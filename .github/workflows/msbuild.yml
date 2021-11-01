@@ -31,7 +31,7 @@ jobs:
       run: msbuild /m /p:Configuration=${{ matrix.configuration }} /p:platform=${{ matrix.platform }} ${{env.SOLUTION_FILE_PATH}}
 
     - uses: actions/upload-artifact@v2
-      if: ${{ matrix.platform == 'x64' }}
+      if: ${{ matrix.platform == 'x86' }}
       with:
         name: ${{ matrix.configuration }}-${{ matrix.platform }}
         path: ${{ matrix.configuration }}\nwinfo.exe
