@@ -7,6 +7,9 @@
 #include <stdlib.h>
 #include "nwinfo.h"
 
+#pragma comment(lib, "userenv.lib")
+#pragma comment(lib, "advapi32.lib")
+
 static const char* GV_GUID = "{8BE4DF61-93CA-11D2-AA0D-00E098032B8C}";
 
 #define INFO_BUFFER_SIZE 32767

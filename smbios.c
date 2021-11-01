@@ -208,7 +208,7 @@ static void ProcMemoryArray(void* p)
 {
 	PMemoryArray pMA = (PMemoryArray)p;
 	UINT64 sz = 0;
-	printf("Memory Device\n");
+	printf("Memory Array\n");
 	switch (pMA->Location)
 	{
 	case 0x01:
