@@ -11,7 +11,7 @@ const char* GetHumanSize(UINT64 size, const char* human_sizes[6], UINT64 base);
 void nwinfo_sys(void);
 void nwinfo_cpuid(void);
 void nwinfo_acpi(void);
-void nwinfo_network(void);
+void nwinfo_network(int active);
 void nwinfo_smbios(void);
 
 #pragma pack(1)
@@ -179,6 +179,17 @@ typedef struct _TYPE_7_ {
 	DWORD   InstalledSize2;
 } CacheInfo, * PCacheInfo;
 
+typedef struct _TYPE_16_ {
+	SMBIOSHEADER Header;
+	UCHAR	Location;
+	UCHAR	Use;
+	UCHAR	ErrCorrection;
+	DWORD	MaxCapacity;
+	UINT16	ErrInfoHandle;
+	UINT16	NumOfMDs;
+	UINT64	ExtMaxCapacity;
+} MemoryArray, * PMemoryArray;
+
 typedef struct _TYPE_17_ {
 	SMBIOSHEADER Header;
 	UINT16	PhysicalArrayHandle;
@@ -215,8 +226,23 @@ typedef struct _TYPE_22_ {
 	UCHAR	Date;
 	UCHAR	SN;
 	UCHAR	DeviceName;
+	UCHAR   DeviceChemistry;
+	UINT16  DesignCapacity;
+	UINT16  DesignVoltage;
 
 } PortableBattery, * PPortableBattery;
+
+typedef struct _TYPE_43_ {
+	SMBIOSHEADER Header;
+	UCHAR   Vendor[4];
+	UCHAR   MajorSpecVer;
+	UCHAR   MinorSpecVer;
+	DWORD   FwVer1;
+	DWORD   FwVer2;
+	UCHAR   Description;
+	UINT64  Characteristics;
+	DWORD   OEM;
+} TPMDevice, * PTMPDevice;
 
 #pragma pack()
 

@@ -41,7 +41,7 @@ static void displayAddress(const PSOCKET_ADDRESS Address)
         printf("NULL\n");
 }
 
-void nwinfo_network (void)
+void nwinfo_network (int active)
 {
     DWORD dwSize = 0;
     DWORD dwRetVal = 0;
@@ -90,6 +90,8 @@ void nwinfo_network (void)
         // If successful, output some information from the data we received
         pCurrAddresses = pAddresses;
         while (pCurrAddresses) {
+            if (active && pCurrAddresses->OperStatus != IfOperStatusUp)
+                goto next_addr;
             printf("Network adapter: %s\n", pCurrAddresses->AdapterName);
             printf("Description: %wS\n", pCurrAddresses->Description);
 
@@ -104,6 +106,12 @@ void nwinfo_network (void)
                         printf("%.2X-",
                             (int)pCurrAddresses->PhysicalAddress[i]);
                 }
+            }
+
+            if (pCurrAddresses->OperStatus == IfOperStatusUp)
+                printf("Status: Active\n");
+            else {
+                printf("Status: Deactive\n");
             }
 
             pUnicast = pCurrAddresses->FirstUnicastAddress;
@@ -173,7 +181,9 @@ void nwinfo_network (void)
 
             printf("Transmit link speed: %s\n", GetHumanSize(pCurrAddresses->TransmitLinkSpeed, bps_human_sizes, 1000));
             printf("Receive link speed: %s\n", GetHumanSize(pCurrAddresses->ReceiveLinkSpeed, bps_human_sizes, 1000));
+
             printf("\n");
+next_addr:
             pCurrAddresses = pCurrAddresses->Next;
         }
     }

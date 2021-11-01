@@ -39,7 +39,7 @@ static void ProcBIOSInfo(void* p)
 	printf("  Version: %s\n", LocateString(str, pBIOS->Version));
 	printf("  Starting Segment: %04Xh\n", pBIOS->StartingAddrSeg);
 	printf("  Release Date: %s\n", LocateString(str, pBIOS->ReleaseDate));
-	printf("  Image Size: %uK\n", (pBIOS->ROMSize + 1) * 64);
+	printf("  Image Size: %u K\n", (pBIOS->ROMSize + 1) * 64);
 	if (pBIOS->Header.Length > 0x14)
 	{
 		if (pBIOS->MajorRelease != 0xff || pBIOS->MinorRelease != 0xff)
@@ -119,18 +119,18 @@ static void ProcProcessorInfo(void* p)
 	}
 	else if (pProcessor->Voltage & (1 << 7)) {
 		UCHAR volt = pProcessor->Voltage - 0x80;
-		printf("  Voltage: %u.%uV\n", volt / 10, volt % 10);
+		printf("  Voltage: %u.%u V\n", volt / 10, volt % 10);
 	}
 	else {
 		printf("  Voltage:%s%s%s\n",
-			pProcessor->Voltage & (1 << 0) ? " 5V" : "",
-			pProcessor->Voltage & (1 << 1) ? " 3.3V" : "",
-			pProcessor->Voltage & (1 << 2) ? " 2.9V" : "");
+			pProcessor->Voltage & (1 << 0) ? " 5 V" : "",
+			pProcessor->Voltage & (1 << 1) ? " 3.3 V" : "",
+			pProcessor->Voltage & (1 << 2) ? " 2.9 V" : "");
 	}
 	if (pProcessor->ExtClock)
-		printf("  External Clock: %uMHz\n", pProcessor->ExtClock);
-	printf("  Max Speed: %uMHz\n", pProcessor->MaxSpeed);
-	printf("  Current Speed: %uMHz\n", pProcessor->CurrentSpeed);
+		printf("  External Clock: %u MHz\n", pProcessor->ExtClock);
+	printf("  Max Speed: %u MHz\n", pProcessor->MaxSpeed);
+	printf("  Current Speed: %u MHz\n", pProcessor->CurrentSpeed);
 	if (pProcessor->Header.Length > 0x20)
 	{
 		// 2.3+
@@ -154,7 +154,7 @@ static void ProcMemModuleInfo(void* p)
 
 	printf("Memory Module information\n");
 	printf("  Socket Designation: %s\n", LocateString(str, pMemModule->SocketDesignation));
-	printf("  Current Speed: %uns\n", pMemModule->CurrentSpeed);
+	printf("  Current Speed: %u ns\n", pMemModule->CurrentSpeed);
 }
 
 static void ProcCacheInfo(void* p)
@@ -165,16 +165,26 @@ static void ProcCacheInfo(void* p)
 
 	printf("Cache information\n");
 	printf("  Socket Designation: %s\n", LocateString(str, pCache->SocketDesignation));
-	if (pCache->MaxSize & (1 << 15))
+	if (pCache->MaxSize == 0xffff && pCache->Header.Length > 0x13)
 	{
+		if (pCache->MaxSize2 & (1 << 31))
+			sz = ((UINT64)pCache->MaxSize2 - (1 << 31)) * 64 * 1024;
+		else
+			sz = ((UINT64)pCache->MaxSize2) * 1024;
+	}
+	else if (pCache->MaxSize & (1 << 15))
 		sz = ((UINT64)pCache->MaxSize - (1 << 15)) * 64 * 1024;
-	}
 	else
-	{
 		sz = ((UINT64) pCache->MaxSize) * 1024;
-	}
 	printf("  Max Cache Size: %s\n", GetHumanSize(sz, mem_human_sizes, 1024));
-	if (pCache->InstalledSize & (1 << 15))
+	if (pCache->InstalledSize == 0xffff && pCache->Header.Length > 0x13)
+	{
+		if (pCache->InstalledSize2 & (1 << 31))
+			sz = ((UINT64)pCache->InstalledSize2 - (1 << 31)) * 64 * 1024;
+		else
+			sz = ((UINT64)pCache->InstalledSize2) * 1024;
+	}
+	else if (pCache->InstalledSize & (1 << 15))
 	{
 		sz = ((UINT64)pCache->InstalledSize - (1 << 15)) * 64 * 1024;
 	}
@@ -184,7 +194,7 @@ static void ProcCacheInfo(void* p)
 	}
 	printf("  Installed Cache Size: %s\n", GetHumanSize(sz, mem_human_sizes, 1024));
 	if (pCache->Speed)
-		printf("  Cache Speed: %uns\n", pCache->Speed);
+		printf("  Cache Speed: %u ns\n", pCache->Speed);
 }
 
 static void ProcOEMString(void* p)
@@ -194,6 +204,120 @@ static void ProcOEMString(void* p)
 	printf("OEM String: %s\n", LocateString(str, *(((char*)p) + 4)));
 }
 
+static void ProcMemoryArray(void* p)
+{
+	PMemoryArray pMA = (PMemoryArray)p;
+	UINT64 sz = 0;
+	printf("Memory Device\n");
+	switch (pMA->Location)
+	{
+	case 0x01:
+		printf("  Location: Other\n");
+		break;
+	case 0x02:
+		printf("  Location: Unknown\n");
+		break;
+	case 0x03:
+		printf("  Location: System board\n");
+		break;
+	case 0x04:
+		printf("  Location: ISA add-on card\n");
+		break;
+	case 0x05:
+		printf("  Location: EISA add-on card\n");
+		break;
+	case 0x06:
+		printf("  Location: PCI add-on card\n");
+		break;
+	case 0x07:
+		printf("  Location: MCA add-on card\n");
+		break;
+	case 0x08:
+		printf("  Location: PCMCIA add-on card\n");
+		break;
+	case 0x09:
+		printf("  Location: Proprietary add-on card\n");
+		break;
+	case 0x0a:
+		printf("  Location: NuBus\n");
+		break;
+	case 0xa0:
+		printf("  Location: PC-98/C20 add-on card\n");
+		break;
+	case 0xa1:
+		printf("  Location: PC-98/C24 add-on card\n");
+		break;
+	case 0xa2:
+		printf("  Location: PC-98/E add-on card\n");
+		break;
+	case 0xa3:
+		printf("  Location: PC-98/Local bus add-on card add-on card\n");
+		break;
+	case 0xa4:
+		printf("  Location: CXL add-on card\n");
+		break;
+	default:
+		break;
+	}
+	switch (pMA->Use)
+	{
+	case 0x01:
+		printf("  Function: Other\n");
+		break;
+	case 0x02:
+		printf("  Function: Unknown\n");
+		break;
+	case 0x03:
+		printf("  Function: System memory\n");
+		break;
+	case 0x04:
+		printf("  Function: Video memory\n");
+		break;
+	case 0x05:
+		printf("  Function: Flash memory\n");
+		break;
+	case 0x06:
+		printf("  Function: Non-volatile RAM\n");
+		break;
+	case 0x07:
+		printf("  Function: Cache memory\n");
+		break;
+	default:
+		break;
+	}
+	switch (pMA->ErrCorrection)
+	{
+	case 0x01:
+		printf("  Error Correction: Other\n");
+		break;
+	case 0x02:
+		printf("  Error Correction: Unknown\n");
+		break;
+	case 0x03:
+		printf("  Error Correction: None\n");
+		break;
+	case 0x04:
+		printf("  Error Correction: Parity\n");
+		break;
+	case 0x05:
+		printf("  Error Correction: Single-bit ECC\n");
+		break;
+	case 0x06:
+		printf("  Error Correction: Multi-bit ECC\n");
+		break;
+	case 0x07:
+		printf("  Error Correction: CRC\n");
+		break;
+	default:
+		break;
+	}
+	if (pMA->MaxCapacity = 0x80000000 && pMA->Header.Length > 0x0f)
+		sz = pMA->ExtMaxCapacity;
+	else
+		sz = ((UINT64)pMA->MaxCapacity) * 1024;
+	printf("  Max Capacity: %s\n", GetHumanSize(sz, mem_human_sizes, 1024));
+}
+
 static void ProcMemoryDevice(void* p)
 {
 	PMemoryDevice pMD = (PMemoryDevice)p;
@@ -201,18 +325,22 @@ static void ProcMemoryDevice(void* p)
 	UINT64 sz = 0;
 
 	printf("Memory Device\n");
-	printf("  Total Width: %ubits\n", pMD->TotalWidth);
-	printf("  Data Width: %ubits\n", pMD->DataWidth);
+	if (pMD->TotalWidth)
+		printf("  Total Width: %u bits\n", pMD->TotalWidth);
+	if (pMD->DataWidth)
+		printf("  Data Width: %u bits\n", pMD->DataWidth);
 	if (pMD->Size & (1 << 15))
 		sz = ((UINT64)pMD->Size - (1 << 15)) * 1024;
 	else
 		sz = ((UINT64)pMD->Size) * 1024 * 1024;
-	printf("  Size: %s\n", GetHumanSize(sz, mem_human_sizes, 1024));
+	if (sz)
+		printf("  Size: %s\n", GetHumanSize(sz, mem_human_sizes, 1024));
 	printf("  Device Locator: %s\n", LocateString(str, pMD->DeviceLocator));
 	printf("  Bank Locator: %s\n", LocateString(str, pMD->BankLocator));
 	if (pMD->Header.Length > 0x15)
 	{
-		printf("  Speed: %u\n", pMD->Speed);
+		if (pMD->Speed)
+			printf("  Speed: %u MT/s\n", pMD->Speed);
 		printf("  Manufacturer: %s\n", LocateString(str, pMD->Manufacturer));
 		printf("  Serial Number: %s\n", LocateString(str, pMD->SN));
 		printf("  Asset Tag Number: %s\n", LocateString(str, pMD->AssetTag));
@@ -242,6 +370,20 @@ static void ProcPortableBattery(void* p)
 	printf("  Manufacturer: %s\n", LocateString(str, pPB->Manufacturer));
 	printf("  Manufacturer Date: %s\n", LocateString(str, pPB->Date));
 	printf("  Serial Number: %s\n", LocateString(str, pPB->SN));
+	printf("  Device Name: %s\n", LocateString(str, pPB->DeviceName));
+}
+
+static void ProcTPMDevice(void* p)
+{
+	PTMPDevice pTPM = (PTMPDevice)p;
+	const char* str = toPointString(p);
+
+	printf("TPM Device\n");
+	printf("  Vendor: %c%c%c%c\n",
+		pTPM->Vendor[0], pTPM->Vendor[1],
+		pTPM->Vendor[2], pTPM->Vendor[3]);
+	printf("  Spec Version: %u%u\n", pTPM->MajorSpecVer, pTPM->MinorSpecVer);
+	printf("  Description: %s\n", LocateString(str, pTPM->Description));
 }
 
 static void DumpSMBIOSStruct(void* Addr, UINT Len)
@@ -278,6 +420,9 @@ static void DumpSMBIOSStruct(void* Addr, UINT Len)
 		case 11:
 			ProcOEMString(pHeader);
 			break;
+		case 16:
+			ProcMemoryArray(pHeader);
+			break;
 		case 17:
 			ProcMemoryDevice(pHeader);
 			break;
@@ -286,6 +431,9 @@ static void DumpSMBIOSStruct(void* Addr, UINT Len)
 			break;
 		case 22:
 			ProcPortableBattery(pHeader);
+			break;
+		case 43:
+			ProcTPMDevice(pHeader);
 			break;
 		default:
 			break;
