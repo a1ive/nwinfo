@@ -1,0 +1,44 @@
+name: MSBuild
+
+on: [push]
+
+env:
+  # Path to the solution file relative to the root of the project.
+  SOLUTION_FILE_PATH: .
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Add MSBuild to PATH
+      uses: microsoft/setup-msbuild@v1.0.2
+
+    - name: Restore NuGet packages
+      working-directory: ${{env.GITHUB_WORKSPACE}}
+      run: nuget restore ${{env.SOLUTION_FILE_PATH}}
+
+    - name: Build
+      working-directory: ${{env.GITHUB_WORKSPACE}}
+      # Add additional options to the MSBuild command line here (like platform or verbosity level).
+      # See https://docs.microsoft.com/visualstudio/msbuild/msbuild-command-line-reference
+      run: |
+        msbuild /m /p:Configuration=Release /p:platform=x64 ${{env.SOLUTION_FILE_PATH}}
+        move x64\Release\nwinfo.exe nwinfo_x64_static.exe
+        msbuild /m /p:Configuration=Release /p:platform=x86 ${{env.SOLUTION_FILE_PATH}}
+        move Release\nwinfo.exe nwinfo_x86.exe
+        msbuild /m /p:Configuration=StaticRelease /p:platform=x64 ${{env.SOLUTION_FILE_PATH}}
+        move x64\StaticRelease\nwinfo.exe nwinfo_x64.exe
+        msbuild /m /p:Configuration=StaticRelease /p:platform=x86 ${{env.SOLUTION_FILE_PATH}}
+        move StaticRelease\nwinfo.exe nwinfo_x86_static.exe
+
+    - uses: "marvinpinto/action-automatic-releases@latest"
+      with:
+        repo_token: "${{ secrets.GITHUB_TOKEN }}"
+        prerelease: false
+        automatic_release_tag: "latest"
+        title: "Development Build"
+        files: |
+          nwinfo_*.exe
