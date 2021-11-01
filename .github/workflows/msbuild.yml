@@ -9,10 +9,6 @@ env:
 jobs:
   build:
     runs-on: windows-latest
-    strategy:
-      matrix:
-        configuration: [Release, StaticRelease]
-        platform: [x86, x64]
 
     steps:
     - uses: actions/checkout@v2
@@ -28,16 +24,22 @@ jobs:
       working-directory: ${{env.GITHUB_WORKSPACE}}
       # Add additional options to the MSBuild command line here (like platform or verbosity level).
       # See https://docs.microsoft.com/visualstudio/msbuild/msbuild-command-line-reference
-      run: msbuild /m /p:Configuration=${{ matrix.configuration }} /p:platform=${{ matrix.platform }} ${{env.SOLUTION_FILE_PATH}}
+      run: |
+        msbuild /m /p:Configuration=Release /p:platform=x64 ${{env.SOLUTION_FILE_PATH}}
+        move x64\StaticRelease\nwinfo.exe nwinfo_x64_static.exe
+        msbuild /m /p:Configuration=Release /p:platform=x86 ${{env.SOLUTION_FILE_PATH}}
+        move Release\nwinfo.exe nwinfo_x86.exe
+        msbuild /m /p:Configuration=StaticRelease /p:platform=x64 ${{env.SOLUTION_FILE_PATH}}
+        move x64\Release\nwinfo.exe nwinfo_x64.exe
+        msbuild /m /p:Configuration=StaticRelease /p:platform=x86 ${{env.SOLUTION_FILE_PATH}}
+        move StaticRelease\nwinfo.exe nwinfo_x86_static.exe
 
-    - uses: actions/upload-artifact@v2
-      if: ${{ matrix.platform == 'x86' }}
+    - uses: "marvinpinto/action-automatic-releases@latest"
       with:
-        name: ${{ matrix.configuration }}-${{ matrix.platform }}
-        path: ${{ matrix.configuration }}\nwinfo.exe
-
-    - uses: actions/upload-artifact@v2
-      if: ${{ matrix.platform == 'x64' }}
-      with:
-        name: ${{ matrix.configuration }}-${{ matrix.platform }}
-        path: x64\${{ matrix.configuration }}\nwinfo.exe
+        repo_token: "${{ secrets.GITHUB_TOKEN }}"
+        prerelease: false
+        automatic_release_tag: "latest"
+        title: "Development Build"
+        files: |
+          LICENSE
+          nwinfo_*.exe
