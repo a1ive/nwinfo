@@ -201,7 +201,8 @@ static void ProcOEMString(void* p)
 {
 	PSMBIOSHEADER pHdr = (PSMBIOSHEADER)p;
 	const char* str = toPointString(p);
-	printf("OEM String: %s\n", LocateString(str, *(((char*)p) + 4)));
+	printf("OEM String\n");
+	printf("  %s\n", LocateString(str, *(((char*)p) + 4)));
 }
 
 static void ProcMemoryArray(void* p)
@@ -325,6 +326,8 @@ static void ProcMemoryDevice(void* p)
 	UINT64 sz = 0;
 
 	printf("Memory Device\n");
+	printf("  Device Locator: %s\n", LocateString(str, pMD->DeviceLocator));
+	printf("  Bank Locator: %s\n", LocateString(str, pMD->BankLocator));
 	if (pMD->TotalWidth)
 		printf("  Total Width: %u bits\n", pMD->TotalWidth);
 	if (pMD->DataWidth)
@@ -333,10 +336,116 @@ static void ProcMemoryDevice(void* p)
 		sz = ((UINT64)pMD->Size - (1 << 15)) * 1024;
 	else
 		sz = ((UINT64)pMD->Size) * 1024 * 1024;
-	if (sz)
-		printf("  Size: %s\n", GetHumanSize(sz, mem_human_sizes, 1024));
-	printf("  Device Locator: %s\n", LocateString(str, pMD->DeviceLocator));
-	printf("  Bank Locator: %s\n", LocateString(str, pMD->BankLocator));
+	if (!sz)
+		return;
+	printf("  Size: %s\n", GetHumanSize(sz, mem_human_sizes, 1024));
+
+	switch (pMD->MemoryType)
+	{
+	case 0x01:
+		printf("  Type: Other\n");
+		break;
+	case 0x02:
+		printf("  Type: Unknown\n");
+		break;
+	case 0x03:
+		printf("  Type: DRAM\n");
+		break;
+	case 0x04:
+		printf("  Type: EDRAM\n");
+		break;
+	case 0x05:
+		printf("  Type: VRAM\n");
+		break;
+	case 0x06:
+		printf("  Type: SRAM\n");
+		break;
+	case 0x07:
+		printf("  Type: RAM\n");
+		break;
+	case 0x08:
+		printf("  Type: ROM\n");
+		break;
+	case 0x09:
+		printf("  Type: FLASH\n");
+		break;
+	case 0x0a:
+		printf("  Type: EEPROM\n");
+		break;
+	case 0x0b:
+		printf("  Type: FEPROM\n");
+		break;
+	case 0x0c:
+		printf("  Type: EPROM\n");
+		break;
+	case 0x0d:
+		printf("  Type: CDRAM\n");
+		break;
+	case 0x0e:
+		printf("  Type: 3DRAM\n");
+		break;
+	case 0x0f:
+		printf("  Type: SDRAM\n");
+		break;
+	case 0x10:
+		printf("  Type: SGRAM\n");
+		break;
+	case 0x11:
+		printf("  Type: RDRAM\n");
+		break;
+	case 0x12:
+		printf("  Type: DDR\n");
+		break;
+	case 0x13:
+		printf("  Type: DDR2\n");
+		break;
+	case 0x14:
+		printf("  Type: DDR2 FB-DIMM\n");
+		break;
+	case 0x15:
+	case 0x16:
+	case 0x17:
+		printf("  Type: Reserved\n");
+		break;
+	case 0x18:
+		printf("  Type: DDR3\n");
+		break;
+	case 0x19:
+		printf("  Type: FBD2\n");
+		break;
+	case 0x1a:
+		printf("  Type: DDR4\n");
+		break;
+	case 0x1b:
+		printf("  Type: LPDDR\n");
+		break;
+	case 0x1c:
+		printf("  Type: LPDDR2\n");
+		break;
+	case 0x1d:
+		printf("  Type: LPDDR3\n");
+		break;
+	case 0x1e:
+		printf("  Type: LPDDR4\n");
+		break;
+	case 0x1f:
+		printf("  Type: Logical non-volatile device\n");
+		break;
+	case 0x20:
+		printf("  Type: HBM (High Bandwidth Memory)\n");
+		break;
+	case 0x21:
+		printf("  Type: HBM2 (High Bandwidth Memory Generation 2)\n");
+		break;
+	case 0x22:
+		printf("  Type: DDR5\n");
+		break;
+	case 0x23:
+		printf("  Type: LPDDR5\n");
+		break;
+	default:
+		break;
+	}
 	if (pMD->Header.Length > 0x15)
 	{
 		if (pMD->Speed)
