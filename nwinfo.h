@@ -7,6 +7,8 @@
 
 void ObtainPrivileges(LPCTSTR privilege);
 const char* GetHumanSize(UINT64 size, const char* human_sizes[6], UINT64 base);
+PVOID GetAcpi(DWORD TableId);
+UINT8 AcpiChecksum(void* base, UINT size);
 
 void nwinfo_sys(void);
 void nwinfo_cpuid(void);

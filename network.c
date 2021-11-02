@@ -9,7 +9,7 @@
 #include "nwinfo.h"
 
 // Link with Iphlpapi.lib
-#pragma comment(lib, "IPHLPAPI.lib")
+#pragma comment(lib, "iphlpapi.lib")
 #pragma comment(lib, "ws2_32.lib")
 
 #define WORKING_BUFFER_SIZE 15000
@@ -192,19 +192,8 @@ next_addr:
 			dwRetVal);
 		if (dwRetVal == ERROR_NO_DATA)
 			printf("No addresses were found for the requested parameters\n");
-		else {
-
-			if (FormatMessageA(FORMAT_MESSAGE_ALLOCATE_BUFFER |
-				FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
-				NULL, dwRetVal, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-				// Default language
-				lpMsgBuf, 0, NULL)) {
-				printf("Error: %s\n", lpMsgBuf);
-				LocalFree(lpMsgBuf);
-				if (pAddresses)
-					FREE(pAddresses);
-			}
-		}
+		else
+			printf("Error: %u\n", dwRetVal);
 	}
 
 	if (pAddresses) {

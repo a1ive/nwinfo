@@ -117,15 +117,15 @@ static void ProcProcessorInfo(void* p)
 	if (!pProcessor->Voltage) {
 		// unsupported
 	}
-	else if (pProcessor->Voltage & (1 << 7)) {
+	else if (pProcessor->Voltage & (1U << 7)) {
 		UCHAR volt = pProcessor->Voltage - 0x80;
 		printf("  Voltage: %u.%u V\n", volt / 10, volt % 10);
 	}
 	else {
 		printf("  Voltage:%s%s%s\n",
-			pProcessor->Voltage & (1 << 0) ? " 5 V" : "",
-			pProcessor->Voltage & (1 << 1) ? " 3.3 V" : "",
-			pProcessor->Voltage & (1 << 2) ? " 2.9 V" : "");
+			pProcessor->Voltage & (1U << 0) ? " 5 V" : "",
+			pProcessor->Voltage & (1U << 1) ? " 3.3 V" : "",
+			pProcessor->Voltage & (1U << 2) ? " 2.9 V" : "");
 	}
 	if (pProcessor->ExtClock)
 		printf("  External Clock: %u MHz\n", pProcessor->ExtClock);
@@ -167,26 +167,26 @@ static void ProcCacheInfo(void* p)
 	printf("  Socket Designation: %s\n", LocateString(str, pCache->SocketDesignation));
 	if (pCache->MaxSize == 0xffff && pCache->Header.Length > 0x13)
 	{
-		if (pCache->MaxSize2 & (1 << 31))
-			sz = ((UINT64)pCache->MaxSize2 - (1 << 31)) * 64 * 1024;
+		if (pCache->MaxSize2 & (1ULL << 31))
+			sz = ((UINT64)pCache->MaxSize2 - (1ULL << 31)) * 64 * 1024;
 		else
 			sz = ((UINT64)pCache->MaxSize2) * 1024;
 	}
-	else if (pCache->MaxSize & (1 << 15))
-		sz = ((UINT64)pCache->MaxSize - (1 << 15)) * 64 * 1024;
+	else if (pCache->MaxSize & (1ULL << 15))
+		sz = ((UINT64)pCache->MaxSize - (1ULL << 15)) * 64 * 1024;
 	else
 		sz = ((UINT64) pCache->MaxSize) * 1024;
 	printf("  Max Cache Size: %s\n", GetHumanSize(sz, mem_human_sizes, 1024));
 	if (pCache->InstalledSize == 0xffff && pCache->Header.Length > 0x13)
 	{
-		if (pCache->InstalledSize2 & (1 << 31))
-			sz = ((UINT64)pCache->InstalledSize2 - (1 << 31)) * 64 * 1024;
+		if (pCache->InstalledSize2 & (1ULL << 31))
+			sz = ((UINT64)pCache->InstalledSize2 - (1ULL << 31)) * 64 * 1024;
 		else
 			sz = ((UINT64)pCache->InstalledSize2) * 1024;
 	}
-	else if (pCache->InstalledSize & (1 << 15))
+	else if (pCache->InstalledSize & (1ULL << 15))
 	{
-		sz = ((UINT64)pCache->InstalledSize - (1 << 15)) * 64 * 1024;
+		sz = ((UINT64)pCache->InstalledSize - (1ULL << 15)) * 64 * 1024;
 	}
 	else
 	{
@@ -332,8 +332,8 @@ static void ProcMemoryDevice(void* p)
 		printf("  Total Width: %u bits\n", pMD->TotalWidth);
 	if (pMD->DataWidth)
 		printf("  Data Width: %u bits\n", pMD->DataWidth);
-	if (pMD->Size & (1 << 15))
-		sz = ((UINT64)pMD->Size - (1 << 15)) * 1024;
+	if (pMD->Size & (1ULL << 15))
+		sz = ((UINT64)pMD->Size - (1ULL << 15)) * 1024;
 	else
 		sz = ((UINT64)pMD->Size) * 1024 * 1024;
 	if (!sz)

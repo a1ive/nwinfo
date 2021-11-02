@@ -6,31 +6,6 @@
 #include <stdlib.h>
 #include "nwinfo.h"
 
-static PVOID GetAcpi (DWORD TableId)
-{
-	PVOID pFirmwareTableBuffer = NULL;
-	UINT BufferSize = 0;
-	BufferSize = GetSystemFirmwareTable('ACPI', TableId, NULL, 0);
-	if (BufferSize == 0)
-		return NULL;
-	pFirmwareTableBuffer = malloc(BufferSize);
-	if (!pFirmwareTableBuffer)
-		return NULL;
-	GetSystemFirmwareTable('ACPI', TableId, pFirmwareTableBuffer, BufferSize);
-	return pFirmwareTableBuffer;
-}
-
-static UINT8
-AcpiChecksum(void* base, UINT size)
-{
-	UINT8* ptr;
-	UINT8 ret = 0;
-	for (ptr = (UINT8*)base; ptr < ((UINT8*)base) + size;
-		ptr++)
-		ret += *ptr;
-	return ret;
-}
-
 static void PrintTableInfo(struct acpi_table_header* Hdr)
 {
 	int i = 0;

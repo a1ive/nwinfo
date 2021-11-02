@@ -5,6 +5,7 @@
 #include <string.h>
 #include <windows.h>
 #include <winioctl.h>
+#include <sysinfoapi.h>
 
 void ObtainPrivileges(LPCTSTR privilege) {
 	HANDLE hToken;
@@ -61,4 +62,29 @@ const char* GetHumanSize(UINT64 size, const char* human_sizes[6], UINT64 base)
 	else
 		snprintf(buf, sizeof(buf), "%llu %s", size, umsg);
 	return buf;
+}
+
+PVOID GetAcpi(DWORD TableId)
+{
+	PVOID pFirmwareTableBuffer = NULL;
+	UINT BufferSize = 0;
+	BufferSize = GetSystemFirmwareTable('ACPI', TableId, NULL, 0);
+	if (BufferSize == 0)
+		return NULL;
+	pFirmwareTableBuffer = malloc(BufferSize);
+	if (!pFirmwareTableBuffer)
+		return NULL;
+	GetSystemFirmwareTable('ACPI', TableId, pFirmwareTableBuffer, BufferSize);
+	return pFirmwareTableBuffer;
+}
+
+UINT8
+AcpiChecksum(void* base, UINT size)
+{
+	UINT8* ptr;
+	UINT8 ret = 0;
+	for (ptr = (UINT8*)base; ptr < ((UINT8*)base) + size;
+		ptr++)
+		ret += *ptr;
+	return ret;
 }
