@@ -38,27 +38,27 @@ void ObtainPrivileges(LPCTSTR privilege) {
 
 const char* GetHumanSize(UINT64 size, const char* human_sizes[6], UINT64 base)
 {
-    UINT64 fsize = size, frac = 0;
-    unsigned units = 0;
-    static char buf[48];
-    const char* umsg;
+	UINT64 fsize = size, frac = 0;
+	unsigned units = 0;
+	static char buf[48];
+	const char* umsg;
 
-    while (fsize >= base && units < 5)
-    {
-        frac = fsize % base;
-        fsize = fsize / base;
-        units++;
-    }
+	while (fsize >= base && units < 5)
+	{
+		frac = fsize % base;
+		fsize = fsize / base;
+		units++;
+	}
 
-    umsg = human_sizes[units];
+	umsg = human_sizes[units];
 
-    if (units)
-    {
-        if (frac)
-            frac = frac * 100 / base;
-        snprintf(buf, sizeof(buf), "%llu.%02llu %s", fsize, frac, umsg);
-    }
-    else
-        snprintf(buf, sizeof(buf), "%llu %s", size, umsg);
-    return buf;
+	if (units)
+	{
+		if (frac)
+			frac = frac * 100 / base;
+		snprintf(buf, sizeof(buf), "%llu.%02llu %s", fsize, frac, umsg);
+	}
+	else
+		snprintf(buf, sizeof(buf), "%llu %s", size, umsg);
+	return buf;
 }

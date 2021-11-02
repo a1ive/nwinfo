@@ -560,22 +560,22 @@ static void DumpSMBIOSStruct(void* Addr, UINT Len)
 
 void nwinfo_smbios(void)
 {
-    DWORD smBiosDataSize = 0;
-    struct RawSMBIOSData* smBiosData = NULL;
-    DWORD bytesWritten = 0;
+	DWORD smBiosDataSize = 0;
+	struct RawSMBIOSData* smBiosData = NULL;
+	DWORD bytesWritten = 0;
 
-    // Query size of SMBIOS data.
-    smBiosDataSize = GetSystemFirmwareTable('RSMB', 0, NULL, 0);
-    if (smBiosDataSize == 0)
-        return;
-    // Allocate memory for SMBIOS data
-    smBiosData = (struct RawSMBIOSData*)malloc(smBiosDataSize);
-    if (!smBiosData)
-        return;
-    // Retrieve the SMBIOS table
-    GetSystemFirmwareTable('RSMB', 0, smBiosData, smBiosDataSize);
-    printf("SMBIOS Version: %u.%u\n", smBiosData->MajorVersion, smBiosData->MinorVersion);
-    printf("DMI Version: %u\n", smBiosData->DmiRevision);
+	// Query size of SMBIOS data.
+	smBiosDataSize = GetSystemFirmwareTable('RSMB', 0, NULL, 0);
+	if (smBiosDataSize == 0)
+		return;
+	// Allocate memory for SMBIOS data
+	smBiosData = (struct RawSMBIOSData*)malloc(smBiosDataSize);
+	if (!smBiosData)
+		return;
+	// Retrieve the SMBIOS table
+	GetSystemFirmwareTable('RSMB', 0, smBiosData, smBiosDataSize);
+	printf("SMBIOS Version: %u.%u\n", smBiosData->MajorVersion, smBiosData->MinorVersion);
+	printf("DMI Version: %u\n", smBiosData->DmiRevision);
 	printf("\n");
 	DumpSMBIOSStruct(smBiosData->Data, smBiosData->Length);
 }
