@@ -88,3 +88,55 @@ AcpiChecksum(void* base, UINT size)
 		ret += *ptr;
 	return ret;
 }
+
+void TrimString(CHAR* String)
+{
+	CHAR* Pos1 = String;
+	CHAR* Pos2 = String;
+	size_t Len = strlen(String);
+
+	while (Len > 0)
+	{
+		if (String[Len - 1] != ' ' && String[Len - 1] != '\t')
+		{
+			break;
+		}
+		String[Len - 1] = 0;
+		Len--;
+	}
+
+	while (*Pos1 == ' ' || *Pos1 == '\t')
+	{
+		Pos1++;
+	}
+
+	while (*Pos1)
+	{
+		*Pos2++ = *Pos1++;
+	}
+	*Pos2++ = 0;
+
+	return;
+}
+
+int GetRegDwordValue(HKEY Key, LPCSTR SubKey, LPCSTR ValueName, DWORD* pValue)
+{
+	HKEY hKey;
+	DWORD Type;
+	DWORD Size;
+	LSTATUS lRet;
+	DWORD Value = 0;
+	lRet = RegOpenKeyExA(Key, SubKey, 0, KEY_QUERY_VALUE, &hKey);
+	if (ERROR_SUCCESS == lRet)
+	{
+		Size = sizeof(Value);
+		lRet = RegQueryValueExA(hKey, ValueName, NULL, &Type, (LPBYTE)&Value, &Size);
+		*pValue = Value;
+		RegCloseKey(hKey);
+		return 0;
+	}
+	else
+	{
+		return 1;
+	}
+}

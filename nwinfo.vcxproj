@@ -29,6 +29,7 @@
   <ItemGroup>
     <ClCompile Include="acpi.c" />
     <ClCompile Include="cpuid.c" />
+    <ClCompile Include="disk.c" />
     <ClCompile Include="network.c" />
     <ClCompile Include="nwinfo.c" />
     <ClCompile Include="smbios.c" />

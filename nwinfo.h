@@ -9,12 +9,15 @@ void ObtainPrivileges(LPCTSTR privilege);
 const char* GetHumanSize(UINT64 size, const char* human_sizes[6], UINT64 base);
 PVOID GetAcpi(DWORD TableId);
 UINT8 AcpiChecksum(void* base, UINT size);
+void TrimString(CHAR* String);
+int GetRegDwordValue(HKEY Key, LPCSTR SubKey, LPCSTR ValueName, DWORD* pValue);
 
 void nwinfo_sys(void);
 void nwinfo_cpuid(void);
 void nwinfo_acpi(void);
 void nwinfo_network(int active);
 void nwinfo_smbios(void);
+void nwinfo_disk(void);
 
 #pragma pack(1)
 
@@ -245,6 +248,97 @@ typedef struct _TYPE_43_ {
 	UINT64  Characteristics;
 	DWORD   OEM;
 } TPMDevice, * PTMPDevice;
+
+struct mbr_entry
+{
+	/* If active, 0x80, otherwise, 0x00.  */
+	uint8_t flag;
+	/* The head of the start.  */
+	uint8_t start_head;
+	/* (S | ((C >> 2) & 0xC0)) where S is the sector of the start and C
+	   is the cylinder of the start. Note that S is counted from one.  */
+	uint8_t start_sector;
+	/* (C & 0xFF) where C is the cylinder of the start.  */
+	uint8_t start_cylinder;
+	/* The partition type.  */
+	uint8_t type;
+	/* The end versions of start_head, start_sector and start_cylinder,
+	   respectively.  */
+	uint8_t end_head;
+	uint8_t end_sector;
+	uint8_t end_cylinder;
+	/* The start sector. Note that this is counted from zero.  */
+	uint32_t start;
+	/* The length in sector units.  */
+	uint32_t length;
+};
+
+struct mbr_header
+{
+	char dummy1[11];/* normally there is a short JMP instuction(opcode is 0xEB) */
+	uint16_t bytes_per_sector;/* seems always to be 512, so we just use 512 */
+	uint8_t sectors_per_cluster;/* non-zero, the power of 2, i.e., 2^n */
+	uint16_t reserved_sectors;/* FAT=non-zero, NTFS=0? */
+	uint8_t number_of_fats;/* NTFS=0; FAT=1 or 2  */
+	uint16_t root_dir_entries;/* FAT32=0, NTFS=0, FAT12/16=non-zero */
+	uint16_t total_sectors_short;/* FAT32=0, NTFS=0, FAT12/16=any */
+	uint8_t media_descriptor;/* range from 0xf0 to 0xff */
+	uint16_t sectors_per_fat;/* FAT32=0, NTFS=0, FAT12/16=non-zero */
+	uint16_t sectors_per_track;/* range from 1 to 63 */
+	uint16_t total_heads;/* range from 1 to 256 */
+	uint32_t hidden_sectors;/* any value */
+	uint32_t total_sectors_long;/* FAT32=non-zero, NTFS=0, FAT12/16=any */
+	uint32_t sectors_per_fat32;/* FAT32=non-zero, NTFS=any, FAT12/16=any */
+	uint64_t total_sectors_long_long;/* NTFS=non-zero, FAT12/16/32=any */
+	char dummy2[392];
+	uint8_t unique_signature[4];
+	uint8_t unknown[2];
+
+	/* Four partition entries.  */
+	struct mbr_entry entries[4];
+
+	/* The signature 0xaa55.  */
+	uint16_t signature;
+};
+
+struct gpt_header
+{
+	uint8_t magic[8];
+	uint32_t version;
+	uint32_t headersize;
+	uint32_t crc32;
+	uint32_t unused1;
+	uint64_t header_lba;
+	uint64_t alternate_lba;
+	uint64_t start;
+	uint64_t end;
+	uint8_t guid[16];
+	uint64_t partitions;
+	uint32_t maxpart;
+	uint32_t partentry_size;
+	uint32_t partentry_crc32;
+};
+
+typedef struct PHY_DRIVE_INFO
+{
+	//int Id;
+	int PhyDrive;
+	int PartStyle;//0:UNKNOWN 1:MBR 2:GPT
+	UINT64 SizeInBytes;
+	BYTE DeviceType;
+	BOOL RemovableMedia;
+	CHAR VendorId[128];
+	CHAR ProductId[128];
+	CHAR ProductRev[128];
+	CHAR SerialNumber[128];
+	STORAGE_BUS_TYPE BusType;
+	// MBR
+	UCHAR MbrSignature[4];
+	// GPT
+	UCHAR GptGuid[16];
+
+	CHAR DriveLetters[26];
+}PHY_DRIVE_INFO;
 
 #pragma pack()
 

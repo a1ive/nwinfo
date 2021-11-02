@@ -29,6 +29,8 @@ int __cdecl main(int argc, char** argv)
 			nwinfo_acpi();
 		else if (_stricmp(argv[i], "--smbios") == 0)
 			nwinfo_smbios();
+		else if (_stricmp(argv[i], "--disk") == 0)
+			nwinfo_disk();
 		else {
 			printf("Usage: nwinfo OPTIONS\n");
 			printf("OPTIONS:\n");
@@ -38,6 +40,7 @@ int __cdecl main(int argc, char** argv)
 			printf("  --net=active   Print active network info\n");
 			printf("  --acpi         Print ACPI info.\n");
 			printf("  --smbios       Print SMBIOS info.\n");
+			printf("  --disk         Print disk info.\n");
 		}
 	}
 	return 0;
