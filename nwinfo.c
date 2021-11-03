@@ -5,6 +5,12 @@
 #include <VersionHelpers.h>
 #include "nwinfo.h"
 
+#pragma comment(lib, "iphlpapi.lib")
+#pragma comment(lib, "ws2_32.lib")
+#pragma comment(lib, "user32.lib")
+#pragma comment(lib, "userenv.lib")
+#pragma comment(lib, "advapi32.lib")
+
 int __cdecl main(int argc, char** argv)
 {
 	if (!IsWindows7OrGreater())
@@ -31,6 +37,8 @@ int __cdecl main(int argc, char** argv)
 			nwinfo_smbios();
 		else if (_stricmp(argv[i], "--disk") == 0)
 			nwinfo_disk();
+		else if (_stricmp(argv[i], "--display") == 0)
+			nwinfo_display();
 		else {
 			printf("Usage: nwinfo OPTIONS\n");
 			printf("OPTIONS:\n");
@@ -41,6 +49,7 @@ int __cdecl main(int argc, char** argv)
 			printf("  --acpi         Print ACPI info.\n");
 			printf("  --smbios       Print SMBIOS info.\n");
 			printf("  --disk         Print disk info.\n");
+			printf("  --display      Print display info.\n");
 		}
 	}
 	return 0;

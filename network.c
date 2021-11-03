@@ -8,10 +8,6 @@
 #include <stdlib.h>
 #include "nwinfo.h"
 
-// Link with Iphlpapi.lib
-#pragma comment(lib, "iphlpapi.lib")
-#pragma comment(lib, "ws2_32.lib")
-
 #define WORKING_BUFFER_SIZE 15000
 #define MAX_TRIES 3
 

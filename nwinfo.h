@@ -18,6 +18,7 @@ void nwinfo_acpi(void);
 void nwinfo_network(int active);
 void nwinfo_smbios(void);
 void nwinfo_disk(void);
+void nwinfo_display(void);
 
 #pragma pack(1)
 
