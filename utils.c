@@ -140,3 +140,114 @@ int GetRegDwordValue(HKEY Key, LPCSTR SubKey, LPCSTR ValueName, DWORD* pValue)
 		return 1;
 	}
 }
+
+CHAR* IDS = NULL;
+DWORD IDS_SIZE = 0;
+
+static CHAR*
+IdsGetline(DWORD* Offset)
+{
+	CHAR* Line = NULL;
+	DWORD i = 0, Len = 0;
+	if (*Offset >= IDS_SIZE)
+		return NULL;
+	for (i = *Offset; i < IDS_SIZE; i++)
+	{
+		if (IDS[i] == '\n' || IDS[i] == '\r')
+			break;
+	}
+	Len = i - *Offset;
+	Line = malloc((SIZE_T)Len + 1);
+	if (!Line)
+		return NULL;
+	memcpy(Line, IDS + *Offset, Len);
+	Line[Len] = 0;
+	*Offset += Len;
+	for (i = *Offset; i < IDS_SIZE; i++, (*Offset)++)
+	{
+		if (IDS[i] != '\n' && IDS[i] != '\r')
+			break;
+	}
+	return Line;
+}
+
+void
+FindId(CONST CHAR* v, CONST CHAR* d, CONST CHAR* s, int usb)
+{
+	DWORD Offset = 0;
+	CHAR* vLine = NULL;
+	CHAR* dLine = NULL;
+	CHAR* sLine = NULL;
+	if (!v || !d)
+		return;
+	vLine = IdsGetline(&Offset);
+	while (vLine)
+	{
+		if (!vLine[0] || vLine[0] == '#' || strlen(vLine) < 7)
+		{
+			free(vLine);
+			vLine = IdsGetline(&Offset);
+			continue;
+		}
+		if (_strnicmp(v, vLine, 4) != 0)
+		{
+			free(vLine);
+			vLine = IdsGetline(&Offset);
+			continue;
+		}
+		printf("  Vendor: %s\n", vLine + 6);
+		free(vLine);
+		dLine = IdsGetline(&Offset);
+		while (dLine)
+		{
+			if (!dLine[0] || dLine[0] == '#')
+			{
+				free(dLine);
+				dLine = IdsGetline(&Offset);
+				continue;
+			}
+			if (dLine[0] != '\t' || strlen(dLine) < 8)
+			{
+				free(dLine);
+				break;
+			}
+			if (_strnicmp(d, dLine + 1, 4) != 0)
+			{
+				free(dLine);
+				dLine = IdsGetline(&Offset);
+				continue;
+			}
+			printf("  Device: %s\n", dLine + 7);
+			free(dLine);
+			if (!s)
+				break;
+			sLine = IdsGetline(&Offset);
+			while (sLine)
+			{
+				if (!sLine[0] || sLine[0] == '#')
+				{
+					free(sLine);
+					sLine = IdsGetline(&Offset);
+					continue;
+				}
+				if (sLine[0] != '\t' || !sLine[1] || sLine[1] != '\t' || strlen(sLine) < 14)
+				{
+					free(sLine);
+					break;
+				}
+				if (_strnicmp(s, sLine + 2, 9) != 0)
+				{
+					free(sLine);
+					sLine = IdsGetline(&Offset);
+					continue;
+				}
+				printf("  %s: %s\n", usb? "Interface" : "Subsys", sLine + 13);
+				free(sLine);
+				break;
+			}
+			break;
+		}
+		break;
+	}
+}
+

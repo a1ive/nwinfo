@@ -51,6 +51,10 @@ int __cdecl main(int argc, char** argv)
 				Guid = &GUID_DEVCLASS_NET;
 			nwinfo_pci(Guid);
 		}
+		else if (_stricmp(argv[i], "--usb") == 0) {
+			Guid = &GUID_DEVCLASS_USB;
+			nwinfo_usb(Guid);
+		}
 		else {
 			printf("Usage: nwinfo OPTIONS\n");
 			printf("OPTIONS:\n");
@@ -64,6 +68,7 @@ int __cdecl main(int argc, char** argv)
 			printf("  --display      Print display info.\n");
 			printf("  --pci          Print PCI info.\n");
 			printf("  --pci=XXX      Print display|usb|net PCI devices.\n");
+			printf("  --usb          Print USB info.\n");
 		}
 	}
 	return 0;

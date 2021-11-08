@@ -36,6 +36,7 @@
     <ClCompile Include="pci.c" />
     <ClCompile Include="smbios.c" />
     <ClCompile Include="sys.c" />
+    <ClCompile Include="usb.c" />
     <ClCompile Include="utils.c" />
   </ItemGroup>
   <ItemGroup>

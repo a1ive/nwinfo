@@ -11,30 +11,36 @@ ParseHwid(const CHAR *Hwid)
 {
 	CHAR VendorID[5] = { 0 };
 	CHAR DeviceID[5] = { 0 };
-	CHAR Subsys[10] = { 0 };
-	// PCI\VEN_XXXX&DEV_XXXX
+	// USB\VID_XXXX&PID_XXXX
+	// USB\ROOT_HUBXX&VIDXXXX&PIDXXXX
 	if (!Hwid || strlen(Hwid) < 21)
 		return 0;
-	if (_strnicmp(Hwid, "PCI\\VEN_", 8) != 0)
-		return 0;
-	snprintf(VendorID, 5, "%s", Hwid + 8);
-	if (_strnicmp(Hwid + 12, "&DEV_", 5) != 0)
-		return 0;
-	snprintf(DeviceID, 5, "%s", Hwid + 17);
-	// PCI\VEN_XXXX&DEV_XXXX&SUBSYS_XXXXXXXX
-	if (strlen(Hwid) < 37 || _strnicmp(Hwid + 21, "&SUBSYS_", 8) != 0)
+	if (_strnicmp(Hwid, "USB\\VID_", 8) != 0)
 	{
-		FindId(VendorID, DeviceID, NULL, 0);
-		return 1;
+		CHAR* p = strstr(Hwid, "VID");
+		if (p && strlen(p) > 7)
+			snprintf(VendorID, 5, "%s", p + 3);
+		else
+			return 0;
 	}
-	snprintf(Subsys, 5, "%s", Hwid + 29);
-	snprintf(Subsys + 4, 6, " %s", Hwid + 33);
-	FindId(VendorID, DeviceID, Subsys, 0);
+	else
+		snprintf(VendorID, 5, "%s", Hwid + 8);
+	if (_strnicmp(Hwid + 12, "&PID_", 5) != 0)
+	{
+		CHAR* p = strstr(Hwid, "PID");
+		if (p && strlen(p) > 7)
+			snprintf(DeviceID, 5, "%s", p + 3);
+		else
+			return 0;
+	}
+	else
+		snprintf(DeviceID, 5, "%s", Hwid + 17);
+	FindId(VendorID, DeviceID, NULL, 1);
 	return 1;
 }
 
 static void
-ListPci(const GUID *Guid)
+ListUsb(const GUID *Guid)
 {
 	HDEVINFO Info = NULL;
 	DWORD i = 0, j = 0;
@@ -43,7 +49,7 @@ ListPci(const GUID *Guid)
 	DWORD Flags = DIGCF_PRESENT;
 	if (!Guid)
 		Flags |= DIGCF_ALLCLASSES;
-	Info = SetupDiGetClassDevsW(Guid, L"PCI", NULL, Flags);
+	Info = SetupDiGetClassDevsW(Guid, L"USB", NULL, Flags);
 	if (Info == INVALID_HANDLE_VALUE)
 	{
 		printf("SetupDiGetClassDevs failed.\n");
@@ -59,7 +65,7 @@ ListPci(const GUID *Guid)
 	SetupDiDestroyDeviceInfoList(Info);
 }
 
-void nwinfo_pci(const GUID *Guid)
+void nwinfo_usb(const GUID *Guid)
 {
 	HANDLE Fp = INVALID_HANDLE_VALUE;
 	DWORD dwSize = 0;
@@ -79,7 +85,7 @@ void nwinfo_pci(const GUID *Guid)
 			break;
 		}
 	}
-	snprintf(FilePath, MAX_PATH, "%s\\pci.ids", FilePath);
+	snprintf(FilePath, MAX_PATH, "%s\\usb.ids", FilePath);
 	Fp = CreateFileA(FilePath, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
 	if (Fp == INVALID_HANDLE_VALUE)
 	{
@@ -89,7 +95,7 @@ void nwinfo_pci(const GUID *Guid)
 	dwSize = GetFileSize(Fp, NULL);
 	if (dwSize == INVALID_FILE_SIZE || dwSize == 0)
 	{
-		printf("bad pci.ids file\n");
+		printf("bad usb.ids file\n");
 		CloseHandle(Fp);
 		return;
 	}
@@ -105,10 +111,10 @@ void nwinfo_pci(const GUID *Guid)
 	CloseHandle(Fp);
 	if (bRet)
 	{
-		ListPci(Guid);
+		ListUsb(Guid);
 	}
 	else
-		printf("pci.ids read error\n");
+		printf("usb.ids read error\n");
 	free(IDS);
 	IDS_SIZE = 0;
 }

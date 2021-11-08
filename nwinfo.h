@@ -11,6 +11,9 @@ PVOID GetAcpi(DWORD TableId);
 UINT8 AcpiChecksum(void* base, UINT size);
 void TrimString(CHAR* String);
 int GetRegDwordValue(HKEY Key, LPCSTR SubKey, LPCSTR ValueName, DWORD* pValue);
+extern CHAR* IDS;
+extern DWORD IDS_SIZE;
+void FindId(CONST CHAR* v, CONST CHAR* d, CONST CHAR* s, int usb);
 
 void nwinfo_sys(void);
 void nwinfo_cpuid(void);
@@ -20,6 +23,7 @@ void nwinfo_smbios(void);
 void nwinfo_disk(void);
 void nwinfo_display(void);
 void nwinfo_pci(const GUID* Guid);
+void nwinfo_usb(const GUID* Guid);
 
 #pragma pack(1)
 
