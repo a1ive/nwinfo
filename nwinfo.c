@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <windows.h>
 #include <VersionHelpers.h>
+#include <devguid.h>
 #include "nwinfo.h"
 
 #pragma comment(lib, "iphlpapi.lib")
@@ -10,9 +11,11 @@
 #pragma comment(lib, "user32.lib")
 #pragma comment(lib, "userenv.lib")
 #pragma comment(lib, "advapi32.lib")
+#pragma comment(lib, "setupapi.lib")
 
 int __cdecl main(int argc, char** argv)
 {
+	const GUID* Guid = NULL;
 	if (!IsWindows7OrGreater())
 	{
 		printf("You need at least Windows 7\n");
@@ -39,6 +42,15 @@ int __cdecl main(int argc, char** argv)
 			nwinfo_disk();
 		else if (_stricmp(argv[i], "--display") == 0)
 			nwinfo_display();
+		else if (_strnicmp(argv[i], "--pci", 5) == 0) {
+			if (_stricmp(&argv[i][5], "=display") == 0)
+				Guid = &GUID_DEVCLASS_DISPLAY;
+			else if (_stricmp(&argv[i][5], "=usb") == 0)
+				Guid = &GUID_DEVCLASS_USB;
+			else if (_stricmp(&argv[i][5], "=net") == 0)
+				Guid = &GUID_DEVCLASS_NET;
+			nwinfo_pci(Guid);
+		}
 		else {
 			printf("Usage: nwinfo OPTIONS\n");
 			printf("OPTIONS:\n");
@@ -50,6 +62,8 @@ int __cdecl main(int argc, char** argv)
 			printf("  --smbios       Print SMBIOS info.\n");
 			printf("  --disk         Print disk info.\n");
 			printf("  --display      Print display info.\n");
+			printf("  --pci          Print PCI info.\n");
+			printf("  --pci=XXX      Print display|usb|net PCI devices.\n");
 		}
 	}
 	return 0;

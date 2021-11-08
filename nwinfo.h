@@ -19,6 +19,7 @@ void nwinfo_network(int active);
 void nwinfo_smbios(void);
 void nwinfo_disk(void);
 void nwinfo_display(void);
+void nwinfo_pci(const GUID* Guid);
 
 #pragma pack(1)
 

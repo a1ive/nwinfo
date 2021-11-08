@@ -42,6 +42,9 @@
     <ClCompile Include="display.c">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="pci.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="nwinfo.h">

@@ -28,6 +28,7 @@ jobs:
       # Add additional options to the MSBuild command line here (like platform or verbosity level).
       # See https://docs.microsoft.com/visualstudio/msbuild/msbuild-command-line-reference
       run: |
+        curl.exe -o pci.ids https://raw.githubusercontent.com/pciutils/pciids/master/pci.ids
         msbuild /m /p:Configuration=Release /p:platform=x64 ${{env.SOLUTION_FILE_PATH}}
         msbuild /m /p:Configuration=Release /p:platform=x86 ${{env.SOLUTION_FILE_PATH}}
         msbuild /m /p:Configuration=StaticRelease /p:platform=x64 ${{env.SOLUTION_FILE_PATH}}
@@ -39,6 +40,7 @@ jobs:
         move Release\nwinfo.exe nwinfo\x86\nwinfo.exe
         move StaticRelease\nwinfo.exe nwinfo\x86\nwinfo_static.exe
         copy LICENSE nwinfo\LICENSE
+        copy pci.ids nwinfo\pci.ids
 
     - uses: thedoctor0/zip-release@master
       with:
