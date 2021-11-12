@@ -43,6 +43,16 @@ jobs:
         copy LICENSE nwinfo\LICENSE
         copy pci.ids nwinfo\pci.ids
         copy usb.ids nwinfo\usb.ids
+    - name: Run UPX
+      uses: crazy-max/ghaction-upx@v1
+      with:
+        version: latest
+        files: |
+          .\nwinfo\x86\nwinfo.exe
+          .\nwinfo\x86\nwinfo_static.exe
+          .\nwinfo\x64\nwinfo.exe
+          .\nwinfo\x64\nwinfo_static.exe
+        args: -fq
 
     - uses: thedoctor0/zip-release@master
       with:
