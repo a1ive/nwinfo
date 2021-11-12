@@ -60,14 +60,12 @@ int __cdecl main(int argc, char** argv)
 			printf("OPTIONS:\n");
 			printf("  --sys          Print system info.\n");
 			printf("  --cpu          Print CPUID info.\n");
-			printf("  --net          Print network info.\n");
-			printf("  --net=active   Print active network info\n");
+			printf("  --net[=active] Print [active] network info\n");
 			printf("  --acpi         Print ACPI info.\n");
-			printf("  --smbios       Print SMBIOS info.\n");
+			printf("  --smbios[=XX]  Print SMBIOS info.\n");
 			printf("  --disk         Print disk info.\n");
 			printf("  --display      Print display info.\n");
-			printf("  --pci          Print PCI info.\n");
-			printf("  --pci=XX       Print PCI devices with XX class code.\n");
+			printf("  --pci[=XX]     Print PCI info.\n");
 			printf("  --usb          Print USB info.\n");
 		}
 	}
