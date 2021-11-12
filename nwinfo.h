@@ -19,7 +19,7 @@ void nwinfo_sys(void);
 void nwinfo_cpuid(void);
 void nwinfo_acpi(void);
 void nwinfo_network(int active);
-void nwinfo_smbios(void);
+void nwinfo_smbios(UINT8 Type);
 void nwinfo_disk(void);
 void nwinfo_display(void);
 void nwinfo_pci(const GUID* Guid, const CHAR *PciClass);

@@ -495,7 +495,7 @@ static void ProcTPMDevice(void* p)
 	printf("  Description: %s\n", LocateString(str, pTPM->Description));
 }
 
-static void DumpSMBIOSStruct(void* Addr, UINT Len)
+static void DumpSMBIOSStruct(void* Addr, UINT Len, UINT8 Type)
 {
 	LPBYTE p = (LPBYTE)(Addr);
 	const LPBYTE lastAddress = p + Len;
@@ -503,6 +503,8 @@ static void DumpSMBIOSStruct(void* Addr, UINT Len)
 
 	for (;;) {
 		pHeader = (PSMBIOSHEADER)p;
+		if (Type != 127 && pHeader->Type != Type)
+			goto next_table;
 		switch (pHeader->Type)
 		{
 		case 0:
@@ -547,6 +549,7 @@ static void DumpSMBIOSStruct(void* Addr, UINT Len)
 		default:
 			break;
 		}
+	next_table:
 		if ((pHeader->Type == 127) && (pHeader->Length == 4))
 			break; // last avaiable tables
 		LPBYTE nt = p + pHeader->Length; // point to struct end
@@ -558,7 +561,7 @@ static void DumpSMBIOSStruct(void* Addr, UINT Len)
 	}
 }
 
-void nwinfo_smbios(void)
+void nwinfo_smbios(UINT8 Type)
 {
 	DWORD smBiosDataSize = 0;
 	struct RawSMBIOSData* smBiosData = NULL;
@@ -575,7 +578,8 @@ void nwinfo_smbios(void)
 	// Retrieve the SMBIOS table
 	GetSystemFirmwareTable('RSMB', 0, smBiosData, smBiosDataSize);
 	printf("SMBIOS Version: %u.%u\n", smBiosData->MajorVersion, smBiosData->MinorVersion);
-	printf("DMI Version: %u\n", smBiosData->DmiRevision);
+	if (smBiosData->DmiRevision)
+		printf("DMI Version: %u\n", smBiosData->DmiRevision);
 	printf("\n");
-	DumpSMBIOSStruct(smBiosData->Data, smBiosData->Length);
+	DumpSMBIOSStruct(smBiosData->Data, smBiosData->Length, Type);
 }

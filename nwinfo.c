@@ -35,8 +35,12 @@ int __cdecl main(int argc, char** argv)
 		}
 		else if (_stricmp(argv[i], "--acpi") == 0)
 			nwinfo_acpi();
-		else if (_stricmp(argv[i], "--smbios") == 0)
-			nwinfo_smbios();
+		else if (_strnicmp(argv[i], "--smbios", 8) == 0) {
+			UINT8 Type = 127;
+			if (argv[i][8] == '=' && argv[i][9])
+				Type = (UINT8) strtoul(&argv[i][9], NULL, 0);
+			nwinfo_smbios(Type);
+		}
 		else if (_stricmp(argv[i], "--disk") == 0)
 			nwinfo_disk();
 		else if (_stricmp(argv[i], "--display") == 0)
