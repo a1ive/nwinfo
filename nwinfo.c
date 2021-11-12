@@ -15,7 +15,6 @@
 
 int __cdecl main(int argc, char** argv)
 {
-	const GUID* Guid = NULL;
 	if (!IsWindows7OrGreater())
 	{
 		printf("You need at least Windows 7\n");
@@ -43,17 +42,14 @@ int __cdecl main(int argc, char** argv)
 		else if (_stricmp(argv[i], "--display") == 0)
 			nwinfo_display();
 		else if (_strnicmp(argv[i], "--pci", 5) == 0) {
-			if (_stricmp(&argv[i][5], "=display") == 0)
-				Guid = &GUID_DEVCLASS_DISPLAY;
-			else if (_stricmp(&argv[i][5], "=usb") == 0)
-				Guid = &GUID_DEVCLASS_USB;
-			else if (_stricmp(&argv[i][5], "=net") == 0)
-				Guid = &GUID_DEVCLASS_NET;
-			nwinfo_pci(Guid);
+			const CHAR* PciClass = NULL;
+			PciClass = NULL;
+			if (argv[i][5] == '=' && argv[i][6])
+				PciClass = &argv[i][6];
+			nwinfo_pci(NULL, PciClass);
 		}
 		else if (_stricmp(argv[i], "--usb") == 0) {
-			Guid = &GUID_DEVCLASS_USB;
-			nwinfo_usb(Guid);
+			nwinfo_usb(NULL);
 		}
 		else {
 			printf("Usage: nwinfo OPTIONS\n");
@@ -67,7 +63,7 @@ int __cdecl main(int argc, char** argv)
 			printf("  --disk         Print disk info.\n");
 			printf("  --display      Print display info.\n");
 			printf("  --pci          Print PCI info.\n");
-			printf("  --pci=XXX      Print display|usb|net PCI devices.\n");
+			printf("  --pci=XX       Print PCI devices with XX class code.\n");
 			printf("  --usb          Print USB info.\n");
 		}
 	}

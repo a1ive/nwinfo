@@ -22,7 +22,7 @@ void nwinfo_network(int active);
 void nwinfo_smbios(void);
 void nwinfo_disk(void);
 void nwinfo_display(void);
-void nwinfo_pci(const GUID* Guid);
+void nwinfo_pci(const GUID* Guid, const CHAR *PciClass);
 void nwinfo_usb(const GUID* Guid);
 
 #pragma pack(1)
