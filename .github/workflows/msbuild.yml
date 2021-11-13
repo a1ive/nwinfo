@@ -32,14 +32,8 @@ jobs:
         curl.exe -o usb.ids http://www.linux-usb.org/usb.ids
         msbuild /m /p:Configuration=Release /p:platform=x64 ${{env.SOLUTION_FILE_PATH}}
         msbuild /m /p:Configuration=Release /p:platform=x86 ${{env.SOLUTION_FILE_PATH}}
-        msbuild /m /p:Configuration=StaticRelease /p:platform=x64 ${{env.SOLUTION_FILE_PATH}}
-        msbuild /m /p:Configuration=StaticRelease /p:platform=x86 ${{env.SOLUTION_FILE_PATH}}
-        md nwinfo\x64
-        move x64\Release\nwinfo.exe nwinfo\x64\nwinfo.exe
-        move x64\StaticRelease\nwinfo.exe nwinfo\x64\nwinfo_static.exe
-        md nwinfo\x86
-        move Release\nwinfo.exe nwinfo\x86\nwinfo.exe
-        move StaticRelease\nwinfo.exe nwinfo\x86\nwinfo_static.exe
+        move x64\Release\nwinfo.exe nwinfo\nwinfo_x64.exe
+        move Release\nwinfo.exe nwinfo\nwinfo_x86.exe
         copy LICENSE nwinfo\LICENSE
         copy pci.ids nwinfo\pci.ids
         copy usb.ids nwinfo\usb.ids
@@ -48,10 +42,8 @@ jobs:
       with:
         version: latest
         files: |
-          .\nwinfo\x86\nwinfo.exe
-          .\nwinfo\x86\nwinfo_static.exe
-          .\nwinfo\x64\nwinfo.exe
-          .\nwinfo\x64\nwinfo_static.exe
+          .\nwinfo\nwinfo_x64.exe
+          .\nwinfo\nwinfo_x86.exe
         args: -fq
 
     - uses: thedoctor0/zip-release@master
