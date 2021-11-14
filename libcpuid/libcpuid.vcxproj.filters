@@ -51,6 +51,9 @@
     <ClInclude Include="rdtsc.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="..\winring0\winring0.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="asm-bits.c">
@@ -69,6 +72,12 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="rdtsc.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\winring0\msrdriver.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\winring0\rdmsr.c">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

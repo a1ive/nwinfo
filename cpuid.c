@@ -5,7 +5,7 @@
 #include <string.h>
 #include <intrin.h>
 #include "nwinfo.h"
-#include "libcpuid/libcpuid.h"
+#include "libcpuid.h"
 
 static void
 PrintHypervisor(void)
@@ -44,6 +44,42 @@ PrintHypervisor(void)
 
 static const char* kb_human_sizes[6] =
 { "KB", "MB", "GB", "TB", "PB", "EB", };
+
+static void
+PrintMsr(void)
+{
+	int value = CPU_INVALID_VALUE;
+	struct msr_driver_t* handle;
+
+	if ((handle = cpu_msr_driver_open()) == NULL) {
+		return;
+	}
+#if 0
+	if ((value = cpu_msrinfo(handle, INFO_MPERF)) != CPU_INVALID_VALUE)
+		printf("MSR.mperf: %d MHz\n", value);
+	if ((value = cpu_msrinfo(handle, INFO_APERF)) != CPU_INVALID_VALUE)
+		printf("MSR.aperf: %d MHz\n", value);
+#endif
+	int min_multi = cpu_msrinfo(handle, INFO_MIN_MULTIPLIER);
+	int max_multi = cpu_msrinfo(handle, INFO_MAX_MULTIPLIER);
+	int cur_multi = cpu_msrinfo(handle, INFO_CUR_MULTIPLIER);
+	if (min_multi == CPU_INVALID_VALUE)
+		min_multi = 0;
+	if (max_multi == CPU_INVALID_VALUE)
+		max_multi = 0;
+	if (cur_multi == CPU_INVALID_VALUE)
+		cur_multi = 0;
+	printf("Multiplier: x%.1lf ( %d - %d )\n", cur_multi / 100.0, min_multi / 100, max_multi / 100);
+	if ((value = cpu_msrinfo(handle, INFO_TEMPERATURE)) != CPU_INVALID_VALUE)
+		printf("Temperature: %d (C)\n", value);
+	if ((value = cpu_msrinfo(handle, INFO_THROTTLING)) != CPU_INVALID_VALUE)
+		printf("Throttling: %s\n", value ? "yes" : "no");
+	if ((value = cpu_msrinfo(handle, INFO_VOLTAGE)) != CPU_INVALID_VALUE)
+		printf("Core voltage: %.2lf V\n", value / 100.0);
+	if ((value = cpu_msrinfo(handle, INFO_BUS_CLOCK)) != CPU_INVALID_VALUE)
+		printf("Bus clock: %.2lf MHz\n", value / 100.0);
+	cpu_msr_driver_close(handle);
+}
 
 void nwinfo_cpuid(void)
 {
@@ -93,7 +129,8 @@ void nwinfo_cpuid(void)
 			printf(" %s", cpu_feature_str(i));
 	printf("\n");
 
-	//printf("CPU clock: %d MHz\n", cpu_clock_measure(400, 1));
-	printf("CPU clock: %d MHz\n", cpu_clock());
+	printf("CPU clock: %d MHz\n", cpu_clock_measure(200, 1));
+	//printf("CPU clock: %d MHz\n", cpu_clock());
 	PrintHypervisor();
+	PrintMsr();
 }
