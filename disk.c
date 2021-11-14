@@ -284,8 +284,7 @@ static int GetAllPhysicalDriveInfo(PHY_DRIVE_INFO* pDriveList, DWORD* pDriveCoun
 				}
 			}
 		}
-		if (CurDrive->PartStyle != 1 &&
-			memcmp(GPT->magic, GPT_MAGIC, sizeof(GPT_MAGIC)) == 0)
+		if (memcmp(GPT->magic, GPT_MAGIC, sizeof(GPT_MAGIC)) == 0)
 		{
 			memcpy(CurDrive->GptGuid, GPT->guid, 16);
 			CurDrive->PartStyle = 2;
