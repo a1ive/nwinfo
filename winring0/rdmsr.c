@@ -23,6 +23,9 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+
+#ifdef BUILD_MSR
+
 #define _XOPEN_SOURCE 500
 #include <stdio.h>
 #include <stdlib.h>
@@ -918,3 +921,4 @@ int msr_serialize_raw_data(struct msr_driver_t* handle, const char* filename)
 }
 
 #endif // RDMSR_UNSUPPORTED_OS
+#endif

@@ -37,7 +37,7 @@
  * They are extracted to the filesystem on demand and loaded in the kernel
  * by the cpu_msr_driver_open() function
  */
-#ifdef _WIN32
+#ifdef BUILD_MSR
 #include "asm-bits.h"
 //begin {
 int cc_x86driver_code_size = 14416;
@@ -1656,6 +1656,4 @@ uint8_t cc_x64driver_code[14544] = {
 	0xe5,0xb2,0x76,0x12,0x8d,0x19,0x19,0xdd,0x3d,0x4a,0x09,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
 };
 //} end
-#endif // _WIN32
-
-int msrdriver_dummy; // a dummy to avoid a linker warning on OS X.
+#endif
