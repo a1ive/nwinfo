@@ -71,7 +71,7 @@ static void
 PrintMsr(void)
 {
 	int value = CPU_INVALID_VALUE;
-	struct msr_driver_t* handle;
+	struct msr_driver_t* handle = NULL;
 
 	if ((handle = cpu_msr_driver_open()) == NULL) {
 		return;
@@ -98,13 +98,13 @@ PrintMsr(void)
 	cpu_msr_driver_close(handle);
 }
 
-void nwinfo_cpuid(void)
+void nwinfo_cpuid(int debug_level)
 {
 	struct cpu_raw_data_t raw = { 0 };
 	struct cpu_id_t data = { 0 };
 	int i = 0;
 
-	cpuid_set_verbosiness_level(0);
+	cpuid_set_verbosiness_level(debug_level);
 
 	if (cpuid_get_raw_data(&raw) < 0) {
 		printf("Cannot obtain raw CPU data!\n");

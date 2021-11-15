@@ -16,7 +16,7 @@ extern DWORD IDS_SIZE;
 void FindId(CONST CHAR* v, CONST CHAR* d, CONST CHAR* s, int usb);
 
 void nwinfo_sys(void);
-void nwinfo_cpuid(void);
+void nwinfo_cpuid(int debug_level);
 void nwinfo_acpi(void);
 void nwinfo_network(int active);
 void nwinfo_smbios(UINT8 Type);

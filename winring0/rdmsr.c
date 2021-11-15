@@ -42,11 +42,6 @@
 #include <winioctl.h>
 #include <winerror.h>
 
-extern uint8_t cc_x86driver_code[];
-extern int cc_x86driver_code_size;
-extern uint8_t cc_x64driver_code[];
-extern int cc_x64driver_code_size;
-
 struct msr_driver_t {
 	char driver_path[MAX_PATH + 1];
 	SC_HANDLE scManager;
@@ -114,38 +109,42 @@ static BOOL MsrLoadDriver(struct msr_driver_t* drv)
 
 static int rdmsr_supported(void);
 
-#ifndef _WIN64
 typedef BOOL(WINAPI* LPFN_ISWOW64PROCESS) (HANDLE, PBOOL);
 static BOOL is_running_x64(void)
 {
+#ifdef _WIN64
+	return TRUE;
+#else
 	BOOL bIsWow64 = FALSE;
 
 	LPFN_ISWOW64PROCESS fnIsWow64Process = (LPFN_ISWOW64PROCESS)GetProcAddress(GetModuleHandleA("kernel32"), "IsWow64Process");
 	if (NULL != fnIsWow64Process)
 		fnIsWow64Process(GetCurrentProcess(), &bIsWow64);
 	return bIsWow64;
-}
 #endif
+}
 
 static int extract_driver(struct msr_driver_t* driver)
 {
-
-	FILE* f;
-	if (!GetTempPathA(sizeof(driver->driver_path), driver->driver_path))
+	size_t i = 0;
+	ZeroMemory(driver->driver_path, sizeof(driver->driver_path));
+	if (!GetModuleFileNameA(NULL, driver->driver_path, MAX_PATH) || strlen(driver->driver_path) == 0)
+	{
+		printf("GetModuleFileName failed\n");
 		return 0;
-	strcat(driver->driver_path, "WinRing0.sys");
-
-	f = fopen(driver->driver_path, "wb");
-	if (!f) return 0;
-#ifndef _WIN64
+	}
+	for (i = strlen(driver->driver_path); i > 0; i--)
+	{
+		if (driver->driver_path[i] == '\\')
+		{
+			driver->driver_path[i] = 0;
+			break;
+		}
+	}
 	if (is_running_x64())
-#endif
-		fwrite(cc_x64driver_code, 1, cc_x64driver_code_size, f);
-#ifndef _WIN64
+		snprintf(driver->driver_path, MAX_PATH, "%s\\WinRing0x64.sys", driver->driver_path);
 	else
-		fwrite(cc_x86driver_code, 1, cc_x86driver_code_size, f);
-#endif
-	fclose(f);
+		snprintf(driver->driver_path, MAX_PATH, "%s\\WinRing0.sys", driver->driver_path);
 	return 1;
 }
 
@@ -181,8 +180,6 @@ struct msr_driver_t* cpu_msr_driver_open(void)
 		}
 	}
 
-	if (!DeleteFileA(drv->driver_path))
-		debugf(1, "Deleting temporary driver file failed.\n");
 	if (!status) {
 		debugf(1, "driver open failed.\n");
 		set_error(drv->errorcode ? drv->errorcode : ERR_NO_DRIVER);

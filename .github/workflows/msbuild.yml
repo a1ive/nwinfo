@@ -38,6 +38,8 @@ jobs:
         copy LICENSE nwinfo\LICENSE
         copy pci.ids nwinfo\pci.ids
         copy usb.ids nwinfo\usb.ids
+        copy winring0\WinRing0.sys nwinfo\WinRing0.sys
+        copy winring0\WinRing0x64.sys nwinfo\WinRing0x64.sys
     - name: Run UPX
       uses: crazy-max/ghaction-upx@v1
       with:

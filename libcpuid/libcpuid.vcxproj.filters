@@ -74,9 +74,6 @@
     <ClCompile Include="rdtsc.c">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="..\winring0\msrdriver.c">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="..\winring0\rdmsr.c">
       <Filter>源文件</Filter>
     </ClCompile>

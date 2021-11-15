@@ -162,7 +162,6 @@
     <ClInclude Include="recog_intel.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\winring0\msrdriver.c" />
     <ClCompile Include="..\winring0\rdmsr.c" />
     <ClCompile Include="asm-bits.c" />
     <ClCompile Include="cpuid_main.c" />
