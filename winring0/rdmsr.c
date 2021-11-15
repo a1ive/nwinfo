@@ -114,24 +114,22 @@ static BOOL MsrLoadDriver(struct msr_driver_t* drv)
 
 static int rdmsr_supported(void);
 
+#ifndef _WIN64
 typedef BOOL(WINAPI* LPFN_ISWOW64PROCESS) (HANDLE, PBOOL);
 static BOOL is_running_x64(void)
 {
-#ifdef _WIN64
-	return TRUE;
-#else
 	BOOL bIsWow64 = FALSE;
 
 	LPFN_ISWOW64PROCESS fnIsWow64Process = (LPFN_ISWOW64PROCESS)GetProcAddress(GetModuleHandleA("kernel32"), "IsWow64Process");
 	if (NULL != fnIsWow64Process)
 		fnIsWow64Process(GetCurrentProcess(), &bIsWow64);
 	return bIsWow64;
-#endif
 }
+#endif
 
 static int extract_driver(struct msr_driver_t* driver)
 {
-#if 1
+
 	FILE* f;
 	if (!GetTempPathA(sizeof(driver->driver_path), driver->driver_path))
 		return 0;
@@ -139,35 +137,16 @@ static int extract_driver(struct msr_driver_t* driver)
 
 	f = fopen(driver->driver_path, "wb");
 	if (!f) return 0;
+#ifndef _WIN64
 	if (is_running_x64())
+#endif
 		fwrite(cc_x64driver_code, 1, cc_x64driver_code_size, f);
+#ifndef _WIN64
 	else
 		fwrite(cc_x86driver_code, 1, cc_x86driver_code_size, f);
+#endif
 	fclose(f);
 	return 1;
-#endif
-#if 0
-	size_t i = 0;
-	ZeroMemory(driver->driver_path, sizeof(driver->driver_path));
-	if (!GetModuleFileNameA(NULL, driver->driver_path, MAX_PATH) || strlen(driver->driver_path) == 0)
-	{
-		printf("GetModuleFileName failed\n");
-		return 0;
-	}
-	for (i = strlen(driver->driver_path); i > 0; i--)
-	{
-		if (driver->driver_path[i] == '\\')
-		{
-			driver->driver_path[i] = 0;
-			break;
-		}
-	}
-	if (is_running_x64())
-		snprintf(driver->driver_path, MAX_PATH, "%s\\WinRing0x64.sys", driver->driver_path);
-	else
-		snprintf(driver->driver_path, MAX_PATH, "%s\\WinRing0.sys", driver->driver_path);
-	return 1;
-#endif
 }
 
 struct msr_driver_t* cpu_msr_driver_open(void)
@@ -421,7 +400,7 @@ static int get_amd_multipliers(struct msr_info_t *info, uint32_t pstate, double 
 			Note: This family contains only APUs */
 			err  = cpu_rdmsr_range(info->handle, pstate, 8, 4, &CpuDid);
 			err += cpu_rdmsr_range(info->handle, pstate, 3, 0, &CpuDidLSD);
-			*multiplier = (double) (((info->cpu_clock + 5) / 100 + magic_constant) / (CpuDid + CpuDidLSD * 0.25 + 1));
+			*multiplier = (double) (((info->cpu_clock + 5LL) / 100 + magic_constant) / (CpuDid + CpuDidLSD * 0.25 + 1));
 			break;
 		case 0x10:
 			/* BKDG 10h, page 429
@@ -629,7 +608,7 @@ static double get_info_voltage(struct msr_info_t *info)
 		MSR_PERF_STATUS[47:32] is Core Voltage
 		P-state core voltage can be computed by MSR_PERF_STATUS[37:32] * (float) 1/(2^13). */
 		err = cpu_rdmsr_range(info->handle, MSR_PERF_STATUS, 47, 32, &reg);
-		if (!err) return (double) reg / (1 << 13);
+		if (!err) return (double) reg / (1ULL << 13ULL);
 	}
 	else if(info->id->vendor == VENDOR_AMD || info->id->vendor == VENDOR_HYGON) {
 		/* Refer links above
@@ -710,7 +689,7 @@ int cpu_msrinfo(struct msr_driver_t* handle, cpu_msrinfo_request_t which)
 	struct cpu_raw_data_t raw;
 	static struct cpu_id_t id;
 	static struct internal_id_info_t internal;
-	static struct msr_info_t info;
+	static struct msr_info_t info = { 0 };
 
 	if (handle == NULL) {
 		set_error(ERR_HANDLE);

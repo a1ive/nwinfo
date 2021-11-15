@@ -1,45 +1,12 @@
-/*
- * Copyright 2009  Veselin Georgiev,
- * anrieffNOSPAM @ mgail_DOT.com (convert to gmail)
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions
- * are met:
- *
- * 1. Redistributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer.
- * 2. Redistributions in binary form must reproduce the above copyright
- *    notice, this list of conditions and the following disclaimer in the
- *    documentation and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
- * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
- * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
- * IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
- * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
- * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
- * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+/**
+ * WinRing0 signed driver
+ * Copyright 2007-2009 hiyohiyo (hiyohiyo@crystalmark.info)
+ * http://openlibsys.org/
  */
 
-/**
- * @File    msrdriver.c
- * @Brief   Contains the binary images of the x86 and x64 MSR drivers for Windows
- * @Date    2009-09-29
- *
- * The driver is courtesy of Nick 'Bombera' Gabareff, and its source is actually
- * available, see the contrib/ dir.
- *
- * However, for simplicity, here we just include the images of the compiled .SYS
- * files.
- * They are extracted to the filesystem on demand and loaded in the kernel
- * by the cpu_msr_driver_open() function
- */
-#if 1
 #include "asm-bits.h"
 //begin {
+#ifndef _WIN64
 int cc_x86driver_code_size = 14416;
 uint8_t cc_x86driver_code[14416] = {
 	0x4d,0x5a,0x90,0x00,0x03,0x00,0x00,0x00,0x04,0x00,0x00,0x00,0xff,0xff,0x00,0x00,0xb8,0x00,
@@ -844,6 +811,7 @@ uint8_t cc_x86driver_code[14416] = {
 	0x76,0xa7,0x7b,0x27,0x42,0xb6,0x76,0xe9,0x1f,0xc8,0xf1,0xe8,0x64,0x9d,0x3a,0xfe,0xfd,0x49,
 	0x4f,0xb2,0xeb,0x55,0x22,0x50,0x48,0x3a,0x4c,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
 };
+#endif
 int cc_x64driver_code_size = 14544;
 uint8_t cc_x64driver_code[14544] = {
 	0x4d,0x5a,0x90,0x00,0x03,0x00,0x00,0x00,0x04,0x00,0x00,0x00,0xff,0xff,0x00,0x00,0xb8,0x00,
@@ -1656,4 +1624,3 @@ uint8_t cc_x64driver_code[14544] = {
 	0xe5,0xb2,0x76,0x12,0x8d,0x19,0x19,0xdd,0x3d,0x4a,0x09,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
 };
 //} end
-#endif

@@ -7,6 +7,9 @@
 #include "nwinfo.h"
 #include "libcpuid.h"
 
+static const char* kb_human_sizes[6] =
+{ "KB", "MB", "GB", "TB", "PB", "EB", };
+
 static void
 PrintHypervisor(void)
 {
@@ -42,8 +45,27 @@ PrintHypervisor(void)
 		printf("Hypervisor: %s\n", VmSign);
 }
 
-static const char* kb_human_sizes[6] =
-{ "KB", "MB", "GB", "TB", "PB", "EB", };
+static void
+PrintSgx(const struct cpu_raw_data_t* raw, const struct cpu_id_t* data)
+{
+	int i;
+	printf("SGX: %d (%s)\n", data->sgx.present, data->sgx.present ? "present" : "absent");
+	if (data->sgx.present) {
+		printf("SGX max enclave size (32-bit): 2^%d\n", data->sgx.max_enclave_32bit);
+		printf("SGX max enclave size (64-bit): 2^%d\n", data->sgx.max_enclave_64bit);
+		printf("SGX1 extensions              : %d (%s)\n", data->sgx.flags[INTEL_SGX1], data->sgx.flags[INTEL_SGX1] ? "present" : "absent");
+		printf("SGX2 extensions              : %d (%s)\n", data->sgx.flags[INTEL_SGX2], data->sgx.flags[INTEL_SGX2] ? "present" : "absent");
+		printf("SGX MISCSELECT               : %08x\n", data->sgx.misc_select);
+		printf("SGX SECS.ATTRIBUTES mask     : %016llx\n", (unsigned long long) data->sgx.secs_attributes);
+		printf("SGX SECS.XSAVE feature mask  : %016llx\n", (unsigned long long) data->sgx.secs_xfrm);
+		printf("SGX EPC sections count       : %d\n", data->sgx.num_epc_sections);
+		for (i = 0; i < data->sgx.num_epc_sections; i++) {
+			struct cpu_epc_t epc = cpuid_get_epc(i, raw);
+			printf("    SGX EPC section #%-8d: start = %llx, size = %llu\n", i,
+				(unsigned long long) epc.start_addr, (unsigned long long) epc.length);
+		}
+	}
+}
 
 static void
 PrintMsr(void)
@@ -54,12 +76,7 @@ PrintMsr(void)
 	if ((handle = cpu_msr_driver_open()) == NULL) {
 		return;
 	}
-#if 0
-	if ((value = cpu_msrinfo(handle, INFO_MPERF)) != CPU_INVALID_VALUE)
-		printf("MSR.mperf: %d MHz\n", value);
-	if ((value = cpu_msrinfo(handle, INFO_APERF)) != CPU_INVALID_VALUE)
-		printf("MSR.aperf: %d MHz\n", value);
-#endif
+
 	int min_multi = cpu_msrinfo(handle, INFO_MIN_MULTIPLIER);
 	int max_multi = cpu_msrinfo(handle, INFO_MAX_MULTIPLIER);
 	int cur_multi = cpu_msrinfo(handle, INFO_CUR_MULTIPLIER);
@@ -69,7 +86,7 @@ PrintMsr(void)
 		max_multi = 0;
 	if (cur_multi == CPU_INVALID_VALUE)
 		cur_multi = 0;
-	printf("Multiplier: x%.1lf ( %d - %d )\n", cur_multi / 100.0, min_multi / 100, max_multi / 100);
+	printf("Multiplier: x%.1lf (%d-%d)\n", cur_multi / 100.0, min_multi / 100, max_multi / 100);
 	if ((value = cpu_msrinfo(handle, INFO_TEMPERATURE)) != CPU_INVALID_VALUE)
 		printf("Temperature: %d (C)\n", value);
 	if ((value = cpu_msrinfo(handle, INFO_THROTTLING)) != CPU_INVALID_VALUE)
@@ -96,7 +113,7 @@ void nwinfo_cpuid(void)
 
 	if (cpu_identify(&raw, &data) < 0)
 		printf("Error identifying the CPU: %s\n", cpuid_error());
-
+	PrintHypervisor();
 	printf("Vendor: %s\n", data.vendor_str);
 	printf("Brand: %s\n", data.brand_str);
 	printf("Code Name: %s\n", data.cpu_codename);
@@ -131,6 +148,6 @@ void nwinfo_cpuid(void)
 
 	printf("CPU clock: %d MHz\n", cpu_clock_measure(200, 1));
 	//printf("CPU clock: %d MHz\n", cpu_clock());
-	PrintHypervisor();
+	PrintSgx(&raw, &data);
 	PrintMsr();
 }
