@@ -48,7 +48,6 @@ static const char* kb_human_sizes[6] =
 static void
 PrintMsr(void)
 {
-#ifdef BUILD_MSR
 	int value = CPU_INVALID_VALUE;
 	struct msr_driver_t* handle;
 
@@ -80,7 +79,6 @@ PrintMsr(void)
 	if ((value = cpu_msrinfo(handle, INFO_BUS_CLOCK)) != CPU_INVALID_VALUE)
 		printf("Bus clock: %.2lf MHz\n", value / 100.0);
 	cpu_msr_driver_close(handle);
-#endif
 }
 
 void nwinfo_cpuid(void)

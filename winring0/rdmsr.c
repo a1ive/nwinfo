@@ -24,8 +24,6 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifdef BUILD_MSR
-
 #define _XOPEN_SOURCE 500
 #include <stdio.h>
 #include <stdlib.h>
@@ -52,214 +50,66 @@ extern int cc_x64driver_code_size;
 struct msr_driver_t {
 	char driver_path[MAX_PATH + 1];
 	SC_HANDLE scManager;
-	volatile SC_HANDLE scDriver;
+	SC_HANDLE scDriver;
 	HANDLE hhDriver;
 	int errorcode;
 };
 
-static BOOL
-InstallDriver(struct msr_driver_t* drv)
+static BOOL MsrLoadDriver(struct msr_driver_t* drv)
 {
-	BOOL rCode = FALSE;
-	DWORD error = NO_ERROR;
+	BOOL Ret = FALSE;
+	DWORD Status = 0;
+
+	debugf(1, "Load driver: %s\n", drv->driver_path);
+
+	drv->scManager = OpenSCManagerA(NULL, NULL, SC_MANAGER_ALL_ACCESS);
+	if (drv->scManager == NULL) {
+		debugf(1, "OpenSCManager() failed %d.\n", GetLastError());
+		return FALSE;
+	}
+
+	debugf(1, "OpenSCManager() ok.\n");
 
 	drv->scDriver = CreateServiceA(drv->scManager, OLS_DRIVER_ID, OLS_DRIVER_ID,
 		SERVICE_ALL_ACCESS, SERVICE_KERNEL_DRIVER, SERVICE_DEMAND_START, SERVICE_ERROR_NORMAL,
 		drv->driver_path, NULL, NULL, NULL, NULL, NULL);
-
 	if (drv->scDriver == NULL) {
-		error = GetLastError();
-		if (error == ERROR_SERVICE_EXISTS)
-			rCode = TRUE;
+		Status = GetLastError();
+		if (Status != ERROR_IO_PENDING && Status != ERROR_SERVICE_EXISTS) {
+			debugf(1, "CreateService() failed %d.\n", Status);
+			CloseServiceHandle(drv->scManager);
+			return FALSE;
+		}
+
+		drv->scDriver = OpenServiceA(drv->scManager, OLS_DRIVER_ID, SERVICE_ALL_ACCESS);
+		if (drv->scDriver == NULL) {
+			debugf(1, "OpenService() failed %d.\n", Status);
+			CloseServiceHandle(drv->scManager);
+			return FALSE;
+		}
+	}
+
+	debugf(1, "CreateService() ok.\n");
+
+	Ret = StartServiceA(drv->scDriver, 0, NULL);
+	if (Ret) {
+		debugf(1, "StartService() ok.\n");
 	} else {
-		rCode = TRUE;
-		CloseServiceHandle(drv->scDriver);
-	}
-
-	return rCode;
-}
-
-static BOOL
-SystemInstallDriver(struct msr_driver_t* drv)
-{
-	BOOL rCode = FALSE;
-
-	drv->scDriver = OpenServiceA(drv->scManager, OLS_DRIVER_ID, SERVICE_ALL_ACCESS);
-
-	if (drv->scDriver != NULL) {
-		rCode = ChangeServiceConfigA(drv->scDriver,
-			SERVICE_KERNEL_DRIVER, SERVICE_AUTO_START, SERVICE_ERROR_NORMAL,
-			drv->driver_path, NULL, NULL, NULL, NULL, NULL, NULL);
-		CloseServiceHandle(drv->scDriver);
-	}
-
-	return rCode;
-}
-
-static BOOL
-RemoveDriver(struct msr_driver_t* drv)
-{
-	BOOL rCode = FALSE;
-
-	drv->scDriver = OpenServiceA(drv->scManager, OLS_DRIVER_ID, SERVICE_ALL_ACCESS);
-	if (drv->scDriver == NULL)
-		rCode = TRUE;
-	else {
-		rCode = DeleteService(drv->scDriver);
-		CloseServiceHandle(drv->scDriver);
-	}
-
-	return rCode;
-}
-
-static BOOL
-StartDriver(struct msr_driver_t* drv)
-{
-	BOOL rCode = FALSE;
-	DWORD error = NO_ERROR;
-
-	drv->scDriver = OpenServiceA(drv->scManager, OLS_DRIVER_ID, SERVICE_ALL_ACCESS);
-
-	if (drv->scDriver != NULL) {
-		if (!StartServiceA(drv->scDriver, 0, NULL)) {
-			error = GetLastError();
-			if (error == ERROR_SERVICE_ALREADY_RUNNING)
-				rCode = TRUE;
-		}
-		else {
-			rCode = TRUE;
-		}
-		CloseServiceHandle(drv->scDriver);
-	}
-	return rCode;
-}
-
-static BOOL
-StopDriver(struct msr_driver_t* drv)
-{
-	BOOL rCode = FALSE;
-	SERVICE_STATUS serviceStatus;
-	DWORD error = NO_ERROR;
-
-	drv->scDriver = OpenServiceA(drv->scManager, OLS_DRIVER_ID, SERVICE_ALL_ACCESS);
-
-	if (drv->scDriver != NULL) {
-		rCode = ControlService(drv->scDriver, SERVICE_CONTROL_STOP, &serviceStatus);
-		error = GetLastError();
-		CloseServiceHandle(drv->scDriver);
-	}
-
-	return rCode;
-}
-
-static BOOL
-IsSystemInstallDriver(struct msr_driver_t* drv)
-{
-	drv->scDriver = OpenServiceA(drv->scManager, OLS_DRIVER_ID, SERVICE_ALL_ACCESS);
-	if (drv->scDriver != NULL) {
-		DWORD dwSize;
-		if (!QueryServiceConfigA(drv->scDriver, NULL, 0, &dwSize)) {
-			LPQUERY_SERVICE_CONFIGA lpqsc = malloc(dwSize);
-			if (!lpqsc)
-				return FALSE;
-			if (!QueryServiceConfigA(drv->scDriver, lpqsc, dwSize, &dwSize)) {
-				if (lpqsc->dwStartType == SERVICE_AUTO_START) {
-					CloseServiceHandle(drv->scDriver);
-					free (lpqsc);
-					return TRUE;
-				}
-			}
-		}
-	}
-	return FALSE;
-}
-
-static BOOL
-OpenDriverHandle(struct msr_driver_t* drv)
-{
-	drv->hhDriver = CreateFileA("\\\\.\\Global\\" OLS_DRIVER_ID, GENERIC_READ | GENERIC_WRITE,
-		0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
-	if (drv->hhDriver == INVALID_HANDLE_VALUE)
-		return FALSE;
-	return TRUE;
-}
-
-static BOOL
-ManageDriver(struct msr_driver_t* drv, USHORT Function)
-{
-	BOOL rCode = FALSE;
-	DWORD error = NO_ERROR;
-
-	drv->scManager = OpenSCManagerA(NULL, NULL, SC_MANAGER_ALL_ACCESS);
-
-	if (drv->scManager == NULL)
-		return FALSE;
-
-	switch (Function)
-	{
-	case OLS_DRIVER_INSTALL:
-		if (InstallDriver(drv))
-			rCode = StartDriver(drv);
-		break;
-	case OLS_DRIVER_REMOVE:
-		if (!IsSystemInstallDriver(drv)) {
-			StopDriver(drv);
-			rCode = RemoveDriver(drv);
-		}
-		break;
-	case OLS_DRIVER_SYSTEM_INSTALL:
-		if (IsSystemInstallDriver(drv)) {
-			rCode = TRUE;
+		Status = GetLastError();
+		if (Status == ERROR_SERVICE_ALREADY_RUNNING) {
+			Ret = TRUE;
 		} else {
-			if (!OpenDriverHandle(drv)) {
-				StopDriver(drv);
-				RemoveDriver(drv);
-				if (InstallDriver(drv))
-					StartDriver(drv);
-				OpenDriverHandle(drv);
-			}
-			rCode = SystemInstallDriver(drv);
+			debugf(1, "StartService() error %d.\n", Status);
+			Ret = FALSE;
 		}
-		break;
-	case OLS_DRIVER_SYSTEM_UNINSTALL:
-		if (!IsSystemInstallDriver(drv)) {
-			rCode = TRUE;
-		} else {
-			if (drv->hhDriver != INVALID_HANDLE_VALUE) {
-				CloseHandle(drv->hhDriver);
-				drv->hhDriver = INVALID_HANDLE_VALUE;
-			}
-			if (StopDriver(drv)) {
-				rCode = RemoveDriver(drv);
-			}
-		}
-		break;
-	default:
-		rCode = FALSE;
-		break;
 	}
 
-	if (drv->scManager != NULL) {
-		CloseServiceHandle(drv->scManager);
-	}
+	CloseServiceHandle(drv->scDriver);
+	CloseServiceHandle(drv->scManager);
 
-	return rCode;
-}
+	debugf(1, "Load driver %s\n", Ret ? "success" : "failed");
 
-static DWORD
-GetRefCount(struct msr_driver_t* drv)
-{
-	DWORD refCount = 0;
-	DWORD length = 0, result = 0;
-	if (drv->hhDriver == INVALID_HANDLE_VALUE)
-		return 0;
-
-	result = DeviceIoControl(drv->hhDriver, IOCTL_OLS_GET_REFCOUNT,
-		NULL, 0, &refCount, sizeof(refCount), &length, NULL);
-	if (!result)
-		refCount = 0;
-
-	return refCount;
+	return Ret;
 }
 
 static int rdmsr_supported(void);
@@ -267,16 +117,21 @@ static int rdmsr_supported(void);
 typedef BOOL(WINAPI* LPFN_ISWOW64PROCESS) (HANDLE, PBOOL);
 static BOOL is_running_x64(void)
 {
+#ifdef _WIN64
+	return TRUE;
+#else
 	BOOL bIsWow64 = FALSE;
 
 	LPFN_ISWOW64PROCESS fnIsWow64Process = (LPFN_ISWOW64PROCESS)GetProcAddress(GetModuleHandleA("kernel32"), "IsWow64Process");
 	if (NULL != fnIsWow64Process)
 		fnIsWow64Process(GetCurrentProcess(), &bIsWow64);
 	return bIsWow64;
+#endif
 }
 
 static int extract_driver(struct msr_driver_t* driver)
 {
+#if 1
 	FILE* f;
 	if (!GetTempPathA(sizeof(driver->driver_path), driver->driver_path))
 		return 0;
@@ -290,6 +145,29 @@ static int extract_driver(struct msr_driver_t* driver)
 		fwrite(cc_x86driver_code, 1, cc_x86driver_code_size, f);
 	fclose(f);
 	return 1;
+#endif
+#if 0
+	size_t i = 0;
+	ZeroMemory(driver->driver_path, sizeof(driver->driver_path));
+	if (!GetModuleFileNameA(NULL, driver->driver_path, MAX_PATH) || strlen(driver->driver_path) == 0)
+	{
+		printf("GetModuleFileName failed\n");
+		return 0;
+	}
+	for (i = strlen(driver->driver_path); i > 0; i--)
+	{
+		if (driver->driver_path[i] == '\\')
+		{
+			driver->driver_path[i] = 0;
+			break;
+		}
+	}
+	if (is_running_x64())
+		snprintf(driver->driver_path, MAX_PATH, "%s\\WinRing0x64.sys", driver->driver_path);
+	else
+		snprintf(driver->driver_path, MAX_PATH, "%s\\WinRing0.sys", driver->driver_path);
+	return 1;
+#endif
 }
 
 struct msr_driver_t* cpu_msr_driver_open(void)
@@ -313,20 +191,17 @@ struct msr_driver_t* cpu_msr_driver_open(void)
 		set_error(ERR_EXTRACT);
 		return NULL;
 	}
-
-	status = OpenDriverHandle(drv);
-	if (!status)
-		goto out;
-
-	ManageDriver(drv, OLS_DRIVER_SYSTEM_UNINSTALL);
-	if (!ManageDriver(drv, OLS_DRIVER_SYSTEM_INSTALL)) {
-		ManageDriver(drv, OLS_DRIVER_SYSTEM_UNINSTALL);
-		status = FALSE;
-		goto out;
+	status = MsrLoadDriver(drv);
+	if (status) {
+		drv->hhDriver = CreateFileA("\\\\.\\"OLS_DRIVER_ID,
+			GENERIC_WRITE | GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE,
+			NULL, OPEN_EXISTING, 0, NULL);
+		if (drv->hhDriver == INVALID_HANDLE_VALUE) {
+			debugf(1, "Create Device failed %d.\n", GetLastError());
+			status = FALSE;
+		}
 	}
 
-	status = OpenDriverHandle(drv);
-out:
 	if (!DeleteFileA(drv->driver_path))
 		debugf(1, "Deleting temporary driver file failed.\n");
 	if (!status) {
@@ -366,16 +241,19 @@ int cpu_msr_driver_close(struct msr_driver_t* drv)
 	SERVICE_STATUS srvStatus = {0};
 	if (drv == NULL)
 		return 0;
-	if (GetRefCount(drv) == 1) {
+	if (drv->hhDriver && drv->hhDriver != INVALID_HANDLE_VALUE) {
 		CloseHandle(drv->hhDriver);
-		drv->hhDriver = INVALID_HANDLE_VALUE;
-		ManageDriver(drv, OLS_DRIVER_SYSTEM_UNINSTALL);
+		drv->hhDriver = NULL;
 	}
-
-	if (drv->hhDriver != INVALID_HANDLE_VALUE) {
-		CloseHandle(drv->hhDriver);
-		drv->hhDriver = INVALID_HANDLE_VALUE;
+	if (drv->scDriver) {
+		CloseServiceHandle(drv->scDriver);
+		drv->scDriver = NULL;
 	}
+	if (drv->scManager) {
+		CloseServiceHandle(drv->scManager);
+		drv->scManager = NULL;
+	}
+	free(drv);
 	return 0;
 }
 
@@ -799,7 +677,7 @@ static double get_info_bus_clock(struct msr_info_t *info)
 		PstateMaxVal is the the lowest-performance non-boosted P-state */
 		addr = get_amd_last_pstate_addr(info);
 		err  = cpu_rdmsr_range(info->handle, MSR_PSTATE_L, 6, 4, &reg);
-		err += get_amd_multipliers(info, addr - reg, &mult);
+		err += get_amd_multipliers(info, addr - (uint32_t) reg, &mult);
 		if (!err) return (double) info->cpu_clock / mult;
 	}
 
@@ -921,4 +799,3 @@ int msr_serialize_raw_data(struct msr_driver_t* handle, const char* filename)
 }
 
 #endif // RDMSR_UNSUPPORTED_OS
-#endif

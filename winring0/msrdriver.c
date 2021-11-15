@@ -37,7 +37,7 @@
  * They are extracted to the filesystem on demand and loaded in the kernel
  * by the cpu_msr_driver_open() function
  */
-#ifdef BUILD_MSR
+#if 1
 #include "asm-bits.h"
 //begin {
 int cc_x86driver_code_size = 14416;
