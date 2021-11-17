@@ -3,15 +3,7 @@
 #include <stdio.h>
 #include <windows.h>
 #include <VersionHelpers.h>
-#include <devguid.h>
 #include "nwinfo.h"
-
-#pragma comment(lib, "iphlpapi.lib")
-#pragma comment(lib, "ws2_32.lib")
-#pragma comment(lib, "user32.lib")
-#pragma comment(lib, "userenv.lib")
-#pragma comment(lib, "advapi32.lib")
-#pragma comment(lib, "setupapi.lib")
 
 int __cdecl main(int argc, char** argv)
 {
@@ -66,10 +58,10 @@ int __cdecl main(int argc, char** argv)
 			printf("  --cpu          Print CPUID info.\n");
 			printf("  --net[=active] Print [active] network info\n");
 			printf("  --acpi         Print ACPI info.\n");
-			printf("  --smbios[=XX]  Print SMBIOS info.\n");
+			printf("  --smbios[=XX]  Print SMBIOS [type=XX] info.\n");
 			printf("  --disk         Print disk info.\n");
 			printf("  --display      Print display info.\n");
-			printf("  --pci[=XX]     Print PCI info.\n");
+			printf("  --pci[=XX]     Print PCI [class=XX] info.\n");
 			printf("  --usb          Print USB info.\n");
 		}
 	}
