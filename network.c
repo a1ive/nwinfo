@@ -47,6 +47,8 @@ void nwinfo_network (int active)
 	PIP_ADAPTER_MULTICAST_ADDRESS pMulticast = NULL;
 	IP_ADAPTER_DNS_SERVER_ADDRESS* pDnServer = NULL;
 	PIP_ADAPTER_GATEWAY_ADDRESS pGateway = NULL;
+	MIB_IFTABLE *IfTable = NULL;
+	ULONG IfTableSize = 0;
 
 	dwRetVal = GetAdaptersAddresses(AF_UNSPEC, flags, NULL, NULL, &outBufLen);
 
@@ -74,6 +76,13 @@ void nwinfo_network (int active)
 		return;
 	}
 
+	dwRetVal = GetIfTable(NULL, &IfTableSize, FALSE);
+	if (dwRetVal == ERROR_INSUFFICIENT_BUFFER) {
+		IfTable = (MIB_IFTABLE*)malloc(IfTableSize);
+		if (IfTable)
+			GetIfTable(IfTable, &IfTableSize, TRUE);
+	}
+
 	pCurrAddresses = pAddresses;
 	while (pCurrAddresses) {
 		if (active && pCurrAddresses->OperStatus != IfOperStatusUp)
@@ -81,6 +90,44 @@ void nwinfo_network (int active)
 		printf("Network adapter: %s\n", pCurrAddresses->AdapterName);
 		printf("Description: %wS\n", pCurrAddresses->Description);
 
+		switch (pCurrAddresses->IfType) {
+		case IF_TYPE_ETHERNET_CSMACD:
+			printf("Type: Ethernet\n");
+			break;
+		case IF_TYPE_ISO88025_TOKENRING:
+			printf("Type: Token Ring\n");
+			break;
+		case IF_TYPE_PPP:
+			printf("Type: PPP\n");
+			break;
+		case IF_TYPE_SOFTWARE_LOOPBACK:
+			printf("Type: Software Loopback\n");
+			break;
+		case IF_TYPE_ATM:
+			printf("Type: ATM\n");
+			break;
+		case IF_TYPE_IEEE80211:
+			printf("Type: IEEE 802.11 Wireless\n");
+			break;
+		case IF_TYPE_TUNNEL:
+			printf("Type: Tunnel\n");
+			break;
+		case IF_TYPE_IEEE1394:
+			printf("Type: IEEE 1394 High Performance Serial Bus\n");
+			break;
+		case IF_TYPE_IEEE80216_WMAN:
+			printf("Type: WiMax\n");
+			break;
+		case IF_TYPE_WWANPP:
+			printf("Type: GSM\n");
+			break;
+		case IF_TYPE_WWANPP2:
+			printf("Type: CDMA\n");
+			break;
+		default:
+			printf("Type: Other\n");
+			break;
+		}
 		if (pCurrAddresses->PhysicalAddressLength != 0) {
 			printf("MAC address: ");
 			for (i = 0; i < (int)pCurrAddresses->PhysicalAddressLength; i++) {
@@ -163,11 +210,18 @@ void nwinfo_network (int active)
 
 		printf("Transmit link speed: %s\n", GetHumanSize(pCurrAddresses->TransmitLinkSpeed, bps_human_sizes, 1000));
 		printf("Receive link speed: %s\n", GetHumanSize(pCurrAddresses->ReceiveLinkSpeed, bps_human_sizes, 1000));
-
+		printf("MTU: %lu Byte\n", pCurrAddresses->Mtu);
+		if (IfTable && pCurrAddresses->IfIndex > 0) {
+			ULONG idx = pCurrAddresses->IfIndex - 1;
+			printf("Received: %u Octets\n", IfTable->table[idx].dwInOctets);
+			printf("Sent: %u Octets\n", IfTable->table[idx].dwOutOctets);
+		}
 		printf("\n");
 next_addr:
 		pCurrAddresses = pCurrAddresses->Next;
 	}
 
 	free(pAddresses);
+	if (IfTable)
+		free(IfTable);
 }
