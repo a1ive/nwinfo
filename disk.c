@@ -342,11 +342,7 @@ void nwinfo_disk(void)
 			else if (CurDrive->PartStyle == 2)
 			{
 				printf("  PartMap: GPT\n");
-				printf("  GPT GUID: %02X%02X%02X%02X-%02X%02X-%02X%02X-%02X%02X-%02X%02X%02X%02X%02X%02X\n",
-					CurDrive->GptGuid[0], CurDrive->GptGuid[1], CurDrive->GptGuid[2], CurDrive->GptGuid[3],
-					CurDrive->GptGuid[4], CurDrive->GptGuid[5], CurDrive->GptGuid[6], CurDrive->GptGuid[7],
-					CurDrive->GptGuid[8], CurDrive->GptGuid[9], CurDrive->GptGuid[10], CurDrive->GptGuid[11],
-					CurDrive->GptGuid[12], CurDrive->GptGuid[13], CurDrive->GptGuid[14], CurDrive->GptGuid[15]);
+				printf("  GPT GUID: %s\n", GuidToStr(CurDrive->GptGuid));
 			}
 			if (CurDrive->DriveLetters[0])
 			{

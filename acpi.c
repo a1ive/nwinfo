@@ -6,24 +6,27 @@
 #include <stdlib.h>
 #include "nwinfo.h"
 
+static void
+PrintU8Str(UINT8 *Str, DWORD Len)
+{
+	DWORD i = 0;
+	for (i = 0; i < Len; i++)
+		printf("%c", Str[i]);
+}
+
 static void PrintTableInfo(struct acpi_table_header* Hdr)
 {
-	int i = 0;
-	for (i = 0; i < 4; i++)
-		printf("%c", Hdr->signature[i]);
+	PrintU8Str(Hdr->signature, 4);
 	printf("\n  Revision: 0x%02x", Hdr->revision);
 	printf("\n  Length: 0x%x", Hdr->length);
 	printf("\n  Checksum: 0x%02x (%s)", Hdr->checksum, AcpiChecksum(Hdr, Hdr->length) == 0 ? "OK" : "ERR");
 	printf("\n  OEM ID: ");
-	for (i = 0; i < 6; i++)
-		printf("%c", Hdr->oemid[i]);
+	PrintU8Str(Hdr->oemid, 6);
 	printf("\n  OEM Table ID: ");
-	for (i = 0; i < 8; i++)
-		printf("%c", Hdr->oemtable[i]);
+	PrintU8Str(Hdr->oemtable, 8);
 	printf("\n  OEM Revision: 0x%lx", Hdr->oemrev);
 	printf("\n  Creator ID: ");
-	for (i = 0; i < 4; i++)
-		printf("%c", Hdr->creator_id[i]);
+	PrintU8Str(Hdr->creator_id, 4);
 	printf("\n  Creator Revision: 0x%x\n", Hdr->creator_rev);
 }
 
@@ -74,8 +77,7 @@ void nwinfo_acpi(void)
 			printf("    Data Reserved: 0x%08x\n", msdm->data_reserved);
 			printf("    Data Length: 0x%08x\n", msdm->data_length);
 			printf("    Product Key: ");
-			for (int j = 0; j < 29; j++)
-				printf("%c", msdm->data[j]);
+			PrintU8Str(msdm->data, 29);
 			printf("\n");
 		}
 

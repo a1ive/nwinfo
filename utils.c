@@ -251,3 +251,12 @@ FindId(CONST CHAR* v, CONST CHAR* d, CONST CHAR* s, int usb)
 	}
 }
 
+const CHAR*
+GuidToStr(UCHAR Guid[16]) {
+	static CHAR GuidStr[37] = { 0 };
+	snprintf(GuidStr, 37, "%02X%02X%02X%02X-%02X%02X-%02X%02X-%02X%02X-%02X%02X%02X%02X%02X%02X\n",
+		Guid[0], Guid[1], Guid[2], Guid[3], Guid[4], Guid[5], Guid[6], Guid[7],
+		Guid[8], Guid[9], Guid[10], Guid[11], Guid[12], Guid[13], Guid[14], Guid[15]);
+	return GuidStr;
+}
+

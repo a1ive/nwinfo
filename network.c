@@ -31,6 +31,24 @@ static void displayAddress(const PSOCKET_ADDRESS Address)
 		printf("NULL\n");
 }
 
+static const CHAR*
+IfTypeToStr(IFTYPE Type) {
+	switch (Type) {
+	case IF_TYPE_ETHERNET_CSMACD: return "Ethernet";
+	case IF_TYPE_ISO88025_TOKENRING: return "Token Ring";
+	case IF_TYPE_PPP: return "PPP";
+	case IF_TYPE_SOFTWARE_LOOPBACK: return "Software Loopback";
+	case IF_TYPE_ATM: return "ATM";
+	case IF_TYPE_IEEE80211: return "IEEE 802.11 Wireless";
+	case IF_TYPE_TUNNEL: return "Tunnel";
+	case IF_TYPE_IEEE1394: return "IEEE 1394 High Performance Serial Bus";
+	case IF_TYPE_IEEE80216_WMAN: return "WiMax";
+	case IF_TYPE_WWANPP: return "GSM";
+	case IF_TYPE_WWANPP2: return "CDMA";
+	}
+	return "Other";
+}
+
 void nwinfo_network (int active)
 {
 	DWORD dwSize = 0;
@@ -89,45 +107,7 @@ void nwinfo_network (int active)
 			goto next_addr;
 		printf("Network adapter: %s\n", pCurrAddresses->AdapterName);
 		printf("Description: %wS\n", pCurrAddresses->Description);
-
-		switch (pCurrAddresses->IfType) {
-		case IF_TYPE_ETHERNET_CSMACD:
-			printf("Type: Ethernet\n");
-			break;
-		case IF_TYPE_ISO88025_TOKENRING:
-			printf("Type: Token Ring\n");
-			break;
-		case IF_TYPE_PPP:
-			printf("Type: PPP\n");
-			break;
-		case IF_TYPE_SOFTWARE_LOOPBACK:
-			printf("Type: Software Loopback\n");
-			break;
-		case IF_TYPE_ATM:
-			printf("Type: ATM\n");
-			break;
-		case IF_TYPE_IEEE80211:
-			printf("Type: IEEE 802.11 Wireless\n");
-			break;
-		case IF_TYPE_TUNNEL:
-			printf("Type: Tunnel\n");
-			break;
-		case IF_TYPE_IEEE1394:
-			printf("Type: IEEE 1394 High Performance Serial Bus\n");
-			break;
-		case IF_TYPE_IEEE80216_WMAN:
-			printf("Type: WiMax\n");
-			break;
-		case IF_TYPE_WWANPP:
-			printf("Type: GSM\n");
-			break;
-		case IF_TYPE_WWANPP2:
-			printf("Type: CDMA\n");
-			break;
-		default:
-			printf("Type: Other\n");
-			break;
-		}
+		printf("Type: %s\n", IfTypeToStr(pCurrAddresses->IfType));
 		if (pCurrAddresses->PhysicalAddressLength != 0) {
 			printf("MAC address: ");
 			for (i = 0; i < (int)pCurrAddresses->PhysicalAddressLength; i++) {

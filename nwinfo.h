@@ -14,6 +14,7 @@ int GetRegDwordValue(HKEY Key, LPCSTR SubKey, LPCSTR ValueName, DWORD* pValue);
 extern CHAR* IDS;
 extern DWORD IDS_SIZE;
 void FindId(CONST CHAR* v, CONST CHAR* d, CONST CHAR* s, int usb);
+const CHAR* GuidToStr(UCHAR Guid[16]);
 
 void nwinfo_sys(void);
 void nwinfo_cpuid(int debug_level);

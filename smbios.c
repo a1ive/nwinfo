@@ -61,13 +61,7 @@ static void ProcSysInfo(void* p)
 	printf("  Serial Number: %s\n", LocateString(str, pSystem->SN));
 	// for v2.1 and later
 	if (pSystem->Header.Length > 0x08)
-	{
-		printf("  UUID: %02X%02X%02X%02X-%02X%02X-%02X%02X-%02X%02X-%02X%02X%02X%02X%02X%02X\n",
-			pSystem->UUID[0], pSystem->UUID[1], pSystem->UUID[2], pSystem->UUID[3],
-			pSystem->UUID[4], pSystem->UUID[5], pSystem->UUID[6], pSystem->UUID[7],
-			pSystem->UUID[8], pSystem->UUID[9], pSystem->UUID[10], pSystem->UUID[11],
-			pSystem->UUID[12], pSystem->UUID[13], pSystem->UUID[14], pSystem->UUID[15]);
-	}
+		printf("  UUID: %s\n", GuidToStr(pSystem->UUID));
 
 	if (pSystem->Header.Length > 0x19)
 	{
@@ -205,119 +199,116 @@ static void ProcOEMString(void* p)
 	printf("  %s\n", LocateString(str, *(((char*)p) + 4)));
 }
 
+static const CHAR*
+pMALocationToStr(UCHAR Location)
+{
+	switch (Location) {
+	case 0x01: return "Other";
+	//case 0x02: return "Unknown";
+	case 0x03: return "System board";
+	case 0x04: return "ISA add-on card";
+	case 0x05: return "EISA add-on card";
+	case 0x06: return "PCI add-on card";
+	case 0x07: return "MCA add-on card";
+	case 0x08: return "PCMCIA add-on card";
+	case 0x09: return "Proprietary add-on card";
+	case 0x0a: return "NuBus";
+	case 0xa0: return "PC-98/C20 add-on card";
+	case 0xa1: return "PC-98/C24 add-on card";
+	case 0xa2: return "PC-98/E add-on card";
+	case 0xa3: return "PC-98/Local bus add-on card add-on card";
+	case 0xa4: return "CXL add-on card";
+	}
+	return "Unknown";
+}
+
+static const CHAR*
+pMAUseToStr(UCHAR Use)
+{
+	switch (Use) {
+	case 0x01: return "Other";
+	//case 0x02: return "Unknown";
+	case 0x03: return "System memory";
+	case 0x04: return "Video memory";
+	case 0x05: return "Flash memory";
+	case 0x06: return "Non-volatile RAM";
+	case 0x07: return "Cache memory";
+	}
+	return "Unknown";
+}
+
+static const CHAR*
+pMAEccToStr(UCHAR ErrCorrection)
+{
+	switch (ErrCorrection) {
+	case 0x01: return "Other";
+	//case 0x02: return "Unknown";
+	case 0x03: return "None";
+	case 0x04: return "Parity";
+	case 0x05: return "Single-bit ECC";
+	case 0x06: return "Multi-bit ECC";
+	case 0x07: return "CRC";
+	}
+	return "Unknown";
+}
+
 static void ProcMemoryArray(void* p)
 {
 	PMemoryArray pMA = (PMemoryArray)p;
 	UINT64 sz = 0;
 	printf("Memory Array\n");
-	switch (pMA->Location)
-	{
-	case 0x01:
-		printf("  Location: Other\n");
-		break;
-	case 0x02:
-		printf("  Location: Unknown\n");
-		break;
-	case 0x03:
-		printf("  Location: System board\n");
-		break;
-	case 0x04:
-		printf("  Location: ISA add-on card\n");
-		break;
-	case 0x05:
-		printf("  Location: EISA add-on card\n");
-		break;
-	case 0x06:
-		printf("  Location: PCI add-on card\n");
-		break;
-	case 0x07:
-		printf("  Location: MCA add-on card\n");
-		break;
-	case 0x08:
-		printf("  Location: PCMCIA add-on card\n");
-		break;
-	case 0x09:
-		printf("  Location: Proprietary add-on card\n");
-		break;
-	case 0x0a:
-		printf("  Location: NuBus\n");
-		break;
-	case 0xa0:
-		printf("  Location: PC-98/C20 add-on card\n");
-		break;
-	case 0xa1:
-		printf("  Location: PC-98/C24 add-on card\n");
-		break;
-	case 0xa2:
-		printf("  Location: PC-98/E add-on card\n");
-		break;
-	case 0xa3:
-		printf("  Location: PC-98/Local bus add-on card add-on card\n");
-		break;
-	case 0xa4:
-		printf("  Location: CXL add-on card\n");
-		break;
-	default:
-		break;
-	}
-	switch (pMA->Use)
-	{
-	case 0x01:
-		printf("  Function: Other\n");
-		break;
-	case 0x02:
-		printf("  Function: Unknown\n");
-		break;
-	case 0x03:
-		printf("  Function: System memory\n");
-		break;
-	case 0x04:
-		printf("  Function: Video memory\n");
-		break;
-	case 0x05:
-		printf("  Function: Flash memory\n");
-		break;
-	case 0x06:
-		printf("  Function: Non-volatile RAM\n");
-		break;
-	case 0x07:
-		printf("  Function: Cache memory\n");
-		break;
-	default:
-		break;
-	}
-	switch (pMA->ErrCorrection)
-	{
-	case 0x01:
-		printf("  Error Correction: Other\n");
-		break;
-	case 0x02:
-		printf("  Error Correction: Unknown\n");
-		break;
-	case 0x03:
-		printf("  Error Correction: None\n");
-		break;
-	case 0x04:
-		printf("  Error Correction: Parity\n");
-		break;
-	case 0x05:
-		printf("  Error Correction: Single-bit ECC\n");
-		break;
-	case 0x06:
-		printf("  Error Correction: Multi-bit ECC\n");
-		break;
-	case 0x07:
-		printf("  Error Correction: CRC\n");
-		break;
-	default:
-		break;
-	}
+	printf("  Location: %s\n", pMALocationToStr(pMA->Location));
+	printf("  Function: %s\n", pMAUseToStr(pMA->Use));
+	printf("  Error Correction: %s\n", pMAEccToStr(pMA->ErrCorrection));
 	printf("  Number of Slots: %u\n", pMA->NumOfMDs);
 	if (pMA->MaxCapacity == 0x80000000 && pMA->Header.Length > 0x0f)
 		sz = pMA->ExtMaxCapacity;
 	else
 		sz = ((UINT64)pMA->MaxCapacity) * 1024;
 	printf("  Max Capacity: %s\n", GetHumanSize(sz, mem_human_sizes, 1024));
+}
+
+static const CHAR*
+pMDMemoryTypeToStr(UCHAR Type)
+{
+	switch (Type) {
+	case 0x01: return "Other";
+	//case 0x02: return "Unknown";
+	case 0x03: return "DRAM";
+	case 0x04: return "EDRAM";
+	case 0x05: return "VRAM";
+	case 0x06: return "SRAM";
+	case 0x07: return "RAM";
+	case 0x08: return "ROM";
+	case 0x09: return "FLASH";
+	case 0x0a: return "EEPROM";
+	case 0x0b: return "FEPROM";
+	case 0x0c: return "EPROM";
+	case 0x0d: return "CDRAM";
+	case 0x0e: return "3DRAM";
+	case 0x0f: return "SDRAM";
+	case 0x10: return "SGRAM";
+	case 0x11: return "RDRAM";
+	case 0x12: return "DDR";
+	case 0x13: return "DDR2";
+	case 0x14: return "DDR2 FB-DIMM";
+	case 0x15:
+	case 0x16:
+	case 0x17: return "Reserved";
+	case 0x18: return "DDR3";
+	case 0x19: return "FBD2";
+	case 0x1a: return "DDR4";
+	case 0x1b: return "LPDDR";
+	case 0x1c: return "LPDDR2";
+	case 0x1d: return "LPDDR3";
+	case 0x1e: return "LPDDR4";
+	case 0x1f: return "Logical non-volatile device";
+	case 0x20: return "HBM (High Bandwidth Memory)";
+	case 0x21: return "HBM2 (High Bandwidth Memory Generation 2)";
+	case 0x22: return "DDR5";
+	case 0x23: return "LPDDR5";
+	}
+	return "Unknown";
 }
 
 static void ProcMemoryDevice(void* p)
@@ -340,113 +331,7 @@ static void ProcMemoryDevice(void* p)
 	if (!sz)
 		return;
 	printf("  Size: %s\n", GetHumanSize(sz, mem_human_sizes, 1024));
-
-	switch (pMD->MemoryType)
-	{
-	case 0x01:
-		printf("  Type: Other\n");
-		break;
-	case 0x02:
-		printf("  Type: Unknown\n");
-		break;
-	case 0x03:
-		printf("  Type: DRAM\n");
-		break;
-	case 0x04:
-		printf("  Type: EDRAM\n");
-		break;
-	case 0x05:
-		printf("  Type: VRAM\n");
-		break;
-	case 0x06:
-		printf("  Type: SRAM\n");
-		break;
-	case 0x07:
-		printf("  Type: RAM\n");
-		break;
-	case 0x08:
-		printf("  Type: ROM\n");
-		break;
-	case 0x09:
-		printf("  Type: FLASH\n");
-		break;
-	case 0x0a:
-		printf("  Type: EEPROM\n");
-		break;
-	case 0x0b:
-		printf("  Type: FEPROM\n");
-		break;
-	case 0x0c:
-		printf("  Type: EPROM\n");
-		break;
-	case 0x0d:
-		printf("  Type: CDRAM\n");
-		break;
-	case 0x0e:
-		printf("  Type: 3DRAM\n");
-		break;
-	case 0x0f:
-		printf("  Type: SDRAM\n");
-		break;
-	case 0x10:
-		printf("  Type: SGRAM\n");
-		break;
-	case 0x11:
-		printf("  Type: RDRAM\n");
-		break;
-	case 0x12:
-		printf("  Type: DDR\n");
-		break;
-	case 0x13:
-		printf("  Type: DDR2\n");
-		break;
-	case 0x14:
-		printf("  Type: DDR2 FB-DIMM\n");
-		break;
-	case 0x15:
-	case 0x16:
-	case 0x17:
-		printf("  Type: Reserved\n");
-		break;
-	case 0x18:
-		printf("  Type: DDR3\n");
-		break;
-	case 0x19:
-		printf("  Type: FBD2\n");
-		break;
-	case 0x1a:
-		printf("  Type: DDR4\n");
-		break;
-	case 0x1b:
-		printf("  Type: LPDDR\n");
-		break;
-	case 0x1c:
-		printf("  Type: LPDDR2\n");
-		break;
-	case 0x1d:
-		printf("  Type: LPDDR3\n");
-		break;
-	case 0x1e:
-		printf("  Type: LPDDR4\n");
-		break;
-	case 0x1f:
-		printf("  Type: Logical non-volatile device\n");
-		break;
-	case 0x20:
-		printf("  Type: HBM (High Bandwidth Memory)\n");
-		break;
-	case 0x21:
-		printf("  Type: HBM2 (High Bandwidth Memory Generation 2)\n");
-		break;
-	case 0x22:
-		printf("  Type: DDR5\n");
-		break;
-	case 0x23:
-		printf("  Type: LPDDR5\n");
-		break;
-	default:
-		break;
-	}
+	printf("  Type: %s\n", pMDMemoryTypeToStr(pMD->MemoryType));
 	if (pMD->Header.Length > 0x15)
 	{
 		if (pMD->Speed)
