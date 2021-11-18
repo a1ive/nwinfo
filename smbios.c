@@ -312,7 +312,8 @@ static void ProcMemoryArray(void* p)
 	default:
 		break;
 	}
-	if (pMA->MaxCapacity = 0x80000000 && pMA->Header.Length > 0x0f)
+	printf("  Number of Slots: %u\n", pMA->NumOfMDs);
+	if (pMA->MaxCapacity == 0x80000000 && pMA->Header.Length > 0x0f)
 		sz = pMA->ExtMaxCapacity;
 	else
 		sz = ((UINT64)pMA->MaxCapacity) * 1024;

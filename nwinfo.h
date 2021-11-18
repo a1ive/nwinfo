@@ -195,7 +195,7 @@ typedef struct _TYPE_16_ {
 	UCHAR	Location;
 	UCHAR	Use;
 	UCHAR	ErrCorrection;
-	DWORD	MaxCapacity;
+	UINT32	MaxCapacity;
 	UINT16	ErrInfoHandle;
 	UINT16	NumOfMDs;
 	UINT64	ExtMaxCapacity;
