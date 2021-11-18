@@ -14,6 +14,47 @@ PrintU8Str(UINT8 *Str, DWORD Len)
 		printf("%c", Str[i]);
 }
 
+static void
+PrintMSDM(struct acpi_table_header* Hdr)
+{
+	struct acpi_msdm* msdm = (struct acpi_msdm*)Hdr;
+	if (Hdr->length < sizeof(struct acpi_msdm))
+		return;
+	printf("  Software Licensing:\n");
+	printf("    Version: 0x%08x\n", msdm->version);
+	printf("    Reserved: 0x%08x\n", msdm->reserved);
+	printf("    Data Type: 0x%08x\n", msdm->data_type);
+	printf("    Data Reserved: 0x%08x\n", msdm->data_reserved);
+	printf("    Data Length: 0x%08x\n", msdm->data_length);
+	printf("    Product Key: ");
+	PrintU8Str(msdm->data, 29);
+	printf("\n");
+}
+
+static void
+PrintMADT(struct acpi_table_header* Hdr)
+{
+	struct acpi_madt* madt = (struct acpi_madt*)Hdr;
+	if (Hdr->length < sizeof(struct acpi_madt))
+		return;
+	printf("  Local APIC Address: %08Xh\n", madt->lapic_addr);
+	printf("  PC-AT-compatible: %s\n", (madt->flags & 0x01) ? "True" : "False");
+	// TODO: print interrupt controller structures
+}
+
+static void
+PrintBGRT(struct acpi_table_header* Hdr)
+{
+	struct acpi_bgrt* bgrt = (struct acpi_bgrt*)Hdr;
+	if (Hdr->length < sizeof(struct acpi_bgrt))
+		return;
+	printf("  BGRT Version: %u\n", bgrt->version);
+	printf("  BGRT Status: %s\n", (bgrt->status & 0x01) ? "Valid" : "Invalid");
+	printf("  Image Type: %s\n", (bgrt->type == 0) ? "BMP" : "Reserved");
+	printf("  Image Address: 0x%llx\n", bgrt->addr);
+	printf("  Image Offset: %u,%u\n", bgrt->x, bgrt->y);
+}
+
 static void PrintTableInfo(struct acpi_table_header* Hdr)
 {
 	PrintU8Str(Hdr->signature, 4);
@@ -28,6 +69,12 @@ static void PrintTableInfo(struct acpi_table_header* Hdr)
 	printf("\n  Creator ID: ");
 	PrintU8Str(Hdr->creator_id, 4);
 	printf("\n  Creator Revision: 0x%x\n", Hdr->creator_rev);
+	if (memcmp(Hdr->signature, "MSDM", 4) == 0)
+		PrintMSDM(Hdr);
+	else if (memcmp(Hdr->signature, "APIC", 4) == 0)
+		PrintMADT(Hdr);
+	else if (memcmp(Hdr->signature, "BGRT", 4) == 0)
+		PrintBGRT(Hdr);
 }
 
 void nwinfo_acpi(void)
@@ -67,20 +114,6 @@ void nwinfo_acpi(void)
 		if (!AcpiHdr)
 			continue;
 		PrintTableInfo(AcpiHdr);
-		if (AcpiList[i] == 'MDSM' && AcpiHdr->length >= sizeof(struct acpi_msdm))
-		{
-			struct acpi_msdm* msdm = (struct acpi_msdm*)AcpiHdr;
-			printf("  Software Licensing:\n");
-			printf("    Version: 0x%08x\n", msdm->version);
-			printf("    Reserved: 0x%08x\n", msdm->reserved);
-			printf("    Data Type: 0x%08x\n", msdm->data_type);
-			printf("    Data Reserved: 0x%08x\n", msdm->data_reserved);
-			printf("    Data Length: 0x%08x\n", msdm->data_length);
-			printf("    Product Key: ");
-			PrintU8Str(msdm->data, 29);
-			printf("\n");
-		}
-
 		free(AcpiHdr);
 	}
 

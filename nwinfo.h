@@ -53,6 +53,40 @@ struct acpi_msdm
 	char data[29];
 };
 
+struct acpi_madt_entry_header
+{
+	uint8_t type;
+	uint8_t len;
+};
+
+struct acpi_madt
+{
+	struct acpi_table_header header;
+	uint32_t lapic_addr;
+	uint32_t flags;
+	struct acpi_madt_entry_header entries[0];
+};
+
+struct acpi_bgrt
+{
+	struct acpi_table_header header;
+	// 2-bytes (16 bit) version ID. This value must be 1.
+	uint16_t version;
+	// 1-byte status field indicating current status about the table.
+	// Bits[7:1] = Reserved (must be zero)
+	// Bit [0] = Valid. A one indicates the boot image graphic is valid.
+	uint8_t status;
+	// 0 = Bitmap
+	// 1 - 255  Reserved (for future use)
+	uint8_t type;
+	// physical address pointing to the firmware's in-memory copy of the image.
+	uint64_t addr;
+	// (X, Y) display offset of the top left corner of the boot image.
+	// The top left corner of the display is at offset (0, 0).
+	uint32_t x;
+	uint32_t y;
+};
+
 struct RawSMBIOSData
 {
 	BYTE Used20CallingMethod;
