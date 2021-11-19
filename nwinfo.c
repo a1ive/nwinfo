@@ -29,8 +29,12 @@ int __cdecl main(int argc, char** argv)
 			else
 				nwinfo_network(0);
 		}
-		else if (_stricmp(argv[i], "--acpi") == 0)
-			nwinfo_acpi();
+		else if (_strnicmp(argv[i], "--acpi", 6) == 0) {
+			DWORD signature = 0;
+			if (argv[i][6] == '=' && strlen(&argv[i][7]) == 4)
+				memcpy(&signature, &argv[i][7], 4);
+			nwinfo_acpi(signature);
+		}
 		else if (_strnicmp(argv[i], "--smbios", 8) == 0) {
 			UINT8 Type = 127;
 			if (argv[i][8] == '=' && argv[i][9])
@@ -57,7 +61,7 @@ int __cdecl main(int argc, char** argv)
 			printf("  --sys          Print system info.\n");
 			printf("  --cpu          Print CPUID info.\n");
 			printf("  --net[=active] Print [active] network info\n");
-			printf("  --acpi         Print ACPI info.\n");
+			printf("  --acpi[=XXXX]  Print ACPI [table=XXXX] info.\n");
 			printf("  --smbios[=XX]  Print SMBIOS [type=XX] info.\n");
 			printf("  --disk         Print disk info.\n");
 			printf("  --display      Print display info.\n");

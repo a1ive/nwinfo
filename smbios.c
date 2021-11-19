@@ -447,7 +447,7 @@ static void DumpSMBIOSStruct(void* Addr, UINT Len, UINT8 Type)
 	}
 }
 
-void nwinfo_smbios(UINT8 Type)
+void nwinfo_smbios(UINT8 type)
 {
 	DWORD smBiosDataSize = 0;
 	struct RawSMBIOSData* smBiosData = NULL;
@@ -467,5 +467,5 @@ void nwinfo_smbios(UINT8 Type)
 	if (smBiosData->DmiRevision)
 		printf("DMI Version: %u\n", smBiosData->DmiRevision);
 	printf("\n");
-	DumpSMBIOSStruct(smBiosData->Data, smBiosData->Length, Type);
+	DumpSMBIOSStruct(smBiosData->Data, smBiosData->Length, type);
 }

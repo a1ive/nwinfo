@@ -18,9 +18,9 @@ const CHAR* GuidToStr(UCHAR Guid[16]);
 
 void nwinfo_sys(void);
 void nwinfo_cpuid(int debug_level);
-void nwinfo_acpi(void);
+void nwinfo_acpi(DWORD signature);
 void nwinfo_network(int active);
-void nwinfo_smbios(UINT8 Type);
+void nwinfo_smbios(UINT8 type);
 void nwinfo_disk(void);
 void nwinfo_display(void);
 void nwinfo_pci(const GUID* Guid, const CHAR *PciClass);
@@ -85,6 +85,105 @@ struct acpi_bgrt
 	// The top left corner of the display is at offset (0, 0).
 	uint32_t x;
 	uint32_t y;
+};
+
+struct acpi_wpbt
+{
+	struct acpi_table_header header;
+	/* The size of the handoff memory buffer
+	 * containing a platform binary.*/
+	uint32_t binary_size;
+	/* The 64-bit physical address of a memory
+	 * buffer containing a platform binary. */
+	uint64_t binary_addr;
+	/* Description of the layout of the handoff memory buffer.
+	 * Possible values include:
+	 * 1 ¨C Image location points to a single
+	 *     Portable Executable (PE) image at
+	 *     offset 0 of the specified memory
+	 *     location. The image is a flat image
+	 *     where sections have not been expanded
+	 *     and relocations have not been applied.
+	 */
+	uint8_t content_layout;
+	/* Description of the content of the binary
+	 * image and the usage model of the
+	 * platform binary. Possible values include:
+	 * 1 ¨C The platform binary is a native usermode application
+	 *     that should be executed by the Windows Session
+	 *     Manager during operating system initialization.
+	 */
+	uint8_t content_type;
+	uint16_t cmdline_length;
+	uint16_t cmdline[0];
+};
+
+struct acpi_gas
+{
+	uint8_t address_space;
+	uint8_t bit_width;
+	uint8_t bit_offset;
+	uint8_t access_size;
+	uint64_t address;
+};
+
+struct acpi_fadt
+{
+	struct acpi_table_header header;
+	uint32_t facs_addr;
+	uint32_t dsdt_addr;
+	uint8_t  reserved; //INT_MODEL
+	uint8_t  preferred_pm_profile;
+	uint16_t sci_int;
+	uint32_t smi_cmd;
+	uint8_t  acpi_enable;
+	uint8_t  acpi_disable;
+	uint8_t  s4bios_req;
+	uint8_t  pstate_cnt;
+	uint32_t pm1a_evt_blk;
+	uint32_t pm1b_evt_blk;
+	uint32_t pm1a_cnt_blk;
+	uint32_t pm1b_cnt_blk;
+	uint32_t pm2_cnt_blk;
+	uint32_t pm_tmr_blk;
+	uint32_t gpe0_blk;
+	uint32_t gpe1_blk;
+	uint8_t  pm1__evt_len;
+	uint8_t  pm1_cnt_len;
+	uint8_t  pm2_cnt_len;
+	uint8_t  pm_tmr_len;
+	uint8_t  gpe0_len;
+	uint8_t  gpe1_len;
+	uint8_t  gpe1_base;
+	uint8_t  cst_cnt;
+	uint16_t p_lvl2_lat;
+	uint16_t p_lvl3_lat;
+	uint16_t flush_size;
+	uint16_t flush_stride;
+	uint8_t  duty_offset;
+	uint8_t  duty_width;
+	uint8_t  day_alarm;
+	uint8_t  month_alarm;
+	uint8_t  century;
+	// reserved in ACPI 1.0; used since ACPI 2.0+
+	uint16_t iapc_boot_arch;
+	uint8_t  reserved2;
+	uint32_t flags;
+	struct acpi_gas reset_reg;
+	uint8_t  reset_value;
+	uint16_t arm_boot_arch;
+	uint8_t  fadt_minor_ver;
+	// 64bit pointers - Available on ACPI 2.0+
+	uint64_t facs_xaddr;
+	uint64_t dsdt_xaddr;
+	struct acpi_gas x_pm1a_evt_blk;
+	struct acpi_gas x_pm1b_evt_blk;
+	struct acpi_gas x_pm1a_cnt_blk;
+	struct acpi_gas x_pm1b_cnt_blk;
+	struct acpi_gas x_pm2_cnt_blk;
+	struct acpi_gas x_pm_tmr_blk;
+	struct acpi_gas x_gpe0_blk;
+	struct acpi_gas x_gpe1_blk;
 };
 
 struct RawSMBIOSData
