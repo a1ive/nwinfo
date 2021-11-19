@@ -16,6 +16,7 @@ static void PrintOsInfo(void)
 	DWORD bufCharCount = INFO_BUFFER_SIZE;
 	SYSTEM_INFO SystemInfo;
 	char* infoBuf = NULL;
+	UINT64 Uptime = 0;
 	infoBuf = malloc(INFO_BUFFER_SIZE);
 	if (!infoBuf)
 		return;
@@ -28,6 +29,14 @@ static void PrintOsInfo(void)
 		printf("System Directory: %s\n", infoBuf);
 	if (GetWindowsDirectoryA(infoBuf, INFO_BUFFER_SIZE))
 		printf("Windows Directory: %s\n", infoBuf);
+	Uptime = GetTickCount64();
+	{
+		UINT64 Days = Uptime / 1000ULL / 3600ULL / 24ULL;
+		UINT64 Hours = Uptime / 1000ULL / 3600ULL - Days * 24ULL;
+		UINT64 Minutes = Uptime / 1000ULL / 60ULL - Days * 24ULL * 60ULL - Hours * 60ULL;
+		UINT64 Seconds = Uptime / 1000ULL - Days * 24ULL * 3600ULL - Hours * 3600ULL - Minutes * 60ULL;
+		printf("UpTime: %llu days, %llu hours, %llu min, %llu sec\n", Days, Hours, Minutes, Seconds);
+	}
 	GetNativeSystemInfo(&SystemInfo);
 	switch (SystemInfo.wProcessorArchitecture)
 	{
