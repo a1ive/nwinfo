@@ -163,6 +163,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\winring0\rdmsr.c" />
+    <ClCompile Include="..\winring0\winring0.c" />
     <ClCompile Include="asm-bits.c" />
     <ClCompile Include="cpuid_main.c" />
     <ClCompile Include="libcpuid_util.c" />

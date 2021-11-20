@@ -24,8 +24,13 @@
 // Version Information
 //
 //-----------------------------------------------------------------------------
-
+#ifdef USE_WINRING0_DRIVER
 #define OLS_DRIVER_ID							"WinRing0_1_2_0"
+#define OLS_DRIVER_NAME							"WinRing0"
+#else
+#define OLS_DRIVER_ID							"HwRwDrv"
+#define OLS_DRIVER_NAME							"HwRwDrv"
+#endif
 
 #define OLS_DRIVER_INSTALL			1
 #define OLS_DRIVER_REMOVE			2

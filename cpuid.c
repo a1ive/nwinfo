@@ -67,12 +67,22 @@ PrintSgx(const struct cpu_raw_data_t* raw, const struct cpu_id_t* data)
 	}
 }
 
+struct cpu_id_t* get_cached_cpuid(void);
+
+static int rdmsr_supported(void)
+{
+	struct cpu_id_t* id = get_cached_cpuid();
+	return id->flags[CPU_FEATURE_MSR];
+}
+
 static void
 PrintMsr(void)
 {
 	int value = CPU_INVALID_VALUE;
 	struct msr_driver_t* handle = NULL;
-
+	if (!rdmsr_supported()) {
+		return;
+	}
 	if ((handle = cpu_msr_driver_open()) == NULL) {
 		return;
 	}
