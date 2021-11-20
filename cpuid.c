@@ -86,7 +86,12 @@ PrintMsr(void)
 	if ((handle = cpu_msr_driver_open()) == NULL) {
 		return;
 	}
-
+#if 0
+	if ((value = cpu_msrinfo(handle, INFO_MPERF)) != CPU_INVALID_VALUE)
+		printf("MSR MPREF: %llu MHz\n", value);
+	if ((value = cpu_msrinfo(handle, INFO_APERF)) != CPU_INVALID_VALUE)
+		printf("MSR APREF: %llu MHz\n", value);
+#endif
 	int min_multi = cpu_msrinfo(handle, INFO_MIN_MULTIPLIER);
 	int max_multi = cpu_msrinfo(handle, INFO_MAX_MULTIPLIER);
 	int cur_multi = cpu_msrinfo(handle, INFO_CUR_MULTIPLIER);

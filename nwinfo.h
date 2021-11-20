@@ -296,8 +296,15 @@ typedef struct _TYPE_4_ {
 
 typedef struct _TYPE_5_ {
 	SMBIOSHEADER Header;
-	// Todo, Here
-
+	UCHAR	ErrDetecting;
+	UCHAR	ErrCorrection;
+	UCHAR	SupportedInterleave;
+	UCHAR	CurrentInterleave;
+	UCHAR	MaxMemModuleSize;
+	UINT16	SupportedSpeeds;
+	UINT16	SupportedMemTypes;
+	UCHAR	MemModuleVoltage;
+	UCHAR	NumOfSlots;
 } MemCtrlInfo, * PMemCtrlInfo;
 
 typedef struct _TYPE_6_ {
@@ -305,7 +312,10 @@ typedef struct _TYPE_6_ {
 	UCHAR	SocketDesignation;
 	UCHAR	BankConnections;
 	UCHAR	CurrentSpeed;
-	// Todo, Here
+	UINT16	CurrentMemType;
+	UCHAR	InstalledSize;
+	UCHAR	EnabledSize;
+	UCHAR	ErrStatus;
 } MemModuleInfo, * PMemModuleInfo;
 
 typedef struct _TYPE_7_ {
