@@ -31,6 +31,23 @@ static void displayAddress(const PSOCKET_ADDRESS Address)
 		printf("NULL\n");
 }
 
+static UINT32 nt5_htonl(UINT32 x)
+{
+	UCHAR* s = (UCHAR*)&x;
+	return (UINT32)(s[0] << 24 | s[1] << 16 | s[2] << 8 | s[3]);
+}
+
+static void
+NT5ConvertLengthToIpv4Mask(ULONG MaskLength, ULONG* Mask)
+{
+	if (MaskLength > 32UL)
+		*Mask = INADDR_NONE;
+	else if (MaskLength == 0)
+		*Mask = 0;
+	else
+		*Mask = nt5_htonl(~0U << (32UL - MaskLength));
+}
+
 static const CHAR*
 IfTypeToStr(IFTYPE Type) {
 	switch (Type) {
@@ -131,7 +148,7 @@ void nwinfo_network (int active)
 				if (pUnicast->Address.lpSockaddr->sa_family == AF_INET) {
 					ULONG SubnetMask = 0;
 					UINT8 bytes[4] = { 0 };
-					ConvertLengthToIpv4Mask(pUnicast->OnLinkPrefixLength, &SubnetMask);
+					NT5ConvertLengthToIpv4Mask(pUnicast->OnLinkPrefixLength, &SubnetMask);
 					bytes[0] = SubnetMask & 0xFF;
 					bytes[1] = (SubnetMask >> 8) & 0xFF;
 					bytes[2] = (SubnetMask >> 16) & 0xFF;

@@ -56,16 +56,11 @@ OsVersionToStr(OSVERSIONINFOEXW* p)
 	if (p->dwMajorVersion == 5 && p->dwMinorVersion == 2) {
 		if (p->wSuiteMask & VER_SUITE_WH_SERVER)
 			return "Home Server";
-		else if (p->wProductType == VER_NT_WORKSTATION)
-			return "XP Professional x64 Edition";
 		else
 			return "Server 2003";
 	}
 	if (p->dwMajorVersion == 5 && p->dwMinorVersion == 1) {
 		return "XP";
-	}
-	if (p->dwMajorVersion == 5 && p->dwMinorVersion == 0) {
-		return "2000";
 	}
 	return "Unknown";
 }
