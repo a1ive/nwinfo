@@ -2,17 +2,11 @@
 
 #include <stdio.h>
 #include <windows.h>
-#include <VersionHelpers.h>
 #include "nwinfo.h"
 
 int __cdecl main(int argc, char** argv)
 {
 	int debug_level = 0;
-	if (!IsWindows7OrGreater())
-	{
-		printf("You need at least Windows 7\n");
-		return 0;
-	}
 	for (int i = 0; i < argc; i++) {
 		if (i == 0 && argc > 1)
 			continue;
