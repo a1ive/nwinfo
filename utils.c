@@ -5,7 +5,6 @@
 #include <string.h>
 #include <windows.h>
 #include <winioctl.h>
-//#include <sysinfoapi.h>
 #include "nwinfo.h"
 
 void ObtainPrivileges(LPCTSTR privilege) {
