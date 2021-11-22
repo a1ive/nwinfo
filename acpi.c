@@ -141,13 +141,13 @@ void nwinfo_acpi(DWORD signature)
 		}
 		return;
 	}
-	AcpiListSize = EnumSystemFirmwareTables('ACPI', NULL, 0);
+	AcpiListSize = NT5EnumSystemFirmwareTables('ACPI', NULL, 0);
 	if (AcpiListSize < 4)
 		return;
 	AcpiList = malloc(AcpiListSize);
 	if (!AcpiList)
 		return;
-	EnumSystemFirmwareTables('ACPI', AcpiList, AcpiListSize);
+	NT5EnumSystemFirmwareTables('ACPI', AcpiList, AcpiListSize);
 	AcpiListSize = AcpiListSize / 4;
 	// remove duplicate elements
 	for (i = 0; i < AcpiListSize; i++)

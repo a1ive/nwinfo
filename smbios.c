@@ -649,7 +649,7 @@ void nwinfo_smbios(UINT8 type)
 	DWORD bytesWritten = 0;
 
 	// Query size of SMBIOS data.
-	smBiosDataSize = GetSystemFirmwareTable('RSMB', 0, NULL, 0);
+	smBiosDataSize = NT5GetSystemFirmwareTable('RSMB', 0, NULL, 0);
 	if (smBiosDataSize == 0)
 		return;
 	// Allocate memory for SMBIOS data
@@ -657,7 +657,7 @@ void nwinfo_smbios(UINT8 type)
 	if (!smBiosData)
 		return;
 	// Retrieve the SMBIOS table
-	GetSystemFirmwareTable('RSMB', 0, smBiosData, smBiosDataSize);
+	NT5GetSystemFirmwareTable('RSMB', 0, smBiosData, smBiosDataSize);
 	printf("SMBIOS Version: %u.%u\n", smBiosData->MajorVersion, smBiosData->MinorVersion);
 	if (smBiosData->DmiRevision)
 		printf("DMI Version: %u\n", smBiosData->DmiRevision);

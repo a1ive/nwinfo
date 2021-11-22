@@ -83,27 +83,6 @@ static void PrintOsVer(void)
 	}
 }
 
-static ULONGLONG
-NT5GetTickCount(void)
-{
-	ULONGLONG(WINAPI * NT6GetTickCount64) (void) = NULL;
-	HMODULE hMod = GetModuleHandleA("kernel32");
-
-	if (hMod)
-		*(FARPROC*)&NT6GetTickCount64 = GetProcAddress(hMod, "GetTickCount64");
-
-	if (NT6GetTickCount64)
-	{
-		//printf("Use GetTickCount64\n");
-		return NT6GetTickCount64();
-	}
-	else
-	{
-		//printf("Use GetTickCount\n");
-		return (ULONGLONG) GetTickCount();
-	}
-}
-
 static void PrintOsInfo(void)
 {
 	DWORD bufCharCount = INFO_BUFFER_SIZE;

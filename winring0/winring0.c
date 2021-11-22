@@ -86,9 +86,11 @@ static BOOL is_running_x64(void)
 	return TRUE;
 #else
 	BOOL bIsWow64 = FALSE;
-
-	LPFN_ISWOW64PROCESS fnIsWow64Process = (LPFN_ISWOW64PROCESS)GetProcAddress(GetModuleHandleA("kernel32"), "IsWow64Process");
-	if (NULL != fnIsWow64Process)
+	HMODULE hMod = GetModuleHandleA("kernel32");
+	LPFN_ISWOW64PROCESS fnIsWow64Process = NULL;
+	if (hMod)
+		fnIsWow64Process = (LPFN_ISWOW64PROCESS)GetProcAddress(hMod, "IsWow64Process");
+	if (fnIsWow64Process)
 		fnIsWow64Process(GetCurrentProcess(), &bIsWow64);
 	return bIsWow64;
 #endif

@@ -6,6 +6,7 @@
 #include <windows.h>
 #include <winioctl.h>
 #include <sysinfoapi.h>
+#include "nwinfo.h"
 
 void ObtainPrivileges(LPCTSTR privilege) {
 	HANDLE hToken;
@@ -68,13 +69,13 @@ PVOID GetAcpi(DWORD TableId)
 {
 	PVOID pFirmwareTableBuffer = NULL;
 	UINT BufferSize = 0;
-	BufferSize = GetSystemFirmwareTable('ACPI', TableId, NULL, 0);
+	BufferSize = NT5GetSystemFirmwareTable('ACPI', TableId, NULL, 0);
 	if (BufferSize == 0)
 		return NULL;
 	pFirmwareTableBuffer = malloc(BufferSize);
 	if (!pFirmwareTableBuffer)
 		return NULL;
-	GetSystemFirmwareTable('ACPI', TableId, pFirmwareTableBuffer, BufferSize);
+	NT5GetSystemFirmwareTable('ACPI', TableId, pFirmwareTableBuffer, BufferSize);
 	return pFirmwareTableBuffer;
 }
 
@@ -260,3 +261,162 @@ GuidToStr(UCHAR Guid[16]) {
 	return GuidStr;
 }
 
+const char*
+nt5_inet_ntop4(const unsigned char* src, char* dst, size_t size)
+{
+	static const char* fmt = "%u.%u.%u.%u";
+	char tmp[sizeof "255.255.255.255"];
+	size_t len;
+
+	len = snprintf(tmp, sizeof tmp, fmt, src[0], src[1], src[2], src[3]);
+	if (len >= size) {
+		errno = ENOSPC;
+		return (NULL);
+	}
+	memcpy(dst, tmp, len + 1);
+
+	return (dst);
+}
+
+#define NS_INT16SZ   2
+#define NS_IN6ADDRSZ  16
+const char*
+nt5_inet_ntop6(const unsigned char* src, char* dst, size_t size)
+{
+	char tmp[sizeof "ffff:ffff:ffff:ffff:ffff:ffff:255.255.255.255"], * tp;
+	struct { int base, len; } best, cur;
+	unsigned int words[NS_IN6ADDRSZ / NS_INT16SZ];
+	int i, inc;
+
+	memset(words, '\0', sizeof words);
+	for (i = 0; i < NS_IN6ADDRSZ; i++)
+		words[i / 2] |= (src[i] << ((1 - (i % 2)) << 3));
+	best.base = -1;
+	cur.base = -1;
+	for (i = 0; i < (NS_IN6ADDRSZ / NS_INT16SZ); i++) {
+		if (words[i] == 0) {
+			if (cur.base == -1)
+				cur.base = i, cur.len = 1;
+			else
+				cur.len++;
+		}
+		else {
+			if (cur.base != -1) {
+				if (best.base == -1 || cur.len > best.len)
+					best = cur;
+				cur.base = -1;
+			}
+		}
+	}
+	if (cur.base != -1) {
+		if (best.base == -1 || cur.len > best.len)
+			best = cur;
+	}
+	if (best.base != -1 && best.len < 2)
+		best.base = -1;
+
+	tp = tmp;
+	for (i = 0; i < (NS_IN6ADDRSZ / NS_INT16SZ); i++) {
+		if (best.base != -1 && i >= best.base &&
+			i < (best.base + best.len)) {
+			if (i == best.base)
+				*tp++ = ':';
+			continue;
+		}
+
+		if (i != 0)
+			*tp++ = ':';
+		if (i == 6 && best.base == 0 &&
+			(best.len == 6 || (best.len == 5 && words[5] == 0xffff))) {
+			if (!nt5_inet_ntop4(src + 12, tp, sizeof tmp - (tp - tmp)))
+				return (NULL);
+			tp += strlen(tp);
+			break;
+		}
+		inc = snprintf(tp, 5, "%x", words[i]);
+		tp += inc;
+	}
+
+	if (best.base != -1 && (best.base + best.len) ==
+		(NS_IN6ADDRSZ / NS_INT16SZ))
+		*tp++ = ':';
+	*tp++ = '\0';
+
+	if ((size_t)(tp - tmp) > size) {
+		errno = ENOSPC;
+		return (NULL);
+	}
+	memcpy(dst, tmp, tp - tmp);
+	return (dst);
+}
+
+static UINT32 nt5_htonl(UINT32 x)
+{
+	UCHAR* s = (UCHAR*)&x;
+	return (UINT32)(s[0] << 24 | s[1] << 16 | s[2] << 8 | s[3]);
+}
+
+void
+NT5ConvertLengthToIpv4Mask(ULONG MaskLength, ULONG* Mask)
+{
+	if (MaskLength > 32UL)
+		*Mask = INADDR_NONE;
+	else if (MaskLength == 0)
+		*Mask = 0;
+	else
+		*Mask = nt5_htonl(~0U << (32UL - MaskLength));
+}
+
+ULONGLONG
+NT5GetTickCount(void)
+{
+	ULONGLONG(WINAPI * NT6GetTickCount64) (void) = NULL;
+	HMODULE hMod = GetModuleHandleA("kernel32");
+
+	if (hMod)
+		*(FARPROC*)&NT6GetTickCount64 = GetProcAddress(hMod, "GetTickCount64");
+
+	if (NT6GetTickCount64)
+	{
+		//printf("Use GetTickCount64\n");
+		return NT6GetTickCount64();
+	}
+	else
+	{
+		//printf("Use GetTickCount\n");
+		return (ULONGLONG)GetTickCount();
+	}
+}
+
+UINT
+NT5EnumSystemFirmwareTables(DWORD FirmwareTableProviderSignature, PVOID pFirmwareTableEnumBuffer, DWORD BufferSize)
+{
+	UINT (WINAPI *NT6EnumSystemFirmwareTables)
+		(DWORD FirmwareTableProviderSignature, PVOID pFirmwareTableEnumBuffer, DWORD BufferSize) = NULL;
+	HMODULE hMod = GetModuleHandleA("kernel32");
+
+	if (hMod)
+		*(FARPROC*)&NT6EnumSystemFirmwareTables = GetProcAddress(hMod, "EnumSystemFirmwareTables");
+
+	if (NT6EnumSystemFirmwareTables)
+		return NT6EnumSystemFirmwareTables(FirmwareTableProviderSignature, pFirmwareTableEnumBuffer, BufferSize);
+	else
+		return 0;
+}
+
+UINT
+NT5GetSystemFirmwareTable(DWORD FirmwareTableProviderSignature, DWORD FirmwareTableID,
+	PVOID pFirmwareTableBuffer, DWORD BufferSize)
+{
+	UINT(WINAPI * NT6GetSystemFirmwareTable)
+		(DWORD FirmwareTableProviderSignature, DWORD FirmwareTableID, PVOID pFirmwareTableBuffer, DWORD BufferSize) = NULL;
+	HMODULE hMod = GetModuleHandleA("kernel32");
+
+	if (hMod)
+		*(FARPROC*)&NT6GetSystemFirmwareTable = GetProcAddress(hMod, "GetSystemFirmwareTable");
+
+	if (NT6GetSystemFirmwareTable)
+		return NT6GetSystemFirmwareTable(FirmwareTableProviderSignature, FirmwareTableID, pFirmwareTableBuffer, BufferSize);
+	else
+		return 0;
+}

@@ -16,6 +16,15 @@ extern DWORD IDS_SIZE;
 void FindId(CONST CHAR* v, CONST CHAR* d, CONST CHAR* s, int usb);
 const CHAR* GuidToStr(UCHAR Guid[16]);
 
+// NT5 compatible
+const char* nt5_inet_ntop4(const unsigned char* src, char* dst, size_t size);
+const char* nt5_inet_ntop6(const unsigned char* src, char* dst, size_t size);
+void NT5ConvertLengthToIpv4Mask(ULONG MaskLength, ULONG* Mask);
+ULONGLONG NT5GetTickCount(void);
+UINT NT5EnumSystemFirmwareTables(DWORD FirmwareTableProviderSignature, PVOID pFirmwareTableEnumBuffer, DWORD BufferSize);
+UINT NT5GetSystemFirmwareTable(DWORD FirmwareTableProviderSignature, DWORD FirmwareTableID,
+	PVOID pFirmwareTableBuffer, DWORD BufferSize);
+
 void nwinfo_sys(void);
 void nwinfo_cpuid(int debug_level);
 void nwinfo_acpi(DWORD signature);
