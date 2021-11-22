@@ -83,6 +83,27 @@ static void PrintOsVer(void)
 	}
 }
 
+static ULONGLONG
+NT5GetTickCount(void)
+{
+	ULONGLONG(WINAPI * NT6GetTickCount64) (void) = NULL;
+	HMODULE hMod = GetModuleHandleA("kernel32");
+
+	if (hMod)
+		*(FARPROC*)&NT6GetTickCount64 = GetProcAddress(hMod, "GetTickCount64");
+
+	if (NT6GetTickCount64)
+	{
+		//printf("Use GetTickCount64\n");
+		return NT6GetTickCount64();
+	}
+	else
+	{
+		//printf("Use GetTickCount\n");
+		return (ULONGLONG) GetTickCount();
+	}
+}
+
 static void PrintOsInfo(void)
 {
 	DWORD bufCharCount = INFO_BUFFER_SIZE;
@@ -101,7 +122,7 @@ static void PrintOsInfo(void)
 		printf("System Directory: %s\n", infoBuf);
 	if (GetWindowsDirectoryA(infoBuf, INFO_BUFFER_SIZE))
 		printf("Windows Directory: %s\n", infoBuf);
-	Uptime = GetTickCount64();
+	Uptime = NT5GetTickCount();
 	{
 		UINT64 Days = Uptime / 1000ULL / 3600ULL / 24ULL;
 		UINT64 Hours = Uptime / 1000ULL / 3600ULL - Days * 24ULL;
