@@ -34,7 +34,7 @@
     <PlatformToolset>v142</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
     <UseOfMfc>Static</UseOfMfc>
-    <DisableAdvancedSupport>false</DisableAdvancedSupport>
+    <DisableAdvancedSupport>true</DisableAdvancedSupport>
     <SupportLTL>true</SupportLTL>
     <CleanImport>true</CleanImport>
     <WindowsTargetPlatformMinVersion>5.1.2600.0</WindowsTargetPlatformMinVersion>
@@ -47,7 +47,7 @@
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
     <UseOfMfc>Static</UseOfMfc>
-    <DisableAdvancedSupport>false</DisableAdvancedSupport>
+    <DisableAdvancedSupport>true</DisableAdvancedSupport>
     <SupportLTL>true</SupportLTL>
     <CleanImport>true</CleanImport>
     <WindowsTargetPlatformMinVersion>5.1.2600.0</WindowsTargetPlatformMinVersion>
@@ -59,7 +59,7 @@
     <PlatformToolset>v142</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
     <UseOfMfc>Static</UseOfMfc>
-    <DisableAdvancedSupport>false</DisableAdvancedSupport>
+    <DisableAdvancedSupport>true</DisableAdvancedSupport>
     <SupportLTL>true</SupportLTL>
     <CleanImport>true</CleanImport>
     <WindowsTargetPlatformMinVersion>5.1.2600.0</WindowsTargetPlatformMinVersion>
@@ -72,7 +72,7 @@
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
     <UseOfMfc>Static</UseOfMfc>
-    <DisableAdvancedSupport>false</DisableAdvancedSupport>
+    <DisableAdvancedSupport>true</DisableAdvancedSupport>
     <SupportLTL>true</SupportLTL>
     <CleanImport>true</CleanImport>
     <WindowsTargetPlatformMinVersion>5.1.2600.0</WindowsTargetPlatformMinVersion>
@@ -208,6 +208,7 @@
   <ImportGroup Label="ExtensionTargets">
     <Import Project="$(VCTargetsPath)\BuildCustomizations\masm.targets" />
     <Import Project="..\packages\YY.NuGet.Import.Helper.1.0.0.4\build\native\YY.NuGet.Import.Helper.targets" Condition="Exists('..\packages\YY.NuGet.Import.Helper.1.0.0.4\build\native\YY.NuGet.Import.Helper.targets')" />
+    <Import Project="..\packages\YY-Thunks.1.0.4\build\native\YY-Thunks.targets" Condition="Exists('..\packages\YY-Thunks.1.0.4\build\native\YY-Thunks.targets')" />
   </ImportGroup>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
@@ -216,5 +217,6 @@
     <Error Condition="!Exists('..\packages\YY.NuGet.Import.Helper.1.0.0.4\build\native\YY.NuGet.Import.Helper.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\YY.NuGet.Import.Helper.1.0.0.4\build\native\YY.NuGet.Import.Helper.props'))" />
     <Error Condition="!Exists('..\packages\YY.NuGet.Import.Helper.1.0.0.4\build\native\YY.NuGet.Import.Helper.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\YY.NuGet.Import.Helper.1.0.0.4\build\native\YY.NuGet.Import.Helper.targets'))" />
     <Error Condition="!Exists('..\packages\VC-LTL.5.0.1\build\native\VC-LTL.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\VC-LTL.5.0.1\build\native\VC-LTL.props'))" />
+    <Error Condition="!Exists('..\packages\YY-Thunks.1.0.4\build\native\YY-Thunks.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\YY-Thunks.1.0.4\build\native\YY-Thunks.targets'))" />
   </Target>
 </Project>

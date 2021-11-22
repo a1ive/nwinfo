@@ -17,14 +17,14 @@ static void displayAddress(const PSOCKET_ADDRESS Address)
 	{
 		SOCKADDR_IN* si = (SOCKADDR_IN*)(Address->lpSockaddr);
 		char a[INET_ADDRSTRLEN] = { 0 };
-		if (nt5_inet_ntop4((const PVOID)&(si->sin_addr), a, sizeof(a)))
+		if (inet_ntop(AF_INET, &(si->sin_addr), a, sizeof(a)))
 			printf("(IPv4) %s\n", a);
 	}
 	else if (Address->lpSockaddr->sa_family == AF_INET6)
 	{
 		SOCKADDR_IN6* si = (SOCKADDR_IN6*)(Address->lpSockaddr);
 		char a[INET6_ADDRSTRLEN] = { 0 };
-		if (nt5_inet_ntop6((const PVOID)&(si->sin6_addr), a, sizeof(a)))
+		if (inet_ntop(AF_INET6, &(si->sin6_addr), a, sizeof(a)))
 			printf("(IPv6) %s\n", a);
 	}
 	else
@@ -106,7 +106,7 @@ void nwinfo_network (int active)
 		if (active && pCurrAddresses->OperStatus != IfOperStatusUp)
 			goto next_addr;
 		printf("Network adapter: %s\n", pCurrAddresses->AdapterName);
-		printf("Description: %wS\n", pCurrAddresses->Description);
+		printf("Description: %s\n", NT5WcsToMbs(pCurrAddresses->Description));
 		printf("Type: %s\n", IfTypeToStr(pCurrAddresses->IfType));
 		if (pCurrAddresses->PhysicalAddressLength != 0) {
 			printf("MAC address: ");
@@ -130,13 +130,9 @@ void nwinfo_network (int active)
 				displayAddress(&pUnicast->Address);
 				if (pUnicast->Address.lpSockaddr->sa_family == AF_INET) {
 					ULONG SubnetMask = 0;
-					UINT8 bytes[4] = { 0 };
 					NT5ConvertLengthToIpv4Mask(pUnicast->OnLinkPrefixLength, &SubnetMask);
-					bytes[0] = SubnetMask & 0xFF;
-					bytes[1] = (SubnetMask >> 8) & 0xFF;
-					bytes[2] = (SubnetMask >> 16) & 0xFF;
-					bytes[3] = (SubnetMask >> 24) & 0xFF;
-					printf("Subnet Mask: %u.%u.%u.%u\n", bytes[0], bytes[1], bytes[2], bytes[3]);
+					printf("Subnet Mask: %u.%u.%u.%u\n",
+						SubnetMask & 0xFF, (SubnetMask >> 8) & 0xFF, (SubnetMask >> 16) & 0xFF, (SubnetMask >> 24) & 0xFF);
 				}
 				pUnicast = pUnicast->Next;
 			}

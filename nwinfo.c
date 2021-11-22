@@ -4,7 +4,7 @@
 #include <windows.h>
 #include "nwinfo.h"
 
-int __cdecl main(int argc, char** argv)
+int main(int argc, char** argv)
 {
 	int debug_level = 0;
 	for (int i = 0; i < argc; i++) {

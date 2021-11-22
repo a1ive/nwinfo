@@ -101,7 +101,7 @@ static void PrintOsInfo(void)
 		printf("System Directory: %s\n", infoBuf);
 	if (GetWindowsDirectoryA(infoBuf, INFO_BUFFER_SIZE))
 		printf("Windows Directory: %s\n", infoBuf);
-	Uptime = NT5GetTickCount();
+	Uptime = GetTickCount64();
 	{
 		UINT64 Days = Uptime / 1000ULL / 3600ULL / 24ULL;
 		UINT64 Hours = Uptime / 1000ULL / 3600ULL - Days * 24ULL;

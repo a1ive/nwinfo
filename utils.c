@@ -261,95 +261,6 @@ GuidToStr(UCHAR Guid[16]) {
 	return GuidStr;
 }
 
-const char*
-nt5_inet_ntop4(const unsigned char* src, char* dst, size_t size)
-{
-	static const char* fmt = "%u.%u.%u.%u";
-	char tmp[sizeof "255.255.255.255"];
-	size_t len;
-
-	len = snprintf(tmp, sizeof tmp, fmt, src[0], src[1], src[2], src[3]);
-	if (len >= size) {
-		errno = ENOSPC;
-		return (NULL);
-	}
-	memcpy(dst, tmp, len + 1);
-
-	return (dst);
-}
-
-#define NS_INT16SZ   2
-#define NS_IN6ADDRSZ  16
-const char*
-nt5_inet_ntop6(const unsigned char* src, char* dst, size_t size)
-{
-	char tmp[sizeof "ffff:ffff:ffff:ffff:ffff:ffff:255.255.255.255"], * tp;
-	struct { int base, len; } best, cur;
-	unsigned int words[NS_IN6ADDRSZ / NS_INT16SZ];
-	int i, inc;
-
-	memset(words, '\0', sizeof words);
-	for (i = 0; i < NS_IN6ADDRSZ; i++)
-		words[i / 2] |= (src[i] << ((1 - (i % 2)) << 3));
-	best.base = -1;
-	cur.base = -1;
-	for (i = 0; i < (NS_IN6ADDRSZ / NS_INT16SZ); i++) {
-		if (words[i] == 0) {
-			if (cur.base == -1)
-				cur.base = i, cur.len = 1;
-			else
-				cur.len++;
-		}
-		else {
-			if (cur.base != -1) {
-				if (best.base == -1 || cur.len > best.len)
-					best = cur;
-				cur.base = -1;
-			}
-		}
-	}
-	if (cur.base != -1) {
-		if (best.base == -1 || cur.len > best.len)
-			best = cur;
-	}
-	if (best.base != -1 && best.len < 2)
-		best.base = -1;
-
-	tp = tmp;
-	for (i = 0; i < (NS_IN6ADDRSZ / NS_INT16SZ); i++) {
-		if (best.base != -1 && i >= best.base &&
-			i < (best.base + best.len)) {
-			if (i == best.base)
-				*tp++ = ':';
-			continue;
-		}
-
-		if (i != 0)
-			*tp++ = ':';
-		if (i == 6 && best.base == 0 &&
-			(best.len == 6 || (best.len == 5 && words[5] == 0xffff))) {
-			if (!nt5_inet_ntop4(src + 12, tp, sizeof tmp - (tp - tmp)))
-				return (NULL);
-			tp += strlen(tp);
-			break;
-		}
-		inc = snprintf(tp, 5, "%x", words[i]);
-		tp += inc;
-	}
-
-	if (best.base != -1 && (best.base + best.len) ==
-		(NS_IN6ADDRSZ / NS_INT16SZ))
-		*tp++ = ':';
-	*tp++ = '\0';
-
-	if ((size_t)(tp - tmp) > size) {
-		errno = ENOSPC;
-		return (NULL);
-	}
-	memcpy(dst, tmp, tp - tmp);
-	return (dst);
-}
-
 static UINT32 nt5_htonl(UINT32 x)
 {
 	UCHAR* s = (UCHAR*)&x;
@@ -365,27 +276,6 @@ NT5ConvertLengthToIpv4Mask(ULONG MaskLength, ULONG* Mask)
 		*Mask = 0;
 	else
 		*Mask = nt5_htonl(~0U << (32UL - MaskLength));
-}
-
-ULONGLONG
-NT5GetTickCount(void)
-{
-	ULONGLONG(WINAPI * NT6GetTickCount64) (void) = NULL;
-	HMODULE hMod = GetModuleHandleA("kernel32");
-
-	if (hMod)
-		*(FARPROC*)&NT6GetTickCount64 = GetProcAddress(hMod, "GetTickCount64");
-
-	if (NT6GetTickCount64)
-	{
-		//printf("Use GetTickCount64\n");
-		return NT6GetTickCount64();
-	}
-	else
-	{
-		//printf("Use GetTickCount\n");
-		return (ULONGLONG)GetTickCount();
-	}
 }
 
 UINT
@@ -419,4 +309,20 @@ NT5GetSystemFirmwareTable(DWORD FirmwareTableProviderSignature, DWORD FirmwareTa
 		return NT6GetSystemFirmwareTable(FirmwareTableProviderSignature, FirmwareTableID, pFirmwareTableBuffer, BufferSize);
 	else
 		return 0;
+}
+
+static CHAR Mbs[256] = { 0 };
+
+const CHAR*
+NT5WcsToMbs(PWCHAR Wcs)
+{
+	size_t i = 0;
+	for (i = 0; i < 255; i++)
+	{
+		if (Wcs[i] == 0 || !isprint(Wcs[i]) || Wcs[i] > 128)
+			break;
+		Mbs[i] = (CHAR)Wcs[i];
+	}
+	Mbs[i] = 0;
+	return Mbs;
 }
