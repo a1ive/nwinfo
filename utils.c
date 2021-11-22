@@ -327,6 +327,7 @@ NT5WcsToMbs(PWCHAR Wcs)
 	return Mbs;
 }
 
+#ifdef NT5_COMPAT
 UINT64
 NT5GetTickCount(void)
 {
@@ -373,3 +374,4 @@ NT5InetNtop(INT af, const void* src, CHAR* dst, size_t size)
 		return inet_ntop4(src, dst, size);
 	return NULL;
 }
+#endif
