@@ -5,7 +5,7 @@
 #include <string.h>
 #include <windows.h>
 #include <winioctl.h>
-#include <sysinfoapi.h>
+//#include <sysinfoapi.h>
 #include "nwinfo.h"
 
 void ObtainPrivileges(LPCTSTR privilege) {
@@ -325,4 +325,51 @@ NT5WcsToMbs(PWCHAR Wcs)
 	}
 	Mbs[i] = 0;
 	return Mbs;
+}
+
+UINT64
+NT5GetTickCount(void)
+{
+	UINT64 (WINAPI * NT6GetTickCount64) (void) = NULL;
+	UINT32(WINAPI * NT6GetTickCount) (void) = NULL;
+	HMODULE hMod = GetModuleHandleA("kernel32");
+
+	if (hMod) {
+		*(FARPROC*)&NT6GetTickCount64 = GetProcAddress(hMod, "GetTickCount64");
+		*(FARPROC*)&NT6GetTickCount = GetProcAddress(hMod, "GetTickCount");
+	}
+
+	if (NT6GetTickCount64)
+		return NT6GetTickCount64();
+	else if (NT6GetTickCount)
+		return (UINT32)NT6GetTickCount();
+	else
+		return 0;
+}
+
+static const CHAR*
+inet_ntop4(const UCHAR* src, CHAR* dst, size_t size)
+{
+	char tmp[] = "255.255.255.255";
+	size_t len = 0;
+	len = snprintf(tmp, sizeof(tmp), "%u.%u.%u.%u", src[0], src[1], src[2], src[3]);
+	if (len >= size) {
+		return NULL;
+	}
+	memcpy(dst, tmp, len + 1);
+	return dst;
+}
+
+const CHAR*
+NT5InetNtop(INT af, const void* src, CHAR* dst, size_t size)
+{
+	const CHAR* (FAR PASCAL *NT6InetNtop) (INT af, const void* src, CHAR * dst, size_t size) = NULL;
+	HINSTANCE hL = LoadLibraryA("ws2_32.dll");
+	if (hL)
+		*(FARPROC*)&NT6InetNtop = GetProcAddress(hL, "inet_ntop");
+	if (NT6InetNtop)
+		return NT6InetNtop(af, src, dst, size);
+	if (af == AF_INET)
+		return inet_ntop4(src, dst, size);
+	return NULL;
 }

@@ -17,15 +17,19 @@ static void displayAddress(const PSOCKET_ADDRESS Address)
 	{
 		SOCKADDR_IN* si = (SOCKADDR_IN*)(Address->lpSockaddr);
 		char a[INET_ADDRSTRLEN] = { 0 };
-		if (inet_ntop(AF_INET, &(si->sin_addr), a, sizeof(a)))
+		if (NT5InetNtop(AF_INET, &(si->sin_addr), a, sizeof(a)))
 			printf("(IPv4) %s\n", a);
+		else
+			printf("(IPv4) NULL\n");
 	}
 	else if (Address->lpSockaddr->sa_family == AF_INET6)
 	{
 		SOCKADDR_IN6* si = (SOCKADDR_IN6*)(Address->lpSockaddr);
 		char a[INET6_ADDRSTRLEN] = { 0 };
-		if (inet_ntop(AF_INET6, &(si->sin6_addr), a, sizeof(a)))
+		if (NT5InetNtop(AF_INET6, &(si->sin6_addr), a, sizeof(a)))
 			printf("(IPv6) %s\n", a);
+		else
+			printf("(IPv6) NULL\n");
 	}
 	else
 		printf("NULL\n");

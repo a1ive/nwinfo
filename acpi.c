@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Unlicense
 
 #include <windows.h>
-#include <sysinfoapi.h>
+//#include <sysinfoapi.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include "nwinfo.h"

@@ -2,7 +2,7 @@
 
 #include <windows.h>
 #include <winbase.h>
-#include <sysinfoapi.h>
+//#include <sysinfoapi.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include "nwinfo.h"
@@ -101,7 +101,7 @@ static void PrintOsInfo(void)
 		printf("System Directory: %s\n", infoBuf);
 	if (GetWindowsDirectoryA(infoBuf, INFO_BUFFER_SIZE))
 		printf("Windows Directory: %s\n", infoBuf);
-	Uptime = GetTickCount64();
+	Uptime = NT5GetTickCount();
 	{
 		UINT64 Days = Uptime / 1000ULL / 3600ULL / 24ULL;
 		UINT64 Hours = Uptime / 1000ULL / 3600ULL - Days * 24ULL;
@@ -128,7 +128,6 @@ static void PrintOsInfo(void)
 
 static void PrintFwInfo(void)
 {
-	FIRMWARE_TYPE FwType = FirmwareTypeUnknown;
 	DWORD VarSize = 0;
 	UINT8 SecureBoot = 0;
 	GetFirmwareEnvironmentVariableA("", "{00000000-0000-0000-0000-000000000000}", NULL, 0);

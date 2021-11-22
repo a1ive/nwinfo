@@ -22,6 +22,8 @@ UINT NT5EnumSystemFirmwareTables(DWORD FirmwareTableProviderSignature, PVOID pFi
 UINT NT5GetSystemFirmwareTable(DWORD FirmwareTableProviderSignature, DWORD FirmwareTableID,
 	PVOID pFirmwareTableBuffer, DWORD BufferSize);
 const CHAR* NT5WcsToMbs(PWCHAR Wcs);
+UINT64 NT5GetTickCount(void);
+const CHAR* NT5InetNtop(INT af, const void* src, CHAR* dst, size_t size);
 
 void nwinfo_sys(void);
 void nwinfo_cpuid(int debug_level);
