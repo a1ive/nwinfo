@@ -26,6 +26,7 @@
     <ClCompile Include="disk.c" />
     <ClCompile Include="display.c" />
     <ClCompile Include="network.c" />
+    <ClCompile Include="nt5phys.c" />
     <ClCompile Include="nwinfo.c" />
     <ClCompile Include="pci.c" />
     <ClCompile Include="smbios.c" />

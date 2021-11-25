@@ -30,6 +30,10 @@ const CHAR* NT5InetNtop(INT af, const void* src, CHAR* dst, size_t size);
 #define NT5InetNtop inet_ntop
 #endif
 
+BOOL InitPhysicalMemory(void);
+void ExitPhysicalMemory(void);
+BOOL ReadPhysicalMemory(PVOID buffer, DWORD address, DWORD length);
+
 void nwinfo_sys(void);
 void nwinfo_cpuid(int debug_level);
 void nwinfo_acpi(DWORD signature);
@@ -198,6 +202,43 @@ struct acpi_fadt
 	struct acpi_gas x_pm_tmr_blk;
 	struct acpi_gas x_gpe0_blk;
 	struct acpi_gas x_gpe1_blk;
+};
+
+struct smbios_ieps
+{
+	uint8_t anchor[5]; /* "_DMI_" */
+	uint8_t checksum;
+	uint16_t table_length;
+	uint32_t table_address;
+	uint16_t structures;
+	uint8_t revision;
+};
+
+struct smbios_eps
+{
+	uint8_t anchor[4]; /* "_SM_" */
+	uint8_t checksum;
+	uint8_t length; /* 0x1f */
+	uint8_t version_major;
+	uint8_t version_minor;
+	uint16_t maximum_structure_size;
+	uint8_t revision;
+	uint8_t formatted[5];
+	struct smbios_ieps intermediate;
+};
+
+struct smbios_eps3
+{
+	uint8_t anchor[5]; /* "_SM3_" */
+	uint8_t checksum;
+	uint8_t length; /* 0x18 */
+	uint8_t version_major;
+	uint8_t version_minor;
+	uint8_t docrev;
+	uint8_t revision;
+	uint8_t reserved;
+	uint32_t maximum_table_length;
+	uint64_t table_address;
 };
 
 struct RawSMBIOSData

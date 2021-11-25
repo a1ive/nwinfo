@@ -277,6 +277,62 @@ NT5ConvertLengthToIpv4Mask(ULONG MaskLength, ULONG* Mask)
 		*Mask = nt5_htonl(~0U << (32UL - MaskLength));
 }
 
+static BOOL
+NT5ReadMem(PVOID buffer, DWORD address, DWORD length)
+{
+	BOOL bRet = FALSE;
+	if (!InitPhysicalMemory())
+		return FALSE;
+	if (ReadPhysicalMemory(buffer, address, length))
+		bRet = TRUE;
+	ExitPhysicalMemory();
+	return bRet;
+}
+
+static UINT
+NT5GetSmbios(struct RawSMBIOSData* buf, DWORD buflen)
+{
+	UCHAR* ptr = NULL;
+	UCHAR* bios = NULL;
+	DWORD smbios_len = 0;
+	bios = malloc(0x10000);
+	if (!bios)
+		return 0;
+	if (!NT5ReadMem(bios, 0xf0000, 0x10000))
+		goto fail;
+	for (ptr = bios; ptr < bios + 0x100000; ptr += 16)
+	{
+		if (memcmp(ptr, "_SM_", 4) == 0 && AcpiChecksum(ptr, sizeof(struct smbios_eps)) == 0)
+		{
+			struct smbios_eps* eps = (struct smbios_eps*)ptr;
+			smbios_len = eps->intermediate.table_length;
+			if (!buf || buflen < smbios_len)
+				goto fail;
+			buf->Length = smbios_len;
+			buf->MajorVersion = eps->version_major;
+			buf->MinorVersion = eps->version_minor;
+			buf->DmiRevision = eps->intermediate.revision;
+			NT5ReadMem(buf->Data, eps->intermediate.table_address, smbios_len);
+			goto fail;
+		}
+		if (memcmp(ptr, "_SM3_", 5) == 0 && AcpiChecksum(ptr, sizeof(struct smbios_eps3)) == 0)
+		{
+			struct smbios_eps3* eps3 = (struct smbios_eps3*)ptr;
+			smbios_len = eps3->maximum_table_length;
+			if (!buf || buflen < smbios_len)
+				goto fail;
+			buf->Length = smbios_len;
+			buf->MajorVersion = eps3->version_major;
+			buf->MinorVersion = eps3->version_minor;
+			NT5ReadMem(buf->Data, (DWORD)eps3->table_address, smbios_len);
+			goto fail;
+		}
+	}
+fail:
+	free(bios);
+	return smbios_len;
+}
+
 UINT
 NT5EnumSystemFirmwareTables(DWORD FirmwareTableProviderSignature, PVOID pFirmwareTableEnumBuffer, DWORD BufferSize)
 {
@@ -306,8 +362,9 @@ NT5GetSystemFirmwareTable(DWORD FirmwareTableProviderSignature, DWORD FirmwareTa
 
 	if (NT6GetSystemFirmwareTable)
 		return NT6GetSystemFirmwareTable(FirmwareTableProviderSignature, FirmwareTableID, pFirmwareTableBuffer, BufferSize);
-	else
-		return 0;
+	if (FirmwareTableProviderSignature == 'RSMB')
+		return NT5GetSmbios(pFirmwareTableBuffer, BufferSize);
+	return 0;
 }
 
 static CHAR Mbs[256] = { 0 };
