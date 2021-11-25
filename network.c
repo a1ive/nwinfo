@@ -13,7 +13,11 @@ static const char* bps_human_sizes[6] =
 
 static void displayAddress(const PSOCKET_ADDRESS Address)
 {
-	if (Address->lpSockaddr->sa_family == AF_INET)
+	if (Address->iSockaddrLength < sizeof(SOCKADDR_IN))
+	{
+		printf("INVALID\n");
+	}
+	else if (Address->lpSockaddr->sa_family == AF_INET)
 	{
 		SOCKADDR_IN* si = (SOCKADDR_IN*)(Address->lpSockaddr);
 		char a[INET_ADDRSTRLEN] = { 0 };

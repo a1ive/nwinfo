@@ -263,11 +263,11 @@ static int GetAllPhysicalDriveInfo(PHY_DRIVE_INFO* pDriveList, DWORD* pDriveCoun
 				(char*)pDevDesc + pDevDesc->SerialNumberOffset);
 			TrimString(CurDrive->SerialNumber);
 		}
-
-		ZeroMemory(Sector, 512 + 512);
+		DWORD dwSize = 512 + 512;
+		ZeroMemory(Sector, dwSize);
 		CurDrive->PartStyle = 0;
 		SetFilePointer(Handle, 0, NULL, FILE_BEGIN);
-		bRet = ReadFile(Handle, Sector, 512 + 512, NULL, NULL);
+		bRet = ReadFile(Handle, Sector, dwSize, &dwSize, NULL);
 		if (!bRet)
 			goto next_drive;
 

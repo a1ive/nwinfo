@@ -107,7 +107,7 @@ void nwinfo_usb(const GUID *Guid)
 		return;
 	}
 	IDS_SIZE = dwSize;
-	bRet = ReadFile(Fp, IDS, dwSize, NULL, NULL);
+	bRet = ReadFile(Fp, IDS, dwSize, &dwSize, NULL);
 	CloseHandle(Fp);
 	if (bRet)
 	{
