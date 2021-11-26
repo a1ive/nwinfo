@@ -38,6 +38,7 @@
   <ItemGroup>
     <ClInclude Include="nwinfo.h" />
     <ClInclude Include="resource.h" />
+    <ClInclude Include="tokyo.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Resource.rc" />
