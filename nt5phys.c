@@ -6,6 +6,7 @@
 #include <windows.h>
 #include "nwinfo.h"
 
+#ifndef _WIN64
 typedef struct _UNICODE_STRING
 {
 	USHORT Length;
@@ -160,3 +161,4 @@ BOOL ReadPhysicalMemory(PVOID buffer, DWORD address, DWORD length)
 		ret = TRUE;
 	return ret;
 }
+#endif

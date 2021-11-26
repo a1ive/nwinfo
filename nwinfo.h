@@ -30,9 +30,11 @@ const CHAR* NT5InetNtop(INT af, const void* src, CHAR* dst, size_t size);
 #define NT5InetNtop inet_ntop
 #endif
 
+#ifndef _WIN64
 BOOL InitPhysicalMemory(void);
 void ExitPhysicalMemory(void);
 BOOL ReadPhysicalMemory(PVOID buffer, DWORD address, DWORD length);
+#endif
 
 void nwinfo_sys(void);
 void nwinfo_cpuid(int debug_level);

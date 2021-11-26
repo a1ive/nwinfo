@@ -42,7 +42,9 @@ static const CHAR* GetBusTypeString(STORAGE_BUS_TYPE Type)
 	case BusTypeVirtual: return "Virtual";
 	case BusTypeFileBackedVirtual: return "FileBackedVirtual";
 	case BusTypeSpaces: return "Spaces";
-	case BusTypeNvme: return "Nvme";
+	case BusTypeNvme: return "NVMe";
+	case BusTypeSCM: return "SCM";
+	case BusTypeUfs: return "UFS";
 	}
 	return "unknown";
 }

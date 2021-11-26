@@ -277,6 +277,7 @@ NT5ConvertLengthToIpv4Mask(ULONG MaskLength, ULONG* Mask)
 		*Mask = nt5_htonl(~0U << (32UL - MaskLength));
 }
 
+#ifndef _WIN64
 static BOOL
 NT5ReadMem(PVOID buffer, DWORD address, DWORD length)
 {
@@ -332,6 +333,7 @@ fail:
 	free(bios);
 	return smbios_len;
 }
+#endif
 
 UINT
 NT5EnumSystemFirmwareTables(DWORD FirmwareTableProviderSignature, PVOID pFirmwareTableEnumBuffer, DWORD BufferSize)
@@ -362,8 +364,10 @@ NT5GetSystemFirmwareTable(DWORD FirmwareTableProviderSignature, DWORD FirmwareTa
 
 	if (NT6GetSystemFirmwareTable)
 		return NT6GetSystemFirmwareTable(FirmwareTableProviderSignature, FirmwareTableID, pFirmwareTableBuffer, BufferSize);
+#ifndef _WIN64
 	if (FirmwareTableProviderSignature == 'RSMB')
 		return NT5GetSmbios(pFirmwareTableBuffer, BufferSize);
+#endif
 	return 0;
 }
 
