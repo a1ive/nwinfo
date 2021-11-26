@@ -9,6 +9,7 @@
 
 #pragma once
 
+#include <stdint.h>
 #include <windows.h>
 
 //-----------------------------------------------------------------------------
@@ -159,3 +160,12 @@ typedef struct  _OLS_WRITE_MEMORY_INPUT {
 }   OLS_WRITE_MEMORY_INPUT;
 
 #pragma pack(pop)
+
+int pci_config_read(struct msr_driver_t* drv,
+	unsigned bus, unsigned dev, unsigned fn, unsigned reg, unsigned len, void* value);
+uint8_t io_inb(struct msr_driver_t* drv, uint16_t port);
+uint16_t io_inw(struct msr_driver_t* drv, uint16_t port);
+uint32_t io_inl(struct msr_driver_t* drv, uint16_t port);
+void io_outb(struct msr_driver_t* drv, uint16_t port, uint8_t value);
+void io_outw(struct msr_driver_t* drv, uint16_t port, uint16_t value);
+void io_outl(struct msr_driver_t* drv, uint16_t port, uint32_t value);

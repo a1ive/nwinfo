@@ -180,6 +180,135 @@ int cpu_rdmsr(struct msr_driver_t* driver, uint32_t msr_index, uint64_t* result)
 	return 0;
 }
 
+int pci_config_read(struct msr_driver_t* drv,
+	unsigned bus, unsigned dev, unsigned fn, unsigned reg, unsigned len, void* value)
+{
+	if (!drv || !drv->hhDriver || drv->hhDriver == INVALID_HANDLE_VALUE)
+		return -1;
+	if (value == NULL)
+		return -1;
+	// alignment check
+	if (len == 2 && (reg & 1) != 0)
+		return -1;
+	if (len == 4 && (reg & 3) != 0)
+		return -1;
+	DWORD pciAddress = 0;
+	DWORD returnedLength = 0;
+	BOOL result = FALSE;
+	OLS_READ_PCI_CONFIG_INPUT inBuf = { 0 };
+
+	inBuf.PciAddress = (1 << 31) | (bus << 16) | (dev << 11) | (fn << 8) | reg;
+	inBuf.PciOffset = reg;
+
+	result = DeviceIoControl(drv->hhDriver, IOCTL_OLS_READ_PCI_CONFIG,
+		&inBuf, sizeof(inBuf), value, len, &returnedLength, NULL);
+
+	if (result)
+		return 0;
+	else
+		return -2;
+}
+
+uint8_t io_inb(struct msr_driver_t* drv, uint16_t port)
+{
+	if (!drv || !drv->hhDriver || drv->hhDriver == INVALID_HANDLE_VALUE)
+		return 0;
+
+	DWORD	returnedLength = 0;
+	BOOL	result = FALSE;
+	WORD	value = 0;
+
+	result = DeviceIoControl(drv->hhDriver, IOCTL_OLS_READ_IO_PORT_BYTE,
+		&port, sizeof(port), &value, sizeof(value), &returnedLength, NULL);
+
+	return (uint8_t)value;
+}
+
+uint16_t io_inw(struct msr_driver_t* drv, uint16_t port)
+{
+	if (!drv || !drv->hhDriver || drv->hhDriver == INVALID_HANDLE_VALUE)
+		return 0;
+
+	DWORD	returnedLength = 0;
+	BOOL	result = FALSE;
+	WORD	value = 0;
+
+	result = DeviceIoControl(drv->hhDriver, IOCTL_OLS_READ_IO_PORT_WORD,
+		&port, sizeof(port), &value, sizeof(value), &returnedLength, NULL);
+
+	return value;
+}
+
+uint32_t io_inl(struct msr_driver_t* drv, uint16_t port)
+{
+	if (!drv || !drv->hhDriver || drv->hhDriver == INVALID_HANDLE_VALUE)
+		return 0;
+
+	DWORD	returnedLength = 0;
+	BOOL	result = FALSE;
+	DWORD	port4 = port;
+	DWORD	value = 0;
+
+	result = DeviceIoControl(drv->hhDriver, IOCTL_OLS_READ_IO_PORT_DWORD,
+		&port4, sizeof(port4), &value, sizeof(value), &returnedLength, NULL);
+
+	return value;
+}
+
+void io_outb(struct msr_driver_t* drv, uint16_t port, uint8_t value)
+{
+	if (!drv || !drv->hhDriver || drv->hhDriver == INVALID_HANDLE_VALUE)
+		return;
+
+	DWORD	returnedLength = 0;
+	BOOL	result = FALSE;
+	DWORD   length = 0;
+	OLS_WRITE_IO_PORT_INPUT inBuf = { 0 };
+
+	inBuf.CharData = value;
+	inBuf.PortNumber = port;
+	length = offsetof(OLS_WRITE_IO_PORT_INPUT, CharData) + sizeof(inBuf.CharData);
+
+	result = DeviceIoControl(drv->hhDriver, IOCTL_OLS_WRITE_IO_PORT_BYTE,
+		&inBuf, length, NULL, 0, &returnedLength, NULL);
+}
+
+void io_outw(struct msr_driver_t* drv, uint16_t port, uint16_t value)
+{
+	if (!drv || !drv->hhDriver || drv->hhDriver == INVALID_HANDLE_VALUE)
+		return;
+
+	DWORD	returnedLength = 0;
+	BOOL	result = FALSE;
+	DWORD   length = 0;
+	OLS_WRITE_IO_PORT_INPUT inBuf = { 0 };
+
+	inBuf.ShortData = value;
+	inBuf.PortNumber = port;
+	length = offsetof(OLS_WRITE_IO_PORT_INPUT, CharData) + sizeof(inBuf.ShortData);
+
+	result = DeviceIoControl(drv->hhDriver, IOCTL_OLS_WRITE_IO_PORT_WORD,
+		&inBuf, length, NULL, 0, &returnedLength, NULL);
+}
+
+void io_outl(struct msr_driver_t* drv, uint16_t port, uint32_t value)
+{
+	if (!drv || !drv->hhDriver || drv->hhDriver == INVALID_HANDLE_VALUE)
+		return;
+
+	DWORD	returnedLength = 0;
+	BOOL	result = FALSE;
+	DWORD   length = 0;
+	OLS_WRITE_IO_PORT_INPUT inBuf = { 0 };
+
+	inBuf.LongData = value;
+	inBuf.PortNumber = port;
+	length = offsetof(OLS_WRITE_IO_PORT_INPUT, CharData) + sizeof(inBuf.LongData);
+
+	result = DeviceIoControl(drv->hhDriver, IOCTL_OLS_WRITE_IO_PORT_DWORD,
+		&inBuf, length, NULL, 0, &returnedLength, NULL);
+}
+
 int cpu_msr_driver_close(struct msr_driver_t* drv)
 {
 	SERVICE_STATUS srvStatus = { 0 };
