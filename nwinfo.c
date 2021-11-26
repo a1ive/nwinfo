@@ -49,6 +49,12 @@ int main(int argc, char** argv)
 		else if (_stricmp(argv[i], "--usb") == 0) {
 			nwinfo_usb(NULL);
 		}
+		else if (_stricmp(argv[i], "--beep") == 0) {
+			int new_argc = argc - i - 1;
+			char** new_argv = argc > 0 ? &argv[i + 1] : NULL;
+			nwinfo_beep(new_argc, new_argv);
+			return 0;
+		}
 		else {
 			printf("Usage: nwinfo OPTIONS\n");
 			printf("OPTIONS:\n");
@@ -61,6 +67,8 @@ int main(int argc, char** argv)
 			printf("  --display      Print display info.\n");
 			printf("  --pci[=XX]     Print PCI [class=XX] info.\n");
 			printf("  --usb          Print USB info.\n");
+			printf("  --beep FREQ TIME [FREQ TIME ...]\n");
+			printf("                 Play a tune.\n");
 		}
 	}
 	return 0;
