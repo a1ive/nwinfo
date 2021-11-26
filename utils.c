@@ -307,7 +307,7 @@ NT5GetSmbios(struct RawSMBIOSData* buf, DWORD buflen)
 		{
 			struct smbios_eps* eps = (struct smbios_eps*)ptr;
 			smbios_len = eps->intermediate.table_length;
-			if (!buf || buflen < smbios_len)
+			if (!buf || buflen < smbios_len + sizeof(struct RawSMBIOSData))
 				goto fail;
 			buf->Length = smbios_len;
 			buf->MajorVersion = eps->version_major;
@@ -320,7 +320,7 @@ NT5GetSmbios(struct RawSMBIOSData* buf, DWORD buflen)
 		{
 			struct smbios_eps3* eps3 = (struct smbios_eps3*)ptr;
 			smbios_len = eps3->maximum_table_length;
-			if (!buf || buflen < smbios_len)
+			if (!buf || buflen < smbios_len + sizeof(struct RawSMBIOSData))
 				goto fail;
 			buf->Length = smbios_len;
 			buf->MajorVersion = eps3->version_major;
@@ -331,7 +331,7 @@ NT5GetSmbios(struct RawSMBIOSData* buf, DWORD buflen)
 	}
 fail:
 	free(bios);
-	return smbios_len;
+	return smbios_len + sizeof(struct RawSMBIOSData);
 }
 #endif
 
