@@ -180,35 +180,6 @@ int cpu_rdmsr(struct msr_driver_t* driver, uint32_t msr_index, uint64_t* result)
 	return 0;
 }
 
-int pci_config_read(struct msr_driver_t* drv,
-	unsigned bus, unsigned dev, unsigned fn, unsigned reg, unsigned len, void* value)
-{
-	if (!drv || !drv->hhDriver || drv->hhDriver == INVALID_HANDLE_VALUE)
-		return -1;
-	if (value == NULL)
-		return -1;
-	// alignment check
-	if (len == 2 && (reg & 1) != 0)
-		return -1;
-	if (len == 4 && (reg & 3) != 0)
-		return -1;
-	DWORD pciAddress = 0;
-	DWORD returnedLength = 0;
-	BOOL result = FALSE;
-	OLS_READ_PCI_CONFIG_INPUT inBuf = { 0 };
-
-	inBuf.PciAddress = (1 << 31) | (bus << 16) | (dev << 11) | (fn << 8) | reg;
-	inBuf.PciOffset = reg;
-
-	result = DeviceIoControl(drv->hhDriver, IOCTL_OLS_READ_PCI_CONFIG,
-		&inBuf, sizeof(inBuf), value, len, &returnedLength, NULL);
-
-	if (result)
-		return 0;
-	else
-		return -2;
-}
-
 uint8_t io_inb(struct msr_driver_t* drv, uint16_t port)
 {
 	if (!drv || !drv->hhDriver || drv->hhDriver == INVALID_HANDLE_VALUE)

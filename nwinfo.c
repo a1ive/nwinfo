@@ -55,6 +55,9 @@ int main(int argc, char** argv)
 			nwinfo_beep(new_argc, new_argv);
 			return 0;
 		}
+		else if (_stricmp(argv[i], "--spd") == 0) {
+			nwinfo_spd();
+		}
 		else {
 			printf("Usage: nwinfo OPTIONS\n");
 			printf("OPTIONS:\n");

@@ -31,6 +31,8 @@
     <ClCompile Include="nwinfo.c" />
     <ClCompile Include="pci.c" />
     <ClCompile Include="smbios.c" />
+    <ClCompile Include="smbus.c" />
+    <ClCompile Include="spd.c" />
     <ClCompile Include="sys.c" />
     <ClCompile Include="usb.c" />
     <ClCompile Include="utils.c" />
@@ -38,6 +40,7 @@
   <ItemGroup>
     <ClInclude Include="nwinfo.h" />
     <ClInclude Include="resource.h" />
+    <ClInclude Include="spd.h" />
     <ClInclude Include="tokyo.h" />
   </ItemGroup>
   <ItemGroup>
