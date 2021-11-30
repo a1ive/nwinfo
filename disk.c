@@ -69,11 +69,15 @@ static CHAR *GetPhysicalDriveHwId(UINT32 Drive)
 
 static CHAR* GetPhysicalDriveHwName(const CHAR* HwId)
 {
-	CHAR *drvRegKey = malloc (2048);
+	CHAR* HwName = NULL;
+	CHAR* drvRegKey = malloc (2048);
 	if (!drvRegKey)
 		return NULL;
 	snprintf(drvRegKey, 2048, "SYSTEM\\CurrentControlSet\\Enum\\%s", HwId);
-	return GetRegSzValue(HKEY_LOCAL_MACHINE, drvRegKey, "FriendlyName");
+	HwName = GetRegSzValue(HKEY_LOCAL_MACHINE, drvRegKey, "FriendlyName");
+	if (!HwName)
+		HwName = GetRegSzValue(HKEY_LOCAL_MACHINE, drvRegKey, "DeviceDesc");
+	return HwName;
 }
 
 static int GetPhyDriveByLogicalDrive(int DriveLetter)
@@ -347,7 +351,7 @@ void nwinfo_disk(void)
 				hwName = GetPhysicalDriveHwName(CurDrive->HwID);
 				if (hwName)
 				{
-					printf("  Friendly Name: %s\n", hwName);
+					printf("  HW Name: %s\n", hwName);
 					free(hwName);
 				}
 				free(CurDrive->HwID);

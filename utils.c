@@ -155,6 +155,11 @@ CHAR* GetRegSzValue(HKEY Key, LPCSTR SubKey, LPCSTR ValueName)
 	if (!sRet)
 		return NULL;
 	lRet = RegQueryValueExA(hKey, ValueName, NULL, &Type, (LPBYTE)sRet, &Size);
+	if (lRet != ERROR_SUCCESS)
+	{
+		free(sRet);
+		return NULL;
+	}
 	RegCloseKey(hKey);
 	return sRet;
 }
