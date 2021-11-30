@@ -7,18 +7,6 @@
 #include "nwinfo.h"
 #include "spd.h"
 
-static void
-PrintSpd(UINT8* rawSpd)
-{
-	UINT i = 0, j = 0;
-	for (i = 0; i < SPD_DATA_LEN; i += 0x10)
-	{
-		for (j = 0; j < 0x10; j++)
-			printf(" %02X", rawSpd[i + j]);
-		printf("\n");
-	}
-}
-
 static int Parity(int value)
 {
 	value ^= value >> 16;
@@ -255,6 +243,23 @@ PrintDDR(UINT8* rawSpd)
 		printf("%02X", rawSpd[95 + i]);
 	printf("\n");
 }
+//#define SPD_RAW
+#ifdef SPD_RAW
+static void
+PrintSpdRaw(UINT8* rawSpd)
+{
+	UINT i = 0, j = 0;
+	UINT Length = SPD_DATA_LEN;
+	if (rawSpd[2] < 12)
+		Length = 256;
+	for (i = 0; i < Length; i += 0x10)
+	{
+		for (j = 0; j < 0x10; j++)
+			printf(" %02X", rawSpd[i + j]);
+		printf("\n");
+	}
+}
+#endif
 
 void
 nwinfo_spd(void)
@@ -264,8 +269,11 @@ nwinfo_spd(void)
 	SpdInit();
 	for (i = 0; i < 8; i++) {
 		rawSpd = SpdGet(i);
-		if (!rawSpd)
+		if (!rawSpd) {
+			printf("Slot %d: EMPTY\n", i);
 			continue;
+		}
+#ifndef SPD_RAW
 		switch (rawSpd[2]) {
 		case 4:
 			printf("Slot %d: SDRAM\n", i);
@@ -287,9 +295,11 @@ nwinfo_spd(void)
 			break;
 		case 9:
 			printf("Slot %d: DDR2 SDRAM FB-DIMM\n", i);
+			PrintDDR2(rawSpd);
 			break;
 		case 10:
 			printf("Slot %d: DDR2 SDRAM FB-DIMM PROBE\n", i);
+			PrintDDR2(rawSpd);
 			break;
 		case 11:
 			printf("Slot %d: DDR3 SDRAM\n", i);
@@ -301,17 +311,23 @@ nwinfo_spd(void)
 			break;
 		case 14:
 			printf("Slot %d: DDR4E SDRAM\n", i);
+			PrintDDR4(rawSpd);
 			break;
 		case 15:
 			printf("Slot %d: LPDDR3 SDRAM\n", i);
+			PrintDDR4(rawSpd);
 			break;
 		case 16:
 			printf("Slot %d: LPDDR4 SDRAM\n", i);
+			PrintDDR4(rawSpd);
 			break;
 		default:
 			printf("Slot %d: UNKNOWN\n", i);
 		}
-		//PrintSpd(rawSpd);
+#else
+		printf("Slot %d:\n", i);
+		PrintSpdRaw(rawSpd);
+#endif
 	}
 	SpdFini();
 }

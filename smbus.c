@@ -219,6 +219,7 @@ static void piix4_get_smb(void)
 unsigned char ich5_smb_read_byte(unsigned char adr, unsigned char cmd)
 {
 	uint64_t t1 = 0, t2 = 0;
+	//io_outb(driver, SMBHSTSTS, 0xfe);
 	io_outb(driver, SMBHSTSTS, 0x1f);
 	//io_outb(driver, SMBHSTDAT, 0xff);
 	while (io_inb(driver, SMBHSTSTS) & 0x01);
@@ -228,8 +229,7 @@ unsigned char ich5_smb_read_byte(unsigned char adr, unsigned char cmd)
 	t1 = NT5GetTickCount();
 	while (!(io_inb(driver, SMBHSTSTS) & 0x02)) {
 		t2 = NT5GetTickCount();
-		// break after 10ms
-		if (t2 - t1 > 10)
+		if (t2 - t1 > 200)
 			break;
 	}
 	return io_inb(driver, SMBHSTDAT);
@@ -239,13 +239,13 @@ static int read_spd(int dimmadr)
 {
 	unsigned short x;
 	spd_raw[0] = ich5_smb_read_byte(0x50 + dimmadr, 0);
-	if (spd_raw[0] == 0xff|| spd_raw[0] == 0x00)
+	if (spd_raw[0] == 0xff || spd_raw[0] == 0x00)
 		return -1;
 	ZeroMemory(spd_raw, SPD_DATA_LEN);
 	for (x = 0; x < 256; x++) {
 		spd_raw[x] = ich5_smb_read_byte(0x50 + dimmadr, (unsigned char)x);
 	}
-	if (spd_raw[2] != 12) // DDR4
+	if (spd_raw[2] < 12) // DDR4
 		return 0;
 	// switch page
 	io_outb(driver, SMBHSTSTS, 0xfe);
