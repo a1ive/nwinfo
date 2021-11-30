@@ -11,6 +11,7 @@ PVOID GetAcpi(DWORD TableId);
 UINT8 AcpiChecksum(void* base, UINT size);
 void TrimString(CHAR* String);
 int GetRegDwordValue(HKEY Key, LPCSTR SubKey, LPCSTR ValueName, DWORD* pValue);
+CHAR* GetRegSzValue(HKEY Key, LPCSTR SubKey, LPCSTR ValueName);
 extern CHAR* IDS;
 extern DWORD IDS_SIZE;
 void FindId(CONST CHAR* v, CONST CHAR* d, CONST CHAR* s, int usb);
@@ -536,6 +537,7 @@ typedef struct PHY_DRIVE_INFO
 	UINT64 SizeInBytes;
 	BYTE DeviceType;
 	BOOL RemovableMedia;
+	CHAR* HwID;
 	CHAR VendorId[128];
 	CHAR ProductId[128];
 	CHAR ProductRev[128];

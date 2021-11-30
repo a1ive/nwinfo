@@ -60,6 +60,22 @@ static UINT32 GetPhysicalDriveCount(void)
 	return Count;
 }
 
+static CHAR *GetPhysicalDriveHwId(UINT32 Drive)
+{
+	CHAR drvRegKey[] = "4294967295";
+	snprintf(drvRegKey, sizeof(drvRegKey), "%u", Drive);
+	return GetRegSzValue(HKEY_LOCAL_MACHINE, "SYSTEM\\CurrentControlSet\\Services\\disk\\Enum", drvRegKey);
+}
+
+static CHAR* GetPhysicalDriveHwName(const CHAR* HwId)
+{
+	CHAR *drvRegKey = malloc (2048);
+	if (!drvRegKey)
+		return NULL;
+	snprintf(drvRegKey, 2048, "SYSTEM\\CurrentControlSet\\Enum\\%s", HwId);
+	return GetRegSzValue(HKEY_LOCAL_MACHINE, drvRegKey, "FriendlyName");
+}
+
 static int GetPhyDriveByLogicalDrive(int DriveLetter)
 {
 	BOOL Ret;
@@ -237,6 +253,7 @@ static int GetAllPhysicalDriveInfo(PHY_DRIVE_INFO* pDriveList, DWORD* pDriveCoun
 		CurDrive->DeviceType = pDevDesc->DeviceType;
 		CurDrive->RemovableMedia = pDevDesc->RemovableMedia;
 		CurDrive->BusType = pDevDesc->BusType;
+		CurDrive->HwID = GetPhysicalDriveHwId(i);
 
 		if (pDevDesc->VendorIdOffset)
 		{
@@ -323,6 +340,18 @@ void nwinfo_disk(void)
 		for (i = 0, CurDrive = PhyDriveList; i < PhyDriveCount; i++, CurDrive++)
 		{
 			printf("\\\\.\\PhysicalDrive%d\n", CurDrive->PhyDrive);
+			if (CurDrive->HwID)
+			{
+				CHAR* hwName = NULL;
+				printf("  HWID: %s\n", CurDrive->HwID);
+				hwName = GetPhysicalDriveHwName(CurDrive->HwID);
+				if (hwName)
+				{
+					printf("  Friendly Name: %s\n", hwName);
+					free(hwName);
+				}
+				free(CurDrive->HwID);
+			}
 			if (CurDrive->VendorId[0])
 				printf("  Vendor ID: %s\n", CurDrive->VendorId);
 			if (CurDrive->ProductId[0])

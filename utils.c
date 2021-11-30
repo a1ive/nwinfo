@@ -141,6 +141,24 @@ int GetRegDwordValue(HKEY Key, LPCSTR SubKey, LPCSTR ValueName, DWORD* pValue)
 	}
 }
 
+CHAR* GetRegSzValue(HKEY Key, LPCSTR SubKey, LPCSTR ValueName)
+{
+	HKEY hKey;
+	DWORD Type;
+	DWORD Size = 1024;
+	LSTATUS lRet;
+	CHAR* sRet = NULL;
+	lRet = RegOpenKeyExA(Key, SubKey, 0, KEY_QUERY_VALUE, &hKey);
+	if (lRet != ERROR_SUCCESS)
+		return NULL;
+	sRet = malloc(Size);
+	if (!sRet)
+		return NULL;
+	lRet = RegQueryValueExA(hKey, ValueName, NULL, &Type, (LPBYTE)sRet, &Size);
+	RegCloseKey(hKey);
+	return sRet;
+}
+
 CHAR* IDS = NULL;
 DWORD IDS_SIZE = 0;
 
