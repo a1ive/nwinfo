@@ -112,8 +112,8 @@ DDR34Manufacturer(UINT8 Lsb, UINT8 Msb)
 	if (Msb == 0x00 || Msb == 0xFF)
 		return "Unknown";
 
-	if (Parity(Lsb) != 1 || Parity(Msb) != 1)
-		return "Invalid";
+	//if (Parity(Lsb) != 1 || Parity(Msb) != 1)
+	//	return "Invalid";
 
 	Bank = Lsb & 0x7f;
 	Index = Msb & 0x7f;
@@ -148,8 +148,8 @@ DDRManufacturer(unsigned char* Raw)
 	if (i < 1)
 		return "Invalid";
 
-	if (Parity(First) != 1)
-		return "Invalid";
+	//if (Parity(First) != 1)
+	//	return "Invalid";
 
 	return JEDEC_MFG_STR(i - 1, (First & 0x7FU) - 1);
 }
