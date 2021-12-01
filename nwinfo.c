@@ -18,10 +18,10 @@ int main(int argc, char** argv)
 		else if (_stricmp(argv[i], "--cpu") == 0)
 			nwinfo_cpuid(debug_level);
 		else if (_strnicmp(argv[i], "--net", 5) == 0) {
+			int active = 0;
 			if (_stricmp(&argv[i][5], "=active") == 0)
-				nwinfo_network(1);
-			else
-				nwinfo_network(0);
+				active = 1;
+			nwinfo_network(active);
 		}
 		else if (_strnicmp(argv[i], "--acpi", 6) == 0) {
 			DWORD signature = 0;
@@ -55,8 +55,11 @@ int main(int argc, char** argv)
 			nwinfo_beep(new_argc, new_argv);
 			return 0;
 		}
-		else if (_stricmp(argv[i], "--spd") == 0) {
-			nwinfo_spd();
+		else if (_strnicmp(argv[i], "--spd", 5) == 0) {
+			int raw = 0;
+			if (_stricmp(&argv[i][5], "=raw") == 0)
+				raw = 1;
+			nwinfo_spd(raw);
 		}
 		else {
 			printf("Usage: nwinfo OPTIONS\n");
@@ -72,6 +75,7 @@ int main(int argc, char** argv)
 			printf("  --usb          Print USB info.\n");
 			printf("  --beep FREQ TIME [FREQ TIME ...]\n");
 			printf("                 Play a tune.\n");
+			printf("  --spd[=raw]    Print [raw] SPD info\n");
 		}
 	}
 	return 0;

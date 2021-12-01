@@ -47,7 +47,7 @@ void nwinfo_display(void);
 void nwinfo_pci(const GUID* Guid, const CHAR *PciClass);
 void nwinfo_usb(const GUID* Guid);
 void nwinfo_beep(int argc, char *argv[]);
-void nwinfo_spd(void);
+void nwinfo_spd(int raw);
 
 #pragma pack(1)
 

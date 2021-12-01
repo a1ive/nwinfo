@@ -207,7 +207,7 @@ PrintDDR3(UINT8* rawSpd)
 	printf("  Capacity: %llu MB\n", DDR3Capacity(rawSpd));
 	printf("  Supported Voltages:%s%s%s\n", (rawSpd[6] & 0x04U) ? " 1.25V" : "",
 		(rawSpd[6] & 0x02U) ? " 1.35V" : "", (rawSpd[6] & 0x01U) ? "" : " 1.5V");
-	printf("  Manufacturer: %s\n", DDR34Manufacturer(rawSpd[94], rawSpd[95]));
+	printf("  Manufacturer: %s\n", DDR34Manufacturer(rawSpd[117], rawSpd[118]));
 	printf("  Date: %s\n", DDR234Date(rawSpd[120], rawSpd[121]));
 	printf("  Serial: ");
 	for (i = 0; i < 4; i++)
@@ -243,8 +243,7 @@ PrintDDR(UINT8* rawSpd)
 		printf("%02X", rawSpd[95 + i]);
 	printf("\n");
 }
-//#define SPD_RAW
-#ifdef SPD_RAW
+
 static void
 PrintSpdRaw(UINT8* rawSpd)
 {
@@ -259,10 +258,9 @@ PrintSpdRaw(UINT8* rawSpd)
 		printf("\n");
 	}
 }
-#endif
 
 void
-nwinfo_spd(void)
+nwinfo_spd(int raw)
 {
 	int i = 0;
 	UINT8* rawSpd = NULL;
@@ -273,7 +271,11 @@ nwinfo_spd(void)
 			printf("Slot %d: EMPTY\n", i);
 			continue;
 		}
-#ifndef SPD_RAW
+		if (raw) {
+			printf("Slot %d:\n", i);
+			PrintSpdRaw(rawSpd);
+			continue;
+		}
 		switch (rawSpd[2]) {
 		case 4:
 			printf("Slot %d: SDRAM\n", i);
@@ -324,10 +326,6 @@ nwinfo_spd(void)
 		default:
 			printf("Slot %d: UNKNOWN\n", i);
 		}
-#else
-		printf("Slot %d:\n", i);
-		PrintSpdRaw(rawSpd);
-#endif
 	}
 	SpdFini();
 }

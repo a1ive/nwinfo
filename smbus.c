@@ -98,7 +98,8 @@ pci_conf_read(unsigned bus, unsigned dev, unsigned fn, unsigned reg, unsigned le
 	return result;
 }
 
-static int pci_sanity_check(void)
+static int
+pci_sanity_check(void)
 {
 	unsigned long value;
 	int result;
@@ -111,7 +112,8 @@ static int pci_sanity_check(void)
 	return result;
 }
 
-static int pci_check_direct(void)
+static int
+pci_check_direct(void)
 {
 	unsigned char tmpCFB;
 	unsigned int tmpCF8;
@@ -165,7 +167,7 @@ static void ich5_get_smb(void)
 		smbusbase = (unsigned short)x & 0xFFFE;
 }
 
-void sb800_get_smb(void)
+static void sb800_get_smb(void)
 {
 	int lbyte, hbyte, result;
 	unsigned long x;
@@ -216,50 +218,63 @@ static void piix4_get_smb(void)
 	}
 }
 
-unsigned char ich5_smb_read_byte(unsigned char adr, unsigned char cmd)
+static int ich5_smb_check(unsigned char adr)
 {
-	uint64_t t1 = 0, t2 = 0;
-	//io_outb(driver, SMBHSTSTS, 0xfe);
-	io_outb(driver, SMBHSTSTS, 0x1f);
-	//io_outb(driver, SMBHSTDAT, 0xff);
-	while (io_inb(driver, SMBHSTSTS) & 0x01);
-	io_outb(driver, SMBHSTCMD, cmd);
+	io_outb(driver, SMBHSTSTS, 0xff);
+	while ((io_inb(driver, SMBHSTSTS) & 0x40) != 0x40);
 	io_outb(driver, SMBHSTADD, (adr << 1) | 0x01);
+	io_outb(driver, SMBHSTCMD, 0x00);
 	io_outb(driver, SMBHSTCNT, 0x48);
-	t1 = NT5GetTickCount();
-	while (!(io_inb(driver, SMBHSTSTS) & 0x02)) {
-		t2 = NT5GetTickCount();
-		if (t2 - t1 > 200)
-			break;
-	}
+	while (((io_inb(driver, SMBHSTSTS) & 0x44) != 0x44)
+		&& ((io_inb(driver, SMBHSTSTS) & 0x42) != 0x42));
+	if ((io_inb(driver, SMBHSTSTS) & 0x44) == 0x44)
+		return -1;
+	if ((io_inb(driver, SMBHSTSTS) & 0x42) == 0x42)
+		return 0;
+	return -1;
+}
+
+static unsigned char ich5_smb_read_byte(unsigned char adr, unsigned char cmd)
+{
+	io_outb(driver, SMBHSTSTS, 0xff);
+	while ((io_inb(driver, SMBHSTSTS) & 0x40) != 0x40);
+	io_outb(driver, SMBHSTADD, (adr << 1) | 0x01);
+	io_outb(driver, SMBHSTCMD, cmd);
+	io_outb(driver, SMBHSTCNT, 0x48);
+	while ((io_inb(driver, SMBHSTSTS) & 0x42) != 0x42);
 	return io_inb(driver, SMBHSTDAT);
+}
+
+static void ich5_smb_switch_page(unsigned page)
+{
+	uint8_t value = 0x6c;
+	if (page)
+		value = 0x6e;
+	io_outb(driver, SMBHSTSTS, 0xfe);
+	io_outb(driver, SMBHSTADD, value);
+	io_outb(driver, SMBHSTCNT, 0x48);
+	while (((io_inb(driver, SMBHSTSTS) & 0x44) != 0x44)
+		&& ((io_inb(driver, SMBHSTSTS) & 0x42) != 0x42));
 }
 
 static int read_spd(int dimmadr)
 {
 	unsigned short x;
-	spd_raw[0] = ich5_smb_read_byte(0x50 + dimmadr, 0);
-	if (spd_raw[0] == 0xff || spd_raw[0] == 0x00)
+	if (ich5_smb_check(0x50 + dimmadr))
 		return -1;
 	ZeroMemory(spd_raw, SPD_DATA_LEN);
+	// switch page 0
+	ich5_smb_switch_page(0);
 	for (x = 0; x < 256; x++) {
 		spd_raw[x] = ich5_smb_read_byte(0x50 + dimmadr, (unsigned char)x);
 	}
 	if (spd_raw[2] < 12) // DDR4
 		return 0;
-	// switch page
-	io_outb(driver, SMBHSTSTS, 0xfe);
-	while (io_inb(driver, SMBHSTSTS) & 0x01);
-	io_outb(driver, SMBHSTADD, 0x6e);
-	io_outb(driver, SMBHSTCNT, 0x48);
-	//while (!(io_inb(driver, SMBHSTSTS) & 0x02));
+	// switch page 1
+	ich5_smb_switch_page(1);
 	for (x = 0; x < 256; x++) {
 		spd_raw[x+256] = ich5_smb_read_byte(0x50 + dimmadr, (unsigned char)x);
 	}
-	// switch page
-	io_outb(driver, SMBHSTSTS, 0xfe);
-	io_outb(driver, SMBHSTADD, 0x6c);
-	io_outb(driver, SMBHSTCNT, 0x48);
 	return 0;
 }
 
