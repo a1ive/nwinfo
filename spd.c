@@ -7,6 +7,7 @@
 #include "nwinfo.h"
 #include "spd.h"
 
+#if 0
 static int Parity(int value)
 {
 	value ^= value >> 16;
@@ -15,6 +16,7 @@ static int Parity(int value)
 	value &= 0xf;
 	return (0x6996 >> value) & 1;
 }
+#endif
 
 static const CHAR*
 DDR34ModuleType(UINT8 Type)
@@ -111,10 +113,10 @@ DDR34Manufacturer(UINT8 Lsb, UINT8 Msb)
 	UINT Bank = 0, Index = 0;
 	if (Msb == 0x00 || Msb == 0xFF)
 		return "Unknown";
-
-	//if (Parity(Lsb) != 1 || Parity(Msb) != 1)
-	//	return "Invalid";
-
+#if 0
+	if (Parity(Lsb) != 1 || Parity(Msb) != 1)
+		return "Invalid";
+#endif
 	Bank = Lsb & 0x7f;
 	Index = Msb & 0x7f;
 	if (Bank >= VENDORS_BANKS)
@@ -147,10 +149,10 @@ DDRManufacturer(unsigned char* Raw)
 
 	if (i < 1)
 		return "Invalid";
-
-	//if (Parity(First) != 1)
-	//	return "Invalid";
-
+#if 0
+	if (Parity(First) != 1)
+		return "Invalid";
+#endif
 	return JEDEC_MFG_STR(i - 1, (First & 0x7FU) - 1);
 }
 
@@ -196,6 +198,10 @@ PrintDDR4(UINT8* rawSpd)
 	for (i = 0; i < 4; i++)
 		printf("%02X", rawSpd[325 + i]);
 	printf("\n");
+	printf("  Part: ");
+	for (i = 0; i < 20; i++)
+		printf("%c", rawSpd[329 + i]);
+	printf("\n");
 }
 
 static void
@@ -213,6 +219,10 @@ PrintDDR3(UINT8* rawSpd)
 	for (i = 0; i < 4; i++)
 		printf("%02X", rawSpd[122 + i]);
 	printf("\n");
+	printf("  Part: ");
+	for (i = 0; i < 18; i++)
+		printf("%c", rawSpd[128 + i]);
+	printf("\n");
 }
 
 static void
@@ -228,6 +238,10 @@ PrintDDR2(UINT8* rawSpd)
 	for (i = 0; i < 4; i++)
 		printf("%02X", rawSpd[95 + i]);
 	printf("\n");
+	printf("  Part: ");
+	for (i = 0; i < 18; i++)
+		printf("%c", rawSpd[73 + i]);
+	printf("\n");
 }
 
 static void
@@ -241,6 +255,10 @@ PrintDDR(UINT8* rawSpd)
 	printf("  Serial: ");
 	for (i = 0; i < 4; i++)
 		printf("%02X", rawSpd[95 + i]);
+	printf("\n");
+	printf("  Part: ");
+	for (i = 0; i < 18; i++)
+		printf("%c", rawSpd[73 + i]);
 	printf("\n");
 }
 
