@@ -55,7 +55,10 @@ DDR2ModuleType(UINT8 Type)
 	return "UNKNOWN";
 }
 
-static UINT64
+static const char* mem_human_sizes[6] =
+{ "MB", "GB", "TB", "PB", "EB", "ZB", };
+
+static const CHAR*
 DDR4Capacity(UINT8* rawSpd)
 {
 	UINT64 Size = 0;
@@ -69,10 +72,10 @@ DDR4Capacity(UINT8* rawSpd)
 		RanksPerDimm *= ((rawSpd[6] >> 4U) & 0x07U) + 1;
 
 	Size = SdrCapacity / 8 * BusWidth / SdrWidth * RanksPerDimm;
-	return Size;
+	return GetHumanSize(Size, mem_human_sizes, 1024);
 }
 
-static UINT64
+static const CHAR*
 DDR3Capacity(UINT8* rawSpd)
 {
 	UINT64 Size = 0;
@@ -81,10 +84,10 @@ DDR3Capacity(UINT8* rawSpd)
 	UINT32 busWidth = 8U << (rawSpd[8] & 0x07U);
 	UINT32 Ranks = 1 + ((rawSpd[7] >> 3) & 0x07U);
 	Size = sdrCapacity / 8 * busWidth / sdrWidth * Ranks;
-	return Size;
+	return GetHumanSize(Size, mem_human_sizes, 1024);
 }
 
-UINT64
+static const CHAR*
 DDR2Capacity(UINT8* rawSpd)
 {
 	UINT64 Size = 0;
@@ -93,10 +96,11 @@ DDR2Capacity(UINT8* rawSpd)
 	k = ((rawSpd[5] & 0x07U) + 1) * rawSpd[17];
 	if (i > 0 && i <= 12 && k > 0)
 		Size = (1ULL << i) * k;
-	return Size;
+	return GetHumanSize(Size, mem_human_sizes, 1024);
 }
 
-UINT64 DDRCapacity(UINT8* rawSpd)
+static const CHAR*
+DDRCapacity(UINT8* rawSpd)
 {
 	UINT64 Size = 0;
 	INT i, k;
@@ -104,7 +108,7 @@ UINT64 DDRCapacity(UINT8* rawSpd)
 	k = (rawSpd[5] <= 8 && rawSpd[17] <= 8) ? rawSpd[5] * rawSpd[17] : 0;
 	if (i > 0 && i <= 12 && k > 0)
 		Size = (1ULL << i) * k;
-	return Size;
+	return GetHumanSize(Size, mem_human_sizes, 1024);
 }
 
 static const CHAR*
@@ -134,7 +138,7 @@ static INT SpdWritten(UINT8* Raw, int Length)
 }
 
 static const CHAR*
-DDRManufacturer(unsigned char* Raw)
+DDRManufacturer(UINT8* Raw)
 {
 	UINT8 First = 0;
 	UINT i = 0;
@@ -184,13 +188,51 @@ DDRDate(UINT8 rawYear, UINT8 rawWeek) {
 	return Date;
 }
 
+static UINT32
+DDR4Speed(UINT8* rawSpd)
+{
+	switch (rawSpd[18]) {
+	case 0x05: return 3200;
+	case 0x06: return 2666;
+	case 0x07: return 2400;
+	case 0x08: return 2133;
+	case 0x09: return 1866;
+	case 0x0A: return 1600;
+	}
+	return 0;
+}
+
+static UINT32
+DDR3Speed(UINT8* rawSpd)
+{
+	switch (rawSpd[12]) {
+	case 0x05: return 2666;
+	case 0x06: return 2533;
+	case 0x07: return 2400;
+	case 0x08: return 2133;
+	case 0x09: return 1866;
+	case 0x0A: return 1600;
+	case 0x0C: return 1333;
+	case 0x0F: return 1066;
+	case 0x14: return 800;
+	}
+	return 0;
+}
+
+static UINT32
+DDRSpeed(UINT8* rawSpd)
+{
+	return 2 * 10000 / ((rawSpd[9] >> 4) * 10 + (rawSpd[9] & 0x0F));
+}
+
 static void
 PrintDDR4(UINT8* rawSpd)
 {
 	UINT i = 0;
 	printf("  Revision: %u.%u\n", rawSpd[1] >> 4, rawSpd[1] & 0x0FU);
 	printf("  Module Type: %s%s\n", DDR34ModuleType(rawSpd[3]), (rawSpd[13] & 0x08U) ? " (ECC)" : "");
-	printf("  Capacity: %llu MB\n", DDR4Capacity(rawSpd));
+	printf("  Capacity: %s\n", DDR4Capacity(rawSpd));
+	printf("  Speed: %u MHz\n", DDR4Speed(rawSpd));
 	printf("  Voltage: %s\n", (rawSpd[11] & 0x01U) ? "1.2 V" : "(Unknown)");
 	printf("  Manufacturer: %s\n", DDR34Manufacturer(rawSpd[320], rawSpd[321]));
 	printf("  Date: %s\n", DDR234Date(rawSpd[323], rawSpd[324]));
@@ -210,7 +252,8 @@ PrintDDR3(UINT8* rawSpd)
 	UINT i = 0;
 	printf("  Revision: %u.%u\n", rawSpd[1] >> 4, rawSpd[1] & 0x0FU);
 	printf("  Module Type: %s%s\n", DDR34ModuleType(rawSpd[3]), (rawSpd[8] >> 3 == 1) ? " (ECC)" : "");
-	printf("  Capacity: %llu MB\n", DDR3Capacity(rawSpd));
+	printf("  Capacity: %s\n", DDR3Capacity(rawSpd));
+	printf("  Speed: %u MHz\n", DDR3Speed(rawSpd));
 	printf("  Supported Voltages:%s%s%s\n", (rawSpd[6] & 0x04U) ? " 1.25V" : "",
 		(rawSpd[6] & 0x02U) ? " 1.35V" : "", (rawSpd[6] & 0x01U) ? "" : " 1.5V");
 	printf("  Manufacturer: %s\n", DDR34Manufacturer(rawSpd[117], rawSpd[118]));
@@ -231,7 +274,8 @@ PrintDDR2(UINT8* rawSpd)
 	UINT i = 0;
 	printf("  Revision: %u.%u\n", rawSpd[1] >> 4, rawSpd[1] & 0x0FU);
 	printf("  Module Type: %s%s\n", DDR2ModuleType(rawSpd[3]), (rawSpd[11] >> 1 == 1) ? " (ECC)" : "");
-	printf("  Capacity: %llu MB\n", DDR2Capacity(rawSpd));
+	printf("  Capacity: %s\n", DDR2Capacity(rawSpd));
+	printf("  Speed: %u MHz\n", DDRSpeed(rawSpd));
 	printf("  Manufacturer: %s\n", DDRManufacturer(rawSpd + 64));
 	printf("  Date: %s\n", DDR234Date(rawSpd[93], rawSpd[94]));
 	printf("  Serial: ");
@@ -249,7 +293,8 @@ PrintDDR(UINT8* rawSpd)
 {
 	UINT i = 0;
 	printf("  Revision: %u.%u\n", rawSpd[1] >> 4, rawSpd[1] & 0x0FU);
-	printf("  Capacity: %llu MB\n", DDRCapacity(rawSpd));
+	printf("  Capacity: %s\n", DDRCapacity(rawSpd));
+	printf("  Speed: %u MHz\n", DDRSpeed(rawSpd));
 	printf("  Manufacturer: %s\n", DDRManufacturer(rawSpd + 64));
 	printf("  Date: %s\n", DDRDate(rawSpd[93], rawSpd[94]));
 	printf("  Serial: ");
