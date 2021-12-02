@@ -119,7 +119,6 @@ pci_check_direct(void)
 	unsigned int tmpCF8;
 	struct cpu_raw_data_t raw = { 0 };
 	struct cpu_id_t data = { 0 };
-	cpuid_set_verbosiness_level(0);
 
 	if (cpuid_get_raw_data(&raw) < 0)
 		goto skip_amd;

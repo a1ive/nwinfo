@@ -36,16 +36,9 @@ static BOOL LoadDriver(struct msr_driver_t* drv)
 	debugf(1, "OpenSCManager() ok.\n");
 
 	drv->scDriver = CreateServiceA(drv->scManager, OLS_DRIVER_ID, OLS_DRIVER_ID,
-		SERVICE_ALL_ACCESS, SERVICE_KERNEL_DRIVER, SERVICE_DEMAND_START, SERVICE_ERROR_NORMAL,
+		SERVICE_ALL_ACCESS, SERVICE_KERNEL_DRIVER, SERVICE_DEMAND_START, SERVICE_ERROR_IGNORE,
 		drv->driver_path, NULL, NULL, NULL, NULL, NULL);
 	if (drv->scDriver == NULL) {
-		Status = GetLastError();
-		if (Status != ERROR_IO_PENDING && Status != ERROR_SERVICE_EXISTS) {
-			debugf(1, "CreateService() failed %d.\n", Status);
-			CloseServiceHandle(drv->scManager);
-			return FALSE;
-		}
-
 		drv->scDriver = OpenServiceA(drv->scManager, OLS_DRIVER_ID, SERVICE_ALL_ACCESS);
 		if (drv->scDriver == NULL) {
 			debugf(1, "OpenService() failed %d.\n", Status);
@@ -63,6 +56,7 @@ static BOOL LoadDriver(struct msr_driver_t* drv)
 	else {
 		Status = GetLastError();
 		if (Status == ERROR_SERVICE_ALREADY_RUNNING) {
+			debugf(1, "StartService() already running.\n");
 			Ret = TRUE;
 		}
 		else {
@@ -288,8 +282,13 @@ int cpu_msr_driver_close(struct msr_driver_t* drv)
 	if (drv->hhDriver && drv->hhDriver != INVALID_HANDLE_VALUE) {
 		CloseHandle(drv->hhDriver);
 		drv->hhDriver = NULL;
+		drv->scManager = OpenSCManagerA(NULL, NULL, SC_MANAGER_ALL_ACCESS);
+		if (drv->scManager)
+			drv->scDriver = OpenServiceA(drv->scManager, OLS_DRIVER_ID, SERVICE_ALL_ACCESS);
 	}
 	if (drv->scDriver) {
+		ControlService(drv->scDriver, SERVICE_CONTROL_STOP, &srvStatus);
+		DeleteService(drv->scDriver);
 		CloseServiceHandle(drv->scDriver);
 		drv->scDriver = NULL;
 	}

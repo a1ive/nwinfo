@@ -3,11 +3,13 @@
 #include <stdio.h>
 #include <windows.h>
 #include "nwinfo.h"
+#include "libcpuid.h"
 
 int main(int argc, char** argv)
 {
 	int debug_level = 0;
 	for (int i = 0; i < argc; i++) {
+		cpuid_set_verbosiness_level(debug_level);
 		if (i == 0 && argc > 1)
 			continue;
 		else if (_strnicmp(argv[i], "--debug=", 8) == 0 && argv[i][8]) {
@@ -16,7 +18,7 @@ int main(int argc, char** argv)
 		else if (_stricmp(argv[i], "--sys") == 0)
 			nwinfo_sys();
 		else if (_stricmp(argv[i], "--cpu") == 0)
-			nwinfo_cpuid(debug_level);
+			nwinfo_cpuid();
 		else if (_strnicmp(argv[i], "--net", 5) == 0) {
 			int active = 0;
 			if (_stricmp(&argv[i][5], "=active") == 0)

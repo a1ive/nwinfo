@@ -113,13 +113,11 @@ PrintMsr(void)
 	cpu_msr_driver_close(handle);
 }
 
-void nwinfo_cpuid(int debug_level)
+void nwinfo_cpuid(void)
 {
 	struct cpu_raw_data_t raw = { 0 };
 	struct cpu_id_t data = { 0 };
 	int i = 0;
-
-	cpuid_set_verbosiness_level(debug_level);
 
 	if (cpuid_get_raw_data(&raw) < 0) {
 		printf("Cannot obtain raw CPU data!\n");

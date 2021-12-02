@@ -38,7 +38,7 @@ BOOL ReadPhysicalMemory(PVOID buffer, DWORD address, DWORD length);
 #endif
 
 void nwinfo_sys(void);
-void nwinfo_cpuid(int debug_level);
+void nwinfo_cpuid(void);
 void nwinfo_acpi(DWORD signature);
 void nwinfo_network(int active);
 void nwinfo_smbios(UINT8 type);
