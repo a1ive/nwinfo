@@ -43,7 +43,7 @@ ListPci(const GUID *Guid, const CHAR* PciClass)
 	DWORD Flags = DIGCF_PRESENT;
 	if (!Guid)
 		Flags |= DIGCF_ALLCLASSES;
-	Info = SetupDiGetClassDevsW(Guid, L"PCI", NULL, Flags);
+	Info = SetupDiGetClassDevsExA(Guid, "PCI", NULL, Flags, NULL, NULL, NULL);
 	if (Info == INVALID_HANDLE_VALUE)
 	{
 		printf("SetupDiGetClassDevs failed.\n");

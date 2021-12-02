@@ -49,7 +49,7 @@ ListUsb(const GUID *Guid)
 	DWORD Flags = DIGCF_PRESENT;
 	if (!Guid)
 		Flags |= DIGCF_ALLCLASSES;
-	Info = SetupDiGetClassDevsW(Guid, L"USB", NULL, Flags);
+	Info = SetupDiGetClassDevsExA(Guid, "USB", NULL, Flags, NULL, NULL, NULL);
 	if (Info == INVALID_HANDLE_VALUE)
 	{
 		printf("SetupDiGetClassDevs failed.\n");
