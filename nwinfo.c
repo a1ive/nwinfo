@@ -43,14 +43,12 @@ int main(int argc, char** argv)
 			nwinfo_display();
 		else if (_strnicmp(argv[i], "--pci", 5) == 0) {
 			const CHAR* PciClass = NULL;
-			PciClass = NULL;
 			if (argv[i][5] == '=' && argv[i][6])
 				PciClass = &argv[i][6];
-			nwinfo_pci(NULL, PciClass);
+			nwinfo_pci(PciClass);
 		}
-		else if (_stricmp(argv[i], "--usb") == 0) {
-			nwinfo_usb(NULL);
-		}
+		else if (_stricmp(argv[i], "--usb") == 0)
+			nwinfo_usb();
 		else if (_stricmp(argv[i], "--beep") == 0) {
 			int new_argc = argc - i - 1;
 			char** new_argv = argc > 0 ? &argv[i + 1] : NULL;

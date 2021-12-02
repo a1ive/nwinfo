@@ -15,6 +15,7 @@ CHAR* GetRegSzValue(HKEY Key, LPCSTR SubKey, LPCSTR ValueName);
 extern CHAR* IDS;
 extern DWORD IDS_SIZE;
 void FindId(CONST CHAR* v, CONST CHAR* d, CONST CHAR* s, int usb);
+void FindClass(CONST CHAR* Class);
 const CHAR* GuidToStr(UCHAR Guid[16]);
 
 // NT5 compatible
@@ -44,8 +45,8 @@ void nwinfo_network(int active);
 void nwinfo_smbios(UINT8 type);
 void nwinfo_disk(void);
 void nwinfo_display(void);
-void nwinfo_pci(const GUID* Guid, const CHAR *PciClass);
-void nwinfo_usb(const GUID* Guid);
+void nwinfo_pci(const CHAR *PciClass);
+void nwinfo_usb(void);
 void nwinfo_beep(int argc, char *argv[]);
 void nwinfo_spd(int raw);
 

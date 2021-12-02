@@ -34,16 +34,13 @@ ParseHwid(const CHAR *Hwid)
 }
 
 static void
-ListPci(const GUID *Guid, const CHAR* PciClass)
+ListPci(const CHAR* PciClass)
 {
 	HDEVINFO Info = NULL;
-	DWORD i = 0, j = 0;
+	DWORD i = 0;
 	SP_DEVINFO_DATA DeviceInfoData = { .cbSize = sizeof(SP_DEVINFO_DATA) };
-	CHAR BufferHw[256] = { 0 };
-	DWORD Flags = DIGCF_PRESENT;
-	if (!Guid)
-		Flags |= DIGCF_ALLCLASSES;
-	Info = SetupDiGetClassDevsExA(Guid, "PCI", NULL, Flags, NULL, NULL, NULL);
+	DWORD Flags = DIGCF_PRESENT | DIGCF_ALLCLASSES;
+	Info = SetupDiGetClassDevsExA(NULL, "PCI", NULL, Flags, NULL, NULL, NULL);
 	if (Info == INVALID_HANDLE_VALUE)
 	{
 		printf("SetupDiGetClassDevs failed.\n");
@@ -51,35 +48,48 @@ ListPci(const GUID *Guid, const CHAR* PciClass)
 	}
 	for (i = 0; SetupDiEnumDeviceInfo(Info, i, &DeviceInfoData); i++)
 	{
-		CHAR* p = BufferHw;
+		CHAR* BufferHw = NULL;
+		DWORD BufferHwLen = 0;
+		CHAR* p = NULL;
 		size_t pLen = 0;
-		ZeroMemory(BufferHw, sizeof(BufferHw));
-		SetupDiGetDeviceRegistryPropertyA(Info, &DeviceInfoData, SPDRP_HARDWAREID, NULL, BufferHw, sizeof(BufferHw), NULL);
-		if (!PciClass) {
-			printf("%s\n", BufferHw);
-			ParseHwid(BufferHw);
-		}
-		else {
-			CHAR HwClass[11] = { 0 };
-			snprintf(HwClass, 11, "&CC_%s", PciClass);
-			while (p[0])
-			{
-				pLen = strlen(p) + 1;
-				//PCI\VEN_XXXX&DEV_XXXX&CC_XXXXXX
-				//printf("%s\n", p);
-				if (pLen > 26 && _strnicmp(p + 21, HwClass, strlen(HwClass)) == 0) {
-					printf("%s\n", BufferHw);
-					ParseHwid(BufferHw);
-					break;
-				}
-				p += pLen;
+		CHAR HwClass[7] = { 0 };
+		SetupDiGetDeviceRegistryPropertyA(Info, &DeviceInfoData, SPDRP_HARDWAREID, NULL, NULL, 0, &BufferHwLen);
+		if (BufferHwLen == 0)
+			continue;
+		BufferHw = malloc(BufferHwLen);
+		if (!BufferHw)
+			continue;
+		p = BufferHw;
+		if (!SetupDiGetDeviceRegistryPropertyA(Info, &DeviceInfoData, SPDRP_HARDWAREID, NULL, BufferHw, BufferHwLen, NULL))
+			goto next_device;
+		while (p[0])
+		{
+			pLen = strlen(p);
+			//PCI\VEN_XXXX&DEV_XXXX&CC_XXXXXX
+			if (pLen >= 29 && _strnicmp(p + 21, "&CC_", 4) == 0) {
+				snprintf(HwClass, 7, "%s", p + 25);
+				break;
 			}
+			p += pLen + 1;
 		}
+		if (PciClass)
+		{
+			size_t PciClassLen = strlen(PciClass);
+			if (PciClassLen > 6)
+				PciClassLen = 6;
+			if (_strnicmp(PciClass, HwClass, PciClassLen) != 0)
+				goto next_device;
+		}
+		printf("%s\n", BufferHw);
+		FindClass(HwClass);
+		ParseHwid(BufferHw);
+next_device:
+		free(BufferHw);
 	}
 	SetupDiDestroyDeviceInfoList(Info);
 }
 
-void nwinfo_pci(const GUID *Guid, const CHAR *PciClass)
+void nwinfo_pci(const CHAR *PciClass)
 {
 	HANDLE Fp = INVALID_HANDLE_VALUE;
 	DWORD dwSize = 0;
@@ -125,7 +135,7 @@ void nwinfo_pci(const GUID *Guid, const CHAR *PciClass)
 	CloseHandle(Fp);
 	if (bRet)
 	{
-		ListPci(Guid, PciClass);
+		ListPci(PciClass);
 	}
 	else
 		printf("pci.ids read error\n");

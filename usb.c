@@ -40,16 +40,13 @@ ParseHwid(const CHAR *Hwid)
 }
 
 static void
-ListUsb(const GUID *Guid)
+ListUsb(void)
 {
 	HDEVINFO Info = NULL;
-	DWORD i = 0, j = 0;
+	DWORD i = 0;
 	SP_DEVINFO_DATA DeviceInfoData = { .cbSize = sizeof(SP_DEVINFO_DATA) };
-	CHAR BufferHw[256] = { 0 };
-	DWORD Flags = DIGCF_PRESENT;
-	if (!Guid)
-		Flags |= DIGCF_ALLCLASSES;
-	Info = SetupDiGetClassDevsExA(Guid, "USB", NULL, Flags, NULL, NULL, NULL);
+	DWORD Flags = DIGCF_PRESENT | DIGCF_ALLCLASSES;
+	Info = SetupDiGetClassDevsExA(NULL, "USB", NULL, Flags, NULL, NULL, NULL);
 	if (Info == INVALID_HANDLE_VALUE)
 	{
 		printf("SetupDiGetClassDevs failed.\n");
@@ -57,15 +54,25 @@ ListUsb(const GUID *Guid)
 	}
 	for (i = 0; SetupDiEnumDeviceInfo(Info, i, &DeviceInfoData); i++)
 	{
-		ZeroMemory(BufferHw, sizeof(BufferHw));
-		SetupDiGetDeviceRegistryPropertyA(Info, &DeviceInfoData, SPDRP_HARDWAREID, NULL, BufferHw, sizeof(BufferHw), NULL);
-		printf("%s\n", BufferHw);
-		ParseHwid(BufferHw);
+		CHAR* BufferHw = NULL;
+		DWORD BufferHwLen = 0;
+		SetupDiGetDeviceRegistryPropertyA(Info, &DeviceInfoData, SPDRP_HARDWAREID, NULL, NULL, 0, &BufferHwLen);
+		if (BufferHwLen == 0)
+			continue;
+		BufferHw = malloc(BufferHwLen);
+		if (!BufferHw)
+			continue;
+		if (SetupDiGetDeviceRegistryPropertyA(Info, &DeviceInfoData, SPDRP_HARDWAREID, NULL, BufferHw, BufferHwLen, NULL))
+		{
+			printf("%s\n", BufferHw);
+			ParseHwid(BufferHw);
+		}
+		free(BufferHw);
 	}
 	SetupDiDestroyDeviceInfoList(Info);
 }
 
-void nwinfo_usb(const GUID *Guid)
+void nwinfo_usb(void)
 {
 	HANDLE Fp = INVALID_HANDLE_VALUE;
 	DWORD dwSize = 0;
@@ -111,7 +118,7 @@ void nwinfo_usb(const GUID *Guid)
 	CloseHandle(Fp);
 	if (bRet)
 	{
-		ListUsb(Guid);
+		ListUsb();
 	}
 	else
 		printf("usb.ids read error\n");

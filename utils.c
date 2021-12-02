@@ -274,6 +274,93 @@ FindId(CONST CHAR* v, CONST CHAR* d, CONST CHAR* s, int usb)
 	}
 }
 
+void
+FindClass(CONST CHAR* Class)
+{
+	DWORD Offset = 0;
+	CHAR* vLine = NULL;
+	CHAR* dLine = NULL;
+	CHAR* sLine = NULL;
+	if (!Class)
+		return;
+	CONST CHAR* v = Class;
+	CONST CHAR* d = strlen(Class) >= 4 ? Class + 2 : NULL;
+	CONST CHAR* s = strlen(Class) >= 6 ? Class + 4 : NULL;
+	vLine = IdsGetline(&Offset);
+	while (vLine)
+	{
+		if (!vLine[0] || vLine[0] != 'C' || strlen(vLine) < 7 || vLine[1] != ' ')
+		{
+			free(vLine);
+			vLine = IdsGetline(&Offset);
+			continue;
+		}
+		if (_strnicmp(v, vLine + 2, 2) != 0)
+		{
+			free(vLine);
+			vLine = IdsGetline(&Offset);
+			continue;
+		}
+		printf("  Class: %s", vLine + 6);
+		free(vLine);
+		if (!d)
+			goto out;
+		dLine = IdsGetline(&Offset);
+		while (dLine)
+		{
+			if (!dLine[0] || dLine[0] == '#')
+			{
+				free(dLine);
+				dLine = IdsGetline(&Offset);
+				continue;
+			}
+			if (dLine[0] != '\t' || strlen(dLine) < 6)
+			{
+				free(dLine);
+				break;
+			}
+			if (_strnicmp(d, dLine + 1, 2) != 0)
+			{
+				free(dLine);
+				dLine = IdsGetline(&Offset);
+				continue;
+			}
+			printf(", %s", dLine + 5);
+			free(dLine);
+			if (!s)
+				break;
+			sLine = IdsGetline(&Offset);
+			while (sLine)
+			{
+				if (!sLine[0] || sLine[0] == '#')
+				{
+					free(sLine);
+					sLine = IdsGetline(&Offset);
+					continue;
+				}
+				if (sLine[0] != '\t' || !sLine[1] || sLine[1] != '\t' || strlen(sLine) < 7)
+				{
+					free(sLine);
+					break;
+				}
+				if (_strnicmp(s, sLine + 2, 2) != 0)
+				{
+					free(sLine);
+					sLine = IdsGetline(&Offset);
+					continue;
+				}
+				printf(", %s", sLine + 6);
+				free(sLine);
+				break;
+			}
+			break;
+		}
+	out:
+		printf("\n");
+		break;
+	}
+}
+
 const CHAR*
 GuidToStr(UCHAR Guid[16]) {
 	static CHAR GuidStr[37] = { 0 };
