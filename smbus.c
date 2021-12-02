@@ -18,7 +18,7 @@
 static struct msr_driver_t* driver = NULL;
 static int smbdev = 0, smbfun = 0;
 static unsigned short smbusbase = 0;
-static unsigned char spd_raw[SPD_DATA_LEN];
+static unsigned char* spd_raw = NULL;
 
 #define SMBHSTSTS smbusbase
 #define SMBHSTCNT smbusbase + 2
@@ -380,6 +380,11 @@ SpdInit(void)
 		printf("unsupported smbus controller\n");
 		return;
 	}
+	spd_raw = malloc(SPD_DATA_LEN);
+	if (!spd_raw) {
+		printf("out of memory\n");
+		return;
+	}
 	smbcontrollers[smbus_index].get_adr();
 }
 
@@ -396,5 +401,6 @@ SpdGet(int dimmadr)
 void
 SpdFini(void)
 {
+	free(spd_raw);
 	cpu_msr_driver_close(driver);
 }
