@@ -130,7 +130,7 @@ void nwinfo_network (int active)
 			printf("Status: Active\n");
 		else
 			printf("Status: Deactive\n");
-
+		printf("DHCP Enabled: %s\n", pCurrAddresses->Dhcpv4Enabled ? "YES" : "NO");
 		pUnicast = pCurrAddresses->FirstUnicastAddress;
 		if (pUnicast != NULL) {
 			for (i = 0; pUnicast != NULL; i++) {
@@ -191,6 +191,11 @@ void nwinfo_network (int active)
 		}
 		else
 			printf("No DNS Server addresses\n");
+
+		if (pCurrAddresses->Dhcpv4Enabled && pCurrAddresses->Dhcpv4Server.iSockaddrLength >= sizeof(SOCKADDR_IN)) {
+			printf("DHCP Server:");
+			displayAddress(&pCurrAddresses->Dhcpv4Server);
+		}
 
 		printf("Transmit link speed: %s\n", GetHumanSize(pCurrAddresses->TransmitLinkSpeed, bps_human_sizes, 1000));
 		printf("Receive link speed: %s\n", GetHumanSize(pCurrAddresses->ReceiveLinkSpeed, bps_human_sizes, 1000));
