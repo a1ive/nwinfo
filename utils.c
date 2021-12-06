@@ -481,6 +481,24 @@ NT5GetSystemFirmwareTable(DWORD FirmwareTableProviderSignature, DWORD FirmwareTa
 	return 0;
 }
 
+DWORD
+NT5GetFirmwareEnvironmentVariable(LPCSTR lpName, LPCSTR lpGuid,
+	PVOID pBuffer, DWORD nSize)
+{
+	DWORD(WINAPI * NT6GetFirmwareEnvironmentVariable)
+		(LPCSTR lpName, LPCSTR lpGuid,
+			PVOID pBuffer, DWORD nSize) = NULL;
+	HMODULE hMod = GetModuleHandleA("kernel32");
+
+	if (hMod)
+		*(FARPROC*)&NT6GetFirmwareEnvironmentVariable = GetProcAddress(hMod, "GetFirmwareEnvironmentVariableA");
+
+	if (NT6GetFirmwareEnvironmentVariable)
+		return NT6GetFirmwareEnvironmentVariable(lpName, lpGuid, pBuffer, nSize);
+	SetLastError(ERROR_INVALID_FUNCTION);
+	return 0;
+}
+
 static CHAR Mbs[256] = { 0 };
 
 const CHAR*

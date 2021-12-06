@@ -95,7 +95,11 @@ static void PrintOsInfo(void)
 		printf("Computer Name: %s\n", infoBuf);
 	bufCharCount = INFO_BUFFER_SIZE;
 	if (GetUserNameA(infoBuf, &bufCharCount))
-		printf("User Name: %s\n", infoBuf);
+		printf("Username: %s\n", infoBuf);
+	if (GetComputerNameExA(ComputerNameDnsDomain, infoBuf, &bufCharCount))
+		printf("DNS Domain: %s\n", infoBuf);
+	if (GetComputerNameExA(ComputerNameDnsHostname, infoBuf, &bufCharCount))
+		printf("DNS Hostname: %s\n", infoBuf);
 	if (GetSystemDirectoryA(infoBuf, INFO_BUFFER_SIZE))
 		printf("System Directory: %s\n", infoBuf);
 	if (GetWindowsDirectoryA(infoBuf, INFO_BUFFER_SIZE))
@@ -129,19 +133,63 @@ static void PrintFwInfo(void)
 {
 	DWORD VarSize = 0;
 	UINT8 SecureBoot = 0;
-	GetFirmwareEnvironmentVariableA("", "{00000000-0000-0000-0000-000000000000}", NULL, 0);
+	NT5GetFirmwareEnvironmentVariable("", "{00000000-0000-0000-0000-000000000000}", NULL, 0);
 	if (GetLastError() == ERROR_INVALID_FUNCTION)
 		printf("Firmware: Legacy BIOS\n");
 	else
 	{
 		printf("Firmware: UEFI\n");
-		VarSize = GetFirmwareEnvironmentVariableA("SecureBoot", GV_GUID, &SecureBoot, sizeof(uint8_t));
+		VarSize = NT5GetFirmwareEnvironmentVariable("SecureBoot", GV_GUID, &SecureBoot, sizeof(uint8_t));
 		if (VarSize)
-			printf("Secure Boot: %s\n", SecureBoot ? "enabled" : "disabled");
+			printf("Secure Boot: %s\n", SecureBoot ? "ENABLED" : "DISABLED");
 		else
-			printf("Secure Boot: unsupported\n");
-		
+			printf("Secure Boot: UNSUPPORTED\n");
 	}
+}
+
+typedef struct _TPM_DEVICE_INFO {
+	UINT32 structVersion;
+	UINT32 tpmVersion;
+	UINT32 tpmInterfaceType;
+	UINT32 tpmImpRevision;
+} TPM_DEVICE_INFO, *PTPM_DEVICE_INFO;
+
+static const CHAR*
+TpmVersion(UINT32 ver)
+{
+	switch (ver) {
+	case 1: return "v1.2";
+	case 2: return "v2.0";
+	}
+	return "UNKNOWN";
+}
+
+static void PrintTpmInfo(void)
+{
+	UINT32 (WINAPI *GetTpmInfo) (UINT32 Size, VOID *Info) = NULL;
+	HINSTANCE hL = LoadLibraryA("tbs.dll");
+	TPM_DEVICE_INFO tpmInfo = { 0 };
+	struct acpi_table_header* AcpiHdr = NULL;
+	AcpiHdr = GetAcpi('2MPT');
+	if (AcpiHdr)
+		printf("TPM: v2.0\n");
+	else {
+		AcpiHdr = GetAcpi('APCT');
+		if (AcpiHdr)
+			printf("TPM: v1.2\n");
+	}
+	if (AcpiHdr) {
+		free(AcpiHdr);
+		return;
+	}
+	if (hL)
+		*(FARPROC*)&GetTpmInfo = GetProcAddress(hL, "Tbsi_GetDeviceInfo");
+	if (GetTpmInfo) {
+		UINT32 dwRet = GetTpmInfo(sizeof(tpmInfo), &tpmInfo);
+		printf("TPM: %s\n", (dwRet == 0) ? TpmVersion(tpmInfo.tpmVersion) : "NOT FOUND");
+	}
+	else
+		printf("TPM: UNSUPPORTED\n");
 }
 
 static const char* mem_human_sizes[6] =
@@ -167,5 +215,6 @@ void nwinfo_sys(void)
 	PrintOsVer();
 	PrintOsInfo();
 	PrintFwInfo();
+	PrintTpmInfo();
 	PrintMemInfo();
 }

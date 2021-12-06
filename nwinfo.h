@@ -23,6 +23,8 @@ void NT5ConvertLengthToIpv4Mask(ULONG MaskLength, ULONG* Mask);
 UINT NT5EnumSystemFirmwareTables(DWORD FirmwareTableProviderSignature, PVOID pFirmwareTableEnumBuffer, DWORD BufferSize);
 UINT NT5GetSystemFirmwareTable(DWORD FirmwareTableProviderSignature, DWORD FirmwareTableID,
 	PVOID pFirmwareTableBuffer, DWORD BufferSize);
+DWORD NT5GetFirmwareEnvironmentVariable(LPCSTR lpName, LPCSTR lpGuid,
+	PVOID pBuffer, DWORD nSize);
 const CHAR* NT5WcsToMbs(PWCHAR Wcs);
 #ifdef NT5_COMPAT
 UINT64 NT5GetTickCount(void);
