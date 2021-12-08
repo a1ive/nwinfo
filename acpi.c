@@ -126,12 +126,15 @@ static void PrintTableInfo(struct acpi_table_header* Hdr)
 	else if (memcmp(Hdr->signature, "FACP", 4) == 0)
 		PrintFADT(Hdr);
 }
-
+#pragma warning(push)
+// fuck you microsoft
+#pragma warning(disable:6385)
+#pragma warning(disable:6386)
 void nwinfo_acpi(DWORD signature)
 {
 	struct acpi_table_header *AcpiHdr = NULL;
 	DWORD* AcpiList = NULL;
-	UINT AcpiListSize = 0, i = 0, j = 0, k = 0;
+	UINT AcpiListSize = 0, i = 0, j = 0;
 	if (signature) {
 		AcpiHdr = GetAcpi(signature);
 		if (AcpiHdr) {
@@ -148,32 +151,22 @@ void nwinfo_acpi(DWORD signature)
 		return;
 	NT5EnumSystemFirmwareTables('ACPI', AcpiList, AcpiListSize);
 	AcpiListSize = AcpiListSize / 4;
-	// remove duplicate elements
 	for (i = 0; i < AcpiListSize; i++)
 	{
-		for (j = i + 1; j < AcpiListSize; j++)
-		{
-			if (AcpiList[i] == AcpiList[j])
-			{
-				// Delete the current duplicate element
-				for (k = j; k < AcpiListSize - 1; k++)
-				{
-					AcpiList[k] = AcpiList[k + 1];
-				}
-
-				AcpiListSize--;
-				j--;
-			}
-		}
-	}
-	for (i = 0; i < AcpiListSize; i++)
-	{
+		if (AcpiList[i] == 0)
+			continue;
 		AcpiHdr = GetAcpi(AcpiList[i]);
 		if (!AcpiHdr)
 			continue;
 		PrintTableInfo(AcpiHdr);
 		free(AcpiHdr);
+		// remove duplicate elements
+		for (j = i + 1; j < AcpiListSize; j++)
+		{
+			if (AcpiList[i] == AcpiList[j])
+				AcpiList[j] = 0;
+		}
 	}
-
 	free(AcpiList);
 }
+#pragma warning(pop)

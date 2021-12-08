@@ -5,7 +5,8 @@
 #include <stdint.h>
 #include <windows.h>
 
-void ObtainPrivileges(LPCTSTR privilege);
+BOOL IsAdmin(void);
+DWORD ObtainPrivileges(LPCTSTR privilege);
 const char* GetHumanSize(UINT64 size, const char* human_sizes[6], UINT64 base);
 PVOID GetAcpi(DWORD TableId);
 UINT8 AcpiChecksum(void* base, UINT size);
@@ -460,7 +461,7 @@ typedef struct _TYPE_43_ {
 	UCHAR   Description;
 	UINT64  Characteristics;
 	DWORD   OEM;
-} TPMDevice, * PTMPDevice;
+} TPMDevice, * PTPMDevice;
 
 struct mbr_entry
 {
@@ -532,6 +533,8 @@ struct gpt_header
 	uint32_t partentry_crc32;
 };
 
+#pragma pack()
+
 typedef struct PHY_DRIVE_INFO
 {
 	//int Id;
@@ -553,6 +556,4 @@ typedef struct PHY_DRIVE_INFO
 
 	CHAR DriveLetters[26];
 }PHY_DRIVE_INFO;
-
-#pragma pack()
 

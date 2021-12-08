@@ -211,7 +211,6 @@ static void PrintMemInfo(void)
 
 void nwinfo_sys(void)
 {
-	ObtainPrivileges(SE_SYSTEM_ENVIRONMENT_NAME);
 	PrintOsVer();
 	PrintOsInfo();
 	PrintFwInfo();

@@ -384,7 +384,6 @@ static void ProcCacheInfo(void* p)
 
 static void ProcOEMString(void* p)
 {
-	PSMBIOSHEADER pHdr = (PSMBIOSHEADER)p;
 	const char* str = toPointString(p);
 	printf("OEM String\n");
 	printf("  %s\n", LocateString(str, *(((char*)p) + 4)));
@@ -537,7 +536,6 @@ static void ProcMemoryDevice(void* p)
 static void ProcMemoryArrayMappedAddress(void* p)
 {
 	PMemoryArrayMappedAddress pMAMA = (PMemoryArrayMappedAddress)p;
-	const char* str = toPointString(p);
 
 	printf("Memory Array Mapped Address\n");
 	printf("  Starting Address: 0x%08X\n", pMAMA->Starting);
@@ -561,7 +559,7 @@ static void ProcPortableBattery(void* p)
 
 static void ProcTPMDevice(void* p)
 {
-	PTMPDevice pTPM = (PTMPDevice)p;
+	PTPMDevice pTPM = (PTPMDevice)p;
 	const char* str = toPointString(p);
 
 	printf("TPM Device\n");
@@ -645,7 +643,6 @@ void nwinfo_smbios(UINT8 type)
 {
 	DWORD smBiosDataSize = 0;
 	struct RawSMBIOSData* smBiosData = NULL;
-	DWORD bytesWritten = 0;
 
 	// Query size of SMBIOS data.
 	smBiosDataSize = NT5GetSystemFirmwareTable('RSMB', 0, NULL, 0);

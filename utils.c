@@ -7,34 +7,37 @@
 #include <winioctl.h>
 #include "nwinfo.h"
 
-void ObtainPrivileges(LPCTSTR privilege) {
+BOOL IsAdmin(void)
+{
+	BOOL b;
+	SID_IDENTIFIER_AUTHORITY NtAuthority = SECURITY_NT_AUTHORITY;
+	PSID AdministratorsGroup;
+	b = AllocateAndInitializeSid(&NtAuthority, 2, SECURITY_BUILTIN_DOMAIN_RID, DOMAIN_ALIAS_RID_ADMINS,
+		0, 0, 0, 0, 0, 0, &AdministratorsGroup);
+	if (b)
+	{
+		if (!CheckTokenMembership(NULL, AdministratorsGroup, &b))
+			b = FALSE;
+		FreeSid(AdministratorsGroup);
+	}
+	return b;
+}
+
+DWORD ObtainPrivileges(LPCTSTR privilege)
+{
 	HANDLE hToken;
 	TOKEN_PRIVILEGES tkp = { 0 };
 	BOOL res;
-	DWORD error;
 	// Obtain required privileges
-	if (!OpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken)) {
-		printf("OpenProcessToken failed!\n");
-		error = GetLastError();
-		exit(error);
-	}
-
+	if (!OpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken))
+		return GetLastError();
 	res = LookupPrivilegeValue(NULL, privilege, &tkp.Privileges[0].Luid);
-	if (!res) {
-		printf("LookupPrivilegeValue failed!\n");
-		error = GetLastError();
-		exit(error);
-	}
+	if (!res)
+		return GetLastError();
 	tkp.PrivilegeCount = 1;
 	tkp.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
 	AdjustTokenPrivileges(hToken, FALSE, &tkp, 0, (PTOKEN_PRIVILEGES)NULL, 0);
-
-	error = GetLastError();
-	if (error != ERROR_SUCCESS) {
-		printf("AdjustTokenPrivileges failed\n");
-		exit(error);
-	}
-
+	return GetLastError();
 }
 
 const char* GetHumanSize(UINT64 size, const char* human_sizes[6], UINT64 base)

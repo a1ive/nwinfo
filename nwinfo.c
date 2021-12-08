@@ -8,6 +8,12 @@
 int main(int argc, char** argv)
 {
 	int debug_level = 0;
+	if (IsAdmin() != TRUE
+		|| ObtainPrivileges(SE_SYSTEM_ENVIRONMENT_NAME) != ERROR_SUCCESS)
+	{
+		printf("permission denied\n");
+		return 1;
+	}
 	for (int i = 0; i < argc; i++) {
 		cpuid_set_verbosiness_level(debug_level);
 		if (i == 0 && argc > 1)

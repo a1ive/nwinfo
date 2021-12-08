@@ -59,12 +59,10 @@ IfTypeToStr(IFTYPE Type) {
 
 void nwinfo_network (int active)
 {
-	DWORD dwSize = 0;
 	DWORD dwRetVal = 0;
 	unsigned int i = 0;
 	// Set the flags to pass to GetAdaptersAddresses
 	ULONG flags = GAA_FLAG_INCLUDE_GATEWAYS;
-	char *lpMsgBuf = NULL;
 	PIP_ADAPTER_ADDRESSES pAddresses = NULL;
 	ULONG outBufLen = 0;
 	PIP_ADAPTER_ADDRESSES pCurrAddresses = NULL;
