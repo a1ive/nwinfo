@@ -49,6 +49,26 @@ static const CHAR* GetBusTypeString(STORAGE_BUS_TYPE Type)
 	return "unknown";
 }
 
+static void
+PrintVolumeInfo(CHAR Letter)
+{
+	CHAR PhyPath[] = "A:\\";
+	CHAR* VolName = malloc(MAX_PATH + 1);
+	CHAR* VolFs = malloc(MAX_PATH + 1);
+	if (!VolName || !VolFs)
+		goto fail;
+	snprintf(PhyPath, sizeof(PhyPath), "%C:\\", Letter);
+	if (GetVolumeInformationA(PhyPath, VolName, MAX_PATH + 1, NULL, NULL, NULL, VolFs, MAX_PATH + 1) != TRUE)
+		goto fail;
+	printf(" %s [%s]", VolFs, VolName[0] ? VolName : "-");
+fail:
+	if (VolName)
+		free(VolName);
+	if (VolFs)
+		free(VolFs);
+	printf("\n");
+}
+
 static DWORD GetDriveCount(void)
 {
 	DWORD Value = 0;
@@ -61,14 +81,14 @@ static HANDLE GetHandleByLetter(CHAR Letter)
 {
 	CHAR PhyPath[] = "\\\\.\\A:";
 	snprintf(PhyPath, sizeof(PhyPath), "\\\\.\\%C:", Letter);
-	return CreateFileA(PhyPath, GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE, 0, OPEN_EXISTING, 0, 0);
+	return CreateFileA(PhyPath, GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE, 0, OPEN_EXISTING, 0, 0);
 }
 
 static HANDLE GetHandleById(DWORD Id)
 {
 	CHAR PhyPath[] = "\\\\.\\PhysicalDrive4294967295";
 	snprintf(PhyPath, sizeof(PhyPath), "\\\\.\\PhysicalDrive%u", Id);
-	return CreateFileA(PhyPath, GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE, 0, OPEN_EXISTING, 0, 0);
+	return CreateFileA(PhyPath, GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE, 0, OPEN_EXISTING, 0, 0);
 }
 
 static CHAR *GetDriveHwId(DWORD Drive)
@@ -357,10 +377,11 @@ void nwinfo_disk(void)
 			}
 			if (CurDrive->DriveLetters[0])
 			{
-				printf("  Drive Letters:");
+				printf("  Drive Letters:\n");
 				for (int j = 0;  CurDrive->DriveLetters[j] && j < 26; j++)
 				{
-					printf(" %c", CurDrive->DriveLetters[j]);
+					printf("    %C:", CurDrive->DriveLetters[j]);
+					PrintVolumeInfo(CurDrive->DriveLetters[j]);
 				}
 				printf("\n");
 			}
