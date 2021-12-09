@@ -49,25 +49,36 @@ static const CHAR* GetBusTypeString(STORAGE_BUS_TYPE Type)
 	return "unknown";
 }
 
-static UINT32 GetPhysicalDriveCount(void)
+static DWORD GetDriveCount(void)
 {
 	DWORD Value = 0;
-	int Count = 0;
-	if (GetRegDwordValue(HKEY_LOCAL_MACHINE, "SYSTEM\\CurrentControlSet\\Services\\disk\\Enum", "Count", &Value) == 0)
-	{
-		Count = Value;
-	}
-	return Count;
+	if (GetRegDwordValue(HKEY_LOCAL_MACHINE, "SYSTEM\\CurrentControlSet\\Services\\disk\\Enum", "Count", &Value) != 0)
+		Value = 0;
+	return Value;
 }
 
-static CHAR *GetPhysicalDriveHwId(UINT32 Drive)
+static HANDLE GetHandleByLetter(CHAR Letter)
+{
+	CHAR PhyPath[] = "\\\\.\\A:";
+	snprintf(PhyPath, sizeof(PhyPath), "\\\\.\\%C:", Letter);
+	return CreateFileA(PhyPath, GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE, 0, OPEN_EXISTING, 0, 0);
+}
+
+static HANDLE GetHandleById(DWORD Id)
+{
+	CHAR PhyPath[] = "\\\\.\\PhysicalDrive4294967295";
+	snprintf(PhyPath, sizeof(PhyPath), "\\\\.\\PhysicalDrive%u", Id);
+	return CreateFileA(PhyPath, GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE, 0, OPEN_EXISTING, 0, 0);
+}
+
+static CHAR *GetDriveHwId(DWORD Drive)
 {
 	CHAR drvRegKey[] = "4294967295";
 	snprintf(drvRegKey, sizeof(drvRegKey), "%u", Drive);
 	return GetRegSzValue(HKEY_LOCAL_MACHINE, "SYSTEM\\CurrentControlSet\\Services\\disk\\Enum", drvRegKey);
 }
 
-static CHAR* GetPhysicalDriveHwName(const CHAR* HwId)
+static CHAR* GetDriveHwName(const CHAR* HwId)
 {
 	CHAR* HwName = NULL;
 	CHAR* drvRegKey = malloc (2048);
@@ -80,48 +91,36 @@ static CHAR* GetPhysicalDriveHwName(const CHAR* HwId)
 	return HwName;
 }
 
-static int GetPhyDriveByLogicalDrive(int DriveLetter)
+static BOOL GetDriveByLetter(CHAR Letter, DWORD* pDrive)
 {
 	BOOL Ret;
 	DWORD dwSize = 0;
-	HANDLE Handle;
 	VOLUME_DISK_EXTENTS DiskExtents = { 0 };
-	CHAR PhyPath[128];
-
-	snprintf(PhyPath, 128, "\\\\.\\%C:", (CHAR)DriveLetter);
-
-	Handle = CreateFileA(PhyPath, GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE, 0, OPEN_EXISTING, 0, 0);
+	HANDLE Handle = GetHandleByLetter(Letter);
 	if (Handle == INVALID_HANDLE_VALUE)
-		return -1;
-
-	Ret = DeviceIoControl(Handle,
-		IOCTL_VOLUME_GET_VOLUME_DISK_EXTENTS,
-		NULL,
-		0,
-		&DiskExtents,
-		(DWORD)(sizeof(DiskExtents)),
-		(LPDWORD)&dwSize,
-		NULL);
-
+		return FALSE;
+	Ret = DeviceIoControl(Handle, IOCTL_VOLUME_GET_VOLUME_DISK_EXTENTS,
+		NULL, 0, &DiskExtents, (DWORD)(sizeof(DiskExtents)), &dwSize, NULL);
 	if (!Ret || DiskExtents.NumberOfDiskExtents == 0)
 	{
 		CHECK_CLOSE_HANDLE(Handle);
-		return -1;
+		return FALSE;
 	}
 	CHECK_CLOSE_HANDLE(Handle);
-
-	return (int) DiskExtents.Extents[0].DiskNumber;
+	*pDrive = DiskExtents.Extents[0].DiskNumber;
+	return TRUE;
 }
 
-static void AddLetter(CHAR* LogLetter, int Letter)
+static void AddLetter(CHAR* LogLetter, CHAR Letter)
 {
+	UINT i;
 	if (Letter < 'A' || Letter > 'Z')
 		return;
-	for (int i = 0; i < 26; i++)
+	for (i = 0; i < 26; i++)
 	{
 		if (LogLetter[i] == 0)
 		{
-			LogLetter[i] = (CHAR)Letter;
+			LogLetter[i] = Letter;
 			break;
 		}
 	}
@@ -129,23 +128,22 @@ static void AddLetter(CHAR* LogLetter, int Letter)
 
 static const UINT8 GPT_MAGIC[8] = { 0x45, 0x46, 0x49, 0x20, 0x50, 0x41, 0x52, 0x54 };
 
-static int GetAllPhysicalDriveInfo(PHY_DRIVE_INFO* pDriveList, DWORD* pDriveCount)
+static int GetDriveInfoList(PHY_DRIVE_INFO* pDriveList, DWORD* pDriveCount)
 {
-	UINT32 i;
-	UINT32 Count;
-	int id;
-	int Letter = 'A';
+	DWORD i;
+	DWORD Count;
+	DWORD id;
+	CHAR Letter = 'A';
 	BOOL  bRet;
 	DWORD dwBytes;
 	DWORD DriveCount = 0;
 	HANDLE Handle = INVALID_HANDLE_VALUE;
-	CHAR PhyDrive[128];
 	PHY_DRIVE_INFO* CurDrive = pDriveList;
 	GET_LENGTH_INFORMATION LengthInfo = { 0 };
 	STORAGE_PROPERTY_QUERY Query = { 0 };
 	STORAGE_DESCRIPTOR_HEADER DevDescHeader = { 0 };
 	STORAGE_DEVICE_DESCRIPTOR* pDevDesc;
-	int PhyDriveId[MAX_PHY_DRIVE] = { 0 };
+	DWORD PhyDriveId[MAX_PHY_DRIVE] = { 0 };
 	CHAR LogLetter[MAX_PHY_DRIVE][26] = { 0 };
 	UINT8 *Sector = NULL;
 	struct mbr_header* MBR = NULL;
@@ -159,22 +157,19 @@ static int GetAllPhysicalDriveInfo(PHY_DRIVE_INFO* pDriveList, DWORD* pDriveCoun
 
 	ZeroMemory(LogLetter, sizeof(LogLetter));
 
-	Count = GetPhysicalDriveCount();
+	Count = GetDriveCount();
+	if (Count > MAX_PHY_DRIVE)
+		Count = MAX_PHY_DRIVE;
 
-	for (i = 0; i < Count && i < MAX_PHY_DRIVE; i++)
-	{
+	for (i = 0; i < Count; i++)
 		PhyDriveId[i] = i;
-	}
 
 	dwBytes = GetLogicalDrives();
-	//printf("Logical Drives: 0x%x\n", dwBytes);
 	while (dwBytes)
 	{
 		if (dwBytes & 0x01)
 		{
-			id = GetPhyDriveByLogicalDrive(Letter);
-			//printf("%C --> %d\n", Letter, id);
-			if (id >= 0)
+			if (GetDriveByLetter(Letter, &id))
 			{
 				for (i = 0; i < Count; i++)
 				{
@@ -186,7 +181,6 @@ static int GetAllPhysicalDriveInfo(PHY_DRIVE_INFO* pDriveList, DWORD* pDriveCoun
 				}
 				if (i >= Count)
 				{
-					//printf("Add phy%d to list\n", i);
 					PhyDriveId[Count] = id;
 					AddLetter(LogLetter[Count], Letter);
 					Count++;
@@ -201,33 +195,21 @@ static int GetAllPhysicalDriveInfo(PHY_DRIVE_INFO* pDriveList, DWORD* pDriveCoun
 	{
 		CHECK_CLOSE_HANDLE(Handle);
 
-		snprintf(PhyDrive, 128, "\\\\.\\PhysicalDrive%d", PhyDriveId[i]);
-		Handle = CreateFileA(PhyDrive, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
+		Handle = GetHandleById(PhyDriveId[i]);
 
 		if (Handle == INVALID_HANDLE_VALUE)
 			continue;
 
-		bRet = DeviceIoControl(Handle,
-			IOCTL_DISK_GET_LENGTH_INFO, NULL,
-			0,
-			&LengthInfo,
-			sizeof(LengthInfo),
-			&dwBytes,
-			NULL);
+		bRet = DeviceIoControl(Handle, IOCTL_DISK_GET_LENGTH_INFO, NULL, 0,
+			&LengthInfo, sizeof(LengthInfo), &dwBytes, NULL);
 		if (!bRet)
 			continue;
 
 		Query.PropertyId = StorageDeviceProperty;
 		Query.QueryType = PropertyStandardQuery;
 
-		bRet = DeviceIoControl(Handle,
-			IOCTL_STORAGE_QUERY_PROPERTY,
-			&Query,
-			sizeof(Query),
-			&DevDescHeader,
-			sizeof(STORAGE_DESCRIPTOR_HEADER),
-			&dwBytes,
-			NULL);
+		bRet = DeviceIoControl(Handle, IOCTL_STORAGE_QUERY_PROPERTY, &Query, sizeof(Query),
+			&DevDescHeader, sizeof(STORAGE_DESCRIPTOR_HEADER), &dwBytes, NULL);
 		if (!bRet)
 			continue;
 
@@ -238,14 +220,8 @@ static int GetAllPhysicalDriveInfo(PHY_DRIVE_INFO* pDriveList, DWORD* pDriveCoun
 		if (!pDevDesc)
 			continue;
 
-		bRet = DeviceIoControl(Handle,
-			IOCTL_STORAGE_QUERY_PROPERTY,
-			&Query,
-			sizeof(Query),
-			pDevDesc,
-			DevDescHeader.Size,
-			&dwBytes,
-			NULL);
+		bRet = DeviceIoControl(Handle, IOCTL_STORAGE_QUERY_PROPERTY, &Query, sizeof(Query),
+			pDevDesc, DevDescHeader.Size, &dwBytes, NULL);
 		if (!bRet)
 		{
 			free(pDevDesc);
@@ -257,7 +233,7 @@ static int GetAllPhysicalDriveInfo(PHY_DRIVE_INFO* pDriveList, DWORD* pDriveCoun
 		CurDrive->DeviceType = pDevDesc->DeviceType;
 		CurDrive->RemovableMedia = pDevDesc->RemovableMedia;
 		CurDrive->BusType = pDevDesc->BusType;
-		CurDrive->HwID = GetPhysicalDriveHwId(i);
+		CurDrive->HwID = GetDriveHwId(i);
 
 		if (pDevDesc->VendorIdOffset)
 		{
@@ -339,16 +315,16 @@ void nwinfo_disk(void)
 		return;
 	}
 	memset(PhyDriveList, 0, sizeof(PHY_DRIVE_INFO) * MAX_PHY_DRIVE);
-	if (GetAllPhysicalDriveInfo(PhyDriveList, &PhyDriveCount) == 0)
+	if (GetDriveInfoList(PhyDriveList, &PhyDriveCount) == 0)
 	{
 		for (i = 0, CurDrive = PhyDriveList; i < PhyDriveCount; i++, CurDrive++)
 		{
-			printf("\\\\.\\PhysicalDrive%d\n", CurDrive->PhyDrive);
+			printf("\\\\.\\PhysicalDrive%u\n", CurDrive->PhyDrive);
 			if (CurDrive->HwID)
 			{
 				CHAR* hwName = NULL;
 				printf("  HWID: %s\n", CurDrive->HwID);
-				hwName = GetPhysicalDriveHwName(CurDrive->HwID);
+				hwName = GetDriveHwName(CurDrive->HwID);
 				if (hwName)
 				{
 					printf("  HW Name: %s\n", hwName);
