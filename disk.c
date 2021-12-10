@@ -53,6 +53,7 @@ static void
 PrintVolumeInfo(CHAR Letter)
 {
 	CHAR PhyPath[] = "A:\\";
+	ULARGE_INTEGER Space;
 	CHAR* VolName = malloc(MAX_PATH + 1);
 	CHAR* VolFs = malloc(MAX_PATH + 1);
 	if (!VolName || !VolFs)
@@ -61,6 +62,8 @@ PrintVolumeInfo(CHAR Letter)
 	if (GetVolumeInformationA(PhyPath, VolName, MAX_PATH + 1, NULL, NULL, NULL, VolFs, MAX_PATH + 1) != TRUE)
 		goto fail;
 	printf(" %s [%s]", VolFs, VolName[0] ? VolName : "-");
+	printf(" %s", GetDiskFreeSpaceExA(PhyPath, NULL, NULL, &Space) ? GetHumanSize(Space.QuadPart, d_human_sizes, 1024) : "- B");
+	printf(" / %s", GetDiskFreeSpaceExA(PhyPath, NULL, &Space, NULL) ? GetHumanSize(Space.QuadPart, d_human_sizes, 1024) : "- B");
 fail:
 	if (VolName)
 		free(VolName);
@@ -131,6 +134,32 @@ static BOOL GetDriveByLetter(CHAR Letter, DWORD* pDrive)
 	return TRUE;
 }
 
+static BOOL
+DiskRead(HANDLE hDisk, UINT64 Sector, UINT64 Offset, DWORD Size, PVOID pBuf)
+{
+	__int64 distance = Offset + (Sector << 9);
+	LARGE_INTEGER li = { 0 };
+
+	li.QuadPart = distance;
+	li.LowPart = SetFilePointer(hDisk, li.LowPart, &li.HighPart, FILE_BEGIN);
+	if (li.LowPart == INVALID_SET_FILE_POINTER && GetLastError() != NO_ERROR)
+		return FALSE;
+
+	return ReadFile(hDisk, pBuf, Size, &Size, NULL);
+}
+
+static UINT64
+GetDiskSize(HANDLE hDisk)
+{
+	DWORD dwBytes;
+	UINT64 Size = 0;
+	GET_LENGTH_INFORMATION LengthInfo = { 0 };
+	if (DeviceIoControl(hDisk, IOCTL_DISK_GET_LENGTH_INFO, NULL, 0,
+		&LengthInfo, sizeof(LengthInfo), &dwBytes, NULL))
+		Size = LengthInfo.Length.QuadPart;
+	return Size;
+}
+
 static void AddLetter(CHAR* LogLetter, CHAR Letter)
 {
 	UINT i;
@@ -159,7 +188,6 @@ static int GetDriveInfoList(PHY_DRIVE_INFO* pDriveList, DWORD* pDriveCount)
 	DWORD DriveCount = 0;
 	HANDLE Handle = INVALID_HANDLE_VALUE;
 	PHY_DRIVE_INFO* CurDrive = pDriveList;
-	GET_LENGTH_INFORMATION LengthInfo = { 0 };
 	STORAGE_PROPERTY_QUERY Query = { 0 };
 	STORAGE_DESCRIPTOR_HEADER DevDescHeader = { 0 };
 	STORAGE_DEVICE_DESCRIPTOR* pDevDesc;
@@ -220,11 +248,6 @@ static int GetDriveInfoList(PHY_DRIVE_INFO* pDriveList, DWORD* pDriveCount)
 		if (Handle == INVALID_HANDLE_VALUE)
 			continue;
 
-		bRet = DeviceIoControl(Handle, IOCTL_DISK_GET_LENGTH_INFO, NULL, 0,
-			&LengthInfo, sizeof(LengthInfo), &dwBytes, NULL);
-		if (!bRet)
-			continue;
-
 		Query.PropertyId = StorageDeviceProperty;
 		Query.QueryType = PropertyStandardQuery;
 
@@ -249,7 +272,7 @@ static int GetDriveInfoList(PHY_DRIVE_INFO* pDriveList, DWORD* pDriveCount)
 		}
 
 		CurDrive->PhyDrive = i;
-		CurDrive->SizeInBytes = LengthInfo.Length.QuadPart;
+		CurDrive->SizeInBytes = GetDiskSize(Handle);
 		CurDrive->DeviceType = pDevDesc->DeviceType;
 		CurDrive->RemovableMedia = pDevDesc->RemovableMedia;
 		CurDrive->BusType = pDevDesc->BusType;
@@ -282,11 +305,10 @@ static int GetDriveInfoList(PHY_DRIVE_INFO* pDriveList, DWORD* pDriveCount)
 				(char*)pDevDesc + pDevDesc->SerialNumberOffset);
 			TrimString(CurDrive->SerialNumber);
 		}
-		DWORD dwSize = 512 + 512;
-		ZeroMemory(Sector, dwSize);
+
 		CurDrive->PartStyle = 0;
-		SetFilePointer(Handle, 0, NULL, FILE_BEGIN);
-		bRet = ReadFile(Handle, Sector, dwSize, &dwSize, NULL);
+		ZeroMemory(Sector, 512 + 512);
+		bRet = DiskRead(Handle, 0, 0, 512 + 512, Sector);
 		if (!bRet)
 			goto next_drive;
 
@@ -377,7 +399,7 @@ void nwinfo_disk(void)
 			}
 			if (CurDrive->DriveLetters[0])
 			{
-				printf("  Drive Letters:\n");
+				printf("  Volumes:\n");
 				for (int j = 0;  CurDrive->DriveLetters[j] && j < 26; j++)
 				{
 					printf("    %C:", CurDrive->DriveLetters[j]);
