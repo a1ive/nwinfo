@@ -192,6 +192,37 @@ static void PrintTpmInfo(void)
 		printf("TPM: UNSUPPORTED\n");
 }
 
+static void
+PrintPowerInfo(void)
+{
+	SYSTEM_POWER_STATUS Power;
+	printf("Power status: ");
+	if (!GetSystemPowerStatus(&Power) || Power.ACLineStatus == 255 || Power.BatteryFlag == 255)
+	{
+		printf("UNKNOWN\n");
+		return;
+	}
+	if (Power.BatteryFlag == 128)
+	{
+		printf("NO BATTERY\n");
+		return;
+	}
+	if (Power.BatteryLifePercent <= 100)
+		printf("%u%%", Power.BatteryLifePercent);
+	else
+		printf("UNKNOWN");
+	if (Power.BatteryLifeTime != -1)
+	{
+		UINT32 Hours = Power.BatteryLifeTime / 3600U;
+		UINT32 Minutes = Power.BatteryLifeTime / 60ULL - Hours * 60ULL;
+		//UINT32 Seconds = Power.BatteryLifeTime - Hours * 3600ULL - Minutes * 60ULL;
+		printf(", %lu hours %lu min left", Hours, Minutes);
+	}
+	if (Power.ACLineStatus == 1 || Power.BatteryFlag == 8)
+		printf(", Charging");
+	printf("\n");
+}
+
 static const char* mem_human_sizes[6] =
 { "B", "K", "M", "G", "T", "P", };
 
@@ -213,6 +244,7 @@ void nwinfo_sys(void)
 {
 	PrintOsVer();
 	PrintOsInfo();
+	PrintPowerInfo();
 	PrintFwInfo();
 	PrintTpmInfo();
 	PrintMemInfo();
