@@ -20,17 +20,39 @@ static int smbdev = 0, smbfun = 0;
 static unsigned short smbusbase = 0;
 static unsigned char* spd_raw = NULL;
 
-#define SMBHSTSTS smbusbase
-#define SMBHSTCNT smbusbase + 2
-#define SMBHSTCMD smbusbase + 3
-#define SMBHSTADD smbusbase + 4
-#define SMBHSTDAT smbusbase + 5
-#define SMBHSTDA1 smbusbase + 6 
+#define I2C_WRITE   0
+#define I2C_READ    1
 
-#define AMD_INDEX_IO_PORT       0xCD6
-#define AMD_DATA_IO_PORT        0xCD7
-#define AMD_SMBUS_BASE_REG      0x2C
-#define AMD_PM_DECODE_EN_REG    0x00
+#define SMBHSTSTS  smbusbase
+#define SMBHSTCNT  smbusbase + 2
+#define SMBHSTCMD  smbusbase + 3
+#define SMBHSTADD  smbusbase + 4
+#define SMBHSTDAT0 smbusbase + 5
+#define SMBHSTDAT1 smbusbase + 6 
+#define SMBBLKDAT  smbusbase + 7
+#define SMBPEC     smbusbase + 8
+#define SMBAUXSTS  smbusbase + 12
+#define SMBAUXCTL  smbusbase + 13
+
+#define SMBHSTSTS_BYTE_DONE     0x80
+#define SMBHSTSTS_INUSE_STS     0x40
+#define SMBHSTSTS_SMBALERT_STS  0x20
+#define SMBHSTSTS_FAILED        0x10
+#define SMBHSTSTS_BUS_ERR       0x08
+#define SMBHSTSTS_DEV_ERR       0x04
+#define SMBHSTSTS_INTR          0x02
+#define SMBHSTSTS_HOST_BUSY     0x01
+
+#define SMBHSTCNT_QUICK             0x00
+#define SMBHSTCNT_BYTE              0x04
+#define SMBHSTCNT_BYTE_DATA         0x08
+#define SMBHSTCNT_WORD_DATA         0x0C
+#define SMBHSTCNT_BLOCK_DATA        0x14
+#define SMBHSTCNT_I2C_BLOCK_DATA    0x18
+#define SMBHSTCNT_LAST_BYTE         0x20
+#define SMBHSTCNT_START             0x40
+
+#define SPD5_MR11 11
 
 static unsigned char pci_conf_type = PCI_CONF_TYPE_NONE;
 
@@ -41,6 +63,21 @@ static unsigned char pci_conf_type = PCI_CONF_TYPE_NONE;
 
 #define PCI_CONF3_ADDRESS(bus, dev, fn, reg) \
 	(0x80000000 | (((reg >> 8) & 0xF) << 24) | (bus << 16) | ((dev & 0x1F) << 11) | (fn << 8) | (reg & 0xFF))
+
+static void usleep(unsigned int usec)
+{
+	HANDLE timer;
+	LARGE_INTEGER ft;
+
+	ft.QuadPart = -(10 * (__int64)usec);
+
+	timer = CreateWaitableTimerA(NULL, TRUE, NULL);
+	if (!timer)
+		return;
+	SetWaitableTimer(timer, &ft, 0, NULL, NULL, 0);
+	WaitForSingleObject(timer, INFINITE);
+	CloseHandle(timer);
+}
 
 static int
 pci_conf_read(unsigned bus, unsigned dev, unsigned fn, unsigned reg, unsigned len, unsigned long* value)
@@ -89,6 +126,63 @@ pci_conf_read(unsigned bus, unsigned dev, unsigned fn, unsigned reg, unsigned le
 			break;
 		case 4:
 			*value = io_inl(driver, PCI_CONF2_ADDRESS(dev, reg));
+			result = 0;
+			break;
+		}
+		io_outb(driver, 0xCF8, 0);
+		break;
+	}
+	return result;
+}
+
+static int
+pci_conf_write(unsigned bus, unsigned dev, unsigned fn, unsigned reg, unsigned len, unsigned long value)
+{
+	int result;
+
+	if (!value || (bus > 255) || (dev > 31) || (fn > 7) ||
+		(reg > 255 && pci_conf_type != PCI_CONF_TYPE_1))
+		return -1;
+	result = -2;
+	switch (pci_conf_type)
+	{
+	case PCI_CONF_TYPE_1:
+		if (reg < 256) {
+			io_outl(driver, 0xCF8, PCI_CONF1_ADDRESS(bus, dev, fn, reg));
+		}
+		else {
+			io_outl(driver, 0xCF8, PCI_CONF3_ADDRESS(bus, dev, fn, reg));
+		}
+		switch (len) {
+		case 1:
+			io_outb(driver, 0xCFC + (reg & 3), (uint8_t)value);
+			result = 0;
+			break;
+		case 2:
+			io_outw(driver, 0xCFC + (reg & 2), (uint16_t)value);
+			result = 0;
+			break;
+		case 4:
+			io_outl(driver, 0xCFC, (uint32_t)value);
+			result = 0;
+			break;
+		}
+		break;
+	case PCI_CONF_TYPE_2:
+		io_outb(driver, 0xCF8, 0xF0 | (fn << 1));
+		io_outb(driver, 0xCFA, bus);
+
+		switch (len) {
+		case 1:
+			io_outb(driver, PCI_CONF2_ADDRESS(dev, reg), (uint8_t)value);
+			result = 0;
+			break;
+		case 2:
+			io_outw(driver, PCI_CONF2_ADDRESS(dev, reg), (uint16_t)value);
+			result = 0;
+			break;
+		case 4:
+			io_outl(driver, PCI_CONF2_ADDRESS(dev, reg), (uint32_t)value);
 			result = 0;
 			break;
 		}
@@ -160,63 +254,60 @@ skip_amd:
 
 static void ich5_get_smb(void)
 {
-	unsigned long x;
-	int result = pci_conf_read(0, smbdev, smbfun, 0x20, 2, &x);
-	if (result == 0)
-		smbusbase = (unsigned short)x & 0xFFFE;
+	unsigned long x = 0;
+	unsigned long tmp = 0;
+	int res;
+	smbusbase = 0;
+	res = pci_conf_read(0, smbdev, smbfun, 0x20, 2, &x);
+	if (res != 0)
+		return;
+	smbusbase = (unsigned short)x & 0xFFFE;
+	res = pci_conf_read(0, smbdev, smbfun, 0x40, 1, &tmp);
+	if (res == 0 && (tmp & 4) == 0)
+		res = pci_conf_write(0, smbdev, smbfun, 0x40, 1, tmp | 0x04);
+	if (res != 0)
+		return;
+	io_outb(driver, SMBHSTSTS, io_inb(driver, SMBHSTSTS) & 0x1F);
+	usleep(1000);
 }
 
-static void sb800_get_smb(void)
+static uint8_t ich5_process(void)
 {
-	int lbyte, hbyte, result;
-	unsigned long x;
+	uint8_t status;
+	uint16_t timeout = 0;
 
-	result = pci_conf_read(0, smbdev, smbfun, 0x08, 1, &x);
+	status = io_inb(driver, SMBHSTSTS) & 0x1F;
 
-	/* if processor revision is ML_A0 or ML_A1 use different way for SMBus
-	 * IO base calculation */
-	if (x == 0x42 || x == 0x41) {
-		/* read PMx00+1 to get SmbusAsfIoBase */
-		io_outb(driver, AMD_INDEX_IO_PORT, AMD_PM_DECODE_EN_REG + 1);
-		lbyte = io_inb(driver, AMD_DATA_IO_PORT);
-
-		/* SMBus IO base is defined as {Smbus0AsfIoBase[7:0], 0x00} */
-		smbusbase = (lbyte & 0xF) << 8;
-	}
-	else {
-		io_outb(driver, AMD_INDEX_IO_PORT, AMD_SMBUS_BASE_REG + 1);
-		lbyte = io_inb(driver, AMD_DATA_IO_PORT);
-		io_outb(driver, AMD_INDEX_IO_PORT, AMD_SMBUS_BASE_REG);
-		hbyte = io_inb(driver, AMD_DATA_IO_PORT);
-
-		smbusbase = lbyte;
-		smbusbase <<= 8;
-		smbusbase += hbyte;
-		smbusbase &= 0xFFE0;
+	if (status != 0x00)
+	{
+		io_outb(driver, SMBHSTSTS, status);
+		usleep(500);
+		if ((status = (0x1F & io_inb(driver, SMBHSTSTS))) != 0x00)
+			return 1;
 	}
 
-	if (smbusbase == 0xFFE0)
-		smbusbase = 0;
+	io_outb(driver, SMBHSTCNT,
+		io_inb(driver, SMBHSTCNT) | SMBHSTCNT_START);
+
+	do
+	{
+		usleep(500);
+		status = io_inb(driver, SMBHSTSTS);
+	} while ((status & 0x01) && (timeout++ < 100));
+
+	if (timeout >= 100)
+		return 2;
+
+	if (status & 0x1C)
+		return status;
+
+	if ((io_inb(driver, SMBHSTSTS) & 0x1F) != 0x00)
+		io_outb(driver, SMBHSTSTS, io_inb(driver, SMBHSTSTS));
+
+	return 0;
 }
 
-static void piix4_get_smb(void)
-{
-	unsigned long x;
-	int result;
-
-	result = pci_conf_read(0, smbdev, smbfun, 0x08, 1, &x);
-	if (x < 0x40) {
-		// SB600/700
-		result = pci_conf_read(0, smbdev, smbfun, 0x90, 2, &x);
-		if (result == 0)
-			smbusbase = (unsigned short)x & 0xFFFE;
-	}
-	else {
-		// SB800
-		sb800_get_smb();
-	}
-}
-
+#if 0
 static int ich5_smb_check(unsigned char adr)
 {
 	io_outb(driver, SMBHSTSTS, 0xff);
@@ -232,16 +323,17 @@ static int ich5_smb_check(unsigned char adr)
 		return 0;
 	return -1;
 }
+#endif
 
 static unsigned char ich5_smb_read_byte(unsigned char adr, unsigned char cmd)
 {
-	io_outb(driver, SMBHSTSTS, 0xff);
-	while ((io_inb(driver, SMBHSTSTS) & 0x40) != 0x40);
-	io_outb(driver, SMBHSTADD, (adr << 1) | 0x01);
+	io_outb(driver, SMBHSTADD, (adr << 1) | I2C_READ);
 	io_outb(driver, SMBHSTCMD, cmd);
-	io_outb(driver, SMBHSTCNT, 0x48);
-	while ((io_inb(driver, SMBHSTSTS) & 0x42) != 0x42);
-	return io_inb(driver, SMBHSTDAT);
+	io_outb(driver, SMBHSTCNT, SMBHSTCNT_BYTE_DATA);
+	if (ich5_process() == 0)
+		return io_inb(driver, SMBHSTDAT0);
+	else
+		return 0xFF;
 }
 
 static void ich5_smb_switch_page(unsigned page)
@@ -249,35 +341,13 @@ static void ich5_smb_switch_page(unsigned page)
 	uint8_t value = 0x6c;
 	if (page)
 		value = 0x6e;
-	io_outb(driver, SMBHSTSTS, 0xfe);
-	io_outb(driver, SMBHSTADD, value);
-	io_outb(driver, SMBHSTCNT, 0x48);
-	while (((io_inb(driver, SMBHSTSTS) & 0x44) != 0x44)
-		&& ((io_inb(driver, SMBHSTSTS) & 0x42) != 0x42));
+	io_outb(driver, SMBHSTADD, value | I2C_WRITE);
+	io_outb(driver, SMBHSTCNT, SMBHSTCNT_BYTE_DATA);
+	ich5_process();
 }
 
-static int read_spd(int dimmadr)
+struct pci_smbus_controller
 {
-	unsigned short x;
-	if (ich5_smb_check(0x50 + dimmadr))
-		return -1;
-	ZeroMemory(spd_raw, SPD_DATA_LEN);
-	// switch page 0
-	ich5_smb_switch_page(0);
-	for (x = 0; x < 256; x++) {
-		spd_raw[x] = ich5_smb_read_byte(0x50 + dimmadr, (unsigned char)x);
-	}
-	if (spd_raw[2] < 12) // DDR4
-		return 0;
-	// switch page 1
-	ich5_smb_switch_page(1);
-	for (x = 0; x < 256; x++) {
-		spd_raw[x+256] = ich5_smb_read_byte(0x50 + dimmadr, (unsigned char)x);
-	}
-	return 0;
-}
-
-struct pci_smbus_controller {
 	unsigned vendor;
 	unsigned device;
 	char* name;
@@ -333,9 +403,20 @@ static struct pci_smbus_controller smbcontrollers[] =
 	{0x8086, 0x269B, "Intel ESB2",			ich5_get_smb},
 	{0x8086, 0x5032, "Intel EP80579",		ich5_get_smb},
 	{0x8086, 0x0f12, "Intel E3800",			ich5_get_smb},
-	// AMD SMBUS
-	{0x1002, 0x4385, "AMD SB600/700",		piix4_get_smb},
-	{0x1022, 0x780B, "AMD SB800/900",		sb800_get_smb},
+	{0x8086, 0x2292, "Intel Braswell",		ich5_get_smb},
+	{0x8086, 0x1BC9, "Intel Emmitsburg",	ich5_get_smb},
+	{0x8086, 0x34A3, "Intel Ice Lake-LP",	ich5_get_smb},
+	{0x8086, 0x38A3, "Intel Ice Lake-N",	ich5_get_smb},
+	{0x8086, 0x02A3, "Intel Comet Lake",	ich5_get_smb},
+	{0x8086, 0x06A3, "Intel Comet Lake-H",	ich5_get_smb},
+	{0x8086, 0x4B23, "Intel Elkhart Lake",	ich5_get_smb},
+	{0x8086, 0xA0A3, "Intel Tiger Lake-LP",	ich5_get_smb},
+	{0x8086, 0x43A3, "Intel Tiger Lake-H",	ich5_get_smb},
+	{0x8086, 0x4DA3, "Intel Jasper Lake",	ich5_get_smb},
+	{0x8086, 0xA3A3, "Intel Comet Lake-V",	ich5_get_smb},
+	{0x8086, 0x7AA3, "Intel Alder Lake-S",	ich5_get_smb},
+	{0x8086, 0x51A3, "Intel Alder Lake-P",	ich5_get_smb},
+	{0x8086, 0x54A3, "Intel Alder Lake-M",	ich5_get_smb},
 	{0, 0, "", NULL}
 };
 
@@ -391,10 +472,24 @@ SpdInit(void)
 void*
 SpdGet(int dimmadr)
 {
+	unsigned short x;
 	if (smbus_index < 0 || dimmadr < 0)
 		return NULL;
-	if (read_spd(dimmadr) != 0)
-		return NULL;
+	ZeroMemory(spd_raw, SPD_DATA_LEN);
+	// switch page 0
+	ich5_smb_switch_page(0);
+	for (x = 0; x < 256; x++)
+	{
+		spd_raw[x] = ich5_smb_read_byte(0x50 + dimmadr, (unsigned char)x);
+		if (x == 1 && spd_raw[0] == 0xFF && spd_raw[1] == 0xFF)
+			return NULL;
+	}
+	if (spd_raw[2] < 12) // DDR4
+		return spd_raw;
+	// switch page 1
+	ich5_smb_switch_page(1);
+	for (x = 0; x < 256; x++)
+		spd_raw[x + 256] = ich5_smb_read_byte(0x50 + dimmadr, (unsigned char)x);
 	return spd_raw;
 }
 

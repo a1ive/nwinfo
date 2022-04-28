@@ -112,7 +112,7 @@ DDRCapacity(UINT8* rawSpd)
 }
 
 static const CHAR*
-DDR34Manufacturer(UINT8 Lsb, UINT8 Msb)
+DDR345Manufacturer(UINT8 Lsb, UINT8 Msb)
 {
 	UINT Bank = 0, Index = 0;
 	if (Msb == 0x00 || Msb == 0xFF)
@@ -161,7 +161,7 @@ DDRManufacturer(UINT8* Raw)
 }
 
 static const CHAR*
-DDR234Date(UINT8 rawYear, UINT8 rawWeek) {
+DDR2345Date(UINT8 rawYear, UINT8 rawWeek) {
 	UINT32 Year = 0, Week = 0;
 	static CHAR Date[] = "Week52/2021";
 	if (rawYear == 0x0 || rawYear == 0xff ||
@@ -226,6 +226,25 @@ DDRSpeed(UINT8* rawSpd)
 }
 
 static void
+PrintDDR5(UINT8* rawSpd)
+{
+	UINT i = 0;
+	printf("  Revision: %u.%u\n", rawSpd[1] >> 4, rawSpd[1] & 0x0FU);
+#if 0
+	printf("  Manufacturer: %s\n", DDR345Manufacturer(rawSpd[512], rawSpd[513]));
+	printf("  Date: %s\n", DDR2345Date(rawSpd[515], rawSpd[516]));
+	printf("  Serial: ");
+	for (i = 0; i < 4; i++)
+		printf("%02X", rawSpd[517 + i]);
+	printf("\n");
+	printf("  Part: ");
+	for (i = 0; i < 20; i++)
+		printf("%c", rawSpd[521 + i]);
+#endif
+	printf("\n");
+}
+
+static void
 PrintDDR4(UINT8* rawSpd)
 {
 	UINT i = 0;
@@ -234,8 +253,8 @@ PrintDDR4(UINT8* rawSpd)
 	printf("  Capacity: %s\n", DDR4Capacity(rawSpd));
 	printf("  Speed: %u MHz\n", DDR4Speed(rawSpd));
 	printf("  Voltage: %s\n", (rawSpd[11] & 0x01U) ? "1.2 V" : "(Unknown)");
-	printf("  Manufacturer: %s\n", DDR34Manufacturer(rawSpd[320], rawSpd[321]));
-	printf("  Date: %s\n", DDR234Date(rawSpd[323], rawSpd[324]));
+	printf("  Manufacturer: %s\n", DDR345Manufacturer(rawSpd[320], rawSpd[321]));
+	printf("  Date: %s\n", DDR2345Date(rawSpd[323], rawSpd[324]));
 	printf("  Serial: ");
 	for (i = 0; i < 4; i++)
 		printf("%02X", rawSpd[325 + i]);
@@ -256,8 +275,8 @@ PrintDDR3(UINT8* rawSpd)
 	printf("  Speed: %u MHz\n", DDR3Speed(rawSpd));
 	printf("  Supported Voltages:%s%s%s\n", (rawSpd[6] & 0x04U) ? " 1.25V" : "",
 		(rawSpd[6] & 0x02U) ? " 1.35V" : "", (rawSpd[6] & 0x01U) ? "" : " 1.5V");
-	printf("  Manufacturer: %s\n", DDR34Manufacturer(rawSpd[117], rawSpd[118]));
-	printf("  Date: %s\n", DDR234Date(rawSpd[120], rawSpd[121]));
+	printf("  Manufacturer: %s\n", DDR345Manufacturer(rawSpd[117], rawSpd[118]));
+	printf("  Date: %s\n", DDR2345Date(rawSpd[120], rawSpd[121]));
 	printf("  Serial: ");
 	for (i = 0; i < 4; i++)
 		printf("%02X", rawSpd[122 + i]);
@@ -277,7 +296,7 @@ PrintDDR2(UINT8* rawSpd)
 	printf("  Capacity: %s\n", DDR2Capacity(rawSpd));
 	printf("  Speed: %u MHz\n", DDRSpeed(rawSpd));
 	printf("  Manufacturer: %s\n", DDRManufacturer(rawSpd + 64));
-	printf("  Date: %s\n", DDR234Date(rawSpd[93], rawSpd[94]));
+	printf("  Date: %s\n", DDR2345Date(rawSpd[93], rawSpd[94]));
 	printf("  Serial: ");
 	for (i = 0; i < 4; i++)
 		printf("%02X", rawSpd[95 + i]);
@@ -385,6 +404,10 @@ nwinfo_spd(int raw)
 		case 16:
 			printf("Slot %d: LPDDR4 SDRAM\n", i);
 			PrintDDR4(rawSpd);
+			break;
+		case 18:
+			printf("Slot %d: DDR5 SDRAM\n", i);
+			PrintDDR5(rawSpd);
 			break;
 		default:
 			printf("Slot %d: UNKNOWN\n", i);

@@ -7,7 +7,7 @@ void SpdInit(void);
 void* SpdGet(int dimmadr);
 void SpdFini(void);
 
-#define SPD_DATA_LEN  512
+#define SPD_DATA_LEN  1024
 
 #define VENDORS_BANKS 8
 #define VENDORS_ITEMS 128
