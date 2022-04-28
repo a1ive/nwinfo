@@ -151,7 +151,7 @@ DecodeEDID(void* pData, DWORD dwSize)
 		hb = (UINT32)pEDID->Desc[i].HBlankingLSB + (UINT32)((pEDID->Desc[i].HPixelsMSB & 0x0f) << 8);
 		vb = (UINT32)pEDID->Desc[i].VBlankingLSB + (UINT32)((pEDID->Desc[i].VLinesMSB & 0x0f) << 8);
 		hz = ((double)pc) / (((UINT64)ha + hb) * ((UINT64)va + vb));
-		printf("Resolution: %u x %u @%.4fHz\n", ha, va, hz);
+		printf("Resolution: %u x %u @%.2fHz\n", ha, va, hz);
 		w = (UINT32)pEDID->Desc[i].WidthLSB + (UINT32)((pEDID->Desc[i].WHMSB & 0xf0) << 4);
 		h = (UINT32)pEDID->Desc[i].HeightLSB + (UINT32)((pEDID->Desc[i].WHMSB & 0x0f) << 8);
 		inch = sqrt((double)((UINT64)w) * w + ((UINT64)h) * h) * 0.0393701;
