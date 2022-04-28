@@ -11,9 +11,6 @@
 
 #define NAME_SIZE 128
 
-static const GUID GUID_CLASS_MONITOR =
-	{ 0x4d36e96e, 0xe325, 0x11ce, 0xbf, 0xc1, 0x08, 0x00, 0x2b, 0xe1, 0x03, 0x18 };
-
 static UCHAR EDIDdata[1024];
 static DWORD EDIDsize = sizeof(EDIDdata);
 
@@ -178,7 +175,6 @@ static void
 GetEDID(int raw, HDEVINFO devInfo, PSP_DEVINFO_DATA devInfoData)
 {
 	HKEY hDevRegKey;
-#if 1
 	CHAR hwID[256];
 	if (SetupDiGetDeviceRegistryPropertyA(devInfo, devInfoData,
 		SPDRP_HARDWAREID, NULL, hwID, sizeof(hwID), NULL))
@@ -189,7 +185,7 @@ GetEDID(int raw, HDEVINFO devInfo, PSP_DEVINFO_DATA devInfoData)
 	{
 		printf("HWID: UNKNOWN\n");
 	}
-#endif
+
 	hDevRegKey = SetupDiOpenDevRegKey(devInfo, devInfoData,
 		DICS_FLAG_GLOBAL, 0, DIREG_DEV, KEY_ALL_ACCESS);
 
@@ -223,25 +219,19 @@ GetEDID(int raw, HDEVINFO devInfo, PSP_DEVINFO_DATA devInfoData)
 
 void nwinfo_display(void)
 {
-	HDEVINFO devInfo = NULL;
-	SP_DEVINFO_DATA devInfoData;
-	ULONG i;
-	do
+	HDEVINFO Info = NULL;
+	DWORD i = 0;
+	SP_DEVINFO_DATA DeviceInfoData = { .cbSize = sizeof(SP_DEVINFO_DATA) };
+	DWORD Flags = DIGCF_PRESENT | DIGCF_ALLCLASSES;
+	Info = SetupDiGetClassDevsExA(NULL, "DISPLAY", NULL, Flags, NULL, NULL, NULL);
+	if (Info == INVALID_HANDLE_VALUE)
 	{
-		devInfo = SetupDiGetClassDevsExA(&GUID_CLASS_MONITOR,
-			NULL, NULL, DIGCF_PRESENT, NULL, NULL, NULL);
-		if (!devInfo)
-			break;
-
-		for (i = 0; ERROR_NO_MORE_ITEMS != GetLastError(); i++)
-		{
-			memset(&devInfoData, 0, sizeof(devInfoData));
-			devInfoData.cbSize = sizeof(devInfoData);
-			if (SetupDiEnumDeviceInfo(devInfo, i, &devInfoData))
-			{
-				GetEDID(0, devInfo, &devInfoData);
-			}
-		}
-
-	} while (FALSE);
+		printf("SetupDiGetClassDevs failed.\n");
+		return;
+	}
+	for (i = 0; SetupDiEnumDeviceInfo(Info, i, &DeviceInfoData); i++)
+	{
+		GetEDID(0, Info, &DeviceInfoData);
+	}
+	SetupDiDestroyDeviceInfoList(Info);
 }
