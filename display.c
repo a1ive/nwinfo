@@ -4,8 +4,10 @@
 #include <stdlib.h>
 #include <windows.h>
 #include <setupapi.h>
-#include <initguid.h>
+#include <math.h>
 #include "nwinfo.h"
+
+#include "pnp_id.h"
 
 #define NAME_SIZE 128
 
@@ -19,7 +21,13 @@ static DWORD EDIDsize = sizeof(EDIDdata);
 struct DetailedTimingDescriptor
 {
 	UINT16 PixelClock;
-	UINT8 Data[10];
+	UINT8 HActiveLSB;
+	UINT8 HBlankingLSB;
+	UINT8 HPixelsMSB;
+	UINT8 VActiveLSB;
+	UINT8 VBlankingLSB;
+	UINT8 VLinesMSB;
+	UINT8 Data1[4];
 	UINT8 WidthLSB;
 	UINT8 HeightLSB;
 	UINT8 WHMSB;
@@ -62,12 +70,27 @@ struct EDID
 static const char* hz_human_sizes[6] =
 { "Hz", "kHz", "MHz", "GHz", "THz", "PHz", };
 
+static const char*
+GetPnpManufacturer(const char* Id)
+{
+	DWORD i;
+	if (!Id)
+		return "UNKNOWN";
+	for (i = 0; i < PNP_ID_NUM; i++)
+	{
+		if (strcmp(Id, PNP_ID_LIST[i].id) == 0)
+			return PNP_ID_LIST[i].vendor;
+	}
+	return "UNKNOWN";
+}
+
 static void
 DecodeEDID(void* pData, DWORD dwSize)
 {
 	DWORD i;
 	struct EDID* pEDID = pData;
 	static UCHAR Magic[8] = { 0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00 };
+	char Manufacturer[4];
 	if (dwSize < sizeof(struct EDID))
 		return;
 	if (memcmp(pEDID->Magic, Magic, 8) != 0)
@@ -76,10 +99,11 @@ DecodeEDID(void* pData, DWORD dwSize)
 		return;
 	}
 	pEDID->Manufacturer = (pEDID->Manufacturer << 8U) | (pEDID->Manufacturer >> 8U); // BE
-	printf("Manufacturer: %c%c%c\n",
+	snprintf(Manufacturer, sizeof (Manufacturer), "%c%c%c",
 		(CHAR)(((pEDID->Manufacturer & 0x7c00U) >> 10U) + 'A' - 1),
 		(CHAR)(((pEDID->Manufacturer & 0x3e0U) >> 5U) + 'A' - 1),
 		(CHAR)((pEDID->Manufacturer & 0x1fU) + 'A' - 1));
+	printf("Manufacturer: %s (%s)\n", GetPnpManufacturer(Manufacturer), Manufacturer);
 	printf("Product: %04X\n", pEDID->Product);
 	printf("Serial: %08X\n", pEDID->Serial);
 	printf("Date: %u, Week %u\n", pEDID->Year + 1990, pEDID->Week & 0x7F);
@@ -115,15 +139,23 @@ DecodeEDID(void* pData, DWORD dwSize)
 	printf("\n");
 	for (i = 0; i < 4; i++)
 	{
-		if (pEDID->Desc[i].PixelClock == 0 && pEDID->Desc[i].Data[0] == 0)
+		UINT32 ha, va, hb, vb, w, h;
+		UINT64 pc;
+		double hz, inch;
+		if (pEDID->Desc[i].PixelClock == 0 && pEDID->Desc[i].HActiveLSB == 0)
 			continue;
-		printf("Pixel Clock: %s\n", GetHumanSize(((UINT64)pEDID->Desc[i].PixelClock) * 10 * 1000, hz_human_sizes, 1000));
-		printf("Resolution: %u x %u\n",
-			(UINT32)pEDID->Desc[i].Data[0] + (UINT32)((pEDID->Desc[i].Data[2] & 0xf0) << 4),
-			(UINT32)pEDID->Desc[i].Data[3] + (UINT32)((pEDID->Desc[i].Data[5] & 0xf0) << 4));
-		printf("Screen Size: %u mm x %u mm\n",
-			(UINT32)pEDID->Desc[i].WidthLSB + (UINT32)((pEDID->Desc[i].WHMSB & 0xf0) << 4),
-			(UINT32)pEDID->Desc[i].HeightLSB + (UINT32)((pEDID->Desc[i].WHMSB & 0x0f) << 8));
+		pc = ((UINT64)pEDID->Desc[i].PixelClock) * 10 * 1000;
+		printf("Pixel Clock: %s\n", GetHumanSize(pc, hz_human_sizes, 1000));
+		ha = (UINT32)pEDID->Desc[i].HActiveLSB + (UINT32)((pEDID->Desc[i].HPixelsMSB & 0xf0) << 4);
+		va = (UINT32)pEDID->Desc[i].VActiveLSB + (UINT32)((pEDID->Desc[i].VLinesMSB & 0xf0) << 4);
+		hb = (UINT32)pEDID->Desc[i].HBlankingLSB + (UINT32)((pEDID->Desc[i].HPixelsMSB & 0x0f) << 8);
+		vb = (UINT32)pEDID->Desc[i].VBlankingLSB + (UINT32)((pEDID->Desc[i].VLinesMSB & 0x0f) << 8);
+		hz = ((double)pc) / (((UINT64)ha + hb) * ((UINT64)va + vb));
+		printf("Resolution: %u x %u @%.4fHz\n", ha, va, hz);
+		w = (UINT32)pEDID->Desc[i].WidthLSB + (UINT32)((pEDID->Desc[i].WHMSB & 0xf0) << 4);
+		h = (UINT32)pEDID->Desc[i].HeightLSB + (UINT32)((pEDID->Desc[i].WHMSB & 0x0f) << 8);
+		inch = sqrt((double)((UINT64)w) * w + ((UINT64)h) * h) * 0.0393701;
+		printf("Screen Size: %u mm x %u mm (%.1f\")\n", w, h, inch);
 		break;
 	}
 	printf("\n");

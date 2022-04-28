@@ -39,6 +39,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="nwinfo.h" />
+    <ClInclude Include="pnp_id.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="spd.h" />
     <ClInclude Include="tokyo.h" />
