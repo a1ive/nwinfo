@@ -45,8 +45,12 @@ int main(int argc, char** argv)
 		}
 		else if (_stricmp(argv[i], "--disk") == 0)
 			nwinfo_disk();
-		else if (_stricmp(argv[i], "--display") == 0)
-			nwinfo_display();
+		else if (_strnicmp(argv[i], "--display", 9) == 0) {
+			int raw = 0;
+			if (_stricmp(&argv[i][9], "=raw") == 0)
+				raw = 1;
+			nwinfo_display(raw);
+		}
 		else if (_strnicmp(argv[i], "--pci", 5) == 0) {
 			const CHAR* PciClass = NULL;
 			if (argv[i][5] == '=' && argv[i][6])

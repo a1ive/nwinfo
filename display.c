@@ -9,9 +9,7 @@
 
 #include "pnp_id.h"
 
-#define NAME_SIZE 128
-
-static UCHAR EDIDdata[1024];
+static UCHAR EDIDdata[2048];
 static DWORD EDIDsize = sizeof(EDIDdata);
 
 #pragma pack(1)
@@ -78,7 +76,7 @@ GetPnpManufacturer(const char* Id)
 		if (strcmp(Id, PNP_ID_LIST[i].id) == 0)
 			return PNP_ID_LIST[i].vendor;
 	}
-	return "UNKNOWN";
+	return Id;
 }
 
 static void
@@ -100,8 +98,8 @@ DecodeEDID(void* pData, DWORD dwSize)
 		(CHAR)(((pEDID->Manufacturer & 0x7c00U) >> 10U) + 'A' - 1),
 		(CHAR)(((pEDID->Manufacturer & 0x3e0U) >> 5U) + 'A' - 1),
 		(CHAR)((pEDID->Manufacturer & 0x1fU) + 'A' - 1));
-	printf("Manufacturer: %s (%s)\n", GetPnpManufacturer(Manufacturer), Manufacturer);
-	printf("Product: %04X\n", pEDID->Product);
+	printf("Manufacturer: %s\n", GetPnpManufacturer(Manufacturer));
+	printf("ID: %s%04X\n", Manufacturer, pEDID->Product);
 	printf("Serial: %08X\n", pEDID->Serial);
 	printf("Date: %u, Week %u\n", pEDID->Year + 1990, pEDID->Week & 0x7F);
 	printf("EDID Version: %u.%u\n", pEDID->Version, pEDID->Revision);
@@ -175,49 +173,41 @@ static void
 GetEDID(int raw, HDEVINFO devInfo, PSP_DEVINFO_DATA devInfoData)
 {
 	HKEY hDevRegKey;
-	CHAR hwID[256];
-	if (SetupDiGetDeviceRegistryPropertyA(devInfo, devInfoData,
-		SPDRP_HARDWAREID, NULL, hwID, sizeof(hwID), NULL))
-	{
-		printf ("HWID: %s\n", hwID);
-	}
-	else
-	{
-		printf("HWID: UNKNOWN\n");
-	}
+	LSTATUS lRet;
+	BOOL bRet;
+
+	bRet = SetupDiGetDeviceRegistryPropertyA(devInfo, devInfoData,
+		SPDRP_HARDWAREID, NULL, EDIDdata, sizeof(EDIDdata), NULL);
+	printf ("HWID: %s\n", bRet ? EDIDdata : "UNKNOWN");
+
+	bRet = SetupDiGetDeviceRegistryPropertyA(devInfo, devInfoData,
+		SPDRP_DEVICEDESC, NULL, EDIDdata, sizeof(EDIDdata), NULL);
+	printf("Description: %s\n", bRet ? EDIDdata : "UNKNOWN MONITOR");
 
 	hDevRegKey = SetupDiOpenDevRegKey(devInfo, devInfoData,
 		DICS_FLAG_GLOBAL, 0, DIREG_DEV, KEY_ALL_ACCESS);
 
-	if (hDevRegKey)
+	if (!hDevRegKey)
 	{
-		LONG retValue, i;
-		DWORD dwType, AcutalValueNameLength = NAME_SIZE;
-		CHAR valueName[NAME_SIZE] = { 0 };
-
-		for (i = 0, retValue = ERROR_SUCCESS; retValue != ERROR_NO_MORE_ITEMS; i++)
-		{
-			EDIDsize = sizeof(EDIDdata);
-			ZeroMemory(EDIDdata, EDIDsize);
-			retValue = RegEnumValueA(hDevRegKey, i,
-				valueName, &AcutalValueNameLength, NULL, &dwType, EDIDdata, &EDIDsize);
-
-			if (retValue == ERROR_SUCCESS)
-			{
-				if (!strcmp(valueName, "EDID"))
-				{
-					DecodeEDID(EDIDdata, EDIDsize);
-					if (raw)
-						PrintEDID(EDIDdata, EDIDsize);
-					break;
-				}
-			}
-		}
-		RegCloseKey(hDevRegKey);
+		printf("SetupDiOpenDevRegKey failed\n");
+		return;
 	}
+	EDIDsize = sizeof(EDIDdata);
+	ZeroMemory(EDIDdata, EDIDsize);
+	lRet = RegGetValueA(hDevRegKey, NULL, "EDID", RRF_RT_REG_BINARY, NULL, EDIDdata, &EDIDsize);
+	if (lRet == ERROR_SUCCESS || lRet == ERROR_MORE_DATA)
+	{
+		if (raw)
+			PrintEDID(EDIDdata, EDIDsize);
+		else
+			DecodeEDID(EDIDdata, EDIDsize);
+	}
+	else
+		printf("NO EDID DATA\n");
+	RegCloseKey(hDevRegKey);
 }
 
-void nwinfo_display(void)
+void nwinfo_display(int raw)
 {
 	HDEVINFO Info = NULL;
 	DWORD i = 0;
@@ -231,7 +221,7 @@ void nwinfo_display(void)
 	}
 	for (i = 0; SetupDiEnumDeviceInfo(Info, i, &DeviceInfoData); i++)
 	{
-		GetEDID(0, Info, &DeviceInfoData);
+		GetEDID(raw, Info, &DeviceInfoData);
 	}
 	SetupDiDestroyDeviceInfoList(Info);
 }

@@ -47,7 +47,7 @@ void nwinfo_acpi(DWORD signature);
 void nwinfo_network(int active);
 void nwinfo_smbios(UINT8 type);
 void nwinfo_disk(void);
-void nwinfo_display(void);
+void nwinfo_display(int raw);
 void nwinfo_pci(const CHAR *PciClass);
 void nwinfo_usb(void);
 void nwinfo_beep(int argc, char *argv[]);
