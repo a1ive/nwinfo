@@ -29,79 +29,80 @@ static const char* toPointString(void* p)
 	return (char*)p + ((PSMBIOSHEADER)p)->Length;
 }
 
-static void ProcBIOSInfo(void* p)
+static void ProcBIOSInfo(PNODE tab, void* p)
 {
 	PBIOSInfo pBIOS = (PBIOSInfo)p;
 	const char* str = toPointString(p);
-	printf("BIOS information\n");
-	printf("  Vendor: %s\n", LocateString(str, pBIOS->Vendor));
-	printf("  Version: %s\n", LocateString(str, pBIOS->Version));
-	printf("  Starting Segment: %04Xh\n", pBIOS->StartingAddrSeg);
-	printf("  Release Date: %s\n", LocateString(str, pBIOS->ReleaseDate));
-	printf("  Image Size: %u K\n", (pBIOS->ROMSize + 1) * 64);
+	node_att_set(tab, "Description", "BIOS information", 0);
+	node_att_set(tab, "Vendor", LocateString(str, pBIOS->Vendor), 0);
+	node_att_set(tab, "Version", LocateString(str, pBIOS->Version), 0);
+	node_setf(tab, "Starting Segment", 0, "%04Xh", pBIOS->StartingAddrSeg);
+	node_att_set(tab, "Release Date", LocateString(str, pBIOS->ReleaseDate), 0);
+	node_setf(tab, "Image Size", 0, "%u K", (pBIOS->ROMSize + 1) * 64);
 	if (pBIOS->Header.Length > 0x14)
 	{
 		if (pBIOS->MajorRelease != 0xff || pBIOS->MinorRelease != 0xff)
-			printf("  System BIOS version: %u.%u\n", pBIOS->MajorRelease, pBIOS->MinorRelease);
+			node_setf(tab, "System BIOS version", 0, "%u.%u", pBIOS->MajorRelease, pBIOS->MinorRelease);
 		if (pBIOS->ECFirmwareMajor != 0xff || pBIOS->ECFirmwareMinor != 0xff)
-			printf("  EC Firmware version: %u.%u\n", pBIOS->ECFirmwareMajor, pBIOS->ECFirmwareMinor);
+			node_setf(tab, "EC Firmware version", 0, "%u.%u", pBIOS->ECFirmwareMajor, pBIOS->ECFirmwareMinor);
 	}
 }
 
-static void ProcSysInfo(void* p)
+static void ProcSysInfo(PNODE tab, void* p)
 {
 	PSystemInfo pSystem = (PSystemInfo)p;
 	const char* str = toPointString(p);
 
-	printf("System information\n");
-	printf("  Manufacturer: %s\n", LocateString(str, pSystem->Manufacturer));
-	printf("  Product Name: %s\n", LocateString(str, pSystem->ProductName));
-	printf("  Version: %s\n", LocateString(str, pSystem->Version));
-	printf("  Serial Number: %s\n", LocateString(str, pSystem->SN));
+	node_att_set(tab, "Description", "System information", 0);
+	node_att_set(tab, "Manufacturer", LocateString(str, pSystem->Manufacturer), 0);
+	node_att_set(tab, "Product Name", LocateString(str, pSystem->ProductName), 0);
+	node_att_set(tab, "Version", LocateString(str, pSystem->Version), 0);
+	node_att_set(tab, "Serial Number", LocateString(str, pSystem->SN), 0);
 	// for v2.1 and later
 	if (pSystem->Header.Length > 0x08)
-		printf("  UUID: %s\n", GuidToStr(pSystem->UUID));
+		node_att_set(tab, "UUID", GuidToStr(pSystem->UUID), 0);
 
 	if (pSystem->Header.Length > 0x19)
 	{
 		// fileds for spec. 2.4
-		printf("  SKU Number: %s\n", LocateString(str, pSystem->SKUNumber));
-		printf("  Family: %s\n", LocateString(str, pSystem->Family));
+		node_att_set(tab, "SKU Number", LocateString(str, pSystem->SKUNumber), 0);
+		node_att_set(tab, "Family", LocateString(str, pSystem->Family), 0);
 	}
 }
 
-static void ProcBoardInfo(void* p)
+static void ProcBoardInfo(PNODE tab, void* p)
 {
 	PBoardInfo pBoard = (PBoardInfo)p;
 	const char* str = toPointString(p);
 
-	printf("Base Board information\n");
-	printf("  Manufacturer: %s\n", LocateString(str, pBoard->Manufacturer));
-	printf("  Product Name: %s\n", LocateString(str, pBoard->Product));
-	printf("  Version: %s\n", LocateString(str, pBoard->Version));
-	printf("  Serial Number: %s\n", LocateString(str, pBoard->SN));
-	printf("  Asset Tag: %s\n", LocateString(str, pBoard->AssetTag));
+	node_att_set(tab, "Description", "Base Board information", 0);
+	node_att_set(tab, "Manufacturer", LocateString(str, pBoard->Manufacturer), 0);
+	node_att_set(tab, "Product Name", LocateString(str, pBoard->Product), 0);
+	node_att_set(tab, "Version", LocateString(str, pBoard->Version), 0);
+	node_att_set(tab, "Serial Number", LocateString(str, pBoard->SN), 0);
+	node_att_set(tab, "Asset Tag", LocateString(str, pBoard->AssetTag), 0);
 	if (pBoard->Header.Length > 0x08)
 	{
-		printf("  Location in Chassis: %s\n", LocateString(str, pBoard->LocationInChassis));
+		node_att_set(tab, "Location in Chassis", LocateString(str, pBoard->LocationInChassis), 0);
 	}
 }
 
-static void ProcSystemEnclosure(void* p)
+static void ProcSystemEnclosure(PNODE tab, void* p)
 {
 	PSystemEnclosure pSysEnclosure = (PSystemEnclosure)p;
 	const char* str = toPointString(p);
-	printf("System Enclosure information\n");
-	printf("  Manufacturer: %s\n", LocateString(str, pSysEnclosure->Manufacturer));
-	printf("  Version: %s\n", LocateString(str, pSysEnclosure->Version));
-	printf("  Serial Number: %s\n", LocateString(str, pSysEnclosure->SN));
-	printf("  Asset Tag: %s\n", LocateString(str, pSysEnclosure->AssetTag));
+	node_att_set(tab, "Description", "System Enclosure information", 0);
+	node_att_set(tab, "Manufacturer", LocateString(str, pSysEnclosure->Manufacturer), 0);
+	node_att_set(tab, "Version", LocateString(str, pSysEnclosure->Version), 0);
+	node_att_set(tab, "Serial Number", LocateString(str, pSysEnclosure->SN), 0);
+	node_att_set(tab, "Asset Tag", LocateString(str, pSysEnclosure->AssetTag), 0);
 }
 
 static const CHAR*
 pProcessorFamilyToStr(UCHAR Family)
 {
-	switch (Family) {
+	switch (Family)
+	{
 	case 0x3: return "8086";
 	case 0x4: return "80286";
 	case 0x5: return "Intel386 processor";
@@ -275,81 +276,82 @@ pProcessorFamilyToStr(UCHAR Family)
 	return "Unknown";
 }
 
-static void ProcProcessorInfo(void* p)
+static void ProcProcessorInfo(PNODE tab, void* p)
 {
 	PProcessorInfo	pProcessor = (PProcessorInfo)p;
 	const char* str = toPointString(p);
-
-	printf("Processor information\n");
-	printf("  Socket Designation: %s\n", LocateString(str, pProcessor->SocketDesignation));
-	printf("  Processor Family: %s\n", pProcessorFamilyToStr(pProcessor->Family));
-	printf("  Processor Manufacturer: %s\n", LocateString(str, pProcessor->Manufacturer));
-	printf("  Processor Version: %s\n", LocateString(str, pProcessor->Version));
-	if (!pProcessor->Voltage) {
+	node_att_set(tab, "Description", "Processor information", 0);
+	node_att_set(tab, "Socket Designation", LocateString(str, pProcessor->SocketDesignation), 0);
+	node_att_set(tab, "Processor Family", pProcessorFamilyToStr(pProcessor->Family), 0);
+	node_att_set(tab, "Processor Manufacturer", LocateString(str, pProcessor->Manufacturer), 0);
+	node_att_set(tab, "Processor Version", LocateString(str, pProcessor->Version), 0);
+	if (!pProcessor->Voltage)
+	{
 		// unsupported
 	}
-	else if (pProcessor->Voltage & (1U << 7)) {
+	else if (pProcessor->Voltage & (1U << 7))
+	{
 		UCHAR volt = pProcessor->Voltage - 0x80;
-		printf("  Voltage: %u.%u V\n", volt / 10, volt % 10);
+		node_setf(tab, "Voltage", 0, "%u.%u V", volt / 10, volt % 10);
 	}
-	else {
-		printf("  Voltage:%s%s%s\n",
+	else
+	{
+		node_setf(tab, "Voltage", 0, "%s%s%s",
 			pProcessor->Voltage & (1U << 0) ? " 5 V" : "",
 			pProcessor->Voltage & (1U << 1) ? " 3.3 V" : "",
 			pProcessor->Voltage & (1U << 2) ? " 2.9 V" : "");
 	}
 	if (pProcessor->ExtClock)
-		printf("  External Clock: %u MHz\n", pProcessor->ExtClock);
-	printf("  Max Speed: %u MHz\n", pProcessor->MaxSpeed);
-	printf("  Current Speed: %u MHz\n", pProcessor->CurrentSpeed);
+		node_setf(tab, "External Clock", 0, "%u MHz", pProcessor->ExtClock);
+	node_setf(tab, "Max Speed", 0, "%u MHz", pProcessor->MaxSpeed);
+	node_setf(tab, "Current Speed", 0, "%u MHz", pProcessor->CurrentSpeed);
 	if (pProcessor->Header.Length > 0x20)
 	{
 		// 2.3+
-		printf("  Serial Number: %s\n", LocateString(str, pProcessor->Serial));
-		printf("  Asset Tag: %s\n", LocateString(str, pProcessor->AssetTag));
+		node_att_set(tab, "Serial Number", LocateString(str, pProcessor->Serial), 0);
+		node_att_set(tab, "Asset Tag", LocateString(str, pProcessor->AssetTag), 0);
 		if (pProcessor->CoreCount == 0xff && pProcessor->Header.Length > 0x2a)
-			printf("  Core Count: %u\n", pProcessor->CoreCount2);
+			node_setf(tab, "Core Count", NAFLG_FMT_NUMERIC, "%u", pProcessor->CoreCount2);
 		else
-			printf("  Core Count: %u\n", pProcessor->CoreCount);
+			node_setf(tab, "Core Count", NAFLG_FMT_NUMERIC, "%u", pProcessor->CoreCount);
 		if (pProcessor->ThreadCount == 0xff && pProcessor->Header.Length > 0x2a)
-			printf("  Thread Count: %u\n", pProcessor->ThreadCount2);
+			node_setf(tab, "Thread Count", NAFLG_FMT_NUMERIC, "%u", pProcessor->ThreadCount2);
 		else
-			printf("  Thread Count: %u\n", pProcessor->ThreadCount);
+			node_setf(tab, "Thread Count", NAFLG_FMT_NUMERIC, "%u", pProcessor->ThreadCount);
 	}
 }
 
-static void ProcMemCtrlInfo(void* p)
+static void ProcMemCtrlInfo(PNODE tab, void* p)
 {
 	PMemCtrlInfo pMemCtrl = (PMemCtrlInfo)p;
 
-	printf("Memory Controller information\n");
-	printf("  Max Memory Module Size: %llu MB\n", 2ULL << pMemCtrl->MaxMemModuleSize);
-	printf("  Number of Slots: %u\n", pMemCtrl->NumOfSlots);
+	node_att_set(tab, "Description", "Memory Controller information", 0);
+	node_setf(tab, "Max Memory Module Size", 0, "%llu MB", 2ULL << pMemCtrl->MaxMemModuleSize);
+	node_setf(tab, "Number of Slots", NAFLG_FMT_NUMERIC, "%u", pMemCtrl->NumOfSlots);
 }
 
-static void ProcMemModuleInfo(void* p)
+static void ProcMemModuleInfo(PNODE tab, void* p)
 {
 	PMemModuleInfo	pMemModule = (PMemModuleInfo)p;
 	const char* str = toPointString(p);
 	UCHAR sz = 0;
-
-	printf("Memory Module information\n");
-	printf("  Socket Designation: %s\n", LocateString(str, pMemModule->SocketDesignation));
-	printf("  Current Speed: %u ns\n", pMemModule->CurrentSpeed);
+	node_att_set(tab, "Description", "Memory Module information", 0);
+	node_att_set(tab, "Socket Designation", LocateString(str, pMemModule->SocketDesignation), 0);
+	node_setf(tab, "Current Speed", 0, "%u ns", pMemModule->CurrentSpeed);
 	sz = pMemModule->InstalledSize & 0x7F;
 	if (sz > 0x7D)
 		sz = 0;
-	printf("  Installed Size: %llu MB\n", 2ULL << sz);
+	node_setf(tab, "Installed Size", 0, "%llu MB", 2ULL << sz);
 }
 
-static void ProcCacheInfo(void* p)
+static void ProcCacheInfo(PNODE tab, void* p)
 {
 	PCacheInfo	pCache = (PCacheInfo)p;
 	const char* str = toPointString(p);
 	UINT64 sz = 0;
 
-	printf("Cache information\n");
-	printf("  Socket Designation: %s\n", LocateString(str, pCache->SocketDesignation));
+	node_att_set(tab, "Description", "Cache information", 0);
+	node_att_set(tab, "Socket Designation", LocateString(str, pCache->SocketDesignation), 0);
 	if (pCache->MaxSize == 0xffff && pCache->Header.Length > 0x13)
 	{
 		if (pCache->MaxSize2 & (1ULL << 31))
@@ -361,7 +363,7 @@ static void ProcCacheInfo(void* p)
 		sz = ((UINT64)pCache->MaxSize - (1ULL << 15)) * 64 * 1024;
 	else
 		sz = ((UINT64) pCache->MaxSize) * 1024;
-	printf("  Max Cache Size: %s\n", GetHumanSize(sz, mem_human_sizes, 1024));
+	node_att_set(tab, "Max Cache Size", GetHumanSize(sz, mem_human_sizes, 1024), 0);
 	if (pCache->InstalledSize == 0xffff && pCache->Header.Length > 0x13)
 	{
 		if (pCache->InstalledSize2 & (1ULL << 31))
@@ -377,22 +379,23 @@ static void ProcCacheInfo(void* p)
 	{
 		sz = ((UINT64)pCache->InstalledSize) * 1024;
 	}
-	printf("  Installed Cache Size: %s\n", GetHumanSize(sz, mem_human_sizes, 1024));
+	node_att_set(tab, "Installed Cache Size", GetHumanSize(sz, mem_human_sizes, 1024), 0);
 	if (pCache->Speed)
-		printf("  Cache Speed: %u ns\n", pCache->Speed);
+		node_setf(tab, "Cache Speed", 0, "%u ns", pCache->Speed);
 }
 
-static void ProcOEMString(void* p)
+static void ProcOEMString(PNODE tab, void* p)
 {
 	const char* str = toPointString(p);
-	printf("OEM String\n");
-	printf("  %s\n", LocateString(str, *(((char*)p) + 4)));
+	node_att_set(tab, "Description", "OEM String", 0);
+	node_att_set(tab, "String", LocateString(str, *(((char*)p) + 4)), 0);
 }
 
 static const CHAR*
 pMALocationToStr(UCHAR Location)
 {
-	switch (Location) {
+	switch (Location)
+	{
 	case 0x01: return "Other";
 	//case 0x02: return "Unknown";
 	case 0x03: return "System board";
@@ -415,7 +418,8 @@ pMALocationToStr(UCHAR Location)
 static const CHAR*
 pMAUseToStr(UCHAR Use)
 {
-	switch (Use) {
+	switch (Use)
+	{
 	case 0x01: return "Other";
 	//case 0x02: return "Unknown";
 	case 0x03: return "System memory";
@@ -430,7 +434,8 @@ pMAUseToStr(UCHAR Use)
 static const CHAR*
 pMAEccToStr(UCHAR ErrCorrection)
 {
-	switch (ErrCorrection) {
+	switch (ErrCorrection)
+	{
 	case 0x01: return "Other";
 	//case 0x02: return "Unknown";
 	case 0x03: return "None";
@@ -442,26 +447,27 @@ pMAEccToStr(UCHAR ErrCorrection)
 	return "Unknown";
 }
 
-static void ProcMemoryArray(void* p)
+static void ProcMemoryArray(PNODE tab, void* p)
 {
 	PMemoryArray pMA = (PMemoryArray)p;
 	UINT64 sz = 0;
-	printf("Memory Array\n");
-	printf("  Location: %s\n", pMALocationToStr(pMA->Location));
-	printf("  Function: %s\n", pMAUseToStr(pMA->Use));
-	printf("  Error Correction: %s\n", pMAEccToStr(pMA->ErrCorrection));
-	printf("  Number of Slots: %u\n", pMA->NumOfMDs);
+	node_att_set(tab, "Description", "Memory Array", 0);
+	node_att_set(tab, "Location", pMALocationToStr(pMA->Location), 0);
+	node_att_set(tab, "Function", pMAUseToStr(pMA->Use), 0);
+	node_att_set(tab, "Error Correction", pMAEccToStr(pMA->ErrCorrection), 0);
+	node_setf(tab, "Number of Slots", NAFLG_FMT_NUMERIC, "%u", pMA->NumOfMDs);
 	if (pMA->MaxCapacity == 0x80000000 && pMA->Header.Length > 0x0f)
 		sz = pMA->ExtMaxCapacity;
 	else
 		sz = ((UINT64)pMA->MaxCapacity) * 1024;
-	printf("  Max Capacity: %s\n", GetHumanSize(sz, mem_human_sizes, 1024));
+	node_att_set(tab, "Max Capacity", GetHumanSize(sz, mem_human_sizes, 1024), 0);
 }
 
 static const CHAR*
 pMDMemoryTypeToStr(UCHAR Type)
 {
-	switch (Type) {
+	switch (Type)
+	{
 	case 0x01: return "Other";
 	//case 0x02: return "Unknown";
 	case 0x03: return "DRAM";
@@ -501,128 +507,132 @@ pMDMemoryTypeToStr(UCHAR Type)
 	return "Unknown";
 }
 
-static void ProcMemoryDevice(void* p)
+static void ProcMemoryDevice(PNODE tab, void* p)
 {
 	PMemoryDevice pMD = (PMemoryDevice)p;
 	const char* str = toPointString(p);
 	UINT64 sz = 0;
 
-	printf("Memory Device\n");
-	printf("  Device Locator: %s\n", LocateString(str, pMD->DeviceLocator));
-	printf("  Bank Locator: %s\n", LocateString(str, pMD->BankLocator));
+	node_att_set(tab, "Description", "Memory Device", 0);
+	node_att_set(tab, "Device Locator", LocateString(str, pMD->DeviceLocator), 0);
+	node_att_set(tab, "Bank Locator", LocateString(str, pMD->BankLocator), 0);
 	if (pMD->TotalWidth)
-		printf("  Total Width: %u bits\n", pMD->TotalWidth);
+		node_setf(tab, "Total Width", 0, "%u bits", pMD->TotalWidth);
 	if (pMD->DataWidth)
-		printf("  Data Width: %u bits\n", pMD->DataWidth);
+		node_setf(tab, "Data Width", 0, "%u bits", pMD->DataWidth);
 	if (pMD->Size & (1ULL << 15))
 		sz = ((UINT64)pMD->Size - (1ULL << 15)) * 1024;
 	else
 		sz = ((UINT64)pMD->Size) * 1024 * 1024;
 	if (!sz)
 		return;
-	printf("  Size: %s\n", GetHumanSize(sz, mem_human_sizes, 1024));
-	printf("  Type: %s\n", pMDMemoryTypeToStr(pMD->MemoryType));
+	node_att_set(tab, "Device Size", GetHumanSize(sz, mem_human_sizes, 1024), 0);
+	node_att_set(tab, "Device Type", pMDMemoryTypeToStr(pMD->MemoryType), 0);
 	if (pMD->Header.Length > 0x15)
 	{
 		if (pMD->Speed)
-			printf("  Speed: %u MT/s\n", pMD->Speed);
-		printf("  Manufacturer: %s\n", LocateString(str, pMD->Manufacturer));
-		printf("  Serial Number: %s\n", LocateString(str, pMD->SN));
-		printf("  Asset Tag Number: %s\n", LocateString(str, pMD->AssetTag));
-		printf("  Part Number: %s\n", LocateString(str, pMD->PN));
+			node_setf(tab, "Speed", 0, "%u MT/s", pMD->Speed);
+		node_att_set(tab, "Manufacturer", LocateString(str, pMD->Manufacturer), 0);
+		node_att_set(tab, "Serial Number", LocateString(str, pMD->SN), 0);
+		node_att_set(tab, "Asset Tag Number", LocateString(str, pMD->AssetTag), 0);
+		node_att_set(tab, "Part Number", LocateString(str, pMD->PN), 0);
 	}
 }
 
-static void ProcMemoryArrayMappedAddress(void* p)
+static void ProcMemoryArrayMappedAddress(PNODE tab, void* p)
 {
 	PMemoryArrayMappedAddress pMAMA = (PMemoryArrayMappedAddress)p;
 
-	printf("Memory Array Mapped Address\n");
-	printf("  Starting Address: 0x%08X\n", pMAMA->Starting);
-	printf("  Ending Address: 0x%08X\n", pMAMA->Ending);
-	printf("  Memory Array Handle: 0x%X\n", pMAMA->Handle);
-	printf("  Partition Width: 0x%X\n", pMAMA->PartitionWidth);
+	node_att_set(tab, "Description", "Memory Array Mapped Address", 0);
+	node_setf(tab, "Starting Address", 0, "0x%08X", pMAMA->Starting);
+	node_setf(tab, "Ending Address", 0, "0x%08X", pMAMA->Ending);
+	node_setf(tab, "Memory Array Handle", 0, "0x%X", pMAMA->Handle);
+	node_setf(tab, "Partition Width", 0, "0x%X", pMAMA->PartitionWidth);
 }
 
-static void ProcPortableBattery(void* p)
+static void ProcPortableBattery(PNODE tab, void* p)
 {
 	PPortableBattery pPB = (PPortableBattery)p;
 	const char* str = toPointString(p);
 
-	printf("Portable Battery\n");
-	printf("  Location: %s\n", LocateString(str, pPB->Location));
-	printf("  Manufacturer: %s\n", LocateString(str, pPB->Manufacturer));
-	printf("  Manufacturer Date: %s\n", LocateString(str, pPB->Date));
-	printf("  Serial Number: %s\n", LocateString(str, pPB->SN));
-	printf("  Device Name: %s\n", LocateString(str, pPB->DeviceName));
+	node_att_set(tab, "Description", "Portable Battery", 0);
+	node_att_set(tab, "Location", LocateString(str, pPB->Location), 0);
+	node_att_set(tab, "Manufacturer", LocateString(str, pPB->Manufacturer), 0);
+	node_att_set(tab, "Manufacturer Date", LocateString(str, pPB->Date), 0);
+	node_att_set(tab, "Serial Number", LocateString(str, pPB->SN), 0);
+	node_att_set(tab, "Device Name", LocateString(str, pPB->DeviceName), 0);
 }
 
-static void ProcTPMDevice(void* p)
+static void ProcTPMDevice(PNODE tab, void* p)
 {
 	PTPMDevice pTPM = (PTPMDevice)p;
 	const char* str = toPointString(p);
 
-	printf("TPM Device\n");
-	printf("  Vendor: %c%c%c%c\n",
+	node_att_set(tab, "Description", "TPM Device", 0);
+	node_setf(tab, "Vendor", 0, "%c%c%c%c",
 		pTPM->Vendor[0], pTPM->Vendor[1],
 		pTPM->Vendor[2], pTPM->Vendor[3]);
-	printf("  Spec Version: %u%u\n", pTPM->MajorSpecVer, pTPM->MinorSpecVer);
-	printf("  Description: %s\n", LocateString(str, pTPM->Description));
+	node_setf(tab, "Spec Version", 0, "%u%u", pTPM->MajorSpecVer, pTPM->MinorSpecVer);
+	node_att_set(tab, "Description", LocateString(str, pTPM->Description), 0);
 }
 
-static void DumpSMBIOSStruct(void* Addr, UINT Len, UINT8 Type)
+static void DumpSMBIOSStruct(PNODE node, void* Addr, UINT Len, UINT8 Type)
 {
 	LPBYTE p = (LPBYTE)(Addr);
 	const LPBYTE lastAddress = p + Len;
 	PSMBIOSHEADER pHeader;
+	PNODE tab;
 
 	for (;;) {
 		pHeader = (PSMBIOSHEADER)p;
 		if (Type != 127 && pHeader->Type != Type)
 			goto next_table;
+		tab = node_append_new(node, "Table", NFLG_TABLE_ROW);
+		node_setf(tab, "Table Type", NAFLG_FMT_NUMERIC, "%u", pHeader->Type);
+		node_setf(tab, "Table Length", NAFLG_FMT_NUMERIC, "%u", pHeader->Length);
 		switch (pHeader->Type)
 		{
 		case 0:
-			ProcBIOSInfo(pHeader);
+			ProcBIOSInfo(tab, pHeader);
 			break;
 		case 1:
-			ProcSysInfo(pHeader);
+			ProcSysInfo(tab, pHeader);
 			break;
 		case 2:
-			ProcBoardInfo(pHeader);
+			ProcBoardInfo(tab, pHeader);
 			break;
 		case 3:
-			ProcSystemEnclosure(pHeader);
+			ProcSystemEnclosure(tab, pHeader);
 			break;
 		case 4:
-			ProcProcessorInfo(pHeader);
+			ProcProcessorInfo(tab, pHeader);
 			break;
 		case 5:
-			ProcMemCtrlInfo(pHeader);
+			ProcMemCtrlInfo(tab, pHeader);
 			break;
 		case 6:
-			ProcMemModuleInfo(pHeader);
+			ProcMemModuleInfo(tab, pHeader);
 			break;
 		case 7:
-			ProcCacheInfo(pHeader);
+			ProcCacheInfo(tab, pHeader);
 			break;
 		case 11:
-			ProcOEMString(pHeader);
+			ProcOEMString(tab, pHeader);
 			break;
 		case 16:
-			ProcMemoryArray(pHeader);
+			ProcMemoryArray(tab, pHeader);
 			break;
 		case 17:
-			ProcMemoryDevice(pHeader);
+			ProcMemoryDevice(tab, pHeader);
 			break;
 		case 19:
-			ProcMemoryArrayMappedAddress(pHeader);
+			ProcMemoryArrayMappedAddress(tab, pHeader);
 			break;
 		case 22:
-			ProcPortableBattery(pHeader);
+			ProcPortableBattery(tab, pHeader);
 			break;
 		case 43:
-			ProcTPMDevice(pHeader);
+			ProcTPMDevice(tab, pHeader);
 			break;
 		default:
 			break;
@@ -639,24 +649,26 @@ static void DumpSMBIOSStruct(void* Addr, UINT Len, UINT8 Type)
 	}
 }
 
-void nwinfo_smbios(UINT8 type)
+PNODE nwinfo_smbios(UINT8 type)
 {
 	DWORD smBiosDataSize = 0;
 	struct RawSMBIOSData* smBiosData = NULL;
+	PNODE node = node_alloc("SMBIOS", NFLG_TABLE);
+	PNODE info = node_append_new(node, "DMI", NFLG_TABLE_ROW);
 
 	// Query size of SMBIOS data.
 	smBiosDataSize = NT5GetSystemFirmwareTable('RSMB', 0, NULL, 0);
 	if (smBiosDataSize == 0)
-		return;
+		return node;
 	// Allocate memory for SMBIOS data
 	smBiosData = (struct RawSMBIOSData*)malloc(smBiosDataSize);
 	if (!smBiosData)
-		return;
+		return node;
 	// Retrieve the SMBIOS table
 	NT5GetSystemFirmwareTable('RSMB', 0, smBiosData, smBiosDataSize);
-	printf("SMBIOS Version: %u.%u\n", smBiosData->MajorVersion, smBiosData->MinorVersion);
+	node_setf(info, "SMBIOS Version", 0, "%u.%u", smBiosData->MajorVersion, smBiosData->MinorVersion);
 	if (smBiosData->DmiRevision)
-		printf("DMI Version: %u\n", smBiosData->DmiRevision);
-	printf("\n");
-	DumpSMBIOSStruct(smBiosData->Data, smBiosData->Length, type);
+		node_setf(info, "DMI Version", NAFLG_FMT_NUMERIC, "%u", smBiosData->DmiRevision);
+	DumpSMBIOSStruct(node, smBiosData->Data, smBiosData->Length, type);
+	return node;
 }

@@ -8,40 +8,42 @@
 #include <stdlib.h>
 #include "nwinfo.h"
 
+static PNODE node;
+
 static const char* bps_human_sizes[6] =
 { "bps", "Kbps", "Mbps", "Gbps", "Tbps", "Pbps", };
 
-static void displayAddress(const PSOCKET_ADDRESS Address)
+static void displayAddress(PNODE pNode, const PSOCKET_ADDRESS Address, LPCSTR key)
 {
 	if (Address->iSockaddrLength < sizeof(SOCKADDR_IN))
 	{
-		printf("INVALID\n");
+		//printf("INVALID\n");
 	}
 	else if (Address->lpSockaddr->sa_family == AF_INET)
 	{
 		SOCKADDR_IN* si = (SOCKADDR_IN*)(Address->lpSockaddr);
 		char a[INET_ADDRSTRLEN] = { 0 };
 		if (NT5InetNtop(AF_INET, &(si->sin_addr), a, sizeof(a)))
-			printf("(IPv4) %s\n", a);
+			node_att_set(pNode, key ? key : "IPv4", a, 0);
 		else
-			printf("(IPv4) NULL\n");
+			node_att_set(pNode, key ? key : "IPv4", "", 0);
 	}
 	else if (Address->lpSockaddr->sa_family == AF_INET6)
 	{
 		SOCKADDR_IN6* si = (SOCKADDR_IN6*)(Address->lpSockaddr);
 		char a[INET6_ADDRSTRLEN] = { 0 };
 		if (NT5InetNtop(AF_INET6, &(si->sin6_addr), a, sizeof(a)))
-			printf("(IPv6) %s\n", a);
+			node_att_set(pNode, key ? key : "IPv6", a, 0);
 		else
-			printf("(IPv6) NULL\n");
+			node_att_set(pNode, key ? key : "IPv6", "", 0);
 	}
-	else
-		printf("NULL\n");
 }
 
 static const CHAR*
-IfTypeToStr(IFTYPE Type) {
-	switch (Type) {
+IfTypeToStr(IFTYPE Type)
+{
+	switch (Type)
+	{
 	case IF_TYPE_ETHERNET_CSMACD: return "Ethernet";
 	case IF_TYPE_ISO88025_TOKENRING: return "Token Ring";
 	case IF_TYPE_PPP: return "PPP";
@@ -57,7 +59,7 @@ IfTypeToStr(IFTYPE Type) {
 	return "Other";
 }
 
-void nwinfo_network (int active)
+PNODE nwinfo_network (int active)
 {
 	DWORD dwRetVal = 0;
 	unsigned int i = 0;
@@ -74,136 +76,150 @@ void nwinfo_network (int active)
 	MIB_IFTABLE *IfTable = NULL;
 	ULONG IfTableSize = 0;
 
+	node = node_alloc("Network", NFLG_TABLE);
+
 	dwRetVal = GetAdaptersAddresses(AF_UNSPEC, flags, NULL, NULL, &outBufLen);
 
-	if (dwRetVal == ERROR_BUFFER_OVERFLOW) {
+	if (dwRetVal == ERROR_BUFFER_OVERFLOW)
+	{
 		pAddresses = (IP_ADAPTER_ADDRESSES*)malloc(outBufLen);
-		if (!pAddresses) {
-			printf ("Memory allocation failed.\n");
-			return;
+		if (!pAddresses)
+		{
+			fprintf (stderr, "Memory allocation failed.\n");
+			return node;
 		}
 	}
-	else if (dwRetVal == ERROR_NO_DATA) {
-		printf("No addresses were found.\n");
-		return;
+	else if (dwRetVal == ERROR_NO_DATA)
+	{
+		fprintf(stderr, "No addresses were found.\n");
+		return node;
 	}
-	else {
-		printf("Error: %d\n", dwRetVal);
-		return;
+	else
+	{
+		fprintf(stderr, "Error: %d\n", dwRetVal);
+		return node;
 	}
 
 	dwRetVal = GetAdaptersAddresses(AF_UNSPEC, flags, NULL, pAddresses, &outBufLen);
 
-	if (dwRetVal != NO_ERROR) {
-		printf("Call to GetAdaptersAddresses failed with error: %d\n", dwRetVal);
+	if (dwRetVal != NO_ERROR)
+	{
+		fprintf(stderr, "Call to GetAdaptersAddresses failed with error: %d\n", dwRetVal);
 		free(pAddresses);
-		return;
+		return node;
 	}
 
 	dwRetVal = GetIfTable(NULL, &IfTableSize, FALSE);
-	if (dwRetVal == ERROR_INSUFFICIENT_BUFFER) {
+	if (dwRetVal == ERROR_INSUFFICIENT_BUFFER)
+	{
 		IfTable = (MIB_IFTABLE*)malloc(IfTableSize);
 		if (IfTable)
 			GetIfTable(IfTable, &IfTableSize, TRUE);
 	}
 
 	pCurrAddresses = pAddresses;
-	while (pCurrAddresses) {
+	while (pCurrAddresses)
+	{
+		PNODE nic = node_append_new(node, "Interface", NFLG_TABLE_ROW);
 		if (active && pCurrAddresses->OperStatus != IfOperStatusUp)
 			goto next_addr;
-		printf("Network adapter: %s\n", pCurrAddresses->AdapterName);
-		printf("Description: %s\n", NT5WcsToMbs(pCurrAddresses->Description));
-		printf("Type: %s\n", IfTypeToStr(pCurrAddresses->IfType));
-		if (pCurrAddresses->PhysicalAddressLength != 0) {
-			printf("MAC address: ");
-			for (i = 0; i < (int)pCurrAddresses->PhysicalAddressLength; i++) {
-				if (i == (pCurrAddresses->PhysicalAddressLength - 1))
-					printf("%.2X\n", pCurrAddresses->PhysicalAddress[i]);
-				else
-					printf("%.2X-", pCurrAddresses->PhysicalAddress[i]);
+		node_att_set(nic, "Network adapter", pCurrAddresses->AdapterName, 0);
+		node_att_set(nic, "Description", NT5WcsToMbs(pCurrAddresses->Description), 0);
+		node_att_set(nic, "Type", IfTypeToStr(pCurrAddresses->IfType), 0);
+		if (pCurrAddresses->PhysicalAddressLength != 0)
+		{
+			nwinfo_buffer[0] = '\0';
+			for (i = 0; i < pCurrAddresses->PhysicalAddressLength; i++)
+			{
+				snprintf(nwinfo_buffer, NWINFO_BUFSZ, "%s%.2X%s", nwinfo_buffer,
+					pCurrAddresses->PhysicalAddress[i], (i == (pCurrAddresses->PhysicalAddressLength - 1)) ? "" : "-");
 			}
+			node_att_set(nic, "MAC address", nwinfo_buffer, 0);
 		}
 
-		if (pCurrAddresses->OperStatus == IfOperStatusUp)
-			printf("Status: Active\n");
-		else
-			printf("Status: Deactive\n");
-		printf("DHCP Enabled: %s\n", pCurrAddresses->Dhcpv4Enabled ? "YES" : "NO");
+		node_att_set(nic, "Status", (pCurrAddresses->OperStatus == IfOperStatusUp) ? "Active" : "Deactive", 0);
+		node_att_set_bool(nic, "DHCP Enabled", pCurrAddresses->Dhcpv4Enabled, 0);
 		pUnicast = pCurrAddresses->FirstUnicastAddress;
-		if (pUnicast != NULL) {
-			for (i = 0; pUnicast != NULL; i++) {
-				printf("Unicast address %u:", i);
-				displayAddress(&pUnicast->Address);
-				if (pUnicast->Address.lpSockaddr->sa_family == AF_INET) {
+		if (pUnicast != NULL)
+		{
+			PNODE n_unicast = node_append_new(nic, "Unicasts", NFLG_TABLE);
+			for (i = 0; pUnicast != NULL; i++)
+			{
+				PNODE unicast = node_append_new(n_unicast, "Unicast address", NFLG_TABLE_ROW);
+				displayAddress(unicast, &pUnicast->Address, NULL);
+				if (pUnicast->Address.lpSockaddr->sa_family == AF_INET)
+				{
 					ULONG SubnetMask = 0;
 					NT5ConvertLengthToIpv4Mask(pUnicast->OnLinkPrefixLength, &SubnetMask);
-					printf("Subnet Mask: %u.%u.%u.%u\n",
+					node_setf(unicast, "Subnet Mask", 0, "%u.%u.%u.%u",
 						SubnetMask & 0xFF, (SubnetMask >> 8) & 0xFF, (SubnetMask >> 16) & 0xFF, (SubnetMask >> 24) & 0xFF);
 				}
 				pUnicast = pUnicast->Next;
 			}
 		}
-		else
-			printf("No Unicast addresses\n");
 
 		pAnycast = pCurrAddresses->FirstAnycastAddress;
-		if (pAnycast) {
-			for (i = 0; pAnycast != NULL; i++) {
-				printf("Anycast address %u:", i);
-				displayAddress(&pAnycast->Address);
+		if (pAnycast)
+		{
+			PNODE n_anycast = node_append_new(nic, "Anycasts", NFLG_TABLE);
+			for (i = 0; pAnycast != NULL; i++)
+			{
+				PNODE anycast = node_append_new(n_anycast, "Anycast address", NFLG_TABLE_ROW);
+				displayAddress(anycast, &pAnycast->Address, NULL);
 				pAnycast = pAnycast->Next;
 			}
 		}
-		else
-			printf("No Anycast addresses\n");
 
 		pMulticast = pCurrAddresses->FirstMulticastAddress;
-		if (pMulticast) {
-			for (i = 0; pMulticast != NULL; i++) {
-				printf("Multicast address %u:", i);
-				displayAddress(&pMulticast->Address);
+		if (pMulticast)
+		{
+			PNODE n_multicast = node_append_new(nic, "Multicasts", NFLG_TABLE);
+			for (i = 0; pMulticast != NULL; i++)
+			{
+				PNODE multicast = node_append_new(n_multicast, "Multicast address", NFLG_TABLE_ROW);
+				displayAddress(multicast, &pMulticast->Address, NULL);
 				pMulticast = pMulticast->Next;
 			}
 		}
-		else
-			printf("No Multicast addresses\n");
 
 		pGateway = pCurrAddresses->FirstGatewayAddress;
-		if (pGateway != NULL) {
-			for (i = 0; pGateway != NULL; i++) {
-				printf("Gateway address %u:", i);
-				displayAddress(&pGateway->Address);
+		if (pGateway != NULL)
+		{
+			PNODE n_gateway = node_append_new(nic, "Gateways", NFLG_TABLE);
+			for (i = 0; pGateway != NULL; i++)
+			{
+				PNODE gateway = node_append_new(n_gateway, "Gateway address", NFLG_TABLE_ROW);
+				displayAddress(gateway, &pGateway->Address, NULL);
 				pGateway = pGateway->Next;
 			}
 		}
-		else
-			printf("No Gateway addresses\n");
 
 		pDnServer = pCurrAddresses->FirstDnsServerAddress;
-		if (pDnServer) {
-			for (i = 0; pDnServer != NULL; i++) {
-				printf("DNS Server address %u:", i);
-				displayAddress(&pDnServer->Address);
+		if (pDnServer)
+		{
+			PNODE n_dns = node_append_new(nic, "DNS Servers", NFLG_TABLE);
+			for (i = 0; pDnServer != NULL; i++)
+			{
+				PNODE dns = node_append_new(n_dns, "DNS Server", NFLG_TABLE_ROW);
+				displayAddress(dns, &pDnServer->Address, NULL);
 				pDnServer = pDnServer->Next;
 			}
 		}
-		else
-			printf("No DNS Server addresses\n");
 
-		if (pCurrAddresses->Dhcpv4Enabled && pCurrAddresses->Dhcpv4Server.iSockaddrLength >= sizeof(SOCKADDR_IN)) {
-			printf("DHCP Server:");
-			displayAddress(&pCurrAddresses->Dhcpv4Server);
+		if (pCurrAddresses->Dhcpv4Enabled && pCurrAddresses->Dhcpv4Server.iSockaddrLength >= sizeof(SOCKADDR_IN))
+		{
+			displayAddress(nic, &pCurrAddresses->Dhcpv4Server, "DHCP Server");
 		}
 
-		printf("Transmit link speed: %s\n", GetHumanSize(pCurrAddresses->TransmitLinkSpeed, bps_human_sizes, 1000));
-		printf("Receive link speed: %s\n", GetHumanSize(pCurrAddresses->ReceiveLinkSpeed, bps_human_sizes, 1000));
-		printf("MTU: %lu Byte\n", pCurrAddresses->Mtu);
-		if (IfTable && pCurrAddresses->IfIndex > 0) {
+		node_att_set(nic, "Transmit link speed", GetHumanSize(pCurrAddresses->TransmitLinkSpeed, bps_human_sizes, 1000), 0);
+		node_att_set(nic, "Receive link speed", GetHumanSize(pCurrAddresses->ReceiveLinkSpeed, bps_human_sizes, 1000), 0);
+		node_setf(nic, "MTU", 0, "%lu Byte", pCurrAddresses->Mtu);
+		if (IfTable && pCurrAddresses->IfIndex > 0)
+		{
 			ULONG idx = pCurrAddresses->IfIndex - 1;
-			printf("Received: %u Octets\n", IfTable->table[idx].dwInOctets);
-			printf("Sent: %u Octets\n", IfTable->table[idx].dwOutOctets);
+			node_setf(nic, "Received", 0, "%u Octets", IfTable->table[idx].dwInOctets);
+			node_setf(nic, "Sent", 0, "%u Octets", IfTable->table[idx].dwOutOctets);
 		}
-		printf("\n");
 next_addr:
 		pCurrAddresses = pCurrAddresses->Next;
 	}
@@ -211,4 +227,5 @@ next_addr:
 	free(pAddresses);
 	if (IfTable)
 		free(IfTable);
+	return node;
 }

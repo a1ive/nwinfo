@@ -7,7 +7,7 @@
 #include "nwinfo.h"
 
 static int
-ParseHwid(const CHAR *Hwid)
+ParseHwid(PNODE nd, const CHAR *Hwid)
 {
 	CHAR VendorID[5] = { 0 };
 	CHAR DeviceID[5] = { 0 };
@@ -35,12 +35,12 @@ ParseHwid(const CHAR *Hwid)
 	}
 	else
 		snprintf(DeviceID, 5, "%s", Hwid + 17);
-	FindId(VendorID, DeviceID, NULL, 1);
+	FindId(nd, VendorID, DeviceID, NULL, 1);
 	return 1;
 }
 
 static void
-ListUsb(void)
+ListUsb(PNODE node)
 {
 	HDEVINFO Info = NULL;
 	DWORD i = 0;
@@ -49,7 +49,7 @@ ListUsb(void)
 	Info = SetupDiGetClassDevsExA(NULL, "USB", NULL, Flags, NULL, NULL, NULL);
 	if (Info == INVALID_HANDLE_VALUE)
 	{
-		printf("SetupDiGetClassDevs failed.\n");
+		fprintf(stderr, "SetupDiGetClassDevs failed.\n");
 		return;
 	}
 	for (i = 0; SetupDiEnumDeviceInfo(Info, i, &DeviceInfoData); i++)
@@ -64,25 +64,27 @@ ListUsb(void)
 			continue;
 		if (SetupDiGetDeviceRegistryPropertyA(Info, &DeviceInfoData, SPDRP_HARDWAREID, NULL, BufferHw, BufferHwLen, NULL))
 		{
-			printf("%s\n", BufferHw);
-			ParseHwid(BufferHw);
+			PNODE nusb = node_append_new(node, "Device", NFLG_TABLE_ROW);
+			node_att_set(nusb, "HWID", BufferHw, 0);
+			ParseHwid(nusb, BufferHw);
 		}
 		free(BufferHw);
 	}
 	SetupDiDestroyDeviceInfoList(Info);
 }
 
-void nwinfo_usb(void)
+PNODE nwinfo_usb(void)
 {
 	HANDLE Fp = INVALID_HANDLE_VALUE;
 	DWORD dwSize = 0;
 	BOOL bRet = TRUE;
-	CHAR FilePath[MAX_PATH] = { 0 };
+	CHAR* FilePath = nwinfo_buffer;
 	size_t i = 0;
+	PNODE node = node_alloc("USB", NFLG_TABLE);
 	if (!GetModuleFileNameA(NULL, FilePath, MAX_PATH) || strlen(FilePath) == 0)
 	{
-		printf("GetModuleFileName failed\n");
-		return;
+		fprintf(stderr, "GetModuleFileName failed\n");
+		return node;
 	}
 	for (i = strlen(FilePath); i > 0; i--)
 	{
@@ -96,32 +98,33 @@ void nwinfo_usb(void)
 	Fp = CreateFileA(FilePath, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
 	if (Fp == INVALID_HANDLE_VALUE)
 	{
-		printf("Cannot open %s\n", FilePath);
-		return;
+		fprintf(stderr, "Cannot open %s\n", FilePath);
+		return node;
 	}
 	dwSize = GetFileSize(Fp, NULL);
 	if (dwSize == INVALID_FILE_SIZE || dwSize == 0)
 	{
-		printf("bad usb.ids file\n");
+		fprintf(stderr, "bad usb.ids file\n");
 		CloseHandle(Fp);
-		return;
+		return node;
 	}
 	IDS = malloc(dwSize);
 	if (!IDS)
 	{
-		printf("out of memory\n");
+		fprintf(stderr, "out of memory\n");
 		CloseHandle(Fp);
-		return;
+		return node;
 	}
 	IDS_SIZE = dwSize;
 	bRet = ReadFile(Fp, IDS, dwSize, &dwSize, NULL);
 	CloseHandle(Fp);
 	if (bRet)
 	{
-		ListUsb();
+		ListUsb(node);
 	}
 	else
-		printf("usb.ids read error\n");
+		fprintf(stderr, "usb.ids read error\n");
 	free(IDS);
 	IDS_SIZE = 0;
+	return node;
 }

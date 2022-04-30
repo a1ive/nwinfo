@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <windows.h>
+#include "format.h"
 
 BOOL IsAdmin(void);
 DWORD ObtainPrivileges(LPCTSTR privilege);
@@ -15,8 +16,8 @@ int GetRegDwordValue(HKEY Key, LPCSTR SubKey, LPCSTR ValueName, DWORD* pValue);
 CHAR* GetRegSzValue(HKEY Key, LPCSTR SubKey, LPCSTR ValueName);
 extern CHAR* IDS;
 extern DWORD IDS_SIZE;
-void FindId(CONST CHAR* v, CONST CHAR* d, CONST CHAR* s, int usb);
-void FindClass(CONST CHAR* Class);
+void FindId(PNODE nd, CONST CHAR* v, CONST CHAR* d, CONST CHAR* s, int usb);
+void FindClass(PNODE nd, CONST CHAR* Class);
 const CHAR* GuidToStr(UCHAR Guid[16]);
 
 // NT5 compatible
@@ -41,17 +42,26 @@ void ExitPhysicalMemory(void);
 BOOL ReadPhysicalMemory(PVOID buffer, DWORD address, DWORD length);
 #endif
 
-void nwinfo_sys(void);
-void nwinfo_cpuid(void);
-void nwinfo_acpi(DWORD signature);
-void nwinfo_network(int active);
-void nwinfo_smbios(UINT8 type);
-void nwinfo_disk(void);
-void nwinfo_display(int raw);
-void nwinfo_pci(const CHAR *PciClass);
-void nwinfo_usb(void);
+extern enum output_format
+{
+	FORMAT_YAML = 0,
+	FORMAT_JSON,
+} nwinfo_output_format;
+extern FILE* nwinfo_output;
+#define NWINFO_BUFSZ 65535
+extern UCHAR nwinfo_buffer[NWINFO_BUFSZ];
+
+PNODE nwinfo_sys(void);
+PNODE nwinfo_cpuid(void);
+PNODE nwinfo_acpi(DWORD signature);
+PNODE nwinfo_network(int active);
+PNODE nwinfo_smbios(UINT8 type);
+PNODE nwinfo_disk(void);
+PNODE nwinfo_display(void);
+PNODE nwinfo_pci(const CHAR *PciClass);
+PNODE nwinfo_usb(void);
 void nwinfo_beep(int argc, char *argv[]);
-void nwinfo_spd(int raw);
+PNODE nwinfo_spd(void);
 
 #pragma pack(1)
 

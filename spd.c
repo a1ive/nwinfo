@@ -22,7 +22,8 @@ static const CHAR*
 DDR34ModuleType(UINT8 Type)
 {
 	Type &= 0x0F;
-	switch (Type) {
+	switch (Type)
+	{
 	case 0: return "EXT.DIMM";
 	case 1: return "RDIMM";
 	case 2: return "UDIMM";
@@ -42,7 +43,8 @@ static const CHAR*
 DDR2ModuleType(UINT8 Type)
 {
 	Type &= 0x3F;
-	switch (Type) {
+	switch (Type)
+	{
 	case 1: return "RDIMM";
 	case 2: return "UDIMM";
 	case 4: return "SO-DIMM";
@@ -161,11 +163,13 @@ DDRManufacturer(UINT8* Raw)
 }
 
 static const CHAR*
-DDR2345Date(UINT8 rawYear, UINT8 rawWeek) {
+DDR2345Date(UINT8 rawYear, UINT8 rawWeek)
+{
 	UINT32 Year = 0, Week = 0;
 	static CHAR Date[] = "Week52/2021";
 	if (rawYear == 0x0 || rawYear == 0xff ||
-		rawWeek == 0x0 || rawWeek == 0xff) {
+		rawWeek == 0x0 || rawWeek == 0xff)
+	{
 		return "-";
 	}
 	Week = ((rawWeek >> 4) & 0x0FU) * 10U + (rawWeek & 0x0FU);
@@ -175,11 +179,13 @@ DDR2345Date(UINT8 rawYear, UINT8 rawWeek) {
 }
 
 static const CHAR*
-DDRDate(UINT8 rawYear, UINT8 rawWeek) {
+DDRDate(UINT8 rawYear, UINT8 rawWeek)
+{
 	UINT32 Year = 0, Week = 0;
 	static CHAR Date[] = "Week52/1990";
 	if (rawYear == 0x0 || rawYear == 0xff ||
-		rawWeek == 0x0 || rawWeek == 0xff) {
+		rawWeek == 0x0 || rawWeek == 0xff)
+	{
 		return "-";
 	}
 	Week = ((rawWeek >> 4) & 0x0FU) * 10U + (rawWeek & 0x0FU);
@@ -191,7 +197,8 @@ DDRDate(UINT8 rawYear, UINT8 rawWeek) {
 static UINT32
 DDR4Speed(UINT8* rawSpd)
 {
-	switch (rawSpd[18]) {
+	switch (rawSpd[18])
+	{
 	case 0x05: return 3200;
 	case 0x06: return 2666;
 	case 0x07: return 2400;
@@ -205,7 +212,8 @@ DDR4Speed(UINT8* rawSpd)
 static UINT32
 DDR3Speed(UINT8* rawSpd)
 {
-	switch (rawSpd[12]) {
+	switch (rawSpd[12])
+	{
 	case 0x05: return 2666;
 	case 0x06: return 2533;
 	case 0x07: return 2400;
@@ -226,192 +234,178 @@ DDRSpeed(UINT8* rawSpd)
 }
 
 static void
-PrintDDR5(UINT8* rawSpd)
+PrintDDR5(PNODE nd, UINT8* rawSpd)
 {
 	UINT i = 0;
-	printf("  Revision: %u.%u\n", rawSpd[1] >> 4, rawSpd[1] & 0x0FU);
+	node_setf(nd, "Revision", 0, "%u.%u", rawSpd[1] >> 4, rawSpd[1] & 0x0FU);
 #if 0
-	printf("  Manufacturer: %s\n", DDR345Manufacturer(rawSpd[512], rawSpd[513]));
-	printf("  Date: %s\n", DDR2345Date(rawSpd[515], rawSpd[516]));
-	printf("  Serial: ");
+	node_att_set(nd, "Manufacturer", DDR345Manufacturer(rawSpd[512], rawSpd[513]), 0);
+	node_att_set(nd, "Date", DDR2345Date(rawSpd[515], rawSpd[516]), 0);
+	nwinfo_buffer[0] = '\0';
 	for (i = 0; i < 4; i++)
-		printf("%02X", rawSpd[517 + i]);
-	printf("\n");
-	printf("  Part: ");
+		snprintf(nwinfo_buffer, NWINFO_BUFSZ, "%s%02X", nwinfo_buffer, rawSpd[517 + i]);
+	node_att_set(nd, "Serial", nwinfo_buffer, 0);
+	nwinfo_buffer[0] = '\0';
 	for (i = 0; i < 20; i++)
-		printf("%c", rawSpd[521 + i]);
+		snprintf(nwinfo_buffer, NWINFO_BUFSZ, "%s%c", nwinfo_buffer, rawSpd[521 + i]);
+	node_att_set(nd, "Part", nwinfo_buffer, 0);
 #endif
-	printf("\n");
 }
 
 static void
-PrintDDR4(UINT8* rawSpd)
+PrintDDR4(PNODE nd, UINT8* rawSpd)
 {
 	UINT i = 0;
-	printf("  Revision: %u.%u\n", rawSpd[1] >> 4, rawSpd[1] & 0x0FU);
-	printf("  Module Type: %s%s\n", DDR34ModuleType(rawSpd[3]), (rawSpd[13] & 0x08U) ? " (ECC)" : "");
-	printf("  Capacity: %s\n", DDR4Capacity(rawSpd));
-	printf("  Speed: %u MHz\n", DDR4Speed(rawSpd));
-	printf("  Voltage: %s\n", (rawSpd[11] & 0x01U) ? "1.2 V" : "(Unknown)");
-	printf("  Manufacturer: %s\n", DDR345Manufacturer(rawSpd[320], rawSpd[321]));
-	printf("  Date: %s\n", DDR2345Date(rawSpd[323], rawSpd[324]));
-	printf("  Serial: ");
+	node_setf(nd, "Revision", 0, "%u.%u", rawSpd[1] >> 4, rawSpd[1] & 0x0FU);
+	node_setf(nd, "Module Type", 0, "%s%s", DDR34ModuleType(rawSpd[3]), (rawSpd[13] & 0x08U) ? " (ECC)" : "");
+	node_att_set(nd, "Capacity", DDR4Capacity(rawSpd), 0);
+	node_setf(nd, "Speed", 0, "%u MHz", DDR4Speed(rawSpd));
+	node_att_set(nd, "Voltage", (rawSpd[11] & 0x01U) ? "1.2 V" : "(Unknown)", 0);
+	node_att_set(nd, "Manufacturer", DDR345Manufacturer(rawSpd[320], rawSpd[321]), 0);
+	node_att_set(nd, "Date", DDR2345Date(rawSpd[323], rawSpd[324]), 0);
+	nwinfo_buffer[0] = '\0';
 	for (i = 0; i < 4; i++)
-		printf("%02X", rawSpd[325 + i]);
-	printf("\n");
-	printf("  Part: ");
+		snprintf(nwinfo_buffer, NWINFO_BUFSZ, "%s%02X", nwinfo_buffer, rawSpd[325 + i]);
+	node_att_set(nd, "Serial", nwinfo_buffer, 0);
+	nwinfo_buffer[0] = '\0';
 	for (i = 0; i < 20; i++)
-		printf("%c", rawSpd[329 + i]);
-	printf("\n");
+		snprintf(nwinfo_buffer, NWINFO_BUFSZ, "%s%c", nwinfo_buffer, rawSpd[329 + i]);
+	node_att_set(nd, "Part", nwinfo_buffer, 0);
 }
 
 static void
-PrintDDR3(UINT8* rawSpd)
+PrintDDR3(PNODE nd, UINT8* rawSpd)
 {
 	UINT i = 0;
-	printf("  Revision: %u.%u\n", rawSpd[1] >> 4, rawSpd[1] & 0x0FU);
-	printf("  Module Type: %s%s\n", DDR34ModuleType(rawSpd[3]), (rawSpd[8] >> 3 == 1) ? " (ECC)" : "");
-	printf("  Capacity: %s\n", DDR3Capacity(rawSpd));
-	printf("  Speed: %u MHz\n", DDR3Speed(rawSpd));
-	printf("  Supported Voltages:%s%s%s\n", (rawSpd[6] & 0x04U) ? " 1.25V" : "",
+	node_setf(nd, "Revision", 0, "%u.%u", rawSpd[1] >> 4, rawSpd[1] & 0x0FU);
+	node_setf(nd, "Module Type", 0, "%s%s", DDR34ModuleType(rawSpd[3]), (rawSpd[8] >> 3 == 1) ? " (ECC)" : "");
+	node_att_set(nd, "Capacity", DDR3Capacity(rawSpd), 0);
+	node_setf(nd, "Speed", 0, "%u MHz", DDR3Speed(rawSpd));
+	node_setf(nd, "Supported Voltages", 0, "%s%s%s", (rawSpd[6] & 0x04U) ? " 1.25V" : "",
 		(rawSpd[6] & 0x02U) ? " 1.35V" : "", (rawSpd[6] & 0x01U) ? "" : " 1.5V");
-	printf("  Manufacturer: %s\n", DDR345Manufacturer(rawSpd[117], rawSpd[118]));
-	printf("  Date: %s\n", DDR2345Date(rawSpd[120], rawSpd[121]));
-	printf("  Serial: ");
+	node_att_set(nd, "Manufacturer", DDR345Manufacturer(rawSpd[117], rawSpd[118]), 0);
+	node_att_set(nd, "Date", DDR2345Date(rawSpd[120], rawSpd[121]), 0);
+	nwinfo_buffer[0] = '\0';
 	for (i = 0; i < 4; i++)
-		printf("%02X", rawSpd[122 + i]);
-	printf("\n");
-	printf("  Part: ");
-	for (i = 0; i < 18; i++)
-		printf("%c", rawSpd[128 + i]);
-	printf("\n");
+		snprintf(nwinfo_buffer, NWINFO_BUFSZ, "%s%02X", nwinfo_buffer, rawSpd[122 + i]);
+	node_att_set(nd, "Serial", nwinfo_buffer, 0);
+	nwinfo_buffer[0] = '\0';
+	for (i = 0; i < 20; i++)
+		snprintf(nwinfo_buffer, NWINFO_BUFSZ, "%s%c", nwinfo_buffer, rawSpd[128 + i]);
+	node_att_set(nd, "Part", nwinfo_buffer, 0);
 }
 
 static void
-PrintDDR2(UINT8* rawSpd)
+PrintDDR2(PNODE nd, UINT8* rawSpd)
 {
 	UINT i = 0;
-	printf("  Revision: %u.%u\n", rawSpd[1] >> 4, rawSpd[1] & 0x0FU);
-	printf("  Module Type: %s%s\n", DDR2ModuleType(rawSpd[3]), (rawSpd[11] >> 1 == 1) ? " (ECC)" : "");
-	printf("  Capacity: %s\n", DDR2Capacity(rawSpd));
-	printf("  Speed: %u MHz\n", DDRSpeed(rawSpd));
-	printf("  Manufacturer: %s\n", DDRManufacturer(rawSpd + 64));
-	printf("  Date: %s\n", DDR2345Date(rawSpd[93], rawSpd[94]));
-	printf("  Serial: ");
+	node_setf(nd, "Revision", 0, "%u.%u", rawSpd[1] >> 4, rawSpd[1] & 0x0FU);
+	node_setf(nd, "Module Type", 0, "%s%s", DDR2ModuleType(rawSpd[3]), (rawSpd[11] >> 1 == 1) ? " (ECC)" : "");
+	node_att_set(nd, "Capacity", DDR2Capacity(rawSpd), 0);
+	node_setf(nd, "Speed", 0, "%u MHz", DDRSpeed(rawSpd));
+	node_att_set(nd, "Manufacturer", DDRManufacturer(rawSpd + 64), 0);
+	node_att_set(nd, "Date", DDR2345Date(rawSpd[93], rawSpd[94]), 0);
+	nwinfo_buffer[0] = '\0';
 	for (i = 0; i < 4; i++)
-		printf("%02X", rawSpd[95 + i]);
-	printf("\n");
-	printf("  Part: ");
+		snprintf(nwinfo_buffer, NWINFO_BUFSZ, "%s%02X", nwinfo_buffer, rawSpd[95 + i]);
+	node_att_set(nd, "Serial", nwinfo_buffer, 0);
+	nwinfo_buffer[0] = '\0';
 	for (i = 0; i < 18; i++)
-		printf("%c", rawSpd[73 + i]);
-	printf("\n");
+		snprintf(nwinfo_buffer, NWINFO_BUFSZ, "%s%c", nwinfo_buffer, rawSpd[73 + i]);
+	node_att_set(nd, "Part", nwinfo_buffer, 0);
 }
 
 static void
-PrintDDR(UINT8* rawSpd)
+PrintDDR(PNODE nd, UINT8* rawSpd)
 {
 	UINT i = 0;
-	printf("  Revision: %u.%u\n", rawSpd[1] >> 4, rawSpd[1] & 0x0FU);
-	printf("  Capacity: %s\n", DDRCapacity(rawSpd));
-	printf("  Speed: %u MHz\n", DDRSpeed(rawSpd));
-	printf("  Manufacturer: %s\n", DDRManufacturer(rawSpd + 64));
-	printf("  Date: %s\n", DDRDate(rawSpd[93], rawSpd[94]));
-	printf("  Serial: ");
+	node_setf(nd, "Revision", 0, "%u.%u", rawSpd[1] >> 4, rawSpd[1] & 0x0FU);
+	node_att_set(nd, "Capacity", DDRCapacity(rawSpd), 0);
+	node_setf(nd, "Speed", 0, "%u MHz", DDRSpeed(rawSpd));
+	node_att_set(nd, "Manufacturer", DDRManufacturer(rawSpd + 64), 0);
+	node_att_set(nd, "Date", DDRDate(rawSpd[93], rawSpd[94]), 0);
+	nwinfo_buffer[0] = '\0';
 	for (i = 0; i < 4; i++)
-		printf("%02X", rawSpd[95 + i]);
-	printf("\n");
-	printf("  Part: ");
+		snprintf(nwinfo_buffer, NWINFO_BUFSZ, "%s%02X", nwinfo_buffer, rawSpd[95 + i]);
+	node_att_set(nd, "Serial", nwinfo_buffer, 0);
+	nwinfo_buffer[0] = '\0';
 	for (i = 0; i < 18; i++)
-		printf("%c", rawSpd[73 + i]);
-	printf("\n");
+		snprintf(nwinfo_buffer, NWINFO_BUFSZ, "%s%c", nwinfo_buffer, rawSpd[73 + i]);
+	node_att_set(nd, "Part", nwinfo_buffer, 0);
 }
 
-static void
-PrintSpdRaw(UINT8* rawSpd)
-{
-	UINT i = 0, j = 0;
-	UINT Length = SPD_DATA_LEN;
-	if (rawSpd[2] < 12)
-		Length = 256;
-	for (i = 0; i < Length; i += 0x10)
-	{
-		for (j = 0; j < 0x10; j++)
-			printf(" %02X", rawSpd[i + j]);
-		printf("\n");
-	}
-}
-
-void
-nwinfo_spd(int raw)
+PNODE
+nwinfo_spd(void)
 {
 	int i = 0;
 	UINT8* rawSpd = NULL;
+	PNODE node = node_alloc("SPD", NFLG_TABLE);
 	SpdInit();
-	for (i = 0; i < 8; i++) {
+	for (i = 0; i < 8; i++)
+	{
+		PNODE nspd = node_append_new(node, "Slot", NFLG_TABLE_ROW);
+		node_setf(nspd, "ID", NAFLG_FMT_NUMERIC, "%d", i);
 		rawSpd = SpdGet(i);
-		if (!rawSpd) {
-			printf("Slot %d: EMPTY\n", i);
+		if (!rawSpd)
+		{
 			continue;
 		}
-		if (raw) {
-			printf("Slot %d:\n", i);
-			PrintSpdRaw(rawSpd);
-			continue;
-		}
-		switch (rawSpd[2]) {
+		switch (rawSpd[2])
+		{
 		case 4:
-			printf("Slot %d: SDRAM\n", i);
-			PrintDDR(rawSpd);
+			node_att_set(nspd, "Memory Type", "SDRAM", 0);
+			PrintDDR(nspd, rawSpd);
 			break;
 		case 5:
-			printf("Slot %d: ROM\n", i);
+			node_att_set(nspd, "Memory Type", "ROM", 0);
 			break;
 		case 6:
-			printf("Slot %d: DDR SGRAM\n", i);
+			node_att_set(nspd, "Memory Type", "DDR SGRAM", 0);
 			break;
 		case 7:
-			printf("Slot %d: DDR SDRAM\n", i);
-			PrintDDR(rawSpd);
+			node_att_set(nspd, "Memory Type", "DDR SDRAM", 0);
+			PrintDDR(nspd, rawSpd);
 			break;
 		case 8:
-			printf("Slot %d: DDR2 SDRAM\n", i);
-			PrintDDR2(rawSpd);
+			node_att_set(nspd, "Memory Type", "DDR2 SDRAM", 0);
+			PrintDDR2(nspd, rawSpd);
 			break;
 		case 9:
-			printf("Slot %d: DDR2 SDRAM FB-DIMM\n", i);
-			PrintDDR2(rawSpd);
+			node_att_set(nspd, "Memory Type", "DDR2 SDRAM FB-DIMM", 0);
+			PrintDDR2(nspd, rawSpd);
 			break;
 		case 10:
-			printf("Slot %d: DDR2 SDRAM FB-DIMM PROBE\n", i);
-			PrintDDR2(rawSpd);
+			node_att_set(nspd, "Memory Type", "DDR2 SDRAM FB-DIMM PROBE", 0);
+			PrintDDR2(nspd, rawSpd);
 			break;
 		case 11:
-			printf("Slot %d: DDR3 SDRAM\n", i);
-			PrintDDR3(rawSpd);
+			node_att_set(nspd, "Memory Type", "DDR3 SDRAM", 0);
+			PrintDDR3(nspd, rawSpd);
 			break;
 		case 12:
-			printf("Slot %d: DDR4 SDRAM\n", i);
-			PrintDDR4(rawSpd);
+			node_att_set(nspd, "Memory Type", "DDR4 SDRAM", 0);
+			PrintDDR4(nspd, rawSpd);
 			break;
 		case 14:
-			printf("Slot %d: DDR4E SDRAM\n", i);
-			PrintDDR4(rawSpd);
+			node_att_set(nspd, "Memory Type", "DDR4E SDRAM", 0);
+			PrintDDR4(nspd, rawSpd);
 			break;
 		case 15:
-			printf("Slot %d: LPDDR3 SDRAM\n", i);
-			PrintDDR4(rawSpd);
+			node_att_set(nspd, "Memory Type", "LPDDR3 SDRAM", 0);
+			PrintDDR4(nspd, rawSpd);
 			break;
 		case 16:
-			printf("Slot %d: LPDDR4 SDRAM\n", i);
-			PrintDDR4(rawSpd);
+			node_att_set(nspd, "Memory Type", "LPDDR4 SDRAM", 0);
+			PrintDDR4(nspd, rawSpd);
 			break;
 		case 18:
-			printf("Slot %d: DDR5 SDRAM\n", i);
-			PrintDDR5(rawSpd);
+			node_att_set(nspd, "Memory Type", "DDR5 SDRAM", 0);
+			PrintDDR5(nspd, rawSpd);
 			break;
 		default:
-			printf("Slot %d: UNKNOWN\n", i);
+			node_att_set(nspd, "Memory Type", "UNKNOWN", 0);
 		}
 	}
 	SpdFini();
+	return node;
 }

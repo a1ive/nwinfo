@@ -60,6 +60,9 @@
     <ClCompile Include="smbus.c">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="format.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="nwinfo.h">
@@ -75,6 +78,9 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="pnp_id.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="format.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

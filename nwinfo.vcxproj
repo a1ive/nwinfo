@@ -26,6 +26,7 @@
     <ClCompile Include="cpuid.c" />
     <ClCompile Include="disk.c" />
     <ClCompile Include="display.c" />
+    <ClCompile Include="format.c" />
     <ClCompile Include="network.c" />
     <ClCompile Include="nt5phys.c" />
     <ClCompile Include="nwinfo.c" />
@@ -38,6 +39,7 @@
     <ClCompile Include="utils.c" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="format.h" />
     <ClInclude Include="nwinfo.h" />
     <ClInclude Include="pnp_id.h" />
     <ClInclude Include="resource.h" />

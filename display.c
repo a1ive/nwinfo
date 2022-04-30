@@ -79,18 +79,32 @@ GetPnpManufacturer(const char* Id)
 	return Id;
 }
 
+static const CHAR*
+InterfaceToStr(UINT8 Interface)
+{
+	switch (Interface)
+	{
+	case 2: return "HDMIa";
+	case 3: return "HDMIb";
+	case 4: return "MDDI";
+	case 5: return "DisplayPort";
+	}
+	return "UNKNOWN";
+}
+
 static void
-DecodeEDID(void* pData, DWORD dwSize)
+DecodeEDID(PNODE nm, void* pData, DWORD dwSize)
 {
 	DWORD i;
 	struct EDID* pEDID = pData;
 	static UCHAR Magic[8] = { 0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00 };
 	char Manufacturer[4];
+	PNODE nflags;
 	if (dwSize < sizeof(struct EDID))
 		return;
 	if (memcmp(pEDID->Magic, Magic, 8) != 0)
 	{
-		printf("ERROR: bad edid magic\n");
+		fprintf(stderr, "ERROR: bad edid magic\n");
 		return;
 	}
 	pEDID->Manufacturer = (pEDID->Manufacturer << 8U) | (pEDID->Manufacturer >> 8U); // BE
@@ -98,40 +112,24 @@ DecodeEDID(void* pData, DWORD dwSize)
 		(CHAR)(((pEDID->Manufacturer & 0x7c00U) >> 10U) + 'A' - 1),
 		(CHAR)(((pEDID->Manufacturer & 0x3e0U) >> 5U) + 'A' - 1),
 		(CHAR)((pEDID->Manufacturer & 0x1fU) + 'A' - 1));
-	printf("Manufacturer: %s\n", GetPnpManufacturer(Manufacturer));
-	printf("ID: %s%04X\n", Manufacturer, pEDID->Product);
-	printf("Serial: %08X\n", pEDID->Serial);
-	printf("Date: %u, Week %u\n", pEDID->Year + 1990, pEDID->Week & 0x7F);
-	printf("EDID Version: %u.%u\n", pEDID->Version, pEDID->Revision);
-	printf("Video Input: ");
+	node_att_set(nm, "Manufacturer", GetPnpManufacturer(Manufacturer), 0);
+	node_setf(nm, "ID", 0, "%s%04X", Manufacturer, pEDID->Product);
+	node_setf(nm, "Serial", 0, "%08X", pEDID->Serial);
+	node_setf(nm, "Date", 0, "%u, Week %u", pEDID->Year + 1990, pEDID->Week & 0x7F);
+	node_setf(nm, "EDID Version", 0, "%u.%u", pEDID->Version, pEDID->Revision);
+	nflags = node_append_new(nm, "Video Input", NFLG_ATTGROUP);
 	if (pEDID->Flags & 0x80)
 	{
-		printf("Digital");
 		UINT8 Depth = (pEDID->Flags & 0x70U) >> 4U;
+		node_att_set(nflags, "Type", "Digital", 0);
 		if (Depth > 0 && Depth < 7)
-			printf(", %u bits per color", Depth * 2 + 4);
-		UINT8 Interface = pEDID->Flags & 0x07U;
-		switch (Interface)
-		{
-		case 2:
-			printf(", HDMIa");
-			break;
-		case 3:
-			printf(", HDMIb");
-			break;
-		case 4:
-			printf(", MDDI");
-			break;
-		case 5:
-			printf(", DisplayPort");
-			break;
-		}
+			node_setf(nflags, "Bits per color", NAFLG_FMT_NUMERIC, "%u", Depth * 2 + 4);
+		node_att_set(nflags, "Interface", InterfaceToStr(pEDID->Flags & 0x07U), 0);
 	}
 	else
 	{
-		printf("Analog");
+		node_att_set(nflags, "Type", "Analog", 0);
 	}
-	printf("\n");
 	for (i = 0; i < 4; i++)
 	{
 		UINT32 ha, va, hb, vb, w, h;
@@ -140,37 +138,23 @@ DecodeEDID(void* pData, DWORD dwSize)
 		if (pEDID->Desc[i].PixelClock == 0 && pEDID->Desc[i].HActiveLSB == 0)
 			continue;
 		pc = ((UINT64)pEDID->Desc[i].PixelClock) * 10 * 1000;
-		printf("Pixel Clock: %s\n", GetHumanSize(pc, hz_human_sizes, 1000));
+		node_att_set(nm, "Pixel Clock", GetHumanSize(pc, hz_human_sizes, 1000), 0);
 		ha = (UINT32)pEDID->Desc[i].HActiveLSB + (UINT32)((pEDID->Desc[i].HPixelsMSB & 0xf0) << 4);
 		va = (UINT32)pEDID->Desc[i].VActiveLSB + (UINT32)((pEDID->Desc[i].VLinesMSB & 0xf0) << 4);
 		hb = (UINT32)pEDID->Desc[i].HBlankingLSB + (UINT32)((pEDID->Desc[i].HPixelsMSB & 0x0f) << 8);
 		vb = (UINT32)pEDID->Desc[i].VBlankingLSB + (UINT32)((pEDID->Desc[i].VLinesMSB & 0x0f) << 8);
 		hz = ((double)pc) / (((UINT64)ha + hb) * ((UINT64)va + vb));
-		printf("Resolution: %u x %u @%.2fHz\n", ha, va, hz);
+		node_setf(nm, "Resolution", 0, "%u x %u @%.2fHz", ha, va, hz);
 		w = (UINT32)pEDID->Desc[i].WidthLSB + (UINT32)((pEDID->Desc[i].WHMSB & 0xf0) << 4);
 		h = (UINT32)pEDID->Desc[i].HeightLSB + (UINT32)((pEDID->Desc[i].WHMSB & 0x0f) << 8);
 		inch = sqrt((double)((UINT64)w) * w + ((UINT64)h) * h) * 0.0393701;
-		printf("Screen Size: %u mm x %u mm (%.1f\")\n", w, h, inch);
+		node_setf(nm, "Screen Size", 0, "%u mm x %u mm (%.1f\")", w, h, inch);
 		break;
 	}
-	printf("\n");
 }
 
 static void
-PrintEDID(UCHAR* pData, DWORD dwSize)
-{
-	DWORD i;
-	for (i = 0; i < dwSize; i++)
-	{
-		if (i && i % 16 == 0)
-			printf("\n");
-		printf("%02x ", pData[i]);
-	}
-	printf("\n");
-}
-
-static void
-GetEDID(int raw, HDEVINFO devInfo, PSP_DEVINFO_DATA devInfoData)
+GetEDID(PNODE nm, HDEVINFO devInfo, PSP_DEVINFO_DATA devInfoData)
 {
 	HKEY hDevRegKey;
 	LSTATUS lRet;
@@ -178,18 +162,18 @@ GetEDID(int raw, HDEVINFO devInfo, PSP_DEVINFO_DATA devInfoData)
 
 	bRet = SetupDiGetDeviceRegistryPropertyA(devInfo, devInfoData,
 		SPDRP_HARDWAREID, NULL, EDIDdata, sizeof(EDIDdata), NULL);
-	printf ("HWID: %s\n", bRet ? EDIDdata : "UNKNOWN");
+	node_att_set (nm, "HWID", bRet ? EDIDdata : "UNKNOWN", 0);
 
 	bRet = SetupDiGetDeviceRegistryPropertyA(devInfo, devInfoData,
 		SPDRP_DEVICEDESC, NULL, EDIDdata, sizeof(EDIDdata), NULL);
-	printf("Description: %s\n", bRet ? EDIDdata : "UNKNOWN MONITOR");
+	node_att_set(nm, "Description", bRet ? EDIDdata : "UNKNOWN MONITOR", 0);
 
 	hDevRegKey = SetupDiOpenDevRegKey(devInfo, devInfoData,
 		DICS_FLAG_GLOBAL, 0, DIREG_DEV, KEY_ALL_ACCESS);
 
 	if (!hDevRegKey)
 	{
-		printf("SetupDiOpenDevRegKey failed\n");
+		fprintf(stderr, "SetupDiOpenDevRegKey failed\n");
 		return;
 	}
 	EDIDsize = sizeof(EDIDdata);
@@ -197,18 +181,14 @@ GetEDID(int raw, HDEVINFO devInfo, PSP_DEVINFO_DATA devInfoData)
 	lRet = RegGetValueA(hDevRegKey, NULL, "EDID", RRF_RT_REG_BINARY, NULL, EDIDdata, &EDIDsize);
 	if (lRet == ERROR_SUCCESS || lRet == ERROR_MORE_DATA)
 	{
-		if (raw)
-			PrintEDID(EDIDdata, EDIDsize);
-		else
-			DecodeEDID(EDIDdata, EDIDsize);
+		DecodeEDID(nm, EDIDdata, EDIDsize);
 	}
-	else
-		printf("NO EDID DATA\n");
 	RegCloseKey(hDevRegKey);
 }
 
-void nwinfo_display(int raw)
+PNODE nwinfo_display(void)
 {
+	PNODE node = node_alloc("Display", NFLG_TABLE);
 	HDEVINFO Info = NULL;
 	DWORD i = 0;
 	SP_DEVINFO_DATA DeviceInfoData = { .cbSize = sizeof(SP_DEVINFO_DATA) };
@@ -216,12 +196,14 @@ void nwinfo_display(int raw)
 	Info = SetupDiGetClassDevsExA(NULL, "DISPLAY", NULL, Flags, NULL, NULL, NULL);
 	if (Info == INVALID_HANDLE_VALUE)
 	{
-		printf("SetupDiGetClassDevs failed.\n");
-		return;
+		fprintf(stderr, "SetupDiGetClassDevs failed.\n");
+		return node;
 	}
 	for (i = 0; SetupDiEnumDeviceInfo(Info, i, &DeviceInfoData); i++)
 	{
-		GetEDID(raw, Info, &DeviceInfoData);
+		PNODE nm = node_append_new(node, "Monitor", NFLG_TABLE_ROW);
+		GetEDID(nm, Info, &DeviceInfoData);
 	}
 	SetupDiDestroyDeviceInfoList(Info);
+	return node;
 }

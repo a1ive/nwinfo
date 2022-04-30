@@ -198,7 +198,7 @@ IdsGetline(DWORD* Offset)
 }
 
 void
-FindId(CONST CHAR* v, CONST CHAR* d, CONST CHAR* s, int usb)
+FindId(PNODE nd, CONST CHAR* v, CONST CHAR* d, CONST CHAR* s, int usb)
 {
 	DWORD Offset = 0;
 	CHAR* vLine = NULL;
@@ -221,7 +221,7 @@ FindId(CONST CHAR* v, CONST CHAR* d, CONST CHAR* s, int usb)
 			vLine = IdsGetline(&Offset);
 			continue;
 		}
-		printf("  Vendor: %s\n", vLine + 6);
+		node_att_set(nd, "Vendor", vLine + 6, 0);
 		free(vLine);
 		dLine = IdsGetline(&Offset);
 		while (dLine)
@@ -243,7 +243,7 @@ FindId(CONST CHAR* v, CONST CHAR* d, CONST CHAR* s, int usb)
 				dLine = IdsGetline(&Offset);
 				continue;
 			}
-			printf("  Device: %s\n", dLine + 7);
+			node_att_set(nd, "Device", dLine + 7, 0);
 			free(dLine);
 			if (!s)
 				break;
@@ -267,7 +267,7 @@ FindId(CONST CHAR* v, CONST CHAR* d, CONST CHAR* s, int usb)
 					sLine = IdsGetline(&Offset);
 					continue;
 				}
-				printf("  %s: %s\n", usb? "Interface" : "Subsys", sLine + 13);
+				node_att_set(nd, usb ? "Interface" : "Subsys", sLine + 13, 0);
 				free(sLine);
 				break;
 			}
@@ -278,7 +278,7 @@ FindId(CONST CHAR* v, CONST CHAR* d, CONST CHAR* s, int usb)
 }
 
 void
-FindClass(CONST CHAR* Class)
+FindClass(PNODE nd, CONST CHAR* Class)
 {
 	DWORD Offset = 0;
 	CHAR* vLine = NULL;
@@ -304,7 +304,7 @@ FindClass(CONST CHAR* Class)
 			vLine = IdsGetline(&Offset);
 			continue;
 		}
-		printf("  Class: %s", vLine + 6);
+		node_att_set(nd, "Class", vLine + 6, 0);
 		free(vLine);
 		if (!d)
 			goto out;
@@ -328,7 +328,7 @@ FindClass(CONST CHAR* Class)
 				dLine = IdsGetline(&Offset);
 				continue;
 			}
-			printf(", %s", dLine + 5);
+			node_att_set(nd, "Subclass", dLine + 5, 0);
 			free(dLine);
 			if (!s)
 				break;
@@ -352,14 +352,13 @@ FindClass(CONST CHAR* Class)
 					sLine = IdsGetline(&Offset);
 					continue;
 				}
-				printf(", %s", sLine + 6);
+				node_att_set(nd, "Prog IF", sLine + 6, 0);
 				free(sLine);
 				break;
 			}
 			break;
 		}
 	out:
-		printf("\n");
 		break;
 	}
 }

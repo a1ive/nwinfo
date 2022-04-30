@@ -50,7 +50,7 @@ static const CHAR* GetBusTypeString(STORAGE_BUS_TYPE Type)
 }
 
 static void
-PrintVolumeInfo(CHAR Letter)
+PrintVolumeInfo(PNODE pNode, CHAR Letter)
 {
 	CHAR PhyPath[] = "A:\\";
 	ULARGE_INTEGER Space;
@@ -61,15 +61,17 @@ PrintVolumeInfo(CHAR Letter)
 	snprintf(PhyPath, sizeof(PhyPath), "%C:\\", Letter);
 	if (GetVolumeInformationA(PhyPath, VolName, MAX_PATH + 1, NULL, NULL, NULL, VolFs, MAX_PATH + 1) != TRUE)
 		goto fail;
-	printf(" %s [%s]", VolFs, VolName[0] ? VolName : "-");
-	printf(" %s", GetDiskFreeSpaceExA(PhyPath, NULL, NULL, &Space) ? GetHumanSize(Space.QuadPart, d_human_sizes, 1024) : "- B");
-	printf(" / %s", GetDiskFreeSpaceExA(PhyPath, NULL, &Space, NULL) ? GetHumanSize(Space.QuadPart, d_human_sizes, 1024) : "- B");
+	node_att_set(pNode, "Filesystem", VolFs, 0);
+	node_att_set(pNode, "Label", VolName, 0);
+	node_att_set(pNode, "Free Space",
+		GetDiskFreeSpaceExA(PhyPath, NULL, NULL, &Space) ? GetHumanSize(Space.QuadPart, d_human_sizes, 1024) : "- B", 0);
+	node_att_set(pNode, "Total Space",
+		GetDiskFreeSpaceExA(PhyPath, NULL, &Space, NULL) ? GetHumanSize(Space.QuadPart, d_human_sizes, 1024) : "- B", 0);
 fail:
 	if (VolName)
 		free(VolName);
 	if (VolFs)
 		free(VolFs);
-	printf("\n");
 }
 
 static DWORD GetDriveCount(void)
@@ -345,70 +347,73 @@ next_drive:
 	return 0;
 }
 
-void nwinfo_disk(void)
+PNODE nwinfo_disk(void)
 {
 	PHY_DRIVE_INFO* PhyDriveList = NULL;
 	DWORD PhyDriveCount = 0, i = 0;
 	PHY_DRIVE_INFO* CurDrive = NULL;
+	PNODE node = node_alloc("Disks", NFLG_TABLE);
 	PhyDriveList = (PHY_DRIVE_INFO*)malloc(sizeof(PHY_DRIVE_INFO) * MAX_PHY_DRIVE);
 	if (NULL == PhyDriveList)
 	{
-		printf("Failed to alloc phy drive memory\n");
-		return;
+		fprintf(stderr, "Failed to alloc phy drive memory\n");
+		return node;
 	}
 	memset(PhyDriveList, 0, sizeof(PHY_DRIVE_INFO) * MAX_PHY_DRIVE);
 	if (GetDriveInfoList(PhyDriveList, &PhyDriveCount) == 0)
 	{
 		for (i = 0, CurDrive = PhyDriveList; i < PhyDriveCount; i++, CurDrive++)
 		{
-			printf("\\\\.\\PhysicalDrive%u\n", CurDrive->PhyDrive);
+			PNODE nd = node_append_new(node, "Disk", NFLG_TABLE_ROW);
+			node_setf(nd, "Path", 0, "\\\\.\\PhysicalDrive%u", CurDrive->PhyDrive);
 			if (CurDrive->HwID)
 			{
 				CHAR* hwName = NULL;
-				printf("  HWID: %s\n", CurDrive->HwID);
+				node_att_set(nd, "HWID", CurDrive->HwID, 0);
 				hwName = GetDriveHwName(CurDrive->HwID);
 				if (hwName)
 				{
-					printf("  HW Name: %s\n", hwName);
+					node_att_set(nd, "HW Name", hwName, 0);
 					free(hwName);
 				}
 				free(CurDrive->HwID);
 			}
 			if (CurDrive->VendorId[0])
-				printf("  Vendor ID: %s\n", CurDrive->VendorId);
+				node_att_set(nd, "Vendor ID", CurDrive->VendorId, 0);
 			if (CurDrive->ProductId[0])
-				printf("  Product ID: %s\n", CurDrive->ProductId);
+				node_att_set(nd, "Product ID", CurDrive->ProductId, 0);
 			if (CurDrive->ProductRev[0])
-				printf("  Product Rev: %s\n", CurDrive->ProductRev);
+				node_att_set(nd, "Product Rev", CurDrive->ProductRev, 0);
 			if (CurDrive->SerialNumber[0])
-				printf("  Serial Number: %s\n", CurDrive->SerialNumber);
-			printf("  Type: %s%s\n", GetBusTypeString(CurDrive->BusType),
-				CurDrive->RemovableMedia ? " Removable" : "");
-			printf("  Size: %s\n", GetHumanSize(CurDrive->SizeInBytes, d_human_sizes, 1024));
+				node_att_set(nd, "Serial Number", CurDrive->SerialNumber, 0);
+			node_att_set(nd, "Type", GetBusTypeString(CurDrive->BusType), 0);
+			node_att_set_bool(nd, "Removable", CurDrive->RemovableMedia, 0);
+			node_att_set(nd, "Size", GetHumanSize(CurDrive->SizeInBytes, d_human_sizes, 1024), 0);
 			if (CurDrive->PartStyle == 1)
 			{
-				printf("  PartMap: MBR\n");
-				printf("  MBR Signature: %02X %02X %02X %02X\n",
+				node_att_set(nd, "PartMap", "MBR", 0);
+				node_setf(nd, "MBR Signature", 0, "%02X %02X %02X %02X",
 					CurDrive->MbrSignature[0], CurDrive->MbrSignature[1],
 					CurDrive->MbrSignature[2], CurDrive->MbrSignature[3]);
 			}
 			else if (CurDrive->PartStyle == 2)
 			{
-				printf("  PartMap: GPT\n");
-				printf("  GPT GUID: %s\n", GuidToStr(CurDrive->GptGuid));
+				node_att_set(nd, "PartMap", "GPT", 0);
+				node_att_set(nd, "GPT GUID", GuidToStr(CurDrive->GptGuid), NAFLG_FMT_GUID);
 			}
 			if (CurDrive->DriveLetters[0])
 			{
-				printf("  Volumes:\n");
+				PNODE nv = node_append_new(nd, "Volumes", NFLG_TABLE);
 				for (int j = 0;  CurDrive->DriveLetters[j] && j < 26; j++)
 				{
-					printf("    %C:", CurDrive->DriveLetters[j]);
-					PrintVolumeInfo(CurDrive->DriveLetters[j]);
+					PNODE vol = node_append_new(nv, "Volume", NFLG_TABLE_ROW);
+					node_setf(vol, "Drive Letter", 0, "%C", CurDrive->DriveLetters[j]);
+					PrintVolumeInfo(vol, CurDrive->DriveLetters[j]);
 				}
-				printf("\n");
 			}
 		}
 	}
 
 	free(PhyDriveList);
+	return node;
 }
