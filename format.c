@@ -9,7 +9,7 @@
 
 // Base on https://github.com/cavaliercoder/sysinv
 
-#define NODE_BUFFER_LEN	255
+#define NODE_BUFFER_LEN	32767
 
 static int indent_depth = 0;
 
@@ -18,18 +18,6 @@ static void fprintcx(FILE* file, LPCSTR s, int count)
 	int i;
 	for (i = 0; i < count; i++)
 		fprintf(file, s);
-}
-
-static CHAR nsbuf[NWINFO_BUFSZ];
-
-char* nsprintf(const char* format, ...)
-{
-	va_list ap;
-	//ZeroMemory(nsbuf, sizeof(nsbuf));
-	va_start(ap, format);
-	vsnprintf(nsbuf, sizeof(nsbuf), format, ap);
-	va_end(ap);
-	return nsbuf;
 }
 
 PNODE node_alloc(LPCSTR name, int flags)
@@ -41,7 +29,8 @@ PNODE node_alloc(LPCSTR name, int flags)
 	size = sizeof(NODE) + (sizeof(CHAR) * (strlen(name) + 1));
 
 	// Allocate
-	if (NULL == (node = (PNODE)calloc(1, size)))
+	node = (PNODE)calloc(1, size);
+	if (!node)
 	{
 		fprintf(stderr, "Failed to allocate memory for new node\n");
 		exit(ERROR_OUTOFMEMORY);
@@ -65,7 +54,7 @@ void node_free(PNODE node, int deep)
 	PNODE_LINK child;
 
 	// Free attributes
-	for (att = &node->Attributes[0]; att->LinkedAttribute != NULL; att++)
+	for (att = &node->Attributes[0]; att->LinkedAttribute; att++)
 		free(att->LinkedAttribute);
 
 	// Free children
@@ -84,7 +73,7 @@ int node_depth(PNODE node)
 {
 	PNODE parent;
 	int count = 0;
-	for (parent = node; NULL != parent->Parent; parent = parent->Parent)
+	for (parent = node; parent->Parent; parent = parent->Parent)
 		count++;
 	return count;
 }
@@ -93,7 +82,7 @@ int node_child_count(PNODE node)
 {
 	int count = 0;
 	PNODE_LINK link = node->Children;
-	while (NULL != node->Children[count].LinkedNode)
+	while (node->Children[count].LinkedNode)
 		count++;
 	return count;
 }
@@ -111,7 +100,8 @@ int node_append_child(PNODE parent, PNODE child)
 	new_count = old_count + 1;
 
 	// Allocate new link list
-	if (NULL == (new_links = (PNODE_LINK)calloc(new_count + 1, sizeof(NODE_LINK))))
+	new_links = (PNODE_LINK)calloc(1ULL + new_count, sizeof(NODE_LINK));
+	if (!new_links)
 	{
 		fprintf(stderr, "Failed to allocate memory for appending node\n");
 		exit(ERROR_OUTOFMEMORY);
@@ -150,9 +140,9 @@ static PNODE_ATT node_alloc_att(LPCSTR key, LPCSTR value, int flags)
 	if (NULL == key)
 		return att;
 
-	nvalue = (NULL == value) ? "" : value;
+	nvalue = value ? value : "";
 
-	size = sizeof(NODE_ATT) + (sizeof(CHAR) * (strlen(key) + 1)) + (sizeof(CHAR) * (strlen(nvalue) + 1));
+	size = sizeof(NODE_ATT) + strlen(key) + 1 + strlen(nvalue) + 1;
 
 	att = (PNODE_ATT)calloc(1, size);
 	if (!att)
@@ -176,7 +166,7 @@ int node_att_count(PNODE node)
 {
 	int count = 0;
 	PNODE_ATT_LINK link = node->Attributes;
-	while (NULL != node->Attributes[count].LinkedAttribute)
+	while (node->Attributes[count].LinkedAttribute)
 		count++;
 	return count;
 }
@@ -184,9 +174,9 @@ int node_att_count(PNODE node)
 int node_att_indexof(PNODE node, LPCSTR key)
 {
 	int i;
-	for (i = 0; NULL != node->Attributes[i].LinkedAttribute; i++)
+	for (i = 0; node->Attributes[i].LinkedAttribute; i++)
 	{
-		if (0 == strcmp(node->Attributes[i].LinkedAttribute->Key, key))
+		if (strcmp(node->Attributes[i].LinkedAttribute->Key, key) == 0)
 			return i;
 	}
 	return -1;
@@ -214,10 +204,10 @@ PNODE_ATT node_att_set(PNODE node, LPCSTR key, LPCSTR value, int flags)
 	if (new_index > -1)
 		new_link = &node->Attributes[new_index];
 
-	if (NULL != new_link)
+	if (new_link)
 	{
 		// Replace attribute link with new value if value differs
-		if (0 != strcmp(new_link->LinkedAttribute->Value, value))
+		if (strcmp(new_link->LinkedAttribute->Value, value) != 0)
 		{
 			free(new_link->LinkedAttribute);
 			new_link->LinkedAttribute = node_alloc_att(key, value, flags);
@@ -236,7 +226,7 @@ PNODE_ATT node_att_set(PNODE node, LPCSTR key, LPCSTR value, int flags)
 		new_count = old_count + 1;
 
 		// Allocate new link list
-		new_links = (PNODE_ATT_LINK)calloc(new_count + 1, sizeof(NODE_ATT_LINK));
+		new_links = (PNODE_ATT_LINK)calloc(1ULL + new_count, sizeof(NODE_ATT_LINK));
 		if (!new_links)
 		{
 			fprintf(stderr, "Failed to allocate memory in node_att_set\n");
@@ -260,24 +250,35 @@ PNODE_ATT node_att_set(PNODE node, LPCSTR key, LPCSTR value, int flags)
 	return att;
 }
 
+static CHAR nsbuf[NODE_BUFFER_LEN];
+
+PNODE_ATT node_att_setf(PNODE node, LPCSTR key, int flags, const char* format, ...)
+{
+	va_list ap;
+	//ZeroMemory(nsbuf, sizeof(nsbuf));
+	va_start(ap, format);
+	vsnprintf(nsbuf, sizeof(nsbuf), format, ap);
+	va_end(ap);
+	return node_att_set(node, key, nsbuf, flags);
+}
+
 static SIZE_T json_escape_content(LPCTSTR input, LPSTR buffer, DWORD bufferSize)
 {
-	DWORD i = 0;
 	LPCTSTR cIn = input;
 	LPSTR cOut = buffer;
 	DWORD newBufferSize = 0;
 
-	while ('\0' != (*cIn))
+	while (*cIn != '\0')
 	{
 		switch (*cIn)
 		{
 		case '"':
-			memcpy(cOut, "\\\"", sizeof(CHAR) * 2);
+			memcpy(cOut, "\\\"", 2);
 			cOut += 2;
 			break;
 
 		case '\\':
-			memcpy(cOut, "\\\\", sizeof(CHAR) * 2);
+			memcpy(cOut, "\\\\", 2);
 			cOut += 2;
 			break;
 
@@ -285,12 +286,12 @@ static SIZE_T json_escape_content(LPCTSTR input, LPSTR buffer, DWORD bufferSize)
 			break;
 
 		case '\n':
-			memcpy(cOut, "\\n", sizeof(CHAR) * 2);
+			memcpy(cOut, "\\n", 2);
 			cOut += 2;
 			break;
 
 		default:
-			memcpy(cOut, cIn, sizeof(CHAR));
+			memcpy(cOut, cIn, 1);
 			cOut += 1;
 			break;
 		}
@@ -309,23 +310,22 @@ int node_to_json(PNODE node, FILE* file, int flags)
 	int atts = node_att_count(node);
 	int children = node_child_count(node);
 	int plural = 0;
-	int indent = (0 == (flags & NODE_JS_FLAG_NOWS)) ? indent_depth : 0;
+	int indent = ((flags & NODE_JS_FLAG_NOWS) == 0) ? indent_depth : 0;
 	LPCSTR nl = flags & NODE_JS_FLAG_NOWS ? "" : NODE_JS_DELIM_NL;
 	LPCSTR space = flags & NODE_JS_FLAG_NOWS ? "" : NODE_JS_DELIM_SPACE;
-	CHAR strBuffer[NODE_BUFFER_LEN];
 
 	// Print header
 	fprintcx(file, NODE_JS_DELIM_INDENT, indent);
-	if (0 < indent_depth && 0 == (node->Flags & NFLG_TABLE_ROW))
+	if (indent_depth > 0 && (node->Flags & NFLG_TABLE_ROW) == 0)
 		fprintf(file, "\"%s\":%s", node->Name, space);
 
-	if (0 == (node->Flags & NFLG_TABLE))
+	if ((node->Flags & NFLG_TABLE) == 0)
 		fprintf(file, "{");
 	else
 		fprintf(file, "[");
 
 	// Print attributes
-	if (0 < atts && 0 == (node->Flags & NFLG_TABLE))
+	if (atts > 0 && (node->Flags & NFLG_TABLE) == 0)
 	{
 		for (i = 0; i < atts; i++)
 		{
@@ -344,17 +344,16 @@ int node_to_json(PNODE node, FILE* file, int flags)
 					fprintf(file, node->Attributes[i].LinkedAttribute->Value);
 				else
 				{
-					json_escape_content(node->Attributes[i].LinkedAttribute->Value, strBuffer, NODE_BUFFER_LEN);
-					fprintf(file, "\"%s\"", strBuffer);
+					json_escape_content(node->Attributes[i].LinkedAttribute->Value, nwinfo_buffer, NWINFO_BUFSZ);
+					fprintf(file, "\"%s\"", nwinfo_buffer);
 				}
-
 				plural = 1;
 			}
 		}
 	}
 
 	// Print children
-	if (0 < children)
+	if (children > 0)
 	{
 		indent_depth++;
 		for (i = 0; i < children; i++)
@@ -369,12 +368,12 @@ int node_to_json(PNODE node, FILE* file, int flags)
 		indent_depth--;
 	}
 
-	if (0 < atts || 0 < children)
+	if (atts > 0 || children > 0)
 	{
 		fprintf(file, NODE_JS_DELIM_NL);
 		fprintcx(file, NODE_JS_DELIM_INDENT, indent);
 	}
-	if (0 == (node->Flags & NFLG_TABLE))
+	if ((node->Flags & NFLG_TABLE) == 0)
 		fprintf(file, "}");
 	else
 		fprintf(file, "]");
@@ -391,7 +390,7 @@ int node_to_yaml(PNODE node, FILE* file, int flags)
 	PNODE child = NULL;
 	CHAR* attVal = NULL;
 
-	if (NULL == node->Parent)
+	if (!node->Parent)
 		fprintf(file, "---%s", NODE_YAML_DELIM_NL);
 
 	fprintcx(file, NODE_YAML_DELIM_INDENT, indent_depth);
@@ -402,13 +401,13 @@ int node_to_yaml(PNODE node, FILE* file, int flags)
 	fprintf(file, "%s:", node->Name);
 
 	// Print attributes
-	if (0 < atts)
+	if (atts > 0)
 	{
 		fprintf(file, NODE_YAML_DELIM_NL);
 		for (i = 0; i < atts; i++)
 		{
 			att = node->Attributes[i].LinkedAttribute;
-			attVal = (NULL != att->Value && '\0' != *att->Value) ? att->Value : "~";
+			attVal = (att->Value && *att->Value != '\0') ? att->Value : "~";
 
 			fprintcx(file, NODE_YAML_DELIM_INDENT, indent_depth + 1);
 			if (NAFLG_FMT_GUID & att->Flags)
@@ -419,9 +418,9 @@ int node_to_yaml(PNODE node, FILE* file, int flags)
 	}
 
 	// Print children
-	if (0 < children)
+	if (children > 0)
 	{
-		if (0 == atts)
+		if (atts == 0)
 			fprintf(file, NODE_YAML_DELIM_NL);
 		indent_depth++;
 		for (i = 0; i < children; i++)
@@ -431,7 +430,7 @@ int node_to_yaml(PNODE node, FILE* file, int flags)
 		}
 		indent_depth--;
 	}
-	else if (0 == atts)
+	else if (atts == 0)
 	{
 		fprintf(file, " ~%s", NODE_YAML_DELIM_NL);
 	}

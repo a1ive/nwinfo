@@ -63,10 +63,10 @@ PrintVolumeInfo(PNODE pNode, CHAR Letter)
 		goto fail;
 	node_att_set(pNode, "Filesystem", VolFs, 0);
 	node_att_set(pNode, "Label", VolName, 0);
-	node_att_set(pNode, "Free Space",
-		GetDiskFreeSpaceExA(PhyPath, NULL, NULL, &Space) ? GetHumanSize(Space.QuadPart, d_human_sizes, 1024) : "- B", 0);
-	node_att_set(pNode, "Total Space",
-		GetDiskFreeSpaceExA(PhyPath, NULL, &Space, NULL) ? GetHumanSize(Space.QuadPart, d_human_sizes, 1024) : "- B", 0);
+	if (GetDiskFreeSpaceExA(PhyPath, NULL, NULL, &Space))
+		node_att_set(pNode, "Free Space", GetHumanSize(Space.QuadPart, d_human_sizes, 1024), 0);
+	if (GetDiskFreeSpaceExA(PhyPath, NULL, &Space, NULL))
+		node_att_set(pNode, "Total Space", GetHumanSize(Space.QuadPart, d_human_sizes, 1024), 0);
 fail:
 	if (VolName)
 		free(VolName);
@@ -365,7 +365,7 @@ PNODE nwinfo_disk(void)
 		for (i = 0, CurDrive = PhyDriveList; i < PhyDriveCount; i++, CurDrive++)
 		{
 			PNODE nd = node_append_new(node, "Disk", NFLG_TABLE_ROW);
-			node_setf(nd, "Path", 0, "\\\\.\\PhysicalDrive%u", CurDrive->PhyDrive);
+			node_att_setf(nd, "Path", 0, "\\\\.\\PhysicalDrive%u", CurDrive->PhyDrive);
 			if (CurDrive->HwID)
 			{
 				CHAR* hwName = NULL;
@@ -391,14 +391,14 @@ PNODE nwinfo_disk(void)
 			node_att_set(nd, "Size", GetHumanSize(CurDrive->SizeInBytes, d_human_sizes, 1024), 0);
 			if (CurDrive->PartStyle == 1)
 			{
-				node_att_set(nd, "PartMap", "MBR", 0);
-				node_setf(nd, "MBR Signature", 0, "%02X %02X %02X %02X",
+				node_att_set(nd, "Partition Table", "MBR", 0);
+				node_att_setf(nd, "MBR Signature", 0, "%02X %02X %02X %02X",
 					CurDrive->MbrSignature[0], CurDrive->MbrSignature[1],
 					CurDrive->MbrSignature[2], CurDrive->MbrSignature[3]);
 			}
 			else if (CurDrive->PartStyle == 2)
 			{
-				node_att_set(nd, "PartMap", "GPT", 0);
+				node_att_set(nd, "Partition Table", "GPT", 0);
 				node_att_set(nd, "GPT GUID", GuidToStr(CurDrive->GptGuid), NAFLG_FMT_GUID);
 			}
 			if (CurDrive->DriveLetters[0])
@@ -407,7 +407,7 @@ PNODE nwinfo_disk(void)
 				for (int j = 0;  CurDrive->DriveLetters[j] && j < 26; j++)
 				{
 					PNODE vol = node_append_new(nv, "Volume", NFLG_TABLE_ROW);
-					node_setf(vol, "Drive Letter", 0, "%C", CurDrive->DriveLetters[j]);
+					node_att_setf(vol, "Drive Letter", 0, "%C", CurDrive->DriveLetters[j]);
 					PrintVolumeInfo(vol, CurDrive->DriveLetters[j]);
 				}
 			}

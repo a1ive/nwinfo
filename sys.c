@@ -86,7 +86,7 @@ static void PrintOsVer(void)
 	{
 		osInfo.dwOSVersionInfoSize = sizeof(osInfo);
 		RtlGetVersion(&osInfo);
-		node_setf(node, "OS", 0,
+		node_att_setf(node, "OS", 0,
 			"Windows %s (%lu.%lu.%lu)", OsVersionToStr(&osInfo),
 			osInfo.dwMajorVersion, osInfo.dwMinorVersion, osInfo.dwBuildNumber);
 	}
@@ -117,7 +117,7 @@ static void PrintOsInfo(void)
 		UINT64 Hours = Uptime / 1000ULL / 3600ULL - Days * 24ULL;
 		UINT64 Minutes = Uptime / 1000ULL / 60ULL - Days * 24ULL * 60ULL - Hours * 60ULL;
 		UINT64 Seconds = Uptime / 1000ULL - Days * 24ULL * 3600ULL - Hours * 3600ULL - Minutes * 60ULL;
-		node_setf(node,"UpTime", 0, "%llu days, %llu hours, %llu min, %llu sec", Days, Hours, Minutes, Seconds);
+		node_att_setf(node,"Uptime", 0, "%llu days, %llu hours, %llu min, %llu sec", Days, Hours, Minutes, Seconds);
 	}
 	GetNativeSystemInfo(&SystemInfo);
 	switch (SystemInfo.wProcessorArchitecture)
@@ -132,7 +132,7 @@ static void PrintOsInfo(void)
 		node_att_set(node, "Processor Architecture", "UNKNOWN", 0);
 		break;
 	}
-	node_setf(node, "Page Size", 0, "%u", SystemInfo.dwPageSize);
+	node_att_setf(node, "Page Size", NAFLG_FMT_NUMERIC, "%u", SystemInfo.dwPageSize);
 }
 
 static void PrintFwInfo(void)
@@ -147,7 +147,7 @@ static void PrintFwInfo(void)
 		node_att_set(node, "Firmware", "UEFI", 0);
 		VarSize = NT5GetFirmwareEnvironmentVariable("SecureBoot", GV_GUID, &SecureBoot, sizeof(uint8_t));
 		if (VarSize)
-			node_setf(node, "Secure Boot", 0, "%s", SecureBoot ? "ENABLED" : "DISABLED");
+			node_att_setf(node, "Secure Boot", 0, "%s", SecureBoot ? "ENABLED" : "DISABLED");
 		else
 			node_att_set(node, "Secure Boot", "UNSUPPORTED", 0);
 	}
@@ -196,7 +196,7 @@ static void PrintTpmInfo(void)
 		*(FARPROC*)&GetTpmInfo = GetProcAddress(hL, "Tbsi_GetDeviceInfo");
 	if (GetTpmInfo) {
 		UINT32 dwRet = GetTpmInfo(sizeof(tpmInfo), &tpmInfo);
-		node_setf(node, "TPM", 0, "%s", (dwRet == 0) ? TpmVersion(tpmInfo.tpmVersion) : "NOT FOUND");
+		node_att_setf(node, "TPM", 0, "%s", (dwRet == 0) ? TpmVersion(tpmInfo.tpmVersion) : "NOT FOUND");
 	}
 	else
 		node_att_set(node, "TPM", "UNSUPPORTED", 0);
@@ -211,29 +211,27 @@ PrintPowerInfo(void)
 		|| Power.BatteryFlag == 255
 		|| Power.BatteryLifePercent > 100)
 	{
-		node_att_set(node, "Power status", "UNKNOWN", 0);
+		node_att_set(node, "Power Status", "UNKNOWN", 0);
 		return;
 	}
 	if (Power.BatteryFlag == 128)
 	{
-		node_att_set(node, "Power status", "NO BATTERY", 0);
+		node_att_set(node, "Power Status", "NO BATTERY", 0);
 		return;
 	}
-
-	
 		
 	if (Power.BatteryLifeTime != -1)
 	{
 		UINT32 Hours = Power.BatteryLifeTime / 3600U;
 		UINT32 Minutes = Power.BatteryLifeTime / 60ULL - Hours * 60ULL;
 		//UINT32 Seconds = Power.BatteryLifeTime - Hours * 3600ULL - Minutes * 60ULL;
-		node_setf(node, "Power status", 0, "%u%%, %lu hours %lu min left%s",
+		node_att_setf(node, "Power Status", 0, "%u%%, %lu hours %lu min left%s",
 			Power.BatteryLifePercent, Hours, Minutes,
 			(Power.ACLineStatus == 1 || Power.BatteryFlag == 8) ? ", Charging" : "");
 	}
 	else
 	{
-		node_setf(node, "Power status", 0, "%u%%%s",
+		node_att_setf(node, "Power Status", 0, "%u%%%s",
 			Power.BatteryLifePercent,
 			(Power.ACLineStatus == 1 || Power.BatteryFlag == 8) ? ", Charging" : "");
 	}
@@ -248,11 +246,11 @@ static void PrintMemInfo(void)
 	MEMORYSTATUSEX statex = { 0 };
 	statex.dwLength = sizeof(statex);
 	GlobalMemoryStatusEx(&statex);
-	node_setf(node, "Memory in use", 0, "%u%%", statex.dwMemoryLoad);
-	nphy = node_append_new(node, "Physical memory", NFLG_ATTGROUP);
+	node_att_setf(node, "Memory Usage", 0, "%u%%", statex.dwMemoryLoad);
+	nphy = node_append_new(node, "Physical Memory", NFLG_ATTGROUP);
 	node_att_set(nphy, "Free", GetHumanSize(statex.ullAvailPhys, mem_human_sizes, 1024), 0);
 	node_att_set(nphy, "Total", GetHumanSize(statex.ullTotalPhys, mem_human_sizes, 1024), 0);
-	npage = node_append_new(node, "Paging file", NFLG_ATTGROUP);
+	npage = node_append_new(node, "Paging File", NFLG_ATTGROUP);
 	node_att_set(npage, "Free", GetHumanSize(statex.ullAvailPageFile, mem_human_sizes, 1024), 0);
 	node_att_set(npage, "Total", GetHumanSize(statex.ullTotalPageFile, mem_human_sizes, 1024), 0);
 }

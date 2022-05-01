@@ -9,9 +9,6 @@
 
 #include "pnp_id.h"
 
-static UCHAR EDIDdata[2048];
-static DWORD EDIDsize = sizeof(EDIDdata);
-
 #pragma pack(1)
 struct DetailedTimingDescriptor
 {
@@ -113,17 +110,17 @@ DecodeEDID(PNODE nm, void* pData, DWORD dwSize)
 		(CHAR)(((pEDID->Manufacturer & 0x3e0U) >> 5U) + 'A' - 1),
 		(CHAR)((pEDID->Manufacturer & 0x1fU) + 'A' - 1));
 	node_att_set(nm, "Manufacturer", GetPnpManufacturer(Manufacturer), 0);
-	node_setf(nm, "ID", 0, "%s%04X", Manufacturer, pEDID->Product);
-	node_setf(nm, "Serial", 0, "%08X", pEDID->Serial);
-	node_setf(nm, "Date", 0, "%u, Week %u", pEDID->Year + 1990, pEDID->Week & 0x7F);
-	node_setf(nm, "EDID Version", 0, "%u.%u", pEDID->Version, pEDID->Revision);
+	node_att_setf(nm, "ID", 0, "%s%04X", Manufacturer, pEDID->Product);
+	node_att_setf(nm, "Serial", 0, "%08X", pEDID->Serial);
+	node_att_setf(nm, "Date", 0, "%u, Week %u", pEDID->Year + 1990, pEDID->Week & 0x7F);
+	node_att_setf(nm, "EDID Version", 0, "%u.%u", pEDID->Version, pEDID->Revision);
 	nflags = node_append_new(nm, "Video Input", NFLG_ATTGROUP);
 	if (pEDID->Flags & 0x80)
 	{
 		UINT8 Depth = (pEDID->Flags & 0x70U) >> 4U;
 		node_att_set(nflags, "Type", "Digital", 0);
 		if (Depth > 0 && Depth < 7)
-			node_setf(nflags, "Bits per color", NAFLG_FMT_NUMERIC, "%u", Depth * 2 + 4);
+			node_att_setf(nflags, "Bits per color", NAFLG_FMT_NUMERIC, "%u", Depth * 2 + 4);
 		node_att_set(nflags, "Interface", InterfaceToStr(pEDID->Flags & 0x07U), 0);
 	}
 	else
@@ -135,6 +132,7 @@ DecodeEDID(PNODE nm, void* pData, DWORD dwSize)
 		UINT32 ha, va, hb, vb, w, h;
 		UINT64 pc;
 		double hz, inch;
+		PNODE nres, nscr;
 		if (pEDID->Desc[i].PixelClock == 0 && pEDID->Desc[i].HActiveLSB == 0)
 			continue;
 		pc = ((UINT64)pEDID->Desc[i].PixelClock) * 10 * 1000;
@@ -144,11 +142,18 @@ DecodeEDID(PNODE nm, void* pData, DWORD dwSize)
 		hb = (UINT32)pEDID->Desc[i].HBlankingLSB + (UINT32)((pEDID->Desc[i].HPixelsMSB & 0x0f) << 8);
 		vb = (UINT32)pEDID->Desc[i].VBlankingLSB + (UINT32)((pEDID->Desc[i].VLinesMSB & 0x0f) << 8);
 		hz = ((double)pc) / (((UINT64)ha + hb) * ((UINT64)va + vb));
-		node_setf(nm, "Resolution", 0, "%u x %u @%.2fHz", ha, va, hz);
+		nres = node_append_new(nm, "Resolution", NFLG_ATTGROUP);
+		node_att_setf(nres, "Width", NAFLG_FMT_NUMERIC, "%u", ha);
+		node_att_setf(nres, "Height", NAFLG_FMT_NUMERIC, "%u", va);
+		node_att_setf(nres, "Refresh Rate (Hz)", NAFLG_FMT_NUMERIC, "%.2f", hz);
+
 		w = (UINT32)pEDID->Desc[i].WidthLSB + (UINT32)((pEDID->Desc[i].WHMSB & 0xf0) << 4);
 		h = (UINT32)pEDID->Desc[i].HeightLSB + (UINT32)((pEDID->Desc[i].WHMSB & 0x0f) << 8);
 		inch = sqrt((double)((UINT64)w) * w + ((UINT64)h) * h) * 0.0393701;
-		node_setf(nm, "Screen Size", 0, "%u mm x %u mm (%.1f\")", w, h, inch);
+		nscr = node_append_new(nm, "Screen Size", NFLG_ATTGROUP);
+		node_att_setf(nscr, "Width (mm)", NAFLG_FMT_NUMERIC, "%u", w);
+		node_att_setf(nscr, "Height (mm)", NAFLG_FMT_NUMERIC, "%u", h);
+		node_att_setf(nscr, "Diagonal (in)", NAFLG_FMT_NUMERIC, "%.1f", inch);
 		break;
 	}
 }
@@ -159,14 +164,12 @@ GetEDID(PNODE nm, HDEVINFO devInfo, PSP_DEVINFO_DATA devInfoData)
 	HKEY hDevRegKey;
 	LSTATUS lRet;
 	BOOL bRet;
+	UCHAR* EDIDdata = nwinfo_buffer;
+	DWORD EDIDsize;
 
 	bRet = SetupDiGetDeviceRegistryPropertyA(devInfo, devInfoData,
-		SPDRP_HARDWAREID, NULL, EDIDdata, sizeof(EDIDdata), NULL);
-	node_att_set (nm, "HWID", bRet ? EDIDdata : "UNKNOWN", 0);
-
-	bRet = SetupDiGetDeviceRegistryPropertyA(devInfo, devInfoData,
-		SPDRP_DEVICEDESC, NULL, EDIDdata, sizeof(EDIDdata), NULL);
-	node_att_set(nm, "Description", bRet ? EDIDdata : "UNKNOWN MONITOR", 0);
+		SPDRP_HARDWAREID, NULL, nwinfo_buffer, NWINFO_BUFSZ, NULL);
+	node_att_set (nm, "HWID", bRet ? nwinfo_buffer : "UNKNOWN", 0);
 
 	hDevRegKey = SetupDiOpenDevRegKey(devInfo, devInfoData,
 		DICS_FLAG_GLOBAL, 0, DIREG_DEV, KEY_ALL_ACCESS);
@@ -176,7 +179,7 @@ GetEDID(PNODE nm, HDEVINFO devInfo, PSP_DEVINFO_DATA devInfoData)
 		fprintf(stderr, "SetupDiOpenDevRegKey failed\n");
 		return;
 	}
-	EDIDsize = sizeof(EDIDdata);
+	EDIDsize = NWINFO_BUFSZ;
 	ZeroMemory(EDIDdata, EDIDsize);
 	lRet = RegGetValueA(hDevRegKey, NULL, "EDID", RRF_RT_REG_BINARY, NULL, EDIDdata, &EDIDsize);
 	if (lRet == ERROR_SUCCESS || lRet == ERROR_MORE_DATA)

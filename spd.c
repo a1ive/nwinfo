@@ -237,7 +237,7 @@ static void
 PrintDDR5(PNODE nd, UINT8* rawSpd)
 {
 	UINT i = 0;
-	node_setf(nd, "Revision", 0, "%u.%u", rawSpd[1] >> 4, rawSpd[1] & 0x0FU);
+	node_att_setf(nd, "Revision", 0, "%u.%u", rawSpd[1] >> 4, rawSpd[1] & 0x0FU);
 #if 0
 	node_att_set(nd, "Manufacturer", DDR345Manufacturer(rawSpd[512], rawSpd[513]), 0);
 	node_att_set(nd, "Date", DDR2345Date(rawSpd[515], rawSpd[516]), 0);
@@ -256,10 +256,10 @@ static void
 PrintDDR4(PNODE nd, UINT8* rawSpd)
 {
 	UINT i = 0;
-	node_setf(nd, "Revision", 0, "%u.%u", rawSpd[1] >> 4, rawSpd[1] & 0x0FU);
-	node_setf(nd, "Module Type", 0, "%s%s", DDR34ModuleType(rawSpd[3]), (rawSpd[13] & 0x08U) ? " (ECC)" : "");
+	node_att_setf(nd, "Revision", 0, "%u.%u", rawSpd[1] >> 4, rawSpd[1] & 0x0FU);
+	node_att_setf(nd, "Module Type", 0, "%s%s", DDR34ModuleType(rawSpd[3]), (rawSpd[13] & 0x08U) ? " (ECC)" : "");
 	node_att_set(nd, "Capacity", DDR4Capacity(rawSpd), 0);
-	node_setf(nd, "Speed", 0, "%u MHz", DDR4Speed(rawSpd));
+	node_att_setf(nd, "Speed (MHz)", NAFLG_FMT_MBYTES, "%u", DDR4Speed(rawSpd));
 	node_att_set(nd, "Voltage", (rawSpd[11] & 0x01U) ? "1.2 V" : "(Unknown)", 0);
 	node_att_set(nd, "Manufacturer", DDR345Manufacturer(rawSpd[320], rawSpd[321]), 0);
 	node_att_set(nd, "Date", DDR2345Date(rawSpd[323], rawSpd[324]), 0);
@@ -277,11 +277,11 @@ static void
 PrintDDR3(PNODE nd, UINT8* rawSpd)
 {
 	UINT i = 0;
-	node_setf(nd, "Revision", 0, "%u.%u", rawSpd[1] >> 4, rawSpd[1] & 0x0FU);
-	node_setf(nd, "Module Type", 0, "%s%s", DDR34ModuleType(rawSpd[3]), (rawSpd[8] >> 3 == 1) ? " (ECC)" : "");
+	node_att_setf(nd, "Revision", 0, "%u.%u", rawSpd[1] >> 4, rawSpd[1] & 0x0FU);
+	node_att_setf(nd, "Module Type", 0, "%s%s", DDR34ModuleType(rawSpd[3]), (rawSpd[8] >> 3 == 1) ? " (ECC)" : "");
 	node_att_set(nd, "Capacity", DDR3Capacity(rawSpd), 0);
-	node_setf(nd, "Speed", 0, "%u MHz", DDR3Speed(rawSpd));
-	node_setf(nd, "Supported Voltages", 0, "%s%s%s", (rawSpd[6] & 0x04U) ? " 1.25V" : "",
+	node_att_setf(nd, "Speed (MHz)", NAFLG_FMT_MBYTES, "%u", DDR3Speed(rawSpd));
+	node_att_setf(nd, "Supported Voltages", 0, "%s%s%s", (rawSpd[6] & 0x04U) ? " 1.25V" : "",
 		(rawSpd[6] & 0x02U) ? " 1.35V" : "", (rawSpd[6] & 0x01U) ? "" : " 1.5V");
 	node_att_set(nd, "Manufacturer", DDR345Manufacturer(rawSpd[117], rawSpd[118]), 0);
 	node_att_set(nd, "Date", DDR2345Date(rawSpd[120], rawSpd[121]), 0);
@@ -299,10 +299,10 @@ static void
 PrintDDR2(PNODE nd, UINT8* rawSpd)
 {
 	UINT i = 0;
-	node_setf(nd, "Revision", 0, "%u.%u", rawSpd[1] >> 4, rawSpd[1] & 0x0FU);
-	node_setf(nd, "Module Type", 0, "%s%s", DDR2ModuleType(rawSpd[3]), (rawSpd[11] >> 1 == 1) ? " (ECC)" : "");
+	node_att_setf(nd, "Revision", 0, "%u.%u", rawSpd[1] >> 4, rawSpd[1] & 0x0FU);
+	node_att_setf(nd, "Module Type", 0, "%s%s", DDR2ModuleType(rawSpd[3]), (rawSpd[11] >> 1 == 1) ? " (ECC)" : "");
 	node_att_set(nd, "Capacity", DDR2Capacity(rawSpd), 0);
-	node_setf(nd, "Speed", 0, "%u MHz", DDRSpeed(rawSpd));
+	node_att_setf(nd, "Speed (MHz)", NAFLG_FMT_MBYTES, "%u", DDRSpeed(rawSpd));
 	node_att_set(nd, "Manufacturer", DDRManufacturer(rawSpd + 64), 0);
 	node_att_set(nd, "Date", DDR2345Date(rawSpd[93], rawSpd[94]), 0);
 	nwinfo_buffer[0] = '\0';
@@ -319,9 +319,9 @@ static void
 PrintDDR(PNODE nd, UINT8* rawSpd)
 {
 	UINT i = 0;
-	node_setf(nd, "Revision", 0, "%u.%u", rawSpd[1] >> 4, rawSpd[1] & 0x0FU);
+	node_att_setf(nd, "Revision", 0, "%u.%u", rawSpd[1] >> 4, rawSpd[1] & 0x0FU);
 	node_att_set(nd, "Capacity", DDRCapacity(rawSpd), 0);
-	node_setf(nd, "Speed", 0, "%u MHz", DDRSpeed(rawSpd));
+	node_att_setf(nd, "Speed (MHz)", NAFLG_FMT_MBYTES, "%u", DDRSpeed(rawSpd));
 	node_att_set(nd, "Manufacturer", DDRManufacturer(rawSpd + 64), 0);
 	node_att_set(nd, "Date", DDRDate(rawSpd[93], rawSpd[94]), 0);
 	nwinfo_buffer[0] = '\0';
@@ -344,7 +344,7 @@ nwinfo_spd(void)
 	for (i = 0; i < 8; i++)
 	{
 		PNODE nspd = node_append_new(node, "Slot", NFLG_TABLE_ROW);
-		node_setf(nspd, "ID", NAFLG_FMT_NUMERIC, "%d", i);
+		node_att_setf(nspd, "ID", NAFLG_FMT_NUMERIC, "%d", i);
 		rawSpd = SpdGet(i);
 		if (!rawSpd)
 		{

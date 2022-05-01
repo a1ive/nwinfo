@@ -36,15 +36,15 @@ static void ProcBIOSInfo(PNODE tab, void* p)
 	node_att_set(tab, "Description", "BIOS information", 0);
 	node_att_set(tab, "Vendor", LocateString(str, pBIOS->Vendor), 0);
 	node_att_set(tab, "Version", LocateString(str, pBIOS->Version), 0);
-	node_setf(tab, "Starting Segment", 0, "%04Xh", pBIOS->StartingAddrSeg);
+	node_att_setf(tab, "Starting Segment", 0, "%04Xh", pBIOS->StartingAddrSeg);
 	node_att_set(tab, "Release Date", LocateString(str, pBIOS->ReleaseDate), 0);
-	node_setf(tab, "Image Size", 0, "%u K", (pBIOS->ROMSize + 1) * 64);
+	node_att_setf(tab, "Image Size (K)", NAFLG_FMT_NUMERIC, "%u", (pBIOS->ROMSize + 1) * 64);
 	if (pBIOS->Header.Length > 0x14)
 	{
 		if (pBIOS->MajorRelease != 0xff || pBIOS->MinorRelease != 0xff)
-			node_setf(tab, "System BIOS version", 0, "%u.%u", pBIOS->MajorRelease, pBIOS->MinorRelease);
+			node_att_setf(tab, "System BIOS version", 0, "%u.%u", pBIOS->MajorRelease, pBIOS->MinorRelease);
 		if (pBIOS->ECFirmwareMajor != 0xff || pBIOS->ECFirmwareMinor != 0xff)
-			node_setf(tab, "EC Firmware version", 0, "%u.%u", pBIOS->ECFirmwareMajor, pBIOS->ECFirmwareMinor);
+			node_att_setf(tab, "EC Firmware version", 0, "%u.%u", pBIOS->ECFirmwareMajor, pBIOS->ECFirmwareMinor);
 	}
 }
 
@@ -292,32 +292,32 @@ static void ProcProcessorInfo(PNODE tab, void* p)
 	else if (pProcessor->Voltage & (1U << 7))
 	{
 		UCHAR volt = pProcessor->Voltage - 0x80;
-		node_setf(tab, "Voltage", 0, "%u.%u V", volt / 10, volt % 10);
+		node_att_setf(tab, "Voltage", 0, "%u.%u V", volt / 10, volt % 10);
 	}
 	else
 	{
-		node_setf(tab, "Voltage", 0, "%s%s%s",
+		node_att_setf(tab, "Voltage", 0, "%s%s%s",
 			pProcessor->Voltage & (1U << 0) ? " 5 V" : "",
 			pProcessor->Voltage & (1U << 1) ? " 3.3 V" : "",
 			pProcessor->Voltage & (1U << 2) ? " 2.9 V" : "");
 	}
 	if (pProcessor->ExtClock)
-		node_setf(tab, "External Clock", 0, "%u MHz", pProcessor->ExtClock);
-	node_setf(tab, "Max Speed", 0, "%u MHz", pProcessor->MaxSpeed);
-	node_setf(tab, "Current Speed", 0, "%u MHz", pProcessor->CurrentSpeed);
+		node_att_setf(tab, "External Clock (MHz)", NAFLG_FMT_NUMERIC, "%u", pProcessor->ExtClock);
+	node_att_setf(tab, "Max Speed (MHz)", NAFLG_FMT_NUMERIC, "%u", pProcessor->MaxSpeed);
+	node_att_setf(tab, "Current Speed (MHz)", NAFLG_FMT_NUMERIC, "%u", pProcessor->CurrentSpeed);
 	if (pProcessor->Header.Length > 0x20)
 	{
 		// 2.3+
 		node_att_set(tab, "Serial Number", LocateString(str, pProcessor->Serial), 0);
 		node_att_set(tab, "Asset Tag", LocateString(str, pProcessor->AssetTag), 0);
 		if (pProcessor->CoreCount == 0xff && pProcessor->Header.Length > 0x2a)
-			node_setf(tab, "Core Count", NAFLG_FMT_NUMERIC, "%u", pProcessor->CoreCount2);
+			node_att_setf(tab, "Core Count", NAFLG_FMT_NUMERIC, "%u", pProcessor->CoreCount2);
 		else
-			node_setf(tab, "Core Count", NAFLG_FMT_NUMERIC, "%u", pProcessor->CoreCount);
+			node_att_setf(tab, "Core Count", NAFLG_FMT_NUMERIC, "%u", pProcessor->CoreCount);
 		if (pProcessor->ThreadCount == 0xff && pProcessor->Header.Length > 0x2a)
-			node_setf(tab, "Thread Count", NAFLG_FMT_NUMERIC, "%u", pProcessor->ThreadCount2);
+			node_att_setf(tab, "Thread Count", NAFLG_FMT_NUMERIC, "%u", pProcessor->ThreadCount2);
 		else
-			node_setf(tab, "Thread Count", NAFLG_FMT_NUMERIC, "%u", pProcessor->ThreadCount);
+			node_att_setf(tab, "Thread Count", NAFLG_FMT_NUMERIC, "%u", pProcessor->ThreadCount);
 	}
 }
 
@@ -326,8 +326,8 @@ static void ProcMemCtrlInfo(PNODE tab, void* p)
 	PMemCtrlInfo pMemCtrl = (PMemCtrlInfo)p;
 
 	node_att_set(tab, "Description", "Memory Controller information", 0);
-	node_setf(tab, "Max Memory Module Size", 0, "%llu MB", 2ULL << pMemCtrl->MaxMemModuleSize);
-	node_setf(tab, "Number of Slots", NAFLG_FMT_NUMERIC, "%u", pMemCtrl->NumOfSlots);
+	node_att_setf(tab, "Max Memory Module Size (MB)", NAFLG_FMT_NUMERIC, "%llu", 2ULL << pMemCtrl->MaxMemModuleSize);
+	node_att_setf(tab, "Number of Slots", NAFLG_FMT_NUMERIC, "%u", pMemCtrl->NumOfSlots);
 }
 
 static void ProcMemModuleInfo(PNODE tab, void* p)
@@ -337,11 +337,11 @@ static void ProcMemModuleInfo(PNODE tab, void* p)
 	UCHAR sz = 0;
 	node_att_set(tab, "Description", "Memory Module information", 0);
 	node_att_set(tab, "Socket Designation", LocateString(str, pMemModule->SocketDesignation), 0);
-	node_setf(tab, "Current Speed", 0, "%u ns", pMemModule->CurrentSpeed);
+	node_att_setf(tab, "Current Speed (ns)", NAFLG_FMT_MBYTES, "%u", pMemModule->CurrentSpeed);
 	sz = pMemModule->InstalledSize & 0x7F;
 	if (sz > 0x7D)
 		sz = 0;
-	node_setf(tab, "Installed Size", 0, "%llu MB", 2ULL << sz);
+	node_att_setf(tab, "Installed Size (MB)", NAFLG_FMT_MBYTES, "%llu", 2ULL << sz);
 }
 
 static void ProcCacheInfo(PNODE tab, void* p)
@@ -381,7 +381,7 @@ static void ProcCacheInfo(PNODE tab, void* p)
 	}
 	node_att_set(tab, "Installed Cache Size", GetHumanSize(sz, mem_human_sizes, 1024), 0);
 	if (pCache->Speed)
-		node_setf(tab, "Cache Speed", 0, "%u ns", pCache->Speed);
+		node_att_setf(tab, "Cache Speed (ns)", NAFLG_FMT_MBYTES, "%u", pCache->Speed);
 }
 
 static void ProcOEMString(PNODE tab, void* p)
@@ -455,7 +455,7 @@ static void ProcMemoryArray(PNODE tab, void* p)
 	node_att_set(tab, "Location", pMALocationToStr(pMA->Location), 0);
 	node_att_set(tab, "Function", pMAUseToStr(pMA->Use), 0);
 	node_att_set(tab, "Error Correction", pMAEccToStr(pMA->ErrCorrection), 0);
-	node_setf(tab, "Number of Slots", NAFLG_FMT_NUMERIC, "%u", pMA->NumOfMDs);
+	node_att_setf(tab, "Number of Slots", NAFLG_FMT_NUMERIC, "%u", pMA->NumOfMDs);
 	if (pMA->MaxCapacity == 0x80000000 && pMA->Header.Length > 0x0f)
 		sz = pMA->ExtMaxCapacity;
 	else
@@ -517,9 +517,9 @@ static void ProcMemoryDevice(PNODE tab, void* p)
 	node_att_set(tab, "Device Locator", LocateString(str, pMD->DeviceLocator), 0);
 	node_att_set(tab, "Bank Locator", LocateString(str, pMD->BankLocator), 0);
 	if (pMD->TotalWidth)
-		node_setf(tab, "Total Width", 0, "%u bits", pMD->TotalWidth);
+		node_att_setf(tab, "Total Width (bits)", NAFLG_FMT_MBYTES, "%u", pMD->TotalWidth);
 	if (pMD->DataWidth)
-		node_setf(tab, "Data Width", 0, "%u bits", pMD->DataWidth);
+		node_att_setf(tab, "Data Width (bits)", NAFLG_FMT_MBYTES, "%u", pMD->DataWidth);
 	if (pMD->Size & (1ULL << 15))
 		sz = ((UINT64)pMD->Size - (1ULL << 15)) * 1024;
 	else
@@ -531,7 +531,7 @@ static void ProcMemoryDevice(PNODE tab, void* p)
 	if (pMD->Header.Length > 0x15)
 	{
 		if (pMD->Speed)
-			node_setf(tab, "Speed", 0, "%u MT/s", pMD->Speed);
+			node_att_setf(tab, "Speed (MT/s)", NAFLG_FMT_MBYTES, "%u", pMD->Speed);
 		node_att_set(tab, "Manufacturer", LocateString(str, pMD->Manufacturer), 0);
 		node_att_set(tab, "Serial Number", LocateString(str, pMD->SN), 0);
 		node_att_set(tab, "Asset Tag Number", LocateString(str, pMD->AssetTag), 0);
@@ -544,10 +544,10 @@ static void ProcMemoryArrayMappedAddress(PNODE tab, void* p)
 	PMemoryArrayMappedAddress pMAMA = (PMemoryArrayMappedAddress)p;
 
 	node_att_set(tab, "Description", "Memory Array Mapped Address", 0);
-	node_setf(tab, "Starting Address", 0, "0x%08X", pMAMA->Starting);
-	node_setf(tab, "Ending Address", 0, "0x%08X", pMAMA->Ending);
-	node_setf(tab, "Memory Array Handle", 0, "0x%X", pMAMA->Handle);
-	node_setf(tab, "Partition Width", 0, "0x%X", pMAMA->PartitionWidth);
+	node_att_setf(tab, "Starting Address", 0, "0x%08X", pMAMA->Starting);
+	node_att_setf(tab, "Ending Address", 0, "0x%08X", pMAMA->Ending);
+	node_att_setf(tab, "Memory Array Handle", 0, "0x%X", pMAMA->Handle);
+	node_att_setf(tab, "Partition Width", 0, "0x%X", pMAMA->PartitionWidth);
 }
 
 static void ProcPortableBattery(PNODE tab, void* p)
@@ -569,10 +569,10 @@ static void ProcTPMDevice(PNODE tab, void* p)
 	const char* str = toPointString(p);
 
 	node_att_set(tab, "Description", "TPM Device", 0);
-	node_setf(tab, "Vendor", 0, "%c%c%c%c",
+	node_att_setf(tab, "Vendor", 0, "%c%c%c%c",
 		pTPM->Vendor[0], pTPM->Vendor[1],
 		pTPM->Vendor[2], pTPM->Vendor[3]);
-	node_setf(tab, "Spec Version", 0, "%u%u", pTPM->MajorSpecVer, pTPM->MinorSpecVer);
+	node_att_setf(tab, "Spec Version", 0, "%u%u", pTPM->MajorSpecVer, pTPM->MinorSpecVer);
 	node_att_set(tab, "Description", LocateString(str, pTPM->Description), 0);
 }
 
@@ -588,8 +588,8 @@ static void DumpSMBIOSStruct(PNODE node, void* Addr, UINT Len, UINT8 Type)
 		if (Type != 127 && pHeader->Type != Type)
 			goto next_table;
 		tab = node_append_new(node, "Table", NFLG_TABLE_ROW);
-		node_setf(tab, "Table Type", NAFLG_FMT_NUMERIC, "%u", pHeader->Type);
-		node_setf(tab, "Table Length", NAFLG_FMT_NUMERIC, "%u", pHeader->Length);
+		node_att_setf(tab, "Table Type", NAFLG_FMT_NUMERIC, "%u", pHeader->Type);
+		node_att_setf(tab, "Table Length", NAFLG_FMT_NUMERIC, "%u", pHeader->Length);
 		switch (pHeader->Type)
 		{
 		case 0:
@@ -666,9 +666,9 @@ PNODE nwinfo_smbios(UINT8 type)
 		return node;
 	// Retrieve the SMBIOS table
 	NT5GetSystemFirmwareTable('RSMB', 0, smBiosData, smBiosDataSize);
-	node_setf(info, "SMBIOS Version", 0, "%u.%u", smBiosData->MajorVersion, smBiosData->MinorVersion);
+	node_att_setf(info, "SMBIOS Version", 0, "%u.%u", smBiosData->MajorVersion, smBiosData->MinorVersion);
 	if (smBiosData->DmiRevision)
-		node_setf(info, "DMI Version", NAFLG_FMT_NUMERIC, "%u", smBiosData->DmiRevision);
+		node_att_setf(info, "DMI Version", NAFLG_FMT_NUMERIC, "%u", smBiosData->DmiRevision);
 	DumpSMBIOSStruct(node, smBiosData->Data, smBiosData->Length, type);
 	return node;
 }

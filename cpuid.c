@@ -47,6 +47,32 @@ PrintHypervisor(void)
 		node_att_set(node, "Hypervisor", VmSign, 0);
 }
 
+static void
+PrintSgx(const struct cpu_raw_data_t* raw, const struct cpu_id_t* data)
+{
+	int i;
+	PNODE nsgx, nepc;
+	if (!data->sgx.present)
+		return;
+	nsgx = node_append_new(node, "SGX", NFLG_ATTGROUP);
+
+	node_att_setf(nsgx, "Max Enclave Size (32-bit)", 0, "2^%d", data->sgx.max_enclave_32bit);
+	node_att_setf(nsgx, "Max Enclave Size (64-bit)", 0, "2^%d", data->sgx.max_enclave_64bit);
+	node_att_set_bool(nsgx, "SGX1 Extensions", data->sgx.flags[INTEL_SGX1], 0);
+	node_att_set_bool(nsgx, "SGX2 Extensions", data->sgx.flags[INTEL_SGX2], 0);
+	node_att_setf(nsgx, "MISCSELECT", 0, "%08x", data->sgx.misc_select);
+	node_att_setf(nsgx, "SECS.ATTRIBUTES Mask", 0, "%016llx", (unsigned long long) data->sgx.secs_attributes);
+	node_att_setf(nsgx, "SECS.XSAVE Feature Mask", 0, "%016llx", (unsigned long long) data->sgx.secs_xfrm);
+	nepc = node_append_new(nsgx, "EPC Sections", NFLG_TABLE);
+	for (i = 0; i < data->sgx.num_epc_sections; i++)
+	{
+		struct cpu_epc_t epc = cpuid_get_epc(i, raw);
+		PNODE p = node_append_new(nepc, "Section", NFLG_TABLE_ROW);
+		node_att_setf(p, "Start", 0, "0x%llx", (unsigned long long) epc.start_addr);
+		node_att_setf(p, "Size", 0, "0x%llx", (unsigned long long) epc.length);
+	}
+}
+
 struct cpu_id_t* get_cached_cpuid(void);
 
 static int rdmsr_supported(void)
@@ -79,15 +105,18 @@ PrintMsr(void)
 		max_multi = 0;
 	if (cur_multi == CPU_INVALID_VALUE)
 		cur_multi = 0;
-	node_setf(node, "Multiplier", 0, "x%.1lf (%d-%d)", cur_multi / 100.0, min_multi / 100, max_multi / 100);
+	PNODE nmulti = node_append_new(node, "Multiplier", NFLG_ATTGROUP);
+	node_att_setf(nmulti, "Current", NAFLG_FMT_NUMERIC, "%.1lf", cur_multi / 100.0);
+	node_att_setf(nmulti, "Max", NAFLG_FMT_NUMERIC, "%d", max_multi / 100);
+	node_att_setf(nmulti, "Min", NAFLG_FMT_NUMERIC, "%d", min_multi / 100);
 	if ((value = cpu_msrinfo(handle, INFO_TEMPERATURE)) != CPU_INVALID_VALUE)
-		node_setf(node, "Temperature", 0, "%d (C)", value);
+		node_att_setf(node, "Temperature (C)", NAFLG_FMT_NUMERIC, "%d", value);
 	if ((value = cpu_msrinfo(handle, INFO_THROTTLING)) != CPU_INVALID_VALUE)
 		node_att_set_bool(node, "Throttling", value, 0);
 	if ((value = cpu_msrinfo(handle, INFO_VOLTAGE)) != CPU_INVALID_VALUE)
-		node_setf(node, "Core voltage", 0, "%.2lf V", value / 100.0);
+		node_att_setf(node, "Core Voltage (V)", NAFLG_FMT_NUMERIC, "%.2lf", value / 100.0);
 	if ((value = cpu_msrinfo(handle, INFO_BUS_CLOCK)) != CPU_INVALID_VALUE)
-		node_setf(node, "Bus clock", 0, "%.2lf MHz", value / 100.0);
+		node_att_setf(node, "Bus Clock (MHz)", NAFLG_FMT_NUMERIC, "%.2lf", value / 100.0);
 	cpu_msr_driver_close(handle);
 }
 
@@ -111,30 +140,30 @@ PNODE nwinfo_cpuid(void)
 	node_att_set(node, "Vendor", data.vendor_str, 0);
 	node_att_set(node, "Brand", data.brand_str, 0);
 	node_att_set(node, "Code Name", data.cpu_codename, 0);
-	node_setf(node, "Family", 0, "%02Xh", data.family);
-	node_setf(node, "Model", 0, "%02Xh", data.model);
-	node_setf(node, "Stepping", 0, "%02Xh", data.stepping);
-	node_setf(node, "Ext.Family", 0, "%02Xh", data.ext_family);
-	node_setf(node, "Ext.Model", 0, "%02Xh", data.ext_model);
+	node_att_setf(node, "Family", 0, "%02Xh", data.family);
+	node_att_setf(node, "Model", 0, "%02Xh", data.model);
+	node_att_setf(node, "Stepping", 0, "%02Xh", data.stepping);
+	node_att_setf(node, "Ext.Family", 0, "%02Xh", data.ext_family);
+	node_att_setf(node, "Ext.Model", 0, "%02Xh", data.ext_model);
 
-	node_setf(node, "Cores", NAFLG_FMT_NUMERIC, "%d", data.num_cores);
-	node_setf(node, "Logical CPUs", NAFLG_FMT_NUMERIC, "%d", data.num_logical_cpus);
-	node_setf(node, "Total CPUs", NAFLG_FMT_NUMERIC, "%d", cpuid_get_total_cpus());
-	cache = node_append_new(node, "Cache", NFLG_PLACEHOLDER);
+	node_att_setf(node, "Cores", NAFLG_FMT_NUMERIC, "%d", data.num_cores);
+	node_att_setf(node, "Logical CPUs", NAFLG_FMT_NUMERIC, "%d", data.num_logical_cpus);
+	node_att_setf(node, "Total CPUs", NAFLG_FMT_NUMERIC, "%d", cpuid_get_total_cpus());
+	cache = node_append_new(node, "Cache", NFLG_ATTGROUP);
 	if (data.l1_data_cache > 0)
-		node_setf(cache, "L1 D", 0, "%d * %s, %d-way",
+		node_att_setf(cache, "L1 D", 0, "%d * %s, %d-way",
 			data.num_cores, GetHumanSize(data.l1_data_cache, kb_human_sizes, 1024), data.l1_data_assoc);
 	if (data.l1_instruction_cache > 0)
-		node_setf(cache, "L1 I", 0, "%d * %s, %d-way",
+		node_att_setf(cache, "L1 I", 0, "%d * %s, %d-way",
 			data.num_cores, GetHumanSize(data.l1_instruction_cache, kb_human_sizes, 1024), data.l1_instruction_assoc);
 	if (data.l2_cache > 0)
-		node_setf(cache, "L2", 0, "%d * %s, %d-way",
+		node_att_setf(cache, "L2", 0, "%d * %s, %d-way",
 			data.num_cores, GetHumanSize(data.l2_cache, kb_human_sizes, 1024), data.l2_assoc);
 	if (data.l3_cache > 0)
-		node_setf(cache, "L3", 0, "%s, %d-way", GetHumanSize(data.l3_cache, kb_human_sizes, 1024), data.l3_assoc);
+		node_att_setf(cache, "L3", 0, "%s, %d-way", GetHumanSize(data.l3_cache, kb_human_sizes, 1024), data.l3_assoc);
 	if (data.l4_cache > 0)
-		node_setf(cache, "L4", 0, "%s, %d-way", GetHumanSize(data.l4_cache, kb_human_sizes, 1024), data.l4_assoc);
-	node_setf(node, "SSE units", 0, "%d bits (%s)",
+		node_att_setf(cache, "L4", 0, "%s, %d-way", GetHumanSize(data.l4_cache, kb_human_sizes, 1024), data.l4_assoc);
+	node_att_setf(node, "SSE Units", 0, "%d bits (%s)",
 		data.sse_size, data.detection_hints[CPU_HINT_SSE_SIZE_AUTH] ? "authoritative" : "non-authoritative");
 	feature = node_append_new(node, "Features", NFLG_ATTGROUP);
 	for (i = 0; i < NUM_CPU_FEATURES; i++)
@@ -142,7 +171,8 @@ PNODE nwinfo_cpuid(void)
 		node_att_set_bool(feature, cpu_feature_str(i), data.flags[i], 0);
 	}
 
-	node_setf(node, "CPU clock", 0, "%d MHz", cpu_clock_measure(200, 1));
+	node_att_setf(node, "CPU Clock (MHz)", NAFLG_FMT_NUMERIC, "%d", cpu_clock_measure(200, 1));
+	PrintSgx(&raw, &data);
 	PrintMsr();
 	return node;
 }

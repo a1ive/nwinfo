@@ -72,8 +72,6 @@ typedef struct _NODE_ATT_LINK
 } NODE_ATT_LINK, * PNODE_ATT_LINK;
 
 // Functions
-char* nsprintf(const char* format, ...);
-
 PNODE node_alloc(LPCSTR name, int flags);
 void node_free(PNODE node, int deep);
 
@@ -85,14 +83,8 @@ PNODE node_append_new(PNODE parent, LPCSTR name, int flags);
 int node_att_count(PNODE node);
 int node_att_indexof(PNODE node, LPCSTR key);
 PNODE_ATT node_att_set(PNODE node, LPCSTR key, LPCSTR value, int flags);
+PNODE_ATT node_att_setf(PNODE node, LPCSTR key, int flags, const char* format, ...);
 LPSTR node_att_get(PNODE node, LPCSTR key);
-
-#define node_setf(n,k,f,...) \
-	do \
-	{ \
-		node_att_set(n, k, nsprintf(__VA_ARGS__), f); \
-	} \
-	while (0)
 
 int node_to_json(PNODE node, FILE* file, int flags);
 int node_to_yaml(PNODE node, FILE* file, int flags);
