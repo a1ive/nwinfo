@@ -47,6 +47,12 @@ const char* GetHumanSize(UINT64 size, const char* human_sizes[6], UINT64 base)
 	static char buf[48];
 	const char* umsg;
 
+	if (!nwinfo_human_size)
+	{
+		snprintf(buf, sizeof(buf), "%llu", size);
+		return buf;
+	}
+
 	while (fsize >= base && units < 5)
 	{
 		frac = fsize % base;
@@ -364,7 +370,8 @@ FindClass(PNODE nd, CONST CHAR* Class)
 }
 
 const CHAR*
-GuidToStr(UCHAR Guid[16]) {
+GuidToStr(UCHAR Guid[16])
+{
 	static CHAR GuidStr[37] = { 0 };
 	snprintf(GuidStr, 37, "%02X%02X%02X%02X-%02X%02X-%02X%02X-%02X%02X-%02X%02X%02X%02X%02X%02X\n",
 		Guid[0], Guid[1], Guid[2], Guid[3], Guid[4], Guid[5], Guid[6], Guid[7],

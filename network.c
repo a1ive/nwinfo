@@ -24,18 +24,18 @@ static void displayAddress(PNODE pNode, const PSOCKET_ADDRESS Address, LPCSTR ke
 		SOCKADDR_IN* si = (SOCKADDR_IN*)(Address->lpSockaddr);
 		char a[INET_ADDRSTRLEN] = { 0 };
 		if (NT5InetNtop(AF_INET, &(si->sin_addr), a, sizeof(a)))
-			node_att_set(pNode, key ? key : "IPv4", a, 0);
+			node_att_set(pNode, key ? key : "IPv4", a, NAFLG_FMT_IPADDR);
 		else
-			node_att_set(pNode, key ? key : "IPv4", "", 0);
+			node_att_set(pNode, key ? key : "IPv4", "", NAFLG_FMT_IPADDR);
 	}
 	else if (Address->lpSockaddr->sa_family == AF_INET6)
 	{
 		SOCKADDR_IN6* si = (SOCKADDR_IN6*)(Address->lpSockaddr);
 		char a[INET6_ADDRSTRLEN] = { 0 };
 		if (NT5InetNtop(AF_INET6, &(si->sin6_addr), a, sizeof(a)))
-			node_att_set(pNode, key ? key : "IPv6", a, 0);
+			node_att_set(pNode, key ? key : "IPv6", a, NAFLG_FMT_IPADDR);
 		else
-			node_att_set(pNode, key ? key : "IPv6", "", 0);
+			node_att_set(pNode, key ? key : "IPv6", "", NAFLG_FMT_IPADDR);
 	}
 }
 
@@ -123,7 +123,7 @@ PNODE nwinfo_network (int active)
 		PNODE nic = node_append_new(node, "Interface", NFLG_TABLE_ROW);
 		if (active && pCurrAddresses->OperStatus != IfOperStatusUp)
 			goto next_addr;
-		node_att_set(nic, "Network Adapter", pCurrAddresses->AdapterName, 0);
+		node_att_set(nic, "Network Adapter", pCurrAddresses->AdapterName, NAFLG_FMT_GUID);
 		node_att_set(nic, "Description", NT5WcsToMbs(pCurrAddresses->Description), 0);
 		node_att_set(nic, "Type", IfTypeToStr(pCurrAddresses->IfType), 0);
 		if (pCurrAddresses->PhysicalAddressLength != 0)
@@ -151,7 +151,7 @@ PNODE nwinfo_network (int active)
 				{
 					ULONG SubnetMask = 0;
 					NT5ConvertLengthToIpv4Mask(pUnicast->OnLinkPrefixLength, &SubnetMask);
-					node_att_setf(unicast, "Subnet Mask", 0, "%u.%u.%u.%u",
+					node_att_setf(unicast, "Subnet Mask", NAFLG_FMT_IPADDR, "%u.%u.%u.%u",
 						SubnetMask & 0xFF, (SubnetMask >> 8) & 0xFF, (SubnetMask >> 16) & 0xFF, (SubnetMask >> 24) & 0xFF);
 				}
 				pUnicast = pUnicast->Next;
@@ -211,8 +211,10 @@ PNODE nwinfo_network (int active)
 			displayAddress(nic, &pCurrAddresses->Dhcpv4Server, "DHCP Server");
 		}
 
-		node_att_set(nic, "Transmit Link Speed", GetHumanSize(pCurrAddresses->TransmitLinkSpeed, bps_human_sizes, 1000), 0);
-		node_att_set(nic, "Receive Link Speed", GetHumanSize(pCurrAddresses->ReceiveLinkSpeed, bps_human_sizes, 1000), 0);
+		node_att_set(nic, "Transmit Link Speed",
+			GetHumanSize(pCurrAddresses->TransmitLinkSpeed, bps_human_sizes, 1000), NAFLG_FMT_HUMAN_SIZE);
+		node_att_set(nic, "Receive Link Speed",
+			GetHumanSize(pCurrAddresses->ReceiveLinkSpeed, bps_human_sizes, 1000), NAFLG_FMT_HUMAN_SIZE);
 		node_att_setf(nic, "MTU (Byte)", NAFLG_FMT_NUMERIC, "%lu", pCurrAddresses->Mtu);
 		if (IfTable && pCurrAddresses->IfIndex > 0)
 		{

@@ -50,6 +50,7 @@ extern enum output_format
 extern FILE* nwinfo_output;
 #define NWINFO_BUFSZ 65535
 extern UCHAR nwinfo_buffer[NWINFO_BUFSZ];
+extern INT nwinfo_human_size;
 
 PNODE nwinfo_sys(void);
 PNODE nwinfo_cpuid(void);

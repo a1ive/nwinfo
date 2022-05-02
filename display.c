@@ -136,7 +136,7 @@ DecodeEDID(PNODE nm, void* pData, DWORD dwSize)
 		if (pEDID->Desc[i].PixelClock == 0 && pEDID->Desc[i].HActiveLSB == 0)
 			continue;
 		pc = ((UINT64)pEDID->Desc[i].PixelClock) * 10 * 1000;
-		node_att_set(nm, "Pixel Clock", GetHumanSize(pc, hz_human_sizes, 1000), 0);
+		node_att_set(nm, "Pixel Clock", GetHumanSize(pc, hz_human_sizes, 1000), NAFLG_FMT_HUMAN_SIZE);
 		ha = (UINT32)pEDID->Desc[i].HActiveLSB + (UINT32)((pEDID->Desc[i].HPixelsMSB & 0xf0) << 4);
 		va = (UINT32)pEDID->Desc[i].VActiveLSB + (UINT32)((pEDID->Desc[i].VLinesMSB & 0xf0) << 4);
 		hb = (UINT32)pEDID->Desc[i].HBlankingLSB + (UINT32)((pEDID->Desc[i].HPixelsMSB & 0x0f) << 8);

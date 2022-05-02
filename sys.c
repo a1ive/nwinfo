@@ -248,11 +248,11 @@ static void PrintMemInfo(void)
 	GlobalMemoryStatusEx(&statex);
 	node_att_setf(node, "Memory Usage", 0, "%u%%", statex.dwMemoryLoad);
 	nphy = node_append_new(node, "Physical Memory", NFLG_ATTGROUP);
-	node_att_set(nphy, "Free", GetHumanSize(statex.ullAvailPhys, mem_human_sizes, 1024), 0);
-	node_att_set(nphy, "Total", GetHumanSize(statex.ullTotalPhys, mem_human_sizes, 1024), 0);
+	node_att_set(nphy, "Free", GetHumanSize(statex.ullAvailPhys, mem_human_sizes, 1024), NAFLG_FMT_HUMAN_SIZE);
+	node_att_set(nphy, "Total", GetHumanSize(statex.ullTotalPhys, mem_human_sizes, 1024), NAFLG_FMT_HUMAN_SIZE);
 	npage = node_append_new(node, "Paging File", NFLG_ATTGROUP);
-	node_att_set(npage, "Free", GetHumanSize(statex.ullAvailPageFile, mem_human_sizes, 1024), 0);
-	node_att_set(npage, "Total", GetHumanSize(statex.ullTotalPageFile, mem_human_sizes, 1024), 0);
+	node_att_set(npage, "Free", GetHumanSize(statex.ullAvailPageFile, mem_human_sizes, 1024), NAFLG_FMT_HUMAN_SIZE);
+	node_att_set(npage, "Total", GetHumanSize(statex.ullTotalPageFile, mem_human_sizes, 1024), NAFLG_FMT_HUMAN_SIZE);
 }
 
 PNODE nwinfo_sys(void)

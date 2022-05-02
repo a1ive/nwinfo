@@ -196,6 +196,8 @@ PNODE_ATT node_att_set(PNODE node, LPCSTR key, LPCSTR value, int flags)
 	PNODE_ATT_LINK new_link = NULL;
 	PNODE_ATT_LINK new_links = NULL;
 
+	if (!nwinfo_human_size && (flags & NAFLG_FMT_HUMAN_SIZE))
+		flags |= NAFLG_FMT_NUMERIC;
 	// Count old attributes
 	old_count = node_att_count(node);
 
@@ -410,7 +412,7 @@ int node_to_yaml(PNODE node, FILE* file, int flags)
 			attVal = (att->Value && *att->Value != '\0') ? att->Value : "~";
 
 			fprintcx(file, NODE_YAML_DELIM_INDENT, indent_depth + 1);
-			if (NAFLG_FMT_GUID & att->Flags)
+			if (att->Flags & NAFLG_FMT_NEED_QUOTE)
 				fprintf(file, "%s: '%s'%s", att->Key, attVal, NODE_YAML_DELIM_NL);
 			else
 				fprintf(file, "%s: %s%s", att->Key, attVal, NODE_YAML_DELIM_NL);

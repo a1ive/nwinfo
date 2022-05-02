@@ -9,6 +9,7 @@
 enum output_format nwinfo_output_format = FORMAT_YAML;
 FILE* nwinfo_output;
 UCHAR nwinfo_buffer[NWINFO_BUFSZ];
+INT nwinfo_human_size;
 
 static void nwinfo_help(void)
 {
@@ -16,6 +17,7 @@ static void nwinfo_help(void)
 		"OPTIONS:\n"
 		"  --format=XXX     Specify output format. [YAML|JSON]\n"
 		"  --output=FILE    Write to FILE instead of printing to screen.\n"
+		"  --human          Display numbers in human readable format.\n"
 		"  --sys            Print system info.\n"
 		"  --cpu            Print CPUID info.\n"
 		"  --net[=active]   Print [active] network info\n"
@@ -42,6 +44,7 @@ int main(int argc, char** argv)
 		fprintf(stderr, "permission denied\n");
 		exit(1);
 	}
+	nwinfo_human_size = 0;
 	nw_root = node_alloc("NWinfo", 0);
 	for (int i = 0; i < argc; i++)
 	{
@@ -66,6 +69,10 @@ int main(int argc, char** argv)
 				fprintf(stderr, "cannot open %s.\n", &argv[i][9]);
 				exit(1);
 			}
+		}
+		else if (_stricmp(argv[i], "--human") == 0)
+		{
+			nwinfo_human_size = 1;
 		}
 		else if (_stricmp(argv[i], "--sys") == 0)
 		{

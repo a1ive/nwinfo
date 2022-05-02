@@ -126,6 +126,7 @@ PNODE nwinfo_cpuid(void)
 	struct cpu_id_t data = { 0 };
 	int i = 0;
 	PNODE cache, feature;
+	int saved_human_size;
 
 	node = node_alloc("CPUID", 0);
 	if (cpuid_get_raw_data(&raw) < 0)
@@ -150,6 +151,8 @@ PNODE nwinfo_cpuid(void)
 	node_att_setf(node, "Logical CPUs", NAFLG_FMT_NUMERIC, "%d", data.num_logical_cpus);
 	node_att_setf(node, "Total CPUs", NAFLG_FMT_NUMERIC, "%d", cpuid_get_total_cpus());
 	cache = node_append_new(node, "Cache", NFLG_ATTGROUP);
+	saved_human_size = nwinfo_human_size;
+	nwinfo_human_size = 1;
 	if (data.l1_data_cache > 0)
 		node_att_setf(cache, "L1 D", 0, "%d * %s, %d-way",
 			data.num_cores, GetHumanSize(data.l1_data_cache, kb_human_sizes, 1024), data.l1_data_assoc);
@@ -163,6 +166,7 @@ PNODE nwinfo_cpuid(void)
 		node_att_setf(cache, "L3", 0, "%s, %d-way", GetHumanSize(data.l3_cache, kb_human_sizes, 1024), data.l3_assoc);
 	if (data.l4_cache > 0)
 		node_att_setf(cache, "L4", 0, "%s, %d-way", GetHumanSize(data.l4_cache, kb_human_sizes, 1024), data.l4_assoc);
+	nwinfo_human_size = saved_human_size;
 	node_att_setf(node, "SSE Units", 0, "%d bits (%s)",
 		data.sse_size, data.detection_hints[CPU_HINT_SSE_SIZE_AUTH] ? "authoritative" : "non-authoritative");
 	feature = node_append_new(node, "Features", NFLG_ATTGROUP);

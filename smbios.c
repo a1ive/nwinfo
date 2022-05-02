@@ -60,7 +60,7 @@ static void ProcSysInfo(PNODE tab, void* p)
 	node_att_set(tab, "Serial Number", LocateString(str, pSystem->SN), 0);
 	// for v2.1 and later
 	if (pSystem->Header.Length > 0x08)
-		node_att_set(tab, "UUID", GuidToStr(pSystem->UUID), 0);
+		node_att_set(tab, "UUID", GuidToStr(pSystem->UUID), NAFLG_FMT_GUID);
 
 	if (pSystem->Header.Length > 0x19)
 	{
@@ -337,11 +337,11 @@ static void ProcMemModuleInfo(PNODE tab, void* p)
 	UCHAR sz = 0;
 	node_att_set(tab, "Description", "Memory Module information", 0);
 	node_att_set(tab, "Socket Designation", LocateString(str, pMemModule->SocketDesignation), 0);
-	node_att_setf(tab, "Current Speed (ns)", NAFLG_FMT_MBYTES, "%u", pMemModule->CurrentSpeed);
+	node_att_setf(tab, "Current Speed (ns)", NAFLG_FMT_NUMERIC, "%u", pMemModule->CurrentSpeed);
 	sz = pMemModule->InstalledSize & 0x7F;
 	if (sz > 0x7D)
 		sz = 0;
-	node_att_setf(tab, "Installed Size (MB)", NAFLG_FMT_MBYTES, "%llu", 2ULL << sz);
+	node_att_setf(tab, "Installed Size (MB)", NAFLG_FMT_NUMERIC, "%llu", 2ULL << sz);
 }
 
 static void ProcCacheInfo(PNODE tab, void* p)
@@ -363,7 +363,7 @@ static void ProcCacheInfo(PNODE tab, void* p)
 		sz = ((UINT64)pCache->MaxSize - (1ULL << 15)) * 64 * 1024;
 	else
 		sz = ((UINT64) pCache->MaxSize) * 1024;
-	node_att_set(tab, "Max Cache Size", GetHumanSize(sz, mem_human_sizes, 1024), 0);
+	node_att_set(tab, "Max Cache Size", GetHumanSize(sz, mem_human_sizes, 1024), NAFLG_FMT_HUMAN_SIZE);
 	if (pCache->InstalledSize == 0xffff && pCache->Header.Length > 0x13)
 	{
 		if (pCache->InstalledSize2 & (1ULL << 31))
@@ -379,9 +379,9 @@ static void ProcCacheInfo(PNODE tab, void* p)
 	{
 		sz = ((UINT64)pCache->InstalledSize) * 1024;
 	}
-	node_att_set(tab, "Installed Cache Size", GetHumanSize(sz, mem_human_sizes, 1024), 0);
+	node_att_set(tab, "Installed Cache Size", GetHumanSize(sz, mem_human_sizes, 1024), NAFLG_FMT_HUMAN_SIZE);
 	if (pCache->Speed)
-		node_att_setf(tab, "Cache Speed (ns)", NAFLG_FMT_MBYTES, "%u", pCache->Speed);
+		node_att_setf(tab, "Cache Speed (ns)", NAFLG_FMT_NUMERIC, "%u", pCache->Speed);
 }
 
 static void ProcOEMString(PNODE tab, void* p)
@@ -460,7 +460,7 @@ static void ProcMemoryArray(PNODE tab, void* p)
 		sz = pMA->ExtMaxCapacity;
 	else
 		sz = ((UINT64)pMA->MaxCapacity) * 1024;
-	node_att_set(tab, "Max Capacity", GetHumanSize(sz, mem_human_sizes, 1024), 0);
+	node_att_set(tab, "Max Capacity", GetHumanSize(sz, mem_human_sizes, 1024), NAFLG_FMT_HUMAN_SIZE);
 }
 
 static const CHAR*
@@ -517,21 +517,21 @@ static void ProcMemoryDevice(PNODE tab, void* p)
 	node_att_set(tab, "Device Locator", LocateString(str, pMD->DeviceLocator), 0);
 	node_att_set(tab, "Bank Locator", LocateString(str, pMD->BankLocator), 0);
 	if (pMD->TotalWidth)
-		node_att_setf(tab, "Total Width (bits)", NAFLG_FMT_MBYTES, "%u", pMD->TotalWidth);
+		node_att_setf(tab, "Total Width (bits)", NAFLG_FMT_NUMERIC, "%u", pMD->TotalWidth);
 	if (pMD->DataWidth)
-		node_att_setf(tab, "Data Width (bits)", NAFLG_FMT_MBYTES, "%u", pMD->DataWidth);
+		node_att_setf(tab, "Data Width (bits)", NAFLG_FMT_NUMERIC, "%u", pMD->DataWidth);
 	if (pMD->Size & (1ULL << 15))
 		sz = ((UINT64)pMD->Size - (1ULL << 15)) * 1024;
 	else
 		sz = ((UINT64)pMD->Size) * 1024 * 1024;
 	if (!sz)
 		return;
-	node_att_set(tab, "Device Size", GetHumanSize(sz, mem_human_sizes, 1024), 0);
+	node_att_set(tab, "Device Size", GetHumanSize(sz, mem_human_sizes, 1024), NAFLG_FMT_HUMAN_SIZE);
 	node_att_set(tab, "Device Type", pMDMemoryTypeToStr(pMD->MemoryType), 0);
 	if (pMD->Header.Length > 0x15)
 	{
 		if (pMD->Speed)
-			node_att_setf(tab, "Speed (MT/s)", NAFLG_FMT_MBYTES, "%u", pMD->Speed);
+			node_att_setf(tab, "Speed (MT/s)", NAFLG_FMT_NUMERIC, "%u", pMD->Speed);
 		node_att_set(tab, "Manufacturer", LocateString(str, pMD->Manufacturer), 0);
 		node_att_set(tab, "Serial Number", LocateString(str, pMD->SN), 0);
 		node_att_set(tab, "Asset Tag Number", LocateString(str, pMD->AssetTag), 0);

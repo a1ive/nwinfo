@@ -64,9 +64,9 @@ PrintVolumeInfo(PNODE pNode, CHAR Letter)
 	node_att_set(pNode, "Filesystem", VolFs, 0);
 	node_att_set(pNode, "Label", VolName, 0);
 	if (GetDiskFreeSpaceExA(PhyPath, NULL, NULL, &Space))
-		node_att_set(pNode, "Free Space", GetHumanSize(Space.QuadPart, d_human_sizes, 1024), 0);
+		node_att_set(pNode, "Free Space", GetHumanSize(Space.QuadPart, d_human_sizes, 1024), NAFLG_FMT_HUMAN_SIZE);
 	if (GetDiskFreeSpaceExA(PhyPath, NULL, &Space, NULL))
-		node_att_set(pNode, "Total Space", GetHumanSize(Space.QuadPart, d_human_sizes, 1024), 0);
+		node_att_set(pNode, "Total Space", GetHumanSize(Space.QuadPart, d_human_sizes, 1024), NAFLG_FMT_HUMAN_SIZE);
 fail:
 	if (VolName)
 		free(VolName);
@@ -388,7 +388,7 @@ PNODE nwinfo_disk(void)
 				node_att_set(nd, "Serial Number", CurDrive->SerialNumber, 0);
 			node_att_set(nd, "Type", GetBusTypeString(CurDrive->BusType), 0);
 			node_att_set_bool(nd, "Removable", CurDrive->RemovableMedia, 0);
-			node_att_set(nd, "Size", GetHumanSize(CurDrive->SizeInBytes, d_human_sizes, 1024), 0);
+			node_att_set(nd, "Size", GetHumanSize(CurDrive->SizeInBytes, d_human_sizes, 1024), NAFLG_FMT_HUMAN_SIZE);
 			if (CurDrive->PartStyle == 1)
 			{
 				node_att_set(nd, "Partition Table", "MBR", 0);
