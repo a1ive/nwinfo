@@ -25,13 +25,12 @@
  */
 #include <stdio.h>
 #include <string.h>
+#include <windows.h>
 #include "libcpuid.h"
 #include "libcpuid_util.h"
 #include "asm-bits.h"
 #include "rdtsc.h"
 
-#ifdef _WIN32
-#include <windows.h>
 void sys_precise_clock(uint64_t *result)
 {
 	double c, f;
@@ -42,17 +41,6 @@ void sys_precise_clock(uint64_t *result)
 	f = (double) freq.QuadPart;
 	*result = (uint64_t) ( c * 1000000.0 / f );
 }
-#else
-/* assuming Linux, Mac OS or other POSIX */
-#include <sys/time.h>
-void sys_precise_clock(uint64_t *result)
-{
-	struct timeval tv;
-	gettimeofday(&tv, NULL);
-	*result = (uint64_t) tv.tv_sec * (uint64_t) 1000000 +
-	          (uint64_t) tv.tv_usec;
-}
-#endif /* _WIN32 */
 
 /* out = a - b */
 static void mark_t_subtract(struct cpu_mark_t* a, struct cpu_mark_t* b, struct cpu_mark_t *out)
@@ -91,17 +79,20 @@ int cpu_clock_by_mark(struct cpu_mark_t* mark)
 	return (int) result;
 }
 
-#ifdef _WIN32
 int cpu_clock_by_os(void)
 {
 	HKEY key;
 	DWORD result;
 	DWORD size = 4;
 
-	if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, TEXT("HARDWARE\\DESCRIPTION\\System\\CentralProcessor\\0"), 0, KEY_READ, &key) != ERROR_SUCCESS)
+	if (RegOpenKeyExA(HKEY_LOCAL_MACHINE,
+		"HARDWARE\\DESCRIPTION\\System\\CentralProcessor\\0",
+		0, KEY_READ, &key) != ERROR_SUCCESS)
 		return -1;
 
-	if (RegQueryValueEx(key, TEXT("~MHz"), NULL, NULL, (LPBYTE) &result, (LPDWORD) &size) != ERROR_SUCCESS) {
+	if (RegQueryValueExA(key, "~MHz",
+		NULL, NULL, (LPBYTE) &result, (LPDWORD) &size) != ERROR_SUCCESS)
+	{
 		RegCloseKey(key);
 		return -1;
 	}
@@ -109,44 +100,7 @@ int cpu_clock_by_os(void)
 
 	return (int)result;
 }
-#else
-#ifdef __APPLE__
-#include <sys/types.h>
-#include <sys/sysctl.h>
-/* Assuming Mac OS X with hw.cpufrequency sysctl */
-int cpu_clock_by_os(void)
-{
-	long long result = -1;
-	size_t size = sizeof(result);
-	if (sysctlbyname("hw.cpufrequency", &result, &size, NULL, 0))
-		return -1;
-	return (int) (result / (long long) 1000000);
-}
-#else
-/* Assuming Linux with /proc/cpuinfo */
-int cpu_clock_by_os(void)
-{
-	FILE *f;
-	char line[1024], *s;
-	int result;
 
-	f = fopen("/proc/cpuinfo", "rt");
-	if (!f) return -1;
-
-	while (fgets(line, sizeof(line), f)) {
-		if (!strncmp(line, "cpu MHz", 7)) {
-			s = strchr(line, ':');
-			if (s && 1 == sscanf(s, ":%d.", &result)) {
-				fclose(f);
-				return result;
-			}
-		}
-	}
-	fclose(f);
-	return -1;
-}
-#endif /* __APPLE__ */
-#endif /* _WIN32 */
 
 /* Emulate doing useful CPU intensive work */
 static int busy_loop(int amount)
@@ -242,24 +196,24 @@ static void adjust_march_ic_multiplier(const struct cpu_id_t* id, int* numerator
 	 */
 	//
 	if (id->sse_size < 128) {
-		debugf(1, "SSE execution path is 64-bit\n");
+		// SSE execution path is 64-bit
 		// on a CPU with half SSE unit length, SSE instructions execute at 0.5 IPC;
 		// the resulting value must be multiplied by 2:
 		*numerator = 2;
 	} else {
-		debugf(1, "SSE execution path is 128-bit\n");
+		// SSE execution path is 128-bit
 	}
 	//
 	// Bulldozer or later: assume 1.4 IPC
 	if ((id->vendor == VENDOR_AMD && id->ext_family >= 21) || (id->vendor == VENDOR_HYGON)) {
-		debugf(1, "cpu_clock_by_ic: Bulldozer (or later) detected, dividing result by 1.4\n");
+		// Bulldozer (or later) detected, dividing result by 1.4
 		*numerator = 5;
 		*denom = 7; // multiply by 5/7, to divide by 1.4
 	}
 	//
 	// Skylake or later: assume 1.6 IPC
 	if (id->vendor == VENDOR_INTEL && id->ext_model >= 94) {
-		debugf(1, "cpu_clock_by_ic: Skylake (or later) detected, dividing result by 1.6\n");
+		// Skylake (or later) detected, dividing result by 1.6
 		*numerator = 5;
 		*denom = 8; // to divide by 1.6, multiply by 5/8
 	}
@@ -278,7 +232,7 @@ int cpu_clock_by_ic(int millis, int runs)
 	//
 	adjust_march_ic_multiplier(id, &multiplier_numerator, &multiplier_denom);
 	//
-	tl = millis * 125; // (*1000 / 8)
+	tl = 125ULL * millis; // (*1000 / 8)
 	cycles_inner = 128;
 	cycles_outer = 1;
 	do {
@@ -289,7 +243,7 @@ int cpu_clock_by_ic(int millis, int runs)
 			busy_sse_loop(cycles_inner);
 		sys_precise_clock(&t1);
 	} while (t1 - t0 < tl);
-	debugf(2, "inner: %d, outer: %d\n", cycles_inner, cycles_outer);
+
 	for (ri = 0; ri < runs; ri++) {
 		sys_precise_clock(&t0);
 		c = 0;
@@ -300,7 +254,6 @@ int cpu_clock_by_ic(int millis, int runs)
 			sys_precise_clock(&t1);
 		} while (t1 - t0 < tl * (uint64_t) 8);
 		// cpu_Hz = cycles_inner * cycles_outer * 256 / (t1 - t0) * 1000000
-		debugf(2, "c = %d, td = %d\n", c, (int) (t1 - t0));
 		hz = ((uint64_t) cycles_inner * (uint64_t) 256 + 12) *
 		     (uint64_t) cycles_outer * (uint64_t) multiplier_numerator * (uint64_t) c * (uint64_t) 1000000
 		     / ((t1 - t0) * (uint64_t) multiplier_denom);

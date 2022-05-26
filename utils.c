@@ -23,7 +23,7 @@ BOOL IsAdmin(void)
 	return b;
 }
 
-DWORD ObtainPrivileges(LPCTSTR privilege)
+DWORD ObtainPrivileges(LPCSTR privilege)
 {
 	HANDLE hToken;
 	TOKEN_PRIVILEGES tkp = { 0 };
@@ -31,7 +31,7 @@ DWORD ObtainPrivileges(LPCTSTR privilege)
 	// Obtain required privileges
 	if (!OpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken))
 		return GetLastError();
-	res = LookupPrivilegeValue(NULL, privilege, &tkp.Privileges[0].Luid);
+	res = LookupPrivilegeValueA(NULL, privilege, &tkp.Privileges[0].Luid);
 	if (!res)
 		return GetLastError();
 	tkp.PrivilegeCount = 1;

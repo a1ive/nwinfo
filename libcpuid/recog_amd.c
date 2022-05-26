@@ -575,15 +575,6 @@ static void decode_amd_codename(struct cpu_raw_data_t* raw, struct cpu_id_t* dat
 		code_and_bits.bits &= ~(ATHLON_ | _64_);
 		code_and_bits.bits |= SEMPRON_;
 	}
-	if (code_str)
-		debugf(2, "Detected AMD brand code: %d (%s)\n", code_and_bits.code, code_str);
-	else
-		debugf(2, "Detected AMD brand code: %d\n", code_and_bits.code);
-
-	if (code_and_bits.bits) {
-		debugf(2, "Detected AMD bits: ");
-		debug_print_lbits(2, code_and_bits.bits);
-	}
 
 	internal->code.amd = code_and_bits.code;
 	internal->bits = code_and_bits.bits;
@@ -598,9 +589,4 @@ int cpuid_identify_amd(struct cpu_raw_data_t* raw, struct cpu_id_t* data, struct
 	decode_amd_number_of_cores(raw, data);
 	decode_amd_codename(raw, data, internal);
 	return 0;
-}
-
-void cpuid_get_list_amd(struct cpu_list_t* list)
-{
-	generic_get_cpu_list(cpudb_amd, COUNT_OF(cpudb_amd), list);
 }

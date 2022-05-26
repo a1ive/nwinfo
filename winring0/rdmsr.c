@@ -532,47 +532,4 @@ int cpu_msrinfo(struct msr_driver_t* handle, cpu_msrinfo_request_t which)
 	}
 }
 
-int msr_serialize_raw_data(struct msr_driver_t* handle, const char* filename)
-{
-	int i, j;
-	FILE *f;
-	uint64_t reg;
-	const uint32_t *msr;
-	struct cpu_raw_data_t raw;
-	struct cpu_id_t id;
-	struct internal_id_info_t internal;
-
-	if (handle == NULL)
-		return set_error(ERR_HANDLE);
-
-	if ((filename == NULL) || !strcmp(filename, ""))
-		f = stdout;
-	else
-		f = fopen(filename, "wt");
-	if (!f) return set_error(ERR_OPEN);
-
-	if (cpuid_get_raw_data(&raw) || cpu_ident_internal(&raw, &id, &internal))
-		return -1;
-
-	fprintf(f, "CPU is %s %s, stock clock is %dMHz.\n", id.vendor_str, id.brand_str, cpu_clock_measure(250, 1));
-	switch (id.vendor) {
-		case VENDOR_HYGON:
-		case VENDOR_AMD:   msr = amd_msr; break;
-		case VENDOR_INTEL: msr = intel_msr; break;
-		default: return set_error(ERR_CPU_UNKN);
-	}
-
-	for (i = 0; msr[i] != CPU_INVALID_VALUE; i++) {
-		cpu_rdmsr(handle, msr[i], &reg);
-		fprintf(f, "msr[%#08x]=", msr[i]);
-		for (j = 56; j >= 0; j -= 8)
-			fprintf(f, "%02x ", (int) (reg >> j) & 0xff);
-		fprintf(f, "\n");
-	}
-
-	if ((filename != NULL) && strcmp(filename, ""))
-		fclose(f);
-	return set_error(ERR_OK);
-}
-
 #endif // RDMSR_UNSUPPORTED_OS

@@ -653,8 +653,8 @@ static void decode_intel_deterministic_cache_info(struct cpu_raw_data_t* raw,
 		else if (level == 4 && typenumber == 3)
 			type = L4;
 		else {
-			warnf("deterministic_cache: unknown level/typenumber combo (%d/%d), cannot\n", level, typenumber);
-			warnf("deterministic_cache: recognize cache type\n");
+			// unknown level/typenumber combo
+			// cannot recognize cache type
 			continue;
 		}
 		ways = ((raw->intel_fn4[ecx][EBX] >> 22) & 0x3ff) + 1;
@@ -777,7 +777,6 @@ static intel_code_and_bits_t get_brand_code_and_bits(struct cpu_id_t* data)
 			code = matchtable[i].c;
 			break;
 		}
-	debugf(2, "intel matchtable result is %d\n", code);
 	if (bits & XEON_) {
 		if (match_pattern(bs, "W35##") || match_pattern(bs, "[ELXW]75##"))
 			bits |= _7;
@@ -932,13 +931,11 @@ static void decode_intel_sgx_features(const struct cpu_raw_data_t* raw, struct c
 	for (i = 0; i < 1000000; i++) {
 		epc = cpuid_get_epc(i, raw);
 		if (epc.length == 0) {
-			debugf(2, "SGX: epc section request for %d returned null, no more EPC sections.\n", i);
 			data->sgx.num_epc_sections = i;
 			break;
 		}
 	}
 	if (data->sgx.num_epc_sections == -1) {
-		debugf(1, "SGX: warning: seems to be infinitude of EPC sections.\n");
 		data->sgx.num_epc_sections = 1000000;
 	}
 }
@@ -992,21 +989,11 @@ int cpuid_identify_intel(struct cpu_raw_data_t* raw, struct cpu_id_t* data, stru
 			break;
 		}
 	}
-	if (brand_code_str)
-		debugf(2, "Detected Intel brand code: %d (%s)\n", brand.code, brand_code_str);
-	else
-		debugf(2, "Detected Intel brand code: %d\n", brand.code);
-	if (brand.bits) {
-		debugf(2, "Detected Intel bits: ");
-		debug_print_lbits(2, brand.bits);
-	}
-	debugf(2, "Detected Intel model code: %d\n", model_code);
 
 	internal->code.intel = brand.code;
 	internal->bits = brand.bits;
 
 	if (data->flags[CPU_FEATURE_SGX]) {
-		debugf(2, "SGX seems to be present, decoding...\n");
 		// if SGX is indicated by the CPU, verify its presence:
 		decode_intel_sgx_features(raw, data);
 	}
@@ -1014,9 +1001,4 @@ int cpuid_identify_intel(struct cpu_raw_data_t* raw, struct cpu_id_t* data, stru
 	internal->score = match_cpu_codename(cpudb_intel, COUNT_OF(cpudb_intel), data,
 		brand.code, brand.bits, model_code);
 	return 0;
-}
-
-void cpuid_get_list_intel(struct cpu_list_t* list)
-{
-	generic_get_cpu_list(cpudb_intel, COUNT_OF(cpudb_intel), list);
 }

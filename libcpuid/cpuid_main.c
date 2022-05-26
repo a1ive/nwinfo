@@ -29,22 +29,15 @@
 #include "recog_amd.h"
 #include "asm-bits.h"
 #include "libcpuid_util.h"
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
+
+#include <windows.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 
 /* Implementation: */
 
-#if defined(__STDC_VERSION__) && __STDC_VERSION__ == 201112L
-	_Thread_local int _libcpiud_errno = ERR_OK;
-#elif defined(__GNUC__) // Also works for clang
-	__thread int _libcpiud_errno = ERR_OK;
-#else
-	static int _libcpiud_errno = ERR_OK;
-#endif
+static int _libcpiud_errno = ERR_OK;
 
 int set_error(cpu_error_t err)
 {
@@ -90,87 +83,12 @@ static int parse_token(const char* expected_token, const char *token,
 }
 
 /* get_total_cpus() system specific code: uses OS routines to determine total number of CPUs */
-#ifdef __APPLE__
-#include <unistd.h>
-#include <mach/clock_types.h>
-#include <mach/clock.h>
-#include <mach/mach.h>
-static int get_total_cpus(void)
-{
-	kern_return_t kr;
-	host_basic_info_data_t basic_info;
-	host_info_t info = (host_info_t)&basic_info;
-	host_flavor_t flavor = HOST_BASIC_INFO;
-	mach_msg_type_number_t count = HOST_BASIC_INFO_COUNT;
-	kr = host_info(mach_host_self(), flavor, info, &count);
-	if (kr != KERN_SUCCESS) return 1;
-	return basic_info.avail_cpus;
-}
-#define GET_TOTAL_CPUS_DEFINED
-#endif
-
-#ifdef _WIN32
-#include <windows.h>
 static int get_total_cpus(void)
 {
 	SYSTEM_INFO system_info;
 	GetSystemInfo(&system_info);
 	return system_info.dwNumberOfProcessors;
 }
-#define GET_TOTAL_CPUS_DEFINED
-#endif
-
-#ifdef __HAIKU__
-#include <OS.h>
-static int get_total_cpus(void)
-{
-	system_info info;
-	get_system_info(&info);
-	return info.cpu_count;
-}
-#define GET_TOTAL_CPUS_DEFINED
-#endif
-
-#if defined linux || defined __linux__ || defined __sun
-#include <sys/sysinfo.h>
-#include <unistd.h>
-
-static int get_total_cpus(void)
-{
-	return sysconf(_SC_NPROCESSORS_ONLN);
-}
-#define GET_TOTAL_CPUS_DEFINED
-#endif
-
-#if defined __FreeBSD__ || defined __OpenBSD__ || defined __NetBSD__ || defined __bsdi__ || defined __QNX__
-#include <sys/types.h>
-#include <sys/sysctl.h>
-
-static int get_total_cpus(void)
-{
-	int mib[2] = { CTL_HW, HW_NCPU };
-	int ncpus;
-	size_t len = sizeof(ncpus);
-	if (sysctl(mib, 2, &ncpus, &len, (void *) 0, 0) != 0) return 1;
-	return ncpus;
-}
-#define GET_TOTAL_CPUS_DEFINED
-#endif
-
-#ifndef GET_TOTAL_CPUS_DEFINED
-static int get_total_cpus(void)
-{
-	static int warning_printed = 0;
-	if (!warning_printed) {
-		warning_printed = 1;
-		warnf("Your system is not supported by libcpuid -- don't know how to detect the\n");
-		warnf("total number of CPUs on your system. It will be reported as 1.\n");
-		printf("Please use cpu_id_t.logical_cpus field instead.\n");
-	}
-	return 1;
-}
-#endif /* GET_TOTAL_CPUS_DEFINED */
-
 
 static void load_features_common(struct cpu_raw_data_t* raw, struct cpu_id_t* data)
 {
@@ -329,7 +247,7 @@ static int cpuid_basic_identify(struct cpu_raw_data_t* raw, struct cpu_id_t* dat
 	if (ext >= 4) {
 		for (i = 0; i < 3; i++)
 			for (j = 0; j < 4; j++)
-				memcpy(brandstr + i * 16 + j * 4,
+				memcpy(brandstr + 16ULL * i + 4ULL * j,
 				       &raw->ext_cpuid[2 + i][j], 4);
 		brandstr[48] = 0;
 		i = 0;
@@ -341,27 +259,6 @@ static int cpuid_basic_identify(struct cpu_raw_data_t* raw, struct cpu_id_t* dat
 	data->total_logical_cpus = get_total_cpus();
 	return set_error(ERR_OK);
 }
-
-static void make_list_from_string(const char* csv, struct cpu_list_t* list)
-{
-	int i, n, l, last;
-	l = (int) strlen(csv);
-	n = 0;
-	for (i = 0; i < l; i++) if (csv[i] == ',') n++;
-	n++;
-	list->num_entries = n;
-	list->names = (char**) malloc(sizeof(char*) * n);
-	last = -1;
-	n = 0;
-	for (i = 0; i <= l; i++) if (i == l || csv[i] == ',') {
-		list->names[n] = (char*) malloc(i - last);
-		memcpy(list->names[n], &csv[last + 1], i - last - 1);
-		list->names[n][i - last - 1] = '\0';
-		n++;
-		last = i;
-	}
-}
-
 
 /* Interface: */
 
@@ -426,112 +323,6 @@ int cpuid_get_raw_data(struct cpu_raw_data_t* data)
 		data->amd_fn8000001dh[i][ECX] = i;
 		cpu_exec_cpuid_ext(data->amd_fn8000001dh[i]);
 	}
-	return set_error(ERR_OK);
-}
-
-int cpuid_serialize_raw_data(struct cpu_raw_data_t* data, const char* filename)
-{
-	int i;
-	FILE *f;
-
-	if (!strcmp(filename, ""))
-		f = stdout;
-	else
-		f = fopen(filename, "wt");
-	if (!f) return set_error(ERR_OPEN);
-
-	fprintf(f, "version=%s\n", VERSION);
-	for (i = 0; i < MAX_CPUID_LEVEL; i++)
-		fprintf(f, "basic_cpuid[%d]=%08x %08x %08x %08x\n", i,
-			data->basic_cpuid[i][EAX], data->basic_cpuid[i][EBX],
-			data->basic_cpuid[i][ECX], data->basic_cpuid[i][EDX]);
-	for (i = 0; i < MAX_EXT_CPUID_LEVEL; i++)
-		fprintf(f, "ext_cpuid[%d]=%08x %08x %08x %08x\n", i,
-			data->ext_cpuid[i][EAX], data->ext_cpuid[i][EBX],
-			data->ext_cpuid[i][ECX], data->ext_cpuid[i][EDX]);
-	for (i = 0; i < MAX_INTELFN4_LEVEL; i++)
-		fprintf(f, "intel_fn4[%d]=%08x %08x %08x %08x\n", i,
-			data->intel_fn4[i][EAX], data->intel_fn4[i][EBX],
-			data->intel_fn4[i][ECX], data->intel_fn4[i][EDX]);
-	for (i = 0; i < MAX_INTELFN11_LEVEL; i++)
-		fprintf(f, "intel_fn11[%d]=%08x %08x %08x %08x\n", i,
-			data->intel_fn11[i][EAX], data->intel_fn11[i][EBX],
-			data->intel_fn11[i][ECX], data->intel_fn11[i][EDX]);
-	for (i = 0; i < MAX_INTELFN12H_LEVEL; i++)
-		fprintf(f, "intel_fn12h[%d]=%08x %08x %08x %08x\n", i,
-			data->intel_fn12h[i][EAX], data->intel_fn12h[i][EBX],
-			data->intel_fn12h[i][ECX], data->intel_fn12h[i][EDX]);
-	for (i = 0; i < MAX_INTELFN14H_LEVEL; i++)
-		fprintf(f, "intel_fn14h[%d]=%08x %08x %08x %08x\n", i,
-			data->intel_fn14h[i][EAX], data->intel_fn14h[i][EBX],
-			data->intel_fn14h[i][ECX], data->intel_fn14h[i][EDX]);
-	for (i = 0; i < MAX_AMDFN8000001DH_LEVEL; i++)
-		fprintf(f, "amd_fn8000001dh[%d]=%08x %08x %08x %08x\n", i,
-			data->amd_fn8000001dh[i][EAX], data->amd_fn8000001dh[i][EBX],
-			data->amd_fn8000001dh[i][ECX], data->amd_fn8000001dh[i][EDX]);
-
-	if (strcmp(filename, ""))
-		fclose(f);
-	return set_error(ERR_OK);
-}
-
-int cpuid_deserialize_raw_data(struct cpu_raw_data_t* data, const char* filename)
-{
-	int i, len;
-	char line[100];
-	char token[100];
-	char *value;
-	int syntax;
-	int cur_line = 0;
-	int recognized;
-	FILE *f;
-
-	raw_data_t_constructor(data);
-
-	if (!strcmp(filename, ""))
-		f = stdin;
-	else
-		f = fopen(filename, "rt");
-	if (!f) return set_error(ERR_OPEN);
-	while (fgets(line, sizeof(line), f)) {
-		++cur_line;
-		len = (int) strlen(line);
-		if (len < 2) continue;
-		if (line[len - 1] == '\n')
-			line[--len] = '\0';
-		for (i = 0; i < len && line[i] != '='; i++)
-		if (i >= len && i < 1 && len - i - 1 <= 0) {
-			fclose(f);
-			return set_error(ERR_BADFMT);
-		}
-		strncpy(token, line, i);
-		token[i] = '\0';
-		value = &line[i + 1];
-		/* try to recognize the line */
-		recognized = 0;
-		if (!strcmp(token, "version") || !strcmp(token, "build_date")) {
-			recognized = 1;
-		}
-		syntax = 1;
-		syntax = syntax && parse_token("basic_cpuid", token, value, data->basic_cpuid,   MAX_CPUID_LEVEL, &recognized);
-		syntax = syntax && parse_token("ext_cpuid", token, value, data->ext_cpuid,       MAX_EXT_CPUID_LEVEL, &recognized);
-		syntax = syntax && parse_token("intel_fn4", token, value, data->intel_fn4,       MAX_INTELFN4_LEVEL, &recognized);
-		syntax = syntax && parse_token("intel_fn11", token, value, data->intel_fn11,     MAX_INTELFN11_LEVEL, &recognized);
-		syntax = syntax && parse_token("intel_fn12h", token, value, data->intel_fn12h,   MAX_INTELFN12H_LEVEL, &recognized);
-		syntax = syntax && parse_token("intel_fn14h", token, value, data->intel_fn14h,   MAX_INTELFN14H_LEVEL, &recognized);
-		syntax = syntax && parse_token("amd_fn8000001dh", token, value, data->amd_fn8000001dh, MAX_AMDFN8000001DH_LEVEL, &recognized);
-		if (!syntax) {
-			warnf("Error: %s:%d: Syntax error\n", filename, cur_line);
-			fclose(f);
-			return set_error(ERR_BADFMT);
-		}
-		if (!recognized) {
-			warnf("Warning: %s:%d not understood!\n", filename, cur_line);
-		}
-	}
-
-	if (strcmp(filename, ""))
-		fclose(f);
 	return set_error(ERR_OK);
 }
 
@@ -691,7 +482,8 @@ const char* cpu_feature_str(cpu_feature_t feature)
 	};
 	unsigned i, n = COUNT_OF(matchtable);
 	if (n != NUM_CPU_FEATURES) {
-		warnf("Warning: incomplete library, feature matchtable size differs from the actual number of features.\n");
+		//Warning: incomplete library
+		//         feature matchtable size differs from the actual number of features.
 	}
 	for (i = 0; i < n; i++)
 		if (matchtable[i].feature == feature)
@@ -734,18 +526,6 @@ const char* cpuid_lib_version(void)
 	return VERSION;
 }
 
-libcpuid_warn_fn_t cpuid_set_warn_function(libcpuid_warn_fn_t new_fn)
-{
-	libcpuid_warn_fn_t ret = _warn_fun;
-	_warn_fun = new_fn;
-	return ret;
-}
-
-void cpuid_set_verbosiness_level(int level)
-{
-	_current_verboselevel = level;
-}
-
 cpu_vendor_t cpuid_get_vendor(void)
 {
 	static cpu_vendor_t vendor = VENDOR_UNKNOWN;
@@ -761,53 +541,4 @@ cpu_vendor_t cpuid_get_vendor(void)
 		}
 	}
 	return vendor;
-}
-
-void cpuid_get_cpu_list(cpu_vendor_t vendor, struct cpu_list_t* list)
-{
-	switch (vendor) {
-		case VENDOR_INTEL:
-			cpuid_get_list_intel(list);
-			break;
-		case VENDOR_AMD:
-		case VENDOR_HYGON:
-			cpuid_get_list_amd(list);
-			break;
-		case VENDOR_CYRIX:
-			make_list_from_string("Cx486,Cx5x86,6x86,6x86MX,M II,MediaGX,MediaGXi,MediaGXm", list);
-			break;
-		case VENDOR_NEXGEN:
-			make_list_from_string("Nx586", list);
-			break;
-		case VENDOR_TRANSMETA:
-			make_list_from_string("Crusoe,Efficeon", list);
-			break;
-		case VENDOR_UMC:
-			make_list_from_string("UMC x86 CPU", list);
-			break;
-		case VENDOR_CENTAUR:
-			make_list_from_string("VIA C3,VIA C7,VIA Nano", list);
-			break;
-		case VENDOR_RISE:
-			make_list_from_string("Rise mP6", list);
-			break;
-		case VENDOR_SIS:
-			make_list_from_string("SiS mP6", list);
-			break;
-		case VENDOR_NSC:
-			make_list_from_string("Geode GXm,Geode GXLV,Geode GX1,Geode GX2", list);
-			break;
-		default:
-			warnf("Unknown vendor passed to cpuid_get_cpu_list()\n");
-			break;
- 	}
-}
-
-void cpuid_free_cpu_list(struct cpu_list_t* list)
-{
-	int i;
-	if (list->num_entries <= 0) return;
-	for (i = 0; i < list->num_entries; i++)
-		free(list->names[i]);
-	free(list->names);
 }

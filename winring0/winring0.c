@@ -12,8 +12,9 @@
 #include "libcpuid_internal.h"
 #include "rdtsc.h"
 
-struct msr_driver_t {
-	char driver_path[MAX_PATH + 1];
+struct msr_driver_t
+{
+	CHAR driver_path[MAX_PATH + 1];
 	SC_HANDLE scManager;
 	SC_HANDLE scDriver;
 	HANDLE hhDriver;
@@ -24,51 +25,44 @@ static BOOL LoadDriver(struct msr_driver_t* drv)
 {
 	BOOL Ret = FALSE;
 	DWORD Status = 0;
-
-	debugf(1, "Load driver: %s\n", drv->driver_path);
+	BOOL Retry = TRUE;
 
 	drv->scManager = OpenSCManagerA(NULL, NULL, SC_MANAGER_ALL_ACCESS);
-	if (drv->scManager == NULL) {
-		debugf(1, "OpenSCManager() failed %d.\n", GetLastError());
+	if (drv->scManager == NULL)
 		return FALSE;
-	}
-
-	debugf(1, "OpenSCManager() ok.\n");
-
+retry:
 	drv->scDriver = CreateServiceA(drv->scManager, OLS_DRIVER_ID, OLS_DRIVER_ID,
 		SERVICE_ALL_ACCESS, SERVICE_KERNEL_DRIVER, SERVICE_DEMAND_START, SERVICE_ERROR_IGNORE,
 		drv->driver_path, NULL, NULL, NULL, NULL, NULL);
-	if (drv->scDriver == NULL) {
+	if (drv->scDriver == NULL)
+	{
 		drv->scDriver = OpenServiceA(drv->scManager, OLS_DRIVER_ID, SERVICE_ALL_ACCESS);
-		if (drv->scDriver == NULL) {
-			debugf(1, "OpenService() failed %d.\n", Status);
+		if (drv->scDriver == NULL)
+		{
 			CloseServiceHandle(drv->scManager);
 			return FALSE;
 		}
 	}
 
-	debugf(1, "CreateService() ok.\n");
-
 	Ret = StartServiceA(drv->scDriver, 0, NULL);
-	if (Ret) {
-		debugf(1, "StartService() ok.\n");
-	}
-	else {
+	if (Ret == FALSE)
+	{
 		Status = GetLastError();
-		if (Status == ERROR_SERVICE_ALREADY_RUNNING) {
-			debugf(1, "StartService() already running.\n");
+		if (Status == ERROR_SERVICE_ALREADY_RUNNING)
 			Ret = TRUE;
+		else if (Retry == TRUE)
+		{
+			Retry = FALSE;
+			DeleteService(drv->scDriver);
+			CloseServiceHandle(drv->scDriver);
+			goto retry;
 		}
-		else {
-			debugf(1, "StartService() error %d.\n", Status);
+		else
 			Ret = FALSE;
-		}
 	}
 
 	CloseServiceHandle(drv->scDriver);
 	CloseServiceHandle(drv->scManager);
-
-	debugf(1, "Load driver %s\n", Ret ? "success" : "failed");
 
 	return Ret;
 }
@@ -94,23 +88,19 @@ static int extract_driver(struct msr_driver_t* driver)
 {
 	size_t i = 0;
 	ZeroMemory(driver->driver_path, sizeof(driver->driver_path));
-	if (!GetModuleFileNameA(NULL, driver->driver_path, MAX_PATH) || strlen(driver->driver_path) == 0)
-	{
-		printf("GetModuleFileName failed\n");
+	if (!GetModuleFileNameA(NULL, driver->driver_path, MAX_PATH)
+		|| strlen(driver->driver_path) == 0)
 		return 0;
-	}
 	for (i = strlen(driver->driver_path); i > 0; i--)
 	{
 		if (driver->driver_path[i] == '\\')
 		{
-			driver->driver_path[i] = 0;
+			driver->driver_path[i] = '\0';
 			break;
 		}
 	}
-	if (is_running_x64())
-		snprintf(driver->driver_path, MAX_PATH, "%s\\"OLS_DRIVER_NAME"x64.sys", driver->driver_path);
-	else
-		snprintf(driver->driver_path, MAX_PATH, "%s\\"OLS_DRIVER_NAME".sys", driver->driver_path);
+	snprintf(driver->driver_path, MAX_PATH, "%s\\%s%s.sys", driver->driver_path,
+		OLS_DRIVER_NAME, is_running_x64() ? "x64" : "");
 	return 1;
 }
 
@@ -136,26 +126,16 @@ struct msr_driver_t* cpu_msr_driver_open(void)
 		drv->hhDriver = CreateFileA("\\\\.\\"OLS_DRIVER_ID,
 			GENERIC_WRITE | GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE,
 			NULL, OPEN_EXISTING, 0, NULL);
-		if (drv->hhDriver == INVALID_HANDLE_VALUE) {
-			debugf(1, "Create Device failed %d.\n", GetLastError());
+		if (drv->hhDriver == INVALID_HANDLE_VALUE)
 			status = FALSE;
-		}
 	}
 
 	if (!status) {
-		debugf(1, "driver open failed.\n");
 		set_error(drv->errorcode ? drv->errorcode : ERR_NO_DRIVER);
 		free(drv);
 		return NULL;
 	}
-	debugf(1, "driver open success.\n");
 	return drv;
-}
-
-struct msr_driver_t* cpu_msr_driver_open_core(unsigned core_num)
-{
-	warnf("cpu_msr_driver_open_core(): parameter ignored (function is the same as cpu_msr_driver_open)\n");
-	return cpu_msr_driver_open();
 }
 
 int cpu_rdmsr(struct msr_driver_t* driver, uint32_t msr_index, uint64_t* result)

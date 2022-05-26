@@ -646,39 +646,6 @@ void cpu_exec_cpuid_ext(uint32_t* regs);
 int cpuid_get_raw_data(struct cpu_raw_data_t* data);
 
 /**
- * @brief Writes the raw CPUID data to a text file
- * @param data - a pointer to cpu_raw_data_t structure
- * @param filename - the path of the file, where the serialized data should be
- *                   written. If empty, stdout will be used.
- * @note This is intended primarily for debugging. On some processor, which is
- *       not currently supported or not completely recognized by cpu_identify,
- *       one can still successfully get the raw data and write it to a file.
- *       libcpuid developers can later import this file and debug the detection
- *       code as if running on the actual hardware.
- *       The file is simple text format of "something=value" pairs. Version info
- *       is also written, but the format is not intended to be neither backward-
- *       nor forward compatible.
- * @returns zero if successful, and some negative number on error.
- *          The error message can be obtained by calling \ref cpuid_error.
- *          @see cpu_error_t
- */
-int cpuid_serialize_raw_data(struct cpu_raw_data_t* data, const char* filename);
-
-/**
- * @brief Reads raw CPUID data from file
- * @param data - a pointer to cpu_raw_data_t structure. The deserialized data will
- *               be written here.
- * @param filename - the path of the file, containing the serialized raw data.
- *                   If empty, stdin will be used.
- * @note This function may fail, if the file is created by different version of
- *       the library. Also, see the notes on cpuid_serialize_raw_data.
- * @returns zero if successful, and some negative number on error.
- *          The error message can be obtained by calling \ref cpuid_error.
- *          @see cpu_error_t
-*/
-int cpuid_deserialize_raw_data(struct cpu_raw_data_t* data, const char* filename);
-
-/**
  * @brief Identifies the CPU
  * @param raw - Input - a pointer to the raw CPUID data, which is obtained
  *              either by cpuid_get_raw_data or cpuid_deserialize_raw_data.
@@ -951,36 +918,6 @@ struct cpu_epc_t cpuid_get_epc(int index, const struct cpu_raw_data_t* raw);
  */
 const char* cpuid_lib_version(void);
 
-typedef void (*libcpuid_warn_fn_t) (const char *msg);
-/**
- * @brief Sets the warning print function
- *
- * In some cases, the internal libcpuid machinery would like to emit useful
- * debug warnings. By default, these warnings are written to stderr. However,
- * you can set a custom function that will receive those warnings.
- *
- * @param warn_fun - the warning function you want to set. If NULL, warnings
- *                   are disabled. The function takes const char* argument.
- *
- * @returns the current warning function. You can use the return value to
- * keep the previous warning function and restore it at your discretion.
- */
-libcpuid_warn_fn_t cpuid_set_warn_function(libcpuid_warn_fn_t warn_fun);
-
-/**
- * @brief Sets the verbosiness level
- *
- * When the verbosiness level is above zero, some functions might print
- * diagnostic information about what are they doing. The higher the level is,
- * the more detail is printed. Level zero is guaranteed to omit all such
- * output. The output is written using the same machinery as the warnings,
- * @see cpuid_set_warn_function()
- *
- * @param level the desired verbosiness level. Useful values 0..2 inclusive
- */
-void cpuid_set_verbosiness_level(int level);
-
-
 /**
  * @brief Obtains the CPU vendor from CPUID from the current CPU
  * @note The result is cached.
@@ -988,44 +925,6 @@ void cpuid_set_verbosiness_level(int level);
  *          @see cpu_vendor_t
  */
 cpu_vendor_t cpuid_get_vendor(void);
-
-/**
- * @brief a structure that holds a list of processor names
- */
-struct cpu_list_t {
-	/** Number of entries in the list */
-	int num_entries;
-	/** Pointers to names. There will be num_entries of them */
-	char **names;
-};
-
-/**
- * @brief Gets a list of all known CPU names from a specific vendor.
- *
- * This function compiles a list of all known CPU (code)names
- * (i.e. the possible values of cpu_id_t::cpu_codename) for the given vendor.
- *
- * There are about 100 entries for Intel and AMD, and a few for the other
- * vendors. The list is written out in approximate chronological introduction
- * order of the parts.
- *
- * @param vendor the vendor to be queried
- * @param list [out] the resulting list will be written here.
- * NOTE: As the memory is dynamically allocated, be sure to call
- *       cpuid_free_cpu_list() after you're done with the data
- * @see cpu_list_t
- */
-void cpuid_get_cpu_list(cpu_vendor_t vendor, struct cpu_list_t* list);
-
-/**
- * @brief Frees a CPU list
- *
- * This function deletes all the memory associated with a CPU list, as obtained
- * by cpuid_get_cpu_list()
- *
- * @param list - the list to be free()'d.
- */
-void cpuid_free_cpu_list(struct cpu_list_t* list);
 
 struct msr_driver_t;
 /**
@@ -1040,21 +939,6 @@ struct msr_driver_t;
  *          @see cpu_error_t
  */
 struct msr_driver_t* cpu_msr_driver_open(void);
-
-/**
- * @brief Similar to \ref cpu_msr_driver_open, but accept one parameter
- *
- * This function works on certain operating systems (GNU/Linux, FreeBSD)
- *
- * @param core_num specify the core number for MSR.
- *          The first core number is 0.
- *          The last core number is \ref cpuid_get_total_cpus - 1.
- *
- * @returns a handle to the driver on success, and NULL on error.
- *          The error message can be obtained by calling \ref cpuid_error.
- *          @see cpu_error_t
- */
-struct msr_driver_t* cpu_msr_driver_open_core(unsigned core_num);
 
 /**
  * @brief Reads a Model-Specific Register (MSR)
@@ -1140,25 +1024,6 @@ int cpu_rdmsr_range(struct msr_driver_t* handle, uint32_t msr_index, uint8_t hig
  */
 int cpu_msrinfo(struct msr_driver_t* handle, cpu_msrinfo_request_t which);
 #define CPU_INVALID_VALUE 0x3fffffff
-
-/**
- * @brief Writes the raw MSR data to a text file
- * @param handle -  a handle to the MSR reader driver, as created by cpu_msr_driver_open
- * @param filename - the path of the file, where the serialized data should be
- *                   written. If empty, stdout will be used.
- * @note This is intended primarily for debugging. On some processor, which is
- *       not currently supported or not completely recognized by cpu_identify,
- *       one can still successfully get the raw data and write it to a file.
- *       libcpuid developers can later import this file and debug the detection
- *       code as if running on the actual hardware.
- *       The file is simple text format of "something=value" pairs. Version info
- *       is also written, but the format is not intended to be neither backward-
- *       nor forward compatible.
- * @returns zero if successful, and some negative number on error.
- *          The error message can be obtained by calling \ref cpuid_error.
- *          @see cpu_error_t
- */
-int msr_serialize_raw_data(struct msr_driver_t* handle, const char* filename);
 
 /**
  * @brief Closes an open MSR driver

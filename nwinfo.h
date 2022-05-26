@@ -7,7 +7,7 @@
 #include "format.h"
 
 BOOL IsAdmin(void);
-DWORD ObtainPrivileges(LPCTSTR privilege);
+DWORD ObtainPrivileges(LPCSTR privilege);
 const char* GetHumanSize(UINT64 size, const char* human_sizes[6], UINT64 base);
 PVOID GetAcpi(DWORD TableId);
 UINT8 AcpiChecksum(void* base, UINT size);

@@ -32,9 +32,8 @@ static void nwinfo_help(void)
 		"  --spd            Print SPD info\n");
 }
 
-int main(int argc, char** argv)
+int main(int argc, char* argv[])
 {
-	int debug_level = 0;
 	PNODE nw_root;
 	PNODE node;
 	nwinfo_output = stdout;
@@ -48,13 +47,8 @@ int main(int argc, char** argv)
 	nw_root = node_alloc("NWinfo", 0);
 	for (int i = 0; i < argc; i++)
 	{
-		cpuid_set_verbosiness_level(debug_level);
 		if (i == 0 && argc > 1)
 			continue;
-		else if (_strnicmp(argv[i], "--debug=", 8) == 0 && argv[i][8])
-		{
-			debug_level = strtol(&argv[i][8], NULL, 0);
-		}
 		else if (_strnicmp(argv[i], "--format=", 9) == 0 && argv[i][9])
 		{
 			if (_stricmp(&argv[i][9], "YAML") == 0)

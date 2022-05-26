@@ -34,7 +34,7 @@ jobs:
         msbuild /m /p:Configuration=Release /p:platform=x86 ${{env.SOLUTION_FILE_PATH}}
         md nwinfo
         move x64\Release\nwinfo.exe nwinfo\nwinfo_x64.exe
-        move Release\nwinfo.exe nwinfo\nwinfo_x86.exe
+        move Win32\Release\nwinfo.exe nwinfo\nwinfo_x86.exe
         copy LICENSE nwinfo\LICENSE
         copy pci.ids nwinfo\pci.ids
         copy usb.ids nwinfo\usb.ids
