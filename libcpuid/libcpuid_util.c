@@ -91,7 +91,7 @@ int match_cpu_codename(const struct match_entry_t* matchtable, int count,
 			bestindex = i;
 		}
 	}
-	strcpy(data->cpu_codename, matchtable[bestindex].name);
+	strcpy_s(data->cpu_codename, 64, matchtable[bestindex].name);
 	return bestscore;
 }
 

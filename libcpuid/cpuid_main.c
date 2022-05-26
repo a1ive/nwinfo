@@ -68,10 +68,10 @@ static int parse_token(const char* expected_token, const char *token,
 
 	if (*recognized) return 1; /* already recognized */
 	if (strncmp(token, expected_token, strlen(expected_token))) return 1; /* not what we search for */
-	sprintf(format, "%s[%%d]", expected_token);
+	snprintf(format, 32, "%s[%%d]", expected_token);
 	*recognized = 1;
-	if (1 == sscanf(token, format, &index) && index >=0 && index < limit) {
-		if (4 == sscanf(value, "%x%x%x%x", &veax, &vebx, &vecx, &vedx)) {
+	if (1 == sscanf_s(token, format, &index) && index >=0 && index < limit) {
+		if (4 == sscanf_s(value, "%x%x%x%x", &veax, &vebx, &vecx, &vedx)) {
 			array[index][0] = veax;
 			array[index][1] = vebx;
 			array[index][2] = vecx;
@@ -252,7 +252,7 @@ static int cpuid_basic_identify(struct cpu_raw_data_t* raw, struct cpu_id_t* dat
 		brandstr[48] = 0;
 		i = 0;
 		while (brandstr[i] == ' ') i++;
-		strncpy(data->brand_str, brandstr + i, sizeof(data->brand_str));
+		strncpy_s(data->brand_str, BRAND_STR_MAX, brandstr + i, sizeof(data->brand_str));
 		data->brand_str[48] = 0;
 	}
 	load_features_common(raw, data);
