@@ -41,18 +41,23 @@ ParseHwid(PNODE nd, CHAR* Ids, DWORD IdsSize, const CHAR *Hwid)
 	return 1;
 }
 
-static void
-ListUsb(PNODE node, CHAR* Ids, DWORD IdsSize)
+PNODE NW_Usb(VOID)
 {
 	HDEVINFO Info = NULL;
 	DWORD i = 0;
 	SP_DEVINFO_DATA DeviceInfoData = { .cbSize = sizeof(SP_DEVINFO_DATA) };
 	DWORD Flags = DIGCF_PRESENT | DIGCF_ALLCLASSES;
+	CHAR* Ids = NULL;
+	DWORD IdsSize = 0;
+	PNODE node = NWL_NodeAlloc("USB", NFLG_TABLE);
+	if (NWLC->UsbInfo)
+		NWL_NodeAppendChild(NWLC->NwRoot, node);
+	Ids = NWL_LoadFileToMemory("usb.ids", &IdsSize);
 	Info = SetupDiGetClassDevsExA(NULL, "USB", NULL, Flags, NULL, NULL, NULL);
 	if (Info == INVALID_HANDLE_VALUE)
 	{
 		fprintf(stderr, "SetupDiGetClassDevs failed.\n");
-		return;
+		goto fail;
 	}
 	for (i = 0; SetupDiEnumDeviceInfo(Info, i, &DeviceInfoData); i++)
 	{
@@ -73,61 +78,7 @@ ListUsb(PNODE node, CHAR* Ids, DWORD IdsSize)
 		free(BufferHw);
 	}
 	SetupDiDestroyDeviceInfoList(Info);
-}
-
-PNODE NW_Usb(VOID)
-{
-	HANDLE Fp = INVALID_HANDLE_VALUE;
-	CHAR* Ids = NULL;
-	DWORD dwSize = 0;
-	BOOL bRet = TRUE;
-	CHAR* FilePath = NWLC->NwBuf;
-	size_t i = 0;
-	PNODE node = NWL_NodeAlloc("USB", NFLG_TABLE);
-	if (NWLC->UsbInfo)
-		NWL_NodeAppendChild(NWLC->NwRoot, node);
-	if (!GetModuleFileNameA(NULL, FilePath, MAX_PATH) || strlen(FilePath) == 0)
-	{
-		fprintf(stderr, "GetModuleFileName failed\n");
-		return node;
-	}
-	for (i = strlen(FilePath); i > 0; i--)
-	{
-		if (FilePath[i] == '\\')
-		{
-			FilePath[i] = 0;
-			break;
-		}
-	}
-	snprintf(FilePath, MAX_PATH, "%s\\usb.ids", FilePath);
-	Fp = CreateFileA(FilePath, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
-	if (Fp == INVALID_HANDLE_VALUE)
-	{
-		fprintf(stderr, "Cannot open %s\n", FilePath);
-		return node;
-	}
-	dwSize = GetFileSize(Fp, NULL);
-	if (dwSize == INVALID_FILE_SIZE || dwSize == 0)
-	{
-		fprintf(stderr, "bad usb.ids file\n");
-		CloseHandle(Fp);
-		return node;
-	}
-	Ids = malloc(dwSize);
-	if (!Ids)
-	{
-		fprintf(stderr, "out of memory\n");
-		CloseHandle(Fp);
-		return node;
-	}
-	bRet = ReadFile(Fp, Ids, dwSize, &dwSize, NULL);
-	CloseHandle(Fp);
-	if (bRet)
-	{
-		ListUsb(node, Ids, dwSize);
-	}
-	else
-		fprintf(stderr, "usb.ids read error\n");
+fail:
 	free(Ids);
 	return node;
 }

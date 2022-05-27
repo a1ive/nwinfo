@@ -488,6 +488,64 @@ NWL_FindClass(PNODE nd, CHAR* Ids, DWORD IdsSize, CONST CHAR* Class)
 	}
 }
 
+CHAR* NWL_LoadFileToMemory(LPCSTR lpFileName, LPDWORD lpSize)
+{
+	HANDLE Fp = INVALID_HANDLE_VALUE;
+	CHAR* Ids = NULL;
+	DWORD dwSize = 0;
+	BOOL bRet = TRUE;
+	CHAR* FilePath = NWLC->NwBuf;
+	CHAR* p;
+	size_t i = 0;
+	if (!GetModuleFileNameA(NULL, FilePath, MAX_PATH) || strlen(FilePath) == 0)
+	{
+		fprintf(stderr, "GetModuleFileName failed\n");
+		goto fail;
+	}
+	p = strrchr(FilePath, '\\');
+	if (!p)
+	{
+		fprintf(stderr, "Invalid file path %s\n", FilePath);
+		goto fail;
+	}
+	p++;
+	strcpy_s(p, MAX_PATH - (p - FilePath), lpFileName);
+	Fp = CreateFileA(FilePath, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+	if (Fp == INVALID_HANDLE_VALUE)
+	{
+		fprintf(stderr, "Cannot open %s\n", FilePath);
+		goto fail;
+	}
+	dwSize = GetFileSize(Fp, NULL);
+	if (dwSize == INVALID_FILE_SIZE || dwSize == 0)
+	{
+		fprintf(stderr, "bad %s file\n", lpFileName);
+		goto fail;
+	}
+	Ids = malloc(dwSize);
+	if (!Ids)
+	{
+		fprintf(stderr, "out of memory\n");
+		goto fail;
+	}
+	bRet = ReadFile(Fp, Ids, dwSize, &dwSize, NULL);
+	if (bRet == FALSE)
+	{
+		fprintf(stderr, "pci.ids read error\n");
+		goto fail;
+	}
+	CloseHandle(Fp);
+	*lpSize = dwSize;
+	return Ids;
+fail:
+	if (Fp != INVALID_HANDLE_VALUE)
+		CloseHandle(Fp);
+	if (Ids)
+		free(Ids);
+	*lpSize = 0;
+	return NULL;
+}
+
 LPCSTR
 NWL_GuidToStr(UCHAR Guid[16])
 {

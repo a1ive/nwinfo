@@ -26,5 +26,6 @@ INT NWL_GetRegDwordValue(HKEY Key, LPCSTR SubKey, LPCSTR ValueName, DWORD* pValu
 CHAR* NWL_GetRegSzValue(HKEY Key, LPCSTR SubKey, LPCSTR ValueName);
 VOID NWL_FindId(PNODE nd, CHAR* Ids, DWORD IdsSize, CONST CHAR* v, CONST CHAR* d, CONST CHAR* s, INT usb);
 VOID NWL_FindClass(PNODE nd, CHAR* Ids, DWORD IdsSize, CONST CHAR* Class);
+CHAR* NWL_LoadFileToMemory(LPCSTR lpFileName, LPDWORD lpSize);
 LPCSTR NWL_GuidToStr(UCHAR Guid[16]);
 LPCSTR NWL_WcsToMbs(PWCHAR Wcs);
