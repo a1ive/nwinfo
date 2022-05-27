@@ -4,9 +4,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <windows.h>
-#include "nwinfo.h"
+#include "utils.h"
 
-#ifndef _WIN64
 typedef struct _UNICODE_STRING
 {
 	USHORT Length;
@@ -78,32 +77,22 @@ static ZwMapViewOfSectionProc ZwMapViewOfSection;
 static ZwUnmapViewOfSectionProc ZwUnmapViewOfSection;
 static RtlInitUnicodeStringProc RtlInitUnicodeString;
 
-BOOL InitPhysicalMemory(void)
+BOOL NWL_NT5InitMemory(void)
 {
-	if (!(hModule = LoadLibrary("ntdll.dll")))
-	{
+	if (!(hModule = LoadLibraryA("ntdll.dll")))
 		return FALSE;
-	}
 
 	if (!(ZwOpenSection = (ZwOpenSectionProc)GetProcAddress(hModule, "ZwOpenSection")))
-	{
 		return FALSE;
-	}
 
 	if (!(ZwMapViewOfSection = (ZwMapViewOfSectionProc)GetProcAddress(hModule, "ZwMapViewOfSection")))
-	{
 		return FALSE;
-	}
 
 	if (!(ZwUnmapViewOfSection = (ZwUnmapViewOfSectionProc)GetProcAddress(hModule, "ZwUnmapViewOfSection")))
-	{
 		return FALSE;
-	}
 
 	if (!(RtlInitUnicodeString = (RtlInitUnicodeStringProc)GetProcAddress(hModule, "RtlInitUnicodeString")))
-	{
 		return FALSE;
-	}
 
 	WCHAR PhysicalMemoryName[] = L"\\Device\\PhysicalMemory";
 	UNICODE_STRING PhysicalMemoryString;
@@ -115,20 +104,16 @@ BOOL InitPhysicalMemory(void)
 	return (status >= 0);
 }
 
-void ExitPhysicalMemory(void)
+void NWL_NT5ExitMemory(void)
 {
 	if (hPhysicalMemory != NULL)
-	{
 		CloseHandle(hPhysicalMemory);
-	}
 
 	if (hModule != NULL)
-	{
 		FreeLibrary(hModule);
-	}
 }
 
-BOOL ReadPhysicalMemory(PVOID buffer, DWORD address, DWORD length)
+BOOL NWL_NT5ReadMemory(PVOID buffer, DWORD address, DWORD length)
 {
 	DWORD outlen;
 	PVOID vaddress;
@@ -140,16 +125,8 @@ BOOL ReadPhysicalMemory(PVOID buffer, DWORD address, DWORD length)
 	outlen = length;
 	base.QuadPart = (ULONGLONG)(address);
 
-	status = ZwMapViewOfSection(hPhysicalMemory,
-		(HANDLE)-1,
-		(PVOID*)&vaddress,
-		0,
-		length,
-		&base,
-		&outlen,
-		ViewShare,
-		0,
-		PAGE_READONLY);
+	status = ZwMapViewOfSection(hPhysicalMemory, (HANDLE)-1,
+		(PVOID*)&vaddress, 0, length, &base, &outlen, ViewShare, 0, PAGE_READONLY);
 
 	if (status != STATUS_SUCCESS)
 		return ret;
@@ -161,4 +138,3 @@ BOOL ReadPhysicalMemory(PVOID buffer, DWORD address, DWORD length)
 		ret = TRUE;
 	return ret;
 }
-#endif

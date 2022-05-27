@@ -15,72 +15,12 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="network.c">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="nwinfo.c">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="utils.c">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="cpuid.c">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="acpi.c">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="smbios.c">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="sys.c">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="disk.c">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="display.c">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="pci.c">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="usb.c">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="nt5phys.c">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="beep.c">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="spd.c">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="smbus.c">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="format.c">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="nwinfo.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="resource.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="tokyo.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="spd.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="pnp_id.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="format.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

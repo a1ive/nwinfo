@@ -3,9 +3,9 @@
 
 #include <stdint.h>
 
-void SpdInit(void);
-void* SpdGet(int dimmadr);
-void SpdFini(void);
+void NWL_SpdInit(void);
+void* NWL_SpdGet(int dimmadr);
+void NWL_SpdFini(void);
 
 #define SPD_DATA_LEN  1024
 

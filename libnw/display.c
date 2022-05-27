@@ -5,8 +5,9 @@
 #include <windows.h>
 #include <setupapi.h>
 #include <math.h>
-#include "nwinfo.h"
 
+#include "libnw.h"
+#include "utils.h"
 #include "pnp_id.h"
 
 #pragma pack(1)
@@ -109,23 +110,23 @@ DecodeEDID(PNODE nm, void* pData, DWORD dwSize)
 		(CHAR)(((pEDID->Manufacturer & 0x7c00U) >> 10U) + 'A' - 1),
 		(CHAR)(((pEDID->Manufacturer & 0x3e0U) >> 5U) + 'A' - 1),
 		(CHAR)((pEDID->Manufacturer & 0x1fU) + 'A' - 1));
-	node_att_set(nm, "Manufacturer", GetPnpManufacturer(Manufacturer), 0);
-	node_att_setf(nm, "ID", 0, "%s%04X", Manufacturer, pEDID->Product);
-	node_att_setf(nm, "Serial", 0, "%08X", pEDID->Serial);
-	node_att_setf(nm, "Date", 0, "%u, Week %u", pEDID->Year + 1990, pEDID->Week & 0x7F);
-	node_att_setf(nm, "EDID Version", 0, "%u.%u", pEDID->Version, pEDID->Revision);
-	nflags = node_append_new(nm, "Video Input", NFLG_ATTGROUP);
+	NWL_NodeAttrSet(nm, "Manufacturer", GetPnpManufacturer(Manufacturer), 0);
+	NWL_NodeAttrSetf(nm, "ID", 0, "%s%04X", Manufacturer, pEDID->Product);
+	NWL_NodeAttrSetf(nm, "Serial", 0, "%08X", pEDID->Serial);
+	NWL_NodeAttrSetf(nm, "Date", 0, "%u, Week %u", pEDID->Year + 1990, pEDID->Week & 0x7F);
+	NWL_NodeAttrSetf(nm, "EDID Version", 0, "%u.%u", pEDID->Version, pEDID->Revision);
+	nflags = NWL_NodeAppendNew(nm, "Video Input", NFLG_ATTGROUP);
 	if (pEDID->Flags & 0x80)
 	{
 		UINT8 Depth = (pEDID->Flags & 0x70U) >> 4U;
-		node_att_set(nflags, "Type", "Digital", 0);
+		NWL_NodeAttrSet(nflags, "Type", "Digital", 0);
 		if (Depth > 0 && Depth < 7)
-			node_att_setf(nflags, "Bits per color", NAFLG_FMT_NUMERIC, "%u", Depth * 2 + 4);
-		node_att_set(nflags, "Interface", InterfaceToStr(pEDID->Flags & 0x07U), 0);
+			NWL_NodeAttrSetf(nflags, "Bits per color", NAFLG_FMT_NUMERIC, "%u", Depth * 2 + 4);
+		NWL_NodeAttrSet(nflags, "Interface", InterfaceToStr(pEDID->Flags & 0x07U), 0);
 	}
 	else
 	{
-		node_att_set(nflags, "Type", "Analog", 0);
+		NWL_NodeAttrSet(nflags, "Type", "Analog", 0);
 	}
 	for (i = 0; i < 4; i++)
 	{
@@ -136,24 +137,24 @@ DecodeEDID(PNODE nm, void* pData, DWORD dwSize)
 		if (pEDID->Desc[i].PixelClock == 0 && pEDID->Desc[i].HActiveLSB == 0)
 			continue;
 		pc = ((UINT64)pEDID->Desc[i].PixelClock) * 10 * 1000;
-		node_att_set(nm, "Pixel Clock", GetHumanSize(pc, hz_human_sizes, 1000), NAFLG_FMT_HUMAN_SIZE);
+		NWL_NodeAttrSet(nm, "Pixel Clock", NWL_GetHumanSize(pc, hz_human_sizes, 1000), NAFLG_FMT_HUMAN_SIZE);
 		ha = (UINT32)pEDID->Desc[i].HActiveLSB + (UINT32)((pEDID->Desc[i].HPixelsMSB & 0xf0) << 4);
 		va = (UINT32)pEDID->Desc[i].VActiveLSB + (UINT32)((pEDID->Desc[i].VLinesMSB & 0xf0) << 4);
 		hb = (UINT32)pEDID->Desc[i].HBlankingLSB + (UINT32)((pEDID->Desc[i].HPixelsMSB & 0x0f) << 8);
 		vb = (UINT32)pEDID->Desc[i].VBlankingLSB + (UINT32)((pEDID->Desc[i].VLinesMSB & 0x0f) << 8);
 		hz = ((double)pc) / (((UINT64)ha + hb) * ((UINT64)va + vb));
-		nres = node_append_new(nm, "Resolution", NFLG_ATTGROUP);
-		node_att_setf(nres, "Width", NAFLG_FMT_NUMERIC, "%u", ha);
-		node_att_setf(nres, "Height", NAFLG_FMT_NUMERIC, "%u", va);
-		node_att_setf(nres, "Refresh Rate (Hz)", NAFLG_FMT_NUMERIC, "%.2f", hz);
+		nres = NWL_NodeAppendNew(nm, "Resolution", NFLG_ATTGROUP);
+		NWL_NodeAttrSetf(nres, "Width", NAFLG_FMT_NUMERIC, "%u", ha);
+		NWL_NodeAttrSetf(nres, "Height", NAFLG_FMT_NUMERIC, "%u", va);
+		NWL_NodeAttrSetf(nres, "Refresh Rate (Hz)", NAFLG_FMT_NUMERIC, "%.2f", hz);
 
 		w = (UINT32)pEDID->Desc[i].WidthLSB + (UINT32)((pEDID->Desc[i].WHMSB & 0xf0) << 4);
 		h = (UINT32)pEDID->Desc[i].HeightLSB + (UINT32)((pEDID->Desc[i].WHMSB & 0x0f) << 8);
 		inch = sqrt((double)((UINT64)w) * w + ((UINT64)h) * h) * 0.0393701;
-		nscr = node_append_new(nm, "Screen Size", NFLG_ATTGROUP);
-		node_att_setf(nscr, "Width (mm)", NAFLG_FMT_NUMERIC, "%u", w);
-		node_att_setf(nscr, "Height (mm)", NAFLG_FMT_NUMERIC, "%u", h);
-		node_att_setf(nscr, "Diagonal (in)", NAFLG_FMT_NUMERIC, "%.1f", inch);
+		nscr = NWL_NodeAppendNew(nm, "Screen Size", NFLG_ATTGROUP);
+		NWL_NodeAttrSetf(nscr, "Width (mm)", NAFLG_FMT_NUMERIC, "%u", w);
+		NWL_NodeAttrSetf(nscr, "Height (mm)", NAFLG_FMT_NUMERIC, "%u", h);
+		NWL_NodeAttrSetf(nscr, "Diagonal (in)", NAFLG_FMT_NUMERIC, "%.1f", inch);
 		break;
 	}
 }
@@ -164,12 +165,12 @@ GetEDID(PNODE nm, HDEVINFO devInfo, PSP_DEVINFO_DATA devInfoData)
 	HKEY hDevRegKey;
 	LSTATUS lRet;
 	BOOL bRet;
-	UCHAR* EDIDdata = nwinfo_buffer;
+	UCHAR* EDIDdata = NWLC->NwBuf;
 	DWORD EDIDsize;
 
 	bRet = SetupDiGetDeviceRegistryPropertyA(devInfo, devInfoData,
-		SPDRP_HARDWAREID, NULL, nwinfo_buffer, NWINFO_BUFSZ, NULL);
-	node_att_set (nm, "HWID", bRet ? nwinfo_buffer : "UNKNOWN", 0);
+		SPDRP_HARDWAREID, NULL, NWLC->NwBuf, NWINFO_BUFSZ, NULL);
+	NWL_NodeAttrSet (nm, "HWID", bRet ? NWLC->NwBuf : "UNKNOWN", 0);
 
 	hDevRegKey = SetupDiOpenDevRegKey(devInfo, devInfoData,
 		DICS_FLAG_GLOBAL, 0, DIREG_DEV, KEY_ALL_ACCESS);
@@ -189,13 +190,15 @@ GetEDID(PNODE nm, HDEVINFO devInfo, PSP_DEVINFO_DATA devInfoData)
 	RegCloseKey(hDevRegKey);
 }
 
-PNODE nwinfo_display(void)
+PNODE NW_Edid(VOID)
 {
-	PNODE node = node_alloc("Display", NFLG_TABLE);
+	PNODE node = NWL_NodeAlloc("Display", NFLG_TABLE);
 	HDEVINFO Info = NULL;
 	DWORD i = 0;
 	SP_DEVINFO_DATA DeviceInfoData = { .cbSize = sizeof(SP_DEVINFO_DATA) };
 	DWORD Flags = DIGCF_PRESENT | DIGCF_ALLCLASSES;
+	if (NWLC->EdidInfo)
+		NWL_NodeAppendChild(NWLC->NwRoot, node);
 	Info = SetupDiGetClassDevsExA(NULL, "DISPLAY", NULL, Flags, NULL, NULL, NULL);
 	if (Info == INVALID_HANDLE_VALUE)
 	{
@@ -204,7 +207,7 @@ PNODE nwinfo_display(void)
 	}
 	for (i = 0; SetupDiEnumDeviceInfo(Info, i, &DeviceInfoData); i++)
 	{
-		PNODE nm = node_append_new(node, "Monitor", NFLG_TABLE_ROW);
+		PNODE nm = NWL_NodeAppendNew(node, "Monitor", NFLG_TABLE_ROW);
 		GetEDID(nm, Info, &DeviceInfoData);
 	}
 	SetupDiDestroyDeviceInfoList(Info);

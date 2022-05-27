@@ -4,7 +4,9 @@
 #include <winbase.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include "nwinfo.h"
+
+#include "libnw.h"
+#include "utils.h"
 
 static PNODE node;
 
@@ -86,7 +88,7 @@ static void PrintOsVer(void)
 	{
 		osInfo.dwOSVersionInfoSize = sizeof(osInfo);
 		RtlGetVersion(&osInfo);
-		node_att_setf(node, "OS", 0,
+		NWL_NodeAttrSetf(node, "OS", 0,
 			"Windows %s (%lu.%lu.%lu)", OsVersionToStr(&osInfo),
 			osInfo.dwMajorVersion, osInfo.dwMinorVersion, osInfo.dwBuildNumber);
 	}
@@ -96,60 +98,60 @@ static void PrintOsInfo(void)
 {
 	DWORD bufCharCount = NWINFO_BUFSZ;
 	SYSTEM_INFO SystemInfo;
-	char* infoBuf = nwinfo_buffer;
+	char* infoBuf = NWLC->NwBuf;
 	UINT64 Uptime = 0;
 	if (GetComputerNameA(infoBuf, &bufCharCount))
-		node_att_set(node, "Computer Name", infoBuf, 0);
+		NWL_NodeAttrSet(node, "Computer Name", infoBuf, 0);
 	bufCharCount = NWINFO_BUFSZ;
 	if (GetUserNameA(infoBuf, &bufCharCount))
-		node_att_set(node, "Username", infoBuf, 0);
+		NWL_NodeAttrSet(node, "Username", infoBuf, 0);
 	if (GetComputerNameExA(ComputerNameDnsDomain, infoBuf, &bufCharCount))
-		node_att_set(node, "DNS Domain", infoBuf, 0);
+		NWL_NodeAttrSet(node, "DNS Domain", infoBuf, 0);
 	if (GetComputerNameExA(ComputerNameDnsHostname, infoBuf, &bufCharCount))
-		node_att_set(node, "DNS Hostname", infoBuf, 0);
+		NWL_NodeAttrSet(node, "DNS Hostname", infoBuf, 0);
 	if (GetSystemDirectoryA(infoBuf, NWINFO_BUFSZ))
-		node_att_set(node, "System Directory", infoBuf, 0);
+		NWL_NodeAttrSet(node, "System Directory", infoBuf, 0);
 	if (GetWindowsDirectoryA(infoBuf, NWINFO_BUFSZ))
-		node_att_set(node, "Windows Directory", infoBuf, 0);
-	Uptime = NT5GetTickCount();
+		NWL_NodeAttrSet(node, "Windows Directory", infoBuf, 0);
+	Uptime = GetTickCount64();
 	{
 		UINT64 Days = Uptime / 1000ULL / 3600ULL / 24ULL;
 		UINT64 Hours = Uptime / 1000ULL / 3600ULL - Days * 24ULL;
 		UINT64 Minutes = Uptime / 1000ULL / 60ULL - Days * 24ULL * 60ULL - Hours * 60ULL;
 		UINT64 Seconds = Uptime / 1000ULL - Days * 24ULL * 3600ULL - Hours * 3600ULL - Minutes * 60ULL;
-		node_att_setf(node,"Uptime", 0, "%llu days, %llu hours, %llu min, %llu sec", Days, Hours, Minutes, Seconds);
+		NWL_NodeAttrSetf(node,"Uptime", 0, "%llu days, %llu hours, %llu min, %llu sec", Days, Hours, Minutes, Seconds);
 	}
 	GetNativeSystemInfo(&SystemInfo);
 	switch (SystemInfo.wProcessorArchitecture)
 	{
 	case PROCESSOR_ARCHITECTURE_AMD64:
-		node_att_set(node, "Processor Architecture", "x64", 0);
+		NWL_NodeAttrSet(node, "Processor Architecture", "x64", 0);
 		break;
 	case PROCESSOR_ARCHITECTURE_INTEL:
-		node_att_set(node, "Processor Architecture", "x86", 0);
+		NWL_NodeAttrSet(node, "Processor Architecture", "x86", 0);
 		break;
 	default:
-		node_att_set(node, "Processor Architecture", "UNKNOWN", 0);
+		NWL_NodeAttrSet(node, "Processor Architecture", "UNKNOWN", 0);
 		break;
 	}
-	node_att_setf(node, "Page Size", NAFLG_FMT_NUMERIC, "%u", SystemInfo.dwPageSize);
+	NWL_NodeAttrSetf(node, "Page Size", NAFLG_FMT_NUMERIC, "%u", SystemInfo.dwPageSize);
 }
 
 static void PrintFwInfo(void)
 {
 	DWORD VarSize = 0;
 	UINT8 SecureBoot = 0;
-	NT5GetFirmwareEnvironmentVariable("", "{00000000-0000-0000-0000-000000000000}", NULL, 0);
+	NWL_GetFirmwareEnvironmentVariable("", "{00000000-0000-0000-0000-000000000000}", NULL, 0);
 	if (GetLastError() == ERROR_INVALID_FUNCTION)
-		node_att_set(node, "Firmware", "Legacy BIOS", 0);
+		NWL_NodeAttrSet(node, "Firmware", "Legacy BIOS", 0);
 	else
 	{
-		node_att_set(node, "Firmware", "UEFI", 0);
-		VarSize = NT5GetFirmwareEnvironmentVariable("SecureBoot", GV_GUID, &SecureBoot, sizeof(uint8_t));
+		NWL_NodeAttrSet(node, "Firmware", "UEFI", 0);
+		VarSize = NWL_GetFirmwareEnvironmentVariable("SecureBoot", GV_GUID, &SecureBoot, sizeof(UINT8));
 		if (VarSize)
-			node_att_setf(node, "Secure Boot", 0, "%s", SecureBoot ? "ENABLED" : "DISABLED");
+			NWL_NodeAttrSetf(node, "Secure Boot", 0, "%s", SecureBoot ? "ENABLED" : "DISABLED");
 		else
-			node_att_set(node, "Secure Boot", "UNSUPPORTED", 0);
+			NWL_NodeAttrSet(node, "Secure Boot", "UNSUPPORTED", 0);
 	}
 }
 
@@ -178,14 +180,14 @@ static void PrintTpmInfo(void)
 	HINSTANCE hL = LoadLibraryA("tbs.dll");
 	TPM_DEVICE_INFO tpmInfo = { 0 };
 	struct acpi_table_header* AcpiHdr = NULL;
-	AcpiHdr = GetAcpi('2MPT');
+	AcpiHdr = NWL_GetAcpi('2MPT');
 	if (AcpiHdr)
-		node_att_set(node, "TPM", "v2.0", 0);
+		NWL_NodeAttrSet(node, "TPM", "v2.0", 0);
 	else
 	{
-		AcpiHdr = GetAcpi('APCT');
+		AcpiHdr = NWL_GetAcpi('APCT');
 		if (AcpiHdr)
-			node_att_set(node, "TPM", "v1.2", 0);
+			NWL_NodeAttrSet(node, "TPM", "v1.2", 0);
 	}
 	if (AcpiHdr)
 	{
@@ -196,10 +198,10 @@ static void PrintTpmInfo(void)
 		*(FARPROC*)&GetTpmInfo = GetProcAddress(hL, "Tbsi_GetDeviceInfo");
 	if (GetTpmInfo) {
 		UINT32 dwRet = GetTpmInfo(sizeof(tpmInfo), &tpmInfo);
-		node_att_setf(node, "TPM", 0, "%s", (dwRet == 0) ? TpmVersion(tpmInfo.tpmVersion) : "NOT FOUND");
+		NWL_NodeAttrSetf(node, "TPM", 0, "%s", (dwRet == 0) ? TpmVersion(tpmInfo.tpmVersion) : "NOT FOUND");
 	}
 	else
-		node_att_set(node, "TPM", "UNSUPPORTED", 0);
+		NWL_NodeAttrSet(node, "TPM", "UNSUPPORTED", 0);
 }
 
 static void
@@ -211,12 +213,12 @@ PrintPowerInfo(void)
 		|| Power.BatteryFlag == 255
 		|| Power.BatteryLifePercent > 100)
 	{
-		node_att_set(node, "Power Status", "UNKNOWN", 0);
+		NWL_NodeAttrSet(node, "Power Status", "UNKNOWN", 0);
 		return;
 	}
 	if (Power.BatteryFlag == 128)
 	{
-		node_att_set(node, "Power Status", "NO BATTERY", 0);
+		NWL_NodeAttrSet(node, "Power Status", "NO BATTERY", 0);
 		return;
 	}
 		
@@ -225,13 +227,13 @@ PrintPowerInfo(void)
 		UINT32 Hours = Power.BatteryLifeTime / 3600U;
 		UINT32 Minutes = Power.BatteryLifeTime / 60ULL - Hours * 60ULL;
 		//UINT32 Seconds = Power.BatteryLifeTime - Hours * 3600ULL - Minutes * 60ULL;
-		node_att_setf(node, "Power Status", 0, "%u%%, %lu hours %lu min left%s",
+		NWL_NodeAttrSetf(node, "Power Status", 0, "%u%%, %lu hours %lu min left%s",
 			Power.BatteryLifePercent, Hours, Minutes,
 			(Power.ACLineStatus == 1 || Power.BatteryFlag == 8) ? ", Charging" : "");
 	}
 	else
 	{
-		node_att_setf(node, "Power Status", 0, "%u%%%s",
+		NWL_NodeAttrSetf(node, "Power Status", 0, "%u%%%s",
 			Power.BatteryLifePercent,
 			(Power.ACLineStatus == 1 || Power.BatteryFlag == 8) ? ", Charging" : "");
 	}
@@ -246,18 +248,20 @@ static void PrintMemInfo(void)
 	MEMORYSTATUSEX statex = { 0 };
 	statex.dwLength = sizeof(statex);
 	GlobalMemoryStatusEx(&statex);
-	node_att_setf(node, "Memory Usage", 0, "%u%%", statex.dwMemoryLoad);
-	nphy = node_append_new(node, "Physical Memory", NFLG_ATTGROUP);
-	node_att_set(nphy, "Free", GetHumanSize(statex.ullAvailPhys, mem_human_sizes, 1024), NAFLG_FMT_HUMAN_SIZE);
-	node_att_set(nphy, "Total", GetHumanSize(statex.ullTotalPhys, mem_human_sizes, 1024), NAFLG_FMT_HUMAN_SIZE);
-	npage = node_append_new(node, "Paging File", NFLG_ATTGROUP);
-	node_att_set(npage, "Free", GetHumanSize(statex.ullAvailPageFile, mem_human_sizes, 1024), NAFLG_FMT_HUMAN_SIZE);
-	node_att_set(npage, "Total", GetHumanSize(statex.ullTotalPageFile, mem_human_sizes, 1024), NAFLG_FMT_HUMAN_SIZE);
+	NWL_NodeAttrSetf(node, "Memory Usage", 0, "%u%%", statex.dwMemoryLoad);
+	nphy = NWL_NodeAppendNew(node, "Physical Memory", NFLG_ATTGROUP);
+	NWL_NodeAttrSet(nphy, "Free", NWL_GetHumanSize(statex.ullAvailPhys, mem_human_sizes, 1024), NAFLG_FMT_HUMAN_SIZE);
+	NWL_NodeAttrSet(nphy, "Total", NWL_GetHumanSize(statex.ullTotalPhys, mem_human_sizes, 1024), NAFLG_FMT_HUMAN_SIZE);
+	npage = NWL_NodeAppendNew(node, "Paging File", NFLG_ATTGROUP);
+	NWL_NodeAttrSet(npage, "Free", NWL_GetHumanSize(statex.ullAvailPageFile, mem_human_sizes, 1024), NAFLG_FMT_HUMAN_SIZE);
+	NWL_NodeAttrSet(npage, "Total", NWL_GetHumanSize(statex.ullTotalPageFile, mem_human_sizes, 1024), NAFLG_FMT_HUMAN_SIZE);
 }
 
-PNODE nwinfo_sys(void)
+PNODE NW_System(VOID)
 {
-	node = node_alloc("System", 0);
+	node = NWL_NodeAlloc("System", 0);
+	if (NWLC->SysInfo)
+		NWL_NodeAppendChild(NWLC->NwRoot, node);
 	PrintOsVer();
 	PrintOsInfo();
 	PrintPowerInfo();

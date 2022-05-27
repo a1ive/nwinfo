@@ -1,15 +1,8 @@
 // SPDX-License-Identifier: Unlicense
 
-#include <stdio.h>
-#include <windows.h>
-#include "nwinfo.h"
-#include "libcpuid.h"
-#include "format.h"
+#include <libnw.h>
 
-enum output_format nwinfo_output_format = FORMAT_YAML;
-FILE* nwinfo_output;
-UCHAR nwinfo_buffer[NWINFO_BUFSZ];
-INT nwinfo_human_size;
+static NWLIB_CONTEXT nwContext;
 
 static void nwinfo_help(void)
 {
@@ -34,17 +27,13 @@ static void nwinfo_help(void)
 
 int main(int argc, char* argv[])
 {
-	PNODE nw_root;
-	PNODE node;
-	nwinfo_output = stdout;
-	if (IsAdmin() != TRUE
-		|| ObtainPrivileges(SE_SYSTEM_ENVIRONMENT_NAME) != ERROR_SUCCESS)
-	{
-		fprintf(stderr, "permission denied\n");
-		exit(1);
-	}
-	nwinfo_human_size = 0;
-	nw_root = node_alloc("NWinfo", 0);
+	LPCSTR lpFileName = NULL;
+	ZeroMemory(&nwContext, sizeof(NWLIB_CONTEXT));
+	nwContext.NwFormat = FORMAT_YAML;
+	nwContext.HumanSize = FALSE;
+	if (NW_Init(&nwContext) == FALSE)
+		return 1;
+	
 	for (int i = 0; i < argc; i++)
 	{
 		if (i == 0 && argc > 1)
@@ -52,88 +41,56 @@ int main(int argc, char* argv[])
 		else if (_strnicmp(argv[i], "--format=", 9) == 0 && argv[i][9])
 		{
 			if (_stricmp(&argv[i][9], "YAML") == 0)
-				nwinfo_output_format = FORMAT_YAML;
+				nwContext.NwFormat = FORMAT_YAML;
 			else if (_stricmp(&argv[i][9], "JSON") == 0)
-				nwinfo_output_format = FORMAT_JSON;
+				nwContext.NwFormat = FORMAT_JSON;
 		}
 		else if (_strnicmp(argv[i], "--output=", 9) == 0 && argv[i][9])
-		{
-			if (fopen_s(&nwinfo_output, &argv[i][9], "w"))
-			{
-				fprintf(stderr, "cannot open %s.\n", &argv[i][9]);
-				exit(1);
-			}
-		}
+			lpFileName = &argv[i][9];
 		else if (_stricmp(argv[i], "--human") == 0)
-		{
-			nwinfo_human_size = 1;
-		}
+			nwContext.HumanSize = TRUE;
 		else if (_stricmp(argv[i], "--sys") == 0)
-		{
-			node = nwinfo_sys();
-			node_append_child(nw_root, node);
-		}
+			nwContext.SysInfo = TRUE;
 		else if (_stricmp(argv[i], "--cpu") == 0)
-		{
-			node = nwinfo_cpuid();
-			node_append_child(nw_root, node);
-		}
+			nwContext.CpuInfo = TRUE;
 		else if (_strnicmp(argv[i], "--net", 5) == 0)
 		{
-			node = nwinfo_network(_stricmp(&argv[i][5], "=active") == 0 ? 1 : 0);
-			node_append_child(nw_root, node);
+			nwContext.ActiveNet = _stricmp(&argv[i][5], "=active") == 0 ? TRUE : FALSE;
+			nwContext.NetInfo = TRUE;
 		}
 		else if (_strnicmp(argv[i], "--acpi", 6) == 0)
 		{
-			DWORD signature = 0;
 			if (argv[i][6] == '=' && strlen(&argv[i][7]) == 4)
-				memcpy(&signature, &argv[i][7], 4);
-			node = nwinfo_acpi(signature);
-			node_append_child(nw_root, node);
+				memcpy(&nwContext.AcpiTable, &argv[i][7], 4);
+			nwContext.AcpiInfo = TRUE;
 		}
 		else if (_strnicmp(argv[i], "--smbios", 8) == 0)
 		{
-			UINT8 Type = 127;
 			if (argv[i][8] == '=' && argv[i][9])
-				Type = (UINT8) strtoul(&argv[i][9], NULL, 0);
-			node = nwinfo_smbios(Type);
-			node_append_child(nw_root, node);
+				nwContext.SmbiosType = (UINT8)strtoul(&argv[i][9], NULL, 0);
+			nwContext.DmiInfo = TRUE;
 		}
 		else if (_stricmp(argv[i], "--disk") == 0)
-		{
-			node = nwinfo_disk();
-			node_append_child(nw_root, node);
-		}
+			nwContext.DiskInfo = TRUE;
 		else if (_stricmp(argv[i], "--display") == 0)
-		{
-			node = nwinfo_display();
-			node_append_child(nw_root, node);
-		}
+			nwContext.EdidInfo = TRUE;
 		else if (_strnicmp(argv[i], "--pci", 5) == 0)
 		{
-			const CHAR* PciClass = NULL;
 			if (argv[i][5] == '=' && argv[i][6])
-				PciClass = &argv[i][6];
-			node = nwinfo_pci(PciClass);
-			node_append_child(nw_root, node);
+				nwContext.PciClass = &argv[i][6];
+			nwContext.PciInfo = TRUE;
 		}
 		else if (_stricmp(argv[i], "--usb") == 0)
-		{
-			node = nwinfo_usb();
-			node_append_child(nw_root, node);
-		}
+			nwContext.UsbInfo = TRUE;
 		else if (_stricmp(argv[i], "--beep") == 0)
 		{
 			int new_argc = argc - i - 1;
 			char** new_argv = argc > 0 ? &argv[i + 1] : NULL;
-			nwinfo_beep(new_argc, new_argv);
+			NW_Beep(new_argc, new_argv);
 			goto main_out;
 		}
 		else if (_stricmp(argv[i], "--spd") == 0)
-		{
-			node = nwinfo_spd();
-			node_append_child(nw_root, node);
-		}
+			nwContext.SpdInfo = TRUE;
 		else
 		{
 			nwinfo_help();
@@ -142,16 +99,7 @@ int main(int argc, char* argv[])
 	}
 
 main_out:
-	switch (nwinfo_output_format)
-	{
-	case FORMAT_YAML:
-		node_to_yaml(nw_root, nwinfo_output, 0);
-		break;
-	case FORMAT_JSON:
-		node_to_json(nw_root, nwinfo_output, 0);
-		break;
-	}
-	_fcloseall();
-	node_free(nw_root, 1);
+	NW_Print(lpFileName);
+	NW_Fini();
 	return 0;
 }

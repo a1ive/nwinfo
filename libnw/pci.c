@@ -4,10 +4,12 @@
 #include <stdlib.h>
 #include <windows.h>
 #include <setupapi.h>
-#include "nwinfo.h"
+
+#include "libnw.h"
+#include "utils.h"
 
 static int
-ParseHwid(PNODE nd, const CHAR *Hwid)
+ParseHwid(PNODE nd, CHAR* Ids, DWORD IdsSize, const CHAR *Hwid)
 {
 	CHAR VendorID[5] = { 0 };
 	CHAR DeviceID[5] = { 0 };
@@ -24,17 +26,17 @@ ParseHwid(PNODE nd, const CHAR *Hwid)
 	// PCI\VEN_XXXX&DEV_XXXX&SUBSYS_XXXXXXXX
 	if (strlen(Hwid) < 37 || _strnicmp(Hwid + 21, "&SUBSYS_", 8) != 0)
 	{
-		FindId(nd, VendorID, DeviceID, NULL, 0);
+		NWL_FindId(nd, Ids, IdsSize, VendorID, DeviceID, NULL, 0);
 		return 1;
 	}
 	snprintf(Subsys, 5, "%s", Hwid + 29);
 	snprintf(Subsys + 4, 6, " %s", Hwid + 33);
-	FindId(nd, VendorID, DeviceID, Subsys, 0);
+	NWL_FindId(nd, Ids, IdsSize, VendorID, DeviceID, Subsys, 0);
 	return 1;
 }
 
 static void
-ListPci(PNODE node, const CHAR* PciClass)
+ListPci(PNODE node, CHAR* Ids, DWORD IdsSize, const CHAR* PciClass)
 {
 	HDEVINFO Info = NULL;
 	DWORD i = 0;
@@ -81,24 +83,27 @@ ListPci(PNODE node, const CHAR* PciClass)
 			if (_strnicmp(PciClass, HwClass, PciClassLen) != 0)
 				goto next_device;
 		}
-		npci = node_append_new(node, "Device", NFLG_TABLE_ROW);
-		node_att_set(npci, "HWID", BufferHw, 0);
-		FindClass(npci, HwClass);
-		ParseHwid(npci, BufferHw);
+		npci = NWL_NodeAppendNew(node, "Device", NFLG_TABLE_ROW);
+		NWL_NodeAttrSet(npci, "HWID", BufferHw, 0);
+		NWL_FindClass(npci, Ids, IdsSize, HwClass);
+		ParseHwid(npci, Ids, IdsSize, BufferHw);
 next_device:
 		free(BufferHw);
 	}
 	SetupDiDestroyDeviceInfoList(Info);
 }
 
-PNODE nwinfo_pci(const CHAR *PciClass)
+PNODE NW_Pci(VOID)
 {
 	HANDLE Fp = INVALID_HANDLE_VALUE;
+	CHAR* Ids = NULL;
 	DWORD dwSize = 0;
 	BOOL bRet = TRUE;
-	CHAR* FilePath = nwinfo_buffer;
+	CHAR* FilePath = NWLC->NwBuf;
 	size_t i = 0;
-	PNODE node = node_alloc("PCI", NFLG_TABLE);
+	PNODE node = NWL_NodeAlloc("PCI", NFLG_TABLE);
+	if (NWLC->PciInfo)
+		NWL_NodeAppendChild(NWLC->NwRoot, node);
 	if (!GetModuleFileNameA(NULL, FilePath, MAX_PATH) || strlen(FilePath) == 0)
 	{
 		fprintf(stderr, "GetModuleFileName failed\n");
@@ -126,23 +131,21 @@ PNODE nwinfo_pci(const CHAR *PciClass)
 		CloseHandle(Fp);
 		return node;
 	}
-	IDS = malloc(dwSize);
-	if (!IDS)
+	Ids = malloc(dwSize);
+	if (!Ids)
 	{
 		fprintf(stderr, "out of memory\n");
 		CloseHandle(Fp);
 		return node;
 	}
-	IDS_SIZE = dwSize;
-	bRet = ReadFile(Fp, IDS, dwSize, &dwSize, NULL);
+	bRet = ReadFile(Fp, Ids, dwSize, &dwSize, NULL);
 	CloseHandle(Fp);
 	if (bRet)
 	{
-		ListPci(node, PciClass);
+		ListPci(node, Ids, dwSize, NWLC->PciClass);
 	}
 	else
 		fprintf(stderr, "pci.ids read error\n");
-	free(IDS);
-	IDS_SIZE = 0;
+	free(Ids);
 	return node;
 }

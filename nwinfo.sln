@@ -7,6 +7,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "nwinfo", "nwinfo.vcxproj", 
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libcpuid", "libcpuid\libcpuid.vcxproj", "{2DA3EA59-BDF3-4FC0-8AC2-5605CE22B800}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libnw", "libnw\libnw.vcxproj", "{D0954ECF-A37A-4DE0-8D49-0D0505F56B29}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Release|x64 = Release|x64
@@ -21,6 +23,10 @@ Global
 		{2DA3EA59-BDF3-4FC0-8AC2-5605CE22B800}.Release|x64.Build.0 = Release|x64
 		{2DA3EA59-BDF3-4FC0-8AC2-5605CE22B800}.Release|x86.ActiveCfg = Release|Win32
 		{2DA3EA59-BDF3-4FC0-8AC2-5605CE22B800}.Release|x86.Build.0 = Release|Win32
+		{D0954ECF-A37A-4DE0-8D49-0D0505F56B29}.Release|x64.ActiveCfg = Release|x64
+		{D0954ECF-A37A-4DE0-8D49-0D0505F56B29}.Release|x64.Build.0 = Release|x64
+		{D0954ECF-A37A-4DE0-8D49-0D0505F56B29}.Release|x86.ActiveCfg = Release|Win32
+		{D0954ECF-A37A-4DE0-8D49-0D0505F56B29}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

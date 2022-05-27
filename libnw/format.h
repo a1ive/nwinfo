@@ -2,7 +2,6 @@
 #pragma once
 
 #include <stdio.h>
-#include <stdint.h>
 #include <windows.h>
 
 #define NFLG_PLACEHOLDER		0x1		// Node is a placeholder with no attributes
@@ -22,28 +21,14 @@
 #define NAFLG_FMT_IPADDR		(NAFLG_FMT_NEED_QUOTE | NAFLG_FMT_STRING)
 #define NAFLG_FMT_GUID			(NAFLG_FMT_NEED_QUOTE | NAFLG_FMT_STRING)
 
-// Macros for printing nodes to JSON
-#define NODE_JS_FLAG_NOWS		0x2		// No whitespace
-#define NODE_JS_DELIM_NL		"\n"	// New line for JSON output
-#define NODE_JS_DELIM_INDENT	"  "	// Tab token for JSON output
-#define NODE_JS_DELIM_SPACE		" "	// Space used between keys and values
-
-// Macros for printing nodes to YAML
-#define NODE_YAML_DELIM_NL		"\n"	// New line token for YAML output
-#define NODE_YAML_DELIM_INDENT	"    "	// Tab toekn for YAML output
-
-// Function macros
-#define node_att_set_bool(node, key, value, flags) \
-	node_att_set(node, key, (value ? "Yes" : "No"), flags | NAFLG_FMT_BOOLEAN)
-
 // Structures
 typedef struct _NODE
 {
-	char* Name;						// Name of the node
+	CHAR* Name;						// Name of the node
 	struct _NODE_ATT_LINK* Attributes;	// Array of attributes linked to the node
 	struct _NODE* Parent;				// Parent node
 	struct _NODE_LINK* Children;		// Array of linked child nodes
-	int Flags;							// Node configuration flags
+	INT Flags;							// Node configuration flags
 } NODE, * PNODE;
 
 typedef struct _NODE_LINK
@@ -55,7 +40,7 @@ typedef struct _NODE_ATT
 {
 	char* Key;						// Attribute name
 	char* Value;						// Attribute value string (may be null separated multistring if NAFLG_ARRAY is set)
-	int Flags;							// Attribute configuration flags
+	INT Flags;							// Attribute configuration flags
 } NODE_ATT, * PNODE_ATT;
 
 typedef struct _NODE_ATT_LINK
@@ -64,19 +49,21 @@ typedef struct _NODE_ATT_LINK
 } NODE_ATT_LINK, * PNODE_ATT_LINK;
 
 // Functions
-PNODE node_alloc(LPCSTR name, int flags);
-void node_free(PNODE node, int deep);
+PNODE NWL_NodeAlloc(LPCSTR name, INT flags);
+VOID NWL_NodeFree(PNODE node, INT deep);
 
-int node_depth(PNODE node);
-int node_child_count(PNODE node);
-int node_append_child(PNODE parent, PNODE child);
-PNODE node_append_new(PNODE parent, LPCSTR name, int flags);
+INT NWL_NodeDepth(PNODE node);
+INT NWL_NodeChildCount(PNODE node);
+INT NWL_NodeAppendChild(PNODE parent, PNODE child);
+PNODE NWL_NodeAppendNew(PNODE parent, LPCSTR name, INT flags);
 
-int node_att_count(PNODE node);
-int node_att_indexof(PNODE node, LPCSTR key);
-PNODE_ATT node_att_set(PNODE node, LPCSTR key, LPCSTR value, int flags);
-PNODE_ATT node_att_setf(PNODE node, LPCSTR key, int flags, const char* format, ...);
-LPSTR node_att_get(PNODE node, LPCSTR key);
+INT NWL_NodeAttrCount(PNODE node);
+LPSTR NWL_NodeAttrGet(PNODE node, LPCSTR key);
+PNODE_ATT NWL_NodeAttrSet(PNODE node, LPCSTR key, LPCSTR value, INT flags);
+PNODE_ATT NWL_NodeAttrSetf(PNODE node, LPCSTR key, INT flags, LPCSTR format, ...);
 
-int node_to_json(PNODE node, FILE* file, int flags);
-int node_to_yaml(PNODE node, FILE* file, int flags);
+#define NWL_NodeAttrSetBool(node, key, value, flags) \
+	NWL_NodeAttrSet(node, key, (value ? "Yes" : "No"), flags | NAFLG_FMT_BOOLEAN)
+
+INT NWL_NodeToJson(PNODE node, FILE* file, INT flags);
+INT NWL_NodeToYaml(PNODE node, FILE* file, INT flags);

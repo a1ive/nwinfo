@@ -1,13 +1,22 @@
 // SPDX-License-Identifier: Unlicense
 
+// Base on https://github.com/cavaliercoder/sysinv
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <windows.h>
-#include "format.h"
-#include "nwinfo.h"
+#include "libnw.h"
 
-// Base on https://github.com/cavaliercoder/sysinv
+// Macros for printing nodes to JSON
+#define NODE_JS_FLAG_NOWS		0x2		// No whitespace
+#define NODE_JS_DELIM_NL		"\n"	// New line for JSON output
+#define NODE_JS_DELIM_INDENT	"  "	// Tab token for JSON output
+#define NODE_JS_DELIM_SPACE		" "	// Space used between keys and values
+
+// Macros for printing nodes to YAML
+#define NODE_YAML_DELIM_NL		"\n"	// New line token for YAML output
+#define NODE_YAML_DELIM_INDENT	"    "	// Tab toekn for YAML output
 
 #define NODE_BUFFER_LEN	32767
 
@@ -20,7 +29,7 @@ static void fprintcx(FILE* file, LPCSTR s, int count)
 		fprintf(file, s);
 }
 
-PNODE node_alloc(LPCSTR name, int flags)
+PNODE NWL_NodeAlloc(LPCSTR name, INT flags)
 {
 	PNODE node = NULL;
 	SIZE_T size;
@@ -48,7 +57,7 @@ PNODE node_alloc(LPCSTR name, int flags)
 	return node;
 }
 
-void node_free(PNODE node, int deep)
+VOID NWL_NodeFree(PNODE node, INT deep)
 {
 	PNODE_ATT_LINK att;
 	PNODE_LINK child;
@@ -61,7 +70,7 @@ void node_free(PNODE node, int deep)
 	if (deep > 0)
 	{
 		for (child = &node->Children[0]; NULL != child->LinkedNode; child++)
-			node_free(child->LinkedNode, deep);
+			NWL_NodeFree(child->LinkedNode, deep);
 	}
 
 	free(node->Attributes);
@@ -69,7 +78,7 @@ void node_free(PNODE node, int deep)
 	free(node);
 }
 
-int node_depth(PNODE node)
+INT NWL_NodeDepth(PNODE node)
 {
 	PNODE parent;
 	int count = 0;
@@ -78,7 +87,7 @@ int node_depth(PNODE node)
 	return count;
 }
 
-int node_child_count(PNODE node)
+INT NWL_NodeChildCount(PNODE node)
 {
 	int count = 0;
 	PNODE_LINK link = node->Children;
@@ -87,13 +96,13 @@ int node_child_count(PNODE node)
 	return count;
 }
 
-int node_append_child(PNODE parent, PNODE child)
+INT NWL_NodeAppendChild(PNODE parent, PNODE child)
 {
 	int i, old_count, new_count;
 	PNODE_LINK new_links;
 
 	// Count old children
-	old_count = node_child_count(parent);
+	old_count = NWL_NodeChildCount(parent);
 	if (NULL == child)
 		return old_count;
 
@@ -124,14 +133,14 @@ int node_append_child(PNODE parent, PNODE child)
 	return new_count;
 }
 
-PNODE node_append_new(PNODE parent, LPCSTR name, int flags)
+PNODE NWL_NodeAppendNew(PNODE parent, LPCSTR name, INT flags)
 {
-	PNODE node = node_alloc(name, flags);
-	node_append_child(parent, node);
+	PNODE node = NWL_NodeAlloc(name, flags);
+	NWL_NodeAppendChild(parent, node);
 	return node;
 }
 
-static PNODE_ATT node_alloc_att(LPCSTR key, LPCSTR value, int flags)
+static PNODE_ATT NWL_NodeAllocAttr(LPCSTR key, LPCSTR value, int flags)
 {
 	PNODE_ATT att = NULL;
 	LPCSTR nvalue = NULL;
@@ -147,7 +156,7 @@ static PNODE_ATT node_alloc_att(LPCSTR key, LPCSTR value, int flags)
 	att = (PNODE_ATT)calloc(1, size);
 	if (!att)
 	{
-		fprintf(stderr, "Failed to allocate memory in node_alloc_att\n");
+		fprintf(stderr, "Failed to allocate memory in NWL_NodeAllocAttr\n");
 		exit(ERROR_OUTOFMEMORY);
 	}
 
@@ -162,7 +171,7 @@ static PNODE_ATT node_alloc_att(LPCSTR key, LPCSTR value, int flags)
 	return att;
 }
 
-int node_att_count(PNODE node)
+INT NWL_NodeAttrCount(PNODE node)
 {
 	int count = 0;
 	PNODE_ATT_LINK link = node->Attributes;
@@ -171,7 +180,7 @@ int node_att_count(PNODE node)
 	return count;
 }
 
-int node_att_indexof(PNODE node, LPCSTR key)
+static INT NWL_NodeAttrGetIndex(PNODE node, LPCSTR key)
 {
 	int i;
 	for (i = 0; node->Attributes[i].LinkedAttribute; i++)
@@ -182,13 +191,13 @@ int node_att_indexof(PNODE node, LPCSTR key)
 	return -1;
 }
 
-LPSTR node_att_get(PNODE node, LPCSTR key)
+LPSTR NWL_NodeAttrGet(PNODE node, LPCSTR key)
 {
-	int i = node_att_indexof(node, key);
+	int i = NWL_NodeAttrGetIndex(node, key);
 	return (i < 0) ? NULL : node->Attributes[i].LinkedAttribute->Value;
 }
 
-PNODE_ATT node_att_set(PNODE node, LPCSTR key, LPCSTR value, int flags)
+PNODE_ATT NWL_NodeAttrSet(PNODE node, LPCSTR key, LPCSTR value, INT flags)
 {
 	int i, old_count, new_count, new_index;
 	PNODE_ATT att;
@@ -196,13 +205,13 @@ PNODE_ATT node_att_set(PNODE node, LPCSTR key, LPCSTR value, int flags)
 	PNODE_ATT_LINK new_link = NULL;
 	PNODE_ATT_LINK new_links = NULL;
 
-	if (!nwinfo_human_size && (flags & NAFLG_FMT_HUMAN_SIZE))
+	if (!NWLC->HumanSize && (flags & NAFLG_FMT_HUMAN_SIZE))
 		flags |= NAFLG_FMT_NUMERIC;
 	// Count old attributes
-	old_count = node_att_count(node);
+	old_count = NWL_NodeAttrCount(node);
 
 	// Search for existing attribute
-	new_index = node_att_indexof(node, key);
+	new_index = NWL_NodeAttrGetIndex(node, key);
 	if (new_index > -1)
 		new_link = &node->Attributes[new_index];
 
@@ -212,7 +221,7 @@ PNODE_ATT node_att_set(PNODE node, LPCSTR key, LPCSTR value, int flags)
 		if (strcmp(new_link->LinkedAttribute->Value, value) != 0)
 		{
 			free(new_link->LinkedAttribute);
-			new_link->LinkedAttribute = node_alloc_att(key, value, flags);
+			new_link->LinkedAttribute = NWL_NodeAllocAttr(key, value, flags);
 		}
 		else
 		{
@@ -240,7 +249,7 @@ PNODE_ATT node_att_set(PNODE node, LPCSTR key, LPCSTR value, int flags)
 			new_links[i].LinkedAttribute = node->Attributes[i].LinkedAttribute;
 
 		// Copy new attribute
-		new_links[new_index].LinkedAttribute = node_alloc_att(key, value, flags);
+		new_links[new_index].LinkedAttribute = NWL_NodeAllocAttr(key, value, flags);
 
 		// Release old list
 		free(node->Attributes);
@@ -254,14 +263,14 @@ PNODE_ATT node_att_set(PNODE node, LPCSTR key, LPCSTR value, int flags)
 
 static CHAR nsbuf[NODE_BUFFER_LEN];
 
-PNODE_ATT node_att_setf(PNODE node, LPCSTR key, int flags, const char* format, ...)
+PNODE_ATT NWL_NodeAttrSetf(PNODE node, LPCSTR key, INT flags, LPCSTR format, ...)
 {
 	va_list ap;
 	//ZeroMemory(nsbuf, sizeof(nsbuf));
 	va_start(ap, format);
 	vsnprintf(nsbuf, sizeof(nsbuf), format, ap);
 	va_end(ap);
-	return node_att_set(node, key, nsbuf, flags);
+	return NWL_NodeAttrSet(node, key, nsbuf, flags);
 }
 
 static SIZE_T json_escape_content(LPCTSTR input, LPSTR buffer, DWORD bufferSize)
@@ -305,12 +314,12 @@ static SIZE_T json_escape_content(LPCTSTR input, LPSTR buffer, DWORD bufferSize)
 	return cOut - buffer;
 }
 
-int node_to_json(PNODE node, FILE* file, int flags)
+INT NWL_NodeToJson(PNODE node, FILE* file, INT flags)
 {
 	int i = 0;
 	int nodes = 1;
-	int atts = node_att_count(node);
-	int children = node_child_count(node);
+	int atts = NWL_NodeAttrCount(node);
+	int children = NWL_NodeChildCount(node);
 	int plural = 0;
 	int indent = ((flags & NODE_JS_FLAG_NOWS) == 0) ? indent_depth : 0;
 	LPCSTR nl = flags & NODE_JS_FLAG_NOWS ? "" : NODE_JS_DELIM_NL;
@@ -346,8 +355,8 @@ int node_to_json(PNODE node, FILE* file, int flags)
 					fprintf(file, node->Attributes[i].LinkedAttribute->Value);
 				else
 				{
-					json_escape_content(node->Attributes[i].LinkedAttribute->Value, nwinfo_buffer, NWINFO_BUFSZ);
-					fprintf(file, "\"%s\"", nwinfo_buffer);
+					json_escape_content(node->Attributes[i].LinkedAttribute->Value, NWLC->NwBuf, NWINFO_BUFSZ);
+					fprintf(file, "\"%s\"", NWLC->NwBuf);
 				}
 				plural = 1;
 			}
@@ -364,7 +373,7 @@ int node_to_json(PNODE node, FILE* file, int flags)
 				fprintf(file, ",");
 
 			fprintf(file, NODE_JS_DELIM_NL);
-			nodes += node_to_json(node->Children[i].LinkedNode, file, flags);
+			nodes += NWL_NodeToJson(node->Children[i].LinkedNode, file, flags);
 			plural = 1;
 		}
 		indent_depth--;
@@ -382,12 +391,12 @@ int node_to_json(PNODE node, FILE* file, int flags)
 	return nodes;
 }
 
-int node_to_yaml(PNODE node, FILE* file, int flags)
+INT NWL_NodeToYaml(PNODE node, FILE* file, INT flags)
 {
 	int i = 0;
 	int count = 1;
-	int atts = node_att_count(node);
-	int children = node_child_count(node);
+	int atts = NWL_NodeAttrCount(node);
+	int children = NWL_NodeChildCount(node);
 	PNODE_ATT att = NULL;
 	PNODE child = NULL;
 	CHAR* attVal = NULL;
@@ -428,7 +437,7 @@ int node_to_yaml(PNODE node, FILE* file, int flags)
 		for (i = 0; i < children; i++)
 		{
 			child = node->Children[i].LinkedNode;
-			node_to_yaml(child, file, 0);
+			NWL_NodeToYaml(child, file, 0);
 		}
 		indent_depth--;
 	}

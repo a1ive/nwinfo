@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: Unlicense
 
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "nwinfo.h"
-#include "libcpuid.h"
-#include "winring0/winring0.h"
+
+#include "libnw.h"
+#include <libcpuid.h>
+#include <winring0.h>
 
 static void
 speaker_play(struct msr_driver_t* drv, unsigned int hz, unsigned long ms)
@@ -44,15 +44,15 @@ play_default(struct msr_driver_t* drv)
 		speaker_play(drv, TOKYO_HOT[i], TOKYO_HOT[i+1]);
 }
 
-void
-nwinfo_beep(int argc, char* argv[])
+VOID
+NW_Beep(int argc, char* argv[])
 {
 	int i = 0;
 	struct msr_driver_t* drv = NULL;
-	if ((drv = cpu_msr_driver_open()) == NULL) {
+	if ((drv = cpu_msr_driver_open()) == NULL)
 		return;
-	}
-	if (argc < 2) {
+	if (argc < 2)
+	{
 		play_default(drv);
 		goto fail;
 	}
@@ -62,7 +62,6 @@ nwinfo_beep(int argc, char* argv[])
 		unsigned long time = 0;
 		hz = strtoul(argv[i], NULL, 0);
 		time = strtoul(argv[i + 1], NULL, 0);
-		//printf("play %u %lu\n", hz, time);
 		speaker_play(drv, hz, time);
 	}
 fail:

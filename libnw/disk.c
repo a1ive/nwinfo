@@ -1,9 +1,8 @@
 // SPDX-License-Identifier: Unlicense
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <windows.h>
-#include "nwinfo.h"
+#include "libnw.h"
+#include "disk.h"
+#include "utils.h"
 
 #define MAX_PHY_DRIVE 128
 
@@ -61,12 +60,12 @@ PrintVolumeInfo(PNODE pNode, CHAR Letter)
 	snprintf(PhyPath, sizeof(PhyPath), "%C:\\", Letter);
 	if (GetVolumeInformationA(PhyPath, VolName, MAX_PATH + 1, NULL, NULL, NULL, VolFs, MAX_PATH + 1) != TRUE)
 		goto fail;
-	node_att_set(pNode, "Filesystem", VolFs, 0);
-	node_att_set(pNode, "Label", VolName, 0);
+	NWL_NodeAttrSet(pNode, "Filesystem", VolFs, 0);
+	NWL_NodeAttrSet(pNode, "Label", VolName, 0);
 	if (GetDiskFreeSpaceExA(PhyPath, NULL, NULL, &Space))
-		node_att_set(pNode, "Free Space", GetHumanSize(Space.QuadPart, d_human_sizes, 1024), NAFLG_FMT_HUMAN_SIZE);
+		NWL_NodeAttrSet(pNode, "Free Space", NWL_GetHumanSize(Space.QuadPart, d_human_sizes, 1024), NAFLG_FMT_HUMAN_SIZE);
 	if (GetDiskFreeSpaceExA(PhyPath, NULL, &Space, NULL))
-		node_att_set(pNode, "Total Space", GetHumanSize(Space.QuadPart, d_human_sizes, 1024), NAFLG_FMT_HUMAN_SIZE);
+		NWL_NodeAttrSet(pNode, "Total Space", NWL_GetHumanSize(Space.QuadPart, d_human_sizes, 1024), NAFLG_FMT_HUMAN_SIZE);
 fail:
 	if (VolName)
 		free(VolName);
@@ -77,7 +76,7 @@ fail:
 static DWORD GetDriveCount(void)
 {
 	DWORD Value = 0;
-	if (GetRegDwordValue(HKEY_LOCAL_MACHINE, "SYSTEM\\CurrentControlSet\\Services\\disk\\Enum", "Count", &Value) != 0)
+	if (NWL_GetRegDwordValue(HKEY_LOCAL_MACHINE, "SYSTEM\\CurrentControlSet\\Services\\disk\\Enum", "Count", &Value) != 0)
 		Value = 0;
 	return Value;
 }
@@ -100,7 +99,7 @@ static CHAR *GetDriveHwId(DWORD Drive)
 {
 	CHAR drvRegKey[] = "4294967295";
 	snprintf(drvRegKey, sizeof(drvRegKey), "%u", Drive);
-	return GetRegSzValue(HKEY_LOCAL_MACHINE, "SYSTEM\\CurrentControlSet\\Services\\disk\\Enum", drvRegKey);
+	return NWL_GetRegSzValue(HKEY_LOCAL_MACHINE, "SYSTEM\\CurrentControlSet\\Services\\disk\\Enum", drvRegKey);
 }
 
 static CHAR* GetDriveHwName(const CHAR* HwId)
@@ -110,9 +109,9 @@ static CHAR* GetDriveHwName(const CHAR* HwId)
 	if (!drvRegKey)
 		return NULL;
 	snprintf(drvRegKey, 2048, "SYSTEM\\CurrentControlSet\\Enum\\%s", HwId);
-	HwName = GetRegSzValue(HKEY_LOCAL_MACHINE, drvRegKey, "FriendlyName");
+	HwName = NWL_GetRegSzValue(HKEY_LOCAL_MACHINE, drvRegKey, "FriendlyName");
 	if (!HwName)
-		HwName = GetRegSzValue(HKEY_LOCAL_MACHINE, drvRegKey, "DeviceDesc");
+		HwName = NWL_GetRegSzValue(HKEY_LOCAL_MACHINE, drvRegKey, "DeviceDesc");
 	return HwName;
 }
 
@@ -284,28 +283,28 @@ static int GetDriveInfoList(PHY_DRIVE_INFO* pDriveList, DWORD* pDriveCount)
 		{
 			strcpy_s(CurDrive->VendorId, sizeof (CurDrive->VendorId),
 				(char*)pDevDesc + pDevDesc->VendorIdOffset);
-			TrimString(CurDrive->VendorId);
+			NWL_TrimString(CurDrive->VendorId);
 		}
 
 		if (pDevDesc->ProductIdOffset)
 		{
 			strcpy_s(CurDrive->ProductId, sizeof(CurDrive->ProductId),
 				(char*)pDevDesc + pDevDesc->ProductIdOffset);
-			TrimString(CurDrive->ProductId);
+			NWL_TrimString(CurDrive->ProductId);
 		}
 
 		if (pDevDesc->ProductRevisionOffset)
 		{
 			strcpy_s(CurDrive->ProductRev, sizeof(CurDrive->ProductRev),
 				(char*)pDevDesc + pDevDesc->ProductRevisionOffset);
-			TrimString(CurDrive->ProductRev);
+			NWL_TrimString(CurDrive->ProductRev);
 		}
 
 		if (pDevDesc->SerialNumberOffset)
 		{
 			strcpy_s(CurDrive->SerialNumber, sizeof(CurDrive->SerialNumber),
 				(char*)pDevDesc + pDevDesc->SerialNumberOffset);
-			TrimString(CurDrive->SerialNumber);
+			NWL_TrimString(CurDrive->SerialNumber);
 		}
 
 		CurDrive->PartStyle = 0;
@@ -347,14 +346,16 @@ next_drive:
 	return 0;
 }
 
-PNODE nwinfo_disk(void)
+PNODE NW_Disk(VOID)
 {
 	PHY_DRIVE_INFO* PhyDriveList = NULL;
 	DWORD PhyDriveCount = 0, i = 0;
 	PHY_DRIVE_INFO* CurDrive = NULL;
-	PNODE node = node_alloc("Disks", NFLG_TABLE);
-	PhyDriveList = (PHY_DRIVE_INFO*)malloc(sizeof(PHY_DRIVE_INFO) * MAX_PHY_DRIVE);
-	if (NULL == PhyDriveList)
+	PNODE node = NWL_NodeAlloc("Disks", NFLG_TABLE);
+	if (NWLC->DiskInfo)
+		NWL_NodeAppendChild(NWLC->NwRoot, node);
+	PhyDriveList = (PHY_DRIVE_INFO*)calloc(MAX_PHY_DRIVE, sizeof(PHY_DRIVE_INFO));
+	if (!PhyDriveList)
 	{
 		fprintf(stderr, "Failed to alloc phy drive memory\n");
 		return node;
@@ -364,50 +365,50 @@ PNODE nwinfo_disk(void)
 	{
 		for (i = 0, CurDrive = PhyDriveList; i < PhyDriveCount; i++, CurDrive++)
 		{
-			PNODE nd = node_append_new(node, "Disk", NFLG_TABLE_ROW);
-			node_att_setf(nd, "Path", 0, "\\\\.\\PhysicalDrive%u", CurDrive->PhyDrive);
+			PNODE nd = NWL_NodeAppendNew(node, "Disk", NFLG_TABLE_ROW);
+			NWL_NodeAttrSetf(nd, "Path", 0, "\\\\.\\PhysicalDrive%u", CurDrive->PhyDrive);
 			if (CurDrive->HwID)
 			{
 				CHAR* hwName = NULL;
-				node_att_set(nd, "HWID", CurDrive->HwID, 0);
+				NWL_NodeAttrSet(nd, "HWID", CurDrive->HwID, 0);
 				hwName = GetDriveHwName(CurDrive->HwID);
 				if (hwName)
 				{
-					node_att_set(nd, "HW Name", hwName, 0);
+					NWL_NodeAttrSet(nd, "HW Name", hwName, 0);
 					free(hwName);
 				}
 				free(CurDrive->HwID);
 			}
 			if (CurDrive->VendorId[0])
-				node_att_set(nd, "Vendor ID", CurDrive->VendorId, 0);
+				NWL_NodeAttrSet(nd, "Vendor ID", CurDrive->VendorId, 0);
 			if (CurDrive->ProductId[0])
-				node_att_set(nd, "Product ID", CurDrive->ProductId, 0);
+				NWL_NodeAttrSet(nd, "Product ID", CurDrive->ProductId, 0);
 			if (CurDrive->ProductRev[0])
-				node_att_set(nd, "Product Rev", CurDrive->ProductRev, 0);
+				NWL_NodeAttrSet(nd, "Product Rev", CurDrive->ProductRev, 0);
 			if (CurDrive->SerialNumber[0])
-				node_att_set(nd, "Serial Number", CurDrive->SerialNumber, 0);
-			node_att_set(nd, "Type", GetBusTypeString(CurDrive->BusType), 0);
-			node_att_set_bool(nd, "Removable", CurDrive->RemovableMedia, 0);
-			node_att_set(nd, "Size", GetHumanSize(CurDrive->SizeInBytes, d_human_sizes, 1024), NAFLG_FMT_HUMAN_SIZE);
+				NWL_NodeAttrSet(nd, "Serial Number", CurDrive->SerialNumber, 0);
+			NWL_NodeAttrSet(nd, "Type", GetBusTypeString(CurDrive->BusType), 0);
+			NWL_NodeAttrSetBool(nd, "Removable", CurDrive->RemovableMedia, 0);
+			NWL_NodeAttrSet(nd, "Size", NWL_GetHumanSize(CurDrive->SizeInBytes, d_human_sizes, 1024), NAFLG_FMT_HUMAN_SIZE);
 			if (CurDrive->PartStyle == 1)
 			{
-				node_att_set(nd, "Partition Table", "MBR", 0);
-				node_att_setf(nd, "MBR Signature", 0, "%02X %02X %02X %02X",
+				NWL_NodeAttrSet(nd, "Partition Table", "MBR", 0);
+				NWL_NodeAttrSetf(nd, "MBR Signature", 0, "%02X %02X %02X %02X",
 					CurDrive->MbrSignature[0], CurDrive->MbrSignature[1],
 					CurDrive->MbrSignature[2], CurDrive->MbrSignature[3]);
 			}
 			else if (CurDrive->PartStyle == 2)
 			{
-				node_att_set(nd, "Partition Table", "GPT", 0);
-				node_att_set(nd, "GPT GUID", GuidToStr(CurDrive->GptGuid), NAFLG_FMT_GUID);
+				NWL_NodeAttrSet(nd, "Partition Table", "GPT", 0);
+				NWL_NodeAttrSet(nd, "GPT GUID", NWL_GuidToStr(CurDrive->GptGuid), NAFLG_FMT_GUID);
 			}
 			if (CurDrive->DriveLetters[0])
 			{
-				PNODE nv = node_append_new(nd, "Volumes", NFLG_TABLE);
+				PNODE nv = NWL_NodeAppendNew(nd, "Volumes", NFLG_TABLE);
 				for (int j = 0;  CurDrive->DriveLetters[j] && j < 26; j++)
 				{
-					PNODE vol = node_append_new(nv, "Volume", NFLG_TABLE_ROW);
-					node_att_setf(vol, "Drive Letter", 0, "%C", CurDrive->DriveLetters[j]);
+					PNODE vol = NWL_NodeAppendNew(nv, "Volume", NFLG_TABLE_ROW);
+					NWL_NodeAttrSetf(vol, "Drive Letter", 0, "%C", CurDrive->DriveLetters[j]);
 					PrintVolumeInfo(vol, CurDrive->DriveLetters[j]);
 				}
 			}

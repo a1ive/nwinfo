@@ -4,9 +4,9 @@
 #include <iphlpapi.h>
 #include <ws2tcpip.h>
 #include <netioapi.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include "nwinfo.h"
+
+#include "libnw.h"
+#include "utils.h"
 
 static PNODE node;
 
@@ -23,19 +23,19 @@ static void displayAddress(PNODE pNode, const PSOCKET_ADDRESS Address, LPCSTR ke
 	{
 		SOCKADDR_IN* si = (SOCKADDR_IN*)(Address->lpSockaddr);
 		char a[INET_ADDRSTRLEN] = { 0 };
-		if (NT5InetNtop(AF_INET, &(si->sin_addr), a, sizeof(a)))
-			node_att_set(pNode, key ? key : "IPv4", a, NAFLG_FMT_IPADDR);
+		if (inet_ntop(AF_INET, &(si->sin_addr), a, sizeof(a)))
+			NWL_NodeAttrSet(pNode, key ? key : "IPv4", a, NAFLG_FMT_IPADDR);
 		else
-			node_att_set(pNode, key ? key : "IPv4", "", NAFLG_FMT_IPADDR);
+			NWL_NodeAttrSet(pNode, key ? key : "IPv4", "", NAFLG_FMT_IPADDR);
 	}
 	else if (Address->lpSockaddr->sa_family == AF_INET6)
 	{
 		SOCKADDR_IN6* si = (SOCKADDR_IN6*)(Address->lpSockaddr);
 		char a[INET6_ADDRSTRLEN] = { 0 };
-		if (NT5InetNtop(AF_INET6, &(si->sin6_addr), a, sizeof(a)))
-			node_att_set(pNode, key ? key : "IPv6", a, NAFLG_FMT_IPADDR);
+		if (inet_ntop(AF_INET6, &(si->sin6_addr), a, sizeof(a)))
+			NWL_NodeAttrSet(pNode, key ? key : "IPv6", a, NAFLG_FMT_IPADDR);
 		else
-			node_att_set(pNode, key ? key : "IPv6", "", NAFLG_FMT_IPADDR);
+			NWL_NodeAttrSet(pNode, key ? key : "IPv6", "", NAFLG_FMT_IPADDR);
 	}
 }
 
@@ -59,7 +59,7 @@ IfTypeToStr(IFTYPE Type)
 	return "Other";
 }
 
-PNODE nwinfo_network (int active)
+PNODE NW_Network (VOID)
 {
 	DWORD dwRetVal = 0;
 	unsigned int i = 0;
@@ -76,7 +76,9 @@ PNODE nwinfo_network (int active)
 	MIB_IFTABLE *IfTable = NULL;
 	ULONG IfTableSize = 0;
 
-	node = node_alloc("Network", NFLG_TABLE);
+	node = NWL_NodeAlloc("Network", NFLG_TABLE);
+	if (NWLC->NetInfo)
+		NWL_NodeAppendChild(NWLC->NwRoot, node);
 
 	dwRetVal = GetAdaptersAddresses(AF_UNSPEC, flags, NULL, NULL, &outBufLen);
 
@@ -96,7 +98,7 @@ PNODE nwinfo_network (int active)
 	}
 	else
 	{
-		fprintf(stderr, "Error: %d\n", dwRetVal);
+		fprintf(stderr, "GetAdaptersAddresses Error: %d\n", dwRetVal);
 		return node;
 	}
 
@@ -120,38 +122,38 @@ PNODE nwinfo_network (int active)
 	pCurrAddresses = pAddresses;
 	while (pCurrAddresses)
 	{
-		PNODE nic = node_append_new(node, "Interface", NFLG_TABLE_ROW);
-		if (active && pCurrAddresses->OperStatus != IfOperStatusUp)
+		PNODE nic = NWL_NodeAppendNew(node, "Interface", NFLG_TABLE_ROW);
+		if (NWLC->ActiveNet && pCurrAddresses->OperStatus != IfOperStatusUp)
 			goto next_addr;
-		node_att_set(nic, "Network Adapter", pCurrAddresses->AdapterName, NAFLG_FMT_GUID);
-		node_att_set(nic, "Description", NT5WcsToMbs(pCurrAddresses->Description), 0);
-		node_att_set(nic, "Type", IfTypeToStr(pCurrAddresses->IfType), 0);
+		NWL_NodeAttrSet(nic, "Network Adapter", pCurrAddresses->AdapterName, NAFLG_FMT_GUID);
+		NWL_NodeAttrSet(nic, "Description", NWL_WcsToMbs(pCurrAddresses->Description), 0);
+		NWL_NodeAttrSet(nic, "Type", IfTypeToStr(pCurrAddresses->IfType), 0);
 		if (pCurrAddresses->PhysicalAddressLength != 0)
 		{
-			nwinfo_buffer[0] = '\0';
+			NWLC->NwBuf[0] = '\0';
 			for (i = 0; i < pCurrAddresses->PhysicalAddressLength; i++)
 			{
-				snprintf(nwinfo_buffer, NWINFO_BUFSZ, "%s%.2X%s", nwinfo_buffer,
+				snprintf(NWLC->NwBuf, NWINFO_BUFSZ, "%s%.2X%s", NWLC->NwBuf,
 					pCurrAddresses->PhysicalAddress[i], (i == (pCurrAddresses->PhysicalAddressLength - 1)) ? "" : "-");
 			}
-			node_att_set(nic, "MAC Address", nwinfo_buffer, 0);
+			NWL_NodeAttrSet(nic, "MAC Address", NWLC->NwBuf, 0);
 		}
 
-		node_att_set(nic, "Status", (pCurrAddresses->OperStatus == IfOperStatusUp) ? "Active" : "Deactive", 0);
-		node_att_set_bool(nic, "DHCP Enabled", pCurrAddresses->Dhcpv4Enabled, 0);
+		NWL_NodeAttrSet(nic, "Status", (pCurrAddresses->OperStatus == IfOperStatusUp) ? "Active" : "Deactive", 0);
+		NWL_NodeAttrSetBool(nic, "DHCP Enabled", pCurrAddresses->Dhcpv4Enabled, 0);
 		pUnicast = pCurrAddresses->FirstUnicastAddress;
 		if (pUnicast != NULL)
 		{
-			PNODE n_unicast = node_append_new(nic, "Unicasts", NFLG_TABLE);
+			PNODE n_unicast = NWL_NodeAppendNew(nic, "Unicasts", NFLG_TABLE);
 			for (i = 0; pUnicast != NULL; i++)
 			{
-				PNODE unicast = node_append_new(n_unicast, "Unicast Address", NFLG_TABLE_ROW);
+				PNODE unicast = NWL_NodeAppendNew(n_unicast, "Unicast Address", NFLG_TABLE_ROW);
 				displayAddress(unicast, &pUnicast->Address, NULL);
 				if (pUnicast->Address.lpSockaddr->sa_family == AF_INET)
 				{
 					ULONG SubnetMask = 0;
-					NT5ConvertLengthToIpv4Mask(pUnicast->OnLinkPrefixLength, &SubnetMask);
-					node_att_setf(unicast, "Subnet Mask", NAFLG_FMT_IPADDR, "%u.%u.%u.%u",
+					NWL_ConvertLengthToIpv4Mask(pUnicast->OnLinkPrefixLength, &SubnetMask);
+					NWL_NodeAttrSetf(unicast, "Subnet Mask", NAFLG_FMT_IPADDR, "%u.%u.%u.%u",
 						SubnetMask & 0xFF, (SubnetMask >> 8) & 0xFF, (SubnetMask >> 16) & 0xFF, (SubnetMask >> 24) & 0xFF);
 				}
 				pUnicast = pUnicast->Next;
@@ -161,10 +163,10 @@ PNODE nwinfo_network (int active)
 		pAnycast = pCurrAddresses->FirstAnycastAddress;
 		if (pAnycast)
 		{
-			PNODE n_anycast = node_append_new(nic, "Anycasts", NFLG_TABLE);
+			PNODE n_anycast = NWL_NodeAppendNew(nic, "Anycasts", NFLG_TABLE);
 			for (i = 0; pAnycast != NULL; i++)
 			{
-				PNODE anycast = node_append_new(n_anycast, "Anycast Address", NFLG_TABLE_ROW);
+				PNODE anycast = NWL_NodeAppendNew(n_anycast, "Anycast Address", NFLG_TABLE_ROW);
 				displayAddress(anycast, &pAnycast->Address, NULL);
 				pAnycast = pAnycast->Next;
 			}
@@ -173,10 +175,10 @@ PNODE nwinfo_network (int active)
 		pMulticast = pCurrAddresses->FirstMulticastAddress;
 		if (pMulticast)
 		{
-			PNODE n_multicast = node_append_new(nic, "Multicasts", NFLG_TABLE);
+			PNODE n_multicast = NWL_NodeAppendNew(nic, "Multicasts", NFLG_TABLE);
 			for (i = 0; pMulticast != NULL; i++)
 			{
-				PNODE multicast = node_append_new(n_multicast, "Multicast Address", NFLG_TABLE_ROW);
+				PNODE multicast = NWL_NodeAppendNew(n_multicast, "Multicast Address", NFLG_TABLE_ROW);
 				displayAddress(multicast, &pMulticast->Address, NULL);
 				pMulticast = pMulticast->Next;
 			}
@@ -185,10 +187,10 @@ PNODE nwinfo_network (int active)
 		pGateway = pCurrAddresses->FirstGatewayAddress;
 		if (pGateway != NULL)
 		{
-			PNODE n_gateway = node_append_new(nic, "Gateways", NFLG_TABLE);
+			PNODE n_gateway = NWL_NodeAppendNew(nic, "Gateways", NFLG_TABLE);
 			for (i = 0; pGateway != NULL; i++)
 			{
-				PNODE gateway = node_append_new(n_gateway, "Gateway", NFLG_TABLE_ROW);
+				PNODE gateway = NWL_NodeAppendNew(n_gateway, "Gateway", NFLG_TABLE_ROW);
 				displayAddress(gateway, &pGateway->Address, NULL);
 				pGateway = pGateway->Next;
 			}
@@ -197,10 +199,10 @@ PNODE nwinfo_network (int active)
 		pDnServer = pCurrAddresses->FirstDnsServerAddress;
 		if (pDnServer)
 		{
-			PNODE n_dns = node_append_new(nic, "DNS Servers", NFLG_TABLE);
+			PNODE n_dns = NWL_NodeAppendNew(nic, "DNS Servers", NFLG_TABLE);
 			for (i = 0; pDnServer != NULL; i++)
 			{
-				PNODE dns = node_append_new(n_dns, "DNS Server", NFLG_TABLE_ROW);
+				PNODE dns = NWL_NodeAppendNew(n_dns, "DNS Server", NFLG_TABLE_ROW);
 				displayAddress(dns, &pDnServer->Address, NULL);
 				pDnServer = pDnServer->Next;
 			}
@@ -211,16 +213,16 @@ PNODE nwinfo_network (int active)
 			displayAddress(nic, &pCurrAddresses->Dhcpv4Server, "DHCP Server");
 		}
 
-		node_att_set(nic, "Transmit Link Speed",
-			GetHumanSize(pCurrAddresses->TransmitLinkSpeed, bps_human_sizes, 1000), NAFLG_FMT_HUMAN_SIZE);
-		node_att_set(nic, "Receive Link Speed",
-			GetHumanSize(pCurrAddresses->ReceiveLinkSpeed, bps_human_sizes, 1000), NAFLG_FMT_HUMAN_SIZE);
-		node_att_setf(nic, "MTU (Byte)", NAFLG_FMT_NUMERIC, "%lu", pCurrAddresses->Mtu);
+		NWL_NodeAttrSet(nic, "Transmit Link Speed",
+			NWL_GetHumanSize(pCurrAddresses->TransmitLinkSpeed, bps_human_sizes, 1000), NAFLG_FMT_HUMAN_SIZE);
+		NWL_NodeAttrSet(nic, "Receive Link Speed",
+			NWL_GetHumanSize(pCurrAddresses->ReceiveLinkSpeed, bps_human_sizes, 1000), NAFLG_FMT_HUMAN_SIZE);
+		NWL_NodeAttrSetf(nic, "MTU (Byte)", NAFLG_FMT_NUMERIC, "%lu", pCurrAddresses->Mtu);
 		if (IfTable && pCurrAddresses->IfIndex > 0)
 		{
 			ULONG idx = pCurrAddresses->IfIndex - 1;
-			node_att_setf(nic, "Received (Octets)", NAFLG_FMT_NUMERIC, "%u", IfTable->table[idx].dwInOctets);
-			node_att_setf(nic, "Sent (Octets)", NAFLG_FMT_NUMERIC, "%u", IfTable->table[idx].dwOutOctets);
+			NWL_NodeAttrSetf(nic, "Received (Octets)", NAFLG_FMT_NUMERIC, "%u", IfTable->table[idx].dwInOctets);
+			NWL_NodeAttrSetf(nic, "Sent (Octets)", NAFLG_FMT_NUMERIC, "%u", IfTable->table[idx].dwOutOctets);
 		}
 next_addr:
 		pCurrAddresses = pCurrAddresses->Next;

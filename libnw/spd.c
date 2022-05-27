@@ -4,7 +4,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <windows.h>
-#include "nwinfo.h"
+
+#include "libnw.h"
+#include "utils.h"
 #include "spd.h"
 
 #if 0
@@ -74,7 +76,7 @@ DDR4Capacity(UINT8* rawSpd)
 		RanksPerDimm *= ((rawSpd[6] >> 4U) & 0x07U) + 1;
 
 	Size = SdrCapacity / 8 * BusWidth / SdrWidth * RanksPerDimm;
-	return GetHumanSize(Size, mem_human_sizes, 1024);
+	return NWL_GetHumanSize(Size, mem_human_sizes, 1024);
 }
 
 static const CHAR*
@@ -86,7 +88,7 @@ DDR3Capacity(UINT8* rawSpd)
 	UINT32 busWidth = 8U << (rawSpd[8] & 0x07U);
 	UINT32 Ranks = 1 + ((rawSpd[7] >> 3) & 0x07U);
 	Size = sdrCapacity / 8 * busWidth / sdrWidth * Ranks;
-	return GetHumanSize(Size, mem_human_sizes, 1024);
+	return NWL_GetHumanSize(Size, mem_human_sizes, 1024);
 }
 
 static const CHAR*
@@ -98,7 +100,7 @@ DDR2Capacity(UINT8* rawSpd)
 	k = ((rawSpd[5] & 0x07U) + 1) * rawSpd[17];
 	if (i > 0 && i <= 12 && k > 0)
 		Size = (1ULL << i) * k;
-	return GetHumanSize(Size, mem_human_sizes, 1024);
+	return NWL_GetHumanSize(Size, mem_human_sizes, 1024);
 }
 
 static const CHAR*
@@ -110,7 +112,7 @@ DDRCapacity(UINT8* rawSpd)
 	k = (rawSpd[5] <= 8 && rawSpd[17] <= 8) ? rawSpd[5] * rawSpd[17] : 0;
 	if (i > 0 && i <= 12 && k > 0)
 		Size = (1ULL << i) * k;
-	return GetHumanSize(Size, mem_human_sizes, 1024);
+	return NWL_GetHumanSize(Size, mem_human_sizes, 1024);
 }
 
 static const CHAR*
@@ -237,18 +239,18 @@ static void
 PrintDDR5(PNODE nd, UINT8* rawSpd)
 {
 	UINT i = 0;
-	node_att_setf(nd, "Revision", 0, "%u.%u", rawSpd[1] >> 4, rawSpd[1] & 0x0FU);
+	NWL_NodeAttrSetf(nd, "Revision", 0, "%u.%u", rawSpd[1] >> 4, rawSpd[1] & 0x0FU);
 #if 0
-	node_att_set(nd, "Manufacturer", DDR345Manufacturer(rawSpd[512], rawSpd[513]), 0);
-	node_att_set(nd, "Date", DDR2345Date(rawSpd[515], rawSpd[516]), 0);
-	nwinfo_buffer[0] = '\0';
+	NWL_NodeAttrSet(nd, "Manufacturer", DDR345Manufacturer(rawSpd[512], rawSpd[513]), 0);
+	NWL_NodeAttrSet(nd, "Date", DDR2345Date(rawSpd[515], rawSpd[516]), 0);
+	NWLC->NwBuf[0] = '\0';
 	for (i = 0; i < 4; i++)
-		snprintf(nwinfo_buffer, NWINFO_BUFSZ, "%s%02X", nwinfo_buffer, rawSpd[517 + i]);
-	node_att_set(nd, "Serial", nwinfo_buffer, 0);
-	nwinfo_buffer[0] = '\0';
+		snprintf(NWLC->NwBuf, NWINFO_BUFSZ, "%s%02X", NWLC->NwBuf, rawSpd[517 + i]);
+	NWL_NodeAttrSet(nd, "Serial", NWLC->NwBuf, 0);
+	NWLC->NwBuf[0] = '\0';
 	for (i = 0; i < 20; i++)
-		snprintf(nwinfo_buffer, NWINFO_BUFSZ, "%s%c", nwinfo_buffer, rawSpd[521 + i]);
-	node_att_set(nd, "Part", nwinfo_buffer, 0);
+		snprintf(NWLC->NwBuf, NWINFO_BUFSZ, "%s%c", NWLC->NwBuf, rawSpd[521 + i]);
+	NWL_NodeAttrSet(nd, "Part", NWLC->NwBuf, 0);
 #endif
 }
 
@@ -256,98 +258,99 @@ static void
 PrintDDR4(PNODE nd, UINT8* rawSpd)
 {
 	UINT i = 0;
-	node_att_setf(nd, "Revision", 0, "%u.%u", rawSpd[1] >> 4, rawSpd[1] & 0x0FU);
-	node_att_setf(nd, "Module Type", 0, "%s%s", DDR34ModuleType(rawSpd[3]), (rawSpd[13] & 0x08U) ? " (ECC)" : "");
-	node_att_set(nd, "Capacity", DDR4Capacity(rawSpd), 0);
-	node_att_setf(nd, "Speed (MHz)", NAFLG_FMT_NUMERIC, "%u", DDR4Speed(rawSpd));
-	node_att_set(nd, "Voltage", (rawSpd[11] & 0x01U) ? "1.2 V" : "(Unknown)", 0);
-	node_att_set(nd, "Manufacturer", DDR345Manufacturer(rawSpd[320], rawSpd[321]), 0);
-	node_att_set(nd, "Date", DDR2345Date(rawSpd[323], rawSpd[324]), 0);
-	nwinfo_buffer[0] = '\0';
+	NWL_NodeAttrSetf(nd, "Revision", 0, "%u.%u", rawSpd[1] >> 4, rawSpd[1] & 0x0FU);
+	NWL_NodeAttrSetf(nd, "Module Type", 0, "%s%s", DDR34ModuleType(rawSpd[3]), (rawSpd[13] & 0x08U) ? " (ECC)" : "");
+	NWL_NodeAttrSet(nd, "Capacity", DDR4Capacity(rawSpd), 0);
+	NWL_NodeAttrSetf(nd, "Speed (MHz)", NAFLG_FMT_NUMERIC, "%u", DDR4Speed(rawSpd));
+	NWL_NodeAttrSet(nd, "Voltage", (rawSpd[11] & 0x01U) ? "1.2 V" : "(Unknown)", 0);
+	NWL_NodeAttrSet(nd, "Manufacturer", DDR345Manufacturer(rawSpd[320], rawSpd[321]), 0);
+	NWL_NodeAttrSet(nd, "Date", DDR2345Date(rawSpd[323], rawSpd[324]), 0);
+	NWLC->NwBuf[0] = '\0';
 	for (i = 0; i < 4; i++)
-		snprintf(nwinfo_buffer, NWINFO_BUFSZ, "%s%02X", nwinfo_buffer, rawSpd[325 + i]);
-	node_att_set(nd, "Serial", nwinfo_buffer, 0);
-	nwinfo_buffer[0] = '\0';
+		snprintf(NWLC->NwBuf, NWINFO_BUFSZ, "%s%02X", NWLC->NwBuf, rawSpd[325 + i]);
+	NWL_NodeAttrSet(nd, "Serial", NWLC->NwBuf, 0);
+	NWLC->NwBuf[0] = '\0';
 	for (i = 0; i < 20; i++)
-		snprintf(nwinfo_buffer, NWINFO_BUFSZ, "%s%c", nwinfo_buffer, rawSpd[329 + i]);
-	node_att_set(nd, "Part", nwinfo_buffer, 0);
+		snprintf(NWLC->NwBuf, NWINFO_BUFSZ, "%s%c", NWLC->NwBuf, rawSpd[329 + i]);
+	NWL_NodeAttrSet(nd, "Part", NWLC->NwBuf, 0);
 }
 
 static void
 PrintDDR3(PNODE nd, UINT8* rawSpd)
 {
 	UINT i = 0;
-	node_att_setf(nd, "Revision", 0, "%u.%u", rawSpd[1] >> 4, rawSpd[1] & 0x0FU);
-	node_att_setf(nd, "Module Type", 0, "%s%s", DDR34ModuleType(rawSpd[3]), (rawSpd[8] >> 3 == 1) ? " (ECC)" : "");
-	node_att_set(nd, "Capacity", DDR3Capacity(rawSpd), 0);
-	node_att_setf(nd, "Speed (MHz)", NAFLG_FMT_NUMERIC, "%u", DDR3Speed(rawSpd));
-	node_att_setf(nd, "Supported Voltages", 0, "%s%s%s", (rawSpd[6] & 0x04U) ? " 1.25V" : "",
+	NWL_NodeAttrSetf(nd, "Revision", 0, "%u.%u", rawSpd[1] >> 4, rawSpd[1] & 0x0FU);
+	NWL_NodeAttrSetf(nd, "Module Type", 0, "%s%s", DDR34ModuleType(rawSpd[3]), (rawSpd[8] >> 3 == 1) ? " (ECC)" : "");
+	NWL_NodeAttrSet(nd, "Capacity", DDR3Capacity(rawSpd), 0);
+	NWL_NodeAttrSetf(nd, "Speed (MHz)", NAFLG_FMT_NUMERIC, "%u", DDR3Speed(rawSpd));
+	NWL_NodeAttrSetf(nd, "Supported Voltages", 0, "%s%s%s", (rawSpd[6] & 0x04U) ? " 1.25V" : "",
 		(rawSpd[6] & 0x02U) ? " 1.35V" : "", (rawSpd[6] & 0x01U) ? "" : " 1.5V");
-	node_att_set(nd, "Manufacturer", DDR345Manufacturer(rawSpd[117], rawSpd[118]), 0);
-	node_att_set(nd, "Date", DDR2345Date(rawSpd[120], rawSpd[121]), 0);
-	nwinfo_buffer[0] = '\0';
+	NWL_NodeAttrSet(nd, "Manufacturer", DDR345Manufacturer(rawSpd[117], rawSpd[118]), 0);
+	NWL_NodeAttrSet(nd, "Date", DDR2345Date(rawSpd[120], rawSpd[121]), 0);
+	NWLC->NwBuf[0] = '\0';
 	for (i = 0; i < 4; i++)
-		snprintf(nwinfo_buffer, NWINFO_BUFSZ, "%s%02X", nwinfo_buffer, rawSpd[122 + i]);
-	node_att_set(nd, "Serial", nwinfo_buffer, 0);
-	nwinfo_buffer[0] = '\0';
+		snprintf(NWLC->NwBuf, NWINFO_BUFSZ, "%s%02X", NWLC->NwBuf, rawSpd[122 + i]);
+	NWL_NodeAttrSet(nd, "Serial", NWLC->NwBuf, 0);
+	NWLC->NwBuf[0] = '\0';
 	for (i = 0; i < 20; i++)
-		snprintf(nwinfo_buffer, NWINFO_BUFSZ, "%s%c", nwinfo_buffer, rawSpd[128 + i]);
-	node_att_set(nd, "Part", nwinfo_buffer, 0);
+		snprintf(NWLC->NwBuf, NWINFO_BUFSZ, "%s%c", NWLC->NwBuf, rawSpd[128 + i]);
+	NWL_NodeAttrSet(nd, "Part", NWLC->NwBuf, 0);
 }
 
 static void
 PrintDDR2(PNODE nd, UINT8* rawSpd)
 {
 	UINT i = 0;
-	node_att_setf(nd, "Revision", 0, "%u.%u", rawSpd[1] >> 4, rawSpd[1] & 0x0FU);
-	node_att_setf(nd, "Module Type", 0, "%s%s", DDR2ModuleType(rawSpd[3]), (rawSpd[11] >> 1 == 1) ? " (ECC)" : "");
-	node_att_set(nd, "Capacity", DDR2Capacity(rawSpd), 0);
-	node_att_setf(nd, "Speed (MHz)", NAFLG_FMT_NUMERIC, "%u", DDRSpeed(rawSpd));
-	node_att_set(nd, "Manufacturer", DDRManufacturer(rawSpd + 64), 0);
-	node_att_set(nd, "Date", DDR2345Date(rawSpd[93], rawSpd[94]), 0);
-	nwinfo_buffer[0] = '\0';
+	NWL_NodeAttrSetf(nd, "Revision", 0, "%u.%u", rawSpd[1] >> 4, rawSpd[1] & 0x0FU);
+	NWL_NodeAttrSetf(nd, "Module Type", 0, "%s%s", DDR2ModuleType(rawSpd[3]), (rawSpd[11] >> 1 == 1) ? " (ECC)" : "");
+	NWL_NodeAttrSet(nd, "Capacity", DDR2Capacity(rawSpd), 0);
+	NWL_NodeAttrSetf(nd, "Speed (MHz)", NAFLG_FMT_NUMERIC, "%u", DDRSpeed(rawSpd));
+	NWL_NodeAttrSet(nd, "Manufacturer", DDRManufacturer(rawSpd + 64), 0);
+	NWL_NodeAttrSet(nd, "Date", DDR2345Date(rawSpd[93], rawSpd[94]), 0);
+	NWLC->NwBuf[0] = '\0';
 	for (i = 0; i < 4; i++)
-		snprintf(nwinfo_buffer, NWINFO_BUFSZ, "%s%02X", nwinfo_buffer, rawSpd[95 + i]);
-	node_att_set(nd, "Serial", nwinfo_buffer, 0);
-	nwinfo_buffer[0] = '\0';
+		snprintf(NWLC->NwBuf, NWINFO_BUFSZ, "%s%02X", NWLC->NwBuf, rawSpd[95 + i]);
+	NWL_NodeAttrSet(nd, "Serial", NWLC->NwBuf, 0);
+	NWLC->NwBuf[0] = '\0';
 	for (i = 0; i < 18; i++)
-		snprintf(nwinfo_buffer, NWINFO_BUFSZ, "%s%c", nwinfo_buffer, rawSpd[73 + i]);
-	node_att_set(nd, "Part", nwinfo_buffer, 0);
+		snprintf(NWLC->NwBuf, NWINFO_BUFSZ, "%s%c", NWLC->NwBuf, rawSpd[73 + i]);
+	NWL_NodeAttrSet(nd, "Part", NWLC->NwBuf, 0);
 }
 
 static void
 PrintDDR(PNODE nd, UINT8* rawSpd)
 {
 	UINT i = 0;
-	node_att_setf(nd, "Revision", 0, "%u.%u", rawSpd[1] >> 4, rawSpd[1] & 0x0FU);
-	node_att_set(nd, "Capacity", DDRCapacity(rawSpd), 0);
-	node_att_setf(nd, "Speed (MHz)", NAFLG_FMT_NUMERIC, "%u", DDRSpeed(rawSpd));
-	node_att_set(nd, "Manufacturer", DDRManufacturer(rawSpd + 64), 0);
-	node_att_set(nd, "Date", DDRDate(rawSpd[93], rawSpd[94]), 0);
-	nwinfo_buffer[0] = '\0';
+	NWL_NodeAttrSetf(nd, "Revision", 0, "%u.%u", rawSpd[1] >> 4, rawSpd[1] & 0x0FU);
+	NWL_NodeAttrSet(nd, "Capacity", DDRCapacity(rawSpd), 0);
+	NWL_NodeAttrSetf(nd, "Speed (MHz)", NAFLG_FMT_NUMERIC, "%u", DDRSpeed(rawSpd));
+	NWL_NodeAttrSet(nd, "Manufacturer", DDRManufacturer(rawSpd + 64), 0);
+	NWL_NodeAttrSet(nd, "Date", DDRDate(rawSpd[93], rawSpd[94]), 0);
+	NWLC->NwBuf[0] = '\0';
 	for (i = 0; i < 4; i++)
-		snprintf(nwinfo_buffer, NWINFO_BUFSZ, "%s%02X", nwinfo_buffer, rawSpd[95 + i]);
-	node_att_set(nd, "Serial", nwinfo_buffer, 0);
-	nwinfo_buffer[0] = '\0';
+		snprintf(NWLC->NwBuf, NWINFO_BUFSZ, "%s%02X", NWLC->NwBuf, rawSpd[95 + i]);
+	NWL_NodeAttrSet(nd, "Serial", NWLC->NwBuf, 0);
+	NWLC->NwBuf[0] = '\0';
 	for (i = 0; i < 18; i++)
-		snprintf(nwinfo_buffer, NWINFO_BUFSZ, "%s%c", nwinfo_buffer, rawSpd[73 + i]);
-	node_att_set(nd, "Part", nwinfo_buffer, 0);
+		snprintf(NWLC->NwBuf, NWINFO_BUFSZ, "%s%c", NWLC->NwBuf, rawSpd[73 + i]);
+	NWL_NodeAttrSet(nd, "Part", NWLC->NwBuf, 0);
 }
 
-PNODE
-nwinfo_spd(void)
+PNODE NW_Spd(VOID)
 {
 	int i = 0;
 	UINT8* rawSpd = NULL;
-	PNODE node = node_alloc("SPD", NFLG_TABLE);
-	int saved_human_size = nwinfo_human_size;
-	nwinfo_human_size = 1;
-	SpdInit();
+	PNODE node = NWL_NodeAlloc("SPD", NFLG_TABLE);
+	BOOL saved_human_size = NWLC->HumanSize;
+	if (NWLC->SpdInfo)
+		NWL_NodeAppendChild(NWLC->NwRoot, node);
+	NWLC->HumanSize = TRUE;
+	NWL_SpdInit();
 	for (i = 0; i < 8; i++)
 	{
-		PNODE nspd = node_append_new(node, "Slot", NFLG_TABLE_ROW);
-		node_att_setf(nspd, "ID", NAFLG_FMT_NUMERIC, "%d", i);
-		rawSpd = SpdGet(i);
+		PNODE nspd = NWL_NodeAppendNew(node, "Slot", NFLG_TABLE_ROW);
+		NWL_NodeAttrSetf(nspd, "ID", NAFLG_FMT_NUMERIC, "%d", i);
+		rawSpd = NWL_SpdGet(i);
 		if (!rawSpd)
 		{
 			continue;
@@ -355,60 +358,60 @@ nwinfo_spd(void)
 		switch (rawSpd[2])
 		{
 		case 4:
-			node_att_set(nspd, "Memory Type", "SDRAM", 0);
+			NWL_NodeAttrSet(nspd, "Memory Type", "SDRAM", 0);
 			PrintDDR(nspd, rawSpd);
 			break;
 		case 5:
-			node_att_set(nspd, "Memory Type", "ROM", 0);
+			NWL_NodeAttrSet(nspd, "Memory Type", "ROM", 0);
 			break;
 		case 6:
-			node_att_set(nspd, "Memory Type", "DDR SGRAM", 0);
+			NWL_NodeAttrSet(nspd, "Memory Type", "DDR SGRAM", 0);
 			break;
 		case 7:
-			node_att_set(nspd, "Memory Type", "DDR SDRAM", 0);
+			NWL_NodeAttrSet(nspd, "Memory Type", "DDR SDRAM", 0);
 			PrintDDR(nspd, rawSpd);
 			break;
 		case 8:
-			node_att_set(nspd, "Memory Type", "DDR2 SDRAM", 0);
+			NWL_NodeAttrSet(nspd, "Memory Type", "DDR2 SDRAM", 0);
 			PrintDDR2(nspd, rawSpd);
 			break;
 		case 9:
-			node_att_set(nspd, "Memory Type", "DDR2 SDRAM FB-DIMM", 0);
+			NWL_NodeAttrSet(nspd, "Memory Type", "DDR2 SDRAM FB-DIMM", 0);
 			PrintDDR2(nspd, rawSpd);
 			break;
 		case 10:
-			node_att_set(nspd, "Memory Type", "DDR2 SDRAM FB-DIMM PROBE", 0);
+			NWL_NodeAttrSet(nspd, "Memory Type", "DDR2 SDRAM FB-DIMM PROBE", 0);
 			PrintDDR2(nspd, rawSpd);
 			break;
 		case 11:
-			node_att_set(nspd, "Memory Type", "DDR3 SDRAM", 0);
+			NWL_NodeAttrSet(nspd, "Memory Type", "DDR3 SDRAM", 0);
 			PrintDDR3(nspd, rawSpd);
 			break;
 		case 12:
-			node_att_set(nspd, "Memory Type", "DDR4 SDRAM", 0);
+			NWL_NodeAttrSet(nspd, "Memory Type", "DDR4 SDRAM", 0);
 			PrintDDR4(nspd, rawSpd);
 			break;
 		case 14:
-			node_att_set(nspd, "Memory Type", "DDR4E SDRAM", 0);
+			NWL_NodeAttrSet(nspd, "Memory Type", "DDR4E SDRAM", 0);
 			PrintDDR4(nspd, rawSpd);
 			break;
 		case 15:
-			node_att_set(nspd, "Memory Type", "LPDDR3 SDRAM", 0);
+			NWL_NodeAttrSet(nspd, "Memory Type", "LPDDR3 SDRAM", 0);
 			PrintDDR4(nspd, rawSpd);
 			break;
 		case 16:
-			node_att_set(nspd, "Memory Type", "LPDDR4 SDRAM", 0);
+			NWL_NodeAttrSet(nspd, "Memory Type", "LPDDR4 SDRAM", 0);
 			PrintDDR4(nspd, rawSpd);
 			break;
 		case 18:
-			node_att_set(nspd, "Memory Type", "DDR5 SDRAM", 0);
+			NWL_NodeAttrSet(nspd, "Memory Type", "DDR5 SDRAM", 0);
 			PrintDDR5(nspd, rawSpd);
 			break;
 		default:
-			node_att_set(nspd, "Memory Type", "UNKNOWN", 0);
+			NWL_NodeAttrSet(nspd, "Memory Type", "UNKNOWN", 0);
 		}
 	}
-	SpdFini();
-	nwinfo_human_size = saved_human_size;
+	NWL_SpdFini();
+	NWLC->HumanSize = saved_human_size;
 	return node;
 }

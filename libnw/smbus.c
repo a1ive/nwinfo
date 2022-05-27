@@ -1,11 +1,9 @@
 // SPDX-License-Identifier: Unlicense
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <windows.h>
-#include "libcpuid.h"
-#include "winring0/winring0.h"
-#include "nwinfo.h"
+#include <libcpuid.h>
+#include <winring0.h>
+#include "libnw.h"
+#include "utils.h"
 #include "spd.h"
 
 #define PCI_CONF_TYPE_NONE 0
@@ -447,30 +445,30 @@ static int find_smb_controller(void)
 static int smbus_index = -1;
 
 void
-SpdInit(void)
+NWL_SpdInit(void)
 {
 	if ((driver = cpu_msr_driver_open()) == NULL) {
 		return;
 	}
 	if (pci_check_direct() != 0) {
-		printf("pci check failed\n");
+		fprintf(stderr, "pci check failed\n");
 		return;
 	}
 	smbus_index = find_smb_controller();
 	if (smbus_index == -1) {
-		printf("unsupported smbus controller\n");
+		fprintf(stderr, "unsupported smbus controller\n");
 		return;
 	}
 	spd_raw = malloc(SPD_DATA_LEN);
 	if (!spd_raw) {
-		printf("out of memory\n");
+		fprintf(stderr, "out of memory\n");
 		return;
 	}
 	smbcontrollers[smbus_index].get_adr();
 }
 
 void*
-SpdGet(int dimmadr)
+NWL_SpdGet(int dimmadr)
 {
 	unsigned short x;
 	if (smbus_index < 0 || dimmadr < 0)
@@ -494,7 +492,7 @@ SpdGet(int dimmadr)
 }
 
 void
-SpdFini(void)
+NWL_SpdFini(void)
 {
 	free(spd_raw);
 	cpu_msr_driver_close(driver);
