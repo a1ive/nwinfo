@@ -1,0 +1,70 @@
+// SPDX-License-Identifier: Unlicense
+
+#pragma once
+
+#include "targetver.h"
+#include <windows.h>
+#include <stdlib.h>
+#include <malloc.h>
+#include <memory.h>
+#include <tchar.h>
+#include <commctrl.h>
+
+#include "resource.h"
+
+#include <libnw.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+typedef struct _GNW_CONTEXT
+{
+	HINSTANCE hInst;
+	HWND hWnd;
+	HANDLE hMutex;
+	NWLIB_CONTEXT nCtx;
+
+	HIMAGELIST hImageList;
+
+	HTREEITEM htRoot;
+
+	HTREEITEM htAcpi;
+	PNODE pnAcpi;
+	HTREEITEM htCpuid;
+	PNODE pnCpuid;
+	HTREEITEM htDisk;
+	PNODE pnDisk;
+	HTREEITEM htEdid;
+	PNODE pnEdid;
+	HTREEITEM htNetwork;
+	PNODE pnNetwork;
+	HTREEITEM htPci;
+	PNODE pnPci;
+	HTREEITEM htSmbios;
+	PNODE pnSmbios;
+	HTREEITEM htSpd;
+	PNODE pnSpd;
+	HTREEITEM htSystem;
+	PNODE pnSystem;
+	HTREEITEM htUsb;
+	PNODE pnUsb;
+} GNW_CONTEXT;
+extern GNW_CONTEXT GNWC;
+
+VOID GNW_Init(HINSTANCE hInstance, INT nCmdShow, DLGPROC lpDialogFunc);
+VOID __declspec(noreturn) GNW_Exit(INT nExitCode);
+
+VOID GNW_TreeInit(VOID);
+HTREEITEM GNW_TreeAdd(HTREEITEM hParent, LPCSTR lpszItem, INT nLevel, INT nIcon, LPVOID lpConfig);
+VOID GNW_TreeExpand(HTREEITEM hTree);
+VOID GNW_TreeDelete(HTREEITEM hTree);
+INT_PTR GNW_TreeUpdate(HWND hWnd, WPARAM wParam, LPARAM lParam);
+
+VOID GNW_ListInit(VOID);
+VOID GNW_ListAdd(PNODE node, BOOL bSkipChild);
+VOID GNW_ListClean(VOID);
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
