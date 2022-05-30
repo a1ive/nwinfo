@@ -40,6 +40,23 @@ MainMenuProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	return (INT_PTR)TRUE;
 }
 
+static VOID
+MainDlgResize(HWND hWnd, UINT nWidth, UINT nHeight)
+{
+	int x, cx;
+	HWND hwndTV = GetDlgItem(GNWC.hWnd, IDC_MAIN_TREE);
+	HWND hwndLV = GetDlgItem(GNWC.hWnd, IDC_MAIN_LIST);
+	if (!hwndTV || !hwndLV)
+		return;
+	x = nWidth / 4;
+	SetWindowPos(hwndTV, NULL, 0, 0, x, nHeight, 0);
+	cx = nWidth - x;
+	SetWindowPos(hwndLV, NULL, x, 0, cx, nHeight, 0);
+	ListView_SetColumnWidth(hwndLV, 0, cx / 4);
+	ListView_SetColumnWidth(hwndLV, 1, cx / 4);
+	ListView_SetColumnWidth(hwndLV, 2, cx / 2);
+}
+
 static INT_PTR CALLBACK
 MainDlgProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
@@ -51,6 +68,9 @@ MainDlgProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		return (INT_PTR)TRUE;
 	case WM_NOTIFY:
 		return GNW_TreeUpdate(hWnd, wParam, lParam);
+	case WM_SIZE:
+		MainDlgResize(hWnd, LOWORD(lParam), HIWORD(lParam));
+		return (INT_PTR)TRUE;
 	case WM_SYSCOMMAND:
 		if (wParam == SC_CLOSE)
 			DestroyWindow(hWnd);
