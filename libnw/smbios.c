@@ -377,11 +377,217 @@ static void ProcCacheInfo(PNODE tab, void* p)
 		NWL_NodeAttrSetf(tab, "Cache Speed (ns)", NAFLG_FMT_NUMERIC, "%u", pCache->Speed);
 }
 
+static const CHAR*
+pIntConnectTypeToStr(UCHAR Type)
+{
+	switch (Type)
+	{
+	case 0x00: return "None";
+	case 0x01: return "Centronics";
+	case 0x02: return "Mini Centronics";
+	case 0x03: return "Proprietary";
+	case 0x04: return "DB-25 pin male";
+	case 0x05: return "DB-25 pin female";
+	case 0x06: return "DB-15 pin male";
+	case 0x07: return "DB-15 pin female";
+	case 0x08: return "DB-9 pin male";
+	case 0x09: return "DB-9 pin female";
+	case 0x0a: return "RJ-11";
+	case 0x0b: return "RJ-45";
+	case 0x0c: return "50 Pin MiniSCSI";
+	case 0x0d: return "Mini-DIN";
+	case 0x0e: return "Micro-DIN";
+	case 0x0f: return "PS/2";
+	case 0x10: return "Infrared";
+	case 0x11: return "HP-HIL";
+	case 0x12: return "Access Bus (USB)";
+	case 0x13: return "SSA SCSI";
+	case 0x14: return "Circular DIN-8 male";
+	case 0x15: return "Circular DIN-8 female";
+	case 0x16: return "On Board IDE";
+	case 0x17: return "On Board Floppy";
+	case 0x18: return "9-pin Dual Inline (pin 10 cut)";
+	case 0x19: return "25-pin Dual Inline (pin 26 cut)";
+	case 0x1a: return "50-pin Dual Inline";
+	case 0x1b: return "68-pin Dual Inline";
+	case 0x1c: return "On Board Sound Input from CD-ROM";
+	case 0x1d: return "Mini-Centronics Type-14";
+	case 0x1e: return "Mini-Centronics Type-26";
+	case 0x1f: return "Mini-jack (headphones)";
+	case 0x20: return "BNC";
+	case 0x21: return "1394";
+	case 0x22: return "SAS/SATA Plug Receptacle";
+	case 0x23: return "USB Type-C Receptacle";
+	case 0xa0: return "PC-98";
+	case 0xa1: return "PC-98Hireso";
+	case 0xa2: return "PC-H98";
+	case 0xa3: return "PC-98Note";
+	case 0xa4: return "PC-98Full";
+	}
+	return "Other";
+}
+
+static const CHAR*
+pPortTypeToStr(UCHAR Type)
+{
+	switch (Type)
+	{
+	case 0x00: return "None";
+	case 0x01: return "Parallel Port XT/AT Compatible";
+	case 0x02: return "Parallel Port PS/2";
+	case 0x03: return "Parallel Port ECP";
+	case 0x04: return "Parallel Port EPP";
+	case 0x05: return "Parallel Port ECP/EPP";
+	case 0x06: return "Serial Port XT/AT Compatible";
+	case 0x07: return "Serial Port 16450 Compatible";
+	case 0x08: return "Serial Port 16550 Compatible";
+	case 0x09: return "Serial Port 16550A Compatible";
+	case 0x0a: return "SCSI Port";
+	case 0x0b: return "MIDI Port";
+	case 0x0c: return "Joy Stick Port";
+	case 0x0d: return "Keyboard Port";
+	case 0x0e: return "Mouse Port";
+	case 0x0f: return "SSA SCSI";
+	case 0x10: return "USB";
+	case 0x11: return "FireWire (IEEE P1394)";
+	case 0x12: return "PCMCIA Type I";
+	case 0x13: return "PCMCIA Type II";
+	case 0x14: return "PCMCIA Type III";
+	case 0x15: return "Cardbus";
+	case 0x16: return "Access Bus Port";
+	case 0x17: return "SCSI II";
+	case 0x18: return "SCSI Wide";
+	case 0x19: return "PC-98";
+	case 0x1a: return "PC-98-Hireso";
+	case 0x1b: return "PC-H98";
+	case 0x1c: return "Video Port";
+	case 0x1d: return "Audio Port";
+	case 0x1e: return "Modem Port";
+	case 0x1f: return "Network Port";
+	case 0x20: return "SATA";
+	case 0x21: return "SAS";
+	case 0x22: return "MFDP (Multi-Function Display Port)";
+	case 0x23: return "Thunderbolt";
+	case 0xa0: return "8251 Compatible";
+	case 0xa1: return "8251 FIFO Compatible";
+	}
+	return "Other";
+}
+
+static void ProcPortConnectInfo(PNODE tab, void* p)
+{
+	PPortConnectInfo pPort = (PPortConnectInfo)p;
+	const char* str = toPointString(p);
+
+	NWL_NodeAttrSet(tab, "Description", "Port Connector Information", 0);
+	NWL_NodeAttrSet(tab, "Internal Reference Designator", LocateString(str, pPort->IntDesignator), 0);
+	NWL_NodeAttrSet(tab, "Internal Connector Type", pIntConnectTypeToStr(pPort->IntConnectorType), 0);
+	NWL_NodeAttrSet(tab, "External Reference Designator", LocateString(str, pPort->ExtDesignator), 0);
+	NWL_NodeAttrSet(tab, "External Connector Type", pIntConnectTypeToStr(pPort->ExtConnectorType), 0);
+	NWL_NodeAttrSet(tab, "Port Type", pPortTypeToStr(pPort->PortType), 0);
+}
+
+static void ProcPSystemSlots(PNODE tab, void* p)
+{
+	PSystemSlots pSys = (PSystemSlots)p;
+	const char* str = toPointString(p);
+
+	NWL_NodeAttrSet(tab, "Description", "System Slots", 0);
+	NWL_NodeAttrSet(tab, "Slot Designation", LocateString(str, pSys->SlotDesignation), 0);
+}
+
+static const CHAR*
+pOnBoardDeviceTypeToStr(UCHAR Type)
+{
+	switch (Type)
+	{
+	case 0x01: return "Other";
+	//case 0x02: return "Unknown";
+	case 0x03: return "Video";
+	case 0x04: return "SCSI Controller";
+	case 0x05: return "Ethernet";
+	case 0x06: return "Token Ring";
+	case 0x07: return "Sound";
+	case 0x08: return "PATA Controller";
+	case 0x09: return "SATA Controller";
+	case 0x0a: return "SAS Controller";
+	}
+	return "Unknown";
+}
+
+static void ProcOnBoardDevInfo(PNODE tab, void* p)
+{
+	UINT count, i;
+	PNODE ndev;
+	POnBoardDevicesInfo pDev = (POnBoardDevicesInfo)p;
+	const char* str = toPointString(p);
+
+	count = (pDev->Header.Length - sizeof(SMBIOSHEADER)) / (sizeof(pDev->DeviceInfo[0]));
+	NWL_NodeAttrSet(tab, "Description", "On Board Devices Information", 0);
+	NWL_NodeAttrSetf(tab, "Number of Devices", NAFLG_FMT_NUMERIC, "%u", count);
+	ndev = NWL_NodeAppendNew(tab, "On Board Devices", NFLG_TABLE);
+	for (i = 0; i < count; i++)
+	{
+		PNODE p = NWL_NodeAppendNew(ndev, "Device", NFLG_TABLE_ROW);
+		UCHAR type = pDev->DeviceInfo[i].DeviceType & 0x7f;
+		UCHAR status = pDev->DeviceInfo[i].DeviceType & 0x90;
+		NWL_NodeAttrSet(p, "Type", pOnBoardDeviceTypeToStr(type), 0);
+		NWL_NodeAttrSet(p, "Status", status ? "Enabled" : "Disabled", 0);
+		NWL_NodeAttrSet(p, "Description", LocateString(str, pDev->DeviceInfo[i].Description), 0);
+	}
+}
+
 static void ProcOEMString(PNODE tab, void* p)
 {
+	UCHAR i;
+	PNODE nstr;
+	POEMString pString = (POEMString)p;
 	const char* str = toPointString(p);
 	NWL_NodeAttrSet(tab, "Description", "OEM String", 0);
-	NWL_NodeAttrSet(tab, "String", LocateString(str, *(((char*)p) + 4)), 0);
+	NWL_NodeAttrSetf(tab, "Number of Strings", NAFLG_FMT_NUMERIC, "%u", pString->Count);
+	nstr = NWL_NodeAppendNew(tab, "OEM Strings", NFLG_TABLE);
+	for (i = 1; i <= pString->Count; i++)
+	{
+		PNODE p = NWL_NodeAppendNew(nstr, "OEM String", NFLG_TABLE_ROW);
+		NWL_NodeAttrSet(p, "String", LocateString(str, i), 0);
+	}
+}
+
+static void ProcSysConfOptions(PNODE tab, void* p)
+{
+	UCHAR i;
+	PNODE nstr;
+	POEMString pString = (POEMString)p;
+	const char* str = toPointString(p);
+	NWL_NodeAttrSet(tab, "Description", "System Configuration Options", 0);
+	NWL_NodeAttrSetf(tab, "Number of Strings", NAFLG_FMT_NUMERIC, "%u", pString->Count);
+	nstr = NWL_NodeAppendNew(tab, "Configuration Strings", NFLG_TABLE);
+	for (i = 1; i <= pString->Count; i++)
+	{
+		PNODE p = NWL_NodeAppendNew(nstr, "String", NFLG_TABLE_ROW);
+		NWL_NodeAttrSet(p, "String", LocateString(str, i), 0);
+	}
+}
+
+static void ProcBIOSLangInfo(PNODE tab, void* p)
+{
+	PBIOSLangInfo pLang = (PBIOSLangInfo)p;
+	const char* str = toPointString(p);
+
+	NWL_NodeAttrSet(tab, "Description", "BIOS Language Information", 0);
+	NWL_NodeAttrSetf(tab, "Installable Languages", NAFLG_FMT_NUMERIC, "%u", pLang->InstallableLang);
+	NWL_NodeAttrSet(tab, "Current Language", LocateString(str, pLang->CurrentLang), 0);
+}
+
+static void ProcGroupAssoc(PNODE tab, void* p)
+{
+	PGroupAssoc pGA = (PGroupAssoc)p;
+	const char* str = toPointString(p);
+
+	NWL_NodeAttrSet(tab, "Description", "Group Associations", 0);
+	NWL_NodeAttrSet(tab, "Group Name", LocateString(str, pGA->GroupName), 0);
+	NWL_NodeAttrSetf(tab, "Item Type", NAFLG_FMT_NUMERIC, "%u", pGA->ItemType);
+	NWL_NodeAttrSetf(tab, "Item Handle", NAFLG_FMT_NUMERIC, "%u", pGA->ItemHandle);
 }
 
 static const CHAR*
@@ -537,10 +743,25 @@ static void ProcMemoryArrayMappedAddress(PNODE tab, void* p)
 	PMemoryArrayMappedAddress pMAMA = (PMemoryArrayMappedAddress)p;
 
 	NWL_NodeAttrSet(tab, "Description", "Memory Array Mapped Address", 0);
-	NWL_NodeAttrSetf(tab, "Starting Address", 0, "0x%08X", pMAMA->Starting);
-	NWL_NodeAttrSetf(tab, "Ending Address", 0, "0x%08X", pMAMA->Ending);
-	NWL_NodeAttrSetf(tab, "Memory Array Handle", 0, "0x%X", pMAMA->Handle);
+	NWL_NodeAttrSetf(tab, "Starting Address", 0, "0x%016X",
+		pMAMA->StartAddr == 0xFFFFFFFF ? pMAMA->ExtStartAddr : pMAMA->StartAddr);
+	NWL_NodeAttrSetf(tab, "Ending Address", 0, "0x%016X",
+		pMAMA->EndAddr == 0xFFFFFFFF ? pMAMA->ExtEndAddr : pMAMA->EndAddr);
+	NWL_NodeAttrSetf(tab, "Memory Array Handle", NAFLG_FMT_NUMERIC, "%u", pMAMA->Handle);
 	NWL_NodeAttrSetf(tab, "Partition Width", 0, "0x%X", pMAMA->PartitionWidth);
+}
+
+static void ProcMemoryDeviceMappedAddress(PNODE tab, void* p)
+{
+	PMemoryDeviceMappedAddress pMDMA = (PMemoryDeviceMappedAddress)p;
+
+	NWL_NodeAttrSet(tab, "Description", "Memory Device Mapped Address", 0);
+	NWL_NodeAttrSetf(tab, "Starting Address", 0, "0x%016X",
+		pMDMA->StartAddr == 0xFFFFFFFF ? pMDMA->ExtStartAddr : pMDMA->StartAddr);
+	NWL_NodeAttrSetf(tab, "Ending Address", 0, "0x%016X",
+		pMDMA->EndAddr == 0xFFFFFFFF ? pMDMA->ExtEndAddr : pMDMA->EndAddr);
+	NWL_NodeAttrSetf(tab, "Memory Device Handle", NAFLG_FMT_NUMERIC, "%u", pMDMA->MDHandle);
+	NWL_NodeAttrSetf(tab, "Memory Array Mapped Address Handle", NAFLG_FMT_NUMERIC, "%u", pMDMA->MAMAHandle);
 }
 
 static void ProcPortableBattery(PNODE tab, void* p)
@@ -556,6 +777,14 @@ static void ProcPortableBattery(PNODE tab, void* p)
 	NWL_NodeAttrSet(tab, "Device Name", LocateString(str, pPB->DeviceName), 0);
 }
 
+static void ProcSysBootInfo(PNODE tab, void* p)
+{
+	PSysBootInfo pBootInfo = (PSysBootInfo)p;
+	const char* str = toPointString(p);
+
+	NWL_NodeAttrSet(tab, "Description", "System Boot Information", 0);
+}
+
 static void ProcTPMDevice(PNODE tab, void* p)
 {
 	PTPMDevice pTPM = (PTPMDevice)p;
@@ -567,6 +796,11 @@ static void ProcTPMDevice(PNODE tab, void* p)
 		pTPM->Vendor[2], pTPM->Vendor[3]);
 	NWL_NodeAttrSetf(tab, "Spec Version", 0, "%u%u", pTPM->MajorSpecVer, pTPM->MinorSpecVer);
 	NWL_NodeAttrSet(tab, "Description", LocateString(str, pTPM->Description), 0);
+}
+
+static void ProcEndTable(PNODE tab, void* p)
+{
+	NWL_NodeAttrSet(tab, "Description", "End-of-Table", 0);
 }
 
 static void DumpSMBIOSStruct(PNODE node, void* Addr, UINT Len, UINT8 Type)
@@ -583,6 +817,7 @@ static void DumpSMBIOSStruct(PNODE node, void* Addr, UINT Len, UINT8 Type)
 		tab = NWL_NodeAppendNew(node, "Table", NFLG_TABLE_ROW);
 		NWL_NodeAttrSetf(tab, "Table Type", NAFLG_FMT_NUMERIC, "%u", pHeader->Type);
 		NWL_NodeAttrSetf(tab, "Table Length", NAFLG_FMT_NUMERIC, "%u", pHeader->Length);
+		NWL_NodeAttrSetf(tab, "Table Handle", NAFLG_FMT_NUMERIC, "%u", pHeader->Handle);
 		switch (pHeader->Type)
 		{
 		case 0:
@@ -609,8 +844,26 @@ static void DumpSMBIOSStruct(PNODE node, void* Addr, UINT Len, UINT8 Type)
 		case 7:
 			ProcCacheInfo(tab, pHeader);
 			break;
+		case 8:
+			ProcPortConnectInfo(tab, pHeader);
+			break;
+		case 9:
+			ProcPSystemSlots(tab, pHeader);
+			break;
+		case 10:
+			ProcOnBoardDevInfo(tab, pHeader);
+			break;
 		case 11:
 			ProcOEMString(tab, pHeader);
+			break;
+		case 12:
+			ProcSysConfOptions(tab, pHeader);
+			break;
+		case 13:
+			ProcBIOSLangInfo(tab, pHeader);
+			break;
+		case 14:
+			ProcGroupAssoc(tab, pHeader);
 			break;
 		case 16:
 			ProcMemoryArray(tab, pHeader);
@@ -621,11 +874,20 @@ static void DumpSMBIOSStruct(PNODE node, void* Addr, UINT Len, UINT8 Type)
 		case 19:
 			ProcMemoryArrayMappedAddress(tab, pHeader);
 			break;
+		case 20:
+			ProcMemoryDeviceMappedAddress(tab, pHeader);
+			break;
 		case 22:
 			ProcPortableBattery(tab, pHeader);
 			break;
+		case 32:
+			ProcSysBootInfo(tab, pHeader);
+			break;
 		case 43:
 			ProcTPMDevice(tab, pHeader);
+			break;
+		case 127:
+			ProcEndTable(tab, pHeader);
 			break;
 		default:
 			break;

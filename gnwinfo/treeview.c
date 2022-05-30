@@ -45,6 +45,12 @@ GNW_TreeInit(VOID)
 	}
 
 	GNWC.htCpuid = GNW_TreeAdd(GNWC.htRoot, "Processor", 2, IDI_ICON_TVN_CPU, GNWC.pnCpuid);
+	count = NWL_NodeChildCount(GNWC.pnCpuid);
+	for (i = 0; i < count; i++)
+	{
+		node = GNWC.pnCpuid->Children[i].LinkedNode;
+		GNW_TreeAdd(GNWC.htCpuid, node->Name, 3, IDI_ICON_TVN_CPU, node);
+	}
 
 	GNWC.htDisk = GNW_TreeAdd(GNWC.htRoot, "Physical Storage", 2, IDI_ICON_TVN_DISK, NULL);
 	count = NWL_NodeChildCount(GNWC.pnDisk);
@@ -177,6 +183,8 @@ GNW_TreeInit(VOID)
 			icon = IDI_ICON_TVD_PC;
 		else if (_stricmp(type, "2") == 0)
 			icon = IDI_ICON_TVD_FW;
+		else if (_stricmp(type, "3") == 0)
+			icon = IDI_ICON_TVD_PC;
 		else if (_stricmp(type, "4") == 0)
 			icon = IDI_ICON_TVN_CPU;
 		else if (_stricmp(type, "5") == 0)
@@ -185,11 +193,19 @@ GNW_TreeInit(VOID)
 			icon = IDI_ICON_TVN_SPD;
 		else if (_stricmp(type, "7") == 0)
 			icon = IDI_ICON_TVN_CPU;
+		else if (_stricmp(type, "11") == 0)
+			icon = IDI_ICON_TVD_HLP;
+		else if (_stricmp(type, "12") == 0)
+			icon = IDI_ICON_TVD_HLP;
+		else if (_stricmp(type, "13") == 0)
+			icon = IDI_ICON_TVD_HLP;
 		else if (_stricmp(type, "16") == 0)
 			icon = IDI_ICON_TVN_SPD;
 		else if (_stricmp(type, "17") == 0)
 			icon = IDI_ICON_TVN_SPD;
 		else if (_stricmp(type, "19") == 0)
+			icon = IDI_ICON_TVN_SPD;
+		else if (_stricmp(type, "20") == 0)
 			icon = IDI_ICON_TVN_SPD;
 		else if (_stricmp(type, "22") == 0)
 			icon = IDI_ICON_TVD_BAT;
@@ -277,7 +293,7 @@ GNW_TreeUpdate(HWND hWnd, WPARAM wParam, LPARAM lParam)
 	UNREFERENCED_PARAMETER(wParam);
 	UNREFERENCED_PARAMETER(hWnd);
 	HWND hwndTV = GetDlgItem(hWnd, IDC_MAIN_TREE);
-	if (!hwndTV || pnmtv->hdr.code != TVN_SELCHANGINGA)
+	if (!hwndTV || pnmtv->hdr.code != (UINT)TVN_SELCHANGINGA)
 		return (INT_PTR)FALSE;
 	GNW_ListClean();
 	if (pnmtv->itemNew.hItem == GNWC.htSpd && GNWC.pnSpd == NULL)
@@ -303,6 +319,8 @@ GNW_TreeUpdate(HWND hWnd, WPARAM wParam, LPARAM lParam)
 		BOOL bSkipChild = FALSE;
 		HTREEITEM htParent = TreeView_GetParent(hwndTV, pnmtv->itemNew.hItem);
 		if (htParent == GNWC.htDisk)
+			bSkipChild = TRUE;
+		else if (pnmtv->itemNew.hItem == GNWC.htCpuid)
 			bSkipChild = TRUE;
 		GNW_ListAdd((PNODE)pnmtv->itemNew.lParam, bSkipChild);
 	}

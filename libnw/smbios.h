@@ -198,6 +198,62 @@ typedef struct _TYPE_7_
 	DWORD InstalledSize2;
 } CacheInfo, * PCacheInfo;
 
+typedef struct _TYPE_8_
+{
+	SMBIOSHEADER Header;
+	UCHAR IntDesignator;
+	UCHAR IntConnectorType;
+	UCHAR ExtDesignator;
+	UCHAR ExtConnectorType;
+	UCHAR PortType;
+} PortConnectInfo, * PPortConnectInfo;
+
+typedef struct _TYPE_9_
+{
+	SMBIOSHEADER Header;
+	UCHAR SlotDesignation;
+	UCHAR SlotType;
+	UCHAR SlotDataBusWidth;
+	UCHAR CurrentUsage;
+	UCHAR SlotLength;
+	UINT16 SlotID;
+	UCHAR SlotCharacteristics1;
+	UCHAR SlotCharacteristics2;
+} SystemSlots, * PSystemSlots;
+
+typedef struct _TYPE_10_
+{
+	SMBIOSHEADER Header;
+	struct _TYPE_10_DEVICE_INFO
+	{
+		UCHAR DeviceType;
+		UCHAR Description;
+	} DeviceInfo[];
+} OnBoardDevicesInfo, * POnBoardDevicesInfo;
+
+typedef struct _TYPE_11_12_
+{
+	SMBIOSHEADER Header;
+	UCHAR Count;
+} OEMString, * POEMString;
+
+typedef struct _TYPE_13_
+{
+	SMBIOSHEADER Header;
+	UCHAR InstallableLang;
+	UCHAR Flags;
+	UCHAR Reserved[15];
+	UCHAR CurrentLang;
+} BIOSLangInfo, * PBIOSLangInfo;
+
+typedef struct _TYPE_14_
+{
+	SMBIOSHEADER Header;
+	UCHAR GroupName;
+	UCHAR ItemType;
+	WORD ItemHandle;
+} GroupAssoc, * PGroupAssoc;
+
 typedef struct _TYPE_16_
 {
 	SMBIOSHEADER Header;
@@ -235,11 +291,27 @@ typedef struct _TYPE_17_
 typedef struct _TYPE_19_
 {
 	SMBIOSHEADER Header;
-	ULONG32 Starting;
-	ULONG32 Ending;
+	UINT32 StartAddr;
+	UINT32 EndAddr;
 	UINT16 Handle;
 	UCHAR PartitionWidth;
+	UINT64 ExtStartAddr;
+	UINT64 ExtEndAddr;
 } MemoryArrayMappedAddress, * PMemoryArrayMappedAddress;
+
+typedef struct _TYPE_20_
+{
+	SMBIOSHEADER Header;
+	UINT32 StartAddr;
+	UINT32 EndAddr;
+	UINT16 MDHandle;
+	UINT16 MAMAHandle;
+	UCHAR PartitionRowPos;
+	UCHAR InterleavePos;
+	UCHAR InterleavedDataDepth;
+	UINT64 ExtStartAddr;
+	UINT64 ExtEndAddr;
+} MemoryDeviceMappedAddress, * PMemoryDeviceMappedAddress;
 
 typedef struct _TYPE_22_
 {
@@ -254,6 +326,13 @@ typedef struct _TYPE_22_
 	UINT16 DesignVoltage;
 
 } PortableBattery, * PPortableBattery;
+
+typedef struct _TYPE_32_
+{
+	SMBIOSHEADER Header;
+	UCHAR Reserved[6];
+	UCHAR BootStatus[];
+} SysBootInfo, * PSysBootInfo;
 
 typedef struct _TYPE_43_
 {
