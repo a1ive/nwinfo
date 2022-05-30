@@ -34,6 +34,9 @@ MainMenuProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	case IDM_EXIT:
 		DestroyWindow(hWnd);
 		break;
+	case IDM_RELOAD:
+		GNW_Reload();
+		break;
 	default:
 		return DefWindowProcA(hWnd, message, wParam, lParam);
 	}

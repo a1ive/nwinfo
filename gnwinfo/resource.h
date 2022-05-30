@@ -6,6 +6,7 @@
 #define IDC_MAIN_MENU                   102
 #define IDM_ABOUT                       104
 #define IDM_EXIT                        105
+#define IDM_RELOAD                      106
 
 #define IDD_MAIN_DIALOG                 130
 #define IDD_ABOUT_DIALOG                131
@@ -49,7 +50,7 @@
 #define _APS_NO_MFC                     1
 #define _APS_NEXT_RESOURCE_VALUE        162
 #define _APS_NEXT_COMMAND_VALUE         32771
-#define _APS_NEXT_CONTROL_VALUE         1003
+#define _APS_NEXT_CONTROL_VALUE         1005
 #define _APS_NEXT_SYMED_VALUE           110
 #endif
 #endif

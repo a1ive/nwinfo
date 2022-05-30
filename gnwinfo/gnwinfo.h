@@ -53,6 +53,7 @@ typedef struct _GNW_CONTEXT
 extern GNW_CONTEXT GNWC;
 
 VOID GNW_Init(HINSTANCE hInstance, INT nCmdShow, DLGPROC lpDialogFunc);
+VOID GNW_Reload(VOID);
 VOID __declspec(noreturn) GNW_Exit(INT nExitCode);
 
 VOID GNW_TreeInit(VOID);

@@ -6,6 +6,29 @@
 
 GNW_CONTEXT GNWC;
 
+static void
+GNW_Wait(VOID)
+{
+	HWND hwndLV = GetDlgItem(GNWC.hWnd, IDC_MAIN_LIST);
+	HWND hwndTV = GetDlgItem(GNWC.hWnd, IDC_MAIN_TREE);
+	ShowWindow(hwndLV, SW_HIDE);
+	ShowWindow(hwndTV, SW_HIDE);
+	SetWindowTextA(GNWC.hWnd, "Loading, please wait ...");
+	GNWC.pnAcpi = NW_Acpi();
+	GNWC.pnCpuid = NW_Cpuid();
+	GNWC.pnDisk = NW_Disk();
+	GNWC.pnEdid = NW_Edid();
+	GNWC.pnNetwork = NW_Network();
+	GNWC.pnPci = NW_Pci();
+	GNWC.pnSmbios = NW_Smbios();
+	GNWC.pnSystem = NW_System();
+	GNWC.pnUsb = NW_Usb();
+	GNWC.pnSpd = NW_Spd();
+	SetWindowTextA(GNWC.hWnd, "GNWinfo");
+	ShowWindow(hwndLV, SW_SHOW);
+	ShowWindow(hwndTV, SW_SHOW);
+}
+
 VOID
 GNW_Init(HINSTANCE hInstance, INT nCmdShow, DLGPROC lpDialogFunc)
 {
@@ -25,6 +48,7 @@ GNW_Init(HINSTANCE hInstance, INT nCmdShow, DLGPROC lpDialogFunc)
 	GNWC.nCtx.NetInfo = TRUE;
 	GNWC.nCtx.PciInfo = TRUE;
 	GNWC.nCtx.DmiInfo = TRUE;
+	GNWC.nCtx.SpdInfo = TRUE;
 	GNWC.nCtx.SysInfo = TRUE;
 	GNWC.nCtx.UsbInfo = TRUE;
 	if (NW_Init(&GNWC.nCtx) == FALSE)
@@ -44,17 +68,22 @@ GNW_Init(HINSTANCE hInstance, INT nCmdShow, DLGPROC lpDialogFunc)
 		ImageList_AddIcon(GNWC.hImageList, LoadIconA(GNWC.hInst, MAKEINTRESOURCEA(i)));
 	}
 
-	GNWC.pnAcpi = NW_Acpi();
-	GNWC.pnCpuid = NW_Cpuid();
-	GNWC.pnDisk = NW_Disk();
-	GNWC.pnEdid = NW_Edid();
-	GNWC.pnNetwork = NW_Network();
-	GNWC.pnPci = NW_Pci();
-	GNWC.pnSmbios = NW_Smbios();
-	GNWC.pnSystem = NW_System();
-	GNWC.pnUsb = NW_Usb();
+	GNW_Wait();
 
 	GNW_ListInit();
+	GNW_TreeInit();
+
+	GNW_TreeExpand(GNWC.htRoot);
+}
+
+VOID
+GNW_Reload(VOID)
+{
+	NWL_NodeFree(GNWC.nCtx.NwRoot, 1);
+	GNWC.nCtx.NwRoot = NWL_NodeAlloc("NWinfo", 0);
+	
+	GNW_Wait();
+	GNW_TreeDelete(TVI_ROOT);
 	GNW_TreeInit();
 
 	GNW_TreeExpand(GNWC.htRoot);

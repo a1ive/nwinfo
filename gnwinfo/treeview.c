@@ -216,6 +216,16 @@ GNW_TreeInit(VOID)
 	}
 
 	GNWC.htSpd = GNW_TreeAdd(GNWC.htRoot, "Memory SPD", 2, IDI_ICON_TVN_SPD, NULL);
+	count = NWL_NodeChildCount(GNWC.pnSpd);
+	for (i = 0; i < count; i++)
+	{
+		LPSTR mt;
+		node = GNWC.pnSpd->Children[i].LinkedNode;
+		mt = NWL_NodeAttrGet(node, "Memory Type");
+		if (!mt)
+			continue;
+		GNW_TreeAdd(GNWC.htSpd, mt, 3, IDI_ICON_TVN_SPD, node);
+	}
 
 	GNWC.htSystem = GNW_TreeAdd(GNWC.htRoot, "Operating System", 2, IDI_ICON_TVN_SYS, GNWC.pnSystem);
 
@@ -296,24 +306,6 @@ GNW_TreeUpdate(HWND hWnd, WPARAM wParam, LPARAM lParam)
 	if (!hwndTV || pnmtv->hdr.code != (UINT)TVN_SELCHANGINGA)
 		return (INT_PTR)FALSE;
 	GNW_ListClean();
-	if (pnmtv->itemNew.hItem == GNWC.htSpd && GNWC.pnSpd == NULL)
-	{
-		PNODE node;
-		INT i, count;
-		GNWC.nCtx.SpdInfo = TRUE;
-		GNWC.pnSpd = NW_Spd();
-		count = NWL_NodeChildCount(GNWC.pnSpd);
-		for (i = 0; i < count; i++)
-		{
-			LPSTR mt;
-			node = GNWC.pnSpd->Children[i].LinkedNode;
-			mt = NWL_NodeAttrGet(node, "Memory Type");
-			if (!mt)
-				continue;
-			GNW_TreeAdd(GNWC.htSpd, mt, 3, IDI_ICON_TVN_SPD, node);
-		}
-		GNW_TreeExpand(GNWC.htSpd);
-	}
 	if (pnmtv->itemNew.lParam)
 	{
 		BOOL bSkipChild = FALSE;
