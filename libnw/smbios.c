@@ -26,7 +26,7 @@ static void ProcBIOSInfo(PNODE tab, void* p)
 {
 	PBIOSInfo pBIOS = (PBIOSInfo)p;
 	const char* str = toPointString(p);
-	NWL_NodeAttrSet(tab, "Description", "BIOS information", 0);
+	NWL_NodeAttrSet(tab, "Description", "BIOS Information", 0);
 	NWL_NodeAttrSet(tab, "Vendor", LocateString(str, pBIOS->Vendor), 0);
 	NWL_NodeAttrSet(tab, "Version", LocateString(str, pBIOS->Version), 0);
 	NWL_NodeAttrSetf(tab, "Starting Segment", 0, "%04Xh", pBIOS->StartingAddrSeg);
@@ -35,9 +35,9 @@ static void ProcBIOSInfo(PNODE tab, void* p)
 	if (pBIOS->Header.Length > 0x14)
 	{
 		if (pBIOS->MajorRelease != 0xff || pBIOS->MinorRelease != 0xff)
-			NWL_NodeAttrSetf(tab, "System BIOS version", 0, "%u.%u", pBIOS->MajorRelease, pBIOS->MinorRelease);
+			NWL_NodeAttrSetf(tab, "System BIOS Version", 0, "%u.%u", pBIOS->MajorRelease, pBIOS->MinorRelease);
 		if (pBIOS->ECFirmwareMajor != 0xff || pBIOS->ECFirmwareMinor != 0xff)
-			NWL_NodeAttrSetf(tab, "EC Firmware version", 0, "%u.%u", pBIOS->ECFirmwareMajor, pBIOS->ECFirmwareMinor);
+			NWL_NodeAttrSetf(tab, "EC Firmware Version", 0, "%u.%u", pBIOS->ECFirmwareMajor, pBIOS->ECFirmwareMinor);
 	}
 }
 
@@ -46,7 +46,7 @@ static void ProcSysInfo(PNODE tab, void* p)
 	PSystemInfo pSystem = (PSystemInfo)p;
 	const char* str = toPointString(p);
 
-	NWL_NodeAttrSet(tab, "Description", "System information", 0);
+	NWL_NodeAttrSet(tab, "Description", "System Information", 0);
 	NWL_NodeAttrSet(tab, "Manufacturer", LocateString(str, pSystem->Manufacturer), 0);
 	NWL_NodeAttrSet(tab, "Product Name", LocateString(str, pSystem->ProductName), 0);
 	NWL_NodeAttrSet(tab, "Version", LocateString(str, pSystem->Version), 0);
@@ -68,7 +68,7 @@ static void ProcBoardInfo(PNODE tab, void* p)
 	PBoardInfo pBoard = (PBoardInfo)p;
 	const char* str = toPointString(p);
 
-	NWL_NodeAttrSet(tab, "Description", "Base Board information", 0);
+	NWL_NodeAttrSet(tab, "Description", "Base Board Information", 0);
 	NWL_NodeAttrSet(tab, "Manufacturer", LocateString(str, pBoard->Manufacturer), 0);
 	NWL_NodeAttrSet(tab, "Product Name", LocateString(str, pBoard->Product), 0);
 	NWL_NodeAttrSet(tab, "Version", LocateString(str, pBoard->Version), 0);
@@ -84,7 +84,7 @@ static void ProcSystemEnclosure(PNODE tab, void* p)
 {
 	PSystemEnclosure pSysEnclosure = (PSystemEnclosure)p;
 	const char* str = toPointString(p);
-	NWL_NodeAttrSet(tab, "Description", "System Enclosure information", 0);
+	NWL_NodeAttrSet(tab, "Description", "System Enclosure Information", 0);
 	NWL_NodeAttrSet(tab, "Manufacturer", LocateString(str, pSysEnclosure->Manufacturer), 0);
 	NWL_NodeAttrSet(tab, "Version", LocateString(str, pSysEnclosure->Version), 0);
 	NWL_NodeAttrSet(tab, "Serial Number", LocateString(str, pSysEnclosure->SN), 0);
@@ -273,7 +273,7 @@ static void ProcProcessorInfo(PNODE tab, void* p)
 {
 	PProcessorInfo	pProcessor = (PProcessorInfo)p;
 	const char* str = toPointString(p);
-	NWL_NodeAttrSet(tab, "Description", "Processor information", 0);
+	NWL_NodeAttrSet(tab, "Description", "Processor Information", 0);
 	NWL_NodeAttrSet(tab, "Socket Designation", LocateString(str, pProcessor->SocketDesignation), 0);
 	NWL_NodeAttrSet(tab, "Processor Family", pProcessorFamilyToStr(pProcessor->Family), 0);
 	NWL_NodeAttrSet(tab, "Processor Manufacturer", LocateString(str, pProcessor->Manufacturer), 0);
@@ -318,7 +318,7 @@ static void ProcMemCtrlInfo(PNODE tab, void* p)
 {
 	PMemCtrlInfo pMemCtrl = (PMemCtrlInfo)p;
 
-	NWL_NodeAttrSet(tab, "Description", "Memory Controller information", 0);
+	NWL_NodeAttrSet(tab, "Description", "Memory Controller Information", 0);
 	NWL_NodeAttrSetf(tab, "Max Memory Module Size (MB)", NAFLG_FMT_NUMERIC, "%llu", 2ULL << pMemCtrl->MaxMemModuleSize);
 	NWL_NodeAttrSetf(tab, "Number of Slots", NAFLG_FMT_NUMERIC, "%u", pMemCtrl->NumOfSlots);
 }
@@ -328,7 +328,7 @@ static void ProcMemModuleInfo(PNODE tab, void* p)
 	PMemModuleInfo	pMemModule = (PMemModuleInfo)p;
 	const char* str = toPointString(p);
 	UCHAR sz = 0;
-	NWL_NodeAttrSet(tab, "Description", "Memory Module information", 0);
+	NWL_NodeAttrSet(tab, "Description", "Memory Module Information", 0);
 	NWL_NodeAttrSet(tab, "Socket Designation", LocateString(str, pMemModule->SocketDesignation), 0);
 	NWL_NodeAttrSetf(tab, "Current Speed (ns)", NAFLG_FMT_NUMERIC, "%u", pMemModule->CurrentSpeed);
 	sz = pMemModule->InstalledSize & 0x7F;
@@ -343,7 +343,7 @@ static void ProcCacheInfo(PNODE tab, void* p)
 	const char* str = toPointString(p);
 	UINT64 sz = 0;
 
-	NWL_NodeAttrSet(tab, "Description", "Cache information", 0);
+	NWL_NodeAttrSet(tab, "Description", "Cache Information", 0);
 	NWL_NodeAttrSet(tab, "Socket Designation", LocateString(str, pCache->SocketDesignation), 0);
 	if (pCache->MaxSize == 0xffff && pCache->Header.Length > 0x13)
 	{

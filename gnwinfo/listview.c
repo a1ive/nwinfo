@@ -53,7 +53,7 @@ VOID GNW_ListAdd(PNODE node, BOOL bSkipChild)
 		lvi.mask = LVIF_TEXT;
 		lvi.cchTextMax = 0;
 		lvi.iSubItem = 0;
-		lvi.pszText = att->Key;
+		lvi.pszText = GNW_GetText(att->Key);
 		ListView_InsertItem(hwndLV, &lvi);
 		ListView_SetItemText(hwndLV, cur_lvi, 2, (att->Value && att->Value[0] != '\0') ? att->Value : "-");
 		cur_lvi++;
@@ -73,7 +73,7 @@ VOID GNW_ListAdd(PNODE node, BOOL bSkipChild)
 			lvi.mask = LVIF_TEXT;
 			lvi.cchTextMax = 0;
 			lvi.iSubItem = 0;
-			lvi.pszText = child->Name;
+			lvi.pszText = GNW_GetText(child->Name);
 			ListView_InsertItem(hwndLV, &lvi);
 			ListView_SetItemText(hwndLV, cur_lvi, 1, att->Key);
 			ListView_SetItemText(hwndLV, cur_lvi, 2, (att->Value && att->Value[0] != '\0') ? att->Value : "-");
@@ -92,7 +92,7 @@ VOID GNW_ListAdd(PNODE node, BOOL bSkipChild)
 				lvi.mask = LVIF_TEXT;
 				lvi.cchTextMax = 0;
 				lvi.iSubItem = 0;
-				lvi.pszText = row->Name;
+				lvi.pszText = GNW_GetText(row->Name);
 				ListView_InsertItem(hwndLV, &lvi);
 				ListView_SetItemText(hwndLV, cur_lvi, 1, att->Key);
 				ListView_SetItemText(hwndLV, cur_lvi, 2, (att->Value && att->Value[0] != '\0') ? att->Value : "-");

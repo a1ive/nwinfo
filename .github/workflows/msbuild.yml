@@ -35,6 +35,8 @@ jobs:
         md nwinfo
         move x64\Release\nwinfo.exe nwinfo\nwinfo_x64.exe
         move Win32\Release\nwinfo.exe nwinfo\nwinfo_x86.exe
+        move x64\Release\gnwinfo.exe nwinfo\gnwinfo_x64.exe
+        move Win32\Release\gnwinfo.exe nwinfo\gnwinfo_x86.exe
         copy LICENSE nwinfo\LICENSE
         copy pci.ids nwinfo\pci.ids
         copy usb.ids nwinfo\usb.ids

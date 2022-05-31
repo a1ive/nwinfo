@@ -2,6 +2,8 @@
 
 #include "gnwinfo.h"
 
+#pragma warning(disable:4566)
+
 #define CHS_LANG 2052
 
 typedef struct
@@ -33,6 +35,46 @@ static GNW_LANG GNW_LANG_CHS[] =
 	{"Memory SPD", "内存 SPD"},
 	{"Operating System", "操作系统"},
 	{"USB Devices", "USB 设备"},
+
+	{"Cache", "缓存"},
+	{"Features", "特性"},
+	{"SGX", "SGX"},
+
+	{"Status", "状态"},
+	{"ID", "ID"},
+	{"HWID", "硬件 ID"},
+	{"HW Name", "硬件名称"},
+	{"Device", "设备"},
+	{"Type", "类型"},
+	{"Class", "种类"},
+	{"Subclass", "子类"},
+	{"Signature", "签名"},
+	{"Length", "长度"},
+	{"Checksum", "校验码"},
+	{"Checksum Status", "校验码状态"},
+	{"Description", "描述"},
+	{"Date", "日期"},
+	{"Version", "版本"},
+	{"Revision", "修订版"},
+	{"Vendor", "供应商"},
+	{"Manufacturer", "制造商"},
+	{"Serial", "序列号"},
+	{"Serial Number", "序列号"},
+	{"Path", "路径"},
+	{"Size", "大小"},
+	{"Capacity", "容量"},
+	{"Drive Letter", "盘符"},
+	{"Filesystem", "文件系统"},
+	{"Label", "卷标"},
+	{"Free Space", "可用空间"},
+	{"Total Space", "总空间"},
+	{"Partition Table", "分区表"},
+	{"Removable", "可移动"},
+	{"Table Type", "表类型"},
+	{"Table Length", "表长度"},
+	{"Table Handle", "表句柄"},
+	{"Voltage", "电压"},
+	{"Prog IF", "编程接口"},
 };
 
 LPSTR
