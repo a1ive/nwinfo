@@ -54,6 +54,12 @@ typedef struct _GNW_CONTEXT
 } GNW_CONTEXT;
 extern GNW_CONTEXT GNWC;
 
+typedef struct
+{
+	LPCSTR lpEng;
+	LPCSTR lpDst;
+} GNW_LANG;
+
 VOID GNW_Init(HINSTANCE hInstance, INT nCmdShow, DLGPROC lpDialogFunc);
 VOID GNW_Reload(VOID);
 VOID __declspec(noreturn) GNW_Exit(INT nExitCode);

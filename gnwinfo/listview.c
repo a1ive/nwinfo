@@ -11,7 +11,7 @@ VOID GNW_ListInit(VOID)
 		return;
 	if (GetClientRect(hwndLV, &rect) == FALSE)
 		return;
-
+	ListView_SetExtendedListViewStyle(hwndLV, LVS_EX_FULLROWSELECT | LVS_EX_GRIDLINES);
 	lvcName.mask = LVCF_FMT | LVCF_TEXT | LVCF_WIDTH | LVCF_SUBITEM;
 	lvcName.fmt = LVCFMT_LEFT;
 	lvcName.cx = rect.right ? rect.right / 4 : 100;
