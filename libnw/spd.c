@@ -246,7 +246,7 @@ PrintDDR5(PNODE nd, UINT8* rawSpd)
 	NWLC->NwBuf[0] = '\0';
 	for (i = 0; i < 4; i++)
 		snprintf(NWLC->NwBuf, NWINFO_BUFSZ, "%s%02X", NWLC->NwBuf, rawSpd[517 + i]);
-	NWL_NodeAttrSet(nd, "Serial", NWLC->NwBuf, 0);
+	NWL_NodeAttrSet(nd, "Serial Number", NWLC->NwBuf, 0);
 	NWLC->NwBuf[0] = '\0';
 	for (i = 0; i < 20; i++)
 		snprintf(NWLC->NwBuf, NWINFO_BUFSZ, "%s%c", NWLC->NwBuf, rawSpd[521 + i]);
@@ -268,7 +268,7 @@ PrintDDR4(PNODE nd, UINT8* rawSpd)
 	NWLC->NwBuf[0] = '\0';
 	for (i = 0; i < 4; i++)
 		snprintf(NWLC->NwBuf, NWINFO_BUFSZ, "%s%02X", NWLC->NwBuf, rawSpd[325 + i]);
-	NWL_NodeAttrSet(nd, "Serial", NWLC->NwBuf, 0);
+	NWL_NodeAttrSet(nd, "Serial Number", NWLC->NwBuf, 0);
 	NWLC->NwBuf[0] = '\0';
 	for (i = 0; i < 20; i++)
 		snprintf(NWLC->NwBuf, NWINFO_BUFSZ, "%s%c", NWLC->NwBuf, rawSpd[329 + i]);
@@ -290,7 +290,7 @@ PrintDDR3(PNODE nd, UINT8* rawSpd)
 	NWLC->NwBuf[0] = '\0';
 	for (i = 0; i < 4; i++)
 		snprintf(NWLC->NwBuf, NWINFO_BUFSZ, "%s%02X", NWLC->NwBuf, rawSpd[122 + i]);
-	NWL_NodeAttrSet(nd, "Serial", NWLC->NwBuf, 0);
+	NWL_NodeAttrSet(nd, "Serial Number", NWLC->NwBuf, 0);
 	NWLC->NwBuf[0] = '\0';
 	for (i = 0; i < 20; i++)
 		snprintf(NWLC->NwBuf, NWINFO_BUFSZ, "%s%c", NWLC->NwBuf, rawSpd[128 + i]);
@@ -310,7 +310,7 @@ PrintDDR2(PNODE nd, UINT8* rawSpd)
 	NWLC->NwBuf[0] = '\0';
 	for (i = 0; i < 4; i++)
 		snprintf(NWLC->NwBuf, NWINFO_BUFSZ, "%s%02X", NWLC->NwBuf, rawSpd[95 + i]);
-	NWL_NodeAttrSet(nd, "Serial", NWLC->NwBuf, 0);
+	NWL_NodeAttrSet(nd, "Serial Number", NWLC->NwBuf, 0);
 	NWLC->NwBuf[0] = '\0';
 	for (i = 0; i < 18; i++)
 		snprintf(NWLC->NwBuf, NWINFO_BUFSZ, "%s%c", NWLC->NwBuf, rawSpd[73 + i]);
@@ -329,7 +329,7 @@ PrintDDR(PNODE nd, UINT8* rawSpd)
 	NWLC->NwBuf[0] = '\0';
 	for (i = 0; i < 4; i++)
 		snprintf(NWLC->NwBuf, NWINFO_BUFSZ, "%s%02X", NWLC->NwBuf, rawSpd[95 + i]);
-	NWL_NodeAttrSet(nd, "Serial", NWLC->NwBuf, 0);
+	NWL_NodeAttrSet(nd, "Serial Number", NWLC->NwBuf, 0);
 	NWLC->NwBuf[0] = '\0';
 	for (i = 0; i < 18; i++)
 		snprintf(NWLC->NwBuf, NWINFO_BUFSZ, "%s%c", NWLC->NwBuf, rawSpd[73 + i]);

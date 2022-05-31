@@ -415,6 +415,7 @@ static struct pci_smbus_controller smbcontrollers[] =
 	{0x8086, 0x7AA3, "Intel Alder Lake-S",	ich5_get_smb},
 	{0x8086, 0x51A3, "Intel Alder Lake-P",	ich5_get_smb},
 	{0x8086, 0x54A3, "Intel Alder Lake-M",	ich5_get_smb},
+	{0x8086, 0x7A23, "Intel Raptor Lake-S", ich5_get_smb},
 	{0, 0, "", NULL}
 };
 
@@ -479,7 +480,8 @@ NWL_SpdGet(int dimmadr)
 	for (x = 0; x < 256; x++)
 	{
 		spd_raw[x] = ich5_smb_read_byte(0x50 + dimmadr, (unsigned char)x);
-		if (x == 1 && spd_raw[0] == 0xFF && spd_raw[1] == 0xFF)
+		if (x == 1 &&
+			((spd_raw[0] == 0xFF && spd_raw[1] == 0xFF) || spd_raw[0] == 0x01))
 			return NULL;
 	}
 	if (spd_raw[2] < 12) // DDR4

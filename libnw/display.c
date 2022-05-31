@@ -112,7 +112,7 @@ DecodeEDID(PNODE nm, void* pData, DWORD dwSize)
 		(CHAR)((pEDID->Manufacturer & 0x1fU) + 'A' - 1));
 	NWL_NodeAttrSet(nm, "Manufacturer", GetPnpManufacturer(Manufacturer), 0);
 	NWL_NodeAttrSetf(nm, "ID", 0, "%s%04X", Manufacturer, pEDID->Product);
-	NWL_NodeAttrSetf(nm, "Serial", 0, "%08X", pEDID->Serial);
+	NWL_NodeAttrSetf(nm, "Serial Number", 0, "%08X", pEDID->Serial);
 	NWL_NodeAttrSetf(nm, "Date", 0, "%u, Week %u", pEDID->Year + 1990, pEDID->Week & 0x7F);
 	NWL_NodeAttrSetf(nm, "EDID Version", 0, "%u.%u", pEDID->Version, pEDID->Revision);
 	nflags = NWL_NodeAppendNew(nm, "Video Input", NFLG_ATTGROUP);
