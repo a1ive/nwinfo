@@ -122,6 +122,8 @@
   <ItemGroup>
     <ClCompile Include="context.c" />
     <ClCompile Include="gnwinfo.c" />
+    <ClCompile Include="icon.c" />
+    <ClCompile Include="lang.c" />
     <ClCompile Include="listview.c" />
     <ClCompile Include="treeview.c" />
   </ItemGroup>
@@ -144,15 +146,20 @@
     <Image Include="icons\crypto.ico" />
     <Image Include="icons\disk.ico" />
     <Image Include="icons\display.ico" />
+    <Image Include="icons\exit.ico" />
+    <Image Include="icons\export.ico" />
     <Image Include="icons\fw.ico" />
     <Image Include="icons\hd.ico" />
     <Image Include="icons\help.ico" />
+    <Image Include="icons\info.ico" />
+    <Image Include="icons\link.ico" />
     <Image Include="icons\multimedia.ico" />
     <Image Include="icons\network.ico" />
     <Image Include="icons\net_wired.ico" />
     <Image Include="icons\net_wireless.ico" />
     <Image Include="icons\pc.ico" />
     <Image Include="icons\pci.ico" />
+    <Image Include="icons\reload.ico" />
     <Image Include="icons\rm.ico" />
     <Image Include="icons\smbios.ico" />
     <Image Include="icons\spd.ico" />

@@ -15,7 +15,7 @@ VOID GNW_ListInit(VOID)
 	lvcName.mask = LVCF_FMT | LVCF_TEXT | LVCF_WIDTH | LVCF_SUBITEM;
 	lvcName.fmt = LVCFMT_LEFT;
 	lvcName.cx = rect.right ? rect.right / 4 : 100;
-	lvcName.pszText = "Name";
+	lvcName.pszText = GNW_GetText("Name");
 	lvcName.cchTextMax = 0;
 	lvcName.iSubItem = 0;
 	ListView_InsertColumn(hwndLV, lvcName.iSubItem, &lvcName);
@@ -23,7 +23,7 @@ VOID GNW_ListInit(VOID)
 	lvcAttr.mask = LVCF_FMT | LVCF_TEXT | LVCF_WIDTH | LVCF_SUBITEM;
 	lvcAttr.fmt = LVCFMT_LEFT;
 	lvcAttr.cx = rect.right ? rect.right / 4 : 100;
-	lvcAttr.pszText = "Attribute";
+	lvcAttr.pszText = GNW_GetText("Attribute");
 	lvcAttr.cchTextMax = 0;
 	lvcAttr.iSubItem = 1;
 	ListView_InsertColumn(hwndLV, lvcAttr.iSubItem, &lvcAttr);
@@ -31,7 +31,7 @@ VOID GNW_ListInit(VOID)
 	lvcValue.mask = LVCF_FMT | LVCF_TEXT | LVCF_WIDTH | LVCF_SUBITEM;
 	lvcValue.fmt = LVCFMT_LEFT;
 	lvcValue.cx = rect.right ? rect.right - lvcName.cx - lvcAttr.cx : 384;
-	lvcValue.pszText = "Value";
+	lvcValue.pszText = GNW_GetText("Data");
 	lvcValue.cchTextMax = 0;
 	lvcValue.iSubItem = 2;
 	ListView_InsertColumn(hwndLV, lvcValue.iSubItem, &lvcValue);

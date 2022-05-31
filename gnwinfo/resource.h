@@ -4,9 +4,11 @@
 //
 #define IDS_APP_TITLE                   101
 #define IDC_MAIN_MENU                   102
-#define IDM_ABOUT                       104
-#define IDM_EXIT                        105
-#define IDM_RELOAD                      106
+
+#define IDM_RELOAD                      103
+#define IDM_EXIT                        104
+
+#define IDM_ABOUT                       105
 
 #define IDD_MAIN_DIALOG                 130
 #define IDD_ABOUT_DIALOG                131
@@ -35,8 +37,13 @@
 #define IDI_ICON_TVD_RMD                160
 #define IDI_ICON_TVD_PC                 161
 #define IDI_ICON_TVD_EFI                162
+#define IDI_ICON_TVD_EXIT               163
+#define IDI_ICON_TVD_DOC                164
+#define IDI_ICON_TVD_INF                165
+#define IDI_ICON_TVD_LNK                166
+#define IDI_ICON_TVD_REL                167
 
-#define IDI_ICON_MAX                    162
+#define IDI_ICON_MAX                    167
 
 #define IDC_ABOUT_ICON                  1001
 #define IDC_ABOUT_TEXT                  1002
@@ -48,9 +55,9 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NO_MFC                     1
-#define _APS_NEXT_RESOURCE_VALUE        162
+#define _APS_NEXT_RESOURCE_VALUE        168
 #define _APS_NEXT_COMMAND_VALUE         32771
 #define _APS_NEXT_CONTROL_VALUE         1005
-#define _APS_NEXT_SYMED_VALUE           110
+#define _APS_NEXT_SYMED_VALUE           112
 #endif
 #endif

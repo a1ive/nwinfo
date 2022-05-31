@@ -44,6 +44,12 @@
     <ClCompile Include="listview.c">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="icon.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="lang.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="gnwinfo.rc">
@@ -121,6 +127,21 @@
       <Filter>资源文件\tvdev</Filter>
     </Image>
     <Image Include="icons\uefi.ico">
+      <Filter>资源文件\tvdev</Filter>
+    </Image>
+    <Image Include="icons\exit.ico">
+      <Filter>资源文件\tvdev</Filter>
+    </Image>
+    <Image Include="icons\export.ico">
+      <Filter>资源文件\tvdev</Filter>
+    </Image>
+    <Image Include="icons\info.ico">
+      <Filter>资源文件\tvdev</Filter>
+    </Image>
+    <Image Include="icons\link.ico">
+      <Filter>资源文件\tvdev</Filter>
+    </Image>
+    <Image Include="icons\reload.ico">
       <Filter>资源文件\tvdev</Filter>
     </Image>
   </ItemGroup>

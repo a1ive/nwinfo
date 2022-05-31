@@ -15,33 +15,12 @@ GNW_TreeInit(VOID)
 	count = NWL_NodeChildCount(GNWC.pnAcpi);
 	for (i = 0; i < count; i++)
 	{
-		INT icon = IDI_ICON_TVN_DMI;
 		LPSTR name;
 		node = GNWC.pnAcpi->Children[i].LinkedNode;
 		name = NWL_NodeAttrGet(node, "Signature");
 		if (!name)
 			continue;
-		if (_stricmp(name, "UEFI") == 0)
-			icon = IDI_ICON_TVD_EFI;
-		else if (_stricmp(name, "FACP") == 0)
-			icon = IDI_ICON_TVN_ACPI;
-		else if (_stricmp(name, "XSDT") == 0)
-			icon = IDI_ICON_TVN_ACPI;
-		else if (_stricmp(name, "APIC") == 0)
-			icon = IDI_ICON_TVD_FW;
-		else if (_stricmp(name, "MCFG") == 0)
-			icon = IDI_ICON_TVN_SPD;
-		else if (_stricmp(name, "DSDT") == 0)
-			icon = IDI_ICON_TVD_BAT;
-		else if (_stricmp(name, "TPM2") == 0)
-			icon = IDI_ICON_TVD_ENC;
-		else if (_stricmp(name, "WSMT") == 0)
-			icon = IDI_ICON_TVD_ENC;
-		else if (_stricmp(name, "BGRT") == 0)
-			icon = IDI_ICON_TVN_EDID;
-		else if (_stricmp(name, "MSDM") == 0)
-			icon = IDI_ICON_TVN_SYS;
-		GNW_TreeAdd(GNWC.htAcpi, name, 3, icon, node);
+		GNW_TreeAdd(GNWC.htAcpi, name, 3, GNW_IconFromAcpi(node, name), node);
 	}
 
 	GNWC.htCpuid = GNW_TreeAdd(GNWC.htRoot, "Processor", 2, IDI_ICON_TVN_CPU, GNWC.pnCpuid);
@@ -57,15 +36,13 @@ GNW_TreeInit(VOID)
 	for (i = 0; i < count; i++)
 	{
 		HTREEITEM disk;
-		LPSTR path, rm;
-		INT icon = IDI_ICON_TVD_HDD;
+		LPSTR path;
+		INT icon;
 		node = GNWC.pnDisk->Children[i].LinkedNode;
 		path = NWL_NodeAttrGet(node, "Path");
 		if (!path)
 			continue;
-		rm = NWL_NodeAttrGet(node, "Removable");
-		if (rm && _stricmp(rm, "Yes") == 0)
-			icon = IDI_ICON_TVD_RMD;
+		icon = GNW_IconFromDisk(node, path);
 		disk = GNW_TreeAdd(GNWC.htDisk, path, 3, icon, node);
 		if (node->Children[0].LinkedNode)
 		{
@@ -84,7 +61,7 @@ GNW_TreeInit(VOID)
 		}
 	}
 
-	GNWC.htEdid = GNW_TreeAdd(GNWC.htRoot, "Display", 2, IDI_ICON_TVN_EDID, NULL);
+	GNWC.htEdid = GNW_TreeAdd(GNWC.htRoot, "Display Devices", 2, IDI_ICON_TVN_EDID, NULL);
 	count = NWL_NodeChildCount(GNWC.pnEdid);
 	for (i = 0; i < count; i++)
 	{
@@ -96,61 +73,28 @@ GNW_TreeInit(VOID)
 		GNW_TreeAdd(GNWC.htEdid, hwid, 3, IDI_ICON_TVN_EDID, node);
 	}
 
-	GNWC.htNetwork = GNW_TreeAdd(GNWC.htRoot, "Network", 2, IDI_ICON_TVN_NET, NULL);
+	GNWC.htNetwork = GNW_TreeAdd(GNWC.htRoot, "Network Adapter", 2, IDI_ICON_TVN_NET, NULL);
 	count = NWL_NodeChildCount(GNWC.pnNetwork);
 	for (i = 0; i < count; i++)
 	{
-		INT icon = IDI_ICON_TVN_NET;
-		LPSTR name, type;
+		LPSTR name;
 		node = GNWC.pnNetwork->Children[i].LinkedNode;
 		name = NWL_NodeAttrGet(node, "Description");
 		if (!name)
 			name = NWL_NodeAttrGet(node, "Network Adapter");
-		type = NWL_NodeAttrGet(node, "Type");
-		if (!type)
-			icon = IDI_ICON_TVD_HLP;
-		else if (_stricmp(type, "Ethernet") == 0)
-			icon = IDI_ICON_TVD_NE;
-		else if (_stricmp(type, "IEEE 802.11 Wireless") == 0)
-			icon = IDI_ICON_TVD_NW;
-		else if (_stricmp(type, "Tunnel") == 0)
-			icon = IDI_ICON_TVD_ENC;
-		GNW_TreeAdd(GNWC.htNetwork, name, 3, icon, node);
+		GNW_TreeAdd(GNWC.htNetwork, name, 3, GNW_IconFromNetwork(node, name), node);
 	}
 
 	GNWC.htPci = GNW_TreeAdd(GNWC.htRoot, "PCI Devices", 2, IDI_ICON_TVN_PCI, NULL);
 	count = NWL_NodeChildCount(GNWC.pnPci);
 	for (i = 0; i < count; i++)
 	{
-		INT icon = IDI_ICON_TVN_PCI;
-		LPSTR hwid, hwclass;
+		LPSTR hwid;
 		node = GNWC.pnPci->Children[i].LinkedNode;
 		hwid = NWL_NodeAttrGet(node, "HWID");
-		hwclass = NWL_NodeAttrGet(node, "Class");
 		if (!hwid)
 			continue;
-		if (!hwclass || _stricmp(hwclass, "Unclassified device") == 0)
-			icon = IDI_ICON_TVD_HLP;
-		else if (_stricmp(hwclass, "Mass storage controller") == 0)
-			icon = IDI_ICON_TVD_HDD;
-		else if (_stricmp(hwclass, "Network controller") == 0)
-			icon = IDI_ICON_TVD_NE;
-		else if (_stricmp(hwclass, "Display controller") == 0)
-			icon = IDI_ICON_TVN_EDID;
-		else if (_stricmp(hwclass, "Multimedia controller") == 0)
-			icon = IDI_ICON_TVD_MM;
-		else if (_stricmp(hwclass, "Memory controller") == 0)
-			icon = IDI_ICON_TVN_SPD;
-		else if (_stricmp(hwclass, "Bridge") == 0)
-			icon = IDI_ICON_TVD_FW;
-		else if (_stricmp(hwclass, "Processor") == 0)
-			icon = IDI_ICON_TVN_CPU;
-		else if (_stricmp(hwclass, "Wireless controller") == 0)
-			icon = IDI_ICON_TVD_NW;
-		else if (_stricmp(hwclass, "Encryption controller") == 0)
-			icon = IDI_ICON_TVD_ENC;
-
-		GNW_TreeAdd(GNWC.htPci, hwid, 3, icon, node);
+		GNW_TreeAdd(GNWC.htPci, hwid, 3, GNW_IconFromPci(node, hwid), node);
 	}
 
 	node = NULL;
@@ -164,7 +108,7 @@ GNW_TreeInit(VOID)
 	GNWC.htSmbios = GNW_TreeAdd(GNWC.htRoot, "SMBIOS", 2, IDI_ICON_TVN_DMI, node);
 	for (i = 0; i < count; i++)
 	{
-		INT icon = IDI_ICON_TVN_DMI;
+		
 		LPSTR name, type;
 		CHAR tmp[] = "Type 1024";
 		node = GNWC.pnSmbios->Children[i].LinkedNode;
@@ -177,42 +121,7 @@ GNW_TreeInit(VOID)
 			snprintf(tmp, sizeof(tmp), "Type %s", type);
 			name = tmp;
 		}
-		if (_stricmp(type, "0") == 0)
-			icon = IDI_ICON_TVD_EFI;
-		else if (_stricmp(type, "1") == 0)
-			icon = IDI_ICON_TVD_PC;
-		else if (_stricmp(type, "2") == 0)
-			icon = IDI_ICON_TVD_FW;
-		else if (_stricmp(type, "3") == 0)
-			icon = IDI_ICON_TVD_PC;
-		else if (_stricmp(type, "4") == 0)
-			icon = IDI_ICON_TVN_CPU;
-		else if (_stricmp(type, "5") == 0)
-			icon = IDI_ICON_TVN_SPD;
-		else if (_stricmp(type, "6") == 0)
-			icon = IDI_ICON_TVN_SPD;
-		else if (_stricmp(type, "7") == 0)
-			icon = IDI_ICON_TVN_CPU;
-		else if (_stricmp(type, "11") == 0)
-			icon = IDI_ICON_TVD_HLP;
-		else if (_stricmp(type, "12") == 0)
-			icon = IDI_ICON_TVD_HLP;
-		else if (_stricmp(type, "13") == 0)
-			icon = IDI_ICON_TVD_HLP;
-		else if (_stricmp(type, "16") == 0)
-			icon = IDI_ICON_TVN_SPD;
-		else if (_stricmp(type, "17") == 0)
-			icon = IDI_ICON_TVN_SPD;
-		else if (_stricmp(type, "19") == 0)
-			icon = IDI_ICON_TVN_SPD;
-		else if (_stricmp(type, "20") == 0)
-			icon = IDI_ICON_TVN_SPD;
-		else if (_stricmp(type, "22") == 0)
-			icon = IDI_ICON_TVD_BAT;
-		else if (_stricmp(type, "43") == 0)
-			icon = IDI_ICON_TVD_ENC;
-
-		GNW_TreeAdd(GNWC.htSmbios, name, 3, icon, node);
+		GNW_TreeAdd(GNWC.htSmbios, name, 3, GNW_IconFromSmbios(node, type), node);
 	}
 
 	GNWC.htSpd = GNW_TreeAdd(GNWC.htRoot, "Memory SPD", 2, IDI_ICON_TVN_SPD, NULL);
@@ -256,8 +165,8 @@ GNW_TreeAdd(HTREEITEM hParent, LPCSTR lpszItem, INT nLevel, INT nIcon, LPVOID lp
 	tvi.mask = TVIF_TEXT | TVIF_PARAM | TVIF_IMAGE | TVIF_SELECTEDIMAGE;
 	tvi.iImage = (nIcon >= IDI_ICON) ? (nIcon - IDI_ICON) : 0;
 	tvi.iSelectedImage = tvi.iImage;
-	tvi.pszText = (LPSTR)lpszItem;
-	tvi.cchTextMax = (int)(strlen(lpszItem) + 1);
+	tvi.pszText = GNW_GetText(lpszItem);
+	tvi.cchTextMax = (int)(strlen(tvi.pszText) + 1);
 	tvi.lParam = (LPARAM)lpConfig;
 	tvins.item = tvi;
 	tvins.hInsertAfter = hPrev;
@@ -316,5 +225,6 @@ GNW_TreeUpdate(HWND hWnd, WPARAM wParam, LPARAM lParam)
 			bSkipChild = TRUE;
 		GNW_ListAdd((PNODE)pnmtv->itemNew.lParam, bSkipChild);
 	}
+	GNW_TreeExpand(pnmtv->itemNew.hItem);
 	return (INT_PTR)TRUE;
 }

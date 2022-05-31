@@ -13,7 +13,7 @@ GNW_Wait(VOID)
 	HWND hwndTV = GetDlgItem(GNWC.hWnd, IDC_MAIN_TREE);
 	ShowWindow(hwndLV, SW_HIDE);
 	ShowWindow(hwndTV, SW_HIDE);
-	SetWindowTextA(GNWC.hWnd, "Loading, please wait ...");
+	SetWindowTextA(GNWC.hWnd, GNW_GetText("Loading, please wait ..."));
 	GNWC.pnAcpi = NW_Acpi();
 	GNWC.pnCpuid = NW_Cpuid();
 	GNWC.pnDisk = NW_Disk();
@@ -57,8 +57,8 @@ GNW_Init(HINSTANCE hInstance, INT nCmdShow, DLGPROC lpDialogFunc)
 		MAKEINTRESOURCEA(IDD_MAIN_DIALOG), NULL, lpDialogFunc, 0);
 	if (!GNWC.hWnd)
 		GNW_Exit(1);
-	ShowWindow(GNWC.hWnd, nCmdShow);
-	UpdateWindow(GNWC.hWnd);
+
+	GNWC.wLang = GetUserDefaultUILanguage();
 
 	GNWC.hImageList = ImageList_Create(24, 24, ILC_COLOR32, 0, IDI_ICON_MAX - IDI_ICON + 1);
 	if (!GNWC.hImageList)
@@ -67,6 +67,13 @@ GNW_Init(HINSTANCE hInstance, INT nCmdShow, DLGPROC lpDialogFunc)
 	{
 		ImageList_AddIcon(GNWC.hImageList, LoadIconA(GNWC.hInst, MAKEINTRESOURCEA(i)));
 	}
+
+	GNWC.hMenu = GetMenu(GNWC.hWnd);
+	if (!GNWC.hMenu)
+		GNW_Exit(1);
+	GNW_SetMenuText();
+	ShowWindow(GNWC.hWnd, nCmdShow);
+	UpdateWindow(GNWC.hWnd);
 
 	GNW_Wait();
 

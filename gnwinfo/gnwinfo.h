@@ -25,7 +25,9 @@ typedef struct _GNW_CONTEXT
 	HANDLE hMutex;
 	NWLIB_CONTEXT nCtx;
 
+	LANGID wLang;
 	HIMAGELIST hImageList;
+	HMENU hMenu;
 
 	HTREEITEM htRoot;
 
@@ -65,6 +67,15 @@ INT_PTR GNW_TreeUpdate(HWND hWnd, WPARAM wParam, LPARAM lParam);
 VOID GNW_ListInit(VOID);
 VOID GNW_ListAdd(PNODE node, BOOL bSkipChild);
 VOID GNW_ListClean(VOID);
+
+INT GNW_IconFromAcpi(PNODE node, LPCSTR name);
+INT GNW_IconFromDisk(PNODE node, LPCSTR name);
+INT GNW_IconFromNetwork(PNODE node, LPCSTR name);
+INT GNW_IconFromPci(PNODE node, LPCSTR name);
+INT GNW_IconFromSmbios(PNODE node, LPCSTR name);
+
+LPSTR GNW_GetText(LPCSTR lpEng);
+VOID GNW_SetMenuText(VOID);
 
 #ifdef __cplusplus
 } /* extern "C" */
