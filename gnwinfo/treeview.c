@@ -9,7 +9,7 @@ GNW_TreeInit(VOID)
 	INT i, count;
 	TreeView_SetImageList(GetDlgItem(GNWC.hWnd, IDC_MAIN_TREE), GNWC.hImageList, TVSIL_NORMAL);
 
-	GNWC.htRoot = GNW_TreeAdd(NULL, "NWinfo", 1, IDI_ICON_TVD_PC, NULL);
+	GNWC.htRoot = GNW_TreeAdd(NULL, "NWinfo", 1, IDI_ICON_TVD_PC, GNWC.pnRoot);
 
 	GNWC.htAcpi = GNW_TreeAdd(GNWC.htRoot, "ACPI Table", 2, IDI_ICON_TVN_ACPI, NULL);
 	count = NWL_NodeChildCount(GNWC.pnAcpi);
@@ -125,16 +125,6 @@ GNW_TreeInit(VOID)
 	}
 
 	GNWC.htSpd = GNW_TreeAdd(GNWC.htRoot, "Memory SPD", 2, IDI_ICON_TVN_SPD, NULL);
-	count = NWL_NodeChildCount(GNWC.pnSpd);
-	for (i = 0; i < count; i++)
-	{
-		LPSTR mt;
-		node = GNWC.pnSpd->Children[i].LinkedNode;
-		mt = NWL_NodeAttrGet(node, "Memory Type");
-		if (!mt)
-			continue;
-		GNW_TreeAdd(GNWC.htSpd, mt, 3, IDI_ICON_TVN_SPD, node);
-	}
 
 	GNWC.htSystem = GNW_TreeAdd(GNWC.htRoot, "Operating System", 2, IDI_ICON_TVN_SYS, GNWC.pnSystem);
 
@@ -215,6 +205,26 @@ GNW_TreeUpdate(HWND hWnd, WPARAM wParam, LPARAM lParam)
 	if (!hwndTV || pnmtv->hdr.code != (UINT)TVN_SELCHANGINGA)
 		return (INT_PTR)FALSE;
 	GNW_ListClean();
+	if (pnmtv->itemNew.hItem == GNWC.htSpd)
+	{
+		INT i, count;
+		if (!GNWC.pnSpd)
+		{
+			SetWindowTextA(GNWC.hWnd, GNW_GetText("Loading, please wait ..."));
+			GNWC.pnSpd = NW_Spd();
+			SetWindowTextA(GNWC.hWnd, "NWinfo GUI");
+		}
+		count = NWL_NodeChildCount(GNWC.pnSpd);
+		for (i = 0; i < count; i++)
+		{
+			LPSTR mt;
+			PNODE node = GNWC.pnSpd->Children[i].LinkedNode;
+			mt = NWL_NodeAttrGet(node, "Memory Type");
+			if (!mt)
+				continue;
+			GNW_TreeAdd(GNWC.htSpd, mt, 3, IDI_ICON_TVN_SPD, node);
+		}
+	}
 	if (pnmtv->itemNew.lParam)
 	{
 		BOOL bSkipChild = FALSE;

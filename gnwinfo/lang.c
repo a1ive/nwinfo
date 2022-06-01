@@ -50,6 +50,8 @@ GNW_SetMenuText(VOID)
 		1, MF_BYPOSITION | MF_STRING | MF_POPUP,
 		(UINT_PTR)GetSubMenu(GNWC.hMenu, 1), GNW_GetText("Help"));
 	GNW_SetMenuItemText(IDM_RELOAD);
+	GNW_SetMenuItemText(IDM_EXPORT);
 	GNW_SetMenuItemText(IDM_EXIT);
+	GNW_SetMenuItemText(IDM_HOMEPAGE);
 	GNW_SetMenuItemText(IDM_ABOUT);
 }

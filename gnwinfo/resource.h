@@ -6,9 +6,11 @@
 #define IDC_MAIN_MENU                   102
 
 #define IDM_RELOAD                      103
-#define IDM_EXIT                        104
+#define IDM_EXPORT                      104
+#define IDM_EXIT                        105
 
-#define IDM_ABOUT                       105
+#define IDM_HOMEPAGE                    106
+#define IDM_ABOUT                       107
 
 #define IDD_MAIN_DIALOG                 130
 #define IDD_ABOUT_DIALOG                131

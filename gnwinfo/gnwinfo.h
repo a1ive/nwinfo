@@ -18,6 +18,8 @@
 extern "C" {
 #endif
 
+#define GNWINFO_HOMEPAGE "https://github.com/a1ive/nwinfo"
+
 typedef struct _GNW_CONTEXT
 {
 	HINSTANCE hInst;
@@ -30,7 +32,7 @@ typedef struct _GNW_CONTEXT
 	HMENU hMenu;
 
 	HTREEITEM htRoot;
-
+	PNODE pnRoot;
 	HTREEITEM htAcpi;
 	PNODE pnAcpi;
 	HTREEITEM htCpuid;
@@ -62,7 +64,10 @@ typedef struct
 
 VOID GNW_Init(HINSTANCE hInstance, INT nCmdShow, DLGPROC lpDialogFunc);
 VOID GNW_Reload(VOID);
+VOID GNW_Export(VOID);
 VOID __declspec(noreturn) GNW_Exit(INT nExitCode);
+
+PNODE GNW_LibInfo(VOID);
 
 VOID GNW_TreeInit(VOID);
 HTREEITEM GNW_TreeAdd(HTREEITEM hParent, LPCSTR lpszItem, INT nLevel, INT nIcon, LPVOID lpConfig);

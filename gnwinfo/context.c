@@ -14,6 +14,7 @@ GNW_Wait(VOID)
 	ShowWindow(hwndLV, SW_HIDE);
 	ShowWindow(hwndTV, SW_HIDE);
 	SetWindowTextA(GNWC.hWnd, GNW_GetText("Loading, please wait ..."));
+	GNWC.pnRoot = GNW_LibInfo();
 	GNWC.pnAcpi = NW_Acpi();
 	GNWC.pnCpuid = NW_Cpuid();
 	GNWC.pnDisk = NW_Disk();
@@ -23,7 +24,8 @@ GNW_Wait(VOID)
 	GNWC.pnSmbios = NW_Smbios();
 	GNWC.pnSystem = NW_System();
 	GNWC.pnUsb = NW_Usb();
-	GNWC.pnSpd = NW_Spd();
+	//GNWC.pnSpd = NW_Spd();
+
 	SetWindowTextA(GNWC.hWnd, "NWinfo GUI");
 	ShowWindow(hwndLV, SW_SHOW);
 	ShowWindow(hwndTV, SW_SHOW);
@@ -48,7 +50,7 @@ GNW_Init(HINSTANCE hInstance, INT nCmdShow, DLGPROC lpDialogFunc)
 	GNWC.nCtx.NetInfo = TRUE;
 	GNWC.nCtx.PciInfo = TRUE;
 	GNWC.nCtx.DmiInfo = TRUE;
-	GNWC.nCtx.SpdInfo = TRUE;
+	//GNWC.nCtx.SpdInfo = TRUE;
 	GNWC.nCtx.SysInfo = TRUE;
 	GNWC.nCtx.UsbInfo = TRUE;
 	if (NW_Init(&GNWC.nCtx) == FALSE)
@@ -96,10 +98,50 @@ GNW_Reload(VOID)
 	GNW_TreeExpand(GNWC.htRoot);
 }
 
+VOID
+GNW_Export(VOID)
+{
+	OPENFILENAMEA ofn;
+	CHAR FilePath[MAX_PATH];
+	SYSTEMTIME st;
+	GetSystemTime(&st);
+	snprintf(FilePath, MAX_PATH, "nwinfo_report_%u%u%u%u%u%u.json",
+		st.wYear, st.wMonth, st.wDay, st.wHour, st.wMinute, st.wSecond);
+	ZeroMemory(&ofn, sizeof(ofn));
+	ofn.lStructSize = sizeof(ofn);
+	ofn.hwndOwner = GNWC.hWnd;
+	ofn.lpstrFilter = "JSON (*.json)\0*.json\0YAML (*.yaml)\0*.yaml\0";
+	ofn.nFilterIndex = 1;
+	ofn.lpstrFile = FilePath;
+	ofn.nMaxFile = MAX_PATH;
+	ofn.lpstrFileTitle = NULL;
+	ofn.nMaxFileTitle = 0;
+	ofn.lpstrInitialDir = NULL;
+	ofn.Flags = OFN_CREATEPROMPT | OFN_OVERWRITEPROMPT;
+	ofn.lpstrDefExt = "txt";
+	if (!GetSaveFileNameA(&ofn))
+		return;
+	if (fopen_s(&GNWC.nCtx.NwFile, FilePath, "w"))
+	{
+		MessageBoxA(GNWC.hWnd, "Cannot open file!", "ERROR", MB_OK);
+		return;
+	}
+	if (_strnicmp(FilePath + ofn.nFileExtension, "yaml", 3) == 0)
+		NWL_NodeToYaml(GNWC.nCtx.NwRoot, GNWC.nCtx.NwFile, 0);
+	else
+		NWL_NodeToJson(GNWC.nCtx.NwRoot, GNWC.nCtx.NwFile, 0);
+	fclose(GNWC.nCtx.NwFile);
+	GNWC.nCtx.NwFile = NULL;
+}
+
 VOID __declspec(noreturn)
 GNW_Exit(INT nExitCode)
 {
 	NW_Fini();
+	if (GNWC.pnSpd)
+		NWL_NodeFree(GNWC.pnSpd, 1);
+	if (GNWC.pnRoot)
+		NWL_NodeFree(GNWC.pnRoot, 1);
 	ImageList_Destroy(GNWC.hImageList);
 	CloseHandle(GNWC.hMutex);
 	exit(nExitCode);

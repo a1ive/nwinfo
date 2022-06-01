@@ -129,6 +129,7 @@
     <ClCompile Include="gnwinfo.c" />
     <ClCompile Include="icon.c" />
     <ClCompile Include="lang.c" />
+    <ClCompile Include="libinfo.c" />
     <ClCompile Include="listview.c" />
     <ClCompile Include="treeview.c" />
   </ItemGroup>

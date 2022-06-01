@@ -31,8 +31,14 @@ MainMenuProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		DialogBoxParamA(GNWC.hInst,
 			MAKEINTRESOURCEA(IDD_ABOUT_DIALOG), hWnd, AboutDlgProc, 0);
 		break;
+	case IDM_HOMEPAGE:
+		ShellExecuteA(NULL, "open", GNWINFO_HOMEPAGE, NULL, NULL, SW_SHOW);
+		break;
 	case IDM_EXIT:
 		DestroyWindow(hWnd);
+		break;
+	case IDM_EXPORT:
+		GNW_Export();
 		break;
 	case IDM_RELOAD:
 		GNW_Reload();

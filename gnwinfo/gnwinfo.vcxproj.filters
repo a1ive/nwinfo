@@ -53,6 +53,9 @@
     <ClCompile Include="lang.c">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="libinfo.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="gnwinfo.rc">
