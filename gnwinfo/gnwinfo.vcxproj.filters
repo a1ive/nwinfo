@@ -147,5 +147,8 @@
     <Image Include="icons\reload.ico">
       <Filter>资源文件\tvdev</Filter>
     </Image>
+    <Image Include="icons\tree.ico">
+      <Filter>资源文件\tvdev</Filter>
+    </Image>
   </ItemGroup>
 </Project>

@@ -48,12 +48,11 @@ VOID
 NW_Beep(int argc, char* argv[])
 {
 	int i = 0;
-	struct msr_driver_t* drv = NULL;
-	if ((drv = cpu_msr_driver_open()) == NULL)
+	if (NWLC->NwDrv == NULL)
 		return;
 	if (argc < 2)
 	{
-		play_default(drv);
+		play_default(NWLC->NwDrv);
 		goto fail;
 	}
 	for (i = 0; i < argc - 1; i+=2)
@@ -62,9 +61,8 @@ NW_Beep(int argc, char* argv[])
 		unsigned long time = 0;
 		hz = strtoul(argv[i], NULL, 0);
 		time = strtoul(argv[i + 1], NULL, 0);
-		speaker_play(drv, hz, time);
+		speaker_play(NWLC->NwDrv, hz, time);
 	}
 fail:
-	speaker_play(drv, 0, 0);
-	cpu_msr_driver_close(drv);
+	speaker_play(NWLC->NwDrv, 0, 0);
 }

@@ -105,7 +105,7 @@ PrintFADT(PNODE pNode, struct acpi_table_header* Hdr)
 		NWL_NodeAttrSetf(pNode, "PM Timer", 0, "0x%08X", fadt->pm_tmr_blk);
 }
 
-static void PrintTableInfo(PNODE pNode, struct acpi_table_header* Hdr)
+static PNODE PrintTableHeader(PNODE pNode, struct acpi_table_header* Hdr)
 {
 	PNODE tab = NWL_NodeAppendNew(pNode, "Table", NFLG_TABLE_ROW);
 	PrintU8Str(tab, "Signature", Hdr->signature, 4);
@@ -118,6 +118,12 @@ static void PrintTableInfo(PNODE pNode, struct acpi_table_header* Hdr)
 	NWL_NodeAttrSetf(tab, "OEM Revision", 0, "0x%lx", Hdr->oemrev);
 	PrintU8Str(tab, "Creator ID", Hdr->creator_id, 4);
 	NWL_NodeAttrSetf(tab, "Creator Revision", 0, "0x%x", Hdr->creator_rev);
+	return tab;
+}
+
+static void PrintTableInfo(PNODE pNode, struct acpi_table_header* Hdr)
+{
+	PNODE tab = PrintTableHeader(pNode, Hdr);
 	if (memcmp(Hdr->signature, "MSDM", 4) == 0)
 		PrintMSDM(tab, Hdr);
 	else if (memcmp(Hdr->signature, "APIC", 4) == 0)
@@ -129,21 +135,87 @@ static void PrintTableInfo(PNODE pNode, struct acpi_table_header* Hdr)
 	else if (memcmp(Hdr->signature, "FACP", 4) == 0)
 		PrintFADT(tab, Hdr);
 }
-#pragma warning(push)
-// fuck you microsoft
-#pragma warning(disable:6385)
-#pragma warning(disable:6386)
+
+static void
+PrintXSDT(PNODE pNode, struct acpi_table_header* Hdr)
+{
+	UINT32 i, count;
+	PNODE entries;
+	struct acpi_xsdt* xsdt = (struct acpi_xsdt*)Hdr;
+	PNODE tab = PrintTableHeader(pNode, Hdr);
+
+	count = (xsdt->header.length - sizeof(struct acpi_table_header)) / sizeof(xsdt->entry[0]);
+	entries = NWL_NodeAppendNew(tab, "Entries", NFLG_TABLE);
+	for (i = 0; i < count; i++)
+	{
+		PNODE entry;
+		CHAR name[5];
+		struct acpi_table_header *t = NWL_GetAcpiByAddr((DWORD_PTR)xsdt->entry[i]);
+		if (!t)
+			continue;
+		snprintf(name, 5, "%c%c%c%c",
+			t->signature[0], t->signature[1], t->signature[2], t->signature[3]);
+		entry = NWL_NodeAppendNew(entries, name, NFLG_TABLE_ROW);
+		NWL_NodeAttrSetf(entry, "Address", 0, "0x%016llx", xsdt->entry[i]);
+		PrintTableInfo(pNode, t);
+		free(t);
+	}
+}
+
+static void
+PrintRSDT(PNODE pNode, struct acpi_table_header* Hdr)
+{
+	UINT32 i, count;
+	PNODE entries;
+	struct acpi_rsdt* rsdt = (struct acpi_rsdt*)Hdr;
+	PNODE tab = PrintTableHeader(pNode, Hdr);
+
+	count = (rsdt->header.length - sizeof(struct acpi_table_header)) / sizeof(rsdt->entry[0]);
+	entries = NWL_NodeAppendNew(tab, "Entries", NFLG_TABLE);
+	for (i = 0; i < count; i++)
+	{
+		PNODE entry;
+		CHAR name[5];
+		struct acpi_table_header* t = NWL_GetAcpiByAddr((DWORD_PTR)rsdt->entry[i]);
+		if (!t)
+			continue;
+		snprintf(name, 5, "%c%c%c%c",
+			t->signature[0], t->signature[1], t->signature[2], t->signature[3]);
+		entry = NWL_NodeAppendNew(entries, name, NFLG_TABLE_ROW);
+		NWL_NodeAttrSetf(entry, "Address", 0, "0x%08x", rsdt->entry[i]);
+		PrintTableInfo(pNode, t);
+		free(t);
+	}
+}
+
+static void PrintRSDP(PNODE pNode, struct acpi_rsdp_v2* rsdp)
+{
+	PNODE tab = NWL_NodeAppendNew(pNode, "Table", NFLG_TABLE_ROW);
+	PrintU8Str(tab, "Signature", rsdp->rsdpv1.signature, RSDP_SIGNATURE_SIZE);
+	NWL_NodeAttrSetf(tab, "V1 Checksum", 0, "0x%02x", rsdp->checksum);
+	NWL_NodeAttrSet(tab, "V1 Checksum Status",
+		NWL_AcpiChecksum(&rsdp->rsdpv1, sizeof(struct acpi_rsdp_v1)) == 0 ? "OK" : "ERR", 0);
+	PrintU8Str(tab, "OEM ID", rsdp->rsdpv1.oemid, 6);
+	NWL_NodeAttrSetf(tab, "Revision", 0, "0x%02x", rsdp->rsdpv1.revision);
+	NWL_NodeAttrSetf(tab, "RSDT Address", 0, "0x%08x", rsdp->rsdpv1.rsdt_addr);
+	if (rsdp->rsdpv1.revision == 0)
+		return;
+
+	NWL_NodeAttrSetf(tab, "Length", 0, "0x%x", rsdp->length);
+	NWL_NodeAttrSetf(tab, "Checksum", 0, "0x%02x", rsdp->checksum);
+	NWL_NodeAttrSet(tab, "Checksum Status",
+		NWL_AcpiChecksum(rsdp, rsdp->length) == 0 ? "OK" : "ERR", 0);
+	NWL_NodeAttrSetf(tab, "XSDT Address", 0, "0x%016llx", rsdp->xsdt_addr);
+}
+
 PNODE NW_Acpi(VOID)
 {
-	struct acpi_table_header *AcpiHdr = NULL;
-	DWORD* AcpiList = NULL;
-	UINT AcpiListSize = 0, i = 0, j = 0;
 	PNODE pNode = NWL_NodeAlloc("ACPI", NFLG_TABLE);
 	if (NWLC->AcpiInfo)
 		NWL_NodeAppendChild(NWLC->NwRoot, pNode);
 	if (NWLC->AcpiTable)
 	{
-		AcpiHdr = NWL_GetAcpi(NWLC->AcpiTable);
+		struct acpi_table_header* AcpiHdr = NWL_GetAcpi(NWLC->AcpiTable);
 		if (AcpiHdr)
 		{
 			PrintTableInfo(pNode, AcpiHdr);
@@ -151,31 +223,11 @@ PNODE NW_Acpi(VOID)
 		}
 		return pNode;
 	}
-	AcpiListSize = NWL_EnumSystemFirmwareTables('ACPI', NULL, 0);
-	if (AcpiListSize < 4)
-		return pNode;
-	AcpiList = malloc(AcpiListSize);
-	if (!AcpiList)
-		return pNode;
-	NWL_EnumSystemFirmwareTables('ACPI', AcpiList, AcpiListSize);
-	AcpiListSize = AcpiListSize / 4;
-	for (i = 0; i < AcpiListSize; i++)
-	{
-		if (AcpiList[i] == 0)
-			continue;
-		AcpiHdr = NWL_GetAcpi(AcpiList[i]);
-		if (!AcpiHdr)
-			continue;
-		PrintTableInfo(pNode, AcpiHdr);
-		free(AcpiHdr);
-		// remove duplicate elements
-		for (j = i + 1; j < AcpiListSize; j++)
-		{
-			if (AcpiList[i] == AcpiList[j])
-				AcpiList[j] = 0;
-		}
-	}
-	free(AcpiList);
+	if (NWLC->NwRsdp)
+		PrintRSDP(pNode, NWLC->NwRsdp);
+	if (NWLC->NwXsdt)
+		PrintXSDT(pNode, (struct acpi_table_header*)NWLC->NwXsdt);
+	else if (NWLC->NwRsdt)
+		PrintRSDT(pNode, (struct acpi_table_header*)NWLC->NwXsdt);
 	return pNode;
 }
-#pragma warning(pop)

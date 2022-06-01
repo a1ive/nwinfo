@@ -131,7 +131,6 @@
     <ClCompile Include="format.c" />
     <ClCompile Include="libnw.c" />
     <ClCompile Include="network.c" />
-    <ClCompile Include="nt5phys.c" />
     <ClCompile Include="pci.c" />
     <ClCompile Include="smbios.c" />
     <ClCompile Include="smbus.c" />

@@ -86,20 +86,19 @@ static void
 PrintMsr(void)
 {
 	int value = CPU_INVALID_VALUE;
-	struct msr_driver_t* handle = NULL;
 	if (!rdmsr_supported())
 	{
 		fprintf(stderr, "rdmsr not supported\n");
 		return;
 	}
-	if ((handle = cpu_msr_driver_open()) == NULL)
+	if (NWLC->NwDrv == NULL)
 	{
 		fprintf(stderr, "Cannot load driver!\n");
 		return;
 	}
-	int min_multi = cpu_msrinfo(handle, INFO_MIN_MULTIPLIER);
-	int max_multi = cpu_msrinfo(handle, INFO_MAX_MULTIPLIER);
-	int cur_multi = cpu_msrinfo(handle, INFO_CUR_MULTIPLIER);
+	int min_multi = cpu_msrinfo(NWLC->NwDrv, INFO_MIN_MULTIPLIER);
+	int max_multi = cpu_msrinfo(NWLC->NwDrv, INFO_MAX_MULTIPLIER);
+	int cur_multi = cpu_msrinfo(NWLC->NwDrv, INFO_CUR_MULTIPLIER);
 	if (min_multi == CPU_INVALID_VALUE)
 		min_multi = 0;
 	if (max_multi == CPU_INVALID_VALUE)
@@ -110,15 +109,14 @@ PrintMsr(void)
 	NWL_NodeAttrSetf(nmulti, "Current", NAFLG_FMT_NUMERIC, "%.1lf", cur_multi / 100.0);
 	NWL_NodeAttrSetf(nmulti, "Max", NAFLG_FMT_NUMERIC, "%d", max_multi / 100);
 	NWL_NodeAttrSetf(nmulti, "Min", NAFLG_FMT_NUMERIC, "%d", min_multi / 100);
-	if ((value = cpu_msrinfo(handle, INFO_TEMPERATURE)) != CPU_INVALID_VALUE)
+	if ((value = cpu_msrinfo(NWLC->NwDrv, INFO_TEMPERATURE)) != CPU_INVALID_VALUE)
 		NWL_NodeAttrSetf(node, "Temperature (C)", NAFLG_FMT_NUMERIC, "%d", value);
-	if ((value = cpu_msrinfo(handle, INFO_THROTTLING)) != CPU_INVALID_VALUE)
+	if ((value = cpu_msrinfo(NWLC->NwDrv, INFO_THROTTLING)) != CPU_INVALID_VALUE)
 		NWL_NodeAttrSetBool(node, "Throttling", value, 0);
-	if ((value = cpu_msrinfo(handle, INFO_VOLTAGE)) != CPU_INVALID_VALUE)
+	if ((value = cpu_msrinfo(NWLC->NwDrv, INFO_VOLTAGE)) != CPU_INVALID_VALUE)
 		NWL_NodeAttrSetf(node, "Core Voltage (V)", NAFLG_FMT_NUMERIC, "%.2lf", value / 100.0);
-	if ((value = cpu_msrinfo(handle, INFO_BUS_CLOCK)) != CPU_INVALID_VALUE)
+	if ((value = cpu_msrinfo(NWLC->NwDrv, INFO_BUS_CLOCK)) != CPU_INVALID_VALUE)
 		NWL_NodeAttrSetf(node, "Bus Clock (MHz)", NAFLG_FMT_NUMERIC, "%.2lf", value / 100.0);
-	cpu_msr_driver_close(handle);
 }
 
 PNODE NW_Cpuid(VOID)

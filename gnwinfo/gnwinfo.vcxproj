@@ -169,6 +169,7 @@
     <Image Include="icons\smbios.ico" />
     <Image Include="icons\spd.ico" />
     <Image Include="icons\system.ico" />
+    <Image Include="icons\tree.ico" />
     <Image Include="icons\uefi.ico" />
     <Image Include="icons\usb.ico" />
     <Image Include="icons\usb_dev.ico" />

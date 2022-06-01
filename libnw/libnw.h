@@ -12,6 +12,11 @@ extern "C" {
 
 #define NWINFO_BUFSZ 65535
 
+struct msr_driver_t;
+struct acpi_rsdp_v2;
+struct acpi_rsdt;
+struct acpi_xsdt;
+
 typedef struct _NWLIB_CONTEXT
 {
 	BOOL HumanSize;
@@ -32,6 +37,11 @@ typedef struct _NWLIB_CONTEXT
 	UINT8 SmbiosType;
 	LPCSTR PciClass;
 
+	struct acpi_rsdp_v2* NwRsdp;
+	struct acpi_rsdt* NwRsdt;
+	struct acpi_xsdt* NwXsdt;
+
+	struct msr_driver_t* NwDrv;
 	struct _NODE* NwRoot;
 	enum
 	{

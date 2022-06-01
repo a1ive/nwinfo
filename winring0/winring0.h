@@ -167,3 +167,4 @@ uint32_t io_inl(struct msr_driver_t* drv, uint16_t port);
 void io_outb(struct msr_driver_t* drv, uint16_t port, uint8_t value);
 void io_outw(struct msr_driver_t* drv, uint16_t port, uint16_t value);
 void io_outl(struct msr_driver_t* drv, uint16_t port, uint32_t value);
+DWORD phymem_read(struct msr_driver_t* drv, DWORD_PTR address, PBYTE buffer, DWORD count, DWORD unitSize);

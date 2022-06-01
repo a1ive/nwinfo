@@ -5,6 +5,27 @@
 
 #pragma pack(1)
 
+#define RSDP_SIGNATURE "RSD PTR "
+#define RSDP_SIGNATURE_SIZE 8
+
+struct acpi_rsdp_v1
+{
+	UINT8 signature[RSDP_SIGNATURE_SIZE];
+	UINT8 checksum;
+	UINT8 oemid[6];
+	UINT8 revision;
+	UINT32 rsdt_addr;
+};
+
+struct acpi_rsdp_v2
+{
+	struct acpi_rsdp_v1 rsdpv1;
+	UINT32 length;
+	UINT64 xsdt_addr;
+	UINT8 checksum;
+	UINT8 reserved[3];
+};
+
 struct acpi_table_header
 {
 	UINT8 signature[4];
@@ -16,6 +37,18 @@ struct acpi_table_header
 	UINT32 oemrev;
 	UINT8 creator_id[4];
 	UINT32 creator_rev;
+};
+
+struct acpi_rsdt
+{
+	struct acpi_table_header header;
+	UINT32 entry[0];
+};
+
+struct acpi_xsdt
+{
+	struct acpi_table_header header;
+	UINT64 entry[0];
 };
 
 // Microsoft Data Management table structure

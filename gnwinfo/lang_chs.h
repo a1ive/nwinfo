@@ -31,6 +31,9 @@ static GNW_LANG GNW_LANG_CHS[] =
 	{"SGX", "SGX"},
 	{"Multiplier", "倍频"},
 
+	{"OS", "操作系统"},
+	{"Computer Name", "计算机名"},
+	{"Username", "用户名"},
 	{"Min", "最小"},
 	{"Max", "最大"},
 	{"Current", "当前"},
@@ -106,4 +109,8 @@ static GNW_LANG GNW_LANG_CHS[] =
 	{"Product ID", "产品 ID"},
 	{"Product Rev", "产品修订版"},
 	{"MAC Address", "MAC 地址"},
+	{"DHCP ENabled", "已启用 DHCP"},
+	{"Transmit Link Speed", "传输链接速率"},
+	{"Receive Link Speed", "接收链接速率"},
+	{"Subnet Mask", "子网掩码"},
 };

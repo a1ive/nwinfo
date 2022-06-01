@@ -3,6 +3,8 @@
 #include "libnw.h"
 #include "utils.h"
 
+#include <libcpuid.h>
+
 PNWLIB_CONTEXT NWLC = NULL;
 
 BOOL NW_Init(PNWLIB_CONTEXT pContext)
@@ -22,6 +24,10 @@ BOOL NW_Init(PNWLIB_CONTEXT pContext)
 	NWLC->AcpiTable = 0;
 	NWLC->SmbiosType = 127;
 	NWLC->NwRoot = NWL_NodeAlloc("NWinfo", 0);
+	NWLC->NwDrv = cpu_msr_driver_open();
+	NWLC->NwRsdp = NWL_GetRsdp();
+	NWLC->NwRsdt = NWL_GetRsdt();
+	NWLC->NwXsdt = NWL_GetXsdt();
 	return TRUE;
 }
 
@@ -67,6 +73,14 @@ VOID NW_Print(LPCSTR lpFileName)
 
 VOID NW_Fini(VOID)
 {
+	if (NWLC->NwRsdp)
+		free(NWLC->NwRsdp);
+	if (NWLC->NwRsdt)
+		free(NWLC->NwRsdt);
+	if (NWLC->NwXsdt)
+		free(NWLC->NwXsdt);
+	if (NWLC->NwDrv)
+		cpu_msr_driver_close(NWLC->NwDrv);
 	if (NWLC->NwRoot)
 		NWL_NodeFree(NWLC->NwRoot, 1);
 	if (NWLC->NwFile && NWLC->NwFile != stdout)

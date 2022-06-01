@@ -8,6 +8,9 @@
 #include "libnw.h"
 #include "utils.h"
 #include "smbios.h"
+#include "acpi.h"
+#include <libcpuid.h>
+#include <winring0.h>
 
 BOOL NWL_IsAdmin(void)
 {
@@ -92,16 +95,14 @@ NWL_ConvertLengthToIpv4Mask(ULONG MaskLength, ULONG* Mask)
 		*Mask = nt5_htonl(~0U << (32UL - MaskLength));
 }
 
-static BOOL
-NT5ReadMem(PVOID buffer, DWORD address, DWORD length)
+BOOL
+NWL_ReadMemory(PVOID buffer, DWORD_PTR address, DWORD length)
 {
-	BOOL bRet = FALSE;
-	if (!NWL_NT5InitMemory())
+	if (!NWLC->NwDrv)
 		return FALSE;
-	if (NWL_NT5ReadMemory(buffer, address, length))
-		bRet = TRUE;
-	NWL_NT5ExitMemory();
-	return bRet;
+	if (phymem_read(NWLC->NwDrv, address, buffer, length, 1) == 0)
+		return FALSE;
+	return TRUE;
 }
 
 static UINT
@@ -113,9 +114,9 @@ NT5GetSmbios(struct RAW_SMBIOS_DATA* buf, DWORD buflen)
 	bios = malloc(0x10000);
 	if (!bios)
 		return 0;
-	if (!NT5ReadMem(bios, 0xf0000, 0x10000))
+	if (!NWL_ReadMemory(bios, 0xf0000, 0x10000))
 		goto fail;
-	for (ptr = bios; ptr < bios + 0x100000; ptr += 16)
+	for (ptr = bios; ptr < bios + 0x10000; ptr += 16)
 	{
 		if (memcmp(ptr, "_SM_", 4) == 0 && NWL_AcpiChecksum(ptr, sizeof(struct smbios_eps)) == 0)
 		{
@@ -127,7 +128,7 @@ NT5GetSmbios(struct RAW_SMBIOS_DATA* buf, DWORD buflen)
 			buf->MajorVersion = eps->version_major;
 			buf->MinorVersion = eps->version_minor;
 			buf->DmiRevision = eps->intermediate.revision;
-			NT5ReadMem(buf->Data, eps->intermediate.table_address, smbios_len);
+			NWL_ReadMemory(buf->Data, eps->intermediate.table_address, smbios_len);
 			goto fail;
 		}
 		if (memcmp(ptr, "_SM3_", 5) == 0 && NWL_AcpiChecksum(ptr, sizeof(struct smbios_eps3)) == 0)
@@ -139,31 +140,13 @@ NT5GetSmbios(struct RAW_SMBIOS_DATA* buf, DWORD buflen)
 			buf->Length = smbios_len;
 			buf->MajorVersion = eps3->version_major;
 			buf->MinorVersion = eps3->version_minor;
-			NT5ReadMem(buf->Data, (DWORD)eps3->table_address, smbios_len);
+			NWL_ReadMemory(buf->Data, (DWORD_PTR)eps3->table_address, smbios_len);
 			goto fail;
 		}
 	}
 fail:
 	free(bios);
 	return smbios_len + sizeof(struct RAW_SMBIOS_DATA);
-}
-
-UINT
-NWL_EnumSystemFirmwareTables(DWORD FirmwareTableProviderSignature,
-	PVOID pFirmwareTableEnumBuffer, DWORD BufferSize)
-{
-	UINT(WINAPI * NT6EnumSystemFirmwareTables)
-		(DWORD FirmwareTableProviderSignature, PVOID pFirmwareTableEnumBuffer, DWORD BufferSize) = NULL;
-	HMODULE hMod = GetModuleHandleA("kernel32");
-
-	if (hMod)
-		*(FARPROC*)&NT6EnumSystemFirmwareTables = GetProcAddress(hMod, "EnumSystemFirmwareTables");
-
-	if (NT6EnumSystemFirmwareTables)
-		return NT6EnumSystemFirmwareTables(FirmwareTableProviderSignature,
-			pFirmwareTableEnumBuffer, BufferSize);
-	else
-		return 0;
 }
 
 UINT
@@ -186,6 +169,155 @@ NWL_GetSystemFirmwareTable(DWORD FirmwareTableProviderSignature, DWORD FirmwareT
 	return 0;
 }
 
+static struct acpi_rsdp_v2*
+NWL_GetRsdpHelper(struct acpi_rsdp_v2* ptr, DWORD_PTR addr)
+{
+	UINT32 len;
+	struct acpi_rsdp_v2* ret = NULL;
+	if (ptr->rsdpv1.revision == 0)
+		len = sizeof(struct acpi_rsdp_v1);
+	else if (ptr->length > sizeof(struct acpi_rsdp_v2))
+		len = ptr->length;
+	else
+		len = sizeof(struct acpi_rsdp_v2);
+
+	ret = calloc(1, len);
+	if (!ret)
+		return NULL;
+	if (!NWL_ReadMemory(ret, addr, len))
+	{
+		free(ret);
+		return NULL;
+	}
+	return ret;
+}
+
+struct acpi_rsdp_v2 *
+NWL_GetRsdp(VOID)
+{
+	struct acpi_rsdp_v2* ret = NULL;
+	UCHAR* ptr = NULL;
+	UCHAR* bios = NULL;
+	bios = malloc(0x20000);
+	if (!bios)
+		return NULL;
+	// EBDA 0x080000 - 0x09FFFF, 0x10000
+	if (!NWL_ReadMemory(bios, 0x80000, 0x10000))
+		goto out;
+	for (ptr = bios; ptr < bios + 0x10000; ptr += 16)
+	{
+		if (memcmp(ptr, RSDP_SIGNATURE, RSDP_SIGNATURE_SIZE) == 0
+			&& NWL_AcpiChecksum(ptr, sizeof(struct acpi_rsdp_v1)) == 0)
+		{
+			ret = NWL_GetRsdpHelper((struct acpi_rsdp_v2*)ptr, 0x80000 + (ptr - bios));
+			goto out;
+		}
+	}
+	// BIOS 0x0E0000 - 0x100000, 0x20000
+	if (!NWL_ReadMemory(bios, 0xE0000, 0x20000))
+		goto out;
+	for (ptr = bios; ptr < bios + 0x20000; ptr += 16)
+	{
+		if (memcmp(ptr, RSDP_SIGNATURE, RSDP_SIGNATURE_SIZE) == 0
+			&& NWL_AcpiChecksum(ptr, sizeof(struct acpi_rsdp_v1)) == 0)
+		{
+			ret = NWL_GetRsdpHelper((struct acpi_rsdp_v2*)ptr, 0xE0000 + (ptr - bios));
+			goto out;
+		}
+	}
+out:
+	free(bios);
+	return ret;
+}
+
+static PVOID NWL_GetSysAcpi(DWORD TableId)
+{
+	PVOID pFirmwareTableBuffer = NULL;
+	UINT BufferSize = 0;
+	BufferSize = NWL_GetSystemFirmwareTable('ACPI', TableId, NULL, 0);
+	if (BufferSize == 0)
+		return NULL;
+	pFirmwareTableBuffer = malloc(BufferSize);
+	if (!pFirmwareTableBuffer)
+		return NULL;
+	NWL_GetSystemFirmwareTable('ACPI', TableId, pFirmwareTableBuffer, BufferSize);
+	return pFirmwareTableBuffer;
+}
+
+struct acpi_rsdt *
+NWL_GetRsdt(VOID)
+{
+	struct acpi_rsdt tmp;
+	struct acpi_rsdt* ret = NULL;
+	if (!NWLC->NwRsdp)
+		return NWL_GetSysAcpi('TDSR');
+	if (!NWL_ReadMemory(&tmp, NWLC->NwRsdp->rsdpv1.rsdt_addr, sizeof(struct acpi_rsdt)))
+		return NWL_GetSysAcpi('TDSR');
+	if (tmp.header.length < sizeof(struct acpi_table_header))
+		tmp.header.length = sizeof(struct acpi_table_header);
+	ret = malloc(tmp.header.length);
+	if (!ret)
+		return NWL_GetSysAcpi('TDSR');
+	if (!NWL_ReadMemory(ret, NWLC->NwRsdp->rsdpv1.rsdt_addr, tmp.header.length))
+	{
+		free(ret);
+		return NULL;
+	}
+	return ret;
+}
+
+struct acpi_xsdt *
+NWL_GetXsdt(VOID)
+{
+	struct acpi_xsdt tmp;
+	struct acpi_xsdt* ret = NULL;
+	if (!NWLC->NwRsdp)
+		return NWL_GetSysAcpi('TDSX');
+	if (NWLC->NwRsdp->rsdpv1.revision == 0) // v1
+		return NULL;
+	if (!NWL_ReadMemory(&tmp, (DWORD_PTR)NWLC->NwRsdp->xsdt_addr, sizeof(struct acpi_xsdt)))
+		return NWL_GetSysAcpi('TDSX');
+	if (tmp.header.length < sizeof(struct acpi_table_header))
+		tmp.header.length = sizeof(struct acpi_table_header);
+	ret = malloc(tmp.header.length);
+	if (!ret)
+		return NWL_GetSysAcpi('TDSX');
+	if (!NWL_ReadMemory(ret, (DWORD_PTR)NWLC->NwRsdp->xsdt_addr, tmp.header.length))
+	{
+		free(ret);
+		return NULL;
+	}
+	return ret;
+}
+
+PVOID NWL_GetAcpi(DWORD TableId)
+{
+	if (TableId == 'TDSR')
+		return NWL_GetRsdt();
+	if (TableId == 'TDSX')
+		return NWL_GetXsdt();
+	return NWL_GetSysAcpi(TableId);
+}
+
+PVOID NWL_GetAcpiByAddr(DWORD_PTR Addr)
+{
+	PVOID ret;
+	struct acpi_table_header tmp;
+	if (!NWL_ReadMemory(&tmp, Addr, sizeof(struct acpi_table_header)))
+		return NULL;
+	if (tmp.length < sizeof(struct acpi_table_header))
+		tmp.length = sizeof(struct acpi_table_header);
+	ret = malloc(tmp.length);
+	if (!ret)
+		return NULL;
+	if (!NWL_ReadMemory(ret, Addr, tmp.length))
+	{
+		free(ret);
+		return NULL;
+	}
+	return ret;
+}
+
 DWORD
 NWL_GetFirmwareEnvironmentVariable(LPCSTR lpName, LPCSTR lpGuid,
 	PVOID pBuffer, DWORD nSize)
@@ -202,20 +334,6 @@ NWL_GetFirmwareEnvironmentVariable(LPCSTR lpName, LPCSTR lpGuid,
 		return NT6GetFirmwareEnvironmentVariable(lpName, lpGuid, pBuffer, nSize);
 	SetLastError(ERROR_INVALID_FUNCTION);
 	return 0;
-}
-
-PVOID NWL_GetAcpi(DWORD TableId)
-{
-	PVOID pFirmwareTableBuffer = NULL;
-	UINT BufferSize = 0;
-	BufferSize = NWL_GetSystemFirmwareTable('ACPI', TableId, NULL, 0);
-	if (BufferSize == 0)
-		return NULL;
-	pFirmwareTableBuffer = malloc(BufferSize);
-	if (!pFirmwareTableBuffer)
-		return NULL;
-	NWL_GetSystemFirmwareTable('ACPI', TableId, pFirmwareTableBuffer, BufferSize);
-	return pFirmwareTableBuffer;
 }
 
 UINT8

@@ -13,7 +13,6 @@
 #define PCI_CLASS_DEVICE      0x0a
 #define PCI_CLASS_BRIDGE_HOST 0x0600
 
-static struct msr_driver_t* driver = NULL;
 static int smbdev = 0, smbfun = 0;
 static unsigned short smbusbase = 0;
 static unsigned char* spd_raw = NULL;
@@ -89,45 +88,45 @@ pci_conf_read(unsigned bus, unsigned dev, unsigned fn, unsigned reg, unsigned le
 	switch (pci_conf_type) {
 	case PCI_CONF_TYPE_1:
 		if (reg < 256) {
-			io_outl(driver, 0xCF8, PCI_CONF1_ADDRESS(bus, dev, fn, reg));
+			io_outl(NWLC->NwDrv, 0xCF8, PCI_CONF1_ADDRESS(bus, dev, fn, reg));
 		}
 		else {
-			io_outl(driver, 0xCF8, PCI_CONF3_ADDRESS(bus, dev, fn, reg));
+			io_outl(NWLC->NwDrv, 0xCF8, PCI_CONF3_ADDRESS(bus, dev, fn, reg));
 		}
 		switch (len) {
 		case 1:
-			*value = io_inb(driver, 0xCFC + (reg & 3));
+			*value = io_inb(NWLC->NwDrv, 0xCFC + (reg & 3));
 			result = 0;
 			break;
 		case 2:
-			*value = io_inw(driver, 0xCFC + (reg & 2));
+			*value = io_inw(NWLC->NwDrv, 0xCFC + (reg & 2));
 			result = 0;
 			break;
 		case 4:
-			*value = io_inl(driver, 0xCFC);
+			*value = io_inl(NWLC->NwDrv, 0xCFC);
 			result = 0;
 			break;
 		}
 		break;
 	case PCI_CONF_TYPE_2:
-		io_outb(driver, 0xCF8, 0xF0 | (fn << 1));
-		io_outb(driver, 0xCFA, bus);
+		io_outb(NWLC->NwDrv, 0xCF8, 0xF0 | (fn << 1));
+		io_outb(NWLC->NwDrv, 0xCFA, bus);
 
 		switch (len) {
 		case 1:
-			*value = io_inb(driver, PCI_CONF2_ADDRESS(dev, reg));
+			*value = io_inb(NWLC->NwDrv, PCI_CONF2_ADDRESS(dev, reg));
 			result = 0;
 			break;
 		case 2:
-			*value = io_inw(driver, PCI_CONF2_ADDRESS(dev, reg));
+			*value = io_inw(NWLC->NwDrv, PCI_CONF2_ADDRESS(dev, reg));
 			result = 0;
 			break;
 		case 4:
-			*value = io_inl(driver, PCI_CONF2_ADDRESS(dev, reg));
+			*value = io_inl(NWLC->NwDrv, PCI_CONF2_ADDRESS(dev, reg));
 			result = 0;
 			break;
 		}
-		io_outb(driver, 0xCF8, 0);
+		io_outb(NWLC->NwDrv, 0xCF8, 0);
 		break;
 	}
 	return result;
@@ -146,45 +145,45 @@ pci_conf_write(unsigned bus, unsigned dev, unsigned fn, unsigned reg, unsigned l
 	{
 	case PCI_CONF_TYPE_1:
 		if (reg < 256) {
-			io_outl(driver, 0xCF8, PCI_CONF1_ADDRESS(bus, dev, fn, reg));
+			io_outl(NWLC->NwDrv, 0xCF8, PCI_CONF1_ADDRESS(bus, dev, fn, reg));
 		}
 		else {
-			io_outl(driver, 0xCF8, PCI_CONF3_ADDRESS(bus, dev, fn, reg));
+			io_outl(NWLC->NwDrv, 0xCF8, PCI_CONF3_ADDRESS(bus, dev, fn, reg));
 		}
 		switch (len) {
 		case 1:
-			io_outb(driver, 0xCFC + (reg & 3), (uint8_t)value);
+			io_outb(NWLC->NwDrv, 0xCFC + (reg & 3), (uint8_t)value);
 			result = 0;
 			break;
 		case 2:
-			io_outw(driver, 0xCFC + (reg & 2), (uint16_t)value);
+			io_outw(NWLC->NwDrv, 0xCFC + (reg & 2), (uint16_t)value);
 			result = 0;
 			break;
 		case 4:
-			io_outl(driver, 0xCFC, (uint32_t)value);
+			io_outl(NWLC->NwDrv, 0xCFC, (uint32_t)value);
 			result = 0;
 			break;
 		}
 		break;
 	case PCI_CONF_TYPE_2:
-		io_outb(driver, 0xCF8, 0xF0 | (fn << 1));
-		io_outb(driver, 0xCFA, bus);
+		io_outb(NWLC->NwDrv, 0xCF8, 0xF0 | (fn << 1));
+		io_outb(NWLC->NwDrv, 0xCFA, bus);
 
 		switch (len) {
 		case 1:
-			io_outb(driver, PCI_CONF2_ADDRESS(dev, reg), (uint8_t)value);
+			io_outb(NWLC->NwDrv, PCI_CONF2_ADDRESS(dev, reg), (uint8_t)value);
 			result = 0;
 			break;
 		case 2:
-			io_outw(driver, PCI_CONF2_ADDRESS(dev, reg), (uint16_t)value);
+			io_outw(NWLC->NwDrv, PCI_CONF2_ADDRESS(dev, reg), (uint16_t)value);
 			result = 0;
 			break;
 		case 4:
-			io_outl(driver, PCI_CONF2_ADDRESS(dev, reg), (uint32_t)value);
+			io_outl(NWLC->NwDrv, PCI_CONF2_ADDRESS(dev, reg), (uint32_t)value);
 			result = 0;
 			break;
 		}
-		io_outb(driver, 0xCF8, 0);
+		io_outb(NWLC->NwDrv, 0xCF8, 0);
 		break;
 	}
 	return result;
@@ -223,27 +222,27 @@ pci_check_direct(void)
 skip_amd:
 	/* Check if configuration type 1 works. */
 	pci_conf_type = PCI_CONF_TYPE_1;
-	tmpCFB = io_inb(driver, 0xCFB);
-	io_outb(driver, 0xCFB, 0x01);
-	tmpCF8 = io_inl(driver, 0xCF8);
-	io_outl(driver, 0xCF8, 0x80000000);
-	if ((io_inl(driver, 0xCF8) == 0x80000000) && (pci_sanity_check() == 0)) {
-		io_outl(driver, 0xCF8, tmpCF8);
-		io_outb(driver, 0xCFB, tmpCFB);
+	tmpCFB = io_inb(NWLC->NwDrv, 0xCFB);
+	io_outb(NWLC->NwDrv, 0xCFB, 0x01);
+	tmpCF8 = io_inl(NWLC->NwDrv, 0xCF8);
+	io_outl(NWLC->NwDrv, 0xCF8, 0x80000000);
+	if ((io_inl(NWLC->NwDrv, 0xCF8) == 0x80000000) && (pci_sanity_check() == 0)) {
+		io_outl(NWLC->NwDrv, 0xCF8, tmpCF8);
+		io_outb(NWLC->NwDrv, 0xCFB, tmpCFB);
 		return 0;
 	}
-	io_outl(driver, 0xCF8, tmpCF8);
+	io_outl(NWLC->NwDrv, 0xCF8, tmpCF8);
 	/* Check if configuration type 2 works. */
 	pci_conf_type = PCI_CONF_TYPE_2;
-	io_outb(driver, 0xCFB, 0x00);
-	io_outb(driver, 0xCF8, 0x00);
-	io_outb(driver, 0xCFA, 0x00);
-	if (io_inb(driver, 0xCF8) == 0x00 && io_inb(driver, 0xCFA) == 0x00 && (pci_sanity_check() == 0)) {
-		io_outb(driver, 0xCFB, tmpCFB);
+	io_outb(NWLC->NwDrv, 0xCFB, 0x00);
+	io_outb(NWLC->NwDrv, 0xCF8, 0x00);
+	io_outb(NWLC->NwDrv, 0xCFA, 0x00);
+	if (io_inb(NWLC->NwDrv, 0xCF8) == 0x00 && io_inb(NWLC->NwDrv, 0xCFA) == 0x00 && (pci_sanity_check() == 0)) {
+		io_outb(NWLC->NwDrv, 0xCFB, tmpCFB);
 		return 0;
 	}
 
-	io_outb(driver, 0xCFB, tmpCFB);
+	io_outb(NWLC->NwDrv, 0xCFB, tmpCFB);
 
 	/* Nothing worked return an error */
 	pci_conf_type = PCI_CONF_TYPE_NONE;
@@ -265,7 +264,7 @@ static void ich5_get_smb(void)
 		res = pci_conf_write(0, smbdev, smbfun, 0x40, 1, tmp | 0x04);
 	if (res != 0)
 		return;
-	io_outb(driver, SMBHSTSTS, io_inb(driver, SMBHSTSTS) & 0x1F);
+	io_outb(NWLC->NwDrv, SMBHSTSTS, io_inb(NWLC->NwDrv, SMBHSTSTS) & 0x1F);
 	usleep(1000);
 }
 
@@ -274,23 +273,23 @@ static uint8_t ich5_process(void)
 	uint8_t status;
 	uint16_t timeout = 0;
 
-	status = io_inb(driver, SMBHSTSTS) & 0x1F;
+	status = io_inb(NWLC->NwDrv, SMBHSTSTS) & 0x1F;
 
 	if (status != 0x00)
 	{
-		io_outb(driver, SMBHSTSTS, status);
+		io_outb(NWLC->NwDrv, SMBHSTSTS, status);
 		usleep(500);
-		if ((status = (0x1F & io_inb(driver, SMBHSTSTS))) != 0x00)
+		if ((status = (0x1F & io_inb(NWLC->NwDrv, SMBHSTSTS))) != 0x00)
 			return 1;
 	}
 
-	io_outb(driver, SMBHSTCNT,
-		io_inb(driver, SMBHSTCNT) | SMBHSTCNT_START);
+	io_outb(NWLC->NwDrv, SMBHSTCNT,
+		io_inb(NWLC->NwDrv, SMBHSTCNT) | SMBHSTCNT_START);
 
 	do
 	{
 		usleep(500);
-		status = io_inb(driver, SMBHSTSTS);
+		status = io_inb(NWLC->NwDrv, SMBHSTSTS);
 	} while ((status & 0x01) && (timeout++ < 100));
 
 	if (timeout >= 100)
@@ -299,8 +298,8 @@ static uint8_t ich5_process(void)
 	if (status & 0x1C)
 		return status;
 
-	if ((io_inb(driver, SMBHSTSTS) & 0x1F) != 0x00)
-		io_outb(driver, SMBHSTSTS, io_inb(driver, SMBHSTSTS));
+	if ((io_inb(NWLC->NwDrv, SMBHSTSTS) & 0x1F) != 0x00)
+		io_outb(NWLC->NwDrv, SMBHSTSTS, io_inb(NWLC->NwDrv, SMBHSTSTS));
 
 	return 0;
 }
@@ -308,16 +307,16 @@ static uint8_t ich5_process(void)
 #if 0
 static int ich5_smb_check(unsigned char adr)
 {
-	io_outb(driver, SMBHSTSTS, 0xff);
-	while ((io_inb(driver, SMBHSTSTS) & 0x40) != 0x40);
-	io_outb(driver, SMBHSTADD, (adr << 1) | 0x01);
-	io_outb(driver, SMBHSTCMD, 0x00);
-	io_outb(driver, SMBHSTCNT, 0x48);
-	while (((io_inb(driver, SMBHSTSTS) & 0x44) != 0x44)
-		&& ((io_inb(driver, SMBHSTSTS) & 0x42) != 0x42));
-	if ((io_inb(driver, SMBHSTSTS) & 0x44) == 0x44)
+	io_outb(NWLC->NwDrv, SMBHSTSTS, 0xff);
+	while ((io_inb(NWLC->NwDrv, SMBHSTSTS) & 0x40) != 0x40);
+	io_outb(NWLC->NwDrv, SMBHSTADD, (adr << 1) | 0x01);
+	io_outb(NWLC->NwDrv, SMBHSTCMD, 0x00);
+	io_outb(NWLC->NwDrv, SMBHSTCNT, 0x48);
+	while (((io_inb(NWLC->NwDrv, SMBHSTSTS) & 0x44) != 0x44)
+		&& ((io_inb(NWLC->NwDrv, SMBHSTSTS) & 0x42) != 0x42));
+	if ((io_inb(NWLC->NwDrv, SMBHSTSTS) & 0x44) == 0x44)
 		return -1;
-	if ((io_inb(driver, SMBHSTSTS) & 0x42) == 0x42)
+	if ((io_inb(NWLC->NwDrv, SMBHSTSTS) & 0x42) == 0x42)
 		return 0;
 	return -1;
 }
@@ -325,11 +324,11 @@ static int ich5_smb_check(unsigned char adr)
 
 static unsigned char ich5_smb_read_byte(unsigned char adr, unsigned char cmd)
 {
-	io_outb(driver, SMBHSTADD, (adr << 1) | I2C_READ);
-	io_outb(driver, SMBHSTCMD, cmd);
-	io_outb(driver, SMBHSTCNT, SMBHSTCNT_BYTE_DATA);
+	io_outb(NWLC->NwDrv, SMBHSTADD, (adr << 1) | I2C_READ);
+	io_outb(NWLC->NwDrv, SMBHSTCMD, cmd);
+	io_outb(NWLC->NwDrv, SMBHSTCNT, SMBHSTCNT_BYTE_DATA);
 	if (ich5_process() == 0)
-		return io_inb(driver, SMBHSTDAT0);
+		return io_inb(NWLC->NwDrv, SMBHSTDAT0);
 	else
 		return 0xFF;
 }
@@ -339,8 +338,8 @@ static void ich5_smb_switch_page(unsigned page)
 	uint8_t value = 0x6c;
 	if (page)
 		value = 0x6e;
-	io_outb(driver, SMBHSTADD, value | I2C_WRITE);
-	io_outb(driver, SMBHSTCNT, SMBHSTCNT_BYTE_DATA);
+	io_outb(NWLC->NwDrv, SMBHSTADD, value | I2C_WRITE);
+	io_outb(NWLC->NwDrv, SMBHSTCNT, SMBHSTCNT_BYTE_DATA);
 	ich5_process();
 }
 
@@ -448,9 +447,8 @@ static int smbus_index = -1;
 void
 NWL_SpdInit(void)
 {
-	if ((driver = cpu_msr_driver_open()) == NULL) {
+	if (NWLC->NwDrv == NULL)
 		return;
-	}
 	if (pci_check_direct() != 0) {
 		fprintf(stderr, "pci check failed\n");
 		return;
@@ -497,5 +495,4 @@ void
 NWL_SpdFini(void)
 {
 	free(spd_raw);
-	cpu_msr_driver_close(driver);
 }

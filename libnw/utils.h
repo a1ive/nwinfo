@@ -4,22 +4,30 @@
 #include <windows.h>
 #include "format.h"
 
+struct acpi_rsdp_v2;
+struct acpi_rsdt;
+struct acpi_xsdt;
+
 BOOL NWL_IsAdmin(void);
 DWORD NWL_ObtainPrivileges(LPCSTR privilege);
 LPCSTR NWL_GetHumanSize(UINT64 size, LPCSTR human_sizes[6], UINT64 base);
 
-BOOL NWL_NT5InitMemory(void);
-void NWL_NT5ExitMemory(void);
-BOOL NWL_NT5ReadMemory(PVOID buffer, DWORD address, DWORD length);
+BOOL NWL_ReadMemory(PVOID buffer, DWORD_PTR address, DWORD length);
 
 void NWL_ConvertLengthToIpv4Mask(ULONG MaskLength, ULONG* Mask);
-UINT NWL_EnumSystemFirmwareTables(DWORD FirmwareTableProviderSignature, PVOID pFirmwareTableEnumBuffer, DWORD BufferSize);
+
 UINT NWL_GetSystemFirmwareTable(DWORD FirmwareTableProviderSignature, DWORD FirmwareTableID,
 	PVOID pFirmwareTableBuffer, DWORD BufferSize);
+
+struct acpi_rsdp_v2* NWL_GetRsdp(VOID);
+struct acpi_rsdt* NWL_GetRsdt(VOID);
+struct acpi_xsdt* NWL_GetXsdt(VOID);
+PVOID NWL_GetAcpi(DWORD TableId);
+PVOID NWL_GetAcpiByAddr(DWORD_PTR Addr);
+
 DWORD NWL_GetFirmwareEnvironmentVariable(LPCSTR lpName, LPCSTR lpGuid,
 	PVOID pBuffer, DWORD nSize);
 
-PVOID NWL_GetAcpi(DWORD TableId);
 UINT8 NWL_AcpiChecksum(VOID* base, UINT size);
 VOID NWL_TrimString(CHAR* String);
 INT NWL_GetRegDwordValue(HKEY Key, LPCSTR SubKey, LPCSTR ValueName, DWORD* pValue);

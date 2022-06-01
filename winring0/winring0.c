@@ -254,6 +254,39 @@ void io_outl(struct msr_driver_t* drv, uint16_t port, uint32_t value)
 		&inBuf, length, NULL, 0, &returnedLength, NULL);
 }
 
+DWORD phymem_read(struct msr_driver_t* drv,
+	DWORD_PTR address, PBYTE buffer, DWORD count, DWORD unitSize)
+{
+	if (!drv || !drv->hhDriver || drv->hhDriver == INVALID_HANDLE_VALUE || !buffer)
+		return 0;
+
+	DWORD	returnedLength = 0;
+	BOOL	result = FALSE;
+	DWORD	size = 0;
+	OLS_READ_MEMORY_INPUT inBuf;
+
+	if (sizeof(DWORD_PTR) == 4)
+	{
+		inBuf.Address.HighPart = 0;
+		inBuf.Address.LowPart = (DWORD)address;
+	}
+	else
+	{
+		inBuf.Address.QuadPart = address;
+	}
+
+	inBuf.UnitSize = unitSize;
+	inBuf.Count = count;
+	size = inBuf.UnitSize * inBuf.Count;
+
+	result = DeviceIoControl(drv->hhDriver, IOCTL_OLS_READ_MEMORY,
+		&inBuf, sizeof(OLS_READ_MEMORY_INPUT), buffer, size, &returnedLength, NULL);
+
+	if (result && returnedLength == size)
+		return count * unitSize;
+	return 0;
+}
+
 int cpu_msr_driver_close(struct msr_driver_t* drv)
 {
 	SERVICE_STATUS srvStatus = { 0 };

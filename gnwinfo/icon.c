@@ -1,17 +1,22 @@
 // SPDX-License-Identifier: Unlicense
 
 #include "gnwinfo.h"
+#include <acpi.h>
 
 INT GNW_IconFromAcpi(PNODE node, LPCSTR name)
 {
 	INT icon = IDI_ICON_TVN_DMI;
 	UNREFERENCED_PARAMETER(node);
-	if (_stricmp(name, "APIC") == 0)
+	if (_stricmp(name, RSDP_SIGNATURE) == 0)
+		icon = IDI_ICON_TVD_TREE;
+	else if (_stricmp(name, "APIC") == 0)
 		icon = IDI_ICON_TVD_FW;
 	else if (_stricmp(name, "ASF!") == 0)
 		icon = IDI_ICON_TVD_INF;
 	else if (_stricmp(name, "BGRT") == 0)
 		icon = IDI_ICON_TVN_EDID;
+	else if (_stricmp(name, "BOOT") == 0)
+		icon = IDI_ICON_TVD_REL;
 	else if (_stricmp(name, "DBGP") == 0)
 		icon = IDI_ICON_TVD_LNK;
 	else if (_stricmp(name, "DBG2") == 0)
@@ -24,8 +29,10 @@ INT GNW_IconFromAcpi(PNODE node, LPCSTR name)
 		icon = IDI_ICON_TVN_SPD;
 	else if (_stricmp(name, "MSDM") == 0)
 		icon = IDI_ICON_TVN_SYS;
+	else if (_stricmp(name, "RSDT") == 0)
+		icon = IDI_ICON_TVD_TREE;
 	else if (_stricmp(name, "SSDT") == 0)
-		icon = IDI_ICON_TVN_ACPI;
+		icon = IDI_ICON_TVD_TREE;
 	else if (_stricmp(name, "TPM2") == 0)
 		icon = IDI_ICON_TVD_ENC;
 	else if (_stricmp(name, "UEFI") == 0)
@@ -35,7 +42,7 @@ INT GNW_IconFromAcpi(PNODE node, LPCSTR name)
 	else if (_stricmp(name, "WSMT") == 0)
 		icon = IDI_ICON_TVD_ENC;
 	else if (_stricmp(name, "XSDT") == 0)
-		icon = IDI_ICON_TVN_ACPI;
+		icon = IDI_ICON_TVD_TREE;
 	return icon;
 }
 
@@ -133,8 +140,9 @@ INT GNW_IconFromSmbios(PNODE node, LPCSTR name)
 	case 12:
 		return IDI_ICON_TVD_DOC;
 	case 13:
-	case 14:
 		return IDI_ICON_TVD_INF;
+	case 14:
+		return IDI_ICON_TVD_TREE;
 	case 22:
 		return IDI_ICON_TVD_BAT;
 	case 32:

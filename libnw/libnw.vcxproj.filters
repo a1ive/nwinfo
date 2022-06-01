@@ -65,9 +65,6 @@
     <ClCompile Include="network.c">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="nt5phys.c">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="pci.c">
       <Filter>源文件</Filter>
     </ClCompile>
