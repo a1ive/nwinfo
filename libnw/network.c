@@ -8,8 +8,6 @@
 #include "libnw.h"
 #include "utils.h"
 
-static PNODE node;
-
 static const char* bps_human_sizes[6] =
 { "bps", "Kbps", "Mbps", "Gbps", "Tbps", "Pbps", };
 
@@ -75,8 +73,7 @@ PNODE NW_Network (VOID)
 	PIP_ADAPTER_GATEWAY_ADDRESS pGateway = NULL;
 	MIB_IFTABLE *IfTable = NULL;
 	ULONG IfTableSize = 0;
-
-	node = NWL_NodeAlloc("Network", NFLG_TABLE);
+	PNODE node = NWL_NodeAlloc("Network", NFLG_TABLE);
 	if (NWLC->NetInfo)
 		NWL_NodeAppendChild(NWLC->NwRoot, node);
 

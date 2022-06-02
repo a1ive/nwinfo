@@ -213,7 +213,6 @@ GNW_TreeUpdate(HWND hWnd, WPARAM wParam, LPARAM lParam)
 {
 	LPNMTREEVIEWA pnmtv = (LPNMTREEVIEWA)lParam;
 	UNREFERENCED_PARAMETER(wParam);
-	UNREFERENCED_PARAMETER(hWnd);
 	HWND hwndTV = GetDlgItem(hWnd, IDC_MAIN_TREE);
 	if (!hwndTV || pnmtv->hdr.code != (UINT)TVN_SELCHANGINGA)
 		return (INT_PTR)FALSE;
@@ -223,7 +222,7 @@ GNW_TreeUpdate(HWND hWnd, WPARAM wParam, LPARAM lParam)
 		INT i, count;
 		SetWindowTextA(GNWC.hWnd, GNW_GetText("Loading, please wait ..."));
 		GNWC.pnSpd = NW_Spd();
-		SetWindowTextA(GNWC.hWnd, "NWinfo GUI");
+		SetWindowTextA(GNWC.hWnd, GNWINFO_TITLE);
 		count = NWL_NodeChildCount(GNWC.pnSpd);
 		for (i = 0; i < count; i++)
 		{

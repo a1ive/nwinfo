@@ -26,7 +26,7 @@ GNW_Wait(VOID)
 	GNWC.pnUsb = NW_Usb();
 	//GNWC.pnSpd = NW_Spd();
 
-	SetWindowTextA(GNWC.hWnd, "NWinfo GUI");
+	SetWindowTextA(GNWC.hWnd, GNWINFO_TITLE);
 	ShowWindow(hwndLV, SW_SHOW);
 	ShowWindow(hwndTV, SW_SHOW);
 }

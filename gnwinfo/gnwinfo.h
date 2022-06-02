@@ -19,6 +19,7 @@ extern "C" {
 #endif
 
 #define GNWINFO_HOMEPAGE "https://github.com/a1ive/nwinfo"
+#define GNWINFO_TITLE    "NWinfo GUI"
 
 typedef struct _GNW_CONTEXT
 {

@@ -263,7 +263,8 @@ PNODE_ATT NWL_NodeAttrSet(PNODE node, LPCSTR key, LPCSTR value, INT flags)
 
 static CHAR nsbuf[NODE_BUFFER_LEN];
 
-PNODE_ATT NWL_NodeAttrSetf(PNODE node, LPCSTR key, INT flags, LPCSTR format, ...)
+PNODE_ATT
+NWL_NodeAttrSetf(PNODE node, LPCSTR key, INT flags, LPCSTR _Printf_format_string_ format, ...)
 {
 	va_list ap;
 	//ZeroMemory(nsbuf, sizeof(nsbuf));

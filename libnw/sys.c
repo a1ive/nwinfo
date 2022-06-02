@@ -8,8 +8,6 @@
 #include "libnw.h"
 #include "utils.h"
 
-static PNODE node;
-
 static const char* GV_GUID = "{8BE4DF61-93CA-11D2-AA0D-00E098032B8C}";
 
 static const CHAR*
@@ -75,7 +73,7 @@ OsVersionToStr(OSVERSIONINFOEXW* p)
 	return "Unknown";
 }
 
-static void PrintOsVer(void)
+static void PrintOsVer(PNODE node)
 {
 	NTSTATUS(WINAPI * RtlGetVersion)(LPOSVERSIONINFOEXW) = NULL;
 	OSVERSIONINFOEXW osInfo = { 0 };
@@ -94,7 +92,7 @@ static void PrintOsVer(void)
 	}
 }
 
-static void PrintOsInfo(void)
+static void PrintOsInfo(PNODE node)
 {
 	DWORD bufCharCount = NWINFO_BUFSZ;
 	SYSTEM_INFO SystemInfo;
@@ -137,7 +135,7 @@ static void PrintOsInfo(void)
 	NWL_NodeAttrSetf(node, "Page Size", NAFLG_FMT_NUMERIC, "%u", SystemInfo.dwPageSize);
 }
 
-static void PrintFwInfo(void)
+static void PrintFwInfo(PNODE node)
 {
 	DWORD VarSize = 0;
 	UINT8 SecureBoot = 0;
@@ -174,7 +172,7 @@ TpmVersion(UINT32 ver)
 	return "UNKNOWN";
 }
 
-static void PrintTpmInfo(void)
+static void PrintTpmInfo(PNODE node)
 {
 	UINT32 (WINAPI *GetTpmInfo) (UINT32 Size, VOID *Info) = NULL;
 	HINSTANCE hL = LoadLibraryA("tbs.dll");
@@ -205,7 +203,7 @@ static void PrintTpmInfo(void)
 }
 
 static void
-PrintPowerInfo(void)
+PrintPowerInfo(PNODE node)
 {
 	SYSTEM_POWER_STATUS Power;
 	if (!GetSystemPowerStatus(&Power)
@@ -242,7 +240,7 @@ PrintPowerInfo(void)
 static const char* mem_human_sizes[6] =
 { "B", "K", "M", "G", "T", "P", };
 
-static void PrintMemInfo(void)
+static void PrintMemInfo(PNODE node)
 {
 	PNODE nphy, npage;
 	MEMORYSTATUSEX statex = { 0 };
@@ -259,14 +257,14 @@ static void PrintMemInfo(void)
 
 PNODE NW_System(VOID)
 {
-	node = NWL_NodeAlloc("System", 0);
+	PNODE node = NWL_NodeAlloc("System", 0);
 	if (NWLC->SysInfo)
 		NWL_NodeAppendChild(NWLC->NwRoot, node);
-	PrintOsVer();
-	PrintOsInfo();
-	PrintPowerInfo();
-	PrintFwInfo();
-	PrintTpmInfo();
-	PrintMemInfo();
+	PrintOsVer(node);
+	PrintOsInfo(node);
+	PrintPowerInfo(node);
+	PrintFwInfo(node);
+	PrintTpmInfo(node);
+	PrintMemInfo(node);
 	return node;
 }

@@ -478,8 +478,9 @@ NWL_SpdGet(int dimmadr)
 	for (x = 0; x < 256; x++)
 	{
 		spd_raw[x] = ich5_smb_read_byte(0x50 + dimmadr, (unsigned char)x);
-		if (x == 1 &&
-			((spd_raw[0] == 0xFF && spd_raw[1] == 0xFF) || spd_raw[0] == 0x01))
+		if (x == 1 && (spd_raw[0] == 0xFF && spd_raw[1] == 0xFF))
+			return NULL;
+		if (x == 2 && (spd_raw[2] < 4 || spd_raw[2] > 18))
 			return NULL;
 	}
 	if (spd_raw[2] < 12) // DDR4

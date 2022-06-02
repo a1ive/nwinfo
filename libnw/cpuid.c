@@ -11,10 +11,8 @@
 static const char* kb_human_sizes[6] =
 { "KB", "MB", "GB", "TB", "PB", "EB", };
 
-static PNODE node;
-
 static void
-PrintHypervisor(void)
+PrintHypervisor(PNODE node)
 {
 	int cpuInfo[4] = { 0 };
 	unsigned MaxFunc = 0;
@@ -49,7 +47,7 @@ PrintHypervisor(void)
 }
 
 static void
-PrintSgx(const struct cpu_raw_data_t* raw, const struct cpu_id_t* data)
+PrintSgx(PNODE node, const struct cpu_raw_data_t* raw, const struct cpu_id_t* data)
 {
 	int i;
 	PNODE nsgx, nepc;
@@ -83,7 +81,7 @@ static int rdmsr_supported(void)
 }
 
 static void
-PrintMsr(void)
+PrintMsr(PNODE node)
 {
 	int value = CPU_INVALID_VALUE;
 	if (!rdmsr_supported())
@@ -126,8 +124,7 @@ PNODE NW_Cpuid(VOID)
 	int i = 0;
 	PNODE cache, feature;
 	BOOL saved_human_size;
-
-	node = NWL_NodeAlloc("CPUID", 0);
+	PNODE node = NWL_NodeAlloc("CPUID", 0);
 	if (NWLC->CpuInfo)
 		NWL_NodeAppendChild(NWLC->NwRoot, node);
 	if (cpuid_get_raw_data(&raw) < 0)
@@ -138,7 +135,7 @@ PNODE NW_Cpuid(VOID)
 
 	if (cpu_identify(&raw, &data) < 0)
 		fprintf(stderr, "Error identifying the CPU: %s\n", cpuid_error());
-	PrintHypervisor();
+	PrintHypervisor(node);
 	NWL_NodeAttrSet(node, "Vendor", data.vendor_str, 0);
 	NWL_NodeAttrSet(node, "Brand", data.brand_str, 0);
 	NWL_NodeAttrSet(node, "Code Name", data.cpu_codename, 0);
@@ -177,7 +174,7 @@ PNODE NW_Cpuid(VOID)
 	}
 
 	NWL_NodeAttrSetf(node, "CPU Clock (MHz)", NAFLG_FMT_NUMERIC, "%d", cpu_clock_measure(200, 1));
-	PrintSgx(&raw, &data);
-	PrintMsr();
+	PrintSgx(node, &raw, &data);
+	PrintMsr(node);
 	return node;
 }
