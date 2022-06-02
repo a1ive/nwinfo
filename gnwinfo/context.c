@@ -92,6 +92,7 @@ GNW_Reload(VOID)
 	GNWC.nCtx.NwRoot = NWL_NodeAlloc("NWinfo", 0);
 	
 	GNW_Wait();
+	GNW_ListClean();
 	GNW_TreeDelete(TVI_ROOT);
 	GNW_TreeInit();
 
