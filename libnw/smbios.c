@@ -743,9 +743,9 @@ static void ProcMemoryArrayMappedAddress(PNODE tab, void* p)
 	PMemoryArrayMappedAddress pMAMA = (PMemoryArrayMappedAddress)p;
 
 	NWL_NodeAttrSet(tab, "Description", "Memory Array Mapped Address", 0);
-	NWL_NodeAttrSetf(tab, "Starting Address", 0, "0x%016X",
+	NWL_NodeAttrSetf(tab, "Starting Address", 0, "0x%016llX",
 		pMAMA->StartAddr == 0xFFFFFFFF ? pMAMA->ExtStartAddr : pMAMA->StartAddr);
-	NWL_NodeAttrSetf(tab, "Ending Address", 0, "0x%016X",
+	NWL_NodeAttrSetf(tab, "Ending Address", 0, "0x%016llX",
 		pMAMA->EndAddr == 0xFFFFFFFF ? pMAMA->ExtEndAddr : pMAMA->EndAddr);
 	NWL_NodeAttrSetf(tab, "Memory Array Handle", NAFLG_FMT_NUMERIC, "%u", pMAMA->Handle);
 	NWL_NodeAttrSetf(tab, "Partition Width", 0, "0x%X", pMAMA->PartitionWidth);
@@ -756,9 +756,9 @@ static void ProcMemoryDeviceMappedAddress(PNODE tab, void* p)
 	PMemoryDeviceMappedAddress pMDMA = (PMemoryDeviceMappedAddress)p;
 
 	NWL_NodeAttrSet(tab, "Description", "Memory Device Mapped Address", 0);
-	NWL_NodeAttrSetf(tab, "Starting Address", 0, "0x%016X",
+	NWL_NodeAttrSetf(tab, "Starting Address", 0, "0x%016llX",
 		pMDMA->StartAddr == 0xFFFFFFFF ? pMDMA->ExtStartAddr : pMDMA->StartAddr);
-	NWL_NodeAttrSetf(tab, "Ending Address", 0, "0x%016X",
+	NWL_NodeAttrSetf(tab, "Ending Address", 0, "0x%016llX",
 		pMDMA->EndAddr == 0xFFFFFFFF ? pMDMA->ExtEndAddr : pMDMA->EndAddr);
 	NWL_NodeAttrSetf(tab, "Memory Device Handle", NAFLG_FMT_NUMERIC, "%u", pMDMA->MDHandle);
 	NWL_NodeAttrSetf(tab, "Memory Array Mapped Address Handle", NAFLG_FMT_NUMERIC, "%u", pMDMA->MAMAHandle);

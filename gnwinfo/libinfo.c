@@ -12,6 +12,31 @@ struct msr_driver_t
 	int errorcode;
 };
 
+static void
+PrintDriverVerison(PNODE node, struct msr_driver_t* drv)
+{
+	DWORD dwLen;
+	LPVOID pBlock = NULL;
+	UINT uLen;
+	VS_FIXEDFILEINFO *pInfo;
+	dwLen = GetFileVersionInfoSizeA(drv->driver_path, NULL);
+	if (!dwLen)
+		return;
+	pBlock = malloc(dwLen);
+	if (!pBlock)
+		return;
+	if (!GetFileVersionInfoA(drv->driver_path, 0, dwLen, pBlock))
+		goto fail;
+	if (!VerQueryValueA(pBlock, "\\", &pInfo, &uLen))
+		goto fail;
+	NWL_NodeAttrSetf(node, "Driver Version", 0, "%u.%u.%u.%u",
+		(pInfo->dwFileVersionMS >> 16) & 0xffff, pInfo->dwFileVersionMS & 0xffff,
+		(pInfo->dwFileVersionLS >> 16) & 0xffff, pInfo->dwFileVersionLS & 0xffff);
+fail:
+	free(pBlock);
+	return;
+}
+
 PNODE GNW_LibInfo(VOID)
 {
 	PNODE node = NWL_NodeAlloc("LIBINF", 0);
@@ -19,6 +44,7 @@ PNODE GNW_LibInfo(VOID)
 	{
 		NWL_NodeAttrSet(node, "Driver", OLS_DRIVER_NAME, 0);
 		NWL_NodeAttrSet(node, "Driver Path", GNWC.nCtx.NwDrv->driver_path, 0);
+		PrintDriverVerison(node, GNWC.nCtx.NwDrv);
 	}
 	else
 		NWL_NodeAttrSet(node, "Driver", "NOT FOUND", 0);

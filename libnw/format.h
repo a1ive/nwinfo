@@ -60,7 +60,8 @@ PNODE NWL_NodeAppendNew(PNODE parent, LPCSTR name, INT flags);
 INT NWL_NodeAttrCount(PNODE node);
 LPSTR NWL_NodeAttrGet(PNODE node, LPCSTR key);
 PNODE_ATT NWL_NodeAttrSet(PNODE node, LPCSTR key, LPCSTR value, INT flags);
-PNODE_ATT NWL_NodeAttrSetf(PNODE node, LPCSTR key, INT flags, LPCSTR format, ...);
+PNODE_ATT
+NWL_NodeAttrSetf(PNODE node, LPCSTR key, INT flags, LPCSTR _Printf_format_string_ format, ...);
 
 #define NWL_NodeAttrSetBool(node, key, value, flags) \
 	NWL_NodeAttrSet(node, key, (value ? "Yes" : "No"), flags | NAFLG_FMT_BOOLEAN)

@@ -125,6 +125,19 @@ GNW_TreeInit(VOID)
 	}
 
 	GNWC.htSpd = GNW_TreeAdd(GNWC.htRoot, "Memory SPD", 2, IDI_ICON_TVN_SPD, NULL);
+	if (GNWC.pnSpd)
+	{
+		count = NWL_NodeChildCount(GNWC.pnSpd);
+		for (i = 0; i < count; i++)
+		{
+			LPSTR mt;
+			PNODE node = GNWC.pnSpd->Children[i].LinkedNode;
+			mt = NWL_NodeAttrGet(node, "Memory Type");
+			if (!mt)
+				continue;
+			GNW_TreeAdd(GNWC.htSpd, mt, 3, IDI_ICON_TVN_SPD, node);
+		}
+	}
 
 	GNWC.htSystem = GNW_TreeAdd(GNWC.htRoot, "Operating System", 2, IDI_ICON_TVN_SYS, GNWC.pnSystem);
 
@@ -205,15 +218,12 @@ GNW_TreeUpdate(HWND hWnd, WPARAM wParam, LPARAM lParam)
 	if (!hwndTV || pnmtv->hdr.code != (UINT)TVN_SELCHANGINGA)
 		return (INT_PTR)FALSE;
 	GNW_ListClean();
-	if (pnmtv->itemNew.hItem == GNWC.htSpd)
+	if (pnmtv->itemNew.hItem == GNWC.htSpd && !GNWC.pnSpd)
 	{
 		INT i, count;
-		if (!GNWC.pnSpd)
-		{
-			SetWindowTextA(GNWC.hWnd, GNW_GetText("Loading, please wait ..."));
-			GNWC.pnSpd = NW_Spd();
-			SetWindowTextA(GNWC.hWnd, "NWinfo GUI");
-		}
+		SetWindowTextA(GNWC.hWnd, GNW_GetText("Loading, please wait ..."));
+		GNWC.pnSpd = NW_Spd();
+		SetWindowTextA(GNWC.hWnd, "NWinfo GUI");
 		count = NWL_NodeChildCount(GNWC.pnSpd);
 		for (i = 0; i < count; i++)
 		{
