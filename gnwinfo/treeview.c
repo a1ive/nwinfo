@@ -222,6 +222,7 @@ GNW_TreeUpdate(HWND hWnd, WPARAM wParam, LPARAM lParam)
 		INT i, count;
 		SetWindowTextA(GNWC.hWnd, GNW_GetText("Loading, please wait ..."));
 		GNWC.pnSpd = NW_Spd();
+		NWL_NodeAppendChild(GNWC.pnRoot, GNWC.pnSpd);
 		SetWindowTextA(GNWC.hWnd, GNWINFO_TITLE);
 		count = NWL_NodeChildCount(GNWC.pnSpd);
 		for (i = 0; i < count; i++)
@@ -241,6 +242,8 @@ GNW_TreeUpdate(HWND hWnd, WPARAM wParam, LPARAM lParam)
 		if (htParent == GNWC.htDisk)
 			bSkipChild = TRUE;
 		else if (pnmtv->itemNew.hItem == GNWC.htCpuid)
+			bSkipChild = TRUE;
+		else if (pnmtv->itemNew.hItem == GNWC.htRoot)
 			bSkipChild = TRUE;
 		GNW_ListAdd((PNODE)pnmtv->itemNew.lParam, bSkipChild);
 	}

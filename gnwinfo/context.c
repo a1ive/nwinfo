@@ -14,7 +14,6 @@ GNW_Wait(VOID)
 	ShowWindow(hwndLV, SW_HIDE);
 	ShowWindow(hwndTV, SW_HIDE);
 	SetWindowTextA(GNWC.hWnd, GNW_GetText("Loading, please wait ..."));
-	GNWC.pnRoot = GNW_LibInfo();
 	GNWC.pnAcpi = NW_Acpi();
 	GNWC.pnCpuid = NW_Cpuid();
 	GNWC.pnDisk = NW_Disk();
@@ -24,7 +23,6 @@ GNW_Wait(VOID)
 	GNWC.pnSmbios = NW_Smbios();
 	GNWC.pnSystem = NW_System();
 	GNWC.pnUsb = NW_Usb();
-	//GNWC.pnSpd = NW_Spd();
 
 	SetWindowTextA(GNWC.hWnd, GNWINFO_TITLE);
 	ShowWindow(hwndLV, SW_SHOW);
@@ -50,7 +48,6 @@ GNW_Init(HINSTANCE hInstance, INT nCmdShow, DLGPROC lpDialogFunc)
 	GNWC.nCtx.NetInfo = TRUE;
 	GNWC.nCtx.PciInfo = TRUE;
 	GNWC.nCtx.DmiInfo = TRUE;
-	//GNWC.nCtx.SpdInfo = TRUE;
 	GNWC.nCtx.SysInfo = TRUE;
 	GNWC.nCtx.UsbInfo = TRUE;
 	if (NW_Init(&GNWC.nCtx) == FALSE)
@@ -78,6 +75,7 @@ GNW_Init(HINSTANCE hInstance, INT nCmdShow, DLGPROC lpDialogFunc)
 	UpdateWindow(GNWC.hWnd);
 
 	GNW_Wait();
+	GNWC.pnRoot = GNW_LibInfo();
 
 	GNW_ListInit();
 	GNW_TreeInit();
@@ -139,8 +137,6 @@ VOID __declspec(noreturn)
 GNW_Exit(INT nExitCode)
 {
 	NW_Fini();
-	if (GNWC.pnSpd)
-		NWL_NodeFree(GNWC.pnSpd, 1);
 	if (GNWC.pnRoot)
 		NWL_NodeFree(GNWC.pnRoot, 1);
 	ImageList_Destroy(GNWC.hImageList);
