@@ -85,6 +85,7 @@ INT GNW_IconFromDisk(PNODE node, LPCSTR name);
 INT GNW_IconFromNetwork(PNODE node, LPCSTR name);
 INT GNW_IconFromPci(PNODE node, LPCSTR name);
 INT GNW_IconFromSmbios(PNODE node, LPCSTR name);
+INT GNW_IconFromUsb(PNODE node, LPCSTR name);
 
 LPSTR GNW_GetText(LPCSTR lpEng);
 VOID GNW_SetMenuText(VOID);

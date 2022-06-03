@@ -150,7 +150,7 @@ GNW_TreeInit(VOID)
 		hwid = NWL_NodeAttrGet(node, "HWID");
 		if (!hwid)
 			continue;
-		GNW_TreeAdd(GNWC.htUsb, hwid, 3, IDI_ICON_TVD_USB, node);
+		GNW_TreeAdd(GNWC.htUsb, hwid, 3, GNW_IconFromUsb(node, hwid), node);
 	}
 }
 

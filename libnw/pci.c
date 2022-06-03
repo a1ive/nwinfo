@@ -90,7 +90,7 @@ PNODE NW_Pci(VOID)
 		}
 		npci = NWL_NodeAppendNew(node, "Device", NFLG_TABLE_ROW);
 		NWL_NodeAttrSet(npci, "HWID", BufferHw, 0);
-		NWL_FindClass(npci, Ids, IdsSize, HwClass);
+		NWL_FindClass(npci, Ids, IdsSize, HwClass, 0);
 		ParseHwid(npci, Ids, IdsSize, BufferHw);
 	next_device:
 		free(BufferHw);

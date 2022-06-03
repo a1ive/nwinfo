@@ -164,3 +164,35 @@ INT GNW_IconFromSmbios(PNODE node, LPCSTR name)
 	}
 	return IDI_ICON_TVN_DMI;
 }
+
+INT GNW_IconFromUsb(PNODE node, LPCSTR name)
+{
+	INT icon = IDI_ICON_TVD_USB;
+	UNREFERENCED_PARAMETER(name);
+	LPSTR hwclass = NWL_NodeAttrGet(node, "Class");
+	if (!hwclass || _stricmp(hwclass, "(Defined at Interface level)") == 0)
+		icon = IDI_ICON_TVD_INF;
+	else if (_stricmp(hwclass, "Audio") == 0)
+		icon = IDI_ICON_TVD_MM;
+	else if (_stricmp(hwclass, "Communications") == 0)
+		icon = IDI_ICON_TVD_LNK;
+	else if (_stricmp(hwclass, "Human Interface Device") == 0)
+		icon = IDI_ICON_TVD_HID;
+	else if (_stricmp(hwclass, "Physical Interface Device") == 0)
+		icon = IDI_ICON_TVD_HID;
+	else if (_stricmp(hwclass, "Printer") == 0)
+		icon = IDI_ICON_TVD_DOC;
+	else if (_stricmp(hwclass, "Mass Storage") == 0)
+		icon = IDI_ICON_TVD_RMD;
+	else if (_stricmp(hwclass, "Hub") == 0)
+		icon = IDI_ICON_TVD_TREE;
+	else if (_stricmp(hwclass, "Chip/SmartCard") == 0)
+		icon = IDI_ICON_TVD_FW;
+	else if (_stricmp(hwclass, "Content Security") == 0)
+		icon = IDI_ICON_TVD_ENC;
+	else if (_stricmp(hwclass, "Video") == 0)
+		icon = IDI_ICON_TVD_MM;
+	else if (_stricmp(hwclass, "Wireless") == 0)
+		icon = IDI_ICON_TVD_NW;
+	return icon;
+}

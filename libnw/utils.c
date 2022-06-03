@@ -521,7 +521,7 @@ NWL_FindId(PNODE nd, CHAR* Ids, DWORD IdsSize, CONST CHAR* v, CONST CHAR* d, CON
 }
 
 VOID
-NWL_FindClass(PNODE nd, CHAR* Ids, DWORD IdsSize, CONST CHAR* Class)
+NWL_FindClass(PNODE nd, CHAR* Ids, DWORD IdsSize, CONST CHAR* Class, INT usb)
 {
 	DWORD Offset = 0;
 	CHAR* vLine = NULL;
@@ -595,7 +595,7 @@ NWL_FindClass(PNODE nd, CHAR* Ids, DWORD IdsSize, CONST CHAR* Class)
 					sLine = IdsGetline(Ids, IdsSize, &Offset);
 					continue;
 				}
-				NWL_NodeAttrSet(nd, "Prog IF", sLine + 6, 0);
+				NWL_NodeAttrSet(nd, usb ? "Protocol" : "Prog IF", sLine + 6, 0);
 				free(sLine);
 				break;
 			}
