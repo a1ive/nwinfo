@@ -89,6 +89,9 @@
     <ClCompile Include="libnw.c">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="nt.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

@@ -77,7 +77,7 @@ struct gpt_header
 
 #pragma pack()
 
-typedef struct PHY_DRIVE_INFO
+typedef struct _PHY_DRIVE_INFO
 {
 	DWORD PhyDrive;
 	INT PartStyle;//0:UNKNOWN 1:MBR 2:GPT
@@ -85,15 +85,16 @@ typedef struct PHY_DRIVE_INFO
 	BYTE DeviceType;
 	BOOL RemovableMedia;
 	CHAR* HwID;
-	CHAR VendorId[128];
-	CHAR ProductId[128];
-	CHAR ProductRev[128];
-	CHAR SerialNumber[128];
+	CHAR VendorId[MAX_PATH];
+	CHAR ProductId[MAX_PATH];
+	CHAR ProductRev[MAX_PATH];
+	CHAR SerialNumber[MAX_PATH];
 	STORAGE_BUS_TYPE BusType;
 	// MBR
 	UCHAR MbrSignature[4];
 	// GPT
 	UCHAR GptGuid[16];
 
-	CHAR DriveLetters[26];
+	DWORD VolumeCount;
+	CHAR Volumes[32][MAX_PATH];
 }PHY_DRIVE_INFO;

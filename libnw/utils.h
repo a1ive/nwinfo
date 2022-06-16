@@ -37,3 +37,7 @@ VOID NWL_FindClass(PNODE nd, CHAR* Ids, DWORD IdsSize, CONST CHAR* Class, INT us
 CHAR* NWL_LoadFileToMemory(LPCSTR lpFileName, LPDWORD lpSize);
 LPCSTR NWL_GuidToStr(UCHAR Guid[16]);
 LPCSTR NWL_WcsToMbs(PWCHAR Wcs);
+
+HANDLE NWL_NtCreateFile(LPCWSTR lpFileName, BOOL bWrite);
+VOID* NWL_NtGetRegValue(HKEY Key, LPCWSTR lpSubKey, LPCWSTR lpValueName, LPDWORD lpType);
+LPCSTR NWL_NtGetPathFromHandle(HANDLE hFile);

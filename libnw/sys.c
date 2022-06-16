@@ -255,6 +255,22 @@ static void PrintMemInfo(PNODE node)
 	NWL_NodeAttrSet(npage, "Total", NWL_GetHumanSize(statex.ullTotalPageFile, mem_human_sizes, 1024), NAFLG_FMT_HUMAN_SIZE);
 }
 
+static void PrintBootDev(PNODE node)
+{
+	DWORD dwType;
+	HANDLE hFile;
+	WCHAR wArcName[MAX_PATH];
+	WCHAR* pFwBootDev = NWL_NtGetRegValue(HKEY_LOCAL_MACHINE,
+		L"SYSTEM\\CurrentControlSet\\Control", L"FirmwareBootDevice", &dwType);
+	if (!pFwBootDev)
+		return;
+	swprintf(wArcName, MAX_PATH, L"\\ArcName\\%s", pFwBootDev);
+	free(pFwBootDev);
+	hFile = NWL_NtCreateFile(wArcName, FALSE);
+	NWL_NodeAttrSet(node, "Boot Device", NWL_NtGetPathFromHandle(hFile), 0);
+	CloseHandle(hFile);
+}
+
 PNODE NW_System(VOID)
 {
 	PNODE node = NWL_NodeAlloc("System", 0);
@@ -262,6 +278,7 @@ PNODE NW_System(VOID)
 		NWL_NodeAppendChild(NWLC->NwRoot, node);
 	PrintOsVer(node);
 	PrintOsInfo(node);
+	PrintBootDev(node);
 	PrintPowerInfo(node);
 	PrintFwInfo(node);
 	PrintTpmInfo(node);

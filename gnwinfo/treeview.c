@@ -53,7 +53,7 @@ GNW_TreeInit(VOID)
 			for (j = 0; j < tab_count; j++)
 			{
 				tab = node->Children[0].LinkedNode->Children[j].LinkedNode;
-				letter = NWL_NodeAttrGet(tab, "Drive Letter");
+				letter = NWL_NodeAttrGet(tab, "Path");
 				if (!letter)
 					continue;
 				GNW_TreeAdd(disk, letter, 4, icon, tab);

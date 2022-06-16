@@ -4,19 +4,6 @@
 #include "disk.h"
 #include "utils.h"
 
-#define MAX_PHY_DRIVE 128
-
-#define CHECK_CLOSE_HANDLE(Handle) \
-{\
-	if (Handle == 0) \
-		Handle = INVALID_HANDLE_VALUE; \
-    if (Handle != INVALID_HANDLE_VALUE) \
-    {\
-        CloseHandle(Handle); \
-        Handle = INVALID_HANDLE_VALUE; \
-    }\
-}
-
 static const char* d_human_sizes[6] =
 { "B", "KB", "MB", "GB", "TB", "PB", };
 
@@ -48,29 +35,60 @@ static const CHAR* GetBusTypeString(STORAGE_BUS_TYPE Type)
 	return "unknown";
 }
 
-static void
-PrintVolumeInfo(PNODE pNode, CHAR Letter)
+static LPCSTR GetRealVolumePath(LPCSTR lpszVolume)
 {
-	CHAR PhyPath[] = "A:\\";
+	LPCSTR lpszRealPath;
+	HANDLE hFile = CreateFileA(lpszVolume, 0,
+		FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING, 0, NULL);
+	if (!hFile || hFile == INVALID_HANDLE_VALUE)
+		return lpszVolume;
+	lpszRealPath = NWL_NtGetPathFromHandle(hFile);
+	CloseHandle(hFile);
+	return lpszRealPath ? lpszRealPath : lpszVolume;
+}
+
+static void
+PrintVolumeInfo(PNODE pNode, LPCSTR lpszVolume)
+{
+	CHAR cchLabel[MAX_PATH];
+	CHAR cchFs[MAX_PATH];
+	CHAR cchPath[MAX_PATH];
+	LPCH lpszVolumePathNames = NULL;
+	DWORD dwSize = 0;
 	ULARGE_INTEGER Space;
-	CHAR* VolName = malloc(MAX_PATH + 1);
-	CHAR* VolFs = malloc(MAX_PATH + 1);
-	if (!VolName || !VolFs)
-		goto fail;
-	snprintf(PhyPath, sizeof(PhyPath), "%C:\\", Letter);
-	if (GetVolumeInformationA(PhyPath, VolName, MAX_PATH + 1, NULL, NULL, NULL, VolFs, MAX_PATH + 1) != TRUE)
-		goto fail;
-	NWL_NodeAttrSet(pNode, "Filesystem", VolFs, 0);
-	NWL_NodeAttrSet(pNode, "Label", VolName, 0);
-	if (GetDiskFreeSpaceExA(PhyPath, NULL, NULL, &Space))
-		NWL_NodeAttrSet(pNode, "Free Space", NWL_GetHumanSize(Space.QuadPart, d_human_sizes, 1024), NAFLG_FMT_HUMAN_SIZE);
-	if (GetDiskFreeSpaceExA(PhyPath, NULL, &Space, NULL))
-		NWL_NodeAttrSet(pNode, "Total Space", NWL_GetHumanSize(Space.QuadPart, d_human_sizes, 1024), NAFLG_FMT_HUMAN_SIZE);
-fail:
-	if (VolName)
-		free(VolName);
-	if (VolFs)
-		free(VolFs);
+
+	snprintf(cchPath, MAX_PATH, "%s\\", lpszVolume);
+	NWL_NodeAttrSet(pNode, "Path", GetRealVolumePath(lpszVolume), 0);
+	NWL_NodeAttrSet(pNode, "Volume GUID", lpszVolume, 0);
+	if (GetVolumeInformationA(cchPath, cchLabel, MAX_PATH, NULL, NULL, NULL, cchFs, MAX_PATH))
+	{
+		NWL_NodeAttrSet(pNode, "Label", cchLabel, 0);
+		NWL_NodeAttrSet(pNode, "Filesystem", cchFs, 0);
+	}
+	if (GetDiskFreeSpaceExA(cchPath, NULL, NULL, &Space))
+		NWL_NodeAttrSet(pNode, "Free Space",
+			NWL_GetHumanSize(Space.QuadPart, d_human_sizes, 1024), NAFLG_FMT_HUMAN_SIZE);
+	if (GetDiskFreeSpaceExA(cchPath, NULL, &Space, NULL))
+		NWL_NodeAttrSet(pNode, "Total Space",
+			NWL_GetHumanSize(Space.QuadPart, d_human_sizes, 1024), NAFLG_FMT_HUMAN_SIZE);
+	GetVolumePathNamesForVolumeNameA(cchPath, NULL, 0, &dwSize);
+	if (GetLastError() == ERROR_MORE_DATA && dwSize)
+	{
+		lpszVolumePathNames = malloc(dwSize);
+		if (lpszVolumePathNames)
+		{
+			if (GetVolumePathNamesForVolumeNameA(cchPath, lpszVolumePathNames, dwSize, &dwSize))
+			{
+				PNODE mp = NWL_NodeAppendNew(pNode, "Volume Path Names", NFLG_TABLE);
+				for (CHAR* p = lpszVolumePathNames; p[0] != '\0'; p += strlen(p) + 1)
+				{
+					PNODE mnt = NWL_NodeAppendNew(mp, "Mount Point", NFLG_TABLE_ROW);
+					NWL_NodeAttrSet(mnt, strlen(p) > 3 ? "Path" : "Drive Letter", p, 0);
+				}
+			}
+			free(lpszVolumePathNames);
+		}
+	}
 }
 
 static DWORD GetDriveCount(void)
@@ -115,22 +133,15 @@ static CHAR* GetDriveHwName(const CHAR* HwId)
 	return HwName;
 }
 
-static BOOL GetDriveByLetter(CHAR Letter, DWORD* pDrive)
+static BOOL GetDriveByVolume(HANDLE hVolume, DWORD* pDrive)
 {
 	BOOL Ret;
 	DWORD dwSize = 0;
 	VOLUME_DISK_EXTENTS DiskExtents = { 0 };
-	HANDLE Handle = GetHandleByLetter(Letter);
-	if (Handle == INVALID_HANDLE_VALUE)
-		return FALSE;
-	Ret = DeviceIoControl(Handle, IOCTL_VOLUME_GET_VOLUME_DISK_EXTENTS,
+	Ret = DeviceIoControl(hVolume, IOCTL_VOLUME_GET_VOLUME_DISK_EXTENTS,
 		NULL, 0, &DiskExtents, (DWORD)(sizeof(DiskExtents)), &dwSize, NULL);
 	if (!Ret || DiskExtents.NumberOfDiskExtents == 0)
-	{
-		CHECK_CLOSE_HANDLE(Handle);
 		return FALSE;
-	}
-	CHECK_CLOSE_HANDLE(Handle);
 	*pDrive = DiskExtents.Extents[0].DiskNumber;
 	return TRUE;
 }
@@ -161,260 +172,238 @@ GetDiskSize(HANDLE hDisk)
 	return Size;
 }
 
-static void AddLetter(CHAR* LogLetter, CHAR Letter)
+static VOID
+RemoveTrailingBackslash(CHAR* lpszPath)
 {
-	UINT i;
-	if (Letter < 'A' || Letter > 'Z')
+	size_t len = strlen(lpszPath);
+	if (len < 1 || lpszPath[len - 1] != '\\')
 		return;
-	for (i = 0; i < 26; i++)
-	{
-		if (LogLetter[i] == 0)
-		{
-			LogLetter[i] = Letter;
-			break;
-		}
-	}
+	lpszPath[len - 1] = '\0';
 }
 
 static const UINT8 GPT_MAGIC[8] = { 0x45, 0x46, 0x49, 0x20, 0x50, 0x41, 0x52, 0x54 };
 
-static int GetDriveInfoList(PHY_DRIVE_INFO* pDriveList, DWORD* pDriveCount)
+static DWORD GetDriveInfoList(PHY_DRIVE_INFO** pDriveList)
 {
 	DWORD i;
-	DWORD Count;
-	DWORD id;
-	CHAR Letter = 'A';
+	DWORD dwCount;
 	BOOL  bRet;
 	DWORD dwBytes;
-	DWORD DriveCount = 0;
-	HANDLE Handle = INVALID_HANDLE_VALUE;
-	PHY_DRIVE_INFO* CurDrive = pDriveList;
-	STORAGE_PROPERTY_QUERY Query = { 0 };
-	STORAGE_DESCRIPTOR_HEADER DevDescHeader = { 0 };
-	STORAGE_DEVICE_DESCRIPTOR* pDevDesc;
-	DWORD PhyDriveId[MAX_PHY_DRIVE] = { 0 };
-	CHAR LogLetter[MAX_PHY_DRIVE][26] = { 0 };
-	UINT8 *Sector = NULL;
+	PHY_DRIVE_INFO* pInfo;
+
+	UINT8 *pSector = NULL;
 	struct mbr_header* MBR = NULL;
 	struct gpt_header* GPT = NULL;
 
-	Sector = malloc(512 + 512);
-	if (!Sector)
-		return 1;
-	MBR = (struct mbr_header*)Sector;
-	GPT = (struct gpt_header*)(Sector + 512);
+	HANDLE hSearch;
+	CHAR cchVolume[MAX_PATH];
 
-	ZeroMemory(LogLetter, sizeof(LogLetter));
+	pSector = malloc(512 + 512);
+	if (!pSector)
+		return 0;
+	MBR = (struct mbr_header*)pSector;
+	GPT = (struct gpt_header*)(pSector + 512);
 
-	Count = GetDriveCount();
-	if (Count > MAX_PHY_DRIVE)
-		Count = MAX_PHY_DRIVE;
-
-	for (i = 0; i < Count; i++)
-		PhyDriveId[i] = i;
-
-	dwBytes = GetLogicalDrives();
-	while (dwBytes)
+	dwCount = GetDriveCount();
+	*pDriveList = calloc(dwCount, sizeof(PHY_DRIVE_INFO));
+	if (!*pDriveList)
 	{
-		if (dwBytes & 0x01)
-		{
-			if (GetDriveByLetter(Letter, &id))
-			{
-				for (i = 0; i < Count; i++)
-				{
-					if (PhyDriveId[i] == id)
-					{
-						AddLetter(LogLetter[i], Letter);
-						break;
-					}
-				}
-				if (i >= Count)
-				{
-					PhyDriveId[Count] = id;
-					AddLetter(LogLetter[Count], Letter);
-					Count++;
-				}
-			}
-		}
-		Letter++;
-		dwBytes >>= 1;
+		free(pSector);
+		return 0;
 	}
+	pInfo = *pDriveList;
 
-	for (i = 0; i < Count && DriveCount < MAX_PHY_DRIVE; i++)
+	for (i = 0; i < dwCount; i++)
 	{
-		CHECK_CLOSE_HANDLE(Handle);
+		HANDLE hDrive = INVALID_HANDLE_VALUE;
+		STORAGE_PROPERTY_QUERY Query = { 0 };
+		STORAGE_DESCRIPTOR_HEADER DevDescHeader = { 0 };
+		STORAGE_DEVICE_DESCRIPTOR* pDevDesc = NULL;
 
-		Handle = GetHandleById(PhyDriveId[i]);
+		hDrive = GetHandleById(i);
 
-		if (Handle == INVALID_HANDLE_VALUE)
-			continue;
+		if (!hDrive || hDrive == INVALID_HANDLE_VALUE)
+			goto next_drive;
 
 		Query.PropertyId = StorageDeviceProperty;
 		Query.QueryType = PropertyStandardQuery;
 
-		bRet = DeviceIoControl(Handle, IOCTL_STORAGE_QUERY_PROPERTY, &Query, sizeof(Query),
+		bRet = DeviceIoControl(hDrive, IOCTL_STORAGE_QUERY_PROPERTY, &Query, sizeof(Query),
 			&DevDescHeader, sizeof(STORAGE_DESCRIPTOR_HEADER), &dwBytes, NULL);
-		if (!bRet)
-			continue;
-
-		if (DevDescHeader.Size < sizeof(STORAGE_DEVICE_DESCRIPTOR))
-			continue;
+		if (!bRet || DevDescHeader.Size < sizeof(STORAGE_DEVICE_DESCRIPTOR))
+			goto next_drive;
 
 		pDevDesc = (STORAGE_DEVICE_DESCRIPTOR*)malloc(DevDescHeader.Size);
 		if (!pDevDesc)
-			continue;
+			goto next_drive;
 
-		bRet = DeviceIoControl(Handle, IOCTL_STORAGE_QUERY_PROPERTY, &Query, sizeof(Query),
+		bRet = DeviceIoControl(hDrive, IOCTL_STORAGE_QUERY_PROPERTY, &Query, sizeof(Query),
 			pDevDesc, DevDescHeader.Size, &dwBytes, NULL);
 		if (!bRet)
-		{
-			free(pDevDesc);
-			continue;
-		}
+			goto next_drive;
 
-		CurDrive->PhyDrive = i;
-		CurDrive->SizeInBytes = GetDiskSize(Handle);
-		CurDrive->DeviceType = pDevDesc->DeviceType;
-		CurDrive->RemovableMedia = pDevDesc->RemovableMedia;
-		CurDrive->BusType = pDevDesc->BusType;
-		CurDrive->HwID = GetDriveHwId(i);
+		pInfo[i].PhyDrive = i;
+		pInfo[i].SizeInBytes = GetDiskSize(hDrive);
+		pInfo[i].DeviceType = pDevDesc->DeviceType;
+		pInfo[i].RemovableMedia = pDevDesc->RemovableMedia;
+		pInfo[i].BusType = pDevDesc->BusType;
+		pInfo[i].HwID = GetDriveHwId(i);
 
 		if (pDevDesc->VendorIdOffset)
 		{
-			strcpy_s(CurDrive->VendorId, sizeof (CurDrive->VendorId),
+			strcpy_s(pInfo[i].VendorId, MAX_PATH,
 				(char*)pDevDesc + pDevDesc->VendorIdOffset);
-			NWL_TrimString(CurDrive->VendorId);
+			NWL_TrimString(pInfo[i].VendorId);
 		}
 
 		if (pDevDesc->ProductIdOffset)
 		{
-			strcpy_s(CurDrive->ProductId, sizeof(CurDrive->ProductId),
+			strcpy_s(pInfo[i].ProductId, MAX_PATH,
 				(char*)pDevDesc + pDevDesc->ProductIdOffset);
-			NWL_TrimString(CurDrive->ProductId);
+			NWL_TrimString(pInfo[i].ProductId);
 		}
 
 		if (pDevDesc->ProductRevisionOffset)
 		{
-			strcpy_s(CurDrive->ProductRev, sizeof(CurDrive->ProductRev),
+			strcpy_s(pInfo[i].ProductRev, MAX_PATH,
 				(char*)pDevDesc + pDevDesc->ProductRevisionOffset);
-			NWL_TrimString(CurDrive->ProductRev);
+			NWL_TrimString(pInfo[i].ProductRev);
 		}
 
 		if (pDevDesc->SerialNumberOffset)
 		{
-			strcpy_s(CurDrive->SerialNumber, sizeof(CurDrive->SerialNumber),
+			strcpy_s(pInfo[i].SerialNumber, MAX_PATH,
 				(char*)pDevDesc + pDevDesc->SerialNumberOffset);
-			NWL_TrimString(CurDrive->SerialNumber);
+			NWL_TrimString(pInfo[i].SerialNumber);
 		}
 
-		CurDrive->PartStyle = 0;
-		ZeroMemory(Sector, 512 + 512);
-		bRet = DiskRead(Handle, 0, 0, 512 + 512, Sector);
+		pInfo[i].PartStyle = 0;
+		ZeroMemory(pSector, 512 + 512);
+		bRet = DiskRead(hDrive, 0, 0, 512 + 512, pSector);
 		if (!bRet)
 			goto next_drive;
 
 		if (MBR->signature == 0xaa55)
 		{
-			CurDrive->PartStyle = 1;
-			memcpy(CurDrive->MbrSignature, MBR->unique_signature, 4);
+			pInfo[i].PartStyle = 1;
+			memcpy(pInfo[i].MbrSignature, MBR->unique_signature, 4);
 			for (int j = 0; j < 4; j++)
 			{
 				if (MBR->entries[i].type == 0xee)
 				{
-					CurDrive->PartStyle = 2;
+					pInfo[i].PartStyle = 2;
 					break;
 				}
 			}
 		}
 		if (memcmp(GPT->magic, GPT_MAGIC, sizeof(GPT_MAGIC)) == 0)
 		{
-			memcpy(CurDrive->GptGuid, GPT->guid, 16);
-			CurDrive->PartStyle = 2;
+			memcpy(pInfo[i].GptGuid, GPT->guid, 16);
+			pInfo[i].PartStyle = 2;
 		}
-		memcpy(CurDrive->DriveLetters, LogLetter[CurDrive->PhyDrive], 26);
+
 next_drive:
-		CurDrive++;
-		DriveCount++;
-
-		free(pDevDesc);
-
-		CHECK_CLOSE_HANDLE(Handle);
+		if (pDevDesc)
+			free(pDevDesc);
+		if (hDrive && hDrive != INVALID_HANDLE_VALUE)
+			CloseHandle(hDrive);
 	}
 
-	*pDriveCount = DriveCount;
+	free(pSector);
 
-	return 0;
+	for (bRet = TRUE, hSearch = FindFirstVolumeA(cchVolume, MAX_PATH);
+		bRet && hSearch != INVALID_HANDLE_VALUE;
+		bRet = FindNextVolumeA(hSearch, cchVolume, MAX_PATH))
+	{
+		HANDLE hVolume;
+		RemoveTrailingBackslash(cchVolume);
+		hVolume = CreateFileA(cchVolume, 0,
+			FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING, 0, NULL);
+		if (!hVolume || hVolume == INVALID_HANDLE_VALUE)
+			continue;
+		if (!GetDriveByVolume(hVolume, &dwBytes))
+		{
+			CloseHandle(hVolume);
+			continue;
+		}
+		CloseHandle(hVolume);
+		if (dwBytes >= dwCount || pInfo[dwBytes].VolumeCount >= 32)
+			continue;
+		strcpy_s(pInfo[dwBytes].Volumes[pInfo[dwBytes].VolumeCount], MAX_PATH, cchVolume);
+		pInfo[dwBytes].VolumeCount++;
+	}
+
+	if (hSearch != INVALID_HANDLE_VALUE)
+		FindVolumeClose(hSearch);
+
+	return dwCount;
 }
 
 PNODE NW_Disk(VOID)
 {
 	PHY_DRIVE_INFO* PhyDriveList = NULL;
 	DWORD PhyDriveCount = 0, i = 0;
-	PHY_DRIVE_INFO* CurDrive = NULL;
 	PNODE node = NWL_NodeAlloc("Disks", NFLG_TABLE);
 	if (NWLC->DiskInfo)
 		NWL_NodeAppendChild(NWLC->NwRoot, node);
-	PhyDriveList = (PHY_DRIVE_INFO*)calloc(MAX_PHY_DRIVE, sizeof(PHY_DRIVE_INFO));
-	if (!PhyDriveList)
+	PhyDriveCount = GetDriveInfoList(&PhyDriveList);
+	if (PhyDriveCount == 0)
+		goto out;
+
+	for (i = 0; i < PhyDriveCount; i++)
 	{
-		fprintf(stderr, "Failed to alloc phy drive memory\n");
-		return node;
-	}
-	memset(PhyDriveList, 0, sizeof(PHY_DRIVE_INFO) * MAX_PHY_DRIVE);
-	if (GetDriveInfoList(PhyDriveList, &PhyDriveCount) == 0)
-	{
-		for (i = 0, CurDrive = PhyDriveList; i < PhyDriveCount; i++, CurDrive++)
+		PNODE nd = NWL_NodeAppendNew(node, "Disk", NFLG_TABLE_ROW);
+		NWL_NodeAttrSetf(nd, "Path", 0, "\\\\.\\PhysicalDrive%u", PhyDriveList[i].PhyDrive);
+		if (PhyDriveList[i].HwID)
 		{
-			PNODE nd = NWL_NodeAppendNew(node, "Disk", NFLG_TABLE_ROW);
-			NWL_NodeAttrSetf(nd, "Path", 0, "\\\\.\\PhysicalDrive%u", CurDrive->PhyDrive);
-			if (CurDrive->HwID)
+			CHAR* hwName = NULL;
+			NWL_NodeAttrSet(nd, "HWID", PhyDriveList[i].HwID, 0);
+			hwName = GetDriveHwName(PhyDriveList[i].HwID);
+			if (hwName)
 			{
-				CHAR* hwName = NULL;
-				NWL_NodeAttrSet(nd, "HWID", CurDrive->HwID, 0);
-				hwName = GetDriveHwName(CurDrive->HwID);
-				if (hwName)
-				{
-					NWL_NodeAttrSet(nd, "HW Name", hwName, 0);
-					free(hwName);
-				}
-				free(CurDrive->HwID);
+				NWL_NodeAttrSet(nd, "HW Name", hwName, 0);
+				free(hwName);
 			}
-			if (CurDrive->VendorId[0])
-				NWL_NodeAttrSet(nd, "Vendor ID", CurDrive->VendorId, 0);
-			if (CurDrive->ProductId[0])
-				NWL_NodeAttrSet(nd, "Product ID", CurDrive->ProductId, 0);
-			if (CurDrive->ProductRev[0])
-				NWL_NodeAttrSet(nd, "Product Rev", CurDrive->ProductRev, 0);
-			if (CurDrive->SerialNumber[0])
-				NWL_NodeAttrSet(nd, "Serial Number", CurDrive->SerialNumber, 0);
-			NWL_NodeAttrSet(nd, "Type", GetBusTypeString(CurDrive->BusType), 0);
-			NWL_NodeAttrSetBool(nd, "Removable", CurDrive->RemovableMedia, 0);
-			NWL_NodeAttrSet(nd, "Size", NWL_GetHumanSize(CurDrive->SizeInBytes, d_human_sizes, 1024), NAFLG_FMT_HUMAN_SIZE);
-			if (CurDrive->PartStyle == 1)
+			free(PhyDriveList[i].HwID);
+		}
+		if (PhyDriveList[i].VendorId[0])
+			NWL_NodeAttrSet(nd, "Vendor ID", PhyDriveList[i].VendorId, 0);
+		if (PhyDriveList[i].ProductId[0])
+			NWL_NodeAttrSet(nd, "Product ID", PhyDriveList[i].ProductId, 0);
+		if (PhyDriveList[i].ProductRev[0])
+			NWL_NodeAttrSet(nd, "Product Rev", PhyDriveList[i].ProductRev, 0);
+		if (PhyDriveList[i].SerialNumber[0])
+			NWL_NodeAttrSet(nd, "Serial Number", PhyDriveList[i].SerialNumber, 0);
+		NWL_NodeAttrSet(nd, "Type", GetBusTypeString(PhyDriveList[i].BusType), 0);
+		NWL_NodeAttrSetBool(nd, "Removable", PhyDriveList[i].RemovableMedia, 0);
+		NWL_NodeAttrSet(nd, "Size",
+			NWL_GetHumanSize(PhyDriveList[i].SizeInBytes, d_human_sizes, 1024), NAFLG_FMT_HUMAN_SIZE);
+		if (PhyDriveList[i].PartStyle == 1)
+		{
+			NWL_NodeAttrSet(nd, "Partition Table", "MBR", 0);
+			NWL_NodeAttrSetf(nd, "MBR Signature", 0, "%02X %02X %02X %02X",
+				PhyDriveList[i].MbrSignature[0], PhyDriveList[i].MbrSignature[1],
+				PhyDriveList[i].MbrSignature[2], PhyDriveList[i].MbrSignature[3]);
+		}
+		else if (PhyDriveList[i].PartStyle == 2)
+		{
+			NWL_NodeAttrSet(nd, "Partition Table", "GPT", 0);
+			NWL_NodeAttrSet(nd, "GPT GUID", NWL_GuidToStr(PhyDriveList[i].GptGuid), NAFLG_FMT_GUID);
+		}
+		if (PhyDriveList[i].VolumeCount)
+		{
+			DWORD j;
+			PNODE nv = NWL_NodeAppendNew(nd, "Volumes", NFLG_TABLE);
+			for (j = 0;  j < PhyDriveList[i].VolumeCount; j++)
 			{
-				NWL_NodeAttrSet(nd, "Partition Table", "MBR", 0);
-				NWL_NodeAttrSetf(nd, "MBR Signature", 0, "%02X %02X %02X %02X",
-					CurDrive->MbrSignature[0], CurDrive->MbrSignature[1],
-					CurDrive->MbrSignature[2], CurDrive->MbrSignature[3]);
-			}
-			else if (CurDrive->PartStyle == 2)
-			{
-				NWL_NodeAttrSet(nd, "Partition Table", "GPT", 0);
-				NWL_NodeAttrSet(nd, "GPT GUID", NWL_GuidToStr(CurDrive->GptGuid), NAFLG_FMT_GUID);
-			}
-			if (CurDrive->DriveLetters[0])
-			{
-				PNODE nv = NWL_NodeAppendNew(nd, "Volumes", NFLG_TABLE);
-				for (int j = 0;  CurDrive->DriveLetters[j] && j < 26; j++)
-				{
-					PNODE vol = NWL_NodeAppendNew(nv, "Volume", NFLG_TABLE_ROW);
-					NWL_NodeAttrSetf(vol, "Drive Letter", 0, "%C", CurDrive->DriveLetters[j]);
-					PrintVolumeInfo(vol, CurDrive->DriveLetters[j]);
-				}
+				PNODE vol = NWL_NodeAppendNew(nv, "Volume", NFLG_TABLE_ROW);
+				PrintVolumeInfo(vol, PhyDriveList[i].Volumes[j]);
 			}
 		}
 	}
 
-	free(PhyDriveList);
+out:
+	if (PhyDriveList)
+		free(PhyDriveList);
 	return node;
 }
