@@ -79,8 +79,7 @@ struct gpt_header
 
 typedef struct _PHY_DRIVE_INFO
 {
-	DWORD PhyDrive;
-	INT PartStyle;//0:UNKNOWN 1:MBR 2:GPT
+	INT PartMap; // 0:UNKNOWN 1:MBR 2:GPT 3:ISO
 	UINT64 SizeInBytes;
 	BYTE DeviceType;
 	BOOL RemovableMedia;

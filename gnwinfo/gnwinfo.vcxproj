@@ -148,6 +148,7 @@
     <Image Include="gnwinfo.ico" />
     <Image Include="icons\acpi.ico" />
     <Image Include="icons\battery.ico" />
+    <Image Include="icons\cdrom.ico" />
     <Image Include="icons\cpu.ico" />
     <Image Include="icons\crypto.ico" />
     <Image Include="icons\disk.ico" />

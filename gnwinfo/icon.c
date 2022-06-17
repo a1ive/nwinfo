@@ -49,10 +49,11 @@ INT GNW_IconFromAcpi(PNODE node, LPCSTR name)
 INT GNW_IconFromDisk(PNODE node, LPCSTR name)
 {
 	INT icon = IDI_ICON_TVD_HDD;
-	UNREFERENCED_PARAMETER(name);
 	LPSTR rm = NWL_NodeAttrGet(node, "Removable");
 	if (rm && _stricmp(rm, "Yes") == 0)
 		icon = IDI_ICON_TVD_RMD;
+	if (name && _strnicmp(name, "\\\\.\\CdRom", 9) == 0)
+		icon = IDI_ICON_TVD_ISO;
 	return icon;
 }
 

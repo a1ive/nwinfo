@@ -153,5 +153,8 @@
     <Image Include="icons\tree.ico">
       <Filter>资源文件\tvdev</Filter>
     </Image>
+    <Image Include="icons\cdrom.ico">
+      <Filter>资源文件\tvdev</Filter>
+    </Image>
   </ItemGroup>
 </Project>
