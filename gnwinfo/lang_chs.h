@@ -19,7 +19,7 @@ static GNW_LANG GNW_LANG_CHS[] =
 
 	{"ACPI Table", "ACPI 表"},
 	{"Processor", "处理器"},
-	{"Physical Storage", "磁盘"},
+	{"Physical Storage", "物理存储"},
 	{"Display Devices", "显示设备"},
 	{"Network Adapter", "网络适配器"},
 	{"PCI Devices", "PCI 设备"},
