@@ -23,7 +23,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v142</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>MultiByte</CharacterSet>
     <DisableAdvancedSupport>true</DisableAdvancedSupport>
@@ -35,7 +35,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v142</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>MultiByte</CharacterSet>
     <DisableAdvancedSupport>true</DisableAdvancedSupport>
@@ -117,6 +117,7 @@
     <ClInclude Include="format.h" />
     <ClInclude Include="libnw.h" />
     <ClInclude Include="pnp_id.h" />
+    <ClInclude Include="smart.h" />
     <ClInclude Include="smbios.h" />
     <ClInclude Include="spd.h" />
     <ClInclude Include="tokyo.h" />
@@ -133,6 +134,7 @@
     <ClCompile Include="network.c" />
     <ClCompile Include="nt.c" />
     <ClCompile Include="pci.c" />
+    <ClCompile Include="smart.c" />
     <ClCompile Include="smbios.c" />
     <ClCompile Include="smbus.c" />
     <ClCompile Include="spd.c" />

@@ -97,3 +97,5 @@ typedef struct _PHY_DRIVE_INFO
 	DWORD VolumeCount;
 	CHAR Volumes[32][MAX_PATH];
 }PHY_DRIVE_INFO;
+
+VOID NWL_GetDiskProtocolSpecificInfo(PNODE pNode, DWORD dwIndex, STORAGE_BUS_TYPE busType);

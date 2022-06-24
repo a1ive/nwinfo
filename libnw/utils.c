@@ -413,6 +413,45 @@ CHAR* NWL_GetRegSzValue(HKEY Key, LPCSTR SubKey, LPCSTR ValueName)
 	return sRet;
 }
 
+HANDLE NWL_GetDiskHandleById(BOOL Cdrom, BOOL Write, DWORD Id)
+{
+	CHAR PhyPath[] = "\\\\.\\PhysicalDrive4294967295";
+	if (Cdrom)
+		snprintf(PhyPath, sizeof(PhyPath), "\\\\.\\CdRom%u", Id);
+	else
+		snprintf(PhyPath, sizeof(PhyPath), "\\\\.\\PhysicalDrive%u", Id);
+	return CreateFileA(PhyPath, Write ? (GENERIC_READ | GENERIC_WRITE) : GENERIC_READ,
+		FILE_SHARE_READ | FILE_SHARE_WRITE, 0, OPEN_EXISTING, FILE_ATTRIBUTE_SYSTEM, 0);
+}
+
+LPCSTR NWL_GetBusTypeString(STORAGE_BUS_TYPE Type)
+{
+	switch (Type)
+	{
+	case BusTypeUnknown: return "unknown";
+	case BusTypeScsi: return "SCSI";
+	case BusTypeAtapi: return "Atapi";
+	case BusTypeAta: return "ATA";
+	case BusType1394: return "1394";
+	case BusTypeSsa: return "SSA";
+	case BusTypeFibre: return "Fibre";
+	case BusTypeUsb: return "USB";
+	case BusTypeRAID: return "RAID";
+	case BusTypeiScsi: return "iSCSI";
+	case BusTypeSas: return "SAS";
+	case BusTypeSata: return "SATA";
+	case BusTypeSd: return "SD";
+	case BusTypeMmc: return "MMC";
+	case BusTypeVirtual: return "Virtual";
+	case BusTypeFileBackedVirtual: return "FileBackedVirtual";
+	case BusTypeSpaces: return "Spaces";
+	case BusTypeNvme: return "NVMe";
+	case BusTypeSCM: return "SCM";
+	case BusTypeUfs: return "UFS";
+	}
+	return "unknown";
+}
+
 static CHAR*
 IdsGetline(CHAR* Ids, DWORD IdsSize, DWORD* Offset)
 {

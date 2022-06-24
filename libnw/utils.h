@@ -32,6 +32,8 @@ UINT8 NWL_AcpiChecksum(VOID* base, UINT size);
 VOID NWL_TrimString(CHAR* String);
 INT NWL_GetRegDwordValue(HKEY Key, LPCSTR SubKey, LPCSTR ValueName, DWORD* pValue);
 CHAR* NWL_GetRegSzValue(HKEY Key, LPCSTR SubKey, LPCSTR ValueName);
+HANDLE NWL_GetDiskHandleById(BOOL Cdrom, BOOL Write, DWORD Id);
+LPCSTR NWL_GetBusTypeString(STORAGE_BUS_TYPE Type);
 VOID NWL_FindId(PNODE nd, CHAR* Ids, DWORD IdsSize, CONST CHAR* v, CONST CHAR* d, CONST CHAR* s, INT usb);
 VOID NWL_FindClass(PNODE nd, CHAR* Ids, DWORD IdsSize, CONST CHAR* Class, INT usb);
 CHAR* NWL_LoadFileToMemory(LPCSTR lpFileName, LPDWORD lpSize);

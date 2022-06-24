@@ -7,34 +7,6 @@
 static const char* d_human_sizes[6] =
 { "B", "KB", "MB", "GB", "TB", "PB", };
 
-static const CHAR* GetBusTypeString(STORAGE_BUS_TYPE Type)
-{
-	switch (Type)
-	{
-	case BusTypeUnknown: return "unknown";
-	case BusTypeScsi: return "SCSI";
-	case BusTypeAtapi: return "Atapi";
-	case BusTypeAta: return "ATA";
-	case BusType1394: return "1394";
-	case BusTypeSsa: return "SSA";
-	case BusTypeFibre: return "Fibre";
-	case BusTypeUsb: return "USB";
-	case BusTypeRAID: return "RAID";
-	case BusTypeiScsi: return "iSCSI";
-	case BusTypeSas: return "SAS";
-	case BusTypeSata: return "SATA";
-	case BusTypeSd: return "SD";
-	case BusTypeMmc: return "MMC";
-	case BusTypeVirtual: return "Virtual";
-	case BusTypeFileBackedVirtual: return "FileBackedVirtual";
-	case BusTypeSpaces: return "Spaces";
-	case BusTypeNvme: return "NVMe";
-	case BusTypeSCM: return "SCM";
-	case BusTypeUfs: return "UFS";
-	}
-	return "unknown";
-}
-
 static LPCSTR GetRealVolumePath(LPCSTR lpszVolume)
 {
 	LPCSTR lpszRealPath;
@@ -106,16 +78,6 @@ static HANDLE GetHandleByLetter(CHAR Letter)
 {
 	CHAR PhyPath[] = "\\\\.\\A:";
 	snprintf(PhyPath, sizeof(PhyPath), "\\\\.\\%C:", Letter);
-	return CreateFileA(PhyPath, GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE, 0, OPEN_EXISTING, 0, 0);
-}
-
-static HANDLE GetHandleById(BOOL Cdrom, DWORD Id)
-{
-	CHAR PhyPath[] = "\\\\.\\PhysicalDrive4294967295";
-	if (Cdrom)
-		snprintf(PhyPath, sizeof(PhyPath), "\\\\.\\CdRom%u", Id);
-	else
-		snprintf(PhyPath, sizeof(PhyPath), "\\\\.\\PhysicalDrive%u", Id);
 	return CreateFileA(PhyPath, GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE, 0, OPEN_EXISTING, 0, 0);
 }
 
@@ -239,7 +201,7 @@ static DWORD GetDriveInfoList(BOOL bIsCdRom, PHY_DRIVE_INFO** pDriveList)
 		STORAGE_DESCRIPTOR_HEADER DevDescHeader = { 0 };
 		STORAGE_DEVICE_DESCRIPTOR* pDevDesc = NULL;
 
-		hDrive = GetHandleById(bIsCdRom, i);
+		hDrive = NWL_GetDiskHandleById(bIsCdRom, FALSE, i);
 
 		if (!hDrive || hDrive == INVALID_HANDLE_VALUE)
 			goto next_drive;
@@ -396,7 +358,7 @@ PrintDiskInfo(BOOL cdrom, PNODE node)
 			NWL_NodeAttrSet(nd, "Product Rev", PhyDriveList[i].ProductRev, 0);
 		if (PhyDriveList[i].SerialNumber[0])
 			NWL_NodeAttrSet(nd, "Serial Number", PhyDriveList[i].SerialNumber, 0);
-		NWL_NodeAttrSet(nd, "Type", GetBusTypeString(PhyDriveList[i].BusType), 0);
+		NWL_NodeAttrSet(nd, "Type", NWL_GetBusTypeString(PhyDriveList[i].BusType), 0);
 		NWL_NodeAttrSetBool(nd, "Removable", PhyDriveList[i].RemovableMedia, 0);
 		NWL_NodeAttrSet(nd, "Size",
 			NWL_GetHumanSize(PhyDriveList[i].SizeInBytes, d_human_sizes, 1024), NAFLG_FMT_HUMAN_SIZE);
@@ -412,6 +374,8 @@ PrintDiskInfo(BOOL cdrom, PNODE node)
 			NWL_NodeAttrSet(nd, "Partition Table", "GPT", 0);
 			NWL_NodeAttrSet(nd, "GPT GUID", NWL_GuidToStr(PhyDriveList[i].GptGuid), NAFLG_FMT_GUID);
 		}
+		if (!cdrom)
+			NWL_GetDiskProtocolSpecificInfo(nd, i, PhyDriveList[i].BusType);
 		if (PhyDriveList[i].VolumeCount)
 		{
 			DWORD j;

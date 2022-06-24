@@ -37,28 +37,33 @@ GNW_TreeInit(VOID)
 	{
 		HTREEITEM disk;
 		LPSTR path;
-		INT icon;
+		INT icon, j, nd_count;
 		node = GNWC.pnDisk->Children[i].LinkedNode;
 		path = NWL_NodeAttrGet(node, "Path");
 		if (!path)
 			continue;
 		icon = GNW_IconFromDisk(node, path);
 		disk = GNW_TreeAdd(GNWC.htDisk, path, 3, icon, node);
-		if (node->Children[0].LinkedNode)
+		nd_count = NWL_NodeChildCount(node);
+		for (j = 0; j < nd_count; j++)
 		{
-			PNODE tab;
-			INT j, tab_count;
-			LPSTR letter;
-			tab_count = NWL_NodeChildCount(node->Children[0].LinkedNode);
-			for (j = 0; j < tab_count; j++)
+			if (_stricmp(node->Children[j].LinkedNode->Name, "Volumes") == 0)
 			{
-				tab = node->Children[0].LinkedNode->Children[j].LinkedNode;
-				letter = NWL_NodeAttrGet(tab, "Path");
-				if (!letter)
-					continue;
-				GNW_TreeAdd(disk, letter, 4, icon, tab);
+				PNODE tab;
+				INT k, tab_count;
+				LPSTR letter;
+				tab_count = NWL_NodeChildCount(node->Children[j].LinkedNode);
+				for (k = 0; k < tab_count; k++)
+				{
+					tab = node->Children[j].LinkedNode->Children[k].LinkedNode;
+					letter = NWL_NodeAttrGet(tab, "Path");
+					if (!letter)
+						continue;
+					GNW_TreeAdd(disk, letter, 4, icon, tab);
+				}
 			}
 		}
+		
 	}
 
 	GNWC.htEdid = GNW_TreeAdd(GNWC.htRoot, "Display Devices", 2, IDI_ICON_TVN_EDID, NULL);
