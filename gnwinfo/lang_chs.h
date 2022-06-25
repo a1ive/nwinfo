@@ -160,6 +160,7 @@ static GNW_LANG GNW_LANG_CHS[] =
 	{"Removable", "可移动"},
 	{"Resolution", "分辨率"},
 	{"Revision", "修订版"},
+	{"Rotation Rate (RPM)", "转速 (RPM)"},
 	{"S.M.A.R.T. Support", "S.M.A.R.T. 支持"},
 	{"SKU Number", "SKU 编号"},
 	{"SMBIOS Version", "SMBIOS 版本"},

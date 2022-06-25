@@ -233,6 +233,31 @@ fail:
 	return FALSE;
 }
 
+static BOOL AtaIdentify(HANDLE hDisk, PVOID pData, PDWORD pdwSize)
+{
+	DWORD dwBytes;
+	SENDCMDINPARAMS stCIP = { 0 };
+	BYTE rawData[sizeof(SENDCMDOUTPARAMS) + IDENTIFY_BUFFER_SIZE] = { 0 };
+	PSENDCMDOUTPARAMS pstCOP = (PSENDCMDOUTPARAMS)rawData;
+
+	stCIP.cBufferSize = IDENTIFY_BUFFER_SIZE;
+	stCIP.bDriveNumber = 0;
+	stCIP.irDriveRegs.bFeaturesReg = 0;
+	stCIP.irDriveRegs.bSectorCountReg = 1;
+	stCIP.irDriveRegs.bSectorNumberReg = 1;
+	stCIP.irDriveRegs.bCylLowReg = 0;
+	stCIP.irDriveRegs.bCylHighReg = 0;
+	stCIP.irDriveRegs.bDriveHeadReg = DRIVE_HEAD_REG;
+	stCIP.irDriveRegs.bCommandReg = ID_CMD;
+	if (!DeviceIoControl(hDisk, SMART_RCV_DRIVE_DATA,
+		&stCIP, sizeof(stCIP), rawData, sizeof(rawData), &dwBytes, NULL))
+		return FALSE;
+	ZeroMemory(pData, READ_ATTRIBUTE_BUFFER_SIZE);
+	memcpy(pData, pstCOP->bBuffer, pstCOP->cBufferSize);
+	*pdwSize = pstCOP->cBufferSize;
+	return TRUE;
+}
+
 static BOOL AtaEnableSmart(HANDLE hDisk)
 {
 	DWORD dwBytes = 0;
@@ -303,9 +328,15 @@ GetAtaData(PNODE pNode, HANDLE hDisk)
 	GETVERSIONINPARAMS gvParam = { 0 };
 	UCHAR curAttr[READ_ATTRIBUTE_BUFFER_SIZE];
 	UCHAR trsAttr[READ_THRESHOLD_BUFFER_SIZE];
+	IDENTIFY_DEVICE_DATA idAta = { 0 };
 
 	ZeroMemory(curAttr, sizeof(curAttr));
 	ZeroMemory(trsAttr, sizeof(trsAttr));
+
+	if (AtaIdentify(hDisk, &idAta, &dwBytes))
+	{
+		NWL_NodeAttrSetf(pNode, "Rotation Rate (RPM)", NAFLG_FMT_NUMERIC, "%u", idAta.NominalMediaRotationRate);
+	}
 
 	if (!DeviceIoControl(hDisk, SMART_GET_VERSION,
 		NULL, 0, &gvParam, sizeof(GETVERSIONINPARAMS), &dwBytes, NULL))
@@ -326,7 +357,7 @@ GetAtaData(PNODE pNode, HANDLE hDisk)
 		return FALSE;
 
 	if (AtaFindSmartAttr(curAttr, 0xc2, &ullRaw))
-		NWL_NodeAttrSetf(pNode, "Temperature (C)", NAFLG_FMT_NUMERIC, "%llu", ullRaw);
+		NWL_NodeAttrSetf(pNode, "Temperature (C)", NAFLG_FMT_NUMERIC, "%llu", ullRaw & 0xFF);
 	if (AtaFindSmartAttr(curAttr, 0x0c, &ullRaw))
 		NWL_NodeAttrSetf(pNode, "Power On Count", NAFLG_FMT_NUMERIC, "%llu", ullRaw);
 	if (AtaFindSmartAttr(curAttr, 0x09, &ullRaw))
