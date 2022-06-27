@@ -303,6 +303,8 @@ PVOID NWL_GetAcpiByAddr(DWORD_PTR Addr)
 {
 	PVOID ret;
 	struct acpi_table_header tmp;
+	if (!Addr)
+		return NULL;
 	if (!NWL_ReadMemory(&tmp, Addr, sizeof(struct acpi_table_header)))
 		return NULL;
 	if (tmp.length < sizeof(struct acpi_table_header))

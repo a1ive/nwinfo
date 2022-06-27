@@ -7,25 +7,48 @@
 
 #include <versionhelpers.h>
 
+#define SMART_ATTR_FLAG_CRITICAL        0x01
+#define SMART_ATTR_FLAG_HIGHER_BETTER   0x02
+#define SMART_ATTR_FLAG_LOWER_BETTER    0x04
+
 static LPCSTR
-GetSmartAttr(BYTE Id)
+GetSmartAttr(BYTE Id, PDWORD Flag)
 {
+	*Flag = 0;
 	switch (Id)
 	{
-	case 0x01: return "Read Error Rate";
-	case 0x02: return "Throughput Performance";
-	case 0x03: return "Spin-Up Time";
+	case 0x01:
+		*Flag |= SMART_ATTR_FLAG_LOWER_BETTER;
+		return "Read Error Rate";
+	case 0x02:
+		*Flag |= SMART_ATTR_FLAG_HIGHER_BETTER;
+		return "Throughput Performance";
+	case 0x03:
+		*Flag |= SMART_ATTR_FLAG_LOWER_BETTER;
+		return "Spin-Up Time";
 	case 0x04: return "Start/Stop Count";
-	case 0x05: return "Reallocated Sectors Count";
+	case 0x05:
+		*Flag |= SMART_ATTR_FLAG_LOWER_BETTER | SMART_ATTR_FLAG_CRITICAL;
+		return "Reallocated Sectors Count";
 	case 0x06: return "Read Channel Margin";
 	case 0x07: return "Seek Error Rate";
-	case 0x08: return "Seek Time Performance";
+	case 0x08:
+		*Flag |= SMART_ATTR_FLAG_HIGHER_BETTER;
+		return "Seek Time Performance";
 	case 0x09: return "Power On Hours";
-	case 0x0a: return "Spin Retry Count";
-	case 0x0b: return "Recalibration Retries";
+	case 0x0a:
+		*Flag |= SMART_ATTR_FLAG_LOWER_BETTER | SMART_ATTR_FLAG_CRITICAL;
+		return "Spin Retry Count";
+	case 0x0b:
+		*Flag |= SMART_ATTR_FLAG_LOWER_BETTER;
+		return "Recalibration Retries";
 	case 0x0c: return "Power Cycle Count";
-	case 0x0d: return "Soft Read Error Rate";
-	case 0x16: return "Current Helium Level";
+	case 0x0d:
+		*Flag |= SMART_ATTR_FLAG_LOWER_BETTER;
+		return "Soft Read Error Rate";
+	case 0x16:
+		*Flag |= SMART_ATTR_FLAG_HIGHER_BETTER;
+		return "Current Helium Level";
 	case 0xaa: return "Available Reserved Space";
 	case 0xab: return "SSD Program Fail Count";
 	case 0xac: return "SSD Erase Fail Count";
@@ -37,47 +60,99 @@ GetSmartAttr(BYTE Id)
 	case 0xb2: return "Used Reserved Block Count";
 	case 0xb3: return "Used Reserved Block Count Total";
 	case 0xb4: return "Unused Reserved Block Count Total";
-	case 0xb5: return "Program Fail Count Total";
+	case 0xb5:
+		*Flag |= SMART_ATTR_FLAG_LOWER_BETTER;
+		return "Program Fail Count Total";
 	case 0xb6: return "Erase Fail Count";
 	case 0xb7: return "SATA Downshift Error Count";
-	case 0xb8: return "End-to-End error / IOEDC";
+	case 0xb8:
+		*Flag |= SMART_ATTR_FLAG_LOWER_BETTER | SMART_ATTR_FLAG_CRITICAL;
+		return "End-to-End error / IOEDC";
 	case 0xb9: return "Head Stability";
 	case 0xba: return "Induced Op-Vibration Detection";
-	case 0xbb: return "Reported Uncorrectable Errors";
-	case 0xbc: return "Command Timeout";
-	case 0xbd: return "High Fly Writes";
+	case 0xbb:
+		*Flag |= SMART_ATTR_FLAG_LOWER_BETTER | SMART_ATTR_FLAG_CRITICAL;
+		return "Reported Uncorrectable Errors";
+	case 0xbc:
+		*Flag |= SMART_ATTR_FLAG_LOWER_BETTER | SMART_ATTR_FLAG_CRITICAL;
+		return "Command Timeout";
+	case 0xbd:
+		*Flag |= SMART_ATTR_FLAG_LOWER_BETTER;
+		return "High Fly Writes";
 	case 0xbe: return "Temperature Difference";
-	case 0xbf: return "G-sense Error Rate";
-	case 0xc0: return "Power-off Retract Count";
-	case 0xc1: return "Load Cycle Count";
-	case 0xc2: return "Temperature";
+	case 0xbf:
+		*Flag |= SMART_ATTR_FLAG_LOWER_BETTER;
+		return "G-sense Error Rate";
+	case 0xc0:
+		*Flag |= SMART_ATTR_FLAG_LOWER_BETTER;
+		return "Power-off Retract Count";
+	case 0xc1:
+		*Flag |= SMART_ATTR_FLAG_LOWER_BETTER;
+		return "Load Cycle Count";
+	case 0xc2:
+		*Flag |= SMART_ATTR_FLAG_LOWER_BETTER;
+		return "Temperature";
 	case 0xc3: return "Hardware ECC Recovered";
-	case 0xc4: return "Reallocation Event Count";
-	case 0xc5: return "Current Pending Sector Count";
-	case 0xc6: return "Uncorrectable Sector Count";
-	case 0xc7: return "UltraDMA CRC Error Count";
-	case 0xc8: return "Multi-Zone Error Rate";
-	case 0xc9: return "Soft Read Error Rate";
-	case 0xca: return "Data Address Mark errors";
-	case 0xcb: return "Run Out Cancel";
-	case 0xcc: return "Soft ECC Correction";
-	case 0xcd: return "Thermal Asperity Rate";
+	case 0xc4:
+		*Flag |= SMART_ATTR_FLAG_LOWER_BETTER | SMART_ATTR_FLAG_CRITICAL;
+		return "Reallocation Event Count";
+	case 0xc5:
+		*Flag |= SMART_ATTR_FLAG_LOWER_BETTER | SMART_ATTR_FLAG_CRITICAL;
+		return "Current Pending Sector Count";
+	case 0xc6:
+		*Flag |= SMART_ATTR_FLAG_LOWER_BETTER | SMART_ATTR_FLAG_CRITICAL;
+		return "Uncorrectable Sector Count";
+	case 0xc7:
+		*Flag |= SMART_ATTR_FLAG_LOWER_BETTER;
+		return "UltraDMA CRC Error Count";
+	case 0xc8:
+		*Flag |= SMART_ATTR_FLAG_LOWER_BETTER;
+		return "Multi-Zone Error Rate";
+	case 0xc9:
+		*Flag |= SMART_ATTR_FLAG_LOWER_BETTER | SMART_ATTR_FLAG_CRITICAL;
+		return "Soft Read Error Rate";
+	case 0xca:
+		*Flag |= SMART_ATTR_FLAG_LOWER_BETTER;
+		return "Data Address Mark errors";
+	case 0xcb:
+		*Flag |= SMART_ATTR_FLAG_LOWER_BETTER;
+		return "Run Out Cancel";
+	case 0xcc:
+		*Flag |= SMART_ATTR_FLAG_LOWER_BETTER;
+		return "Soft ECC Correction";
+	case 0xcd:
+		*Flag |= SMART_ATTR_FLAG_LOWER_BETTER;
+		return "Thermal Asperity Rate";
 	case 0xce: return "Flying Height";
-	case 0xcf: return "Spin High Current";
+	case 0xcf:
+		*Flag |= SMART_ATTR_FLAG_LOWER_BETTER;
+		return "Spin High Current";
 	case 0xd0: return "Spin Buzz";
 	case 0xd1: return "Offline Seek Performance";
 	case 0xd2: return "Vibration During Write";
 	case 0xd3: return "Vibration During Write";
 	case 0xd4: return "Shock During Write";
-	case 0xdc: return "Disk Shift";
-	case 0xdd: return "G-Sense Error Rate";
+	case 0xdc:
+		*Flag |= SMART_ATTR_FLAG_LOWER_BETTER;
+		return "Disk Shift";
+	case 0xdd:
+		*Flag |= SMART_ATTR_FLAG_LOWER_BETTER;
+		return "G-Sense Error Rate";
 	case 0xde: return "Loaded Hours";
 	case 0xdf: return "Load/Unload Retry Count";
-	case 0xe0: return "Load Friction";
-	case 0xe1: return "Load/Unload Cycle Count";
+	case 0xe0:
+		*Flag |= SMART_ATTR_FLAG_LOWER_BETTER;
+		return "Load Friction";
+	case 0xe1:
+		*Flag |= SMART_ATTR_FLAG_LOWER_BETTER;
+		return "Load/Unload Cycle Count";
 	case 0xe2: return "Load In-time";
-	case 0xe3: return "Torque Amplification Count";
-	case 0xe4: return "Power-Off Retract Cycle";
+	case 0xe3:
+		*Flag |= SMART_ATTR_FLAG_LOWER_BETTER;
+		return "Torque Amplification Count";
+	case 0xe4:
+		*Flag |= SMART_ATTR_FLAG_LOWER_BETTER;
+		return "Power-Off Retract Cycle";
 	case 0xe6: return "HDD GMR Head Amplitude | SSD Drive Life Protection Status";
 	case 0xe7: return "SSD Life Left";
 	case 0xe8: return "Endurance Remaining";
@@ -90,12 +165,29 @@ GetSmartAttr(BYTE Id)
 	case 0xf3: return "Total LBAs Written Expanded";
 	case 0xf4: return "Total LBAs Read Expanded";
 	case 0xf9: return "NAND Writes (1GiB)";
-	case 0xfa: return "Read Error Retry Rate";
+	case 0xfa:
+		*Flag |= SMART_ATTR_FLAG_LOWER_BETTER;
+		return "Read Error Retry Rate";
 	case 0xfb: return "Minimum Spares Remaining";
 	case 0xfc: return "Newly Added Bad Flash Block";
-	case 0xfe: return "Free Fall Protection";
+	case 0xfe:
+		*Flag |= SMART_ATTR_FLAG_LOWER_BETTER;
+		return "Free Fall Protection";
 	}
 	return "Unknown";
+}
+
+static LPCSTR
+GetSmartWarn(BYTE Id, UINT64 Value)
+{
+	switch (Id)
+	{
+	case 0x05: if (Value > 0) return "WARN "; break;
+	case 0xc2: if ((Value & 0xff) > 50) return "WARN "; break;
+	case 0xc5: if (Value > 0) return "WARN "; break;
+	case 0xc6: if (Value > 0) return "WARN "; break;
+	}
+	return "";
 }
 
 static BOOL
@@ -366,14 +458,16 @@ GetAtaData(PNODE pNode, HANDLE hDisk)
 	for (i = 0; i < 30; i++)
 	{
 		CHAR tmp[64];
+		DWORD dwFlag;
 		PATA_ATTRIBUTE pAtaAttr = (PATA_ATTRIBUTE)&curAttr[2 + i * sizeof(ATA_ATTRIBUTE)];
 		PATA_THRESHOLD pAtaThrs = (PATA_THRESHOLD)&trsAttr[2 + i * sizeof(ATA_THRESHOLD)];
 		if (!pAtaAttr->bAttrID)
 			continue;
-		snprintf(tmp, 64, "[%02X] %s", pAtaAttr->bAttrID, GetSmartAttr(pAtaAttr->bAttrID));
+		snprintf(tmp, 64, "[%02X] %s", pAtaAttr->bAttrID, GetSmartAttr(pAtaAttr->bAttrID, &dwFlag));
 		ullRaw = 0;
 		memcpy(&ullRaw, pAtaAttr->bRawValue, sizeof(pAtaAttr->bRawValue));
-		NWL_NodeAttrSetf(pNode, tmp, 0, "%012llX (Cur=%u Wor=%u Thr=%u)", ullRaw,
+		NWL_NodeAttrSetf(pNode, tmp, 0, "%012llX (%sCurrent=%u Worst=%u Threshold=%u)",
+			ullRaw, GetSmartWarn(pAtaAttr->bAttrID, ullRaw),
 			pAtaAttr->bAttrValue, pAtaAttr->bWorstValue, pAtaThrs->bWarrantyThreshold);
 	}
 
