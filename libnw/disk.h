@@ -91,6 +91,7 @@ typedef struct _PHY_DRIVE_INFO
 	STORAGE_BUS_TYPE BusType;
 	// MBR
 	UCHAR MbrSignature[4];
+	DWORD MbrLba[4];
 	// GPT
 	UCHAR GptGuid[16];
 

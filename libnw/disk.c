@@ -7,6 +7,17 @@
 static const char* d_human_sizes[6] =
 { "B", "KB", "MB", "GB", "TB", "PB", };
 
+static LPCSTR
+GuidToStr(GUID* pGuid)
+{
+	static CHAR GuidStr[37] = { 0 };
+	snprintf(GuidStr, 37, "%08lX-%04X-%04X-%02X%02X-%02X%02X%02X%02X%02X%02X",
+		pGuid->Data1, pGuid->Data2, pGuid->Data3,
+		pGuid->Data4[0], pGuid->Data4[1], pGuid->Data4[2], pGuid->Data4[3],
+		pGuid->Data4[4], pGuid->Data4[5], pGuid->Data4[6], pGuid->Data4[7]);
+	return GuidStr;
+}
+
 static LPCSTR GetRealVolumePath(LPCSTR lpszVolume)
 {
 	LPCSTR lpszRealPath;
@@ -19,8 +30,72 @@ static LPCSTR GetRealVolumePath(LPCSTR lpszVolume)
 	return lpszRealPath ? lpszRealPath : lpszVolume;
 }
 
+static LPCSTR
+GetGptFlag(GUID* pGuid)
+{
+	LPCSTR lpszGuid = GuidToStr(pGuid);
+	if (_stricmp(lpszGuid, "c12a7328-f81f-11d2-ba4b-00a0c93ec93b") == 0)
+		return "ESP";
+	else if (_stricmp(lpszGuid, "e3c9e316-0b5c-4db8-817d-f92df00215ae") == 0)
+		return "MSR";
+	else if (_stricmp(lpszGuid, "de94bba4-06d1-4d40-a16a-bfd50179d6ac") == 0)
+		return "WINRE";
+	else if (_stricmp(lpszGuid, "21686148-6449-6e6f-744e-656564454649") == 0)
+		return "BIOS";
+	else if (_stricmp(lpszGuid, "024dee41-33e7-11d3-9d69-0008c781f39f") == 0)
+		return "MBR";
+	return "DATA";
+}
+
+static LPCSTR
+GetMbrFlag(LONGLONG llStartingOffset, PHY_DRIVE_INFO* pParent)
+{
+	INT i;
+	LONGLONG llLba = llStartingOffset >> 9;
+	for (i = 0; i < 4; i++)
+	{
+		if (llLba == pParent->MbrLba[i])
+			return "PRIMARY";
+	}
+	return "EXTENDED";
+}
+
 static void
-PrintVolumeInfo(PNODE pNode, LPCSTR lpszVolume)
+PrintPartitionInfo(PNODE pNode, LPCSTR lpszPath, PHY_DRIVE_INFO* pParent)
+{
+	BOOL bRet;
+	HANDLE hDevice = INVALID_HANDLE_VALUE;
+	PARTITION_INFORMATION_EX partInfo = { 0 };
+	DWORD dwPartInfo = sizeof(PARTITION_INFORMATION_EX);
+	hDevice = CreateFileA(lpszPath, GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING, 0, NULL);
+	if (!hDevice || hDevice == INVALID_HANDLE_VALUE)
+		return;
+	bRet = DeviceIoControl(hDevice, IOCTL_DISK_GET_PARTITION_INFO_EX, NULL, 0, &partInfo, dwPartInfo, &dwPartInfo, NULL);
+	CloseHandle(hDevice);
+	if (!bRet)
+		return;
+	if (partInfo.StartingOffset.QuadPart == 0) // CDROM
+		return;
+	NWL_NodeAttrSetf(pNode, "Starting LBA", 0, "%llu", partInfo.StartingOffset.QuadPart >> 9);
+	//NWL_NodeAttrSetf(pNode, "Partition Number", 0, "%u", partInfo.PartitionNumber);
+	switch (partInfo.PartitionStyle)
+	{
+	case PARTITION_STYLE_MBR:
+		NWL_NodeAttrSetf(pNode, "Partition Type", 0, "0x%02X", partInfo.Mbr.PartitionType);
+		NWL_NodeAttrSet(pNode, "Partition ID", GuidToStr(&partInfo.Mbr.PartitionId), NAFLG_FMT_GUID);
+		NWL_NodeAttrSetBool(pNode, "Boot Indicator", partInfo.Mbr.BootIndicator, 0);
+		NWL_NodeAttrSet(pNode, "Partition Flag", GetMbrFlag(partInfo.StartingOffset.QuadPart, pParent), 0);
+		break;
+	case PARTITION_STYLE_GPT:
+		NWL_NodeAttrSet(pNode, "Partition Type", GuidToStr(&partInfo.Gpt.PartitionType), NAFLG_FMT_GUID);
+		NWL_NodeAttrSet(pNode, "Partition ID", GuidToStr(&partInfo.Gpt.PartitionId), NAFLG_FMT_GUID);
+		NWL_NodeAttrSet(pNode, "Partition Flag", GetGptFlag(&partInfo.Gpt.PartitionType), 0);
+		break;
+	}
+}
+
+static void
+PrintVolumeInfo(PNODE pNode, LPCSTR lpszVolume, PHY_DRIVE_INFO* pParent)
 {
 	CHAR cchLabel[MAX_PATH];
 	CHAR cchFs[MAX_PATH];
@@ -32,6 +107,7 @@ PrintVolumeInfo(PNODE pNode, LPCSTR lpszVolume)
 	snprintf(cchPath, MAX_PATH, "%s\\", lpszVolume);
 	NWL_NodeAttrSet(pNode, "Path", GetRealVolumePath(lpszVolume), 0);
 	NWL_NodeAttrSet(pNode, "Volume GUID", lpszVolume, 0);
+	PrintPartitionInfo(pNode, lpszVolume, pParent);
 	if (GetVolumeInformationA(cchPath, cchLabel, MAX_PATH, NULL, NULL, NULL, cchFs, MAX_PATH))
 	{
 		NWL_NodeAttrSet(pNode, "Label", cchLabel, 0);
@@ -274,7 +350,8 @@ static DWORD GetDriveInfoList(BOOL bIsCdRom, PHY_DRIVE_INFO** pDriveList)
 			memcpy(pInfo[i].MbrSignature, MBR->unique_signature, 4);
 			for (int j = 0; j < 4; j++)
 			{
-				if (MBR->entries[i].type == 0xee)
+				pInfo[i].MbrLba[j] = MBR->entries[j].start;
+				if (MBR->entries[j].type == 0xee)
 				{
 					pInfo[i].PartMap = 2;
 					break;
@@ -383,7 +460,7 @@ PrintDiskInfo(BOOL cdrom, PNODE node)
 			for (j = 0; j < PhyDriveList[i].VolumeCount; j++)
 			{
 				PNODE vol = NWL_NodeAppendNew(nv, "Volume", NFLG_TABLE_ROW);
-				PrintVolumeInfo(vol, PhyDriveList[i].Volumes[j]);
+				PrintVolumeInfo(vol, PhyDriveList[i].Volumes[j], &PhyDriveList[i]);
 			}
 		}
 	}
