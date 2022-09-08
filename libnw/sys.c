@@ -175,7 +175,7 @@ TpmVersion(UINT32 ver)
 static void PrintTpmInfo(PNODE node)
 {
 	UINT32 (WINAPI *GetTpmInfo) (UINT32 Size, VOID *Info) = NULL;
-	HINSTANCE hL = LoadLibraryA("tbs.dll");
+	HMODULE hL = LoadLibraryA("tbs.dll");
 	TPM_DEVICE_INFO tpmInfo = { 0 };
 	struct acpi_table_header* AcpiHdr = NULL;
 	AcpiHdr = NWL_GetAcpi('2MPT');
