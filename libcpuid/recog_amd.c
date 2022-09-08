@@ -247,7 +247,9 @@ const struct match_entry_t cpudb_amd[] = {
 	/* 3rd-gen, Steamroller core (2014): */
 	{ 15,  0, -1, 21,   48,   2,    -1,    -1, FUSION_A, 0             ,     0, "Kaveri X2"                     },
 	{ 15,  0, -1, 21,   48,   4,    -1,    -1, FUSION_A, 0             ,     0, "Kaveri X4"                     },
+	{ 15,  8, -1, 21,   56,   4,    -1,    -1, FUSION_A, 0             ,     0, "Godavari X2"                   },
 	{ 15,  8, -1, 21,   56,   4,    -1,    -1, FUSION_A, 0             ,     0, "Godavari X4"                   },
+	{ 15,  8, -1, 21,   56,   4,    -1,    -1, NC      , ATHLON_|_X4   ,     0, "Godavari X4"                   },
 	/* 4th-gen, Excavator core (2015): */
 	{ 15,  1, -1, 21,   96,   2,    -1,    -1, FUSION_A, 0             ,     0, "Carrizo X2"                    },
 	{ 15,  1, -1, 21,   96,   4,    -1,    -1, FUSION_A, 0             ,     0, "Carrizo X4"                    },
@@ -293,6 +295,9 @@ const struct match_entry_t cpudb_amd[] = {
 	{ 15, -1, -1, 23,   96,  -1,    -1,    -1, NC, RYZEN_|_7           ,     0, "Ryzen 7 (Renoir)"              },
 	{ 15, -1, -1, 23,   96,  -1,    -1,    -1, NC, RYZEN_|_5           ,     0, "Ryzen 5 (Renoir)"              },
 	{ 15, -1, -1, 23,   96,  -1,    -1,    -1, NC, RYZEN_|_3           ,     0, "Ryzen 3 (Renoir)"              },
+	{ 15, -1, -1, 23,  104,  -1,    -1,    -1, NC, RYZEN_|_7           ,     0, "Ryzen 7 (Lucienne)"            },
+	{ 15, -1, -1, 23,  104,  -1,    -1,    -1, NC, RYZEN_|_5           ,     0, "Ryzen 5 (Lucienne)"            },
+	{ 15, -1, -1, 23,  104,  -1,    -1,    -1, NC, RYZEN_|_3           ,     0, "Ryzen 3 (Lucienne)"            },
 	/* Zen 3 (2020) => https://en.wikichip.org/wiki/amd/microarchitectures/zen_3 */
 	{ 15, -1, -1, 25,    1,  -1,    -1,    -1, NC, EPYC_               ,     0, "EPYC (Milan)"                  },
 	{ 15, -1, -1, 25,   33,  -1,    -1,    -1, NC, RYZEN_|_9           ,     0, "Ryzen 9 (Vermeer)"             },
@@ -303,6 +308,15 @@ const struct match_entry_t cpudb_amd[] = {
 	{ 15, -1, -1, 25,   80,  -1,    -1,    -1, NC, RYZEN_|_7           ,     0, "Ryzen 7 (Cezanne)"             },
 	{ 15, -1, -1, 25,   80,  -1,    -1,    -1, NC, RYZEN_|_5           ,     0, "Ryzen 5 (Cezanne)"             },
 	{ 15, -1, -1, 25,   80,  -1,    -1,    -1, NC, RYZEN_|_3           ,     0, "Ryzen 3 (Cezanne)"             },
+	/* Zen 3+ (2022) */
+	{ 15, -1,  2, 25,   33,  -1,    -1,    -1, NC, RYZEN_|_9           ,     0, "Ryzen 9 (Warhol)"              },
+	{ 15, -1,  2, 25,   33,  -1,    -1,    -1, NC, RYZEN_|_7           ,     0, "Ryzen 7 (Warhol)"              },
+	{ 15, -1,  2, 25,   33,  -1,    -1,    -1, NC, RYZEN_|_5           ,     0, "Ryzen 5 (Warhol)"              },
+	{ 15, -1,  2, 25,   33,  -1,    -1,    -1, NC, RYZEN_|_3           ,     0, "Ryzen 3 (Warhol)"              },
+	{ 15, -1, -1, 25,   68,  -1,    -1,    -1, NC, RYZEN_|_9           ,     0, "Ryzen 9 (Rembrandt)"           },
+	{ 15, -1, -1, 25,   68,  -1,    -1,    -1, NC, RYZEN_|_7           ,     0, "Ryzen 7 (Rembrandt)"           },
+	{ 15, -1, -1, 25,   68,  -1,    -1,    -1, NC, RYZEN_|_5           ,     0, "Ryzen 5 (Rembrandt)"           },
+	{ 15, -1, -1, 25,   68,  -1,    -1,    -1, NC, RYZEN_|_3           ,     0, "Ryzen 3 (Rembrandt)"           },
 	/* F   M   S  EF    EM  #cores  L2$   L3$  BC  ModelBits          ModelCode  Name                           */
 
 	{ 15, -1, -1, 24,    0,  -1,    -1,    -1, NC, C86_|_7              ,     0, "C86 7 (Dhyana)"               },
