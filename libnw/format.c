@@ -9,10 +9,8 @@
 #include "libnw.h"
 
 // Macros for printing nodes to JSON
-#define NODE_JS_FLAG_NOWS		0x2		// No whitespace
 #define NODE_JS_DELIM_NL		"\n"	// New line for JSON output
 #define NODE_JS_DELIM_INDENT	"  "	// Tab token for JSON output
-#define NODE_JS_DELIM_SPACE		" "	// Space used between keys and values
 
 // Macros for printing nodes to YAML
 #define NODE_YAML_DELIM_NL		"\n"	// New line token for YAML output
@@ -322,14 +320,12 @@ INT NWL_NodeToJson(PNODE node, FILE* file, INT flags)
 	int atts = NWL_NodeAttrCount(node);
 	int children = NWL_NodeChildCount(node);
 	int plural = 0;
-	int indent = ((flags & NODE_JS_FLAG_NOWS) == 0) ? indent_depth : 0;
-	LPCSTR nl = flags & NODE_JS_FLAG_NOWS ? "" : NODE_JS_DELIM_NL;
-	LPCSTR space = flags & NODE_JS_FLAG_NOWS ? "" : NODE_JS_DELIM_SPACE;
+	int indent = indent_depth;
 
 	// Print header
 	fprintcx(file, NODE_JS_DELIM_INDENT, indent);
 	if (indent_depth > 0 && (node->Flags & NFLG_TABLE_ROW) == 0)
-		fprintf(file, "\"%s\":%s", node->Name, space);
+		fprintf(file, "\"%s\": ", node->Name);
 
 	if ((node->Flags & NFLG_TABLE) == 0)
 		fprintf(file, "{");
@@ -349,7 +345,7 @@ INT NWL_NodeToJson(PNODE node, FILE* file, INT flags)
 				// Print attribute name
 				fprintf(file, "%s", NODE_JS_DELIM_NL);
 				fprintcx(file, NODE_JS_DELIM_INDENT, indent + 1);
-				fprintf(file, "\"%s\":%s", node->Attributes[i].LinkedAttribute->Key, space);
+				fprintf(file, "\"%s\": ", node->Attributes[i].LinkedAttribute->Key);
 
 				// Print value
 				if (node->Attributes[i].LinkedAttribute->Flags & NAFLG_FMT_NUMERIC)
