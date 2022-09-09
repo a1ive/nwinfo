@@ -8,7 +8,7 @@ static void nwinfo_help(void)
 {
 	printf("Usage: nwinfo OPTIONS\n"
 		"OPTIONS:\n"
-		"  --format=XXX     Specify output format. [YAML|JSON]\n"
+		"  --format=XXX     Specify output format. [YAML|JSON|LUA]\n"
 		"  --output=FILE    Write to FILE instead of printing to screen.\n"
 		"  --human          Display numbers in human readable format.\n"
 		"  --sys            Print system info.\n"
@@ -44,6 +44,8 @@ int main(int argc, char* argv[])
 				nwContext.NwFormat = FORMAT_YAML;
 			else if (_stricmp(&argv[i][9], "JSON") == 0)
 				nwContext.NwFormat = FORMAT_JSON;
+			else if (_stricmp(&argv[i][9], "LUA") == 0)
+				nwContext.NwFormat = FORMAT_LUA;
 		}
 		else if (_strnicmp(argv[i], "--output=", 9) == 0 && argv[i][9])
 			lpFileName = &argv[i][9];

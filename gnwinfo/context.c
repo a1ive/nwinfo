@@ -109,7 +109,7 @@ GNW_Export(VOID)
 	ZeroMemory(&ofn, sizeof(ofn));
 	ofn.lStructSize = sizeof(ofn);
 	ofn.hwndOwner = GNWC.hWnd;
-	ofn.lpstrFilter = "JSON (*.json)\0*.json\0YAML (*.yaml)\0*.yaml\0";
+	ofn.lpstrFilter = "JSON (*.json)\0*.json\0YAML (*.yaml)\0*.yaml\0LUA (*.lua)\0*.lua\0";
 	ofn.nFilterIndex = 1;
 	ofn.lpstrFile = FilePath;
 	ofn.nMaxFile = MAX_PATH;
@@ -127,8 +127,10 @@ GNW_Export(VOID)
 	}
 	if (_strnicmp(FilePath + ofn.nFileExtension, "yaml", 3) == 0)
 		NWL_NodeToYaml(GNWC.nCtx.NwRoot, GNWC.nCtx.NwFile, 0);
-	else
+	else if (_strnicmp(FilePath + ofn.nFileExtension, "json", 3) == 0)
 		NWL_NodeToJson(GNWC.nCtx.NwRoot, GNWC.nCtx.NwFile, 0);
+	else
+		NWL_NodeToLua(GNWC.nCtx.NwRoot, GNWC.nCtx.NwFile, 0);
 	fclose(GNWC.nCtx.NwFile);
 	GNWC.nCtx.NwFile = NULL;
 }

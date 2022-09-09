@@ -68,6 +68,9 @@ VOID NW_Print(LPCSTR lpFileName)
 	case FORMAT_JSON:
 		NWL_NodeToJson(NWLC->NwRoot, NWLC->NwFile, 0);
 		break;
+	case FORMAT_LUA:
+		NWL_NodeToLua(NWLC->NwRoot, NWLC->NwFile, 0);
+		break;
 	}
 }
 

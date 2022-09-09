@@ -68,3 +68,4 @@ NWL_NodeAttrSetf(PNODE node, LPCSTR key, INT flags, LPCSTR _Printf_format_string
 
 INT NWL_NodeToJson(PNODE node, FILE* file, INT flags);
 INT NWL_NodeToYaml(PNODE node, FILE* file, INT flags);
+INT NWL_NodeToLua(PNODE node, FILE* file, INT flags);

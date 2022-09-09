@@ -14,7 +14,11 @@
 
 // Macros for printing nodes to YAML
 #define NODE_YAML_DELIM_NL		"\n"	// New line token for YAML output
-#define NODE_YAML_DELIM_INDENT	"    "	// Tab toekn for YAML output
+#define NODE_YAML_DELIM_INDENT	"    "	// Tab token for YAML output
+
+// Macros for printing nodes to LUA
+#define NODE_LUA_DELIM_NL		"\n"	// New line token for LUA output
+#define NODE_LUA_DELIM_INDENT	"  "	// Tab token for LUA output
 
 #define NODE_BUFFER_LEN	32767
 
@@ -444,4 +448,73 @@ INT NWL_NodeToYaml(PNODE node, FILE* file, INT flags)
 	}
 
 	return count;
+}
+
+INT NWL_NodeToLua(PNODE node, FILE* file, INT flags)
+{
+	int i = 0;
+	int nodes = 1;
+	int atts = NWL_NodeAttrCount(node);
+	int children = NWL_NodeChildCount(node);
+	int plural = 0;
+	int indent = indent_depth;
+
+	if (!node->Parent)
+		fprintf(file, "#!lua%s_NWINFO = ", NODE_LUA_DELIM_NL);
+
+	// Print header
+	fprintcx(file, NODE_LUA_DELIM_INDENT, indent);
+	if (indent_depth > 0 && (node->Flags & NFLG_TABLE_ROW) == 0)
+		fprintf(file, "[\"%s\"] = ", node->Name);
+
+	//if ((node->Flags & NFLG_TABLE) == 0)
+	fprintf(file, "{");
+
+	// Print attributes
+	if (atts > 0 && (node->Flags & NFLG_TABLE) == 0)
+	{
+		for (i = 0; i < atts; i++)
+		{
+			if (*node->Attributes[i].LinkedAttribute->Value != '\0')
+			{
+				if (plural)
+					fprintf(file, ",");
+
+				// Print attribute name
+				fprintf(file, "%s", NODE_LUA_DELIM_NL);
+				fprintcx(file, NODE_LUA_DELIM_INDENT, indent + 1);
+				fprintf(file, "[\"%s\"] = ", node->Attributes[i].LinkedAttribute->Key);
+
+				// Print value
+				json_escape_content(node->Attributes[i].LinkedAttribute->Value, NWLC->NwBuf, NWINFO_BUFSZ);
+				fprintf(file, "\"%s\"", NWLC->NwBuf);
+				plural = 1;
+			}
+		}
+	}
+
+	// Print children
+	if (children > 0)
+	{
+		indent_depth++;
+		for (i = 0; i < children; i++)
+		{
+			if (plural)
+				fprintf(file, ",");
+
+			fprintf(file, NODE_LUA_DELIM_NL);
+			nodes += NWL_NodeToLua(node->Children[i].LinkedNode, file, flags);
+			plural = 1;
+		}
+		indent_depth--;
+	}
+
+	if (atts > 0 || children > 0)
+	{
+		fprintf(file, NODE_LUA_DELIM_NL);
+		fprintcx(file, NODE_LUA_DELIM_INDENT, indent);
+	}
+	//if ((node->Flags & NFLG_TABLE) == 0)
+	fprintf(file, "}");
+	return nodes;
 }
