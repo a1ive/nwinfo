@@ -135,6 +135,14 @@ static void PrintOsInfo(PNODE node)
 	NWL_NodeAttrSetf(node, "Page Size", NAFLG_FMT_NUMERIC, "%u", SystemInfo.dwPageSize);
 }
 
+static void PrintSysMetrics(PNODE node)
+{
+	NWL_NodeAttrSetBool(node, "Safe Mode", GetSystemMetrics(SM_CLEANBOOT), 0);
+	NWL_NodeAttrSetBool(node, "DBCS Enabled", GetSystemMetrics(SM_DBCSENABLED), 0);
+	NWL_NodeAttrSetBool(node, "Debug Version", GetSystemMetrics(SM_DEBUG), 0);
+	NWL_NodeAttrSetBool(node, "Slow Processor", GetSystemMetrics(SM_SLOWMACHINE), 0);
+}
+
 static void PrintFwInfo(PNODE node)
 {
 	DWORD VarSize = 0;
@@ -206,35 +214,53 @@ static void
 PrintPowerInfo(PNODE node)
 {
 	SYSTEM_POWER_STATUS Power;
-	if (!GetSystemPowerStatus(&Power)
-		|| Power.ACLineStatus == 255
-		|| Power.BatteryFlag == 255
-		|| Power.BatteryLifePercent > 100)
+	if (!GetSystemPowerStatus(&Power))
 	{
-		NWL_NodeAttrSet(node, "Power Status", "UNKNOWN", 0);
+		Power.ACLineStatus = 255;
+		Power.BatteryFlag = 255;
+	}
+
+	switch (Power.ACLineStatus)
+	{
+	case 0:
+		NWL_NodeAttrSet(node, "AC Power", "Offline", 0);
+		break;
+	case 1:
+		NWL_NodeAttrSet(node, "AC Power", "Online", 0);
+		break;
+	default:
+		NWL_NodeAttrSet(node, "AC Power", "UNKNOWN", 0);
+	}
+
+	if (Power.BatteryFlag == 255U)
+	{
+		NWL_NodeAttrSet(node, "Battery Status", "UNKNOWN", 0);
 		return;
 	}
-	if (Power.BatteryFlag == 128)
+	else if (Power.BatteryFlag & 128U)
 	{
-		NWL_NodeAttrSet(node, "Power Status", "NO BATTERY", 0);
+		NWL_NodeAttrSet(node, "Battery Status", "NO BATTERY", 0);
 		return;
 	}
-		
+	else if (Power.BatteryFlag & 8U)
+		NWL_NodeAttrSet(node, "Battery Status", "Charging", 0);
+	else
+		NWL_NodeAttrSet(node, "Battery Status", "Not Charging", 0);
+
+	if (Power.BatteryLifePercent <= 100U)
+		NWL_NodeAttrSetf(node, "Battery Life Percentage", 0, "%u%%", Power.BatteryLifePercent);
+	else
+		NWL_NodeAttrSet(node, "Battery Life Percentage", "UNKNOWN", 0);
+
 	if (Power.BatteryLifeTime != -1)
 	{
 		UINT32 Hours = Power.BatteryLifeTime / 3600U;
 		UINT32 Minutes = Power.BatteryLifeTime / 60ULL - Hours * 60ULL;
 		//UINT32 Seconds = Power.BatteryLifeTime - Hours * 3600ULL - Minutes * 60ULL;
-		NWL_NodeAttrSetf(node, "Power Status", 0, "%u%%, %lu hours %lu min left%s",
-			Power.BatteryLifePercent, Hours, Minutes,
-			(Power.ACLineStatus == 1 || Power.BatteryFlag == 8) ? ", Charging" : "");
+		NWL_NodeAttrSetf(node, "Battery Life Remaining", 0, "%lu hours, %lu min", Hours, Minutes);
 	}
 	else
-	{
-		NWL_NodeAttrSetf(node, "Power Status", 0, "%u%%%s",
-			Power.BatteryLifePercent,
-			(Power.ACLineStatus == 1 || Power.BatteryFlag == 8) ? ", Charging" : "");
-	}
+		NWL_NodeAttrSet(node, "Battery Life Remaining", "UNKNOWN", 0);
 }
 
 static const char* mem_human_sizes[6] =
@@ -278,6 +304,7 @@ PNODE NW_System(VOID)
 		NWL_NodeAppendChild(NWLC->NwRoot, node);
 	PrintOsVer(node);
 	PrintOsInfo(node);
+	PrintSysMetrics(node);
 	PrintBootDev(node);
 	PrintPowerInfo(node);
 	PrintFwInfo(node);
