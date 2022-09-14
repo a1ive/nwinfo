@@ -182,12 +182,12 @@ GetSmartWarn(BYTE Id, UINT64 Value)
 {
 	switch (Id)
 	{
-	case 0x05: if (Value > 0) return "WARN "; break;
-	case 0xc2: if ((Value & 0xff) > 50) return "WARN "; break;
-	case 0xc5: if (Value > 0) return "WARN "; break;
-	case 0xc6: if (Value > 0) return "WARN "; break;
+	case 0x05: if (Value > 0) return "!!"; break;
+	case 0xc2: if ((Value & 0xff) > 50) return "!!"; break;
+	case 0xc5: if (Value > 0) return "!!"; break;
+	case 0xc6: if (Value > 0) return "!!"; break;
 	}
-	return "";
+	return "OK";
 }
 
 static BOOL
@@ -304,21 +304,21 @@ GetNvmeData(PNODE pNode, HANDLE hDisk)
 		NWL_NodeAttrSetf(pNode, "Power On Time (Hours)", NAFLG_FMT_NUMERIC, "%llu", tm);
 	}
 
-	SetRawNumber(pNode, "Critical Warning", &pHealthInfo->CriticalWarning.AsUchar, sizeof(pHealthInfo->CriticalWarning));
-	SetRawNumber(pNode, "Composite Temperature", pHealthInfo->Temperature, sizeof(pHealthInfo->Temperature));
-	SetRawNumber(pNode, "Available Spare", &pHealthInfo->AvailableSpare, sizeof(pHealthInfo->AvailableSpare));
-	SetRawNumber(pNode, "Available Spare Threshold", &pHealthInfo->AvailableSpareThreshold, sizeof(pHealthInfo->AvailableSpareThreshold));
-	SetRawNumber(pNode, "Percentage Used", &pHealthInfo->PercentageUsed, sizeof(pHealthInfo->PercentageUsed));
-	SetRawNumber(pNode, "Data Units Read", pHealthInfo->DataUnitRead, sizeof(pHealthInfo->DataUnitRead));
-	SetRawNumber(pNode, "Data Units Written", pHealthInfo->DataUnitWritten, sizeof(pHealthInfo->DataUnitWritten));
-	SetRawNumber(pNode, "Host Read Commands", pHealthInfo->HostReadCommands, sizeof(pHealthInfo->HostReadCommands));
-	SetRawNumber(pNode, "Host Written Commands", pHealthInfo->HostWrittenCommands, sizeof(pHealthInfo->HostWrittenCommands));
-	SetRawNumber(pNode, "Controller Busy Time", pHealthInfo->ControllerBusyTime, sizeof(pHealthInfo->ControllerBusyTime));
-	SetRawNumber(pNode, "Power Cycles", pHealthInfo->PowerCycle, sizeof(pHealthInfo->PowerCycle));
-	SetRawNumber(pNode, "Power On Hours", pHealthInfo->PowerOnHours, sizeof(pHealthInfo->PowerOnHours));
-	SetRawNumber(pNode, "Unsafe Shutdowns", pHealthInfo->UnsafeShutdowns, sizeof(pHealthInfo->UnsafeShutdowns));
-	SetRawNumber(pNode, "Media and Data Integrity Errors", pHealthInfo->MediaErrors, sizeof(pHealthInfo->MediaErrors));
-	SetRawNumber(pNode, "Number of Error Information Log Entries", pHealthInfo->ErrorInfoLogEntryCount, sizeof(pHealthInfo->ErrorInfoLogEntryCount));
+	SetRawNumber(pNode, "[01] Critical Warning", &pHealthInfo->CriticalWarning.AsUchar, sizeof(pHealthInfo->CriticalWarning));
+	SetRawNumber(pNode, "[02] Composite Temperature", pHealthInfo->Temperature, sizeof(pHealthInfo->Temperature));
+	SetRawNumber(pNode, "[03] Available Spare", &pHealthInfo->AvailableSpare, sizeof(pHealthInfo->AvailableSpare));
+	SetRawNumber(pNode, "[04] Available Spare Threshold", &pHealthInfo->AvailableSpareThreshold, sizeof(pHealthInfo->AvailableSpareThreshold));
+	SetRawNumber(pNode, "[05] Percentage Used", &pHealthInfo->PercentageUsed, sizeof(pHealthInfo->PercentageUsed));
+	SetRawNumber(pNode, "[06] Data Units Read", pHealthInfo->DataUnitRead, sizeof(pHealthInfo->DataUnitRead));
+	SetRawNumber(pNode, "[07] Data Units Written", pHealthInfo->DataUnitWritten, sizeof(pHealthInfo->DataUnitWritten));
+	SetRawNumber(pNode, "[08] Host Read Commands", pHealthInfo->HostReadCommands, sizeof(pHealthInfo->HostReadCommands));
+	SetRawNumber(pNode, "[09] Host Written Commands", pHealthInfo->HostWrittenCommands, sizeof(pHealthInfo->HostWrittenCommands));
+	SetRawNumber(pNode, "[0A] Controller Busy Time", pHealthInfo->ControllerBusyTime, sizeof(pHealthInfo->ControllerBusyTime));
+	SetRawNumber(pNode, "[0B] Power Cycles", pHealthInfo->PowerCycle, sizeof(pHealthInfo->PowerCycle));
+	SetRawNumber(pNode, "[0C] Power On Hours", pHealthInfo->PowerOnHours, sizeof(pHealthInfo->PowerOnHours));
+	SetRawNumber(pNode, "[0D] Unsafe Shutdowns", pHealthInfo->UnsafeShutdowns, sizeof(pHealthInfo->UnsafeShutdowns));
+	SetRawNumber(pNode, "[0E] Media and Data Integrity Errors", pHealthInfo->MediaErrors, sizeof(pHealthInfo->MediaErrors));
+	SetRawNumber(pNode, "[0F] Number of Error Information Log Entries", pHealthInfo->ErrorInfoLogEntryCount, sizeof(pHealthInfo->ErrorInfoLogEntryCount));
 
 fail:
 	free(pBuffer);
@@ -466,8 +466,8 @@ GetAtaData(PNODE pNode, HANDLE hDisk)
 		snprintf(tmp, 64, "[%02X] %s", pAtaAttr->bAttrID, GetSmartAttr(pAtaAttr->bAttrID, &dwFlag));
 		ullRaw = 0;
 		memcpy(&ullRaw, pAtaAttr->bRawValue, sizeof(pAtaAttr->bRawValue));
-		NWL_NodeAttrSetf(pNode, tmp, 0, "%012llX (%sCurrent=%u Worst=%u Threshold=%u)",
-			ullRaw, GetSmartWarn(pAtaAttr->bAttrID, ullRaw),
+		NWL_NodeAttrSetf(pNode, tmp, 0, "[%s] %012llX (Current=%u Worst=%u Threshold=%u)",
+			GetSmartWarn(pAtaAttr->bAttrID, ullRaw), ullRaw,
 			pAtaAttr->bAttrValue, pAtaAttr->bWorstValue, pAtaThrs->bWarrantyThreshold);
 	}
 
