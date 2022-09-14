@@ -15,6 +15,7 @@ GNW_Wait(VOID)
 	ShowWindow(hwndTV, SW_HIDE);
 	SetWindowTextA(GNWC.hWnd, GNW_GetText("Loading, please wait ..."));
 	GNWC.pnAcpi = NW_Acpi();
+	GNWC.pnBattery = NW_Battery();
 	GNWC.pnCpuid = NW_Cpuid();
 	GNWC.pnDisk = NW_Disk();
 	GNWC.pnEdid = NW_Edid();
@@ -42,6 +43,7 @@ GNW_Init(HINSTANCE hInstance, INT nCmdShow, DLGPROC lpDialogFunc)
 	GNWC.nCtx.NwFormat = FORMAT_JSON;
 	GNWC.nCtx.HumanSize = TRUE;
 	GNWC.nCtx.AcpiInfo = TRUE;
+	GNWC.nCtx.BatteryInfo = TRUE;
 	GNWC.nCtx.CpuInfo = TRUE;
 	GNWC.nCtx.DiskInfo = TRUE;
 	GNWC.nCtx.EdidInfo = TRUE;

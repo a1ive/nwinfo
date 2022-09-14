@@ -22,7 +22,8 @@ static void nwinfo_help(void)
 		"  --usb            Print USB info.\n"
 		"  --beep FREQ TIME [FREQ TIME ...]\n"
 		"                   Play a tune.\n"
-		"  --spd            Print SPD info\n");
+		"  --spd            Print SPD info\n"
+		"  --battery        Print battery info.\n");
 }
 
 int main(int argc, char* argv[])
@@ -93,6 +94,8 @@ int main(int argc, char* argv[])
 		}
 		else if (_stricmp(argv[i], "--spd") == 0)
 			nwContext.SpdInfo = TRUE;
+		else if (_stricmp(argv[i], "--battery") == 0)
+			nwContext.BatteryInfo = TRUE;
 		else
 		{
 			nwinfo_help();

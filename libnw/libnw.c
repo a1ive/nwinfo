@@ -60,6 +60,8 @@ VOID NW_Print(LPCSTR lpFileName)
 		NW_System();
 	if (NWLC->UsbInfo)
 		NW_Usb();
+	if (NWLC->BatteryInfo)
+		NW_Battery();
 	switch (NWLC->NwFormat)
 	{
 	case FORMAT_YAML:

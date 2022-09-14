@@ -22,7 +22,7 @@ INT GNW_IconFromAcpi(PNODE node, LPCSTR name)
 	else if (_stricmp(name, "DBG2") == 0)
 		icon = IDI_ICON_TVD_LNK;
 	else if (_stricmp(name, "DSDT") == 0)
-		icon = IDI_ICON_TVD_BAT;
+		icon = IDI_ICON_TVN_BAT;
 	else if (_stricmp(name, "FACP") == 0)
 		icon = IDI_ICON_TVN_ACPI;
 	else if (_stricmp(name, "MCFG") == 0)
@@ -145,7 +145,7 @@ INT GNW_IconFromSmbios(PNODE node, LPCSTR name)
 	case 14:
 		return IDI_ICON_TVD_TREE;
 	case 22:
-		return IDI_ICON_TVD_BAT;
+		return IDI_ICON_TVN_BAT;
 	case 32:
 		return IDI_ICON_TVD_REL;
 	case 43:

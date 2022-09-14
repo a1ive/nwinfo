@@ -123,9 +123,6 @@
     <Image Include="icons\help.ico">
       <Filter>资源文件\tvdev</Filter>
     </Image>
-    <Image Include="icons\battery.ico">
-      <Filter>资源文件\tvdev</Filter>
-    </Image>
     <Image Include="icons\pc.ico">
       <Filter>资源文件\tvdev</Filter>
     </Image>
@@ -155,6 +152,9 @@
     </Image>
     <Image Include="icons\cdrom.ico">
       <Filter>资源文件\tvdev</Filter>
+    </Image>
+    <Image Include="icons\battery.ico">
+      <Filter>资源文件\tvnode</Filter>
     </Image>
   </ItemGroup>
 </Project>

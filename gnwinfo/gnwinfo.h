@@ -36,6 +36,8 @@ typedef struct _GNW_CONTEXT
 	PNODE pnRoot;
 	HTREEITEM htAcpi;
 	PNODE pnAcpi;
+	HTREEITEM htBattery;
+	PNODE pnBattery;
 	HTREEITEM htCpuid;
 	PNODE pnCpuid;
 	HTREEITEM htDisk;

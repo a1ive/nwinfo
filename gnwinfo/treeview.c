@@ -146,6 +146,14 @@ GNW_TreeInit(VOID)
 
 	GNWC.htSystem = GNW_TreeAdd(GNWC.htRoot, "Operating System", 2, IDI_ICON_TVN_SYS, GNWC.pnSystem);
 
+	GNWC.htBattery = GNW_TreeAdd(GNWC.htRoot, "Power Management", 2, IDI_ICON_TVN_BAT, GNWC.pnBattery);
+	count = NWL_NodeChildCount(GNWC.pnBattery);
+	for (i = 0; i < count; i++)
+	{
+		node = GNWC.pnBattery->Children[i].LinkedNode;
+		GNW_TreeAdd(GNWC.htBattery, node->Name, 3, IDI_ICON_TVN_BAT, node);
+	}
+
 	GNWC.htUsb = GNW_TreeAdd(GNWC.htRoot, "USB Devices", 2, IDI_ICON_TVN_USB, NULL);
 	count = NWL_NodeChildCount(GNWC.pnUsb);
 	for (i = 0; i < count; i++)
@@ -247,6 +255,8 @@ GNW_TreeUpdate(HWND hWnd, WPARAM wParam, LPARAM lParam)
 		if (htParent == GNWC.htDisk)
 			bSkipChild = TRUE;
 		else if (pnmtv->itemNew.hItem == GNWC.htCpuid)
+			bSkipChild = TRUE;
+		else if (pnmtv->itemNew.hItem == GNWC.htBattery)
 			bSkipChild = TRUE;
 		else if (pnmtv->itemNew.hItem == GNWC.htRoot)
 			bSkipChild = TRUE;

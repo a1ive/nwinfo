@@ -210,59 +210,6 @@ static void PrintTpmInfo(PNODE node)
 		NWL_NodeAttrSet(node, "TPM", "UNSUPPORTED", 0);
 }
 
-static void
-PrintPowerInfo(PNODE node)
-{
-	SYSTEM_POWER_STATUS Power;
-	if (!GetSystemPowerStatus(&Power))
-	{
-		Power.ACLineStatus = 255;
-		Power.BatteryFlag = 255;
-	}
-
-	switch (Power.ACLineStatus)
-	{
-	case 0:
-		NWL_NodeAttrSet(node, "AC Power", "Offline", 0);
-		break;
-	case 1:
-		NWL_NodeAttrSet(node, "AC Power", "Online", 0);
-		break;
-	default:
-		NWL_NodeAttrSet(node, "AC Power", "UNKNOWN", 0);
-	}
-
-	if (Power.BatteryFlag == 255U)
-	{
-		NWL_NodeAttrSet(node, "Battery Status", "UNKNOWN", 0);
-		return;
-	}
-	else if (Power.BatteryFlag & 128U)
-	{
-		NWL_NodeAttrSet(node, "Battery Status", "NO BATTERY", 0);
-		return;
-	}
-	else if (Power.BatteryFlag & 8U)
-		NWL_NodeAttrSet(node, "Battery Status", "Charging", 0);
-	else
-		NWL_NodeAttrSet(node, "Battery Status", "Not Charging", 0);
-
-	if (Power.BatteryLifePercent <= 100U)
-		NWL_NodeAttrSetf(node, "Battery Life Percentage", 0, "%u%%", Power.BatteryLifePercent);
-	else
-		NWL_NodeAttrSet(node, "Battery Life Percentage", "UNKNOWN", 0);
-
-	if (Power.BatteryLifeTime != -1)
-	{
-		UINT32 Hours = Power.BatteryLifeTime / 3600U;
-		UINT32 Minutes = Power.BatteryLifeTime / 60ULL - Hours * 60ULL;
-		//UINT32 Seconds = Power.BatteryLifeTime - Hours * 3600ULL - Minutes * 60ULL;
-		NWL_NodeAttrSetf(node, "Battery Life Remaining", 0, "%lu hours, %lu min", Hours, Minutes);
-	}
-	else
-		NWL_NodeAttrSet(node, "Battery Life Remaining", "UNKNOWN", 0);
-}
-
 static const char* mem_human_sizes[6] =
 { "B", "K", "M", "G", "T", "P", };
 
@@ -306,7 +253,6 @@ PNODE NW_System(VOID)
 	PrintOsInfo(node);
 	PrintSysMetrics(node);
 	PrintBootDev(node);
-	PrintPowerInfo(node);
 	PrintFwInfo(node);
 	PrintTpmInfo(node);
 	PrintMemInfo(node);
