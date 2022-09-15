@@ -107,6 +107,7 @@ static GNW_LANG GNW_LANG_CHS[] =
 	{"Height", "高度"},
 	{"Height (mm)", "高度 (mm)"},
 	{"Hypervisor", "虚拟机监控器"},
+	{"Hypervisor Signature", "虚拟机签名"},
 	{"ID", "ID"},
 	{"Image", "图像"},
 	{"Image Size (K)", "镜像大小 (K)"},

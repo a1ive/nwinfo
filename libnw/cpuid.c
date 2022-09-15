@@ -11,6 +11,34 @@
 static const char* kb_human_sizes[6] =
 { "KB", "MB", "GB", "TB", "PB", "EB", };
 
+static LPCSTR
+GetHypervisorName(LPCSTR lpszSignature)
+{
+	if (strcmp(lpszSignature, "VMwareVMware") == 0)
+		return "VMware";
+	else if (strcmp(lpszSignature, "Microsoft Hv") == 0)
+		return "Microsoft Hyper-V";
+	else if (strcmp(lpszSignature, "KVMKVMKVM") == 0
+		|| strcmp(lpszSignature, "Linux KVM Hv") == 0)
+		return "KVM";
+	else if (strcmp(lpszSignature, "VBoxVBoxVBox") == 0)
+		return "VirtualBox";
+	else if (strcmp(lpszSignature, "XenVMMXenVMM") == 0)
+		return "Xen";
+	else if (strcmp(lpszSignature, "prl hyperv") == 0
+		|| strcmp(lpszSignature, "lrpepyh vr") == 0)
+		return "Parallels";
+	else if (strcmp(lpszSignature, "TCGTCGTCGTCG") == 0)
+		return "QEMU";
+	else if (strcmp(lpszSignature, "bhyve bhyve") == 0)
+		return "FreeBSD bhyve";
+	else if (strcmp(lpszSignature, "ACRNACRNACRN") == 0)
+		return "Project ACRN";
+	else if (strcmp(lpszSignature, "QNXQVMBSQG") == 0)
+		return "QNX Hypervisor";
+	return "Unknown Hypervisor";
+}
+
 static void
 PrintHypervisor(PNODE node)
 {
@@ -26,24 +54,8 @@ PrintHypervisor(PNODE node)
 		return;
 	__cpuid(cpuInfo, 0x40000000U);
 	memcpy(VmSign, &cpuInfo[1], 12);
-	if (strcmp(VmSign, "VMwareVMware") == 0)
-		NWL_NodeAttrSet(node, "Hypervisor", "VMware", 0);
-	else if (strcmp(VmSign, "Microsoft Hv") == 0)
-		NWL_NodeAttrSet(node, "Hypervisor", "Microsoft Hyper-V", 0);
-	else if (strcmp(VmSign, "KVMKVMKVM") == 0)
-		NWL_NodeAttrSet(node, "Hypervisor", "KVM", 0);
-	else if (strcmp(VmSign, "VBoxVBoxVBox") == 0)
-		NWL_NodeAttrSet(node, "Hypervisor", "VirtualBox", 0);
-	else if (strcmp(VmSign, "XenVMMXenVMM") == 0)
-		NWL_NodeAttrSet(node, "Hypervisor", "Xen", 0);
-	else if (strcmp(VmSign, "prl hyperv") == 0)
-		NWL_NodeAttrSet(node, "Hypervisor", "Parallels", 0);
-	else if (strcmp(VmSign, "TCGTCGTCGTCG") == 0)
-		NWL_NodeAttrSet(node, "Hypervisor", "QEMU", 0);
-	else if (strcmp(VmSign, "bhyve bhyve") == 0)
-		NWL_NodeAttrSet(node, "Hypervisor", "FreeBSD bhyve", 0);
-	else
-		NWL_NodeAttrSet(node, "Hypervisor", VmSign, 0);
+	NWL_NodeAttrSet(node, "Hypervisor", GetHypervisorName(VmSign), 0);
+	NWL_NodeAttrSet(node, "Hypervisor Signature", VmSign, 0);
 }
 
 static void
@@ -107,13 +119,17 @@ PrintMsr(PNODE node)
 	NWL_NodeAttrSetf(nmulti, "Current", NAFLG_FMT_NUMERIC, "%.1lf", cur_multi / 100.0);
 	NWL_NodeAttrSetf(nmulti, "Max", NAFLG_FMT_NUMERIC, "%d", max_multi / 100);
 	NWL_NodeAttrSetf(nmulti, "Min", NAFLG_FMT_NUMERIC, "%d", min_multi / 100);
-	if ((value = cpu_msrinfo(NWLC->NwDrv, INFO_TEMPERATURE)) != CPU_INVALID_VALUE)
+	value = cpu_msrinfo(NWLC->NwDrv, INFO_TEMPERATURE);
+	if (value != CPU_INVALID_VALUE && value > 0)
 		NWL_NodeAttrSetf(node, "Temperature (C)", NAFLG_FMT_NUMERIC, "%d", value);
-	if ((value = cpu_msrinfo(NWLC->NwDrv, INFO_THROTTLING)) != CPU_INVALID_VALUE)
+	value = cpu_msrinfo(NWLC->NwDrv, INFO_THROTTLING);
+	if (value != CPU_INVALID_VALUE && value > 0)
 		NWL_NodeAttrSetBool(node, "Throttling", value, 0);
-	if ((value = cpu_msrinfo(NWLC->NwDrv, INFO_VOLTAGE)) != CPU_INVALID_VALUE)
+	value = cpu_msrinfo(NWLC->NwDrv, INFO_VOLTAGE);
+	if (value != CPU_INVALID_VALUE && value > 0)
 		NWL_NodeAttrSetf(node, "Core Voltage (V)", NAFLG_FMT_NUMERIC, "%.2lf", value / 100.0);
-	if ((value = cpu_msrinfo(NWLC->NwDrv, INFO_BUS_CLOCK)) != CPU_INVALID_VALUE)
+	value = cpu_msrinfo(NWLC->NwDrv, INFO_BUS_CLOCK);
+	if (value != CPU_INVALID_VALUE && value > 0)
 		NWL_NodeAttrSetf(node, "Bus Clock (MHz)", NAFLG_FMT_NUMERIC, "%.2lf", value / 100.0);
 }
 
