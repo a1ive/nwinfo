@@ -159,6 +159,7 @@
     <Image Include="icons\hd.ico" />
     <Image Include="icons\help.ico" />
     <Image Include="icons\info.ico" />
+    <Image Include="icons\input.ico" />
     <Image Include="icons\link.ico" />
     <Image Include="icons\multimedia.ico" />
     <Image Include="icons\network.ico" />

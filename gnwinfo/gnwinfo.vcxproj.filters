@@ -156,5 +156,8 @@
     <Image Include="icons\battery.ico">
       <Filter>资源文件\tvnode</Filter>
     </Image>
+    <Image Include="icons\input.ico">
+      <Filter>资源文件\tvdev</Filter>
+    </Image>
   </ItemGroup>
 </Project>
