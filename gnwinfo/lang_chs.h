@@ -216,7 +216,7 @@ static GNW_LANG GNW_LANG_CHS[] =
 	{"Total Space", "总空间"},
 	{"Total Written", "总计写入"},
 	{"Transmit Link Speed", "传输链接速率"},
-	{"Trim Enabled", "Trim 已启用"},
+	{"Trim Enabled", "Trim 启用"},
 	{"Type", "类型"},
 	{"Unicast Address", "单播地址"},
 	{"Uptime", "正常运行时间"},

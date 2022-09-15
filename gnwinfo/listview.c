@@ -37,16 +37,14 @@ VOID GNW_ListInit(VOID)
 	ListView_InsertColumn(hwndLV, lvcValue.iSubItem, &lvcValue);
 }
 
-static int cur_lvi = 0;
-
 VOID GNW_ListAdd(PNODE node, BOOL bSkipChild)
 {
-	INT i, count;
+	INT i, count, cur_lvi = 0;
 	HWND hwndLV = GetDlgItem(GNWC.hWnd, IDC_MAIN_LIST);
 	if (!hwndLV || !node)
 		return;
 	count = NWL_NodeAttrCount(node);
-	for (i = 0; i < count; i++)
+	for (i = 0; i < count; i++, cur_lvi++)
 	{
 		PNODE_ATT att = node->Attributes[i].LinkedAttribute;
 		LVITEMA lvi;
@@ -54,9 +52,9 @@ VOID GNW_ListAdd(PNODE node, BOOL bSkipChild)
 		lvi.cchTextMax = 0;
 		lvi.iSubItem = 0;
 		lvi.pszText = GNW_GetText(att->Key);
+		lvi.iItem = cur_lvi;
 		ListView_InsertItem(hwndLV, &lvi);
 		ListView_SetItemText(hwndLV, cur_lvi, 2, (att->Value && att->Value[0] != '\0') ? att->Value : "-");
-		cur_lvi++;
 	}
 	if (bSkipChild)
 		return;
@@ -66,7 +64,7 @@ VOID GNW_ListAdd(PNODE node, BOOL bSkipChild)
 		PNODE child = node->Children[i].LinkedNode;
 		INT j, att_count, tab_count;
 		att_count = NWL_NodeAttrCount(child);
-		for (j = 0; j < att_count; j++)
+		for (j = 0; j < att_count; j++, cur_lvi++)
 		{
 			PNODE_ATT att = child->Attributes[j].LinkedAttribute;
 			LVITEMA lvi;
@@ -74,10 +72,10 @@ VOID GNW_ListAdd(PNODE node, BOOL bSkipChild)
 			lvi.cchTextMax = 0;
 			lvi.iSubItem = 0;
 			lvi.pszText = GNW_GetText(child->Name);
+			lvi.iItem = cur_lvi;
 			ListView_InsertItem(hwndLV, &lvi);
 			ListView_SetItemText(hwndLV, cur_lvi, 1, GNW_GetText(att->Key));
 			ListView_SetItemText(hwndLV, cur_lvi, 2, (att->Value && att->Value[0] != '\0') ? att->Value : "-");
-			cur_lvi++;
 		}
 		tab_count = NWL_NodeChildCount(child);
 		for (j = 0; j < tab_count; j++)
@@ -85,7 +83,7 @@ VOID GNW_ListAdd(PNODE node, BOOL bSkipChild)
 			PNODE row = child->Children[j].LinkedNode;
 			INT k, row_count;
 			row_count = NWL_NodeAttrCount(row);
-			for (k = 0; k < row_count; k++)
+			for (k = 0; k < row_count; k++, cur_lvi++)
 			{
 				PNODE_ATT att = row->Attributes[k].LinkedAttribute;
 				LVITEMA lvi;
@@ -93,10 +91,10 @@ VOID GNW_ListAdd(PNODE node, BOOL bSkipChild)
 				lvi.cchTextMax = 0;
 				lvi.iSubItem = 0;
 				lvi.pszText = GNW_GetText(row->Name);
+				lvi.iItem = cur_lvi;
 				ListView_InsertItem(hwndLV, &lvi);
 				ListView_SetItemText(hwndLV, cur_lvi, 1, GNW_GetText(att->Key));
 				ListView_SetItemText(hwndLV, cur_lvi, 2, (att->Value && att->Value[0] != '\0') ? att->Value : "-");
-				cur_lvi++;
 			}
 		}
 	}
@@ -105,7 +103,6 @@ VOID GNW_ListAdd(PNODE node, BOOL bSkipChild)
 VOID GNW_ListClean(VOID)
 {
 	HWND hwndLV = GetDlgItem(GNWC.hWnd, IDC_MAIN_LIST);
-	cur_lvi = 0;
 	if (hwndLV)
 		ListView_DeleteAllItems(hwndLV);
 }
