@@ -76,4 +76,23 @@ int match_all(uint64_t bits, uint64_t mask);
  */
 int set_error(cpu_error_t err);
 
+/*
+ * Manage cpu_affinity_mask_t type
+ */
+
+/* initialize affinity_mask */
+void init_affinity_mask(cpu_affinity_mask_t *affinity_mask);
+
+/* copy one affinity_mask to another one */
+void copy_affinity_mask(cpu_affinity_mask_t *dest_affinity_mask, cpu_affinity_mask_t *src_affinity_mask);
+
+/* set bit corresponding to 'logical_cpu' to '1' */
+void set_affinity_mask_bit(logical_cpu_t logical_cpu, cpu_affinity_mask_t *affinity_mask);
+
+/* get bit corresponding to 'logical_cpu' */
+bool get_affinity_mask_bit(logical_cpu_t logical_cpu, cpu_affinity_mask_t *affinity_mask);
+
+/* set bit corresponding to 'logical_cpu' to '0' */
+void clear_affinity_mask_bit(logical_cpu_t logical_cpu, cpu_affinity_mask_t *affinity_mask);
+
 #endif /* __LIBCPUID_UTIL_H__ */

@@ -59,6 +59,8 @@ struct internal_id_info_t {
 	} code;
 	uint64_t bits;
 	int score; // detection (matchtable) score
+	int32_t smt_id;
+	int32_t core_id;
 };
 
 #define LBIT(x) (((long long) 1) << x)

@@ -33,8 +33,6 @@
 #include "libcpuid.h"
 #include "libcpuid_util.h"
 
-int _current_verboselevel;
-
 void match_features(const struct feature_map_t* matchtable, int count, uint32_t reg, struct cpu_id_t* data)
 {
 	int i;
@@ -91,7 +89,7 @@ int match_cpu_codename(const struct match_entry_t* matchtable, int count,
 			bestindex = i;
 		}
 	}
-	strcpy_s(data->cpu_codename, 64, matchtable[bestindex].name);
+	strcpy_s(data->cpu_codename, sizeof(data->cpu_codename), matchtable[bestindex].name);
 	return bestscore;
 }
 
@@ -145,4 +143,32 @@ struct cpu_id_t* get_cached_cpuid(void)
 int match_all(uint64_t bits, uint64_t mask)
 {
 	return (bits & mask) == mask;
+}
+
+/* Functions to manage cpu_affinity_mask_t type
+ * Adapted from https://electronics.stackexchange.com/a/200070
+ */
+void init_affinity_mask(cpu_affinity_mask_t *affinity_mask)
+{
+	memset(affinity_mask->__bits, 0x00, __MASK_SETSIZE);
+}
+
+void copy_affinity_mask(cpu_affinity_mask_t *dest_affinity_mask, cpu_affinity_mask_t *src_affinity_mask)
+{
+	memcpy(dest_affinity_mask->__bits, src_affinity_mask->__bits, __MASK_SETSIZE);
+}
+
+void set_affinity_mask_bit(logical_cpu_t logical_cpu, cpu_affinity_mask_t *affinity_mask)
+{
+	affinity_mask->__bits[logical_cpu / __MASK_NCPUBITS] |= 0x1 << (logical_cpu % __MASK_NCPUBITS);
+}
+
+bool get_affinity_mask_bit(logical_cpu_t logical_cpu, cpu_affinity_mask_t *affinity_mask)
+{
+	return (affinity_mask->__bits[logical_cpu / __MASK_NCPUBITS] & (0x1 << (logical_cpu % __MASK_NCPUBITS))) != 0x00;
+}
+
+void clear_affinity_mask_bit(logical_cpu_t logical_cpu, cpu_affinity_mask_t *affinity_mask)
+{
+	affinity_mask->__bits[logical_cpu / __MASK_NCPUBITS] &= ~(0x1 << (logical_cpu % __MASK_NCPUBITS));
 }

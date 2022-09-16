@@ -46,6 +46,21 @@ INT GNW_IconFromAcpi(PNODE node, LPCSTR name)
 	return icon;
 }
 
+INT GNW_IconFromCpu(PNODE node, LPCSTR name)
+{
+	INT icon = IDI_ICON_TVN_CPU;
+	UNREFERENCED_PARAMETER(node);
+	if (_stricmp(name, "SGX") == 0)
+		icon = IDI_ICON_TVD_ENC;
+	else if (_stricmp(name, "Multiplier") == 0)
+		icon = IDI_ICON_TVN_CPU;
+	else if (_stricmp(name, "Cache") == 0)
+		icon = IDI_ICON_TVD_FW;
+	else if (_stricmp(name, "Features") == 0)
+		icon = IDI_ICON_TVD_DOC;
+	return icon;
+}
+
 INT GNW_IconFromDisk(PNODE node, LPCSTR name)
 {
 	INT icon = IDI_ICON_TVD_HDD;

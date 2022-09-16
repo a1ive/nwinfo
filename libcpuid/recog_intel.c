@@ -64,6 +64,7 @@ enum _intel_model_t {
 	_9xxx, /* Core i[3579] 9xxx */
 	_10xxx, /* Core i[3579] 10xxx */
 	_11xxx, /* Core i[3579] 11xxx */
+	_12xxx, /* Core i[3579] 11xxx */
 };
 typedef enum _intel_model_t intel_model_t;
 
@@ -423,6 +424,16 @@ const struct match_entry_t cpudb_intel[] = {
 	{  6, 12, -1, -1, 140, -1,    -1,    -1, NC, CORE_|_I_|_3  ,_11xxx, "Tiger Lake (Core i3)"     },
 	{  6, 12, -1, -1, 140,  2,    -1,    -1, NC, PENTIUM_      ,     0, "Tiger Lake (Pentium)"     },
 	{  6, 12, -1, -1, 140,  2,    -1,    -1, NC, CELERON_      ,     0, "Tiger Lake (Celeron)"     },
+
+	/* Alder Lake CPUs (12th gen, 10nm, mobile processors): */
+	{  6,  7, -1, -1, 151, -1,    -1,    -1, NC, CORE_|_I_|_9  ,_12xxx, "Alder Lake-S (Core i9)"     },
+	{  6,  7, -1, -1, 151, -1,    -1,    -1, NC, CORE_|_I_|_7  ,_12xxx, "Alder Lake-S (Core i7)"     },
+	{  6,  7, -1, -1, 151, -1,    -1,    -1, NC, CORE_|_I_|_5  ,_12xxx, "Alder Lake-S (Core i5)"     },
+	{  6,  7, -1, -1, 151, -1,    -1,    -1, NC, CORE_|_I_|_3  ,_12xxx, "Alder Lake-S (Core i3)"     },
+	{  6, 10, -1, -1, 154, -1,    -1,    -1, NC, CORE_|_I_|_9  ,_12xxx, "Alder Lake-P (Core i9)"     },
+	{  6, 10, -1, -1, 154, -1,    -1,    -1, NC, CORE_|_I_|_7  ,_12xxx, "Alder Lake-P (Core i7)"     },
+	{  6, 10, -1, -1, 154, -1,    -1,    -1, NC, CORE_|_I_|_5  ,_12xxx, "Alder Lake-P (Core i5)"     },
+	{  6, 10, -1, -1, 154, -1,    -1,    -1, NC, CORE_|_I_|_3  ,_12xxx, "Alder Lake-P (Core i3)"     },
 	/* F   M   S  EF   EM   C     L2     L3               Brand */
 
 
@@ -667,21 +678,34 @@ static void decode_intel_deterministic_cache_info(struct cpu_raw_data_t* raw,
 }
 
 static int decode_intel_extended_topology(struct cpu_raw_data_t* raw,
-                                           struct cpu_id_t* data)
+                                           struct cpu_id_t* data,
+                                           struct internal_id_info_t* internal)
 {
 	int i, level_type, num_smt = -1, num_core = -1;
-	for (i = 0; i < MAX_INTELFN11_LEVEL; i++) {
-		level_type = (raw->intel_fn11[i][ECX] & 0xff00) >> 8;
+	uint8_t apic_package_shift = 0, apic_shift = 0, apic_next_shift;
+	uint32_t apic_id, unique_id;
+
+	for (i = 0; (raw->intel_fn11[i][EAX] != 0x0) && (raw->intel_fn11[i][EBX] != 0x0) && (i < MAX_INTELFN11_LEVEL); i++)
+		apic_package_shift = EXTRACTS_BITS(raw->intel_fn11[i][EAX], 4, 0);
+
+	for (i = 0; (raw->intel_fn11[i][EAX] != 0x0) && (raw->intel_fn11[i][EBX] != 0x0) && (i < MAX_INTELFN11_LEVEL); i++) {
+		level_type = EXTRACTS_BITS(raw->intel_fn11[i][ECX], 15, 8);
+		apic_next_shift = EXTRACTS_BITS(raw->intel_fn11[i][EAX], 4, 0);
+		apic_id = raw->intel_fn11[i][EDX];
+		unique_id = (apic_id >> apic_shift) & ((1 << (apic_package_shift - apic_shift)) - 1);
 		switch (level_type) {
 			case 0x01:
-				num_smt = raw->intel_fn11[i][EBX] & 0xffff;
+				num_smt = EXTRACTS_BITS(raw->intel_fn11[i][EBX], 15, 0);
+				internal->smt_id = unique_id;
 				break;
 			case 0x02:
-				num_core = raw->intel_fn11[i][EBX] & 0xffff;
+				num_core = EXTRACTS_BITS(raw->intel_fn11[i][EBX], 15, 0);
+				internal->core_id = unique_id;
 				break;
 			default:
 				break;
 		}
+		apic_shift = apic_next_shift;
 	}
 	if (num_smt == -1 || num_core == -1) return 0;
 	data->num_logical_cpus = num_core;
@@ -694,12 +718,13 @@ static int decode_intel_extended_topology(struct cpu_raw_data_t* raw,
 }
 
 static void decode_intel_number_of_cores(struct cpu_raw_data_t* raw,
-                                         struct cpu_id_t* data)
+                                         struct cpu_id_t* data,
+                                         struct internal_id_info_t* internal)
 {
 	int logical_cpus = -1, num_cores = -1;
 
 	if (raw->basic_cpuid[0][EAX] >= 11) {
-		if (decode_intel_extended_topology(raw, data)) return;
+		if (decode_intel_extended_topology(raw, data, internal)) return;
 	}
 
 	if (raw->basic_cpuid[0][EAX] >= 1) {
@@ -979,7 +1004,8 @@ int cpuid_identify_intel(struct cpu_raw_data_t* raw, struct cpu_id_t* data, stru
 	} else if (raw->basic_cpuid[0][EAX] >= 2) {
 		decode_intel_oldstyle_cache_info(raw, data);
 	}
-	decode_intel_number_of_cores(raw, data);
+	decode_intel_number_of_cores(raw, data, internal);
+	data->purpose = cpuid_identify_purpose_intel(raw);
 
 	brand = get_brand_code_and_bits(data);
 	model_code = get_model_code(data);
@@ -1001,4 +1027,27 @@ int cpuid_identify_intel(struct cpu_raw_data_t* raw, struct cpu_id_t* data, stru
 	internal->score = match_cpu_codename(cpudb_intel, COUNT_OF(cpudb_intel), data,
 		brand.code, brand.bits, model_code);
 	return 0;
+}
+
+cpu_purpose_t cpuid_identify_purpose_intel(struct cpu_raw_data_t* raw)
+{
+	/* Check for hybrid architecture
+	From Intel® 64 and IA-32 Architectures Software Developer’s Manual Combined Volumes: 1, 2A, 2B, 2C, 2D, 3A, 3B, 3C, 3D, and 4
+	Available at https://cdrdv2.intel.com/v1/dl/getContent/671200
+
+	- CPUID[7h] is Structured Extended Feature Flags Enumeration Leaf (Output depends on ECX input value)
+	  EDX, bit 15: Hybrid. If 1, the processor is identified as a hybrid part.
+
+	- CPUID[1Ah] is Hybrid Information Enumeration Leaf (EAX = 1AH, ECX = 0)
+	  EAX, bits 31-24: Core type
+	*/
+	if (EXTRACTS_BIT(raw->basic_cpuid[0x7][EDX], 15) == 0x1) {
+		switch (EXTRACTS_BITS(raw->basic_cpuid[0x1a][EAX], 31, 24)) {
+			case 0x20: /* Atom */ return PURPOSE_EFFICIENCY;
+			case 0x40: /* Core */ return PURPOSE_PERFORMANCE;
+			default:              return PURPOSE_GENERAL;
+		}
+	}
+
+	return PURPOSE_GENERAL;
 }

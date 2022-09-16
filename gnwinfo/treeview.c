@@ -28,7 +28,7 @@ GNW_TreeInit(VOID)
 	for (i = 0; i < count; i++)
 	{
 		node = GNWC.pnCpuid->Children[i].LinkedNode;
-		GNW_TreeAdd(GNWC.htCpuid, node->Name, 3, IDI_ICON_TVN_CPU, node);
+		GNW_TreeAdd(GNWC.htCpuid, node->Name, 3, GNW_IconFromCpu(node, node->Name), node);
 	}
 
 	GNWC.htDisk = GNW_TreeAdd(GNWC.htRoot, "Physical Storage", 2, IDI_ICON_TVN_DISK, NULL);

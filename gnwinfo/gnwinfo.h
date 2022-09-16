@@ -83,6 +83,7 @@ VOID GNW_ListAdd(PNODE node, BOOL bSkipChild);
 VOID GNW_ListClean(VOID);
 
 INT GNW_IconFromAcpi(PNODE node, LPCSTR name);
+INT GNW_IconFromCpu(PNODE node, LPCSTR name);
 INT GNW_IconFromDisk(PNODE node, LPCSTR name);
 INT GNW_IconFromNetwork(PNODE node, LPCSTR name);
 INT GNW_IconFromPci(PNODE node, LPCSTR name);

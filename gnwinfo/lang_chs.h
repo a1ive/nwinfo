@@ -123,6 +123,7 @@ static GNW_LANG GNW_LANG_CHS[] =
 	{"L1 I", "一级 指令"},
 	{"L2", "二级"},
 	{"L3", "三级"},
+	{"L4", "四级"},
 	{"Label", "卷标"},
 	{"Language ID", "语言 ID"},
 	{"Length", "长度"},
