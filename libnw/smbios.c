@@ -501,6 +501,100 @@ static void ProcMemModuleInfo(PNODE tab, void* p)
 	NWL_NodeAttrSetf(tab, "Installed Size (MB)", NAFLG_FMT_NUMERIC, "%llu", 2ULL << sz);
 }
 
+static const CHAR*
+pCacheConfToOpMode(UINT16 Conf)
+{
+	UINT16 OpMode = (Conf & 0x300) >> 8;
+	switch (OpMode)
+	{
+	case 0x00: return "Write Through";
+	case 0x01: return "Write Back";
+	case 0x02: return "Varies with Memory Address";
+	}
+	return "Unknown";
+}
+
+static const CHAR*
+pCacheConfToLocation(UINT16 Conf)
+{
+	UINT16 OpMode = (Conf & 0x60) >> 5;
+	switch (OpMode)
+	{
+	case 0x00: return "Internal";
+	case 0x01: return "External";
+	case 0x02: return "Reserved";
+	}
+	return "Unknown";
+}
+
+static void
+pCacheSetSRAMType(PNODE tab, LPCSTR key, UINT16 value)
+{
+	size_t len;
+	char str[64];
+	snprintf(str, sizeof(str), "%s%s%s%s%s",
+		value & (1 << 2) ? "Non-Burst," : "",
+		value & (1 << 3) ? "Burst," : "",
+		value & (1 << 4) ? "Pipeline Burst," : "",
+		value & (1 << 5) ? "Synchronous," : "",
+		value & (1 << 6) ? "Asynchronous," : "");
+	len = strlen(str);
+	if (len > 1)
+		str[len - 1] = '\0';
+	else
+		strcpy_s(str, sizeof(str), "Unknown");
+	NWL_NodeAttrSet(tab, key, str, 0);
+}
+
+static const CHAR*
+pCacheECTypeToStr(UCHAR Type)
+{
+	switch (Type)
+	{
+	case 0x01: return "Other";
+	case 0x03: return "None";
+	case 0x04: return "Parity";
+	case 0x05: return "Single-bit ECC";
+	case 0x06: return "Multi-bit ECC";
+	}
+	return "Unknown";
+}
+
+static const CHAR*
+pCacheTypeToStr(UCHAR Type)
+{
+	switch (Type)
+	{
+	case 0x01: return "Other";
+	case 0x03: return "Instruction";
+	case 0x04: return "Data";
+	case 0x05: return "Unified";
+	}
+	return "Unknown";
+}
+
+static const CHAR*
+pCacheAssocToStr(UCHAR Type)
+{
+	switch (Type)
+	{
+	case 0x01: return "Other";
+	case 0x03: return "Direct Mapped";
+	case 0x04: return "2-way Set-Associative";
+	case 0x05: return "4-way Set-Associative";
+	case 0x06: return "Fully Associative";
+	case 0x07: return "8-way Set-Associative";
+	case 0x08: return "16-way Set-Associative";
+	case 0x09: return "12-way Set-Associative";
+	case 0x0a: return "24-way Set-Associative";
+	case 0x0b: return "32-way Set-Associative";
+	case 0x0c: return "48-way Set-Associative";
+	case 0x0d: return "64-way Set-Associative";
+	case 0x0e: return "20-way Set-Associative";
+	}
+	return "Unknown";
+}
+
 static void ProcCacheInfo(PNODE tab, void* p)
 {
 	PCacheInfo	pCache = (PCacheInfo)p;
@@ -510,6 +604,11 @@ static void ProcCacheInfo(PNODE tab, void* p)
 	if (pCache->Header.Length < 0x0f) // 2.0
 		return;
 	NWL_NodeAttrSet(tab, "Socket Designation", LocateString(str, pCache->SocketDesignation), 0);
+	NWL_NodeAttrSetf(tab, "Cache Configuration", 0, "0x%04X", pCache->Configuration);
+	NWL_NodeAttrSet(tab, "Operational Mode", pCacheConfToOpMode(pCache->Configuration), 0);
+	NWL_NodeAttrSetBool(tab, "Enabled", pCache->Configuration & 0x80, 0);
+	NWL_NodeAttrSet(tab, "Location", pCacheConfToLocation(pCache->Configuration), 0);
+	NWL_NodeAttrSetf(tab, "Cache Level", 0, "L%u", 1U + (pCache->Configuration & 0x07));
 	if (pCache->MaxSize == 0xffff && pCache->Header.Length > 0x13)
 	{
 		if (pCache->MaxSize2 & (1ULL << 31))
@@ -538,8 +637,15 @@ static void ProcCacheInfo(PNODE tab, void* p)
 		sz = ((UINT64)pCache->InstalledSize) * 1024;
 	}
 	NWL_NodeAttrSet(tab, "Installed Cache Size", NWL_GetHumanSize(sz, mem_human_sizes, 1024), NAFLG_FMT_HUMAN_SIZE);
+	pCacheSetSRAMType(tab, "Supported SRAM Type", pCache->SupportSRAMType);
+	pCacheSetSRAMType(tab, "Current SRAM Type", pCache->SupportSRAMType);
+	if (pCache->Header.Length < 0x13) // 2.1
+		return;
 	if (pCache->Speed)
 		NWL_NodeAttrSetf(tab, "Cache Speed (ns)", NAFLG_FMT_NUMERIC, "%u", pCache->Speed);
+	NWL_NodeAttrSet(tab, "Error Correction Type", pCacheECTypeToStr(pCache->ErrorCorrectionType), 0);
+	NWL_NodeAttrSet(tab, "System Cache Type", pCacheTypeToStr(pCache->SystemCacheType), 0);
+	NWL_NodeAttrSet(tab, "Associativity", pCacheAssocToStr(pCache->Associativity), 0);
 }
 
 static const CHAR*
@@ -964,6 +1070,37 @@ static void ProcMemoryDevice(PNODE tab, void* p)
 	NWL_NodeAttrSet(tab, "Part Number", LocateString(str, pMD->PN), 0);
 }
 
+static const CHAR*
+pMemErrTypeToStr(UCHAR Type)
+{
+	switch (Type)
+	{
+	case 0x01: return "Other";
+	case 0x03: return "OK";
+	case 0x04: return "Bad Read";
+	case 0x05: return "Parity Error";
+	case 0x06: return "Single-bit Error";
+	case 0x07: return "Double-bit Error";
+	case 0x08: return "Multi-bit Error";
+	case 0x09: return "Nibble Error";
+	case 0x0a: return "Checksum Error";
+	case 0x0b: return "CRC Error";
+	case 0x0c: return "Corrected Single-bit Error";
+	case 0x0d: return "Corrected Error";
+	case 0x0e: return "Uncorrectable Error";
+	}
+	return "Unknown";
+}
+
+static void ProcMemoryErrInfo(PNODE tab, void* p)
+{
+	PMemoryErrInfo pMemErrInfo = (PMemoryErrInfo)p;
+	NWL_NodeAttrSet(tab, "Description", "32-Bit Memory Error Information", 0);
+	if (pMemErrInfo->Header.Length < 0x17) // 2.1
+		return;
+	NWL_NodeAttrSet(tab, "Error Type", pMemErrTypeToStr(pMemErrInfo->ErrType), 0);
+}
+
 static void ProcMemoryArrayMappedAddress(PNODE tab, void* p)
 {
 	PMemoryArrayMappedAddress pMAMA = (PMemoryArrayMappedAddress)p;
@@ -1106,6 +1243,9 @@ static void DumpSMBIOSStruct(PNODE node, void* Addr, UINT Len, UINT8 Type)
 			break;
 		case 17:
 			ProcMemoryDevice(tab, pHeader);
+			break;
+		case 18:
+			ProcMemoryErrInfo(tab, pHeader);
 			break;
 		case 19:
 			ProcMemoryArrayMappedAddress(tab, pHeader);

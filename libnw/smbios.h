@@ -303,6 +303,18 @@ typedef struct _TYPE_17_
 	UCHAR Attributes;
 } MemoryDevice, * PMemoryDevice;
 
+typedef struct _TYPE_18_
+{
+	SMBIOSHEADER Header;
+	BYTE ErrType;
+	BYTE ErrGranularity;
+	BYTE ErrOperation;
+	DWORD VendorSyndrome;
+	DWORD MemArrayErrAddr;
+	DWORD DevErrAddr;
+	DWORD ErrResolution;
+} MemoryErrInfo, * PMemoryErrInfo;
+
 typedef struct _TYPE_19_
 {
 	SMBIOSHEADER Header;
