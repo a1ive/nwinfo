@@ -754,16 +754,38 @@ static void ProcBIOSLangInfo(PNODE tab, void* p)
 
 static void ProcGroupAssoc(PNODE tab, void* p)
 {
+	UINT i, count;
+	PNODE ndev;
 	PGroupAssoc pGA = (PGroupAssoc)p;
 	const char* str = toPointString(p);
 	NWL_NodeAttrSet(tab, "Description", "Group Associations", 0);
 	if (pGA->Header.Length < 0x05)
 		return;
 	NWL_NodeAttrSet(tab, "Group Name", LocateString(str, pGA->GroupName), 0);
-	if (pGA->Header.Length < 0x08)
+	count = (pGA->Header.Length - sizeof(pGA->GroupName) - sizeof(SMBIOSHEADER)) / (sizeof(pGA->GAItem[0]));
+	NWL_NodeAttrSetf(tab, "Number of Items", NAFLG_FMT_NUMERIC, "%u", count);
+	ndev = NWL_NodeAppendNew(tab, "Items", NFLG_TABLE);
+	for (i = 0; i < count; i++)
+	{
+		PNODE p = NWL_NodeAppendNew(ndev, "Item", NFLG_TABLE_ROW);
+		NWL_NodeAttrSetf(p, "Type", NAFLG_FMT_NUMERIC, "%u", pGA->GAItem[i].ItemType);
+		NWL_NodeAttrSetf(p, "Handle", NAFLG_FMT_NUMERIC, "%u", pGA->GAItem[i].ItemHandle);
+	}
+}
+
+static void ProcSystemEventLog(PNODE tab, void* p)
+{
+	PSystemEventLog pSys = (PSystemEventLog)p;
+	NWL_NodeAttrSet(tab, "Description", "System Event Log", 0);
+	if (pSys->Header.Length < 0x14) // 2.0
 		return;
-	NWL_NodeAttrSetf(tab, "Item Type", NAFLG_FMT_NUMERIC, "%u", pGA->ItemType);
-	NWL_NodeAttrSetf(tab, "Item Handle", NAFLG_FMT_NUMERIC, "%u", pGA->ItemHandle);
+	NWL_NodeAttrSetf(tab, "Log Area Length", NAFLG_FMT_NUMERIC, "%u", pSys->LogAreaLength);
+	NWL_NodeAttrSetf(tab, "Log Header Start Offset", NAFLG_FMT_NUMERIC, "%u", pSys->LogHdrStartOffset);
+	NWL_NodeAttrSetf(tab, "Log Data Start Offset", NAFLG_FMT_NUMERIC, "%u", pSys->LogDataStartOffset);
+	NWL_NodeAttrSetf(tab, "Access Method", 0, "0x%02X", pSys->AccessMethod);
+	NWL_NodeAttrSetf(tab, "Log Status", 0, "0x%02X", pSys->LogStatus);
+	NWL_NodeAttrSetf(tab, "Log Change Token", 0, "0x%08lX", pSys->LogChangeToken);
+	NWL_NodeAttrSetf(tab, "Access Method Address", 0, "0x%08lX", pSys->AccessMethodAddr);
 }
 
 static const CHAR*
@@ -832,12 +854,12 @@ static void ProcMemoryArray(PNODE tab, void* p)
 	NWL_NodeAttrSet(tab, "Location", pMALocationToStr(pMA->Location), 0);
 	NWL_NodeAttrSet(tab, "Function", pMAUseToStr(pMA->Use), 0);
 	NWL_NodeAttrSet(tab, "Error Correction", pMAEccToStr(pMA->ErrCorrection), 0);
-	NWL_NodeAttrSetf(tab, "Number of Slots", NAFLG_FMT_NUMERIC, "%u", pMA->NumOfMDs);
 	if (pMA->MaxCapacity == 0x80000000 && pMA->Header.Length > 0x0f)
 		sz = pMA->ExtMaxCapacity;
 	else
 		sz = ((UINT64)pMA->MaxCapacity) * 1024;
 	NWL_NodeAttrSet(tab, "Max Capacity", NWL_GetHumanSize(sz, mem_human_sizes, 1024), NAFLG_FMT_HUMAN_SIZE);
+	NWL_NodeAttrSetf(tab, "Number of Slots", NAFLG_FMT_NUMERIC, "%u", pMA->NumOfMDs);
 }
 
 static const CHAR*
@@ -885,6 +907,30 @@ pMDMemoryTypeToStr(UCHAR Type)
 	return "Unknown";
 }
 
+static const CHAR*
+pMDFormFactorToStr(UCHAR Type)
+{
+	switch (Type)
+	{
+	case 0x01: return "Other";
+	case 0x03: return "SIMM";
+	case 0x04: return "SIP";
+	case 0x05: return "Chip";
+	case 0x06: return "DIP";
+	case 0x07: return "ZIP";
+	case 0x08: return "Proprietary Card";
+	case 0x09: return "DIMM";
+	case 0x0a: return "TSOP";
+	case 0x0b: return "Row of chips";
+	case 0x0c: return "RIMM";
+	case 0x0d: return "SODIMM";
+	case 0x0e: return "SRIMM";
+	case 0x0f: return "FB-DIMM";
+	case 0x10: return "Die";
+	}
+	return "Unknown";
+}
+
 static void ProcMemoryDevice(PNODE tab, void* p)
 {
 	PMemoryDevice pMD = (PMemoryDevice)p;
@@ -895,6 +941,7 @@ static void ProcMemoryDevice(PNODE tab, void* p)
 		return;
 	NWL_NodeAttrSet(tab, "Device Locator", LocateString(str, pMD->DeviceLocator), 0);
 	NWL_NodeAttrSet(tab, "Bank Locator", LocateString(str, pMD->BankLocator), 0);
+	NWL_NodeAttrSet(tab, "Form Factor", pMDFormFactorToStr(pMD->FormFactor), 0);
 	if (pMD->TotalWidth)
 		NWL_NodeAttrSetf(tab, "Total Width (bits)", NAFLG_FMT_NUMERIC, "%u", pMD->TotalWidth);
 	if (pMD->DataWidth)
@@ -1050,6 +1097,9 @@ static void DumpSMBIOSStruct(PNODE node, void* Addr, UINT Len, UINT8 Type)
 			break;
 		case 14:
 			ProcGroupAssoc(tab, pHeader);
+			break;
+		case 15:
+			ProcSystemEventLog(tab, pHeader);
 			break;
 		case 16:
 			ProcMemoryArray(tab, pHeader);

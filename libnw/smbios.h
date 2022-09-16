@@ -250,9 +250,24 @@ typedef struct _TYPE_14_
 {
 	SMBIOSHEADER Header;
 	UCHAR GroupName;
-	UCHAR ItemType;
-	WORD ItemHandle;
+	struct _TYPE_14_ITEM
+	{
+		UCHAR ItemType;
+		WORD ItemHandle;
+	} GAItem[0];
 } GroupAssoc, * PGroupAssoc;
+
+typedef struct _TYPE_15_
+{
+	SMBIOSHEADER Header;
+	WORD LogAreaLength;
+	WORD LogHdrStartOffset;
+	WORD LogDataStartOffset;
+	UCHAR AccessMethod;
+	UCHAR LogStatus;
+	DWORD LogChangeToken;
+	DWORD AccessMethodAddr;
+} SystemEventLog, * PSystemEventLog;
 
 typedef struct _TYPE_16_
 {
