@@ -759,6 +759,145 @@ static void ProcPortConnectInfo(PNODE tab, void* p)
 	NWL_NodeAttrSet(tab, "Port Type", pPortTypeToStr(pPort->PortType), 0);
 }
 
+static const CHAR*
+pSysSlotTypeToStr(UCHAR Type)
+{
+	switch (Type)
+	{
+	case 0x01: return "Other";
+	case 0x03: return "ISA";
+	case 0x04: return "MCA";
+	case 0x05: return "EISA";
+	case 0x06: return "PCI";
+	case 0x07: return "PC Card (PCMCIA)";
+	case 0x08: return "VL-VESA";
+	case 0x09: return "Proprietary";
+	case 0x0a: return "Processor Card Slot";
+	case 0x0b: return "Proprietary Memory Card Slot";
+	case 0x0c: return "I/O Riser Card Slot";
+	case 0x0d: return "NuBus";
+	case 0x0e: return "PCI ¨C 66MHz Capable";
+	case 0x0f: return "AGP";
+	case 0x10: return "AGP 2X";
+	case 0x11: return "AGP 4X";
+	case 0x12: return "PCI-X";
+	case 0x13: return "AGP 8X";
+	case 0x14: return "M.2 Socket 1-DP (Mechanical Key A)";
+	case 0x15: return "M.2 Socket 1-SD (Mechanical Key E)";
+	case 0x16: return "M.2 Socket 2 (Mechanical Key B)";
+	case 0x17: return "M.2 Socket 3 (Mechanical Key M)";
+	case 0x18: return "MXM Type I";
+	case 0x19: return "MXM Type II";
+	case 0x1a: return "MXM Type III (standard connector)";
+	case 0x1b: return "MXM Type III (HE connector)";
+	case 0x1c: return "MXM Type IV";
+	case 0x1d: return "MXM 3.0 Type A";
+	case 0x1e: return "MXM 3.0 Type B";
+	case 0x1f: return "PCI Express Gen 2 SFF-8639 (U.2)";
+	case 0x20: return "PCI Express Gen 3 SFF-8639 (U.2)";
+	case 0x21: return "PCI Express Mini 52-pin (CEM spec. 2.0) with bottom-side keep-outs";
+	case 0x22: return "PCI Express Mini 52-pin (CEM spec. 2.0) without bottom-side keep-outs";
+	case 0x23: return "PCI Express Mini 76-pin (CEM spec. 2.0)";
+	case 0x24: return "PCI Express Gen 4 SFF-8639 (U.2)";
+	case 0x25: return "PCI Express Gen 5 SFF-8639 (U.2)";
+	case 0x26: return "OCP NIC 3.0 Small Form Factor (SFF)";
+	case 0x27: return "OCP NIC 3.0 Large Form Factor (LFF)";
+	case 0x28: return "OCP NIC Prior to 3.0";
+
+	case 0x30: return "CXL Flexbus 1.0";
+
+	case 0xa0: return "PC-98/C20";
+	case 0xa1: return "PC-98/C24";
+	case 0xa2: return "PC-98/E";
+	case 0xa3: return "PC-98/Local Bus";
+	case 0xa4: return "PC-98/Card";
+	case 0xa5: return "PCI Express";
+	case 0xa6: return "PCI Express x1";
+	case 0xa7: return "PCI Express x2";
+	case 0xa8: return "PCI Express x4";
+	case 0xa9: return "PCI Express x8";
+	case 0xaa: return "PCI Express x16";
+	case 0xab: return "PCI Express Gen 2";
+	case 0xac: return "PCI Express Gen 2 x1";
+	case 0xad: return "PCI Express Gen 2 x2";
+	case 0xae: return "PCI Express Gen 2 x4";
+	case 0xaf: return "PCI Express Gen 2 x8";
+	case 0xb0: return "PCI Express Gen 2 x16";
+	case 0xb1: return "PCI Express Gen 3";
+	case 0xb2: return "PCI Express Gen 3 x1";
+	case 0xb3: return "PCI Express Gen 3 x2";
+	case 0xb4: return "PCI Express Gen 3 x4";
+	case 0xb5: return "PCI Express Gen 3 x8";
+	case 0xb6: return "PCI Express Gen 3 x16";
+
+	case 0xb8: return "PCI Express Gen 4";
+	case 0xb9: return "PCI Express Gen 4 x1";
+	case 0xba: return "PCI Express Gen 4 x2";
+	case 0xbb: return "PCI Express Gen 4 x4";
+	case 0xbc: return "PCI Express Gen 4 x8";
+	case 0xbd: return "PCI Express Gen 4 x16";
+	case 0xbe: return "PCI Express Gen 5";
+	case 0xbf: return "PCI Express Gen 5 x1";
+	case 0xc0: return "PCI Express Gen 5 x2";
+	case 0xc1: return "PCI Express Gen 5 x4";
+	case 0xc2: return "PCI Express Gen 5 x8";
+	case 0xc3: return "PCI Express Gen 5 x16";
+	case 0xc4: return "PCI Express Gen 6 and Beyond";
+	case 0xc5: return "EDSFF E1.S, E1.L";
+	case 0xc6: return "EDSFF E3.S, E3.L";
+	}
+	return "Unknown";
+}
+
+static const CHAR*
+pSysSlotBusWidthToStr(UCHAR Width)
+{
+	switch (Width)
+	{
+	case 0x01: return "Other";
+	case 0x03: return "8 bit";
+	case 0x04: return "16 bit";
+	case 0x05: return "32 bit";
+	case 0x06: return "64 bit";
+	case 0x07: return "128 bit";
+	case 0x08: return "x1";
+	case 0x09: return "x2";
+	case 0x0a: return "x4";
+	case 0x0b: return "x8";
+	case 0x0c: return "x12";
+	case 0x0d: return "x16";
+	case 0x0e: return "x32";
+	}
+	return "Unknown";
+}
+
+static const CHAR*
+pSysSlotUsageToStr(UCHAR Usage)
+{
+	switch (Usage)
+	{
+	case 0x01: return "Other";
+	case 0x03: return "Available";
+	case 0x04: return "In use";
+	case 0x05: return "Unavailable";
+	}
+	return "Unknown";
+}
+
+static const CHAR*
+pSysSlotLengthToStr(UCHAR Length)
+{
+	switch (Length)
+	{
+	case 0x01: return "Other";
+	case 0x03: return "Short Length";
+	case 0x04: return "Long Length";
+	case 0x05: return "2.5 drive form factor";
+	case 0x06: return "3.5 drive form factor";
+	}
+	return "Unknown";
+}
+
 static void ProcPSystemSlots(PNODE tab, void* p)
 {
 	PSystemSlots pSys = (PSystemSlots)p;
@@ -767,6 +906,15 @@ static void ProcPSystemSlots(PNODE tab, void* p)
 	if (pSys->Header.Length < 0x0c) // 2.0
 		return;
 	NWL_NodeAttrSet(tab, "Slot Designation", LocateString(str, pSys->SlotDesignation), 0);
+	NWL_NodeAttrSet(tab, "Slot Type", pSysSlotTypeToStr(pSys->SlotType), 0);
+	NWL_NodeAttrSet(tab, "Slot Data Bus Width", pSysSlotBusWidthToStr(pSys->SlotDataBusWidth), 0);
+	NWL_NodeAttrSet(tab, "Current Usage", pSysSlotUsageToStr(pSys->CurrentUsage), 0);
+	NWL_NodeAttrSet(tab, "Slot Length", pSysSlotLengthToStr(pSys->SlotLength), 0);
+	NWL_NodeAttrSetf(tab, "Slot ID", NAFLG_FMT_NUMERIC, "%u", pSys->SlotID);
+	NWL_NodeAttrSetf(tab, "Slot Characteristics 1", 0, "0x%02X", pSys->SlotCharacteristics1);
+	if (pSys->Header.Length < 0x0d) // 2.1
+		return;
+	NWL_NodeAttrSetf(tab, "Slot Characteristics 2", 0, "0x%02X", pSys->SlotCharacteristics2);
 }
 
 static const CHAR*
