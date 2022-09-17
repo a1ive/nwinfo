@@ -1092,6 +1092,31 @@ pMemErrTypeToStr(UCHAR Type)
 	return "Unknown";
 }
 
+static const CHAR*
+pMemErrGranularityToStr(UCHAR Type)
+{
+	switch (Type)
+	{
+	case 0x01: return "Other";
+	case 0x03: return "Device level";
+	case 0x04: return "Memory partition level";
+	}
+	return "Unknown";
+}
+
+static const CHAR*
+pMemErrOperationToStr(UCHAR Type)
+{
+	switch (Type)
+	{
+	case 0x01: return "Other";
+	case 0x03: return "Read";
+	case 0x04: return "Write";
+	case 0x05: return "Partial Write";
+	}
+	return "Unknown";
+}
+
 static void ProcMemoryErrInfo(PNODE tab, void* p)
 {
 	PMemoryErrInfo pMemErrInfo = (PMemoryErrInfo)p;
@@ -1099,6 +1124,12 @@ static void ProcMemoryErrInfo(PNODE tab, void* p)
 	if (pMemErrInfo->Header.Length < 0x17) // 2.1
 		return;
 	NWL_NodeAttrSet(tab, "Error Type", pMemErrTypeToStr(pMemErrInfo->ErrType), 0);
+	NWL_NodeAttrSet(tab, "Error Granularity", pMemErrGranularityToStr(pMemErrInfo->ErrGranularity), 0);
+	NWL_NodeAttrSet(tab, "Error Operation", pMemErrOperationToStr(pMemErrInfo->ErrOperation), 0);
+	NWL_NodeAttrSetf(tab, "Vendor Syndrome", 0, "0x%08lX", pMemErrInfo->VendorSyndrome);
+	NWL_NodeAttrSetf(tab, "Memory Array Error Address", 0, "0x%08lX", pMemErrInfo->MemArrayErrAddr);
+	NWL_NodeAttrSetf(tab, "Device Error Address", 0, "0x%08lX", pMemErrInfo->DevErrAddr);
+	NWL_NodeAttrSetf(tab, "Error Resolution", 0, "0x%08lX", pMemErrInfo->ErrResolution);
 }
 
 static void ProcMemoryArrayMappedAddress(PNODE tab, void* p)
@@ -1133,6 +1164,55 @@ static void ProcMemoryDeviceMappedAddress(PNODE tab, void* p)
 	NWL_NodeAttrSetf(tab, "Memory Array Mapped Address Handle", NAFLG_FMT_NUMERIC, "%u", pMDMA->MAMAHandle);
 }
 
+static const CHAR*
+pPointingDevTypeToStr(UCHAR Type)
+{
+	switch (Type)
+	{
+	case 0x01: return "Other";
+	case 0x03: return "Mouse";
+	case 0x04: return "Track Ball";
+	case 0x05: return "Track Point";
+	case 0x06: return "Glide Point";
+	case 0x07: return "Touch Pad";
+	case 0x08: return "Touch Screen";
+	case 0x09: return "Optical Sensor";
+	}
+	return "Unknown";
+}
+
+static const CHAR*
+pPointingDevInterfaceToStr(UCHAR Type)
+{
+	switch (Type)
+	{
+	case 0x01: return "Other";
+	case 0x03: return "Serial";
+	case 0x04: return "PS/2";
+	case 0x05: return "Infrared";
+	case 0x06: return "HP-HIL";
+	case 0x07: return "Bus mouse";
+	case 0x08: return "ADB";
+	case 0xa0: return "Bus mouse DB-9";
+	case 0xa1: return "Bus mouse micro-DIN";
+	case 0xa2: return "USB";
+	case 0xa3: return "I2C";
+	case 0xa4: return "SPI";
+	}
+	return "Unknown";
+}
+
+static void ProcBuiltinPointing(PNODE tab, void* p)
+{
+	PBuiltinPointing pBP = (PBuiltinPointing)p;
+	NWL_NodeAttrSet(tab, "Description", "Built-in Pointing Device", 0);
+	if (pBP->Header.Length < 0x07) // 2.1
+		return;
+	NWL_NodeAttrSet(tab, "Type", pPointingDevTypeToStr(pBP->Type), 0);
+	NWL_NodeAttrSet(tab, "Interface", pPointingDevInterfaceToStr(pBP->Interface), 0);
+	NWL_NodeAttrSetf(tab, "Number of Buttons", NAFLG_FMT_NUMERIC, "%u", pBP->NumOfButtons);
+}
+
 static void ProcPortableBattery(PNODE tab, void* p)
 {
 	PPortableBattery pPB = (PPortableBattery)p;
@@ -1147,11 +1227,118 @@ static void ProcPortableBattery(PNODE tab, void* p)
 	NWL_NodeAttrSet(tab, "Device Name", LocateString(str, pPB->DeviceName), 0);
 }
 
+static const CHAR*
+pSysResetCapabilitiesToStr(UCHAR Type)
+{
+	switch (Type)
+	{
+	case 0x01: return "Operating System";
+	case 0x02: return "System Utilities";
+	case 0x03: return "Do Not Reboot";
+	}
+	return "Reserved";
+}
+
+static void ProcSysReset(PNODE tab, void* p)
+{
+	PSysReset pSysReset = (PSysReset)p;
+	NWL_NodeAttrSet(tab, "Description", "System Reset", 0);
+	if (pSysReset->Header.Length < 0x0d)
+		return;
+	NWL_NodeAttrSetBool(tab, "Watchdog Timer", pSysReset->Capabilities & (1 << 5), 0);
+	NWL_NodeAttrSet(tab, "Boot Option on Limit",
+		pSysResetCapabilitiesToStr((pSysReset->Capabilities & 0x18) >> 3), 0);
+	NWL_NodeAttrSet(tab, "Boot Option",
+		pSysResetCapabilitiesToStr((pSysReset->Capabilities & 0x06) >> 1), 0);
+	NWL_NodeAttrSetBool(tab, "System Reset Status", pSysReset->Capabilities & 0x01, 0);
+	NWL_NodeAttrSetf(tab, "Reset Count", NAFLG_FMT_NUMERIC, "%u", pSysReset->ResetCount);
+	NWL_NodeAttrSetf(tab, "Reset Limit", NAFLG_FMT_NUMERIC, "%u", pSysReset->ResetLimit);
+	NWL_NodeAttrSetf(tab, "Timer Interval", NAFLG_FMT_NUMERIC, "%u", pSysReset->TimerInterval);
+	NWL_NodeAttrSetf(tab, "Timeout", NAFLG_FMT_NUMERIC, "%u", pSysReset->Timeout);
+}
+
+static const CHAR*
+pHwSecurityStatusToStr(UCHAR Type)
+{
+	switch (Type)
+	{
+	case 0x00: return "Disabled";
+	case 0x01: return "Enabled";
+	case 0x02: return "Not Implemented";
+	}
+	return "Unknown";
+}
+
+static void ProcHwSecurity(PNODE tab, void* p)
+{
+	PHwSecurity pHwSecurity = (PHwSecurity)p;
+	NWL_NodeAttrSet(tab, "Description", "Hardware Security", 0);
+	if (pHwSecurity->Header.Length < 0x05)
+		return;
+	NWL_NodeAttrSet(tab, "Power-on Password",
+		pHwSecurityStatusToStr((pHwSecurity->Settings & 0xc0) >> 6), 0);
+	NWL_NodeAttrSet(tab, "Keyboard Password",
+		pHwSecurityStatusToStr((pHwSecurity->Settings & 0x30) >> 4), 0);
+	NWL_NodeAttrSet(tab, "Administrator Password",
+		pHwSecurityStatusToStr((pHwSecurity->Settings & 0x0c) >> 2), 0);
+	NWL_NodeAttrSet(tab, "Front Panel Reset",
+		pHwSecurityStatusToStr(pHwSecurity->Settings & 0x03), 0);
+}
+
+static void ProcSysPowerCtrl(PNODE tab, void* p)
+{
+	PSysPowerCtrl pSysPowerCtrl = (PSysPowerCtrl)p;
+	NWL_NodeAttrSet(tab, "Description", "System Power Controls", 0);
+	if (pSysPowerCtrl->Header.Length < 0x09)
+		return;
+	NWL_NodeAttrSetf(tab, "Next Scheduled Power-on", 0,
+		"%02X-%02X-%02X:%02X:%02X",
+		pSysPowerCtrl->NextPwrOnMonth, pSysPowerCtrl->NextPwrOnDay,
+		pSysPowerCtrl->NextPwrOnHour, pSysPowerCtrl->NextPwrOnMinute,
+		pSysPowerCtrl->NextPwrOnSecond);
+}
+
+static void ProcOutOfBandRemoteAccess(PNODE tab, void* p)
+{
+	POutOfBandRemoteAccess pRemoteAccess = (POutOfBandRemoteAccess)p;
+	const char* str = toPointString(p);
+	NWL_NodeAttrSet(tab, "Description", "Out-of-Band Remote Access", 0);
+	if (pRemoteAccess->Header.Length < 0x06)
+		return;
+	NWL_NodeAttrSet(tab, "Manufacturer", LocateString(str, pRemoteAccess->Manufacturer), 0);
+	NWL_NodeAttrSetBool(tab, "Outbound Connection Enabled", pRemoteAccess->Connections & (1 << 1), 0);
+	NWL_NodeAttrSetBool(tab, "Inbound Connection Enabled", pRemoteAccess->Connections & (1 << 0), 0);
+}
+
+static void ProcBISEntryPoint(PNODE tab, void* p)
+{
+	//PBISEntryPoint pBISEntryPoint = (PBISEntryPoint)p;
+	(void)p;
+	NWL_NodeAttrSet(tab, "Description", "Boot Integrity Services Entry Point", 0);
+}
+
 static void ProcSysBootInfo(PNODE tab, void* p)
 {
 	PSysBootInfo pBootInfo = (PSysBootInfo)p;
-	const char* str = toPointString(p);
 	NWL_NodeAttrSet(tab, "Description", "System Boot Information", 0);
+	if (pBootInfo->Header.Length < 0x0b)
+		return;
+	// TODO
+}
+
+static void ProcMemoryErrInfo64(PNODE tab, void* p)
+{
+	PMemoryErrInfo64 pMemErrInfo = (PMemoryErrInfo64)p;
+	NWL_NodeAttrSet(tab, "Description", "64-Bit Memory Error Information", 0);
+	if (pMemErrInfo->Header.Length < 0x17) // 2.1
+		return;
+	NWL_NodeAttrSet(tab, "Error Type", pMemErrTypeToStr(pMemErrInfo->ErrType), 0);
+	NWL_NodeAttrSet(tab, "Error Granularity", pMemErrGranularityToStr(pMemErrInfo->ErrGranularity), 0);
+	NWL_NodeAttrSet(tab, "Error Operation", pMemErrOperationToStr(pMemErrInfo->ErrOperation), 0);
+	NWL_NodeAttrSetf(tab, "Vendor Syndrome", 0, "0x%08lX", pMemErrInfo->VendorSyndrome);
+	NWL_NodeAttrSetf(tab, "Memory Array Error Address", 0, "0x%016llX", pMemErrInfo->MemArrayErrAddr);
+	NWL_NodeAttrSetf(tab, "Device Error Address", 0, "0x%016llX", pMemErrInfo->DevErrAddr);
+	NWL_NodeAttrSetf(tab, "Error Resolution", 0, "0x%08lX", pMemErrInfo->ErrResolution);
 }
 
 static void ProcTPMDevice(PNODE tab, void* p)
@@ -1253,11 +1440,32 @@ static void DumpSMBIOSStruct(PNODE node, void* Addr, UINT Len, UINT8 Type)
 		case 20:
 			ProcMemoryDeviceMappedAddress(tab, pHeader);
 			break;
+		case 21:
+			ProcBuiltinPointing(tab, pHeader);
+			break;
 		case 22:
 			ProcPortableBattery(tab, pHeader);
 			break;
+		case 23:
+			ProcSysReset(tab, pHeader);
+			break;
+		case 24:
+			ProcHwSecurity(tab, pHeader);
+			break;
+		case 25:
+			ProcSysPowerCtrl(tab, pHeader);
+			break;
+		case 30:
+			ProcOutOfBandRemoteAccess(tab, pHeader);
+			break;
+		case 31:
+			ProcBISEntryPoint(tab, pHeader);
+			break;
 		case 32:
 			ProcSysBootInfo(tab, pHeader);
+			break;
+		case 33:
+			ProcMemoryErrInfo64(tab, pHeader);
 			break;
 		case 43:
 			ProcTPMDevice(tab, pHeader);

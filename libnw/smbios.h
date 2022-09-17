@@ -340,6 +340,14 @@ typedef struct _TYPE_20_
 	UINT64 ExtEndAddr;
 } MemoryDeviceMappedAddress, * PMemoryDeviceMappedAddress;
 
+typedef struct _TYPE_21_
+{
+	SMBIOSHEADER Header;
+	UCHAR Type;
+	UCHAR Interface;
+	UCHAR NumOfButtons;
+} BuiltinPointing, * PBuiltinPointing;
+
 typedef struct _TYPE_22_
 {
 	SMBIOSHEADER Header;
@@ -351,8 +359,52 @@ typedef struct _TYPE_22_
 	UCHAR DeviceChemistry;
 	UINT16 DesignCapacity;
 	UINT16 DesignVoltage;
-
+	UCHAR SBDSVer;
+	UCHAR MaxErr;
+	UINT16 SBDSSerial;
+	UINT16 SBDSManufactureDate;
+	UCHAR SBDSChemistry;
+	UCHAR DesignCapacityMultiplier;
+	DWORD OEMInfo;
 } PortableBattery, * PPortableBattery;
+
+typedef struct _TYPE_23_
+{
+	SMBIOSHEADER Header;
+	UCHAR Capabilities;
+	UINT16 ResetCount;
+	UINT16 ResetLimit;
+	UINT16 TimerInterval;
+	UINT16 Timeout;
+} SysReset, * PSysReset;
+
+typedef struct _TYPE_24_
+{
+	SMBIOSHEADER Header;
+	UCHAR Settings;
+} HwSecurity, * PHwSecurity;
+
+typedef struct _TYPE_25_
+{
+	SMBIOSHEADER Header;
+	UCHAR NextPwrOnMonth;
+	UCHAR NextPwrOnDay;
+	UCHAR NextPwrOnHour;
+	UCHAR NextPwrOnMinute;
+	UCHAR NextPwrOnSecond;
+} SysPowerCtrl, * PSysPowerCtrl;
+
+typedef struct _TYPE_30_
+{
+	SMBIOSHEADER Header;
+	UCHAR Manufacturer;
+	UCHAR Connections;
+} OutOfBandRemoteAccess, * POutOfBandRemoteAccess;
+
+typedef struct _TYPE_31_
+{
+	SMBIOSHEADER Header;
+} BISEntryPoint, * PBISEntryPoint;
 
 typedef struct _TYPE_32_
 {
@@ -360,6 +412,18 @@ typedef struct _TYPE_32_
 	UCHAR Reserved[6];
 	UCHAR BootStatus[];
 } SysBootInfo, * PSysBootInfo;
+
+typedef struct _TYPE_33_
+{
+	SMBIOSHEADER Header;
+	BYTE ErrType;
+	BYTE ErrGranularity;
+	BYTE ErrOperation;
+	DWORD VendorSyndrome;
+	UINT64 MemArrayErrAddr;
+	UINT64 DevErrAddr;
+	DWORD ErrResolution;
+} MemoryErrInfo64, * PMemoryErrInfo64;
 
 typedef struct _TYPE_43_
 {
