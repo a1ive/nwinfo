@@ -199,6 +199,7 @@ static void load_features_common(struct cpu_raw_data_t* raw, struct cpu_id_t* da
 		{ 28, CPU_FEATURE_AVX },
 		{ 29, CPU_FEATURE_F16C },
 		{ 30, CPU_FEATURE_RDRAND },
+		{ 31, CPU_FEATURE_HYPERVISOR },
 	};
 	const struct feature_map_t matchtable_ebx7[] = {
 		{  3, CPU_FEATURE_BMI1 },
@@ -256,19 +257,24 @@ static cpu_vendor_t cpuid_vendor_identify(const uint32_t *raw_vendor, char *vend
 	int i;
 	cpu_vendor_t vendor = VENDOR_UNKNOWN;
 	const struct { cpu_vendor_t vendor; char match[16]; }
-	matchtable[NUM_CPU_VENDORS] = {
+	matchtable[] = {
 		/* source: http://www.sandpile.org/ia32/cpuid.htm */
 		{ VENDOR_INTEL		, "GenuineIntel" },
 		{ VENDOR_AMD		, "AuthenticAMD" },
+		{ VENDOR_AMD		, "AMDisbetter!" }, // AMD K5
 		{ VENDOR_CYRIX		, "CyrixInstead" },
 		{ VENDOR_NEXGEN		, "NexGenDriven" },
 		{ VENDOR_TRANSMETA	, "GenuineTMx86" },
+		{ VENDOR_TRANSMETA	, "TransmetaCPU" },
 		{ VENDOR_UMC		, "UMC UMC UMC " },
 		{ VENDOR_CENTAUR	, "CentaurHauls" },
 		{ VENDOR_RISE		, "RiseRiseRise" },
 		{ VENDOR_SIS		, "SiS SiS SiS " },
 		{ VENDOR_NSC		, "Geode by NSC" },
 		{ VENDOR_HYGON		, "HygonGenuine" },
+		{ VENDOR_VORTEX86	, "Vortex86 SoC" },
+		{ VENDOR_VIA		, "VIA VIA VIA " },
+		{ VENDOR_ZHAOXIN	, "  Shanghai  " },
 	};
 
 	memcpy(vendor_str + 0, &raw_vendor[1], 4);
@@ -277,13 +283,71 @@ static cpu_vendor_t cpuid_vendor_identify(const uint32_t *raw_vendor, char *vend
 	vendor_str[12] = 0;
 
 	/* Determine vendor: */
-	for (i = 0; i < NUM_CPU_VENDORS; i++)
+	for (i = 0; i < sizeof(matchtable) / sizeof(matchtable[0]); i++)
 		if (!strcmp(vendor_str, matchtable[i].match)) {
 			vendor = matchtable[i].vendor;
 			break;
 		}
 	return vendor;
 }
+
+static hypervisor_vendor_t cpuid_get_hypervisor(struct cpu_raw_data_t* raw, struct cpu_id_t* data)
+{
+	int i;
+	uint32_t hypervisor_fn40000000h[NUM_REGS];
+	const struct { hypervisor_vendor_t hypervisor; char match[16]; }
+	matchtable[] = {
+		/* source: https://github.com/a0rtega/pafish/blob/master/pafish/cpu.c */
+		{ HYPERVISOR_ACRN       , "ACRNACRNACRN"    },
+		{ HYPERVISOR_BHYVE      , "bhyve bhyve\0"   },
+		{ HYPERVISOR_HYPERV     , "Microsoft Hv"    },
+		{ HYPERVISOR_KVM        , "KVMKVMKVM\0\0\0" },
+		{ HYPERVISOR_KVM        , "Linux KVM Hv"    },
+		{ HYPERVISOR_PARALLELS  , "prl hyperv\0\0"  },
+		{ HYPERVISOR_PARALLELS  , "lrpepyh vr\0\0"  },
+		{ HYPERVISOR_QEMU       , "TCGTCGTCGTCG"    },
+		{ HYPERVISOR_QNX        , "QNXQVMBSQG\0\0"  },
+		{ HYPERVISOR_VIRTUALBOX , "VBoxVBoxVBox"    },
+		{ HYPERVISOR_VMWARE     , "VMwareVMware"    },
+		{ HYPERVISOR_XEN        , "XenVMMXenVMM"    },
+	};
+
+	memset(data->hypervisor_str, 0, VENDOR_STR_MAX);
+
+	/* Intel and AMD CPUs have reserved bit 31 of ECX of CPUID leaf 0x1 as the hypervisor present bit
+	Source: https://kb.vmware.com/s/article/1009458 */
+	switch (data->vendor) {
+	case VENDOR_AMD:
+	case VENDOR_INTEL:
+		break;
+	default:
+		return HYPERVISOR_UNKNOWN;
+	}
+	if (!data->flags[CPU_FEATURE_HYPERVISOR])
+		return HYPERVISOR_NONE;
+
+	/* Intel and AMD have also reserved CPUID leaves 0x40000000 - 0x400000FF for software use.
+	Hypervisors can use these leaves to provide an interface to pass information
+	from the hypervisor to the guest operating system running inside a virtual machine.
+	The hypervisor bit indicates the presence of a hypervisor
+	and that it is safe to test these additional software leaves. */
+	memset(hypervisor_fn40000000h, 0, sizeof(hypervisor_fn40000000h));
+	hypervisor_fn40000000h[EAX] = 0x40000000;
+	cpu_exec_cpuid_ext(hypervisor_fn40000000h);
+
+	/* Copy the hypervisor CPUID information leaf */
+	memcpy(data->hypervisor_str + 0, &hypervisor_fn40000000h[1], 4);
+	memcpy(data->hypervisor_str + 4, &hypervisor_fn40000000h[2], 4);
+	memcpy(data->hypervisor_str + 8, &hypervisor_fn40000000h[3], 4);
+	data->hypervisor_str[12] = '\0';
+
+	/* Determine hypervisor */
+	for (i = 0; i < sizeof(matchtable) / sizeof(matchtable[0]); i++)
+		if (!strcmp(data->hypervisor_str, matchtable[i].match))
+			return matchtable[i].hypervisor;
+	return HYPERVISOR_UNKNOWN;
+}
+
 
 static int cpuid_basic_identify(struct cpu_raw_data_t* raw, struct cpu_id_t* data)
 {
@@ -323,6 +387,7 @@ static int cpuid_basic_identify(struct cpu_raw_data_t* raw, struct cpu_id_t* dat
 	}
 	load_features_common(raw, data);
 	data->total_logical_cpus = get_total_cpus();
+	data->hypervisor_vendor = cpuid_get_hypervisor(raw, data);
 	return set_error(ERR_OK);
 }
 
@@ -755,6 +820,7 @@ const char* cpu_feature_str(cpu_feature_t feature)
 		{ CPU_FEATURE_AVX512VNNI, "avx512vnni" },
 		{ CPU_FEATURE_AVX512VBMI, "avx512vbmi" },
 		{ CPU_FEATURE_AVX512VBMI2, "avx512vbmi2" },
+		{ CPU_FEATURE_HYPERVISOR, "hypervisor" },
 	};
 	unsigned i, n = COUNT_OF(matchtable);
 	if (n != NUM_CPU_FEATURES) {

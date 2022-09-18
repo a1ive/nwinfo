@@ -224,6 +224,7 @@ static GNW_LANG GNW_LANG_CHS[] =
 	{"Uptime", "正常运行时间"},
 	{"Username", "用户名"},
 	{"Vendor", "供应商"},
+	{"Vendor Name", "供应商名称"},
 	{"Version", "版本"},
 	{"Video Input", "视频输入"},
 	{"Voltage", "电压"},

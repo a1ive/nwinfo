@@ -11,51 +11,27 @@
 static const char* kb_human_sizes[6] =
 { "KB", "MB", "GB", "TB", "PB", "EB", };
 
-static LPCSTR
-GetHypervisorName(LPCSTR lpszSignature)
-{
-	if (strcmp(lpszSignature, "VMwareVMware") == 0)
-		return "VMware";
-	else if (strcmp(lpszSignature, "Microsoft Hv") == 0)
-		return "Microsoft Hyper-V";
-	else if (strcmp(lpszSignature, "KVMKVMKVM") == 0
-		|| strcmp(lpszSignature, "Linux KVM Hv") == 0)
-		return "KVM";
-	else if (strcmp(lpszSignature, "VBoxVBoxVBox") == 0)
-		return "VirtualBox";
-	else if (strcmp(lpszSignature, "XenVMMXenVMM") == 0)
-		return "Xen";
-	else if (strcmp(lpszSignature, "prl hyperv") == 0
-		|| strcmp(lpszSignature, "lrpepyh vr") == 0)
-		return "Parallels";
-	else if (strcmp(lpszSignature, "TCGTCGTCGTCG") == 0)
-		return "QEMU";
-	else if (strcmp(lpszSignature, "bhyve bhyve") == 0)
-		return "FreeBSD bhyve";
-	else if (strcmp(lpszSignature, "ACRNACRNACRN") == 0)
-		return "Project ACRN";
-	else if (strcmp(lpszSignature, "QNXQVMBSQG") == 0)
-		return "QNX Hypervisor";
-	return "Unknown Hypervisor";
-}
-
 static void
-PrintHypervisor(PNODE node)
+PrintHypervisor(PNODE node, struct cpu_id_t* data)
 {
-	int cpuInfo[4] = { 0 };
-	unsigned MaxFunc = 0;
-	char VmSign[13] = { 0 };
-	__cpuid(cpuInfo, 0);
-	MaxFunc = cpuInfo[0];
-	if (MaxFunc < 1U)
-		return;
-	__cpuid(cpuInfo, 1);
-	if (((unsigned)cpuInfo[2] & (1U << 31U)) == 0)
-		return;
-	__cpuid(cpuInfo, 0x40000000U);
-	memcpy(VmSign, &cpuInfo[1], 12);
-	NWL_NodeAttrSet(node, "Hypervisor", GetHypervisorName(VmSign), 0);
-	NWL_NodeAttrSet(node, "Hypervisor Signature", VmSign, 0);
+	LPCSTR name = NULL;
+	switch (data->hypervisor_vendor)
+	{
+	case HYPERVISOR_NONE: return;
+	case HYPERVISOR_ACRN: name = "Project ACRN"; break;
+	case HYPERVISOR_BHYVE: name = "FreeBSD bhyve"; break;
+	case HYPERVISOR_HYPERV: name = "Microsoft Hyper-V"; break;
+	case HYPERVISOR_KVM: name = "KVM"; break;
+	case HYPERVISOR_PARALLELS: name = "Parallels"; break;
+	case HYPERVISOR_QEMU: name = "QEMU"; break;
+	case HYPERVISOR_QNX: name = "QNX Hypervisor"; break;
+	case HYPERVISOR_VIRTUALBOX: name = "VirtualBox"; break;
+	case HYPERVISOR_VMWARE: name = "VMware"; break;
+	case HYPERVISOR_XEN: name = "Xen"; break;
+	default: name = "Unknown";
+	}
+	NWL_NodeAttrSet(node, "Hypervisor", name, 0);
+	NWL_NodeAttrSet(node, "Hypervisor Signature", data->hypervisor_str, 0);
 }
 
 static void
@@ -84,19 +60,11 @@ PrintSgx(PNODE node, const struct cpu_raw_data_t* raw, const struct cpu_id_t* da
 	}
 }
 
-struct cpu_id_t* get_cached_cpuid(void);
-
-static int rdmsr_supported(void)
-{
-	struct cpu_id_t* id = get_cached_cpuid();
-	return id->flags[CPU_FEATURE_MSR];
-}
-
 static void
-PrintMsr(PNODE node)
+PrintMsr(PNODE node, struct cpu_id_t* data)
 {
 	int value = CPU_INVALID_VALUE;
-	if (!rdmsr_supported())
+	if (!data->flags[CPU_FEATURE_MSR])
 	{
 		fprintf(stderr, "rdmsr not supported\n");
 		return;
@@ -138,6 +106,7 @@ PNODE NW_Cpuid(VOID)
 	struct cpu_raw_data_t raw = { 0 };
 	struct cpu_id_t data = { 0 };
 	int i = 0;
+	LPCSTR vendor_name = NULL;
 	PNODE cache, feature;
 	BOOL saved_human_size;
 	PNODE node = NWL_NodeAlloc("CPUID", 0);
@@ -151,8 +120,27 @@ PNODE NW_Cpuid(VOID)
 
 	if (cpu_identify(&raw, &data) < 0)
 		fprintf(stderr, "Error identifying the CPU: %s\n", cpuid_error());
-	PrintHypervisor(node);
+	PrintHypervisor(node, &data);
 	NWL_NodeAttrSet(node, "Vendor", data.vendor_str, 0);
+	switch (data.vendor)
+	{
+	case VENDOR_INTEL: vendor_name = "Intel"; break;
+	case VENDOR_AMD: vendor_name = "AMD"; break;
+	case VENDOR_CYRIX: vendor_name = "Cyrix"; break;
+	case VENDOR_NEXGEN: vendor_name = "NexGen"; break;
+	case VENDOR_TRANSMETA: vendor_name = "Transmeta"; break;
+	case VENDOR_UMC: vendor_name = "UMC"; break;
+	case VENDOR_CENTAUR: vendor_name = "IDT/Centaur"; break;
+	case VENDOR_RISE: vendor_name = "Rise Technology"; break;
+	case VENDOR_SIS: vendor_name = "SiS"; break;
+	case VENDOR_NSC: vendor_name = "National Semiconductor"; break;
+	case VENDOR_HYGON: vendor_name = "Hygon"; break;
+	case VENDOR_VORTEX86: vendor_name = "DM&P Vortex86"; break;
+	case VENDOR_VIA: vendor_name = "VIA"; break;
+	case VENDOR_ZHAOXIN: vendor_name = "Zhaoxin"; break;
+	default: vendor_name = "Unknown";
+	}
+	NWL_NodeAttrSet(node, "Vendor Name", vendor_name, 0);
 	NWL_NodeAttrSet(node, "Brand", data.brand_str, 0);
 	NWL_NodeAttrSet(node, "Code Name", data.cpu_codename, 0);
 	NWL_NodeAttrSetf(node, "Family", 0, "%02Xh", data.family);
@@ -191,6 +179,6 @@ PNODE NW_Cpuid(VOID)
 
 	NWL_NodeAttrSetf(node, "CPU Clock (MHz)", NAFLG_FMT_NUMERIC, "%d", cpu_clock_measure(200, 1));
 	PrintSgx(node, &raw, &data);
-	PrintMsr(node);
+	PrintMsr(node, &data);
 	return node;
 }

@@ -118,6 +118,9 @@ typedef enum {
 	VENDOR_SIS,        /*!< x86 CPU by SiS */
 	VENDOR_NSC,        /*!< x86 CPU by National Semiconductor */
 	VENDOR_HYGON,	   /*!< Hygon CPU */
+	VENDOR_VORTEX86,   /*!< DM&P Vortex86 CPU */
+	VENDOR_VIA,        /*!< x86 CPU by VIA */
+	VENDOR_ZHAOXIN,    /*!< x86 CPU by Zhaoxin */
 
 	NUM_CPU_VENDORS,   /*!< Valid CPU vendor ids: 0..NUM_CPU_VENDORS - 1 */
 	VENDOR_UNKNOWN = -1,
@@ -147,6 +150,26 @@ typedef enum {
 	NUM_CPU_PURPOSES,     /*!< Valid CPU purpose ids: 0..NUM_CPU_PURPOSES - 1 */
 } cpu_purpose_t;
 #define NUM_CPU_PURPOSES NUM_CPU_PURPOSES
+
+/**
+ * @brief Hypervisor vendor, as guessed from the CPU_FEATURE_HYPERVISOR flag.
+ */
+typedef enum {
+	HYPERVISOR_NONE = 0,     /*!< no hypervisor */
+	HYPERVISOR_ACRN,         /*!< Projext ACRN hypervisor */
+	HYPERVISOR_BHYVE,        /*!< FreeBSD bhyve hypervisor */
+	HYPERVISOR_HYPERV,       /*!< Microsoft Hyper-V or Windows Virtual PC hypervisor */
+	HYPERVISOR_KVM,          /*!< KVM hypervisor */
+	HYPERVISOR_PARALLELS,    /*!< Parallels hypervisor */
+	HYPERVISOR_QEMU,         /*!< QEMU hypervisor */
+	HYPERVISOR_QNX,          /*!< QNX hypervisor */
+	HYPERVISOR_VIRTUALBOX,   /*!< VirtualBox hypervisor */
+	HYPERVISOR_VMWARE,       /*!< VMware hypervisor */
+	HYPERVISOR_XEN,          /*!< Xen hypervisor */
+	NUM_HYPERVISOR_VENDORS,  /*!< Valid hypervisor vendor ids: 0..NUM_HYPERVISOR_VENDORS - 1 */
+	HYPERVISOR_UNKNOWN = -1,
+} hypervisor_vendor_t;
+#define NUM_HYPERVISOR_VENDORS NUM_HYPERVISOR_VENDORS
 
 /**
  * @brief Contains just the raw CPUID data.
@@ -444,6 +467,12 @@ struct cpu_id_t {
 
 	/** processor type purpose, relevant in case of hybrid CPU (e.g. PURPOSE_PERFORMANCE) */
 	cpu_purpose_t purpose;
+
+	/** contains the hypervisor vendor string, e.g. "VBoxVBoxVBox" */
+	char hypervisor_str[VENDOR_STR_MAX];
+
+	/** contains the recognized hypervisor vendor */
+	hypervisor_vendor_t hypervisor_vendor;
 };
 
 /**
@@ -591,6 +620,7 @@ typedef enum {
 	CPU_FEATURE_AVX512VNNI, /*!< AVX-512 Vector Neural Network Instructions */
 	CPU_FEATURE_AVX512VBMI, /*!< AVX-512 Vector Bit ManipulationInstructions (version 1) */
 	CPU_FEATURE_AVX512VBMI2, /*!< AVX-512 Vector Bit ManipulationInstructions (version 2) */
+	CPU_FEATURE_HYPERVISOR, /*!< Hypervisor present (always zero on physical CPUs) */
 	/* termination: */
 	NUM_CPU_FEATURES,
 } cpu_feature_t;
