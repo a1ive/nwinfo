@@ -38,6 +38,16 @@ enum _common_codes_t {
 	NC, /* No code */
 };
 
+enum _cache_type_t {
+	L1I,
+	L1D,
+	L2,
+	L3,
+	L4,
+	NUM_CACHE_TYPES
+};
+typedef enum _cache_type_t cache_type_t;
+
 #define CODE(x) x
 #define CODE2(x, y) x = y
 enum _amd_code_t {
@@ -59,8 +69,7 @@ struct internal_id_info_t {
 	} code;
 	uint64_t bits;
 	int score; // detection (matchtable) score
-	int32_t smt_id;
-	int32_t core_id;
+	int32_t cache_mask[NUM_CACHE_TYPES];
 };
 
 #define LBIT(x) (((long long) 1) << x)

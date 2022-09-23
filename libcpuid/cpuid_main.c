@@ -59,56 +59,6 @@ static void cpu_id_t_constructor(struct cpu_id_t* id)
 	id->l1_cacheline = id->l1_data_cacheline = id->l1_instruction_cacheline = id->l2_cacheline = id->l3_cacheline = id->l4_cacheline = -1;
 	id->sse_size = -1;
 	init_affinity_mask(&id->affinity_mask);
-	id->purpose = PURPOSE_GENERAL;
-}
-
-static void cpu_raw_data_array_t_constructor(struct cpu_raw_data_array_t* raw_array, bool with_affinity)
-{
-	raw_array->with_affinity = with_affinity;
-	raw_array->num_raw = 0;
-	raw_array->raw = NULL;
-}
-
-static void system_id_t_constructor(struct system_id_t* system)
-{
-	system->num_cpu_types = 0;
-	system->cpu_types = NULL;
-}
-
-static void cpuid_grow_raw_data_array(struct cpu_raw_data_array_t* raw_array, logical_cpu_t n)
-{
-	logical_cpu_t i;
-	struct cpu_raw_data_t *tmp = NULL;
-
-	if ((n <= 0) || (n < raw_array->num_raw)) return;
-	tmp = realloc(raw_array->raw, sizeof(struct cpu_raw_data_t) * n);
-	if (tmp == NULL) { /* Memory allocation failure */
-		set_error(ERR_NO_MEM);
-		return;
-	}
-
-	for (i = raw_array->num_raw; i < n; i++)
-		raw_data_t_constructor(&tmp[i]);
-	raw_array->num_raw = n;
-	raw_array->raw     = tmp;
-}
-
-static void cpuid_grow_system_id(struct system_id_t* system, uint8_t n)
-{
-	uint8_t i;
-	struct cpu_id_t *tmp = NULL;
-
-	if ((n <= 0) || (n < system->num_cpu_types)) return;
-	tmp = realloc(system->cpu_types, sizeof(struct cpu_id_t) * n);
-	if (tmp == NULL) { /* Memory allocation failure */
-		set_error(ERR_NO_MEM);
-		return;
-	}
-
-	for (i = system->num_cpu_types; i < n; i++)
-		cpu_id_t_constructor(&tmp[i]);
-	system->num_cpu_types = n;
-	system->cpu_types     = tmp;
 }
 
 /* get_total_cpus() system specific code: uses OS routines to determine total number of CPUs */
@@ -291,7 +241,7 @@ static cpu_vendor_t cpuid_vendor_identify(const uint32_t *raw_vendor, char *vend
 	return vendor;
 }
 
-static hypervisor_vendor_t cpuid_get_hypervisor(struct cpu_raw_data_t* raw, struct cpu_id_t* data)
+static hypervisor_vendor_t cpuid_get_hypervisor(struct cpu_id_t* data)
 {
 	int i;
 	uint32_t hypervisor_fn40000000h[NUM_REGS];
@@ -357,7 +307,6 @@ static int cpuid_basic_identify(struct cpu_raw_data_t* raw, struct cpu_id_t* dat
 
 	if (data->vendor == VENDOR_UNKNOWN)
 		return set_error(ERR_CPU_UNKN);
-	data->architecture = ARCHITECTURE_X86;
 	basic = raw->basic_cpuid[0][EAX];
 	if (basic >= 1) {
 		data->family = (raw->basic_cpuid[1][EAX] >> 8) & 0xf;
@@ -387,7 +336,7 @@ static int cpuid_basic_identify(struct cpu_raw_data_t* raw, struct cpu_id_t* dat
 	}
 	load_features_common(raw, data);
 	data->total_logical_cpus = get_total_cpus();
-	data->hypervisor_vendor = cpuid_get_hypervisor(raw, data);
+	data->hypervisor_vendor = cpuid_get_hypervisor(data);
 	return set_error(ERR_OK);
 }
 
@@ -457,29 +406,6 @@ int cpuid_get_raw_data(struct cpu_raw_data_t* data)
 	return set_error(ERR_OK);
 }
 
-int cpuid_get_all_raw_data(struct cpu_raw_data_array_t* data)
-{
-	int cur_error = set_error(ERR_OK);
-	int ret_error = set_error(ERR_OK);
-	logical_cpu_t logical_cpu = 0;
-	struct cpu_raw_data_t* raw_ptr = NULL;
-
-	if (data == NULL)
-		return set_error(ERR_HANDLE);
-
-	cpu_raw_data_array_t_constructor(data, true);
-	while (set_cpu_affinity(logical_cpu)) {
-		cpuid_grow_raw_data_array(data, logical_cpu + 1);
-		raw_ptr = &data->raw[logical_cpu];
-		cur_error = cpuid_get_raw_data(raw_ptr);
-		if (ret_error == ERR_OK)
-			ret_error = cur_error;
-		logical_cpu++;
-	}
-
-	return ret_error;
-}
-
 int cpu_ident_internal(struct cpu_raw_data_t* raw, struct cpu_id_t* data, struct internal_id_info_t* internal)
 {
 	int r;
@@ -490,8 +416,7 @@ int cpu_ident_internal(struct cpu_raw_data_t* raw, struct cpu_id_t* data, struct
 		raw = &myraw;
 	}
 	cpu_id_t_constructor(data);
-	internal->smt_id = -1;
-	internal->core_id = -1;
+	memset(internal->cache_mask, 0, sizeof(internal->cache_mask));
 	if ((r = cpuid_basic_identify(raw, data)) < 0)
 		return set_error(r);
 	switch (data->vendor) {
@@ -512,167 +437,12 @@ int cpu_ident_internal(struct cpu_raw_data_t* raw, struct cpu_id_t* data, struct
 	return set_error(r);
 }
 
-static cpu_purpose_t cpu_ident_purpose(struct cpu_raw_data_t* raw)
-{
-	cpu_vendor_t vendor = VENDOR_UNKNOWN;
-	cpu_purpose_t purpose = PURPOSE_GENERAL;
-	char vendor_str[VENDOR_STR_MAX];
-
-	vendor = cpuid_vendor_identify(raw->basic_cpuid[0], vendor_str);
-	if (vendor == VENDOR_UNKNOWN) {
-		set_error(ERR_CPU_UNKN);
-		return purpose;
-	}
-
-	switch (vendor) {
-		case VENDOR_INTEL:
-			purpose = cpuid_identify_purpose_intel(raw);
-			break;
-		default:
-			purpose = PURPOSE_GENERAL;
-			break;
-	}
-
-	return purpose;
-}
-
 int cpu_identify(struct cpu_raw_data_t* raw, struct cpu_id_t* data)
 {
 	int r;
 	struct internal_id_info_t throwaway;
 	r = cpu_ident_internal(raw, data, &throwaway);
 	return r;
-}
-
-int cpu_identify_all(struct cpu_raw_data_array_t* raw_array, struct system_id_t* system)
-{
-	int cur_error = set_error(ERR_OK);
-	int ret_error = set_error(ERR_OK);
-	double smt_divisor;
-	bool is_new_cpu_type;
-	bool is_smt_supported;
-	uint8_t cpu_type_index = 0;
-	int32_t num_logical_cpus = 1;
-	logical_cpu_t logical_cpu = 0;
-	cpu_purpose_t purpose;
-	cpu_affinity_mask_t affinity_mask;
-	struct cpu_raw_data_array_t my_raw_array;
-	struct internal_id_info_t throwaway;
-
-	if (system == NULL)
-		return set_error(ERR_HANDLE);
-	if (!raw_array) {
-		if ((ret_error = cpuid_get_all_raw_data(&my_raw_array)) < 0)
-			return set_error(ret_error);
-		raw_array = &my_raw_array;
-	}
-	system_id_t_constructor(system);
-	if (raw_array->with_affinity) {
-		init_affinity_mask(&affinity_mask);
-		set_affinity_mask_bit(0, &affinity_mask);
-	}
-
-	/* Iterate over all RAW */
-	for (logical_cpu = 0; logical_cpu < raw_array->num_raw; logical_cpu++) {
-		is_new_cpu_type = false;
-		purpose = cpu_ident_purpose(&raw_array->raw[logical_cpu]);
-		/* Put data to system->cpu_types on the first iteration or when purpose is different than previous core */
-		if ((system->num_cpu_types == 0) || (purpose != system->cpu_types[system->num_cpu_types - 1].purpose)) {
-			is_new_cpu_type = true;
-			cpu_type_index = system->num_cpu_types;
-			cpuid_grow_system_id(system, system->num_cpu_types + 1);
-			cur_error = cpu_ident_internal(&raw_array->raw[logical_cpu], &system->cpu_types[cpu_type_index], &throwaway);
-			if (ret_error == ERR_OK)
-				ret_error = cur_error;
-
-		}
-		/* Increment logical and physical CPU counters for current purpose */
-		else if (raw_array->with_affinity) {
-			set_affinity_mask_bit(logical_cpu, &affinity_mask);
-			num_logical_cpus++;
-		}
-		/* Update logical and physical CPU counters in system->cpu_types on the last iteration or when purpose is different than previous core */
-		if (raw_array->with_affinity && ((logical_cpu + 1 == raw_array->num_raw) || (is_new_cpu_type && (system->num_cpu_types > 1)))) {
-			cpu_type_index = is_new_cpu_type && raw_array->with_affinity ? system->num_cpu_types - 2 : system->num_cpu_types - 1;
-			is_smt_supported = (system->cpu_types[cpu_type_index].num_logical_cpus % system->cpu_types[cpu_type_index].num_cores) == 0;
-			smt_divisor = is_smt_supported ? system->cpu_types[cpu_type_index].num_logical_cpus / system->cpu_types[cpu_type_index].num_cores : 1.0;
-			/* Save current values in system->cpu_types[cpu_type_index] */
-			copy_affinity_mask(&system->cpu_types[cpu_type_index].affinity_mask, &affinity_mask);
-			system->cpu_types[cpu_type_index].num_cores = (int32_t) (num_logical_cpus / smt_divisor);
-			system->cpu_types[cpu_type_index].num_logical_cpus = num_logical_cpus;
-			/* Reset values for the next purpose */
-			init_affinity_mask(&affinity_mask);
-			set_affinity_mask_bit(logical_cpu, &affinity_mask);
-			num_logical_cpus = 1;
-		}
-	}
-
-	/* Update the total_logical_cpus value for each purpose */
-	for (cpu_type_index = 0; cpu_type_index < system->num_cpu_types; cpu_type_index++)
-		system->cpu_types[cpu_type_index].total_logical_cpus = logical_cpu;
-
-	return ret_error;
-}
-
-int cpu_request_core_type(cpu_purpose_t purpose, struct cpu_raw_data_array_t* raw_array, struct cpu_id_t* data)
-{
-	int error;
-	logical_cpu_t logical_cpu = 0;
-	struct cpu_raw_data_array_t my_raw_array;
-	struct internal_id_info_t throwaway;
-
-	if (!raw_array) {
-		if ((error = cpuid_get_all_raw_data(&my_raw_array)) < 0)
-			return set_error(error);
-		raw_array = &my_raw_array;
-	}
-
-	for (logical_cpu = 0; logical_cpu < raw_array->num_raw; logical_cpu++) {
-		if (cpu_ident_purpose(&raw_array->raw[logical_cpu]) == purpose) {
-			cpu_ident_internal(&raw_array->raw[logical_cpu], data, &throwaway);
-			return set_error(ERR_OK);
-		}
-	}
-
-	return set_error(ERR_NOT_FOUND);
-}
-
-const char* cpu_architecture_str(cpu_architecture_t architecture)
-{
-	const struct { cpu_architecture_t architecture; const char* name; }
-	matchtable[] = {
-		{ ARCHITECTURE_UNKNOWN, "unknown" },
-		{ ARCHITECTURE_X86,     "x86"     },
-		{ ARCHITECTURE_ARM,     "ARM"     },
-	};
-	unsigned i, n = COUNT_OF(matchtable);
-	if (n != NUM_CPU_ARCHITECTURES + 1) {
-		// Warning:incomplete library
-		// architecture matchtable size differs from the actual number of architectures.
-	}
-	for (i = 0; i < n; i++)
-		if (matchtable[i].architecture == architecture)
-			return matchtable[i].name;
-	return "";
-}
-
-const char* cpu_purpose_str(cpu_purpose_t purpose)
-{
-	const struct { cpu_purpose_t purpose; const char* name; }
-	matchtable[] = {
-		{ PURPOSE_GENERAL,     "general"     },
-		{ PURPOSE_PERFORMANCE, "performance" },
-		{ PURPOSE_EFFICIENCY,  "efficiency"  },
-	};
-	unsigned i, n = COUNT_OF(matchtable);
-	if (n != NUM_CPU_PURPOSES) {
-		// Warning: incomplete library
-		// purpose matchtable size differs from the actual number of purposes.
-	}
-	for (i = 0; i < n; i++)
-		if (matchtable[i].purpose == purpose)
-			return matchtable[i].name;
-	return "";
 }
 
 char* affinity_mask_str_r(cpu_affinity_mask_t* affinity_mask, char* buffer, uint32_t buffer_len)
@@ -884,18 +654,4 @@ cpu_vendor_t cpuid_get_vendor(void)
 		}
 	}
 	return vendor;
-}
-
-void cpuid_free_raw_data_array(struct cpu_raw_data_array_t* raw_array)
-{
-	if (raw_array->num_raw <= 0) return;
-	free(raw_array->raw);
-	raw_array->num_raw = 0;
-}
-
-void cpuid_free_system_id(struct system_id_t* system)
-{
-	if (system->num_cpu_types <= 0) return;
-	free(system->cpu_types);
-	system->num_cpu_types = 0;
 }

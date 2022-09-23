@@ -101,14 +101,39 @@ PrintMsr(PNODE node, struct cpu_id_t* data)
 		NWL_NodeAttrSetf(node, "Bus Clock (MHz)", NAFLG_FMT_NUMERIC, "%.2lf", value / 100.0);
 }
 
+static void
+PrintCache(PNODE node, struct cpu_id_t* data)
+{
+	PNODE cache;
+	BOOL saved_human_size;
+	cache = NWL_NodeAppendNew(node, "Cache", NFLG_ATTGROUP);
+	saved_human_size = NWLC->HumanSize;
+	NWLC->HumanSize = TRUE;
+	if (data->l1_data_cache > 0)
+		NWL_NodeAttrSetf(cache, "L1 D", 0, "%d * %s, %d-way",
+			data->num_cores, NWL_GetHumanSize(data->l1_data_cache, kb_human_sizes, 1024), data->l1_data_assoc);
+	if (data->l1_instruction_cache > 0)
+		NWL_NodeAttrSetf(cache, "L1 I", 0, "%d * %s, %d-way",
+			data->num_cores, NWL_GetHumanSize(data->l1_instruction_cache, kb_human_sizes, 1024), data->l1_instruction_assoc);
+	if (data->l2_cache > 0)
+		NWL_NodeAttrSetf(cache, "L2", 0, "%d * %s, %d-way",
+			data->num_cores, NWL_GetHumanSize(data->l2_cache, kb_human_sizes, 1024), data->l2_assoc);
+	if (data->l3_cache > 0)
+		NWL_NodeAttrSetf(cache, "L3", 0, "%s, %d-way",
+			NWL_GetHumanSize(data->l3_cache, kb_human_sizes, 1024), data->l3_assoc);
+	if (data->l4_cache > 0)
+		NWL_NodeAttrSetf(cache, "L4", 0, "%s, %d-way",
+			NWL_GetHumanSize(data->l4_cache, kb_human_sizes, 1024), data->l4_assoc);
+	NWLC->HumanSize = saved_human_size;
+}
+
 PNODE NW_Cpuid(VOID)
 {
 	struct cpu_raw_data_t raw = { 0 };
 	struct cpu_id_t data = { 0 };
 	int i = 0;
 	LPCSTR vendor_name = NULL;
-	PNODE cache, feature;
-	BOOL saved_human_size;
+	PNODE feature;
 	PNODE node = NWL_NodeAlloc("CPUID", 0);
 	if (NWLC->CpuInfo)
 		NWL_NodeAppendChild(NWLC->NwRoot, node);
@@ -152,23 +177,7 @@ PNODE NW_Cpuid(VOID)
 	NWL_NodeAttrSetf(node, "Cores", NAFLG_FMT_NUMERIC, "%d", data.num_cores);
 	NWL_NodeAttrSetf(node, "Logical CPUs", NAFLG_FMT_NUMERIC, "%d", data.num_logical_cpus);
 	NWL_NodeAttrSetf(node, "Total CPUs", NAFLG_FMT_NUMERIC, "%d", cpuid_get_total_cpus());
-	cache = NWL_NodeAppendNew(node, "Cache", NFLG_ATTGROUP);
-	saved_human_size = NWLC->HumanSize;
-	NWLC->HumanSize = TRUE;
-	if (data.l1_data_cache > 0)
-		NWL_NodeAttrSetf(cache, "L1 D", 0, "%d * %s, %d-way",
-			data.num_cores, NWL_GetHumanSize(data.l1_data_cache, kb_human_sizes, 1024), data.l1_data_assoc);
-	if (data.l1_instruction_cache > 0)
-		NWL_NodeAttrSetf(cache, "L1 I", 0, "%d * %s, %d-way",
-			data.num_cores, NWL_GetHumanSize(data.l1_instruction_cache, kb_human_sizes, 1024), data.l1_instruction_assoc);
-	if (data.l2_cache > 0)
-		NWL_NodeAttrSetf(cache, "L2", 0, "%d * %s, %d-way",
-			data.num_cores, NWL_GetHumanSize(data.l2_cache, kb_human_sizes, 1024), data.l2_assoc);
-	if (data.l3_cache > 0)
-		NWL_NodeAttrSetf(cache, "L3", 0, "%s, %d-way", NWL_GetHumanSize(data.l3_cache, kb_human_sizes, 1024), data.l3_assoc);
-	if (data.l4_cache > 0)
-		NWL_NodeAttrSetf(cache, "L4", 0, "%s, %d-way", NWL_GetHumanSize(data.l4_cache, kb_human_sizes, 1024), data.l4_assoc);
-	NWLC->HumanSize = saved_human_size;
+	PrintCache(node, &data);
 	NWL_NodeAttrSetf(node, "SSE Units", 0, "%d bits (%s)",
 		data.sse_size, data.detection_hints[CPU_HINT_SSE_SIZE_AUTH] ? "authoritative" : "non-authoritative");
 	feature = NWL_NodeAppendNew(node, "Features", NFLG_ATTGROUP);

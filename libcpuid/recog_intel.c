@@ -503,49 +503,6 @@ static void load_intel_features(struct cpu_raw_data_t* raw, struct cpu_id_t* dat
 	}
 }
 
-enum _cache_type_t {
-	L1I,
-	L1D,
-	L2,
-	L3,
-	L4
-};
-typedef enum _cache_type_t cache_type_t;
-
-static void check_case(uint8_t on, cache_type_t cache, int size, int assoc, int linesize, struct cpu_id_t* data)
-{
-	if (!on) return;
-	switch (cache) {
-		case L1I:
-			data->l1_instruction_cache = size;
-			data->l1_instruction_assoc = assoc;
-			data->l1_instruction_cacheline = linesize;
-			break;
-		case L1D:
-			data->l1_data_cache = size;
-			data->l1_data_assoc = assoc;
-			data->l1_data_cacheline = linesize;
-			break;
-		case L2:
-			data->l2_cache = size;
-			data->l2_assoc = assoc;
-			data->l2_cacheline = linesize;
-			break;
-		case L3:
-			data->l3_cache = size;
-			data->l3_assoc = assoc;
-			data->l3_cacheline = linesize;
-			break;
-		case L4:
-			data->l4_cache = size;
-			data->l4_assoc = assoc;
-			data->l4_cacheline = linesize;
-			break;
-		default:
-			break;
-	}
-}
-
 static void decode_intel_oldstyle_cache_info(struct cpu_raw_data_t* raw, struct cpu_id_t* data)
 {
 	uint8_t f[256] = {0};
@@ -560,59 +517,59 @@ static void decode_intel_oldstyle_cache_info(struct cpu_raw_data_t* raw, struct 
 		}
 	}
 
-	check_case(f[0x06], L1I,      8,  4,  32, data);
-	check_case(f[0x08], L1I,     16,  4,  32, data);
-	check_case(f[0x0A], L1D,      8,  2,  32, data);
-	check_case(f[0x0C], L1D,     16,  4,  32, data);
-	check_case(f[0x22],  L3,    512,  4,  64, data);
-	check_case(f[0x23],  L3,   1024,  8,  64, data);
-	check_case(f[0x25],  L3,   2048,  8,  64, data);
-	check_case(f[0x29],  L3,   4096,  8,  64, data);
-	check_case(f[0x2C], L1D,     32,  8,  64, data);
-	check_case(f[0x30], L1I,     32,  8,  64, data);
-	check_case(f[0x39],  L2,    128,  4,  64, data);
-	check_case(f[0x3A],  L2,    192,  6,  64, data);
-	check_case(f[0x3B],  L2,    128,  2,  64, data);
-	check_case(f[0x3C],  L2,    256,  4,  64, data);
-	check_case(f[0x3D],  L2,    384,  6,  64, data);
-	check_case(f[0x3E],  L2,    512,  4,  64, data);
-	check_case(f[0x41],  L2,    128,  4,  32, data);
-	check_case(f[0x42],  L2,    256,  4,  32, data);
-	check_case(f[0x43],  L2,    512,  4,  32, data);
-	check_case(f[0x44],  L2,   1024,  4,  32, data);
-	check_case(f[0x45],  L2,   2048,  4,  32, data);
-	check_case(f[0x46],  L3,   4096,  4,  64, data);
-	check_case(f[0x47],  L3,   8192,  8,  64, data);
-	check_case(f[0x4A],  L3,   6144, 12,  64, data);
-	check_case(f[0x4B],  L3,   8192, 16,  64, data);
-	check_case(f[0x4C],  L3,  12288, 12,  64, data);
-	check_case(f[0x4D],  L3,  16384, 16,  64, data);
-	check_case(f[0x4E],  L2,   6144, 24,  64, data);
-	check_case(f[0x60], L1D,     16,  8,  64, data);
-	check_case(f[0x66], L1D,      8,  4,  64, data);
-	check_case(f[0x67], L1D,     16,  4,  64, data);
-	check_case(f[0x68], L1D,     32,  4,  64, data);
+	assign_cache_data(f[0x06], L1I,      8,  4,  32, data);
+	assign_cache_data(f[0x08], L1I,     16,  4,  32, data);
+	assign_cache_data(f[0x0A], L1D,      8,  2,  32, data);
+	assign_cache_data(f[0x0C], L1D,     16,  4,  32, data);
+	assign_cache_data(f[0x22],  L3,    512,  4,  64, data);
+	assign_cache_data(f[0x23],  L3,   1024,  8,  64, data);
+	assign_cache_data(f[0x25],  L3,   2048,  8,  64, data);
+	assign_cache_data(f[0x29],  L3,   4096,  8,  64, data);
+	assign_cache_data(f[0x2C], L1D,     32,  8,  64, data);
+	assign_cache_data(f[0x30], L1I,     32,  8,  64, data);
+	assign_cache_data(f[0x39],  L2,    128,  4,  64, data);
+	assign_cache_data(f[0x3A],  L2,    192,  6,  64, data);
+	assign_cache_data(f[0x3B],  L2,    128,  2,  64, data);
+	assign_cache_data(f[0x3C],  L2,    256,  4,  64, data);
+	assign_cache_data(f[0x3D],  L2,    384,  6,  64, data);
+	assign_cache_data(f[0x3E],  L2,    512,  4,  64, data);
+	assign_cache_data(f[0x41],  L2,    128,  4,  32, data);
+	assign_cache_data(f[0x42],  L2,    256,  4,  32, data);
+	assign_cache_data(f[0x43],  L2,    512,  4,  32, data);
+	assign_cache_data(f[0x44],  L2,   1024,  4,  32, data);
+	assign_cache_data(f[0x45],  L2,   2048,  4,  32, data);
+	assign_cache_data(f[0x46],  L3,   4096,  4,  64, data);
+	assign_cache_data(f[0x47],  L3,   8192,  8,  64, data);
+	assign_cache_data(f[0x4A],  L3,   6144, 12,  64, data);
+	assign_cache_data(f[0x4B],  L3,   8192, 16,  64, data);
+	assign_cache_data(f[0x4C],  L3,  12288, 12,  64, data);
+	assign_cache_data(f[0x4D],  L3,  16384, 16,  64, data);
+	assign_cache_data(f[0x4E],  L2,   6144, 24,  64, data);
+	assign_cache_data(f[0x60], L1D,     16,  8,  64, data);
+	assign_cache_data(f[0x66], L1D,      8,  4,  64, data);
+	assign_cache_data(f[0x67], L1D,     16,  4,  64, data);
+	assign_cache_data(f[0x68], L1D,     32,  4,  64, data);
 	/* The following four entries are trace cache. Intel does not
 	 * specify a cache-line size, so we use -1 instead
 	 */
-	check_case(f[0x70], L1I,     12,  8,  -1, data);
-	check_case(f[0x71], L1I,     16,  8,  -1, data);
-	check_case(f[0x72], L1I,     32,  8,  -1, data);
-	check_case(f[0x73], L1I,     64,  8,  -1, data);
+	assign_cache_data(f[0x70], L1I,     12,  8,  -1, data);
+	assign_cache_data(f[0x71], L1I,     16,  8,  -1, data);
+	assign_cache_data(f[0x72], L1I,     32,  8,  -1, data);
+	assign_cache_data(f[0x73], L1I,     64,  8,  -1, data);
 
-	check_case(f[0x78],  L2,   1024,  4,  64, data);
-	check_case(f[0x79],  L2,    128,  8,  64, data);
-	check_case(f[0x7A],  L2,    256,  8,  64, data);
-	check_case(f[0x7B],  L2,    512,  8,  64, data);
-	check_case(f[0x7C],  L2,   1024,  8,  64, data);
-	check_case(f[0x7D],  L2,   2048,  8,  64, data);
-	check_case(f[0x7F],  L2,    512,  2,  64, data);
-	check_case(f[0x82],  L2,    256,  8,  32, data);
-	check_case(f[0x83],  L2,    512,  8,  32, data);
-	check_case(f[0x84],  L2,   1024,  8,  32, data);
-	check_case(f[0x85],  L2,   2048,  8,  32, data);
-	check_case(f[0x86],  L2,    512,  4,  64, data);
-	check_case(f[0x87],  L2,   1024,  8,  64, data);
+	assign_cache_data(f[0x78],  L2,   1024,  4,  64, data);
+	assign_cache_data(f[0x79],  L2,    128,  8,  64, data);
+	assign_cache_data(f[0x7A],  L2,    256,  8,  64, data);
+	assign_cache_data(f[0x7B],  L2,    512,  8,  64, data);
+	assign_cache_data(f[0x7C],  L2,   1024,  8,  64, data);
+	assign_cache_data(f[0x7D],  L2,   2048,  8,  64, data);
+	assign_cache_data(f[0x7F],  L2,    512,  2,  64, data);
+	assign_cache_data(f[0x82],  L2,    256,  8,  32, data);
+	assign_cache_data(f[0x83],  L2,    512,  8,  32, data);
+	assign_cache_data(f[0x84],  L2,   1024,  8,  32, data);
+	assign_cache_data(f[0x85],  L2,   2048,  8,  32, data);
+	assign_cache_data(f[0x86],  L2,    512,  4,  64, data);
+	assign_cache_data(f[0x87],  L2,   1024,  8,  64, data);
 
 	if (f[0x49]) {
 		/* This flag is overloaded with two meanings. On Xeon MP
@@ -643,69 +600,24 @@ static void decode_intel_oldstyle_cache_info(struct cpu_raw_data_t* raw, struct 
 	}
 }
 
-static void decode_intel_deterministic_cache_info(struct cpu_raw_data_t* raw,
-                                                  struct cpu_id_t* data)
-{
-	int ecx;
-	int ways, partitions, linesize, sets, size, level, typenumber;
-	cache_type_t type;
-	for (ecx = 0; ecx < MAX_INTELFN4_LEVEL; ecx++) {
-		typenumber = raw->intel_fn4[ecx][EAX] & 0x1f;
-		if (typenumber == 0) break;
-		level = (raw->intel_fn4[ecx][EAX] >> 5) & 0x7;
-		if (level == 1 && typenumber == 1)
-			type = L1D;
-		else if (level == 1 && typenumber == 2)
-			type = L1I;
-		else if (level == 2 && typenumber == 3)
-			type = L2;
-		else if (level == 3 && typenumber == 3)
-			type = L3;
-		else if (level == 4 && typenumber == 3)
-			type = L4;
-		else {
-			// unknown level/typenumber combo
-			// cannot recognize cache type
-			continue;
-		}
-		ways = ((raw->intel_fn4[ecx][EBX] >> 22) & 0x3ff) + 1;
-		partitions = ((raw->intel_fn4[ecx][EBX] >> 12) & 0x3ff) + 1;
-		linesize = (raw->intel_fn4[ecx][EBX] & 0xfff) + 1;
-		sets = raw->intel_fn4[ecx][ECX] + 1;
-		size = ways * partitions * linesize * sets / 1024;
-		check_case(1, type, size, ways, linesize, data);
-	}
-}
-
 static int decode_intel_extended_topology(struct cpu_raw_data_t* raw,
                                            struct cpu_id_t* data,
                                            struct internal_id_info_t* internal)
 {
 	int i, level_type, num_smt = -1, num_core = -1;
-	uint8_t apic_package_shift = 0, apic_shift = 0, apic_next_shift;
-	uint32_t apic_id, unique_id;
-
-	for (i = 0; (raw->intel_fn11[i][EAX] != 0x0) && (raw->intel_fn11[i][EBX] != 0x0) && (i < MAX_INTELFN11_LEVEL); i++)
-		apic_package_shift = EXTRACTS_BITS(raw->intel_fn11[i][EAX], 4, 0);
 
 	for (i = 0; (raw->intel_fn11[i][EAX] != 0x0) && (raw->intel_fn11[i][EBX] != 0x0) && (i < MAX_INTELFN11_LEVEL); i++) {
 		level_type = EXTRACTS_BITS(raw->intel_fn11[i][ECX], 15, 8);
-		apic_next_shift = EXTRACTS_BITS(raw->intel_fn11[i][EAX], 4, 0);
-		apic_id = raw->intel_fn11[i][EDX];
-		unique_id = (apic_id >> apic_shift) & ((1 << (apic_package_shift - apic_shift)) - 1);
 		switch (level_type) {
 			case 0x01:
 				num_smt = EXTRACTS_BITS(raw->intel_fn11[i][EBX], 15, 0);
-				internal->smt_id = unique_id;
 				break;
 			case 0x02:
 				num_core = EXTRACTS_BITS(raw->intel_fn11[i][EBX], 15, 0);
-				internal->core_id = unique_id;
 				break;
 			default:
 				break;
 		}
-		apic_shift = apic_next_shift;
 	}
 	if (num_smt == -1 || num_core == -1) return 0;
 	data->num_logical_cpus = num_core;
@@ -1000,12 +912,11 @@ int cpuid_identify_intel(struct cpu_raw_data_t* raw, struct cpu_id_t* data, stru
 	load_intel_features(raw, data);
 	if (raw->basic_cpuid[0][EAX] >= 4) {
 		/* Deterministic way is preferred, being more generic */
-		decode_intel_deterministic_cache_info(raw, data);
+		decode_deterministic_cache_info_x86(raw->intel_fn4, MAX_INTELFN4_LEVEL, data, internal);
 	} else if (raw->basic_cpuid[0][EAX] >= 2) {
 		decode_intel_oldstyle_cache_info(raw, data);
 	}
 	decode_intel_number_of_cores(raw, data, internal);
-	data->purpose = cpuid_identify_purpose_intel(raw);
 
 	brand = get_brand_code_and_bits(data);
 	model_code = get_model_code(data);
@@ -1027,27 +938,4 @@ int cpuid_identify_intel(struct cpu_raw_data_t* raw, struct cpu_id_t* data, stru
 	internal->score = match_cpu_codename(cpudb_intel, COUNT_OF(cpudb_intel), data,
 		brand.code, brand.bits, model_code);
 	return 0;
-}
-
-cpu_purpose_t cpuid_identify_purpose_intel(struct cpu_raw_data_t* raw)
-{
-	/* Check for hybrid architecture
-	From Intel® 64 and IA-32 Architectures Software Developer’s Manual Combined Volumes: 1, 2A, 2B, 2C, 2D, 3A, 3B, 3C, 3D, and 4
-	Available at https://cdrdv2.intel.com/v1/dl/getContent/671200
-
-	- CPUID[7h] is Structured Extended Feature Flags Enumeration Leaf (Output depends on ECX input value)
-	  EDX, bit 15: Hybrid. If 1, the processor is identified as a hybrid part.
-
-	- CPUID[1Ah] is Hybrid Information Enumeration Leaf (EAX = 1AH, ECX = 0)
-	  EAX, bits 31-24: Core type
-	*/
-	if (EXTRACTS_BIT(raw->basic_cpuid[0x7][EDX], 15) == 0x1) {
-		switch (EXTRACTS_BITS(raw->basic_cpuid[0x1a][EAX], 31, 24)) {
-			case 0x20: /* Atom */ return PURPOSE_EFFICIENCY;
-			case 0x40: /* Core */ return PURPOSE_PERFORMANCE;
-			default:              return PURPOSE_GENERAL;
-		}
-	}
-
-	return PURPOSE_GENERAL;
 }
