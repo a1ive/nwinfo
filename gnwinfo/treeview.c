@@ -27,8 +27,16 @@ GNW_TreeInit(VOID)
 	count = NWL_NodeChildCount(GNWC.pnCpuid);
 	for (i = 0; i < count; i++)
 	{
+		HTREEITEM cpu;
+		INT j, nd_count;
 		node = GNWC.pnCpuid->Children[i].LinkedNode;
-		GNW_TreeAdd(GNWC.htCpuid, node->Name, 3, GNW_IconFromCpu(node, node->Name), node);
+		cpu = GNW_TreeAdd(GNWC.htCpuid, node->Name, 3, IDI_ICON_TVN_CPU, node);
+		nd_count = NWL_NodeChildCount(node);
+		for (j = 0; j < nd_count; j++)
+		{
+			PNODE core = node->Children[j].LinkedNode;
+			GNW_TreeAdd(cpu, core->Name, 4, GNW_IconFromCpu(core, core->Name), core);
+		}
 	}
 
 	GNWC.htDisk = GNW_TreeAdd(GNWC.htRoot, "Physical Storage", 2, IDI_ICON_TVN_DISK, NULL);
@@ -254,7 +262,7 @@ GNW_TreeUpdate(HWND hWnd, WPARAM wParam, LPARAM lParam)
 		HTREEITEM htParent = TreeView_GetParent(hwndTV, pnmtv->itemNew.hItem);
 		if (htParent == GNWC.htDisk)
 			bSkipChild = TRUE;
-		else if (pnmtv->itemNew.hItem == GNWC.htCpuid)
+		else if (htParent == GNWC.htCpuid || pnmtv->itemNew.hItem == GNWC.htCpuid)
 			bSkipChild = TRUE;
 		else if (pnmtv->itemNew.hItem == GNWC.htBattery)
 			bSkipChild = TRUE;

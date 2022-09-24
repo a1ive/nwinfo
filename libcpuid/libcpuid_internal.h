@@ -72,6 +72,26 @@ struct internal_id_info_t {
 	int32_t cache_mask[NUM_CACHE_TYPES];
 };
 
+struct internal_apic_info_t {
+	int32_t apic_id;
+	int32_t package_id;
+	int32_t core_id;
+	int32_t smt_id;
+	int32_t cache_id[NUM_CACHE_TYPES];
+	logical_cpu_t logical_cpu;
+};
+
+struct internal_cache_id_t {
+	logical_cpu_t num_logical_cpu;
+	int32_t cache_id;
+};
+
+#define CACHES_HTABLE_SIZE 256
+struct internal_cache_instances_t {
+	uint8_t instances[NUM_CACHE_TYPES];
+	struct internal_cache_id_t htable[NUM_CACHE_TYPES][CACHES_HTABLE_SIZE];
+};
+
 #define LBIT(x) (((long long) 1) << x)
 
 enum _common_bits_t {

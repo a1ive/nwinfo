@@ -57,8 +57,80 @@ static void cpu_id_t_constructor(struct cpu_id_t* id)
 	id->l1_data_cache = id->l1_instruction_cache = id->l2_cache = id->l3_cache = id->l4_cache = -1;
 	id->l1_assoc = id->l1_data_assoc = id->l1_instruction_assoc = id->l2_assoc = id->l3_assoc = id->l4_assoc = -1;
 	id->l1_cacheline = id->l1_data_cacheline = id->l1_instruction_cacheline = id->l2_cacheline = id->l3_cacheline = id->l4_cacheline = -1;
+	id->l1_data_instances = id->l1_instruction_instances = id->l2_instances = id->l3_instances = id->l4_instances = -1;
 	id->sse_size = -1;
 	init_affinity_mask(&id->affinity_mask);
+	id->purpose = PURPOSE_GENERAL;
+}
+
+static void cpu_raw_data_array_t_constructor(struct cpu_raw_data_array_t* raw_array, bool with_affinity)
+{
+	raw_array->with_affinity = with_affinity;
+	raw_array->num_raw = 0;
+	raw_array->raw = NULL;
+}
+
+static void system_id_t_constructor(struct system_id_t* system)
+{
+	system->num_cpu_types                  = 0;
+	system->cpu_types                      = NULL;
+	system->l1_data_total_instances        = -1;
+	system->l1_instruction_total_instances = -1;
+	system->l2_total_instances             = -1;
+	system->l3_total_instances             = -1;
+	system->l4_total_instances             = -1;
+}
+
+static void apic_info_t_constructor(struct internal_apic_info_t* apic_info, logical_cpu_t logical_cpu)
+{
+	memset(apic_info, 0, sizeof(struct internal_apic_info_t));
+	apic_info->apic_id     = -1;
+	apic_info->package_id  = -1;
+	apic_info->core_id     = -1;
+	apic_info->smt_id      = -1;
+	apic_info->logical_cpu = logical_cpu;
+}
+
+static void cache_instances_t_constructor(struct internal_cache_instances_t* data)
+{
+	memset(data->instances, 0, sizeof(data->instances));
+	memset(data->htable,    0, sizeof(data->htable));
+}
+
+static void cpuid_grow_raw_data_array(struct cpu_raw_data_array_t* raw_array, logical_cpu_t n)
+{
+	logical_cpu_t i;
+	struct cpu_raw_data_t *tmp = NULL;
+
+	if ((n <= 0) || (n < raw_array->num_raw)) return;
+	tmp = realloc(raw_array->raw, sizeof(struct cpu_raw_data_t) * n);
+	if (tmp == NULL) { /* Memory allocation failure */
+		set_error(ERR_NO_MEM);
+		return;
+	}
+
+	for (i = raw_array->num_raw; i < n; i++)
+		raw_data_t_constructor(&tmp[i]);
+	raw_array->num_raw = n;
+	raw_array->raw     = tmp;
+}
+
+static void cpuid_grow_system_id(struct system_id_t* system, uint8_t n)
+{
+	uint8_t i;
+	struct cpu_id_t *tmp = NULL;
+
+	if ((n <= 0) || (n < system->num_cpu_types)) return;
+	tmp = realloc(system->cpu_types, sizeof(struct cpu_id_t) * n);
+	if (tmp == NULL) { /* Memory allocation failure */
+		set_error(ERR_NO_MEM);
+		return;
+	}
+
+	for (i = system->num_cpu_types; i < n; i++)
+		cpu_id_t_constructor(&tmp[i]);
+	system->num_cpu_types = n;
+	system->cpu_types     = tmp;
 }
 
 /* get_total_cpus() system specific code: uses OS routines to determine total number of CPUs */
@@ -69,10 +141,11 @@ static int get_total_cpus(void)
 	return system_info.dwNumberOfProcessors;
 }
 
-static bool set_cpu_affinity(logical_cpu_t logical_cpu)
+bool set_cpu_affinity(logical_cpu_t logical_cpu)
 {
 /* Credits to https://github.com/PolygonTek/BlueshiftEngine/blob/fbc374cbc391e1147c744649f405a66a27c35d89/Source/Runtime/Private/Platform/Windows/PlatformWinThread.cpp#L27 */
-#if (_WIN32_WINNT >= 0x0601)
+/* _WIN32_WINNT >= 0x0601 */
+#if 0
 	int groups = GetActiveProcessorGroupCount();
 	int total_processors = 0;
 	int group = 0;
@@ -94,15 +167,14 @@ static bool set_cpu_affinity(logical_cpu_t logical_cpu)
 	groupAffinity.Group = (WORD) group;
 	groupAffinity.Mask = (KAFFINITY) (1ULL << number);
 	return SetThreadGroupAffinity(thread, &groupAffinity, NULL);
-#else
+#endif
 	if (logical_cpu > (sizeof(DWORD_PTR) * 8)) {
-		warnf("set_cpu_affinity for logical CPU %u is not supported in this operating system.\n", logical_cpu);
-		return -1;
+		// Warning: not supported
+		return FALSE;
 	}
 	HANDLE process = GetCurrentProcess();
 	DWORD_PTR processAffinityMask = 1ULL << logical_cpu;
 	return SetProcessAffinityMask(process, processAffinityMask);
-#endif /* (_WIN32_WINNT >= 0x0601) */
 }
 
 static void load_features_common(struct cpu_raw_data_t* raw, struct cpu_id_t* data)
@@ -298,7 +370,6 @@ static hypervisor_vendor_t cpuid_get_hypervisor(struct cpu_id_t* data)
 	return HYPERVISOR_UNKNOWN;
 }
 
-
 static int cpuid_basic_identify(struct cpu_raw_data_t* raw, struct cpu_id_t* data)
 {
 	int i, j, basic, xmodel, xfamily, ext;
@@ -307,6 +378,7 @@ static int cpuid_basic_identify(struct cpu_raw_data_t* raw, struct cpu_id_t* dat
 
 	if (data->vendor == VENDOR_UNKNOWN)
 		return set_error(ERR_CPU_UNKN);
+	data->architecture = ARCHITECTURE_X86;
 	basic = raw->basic_cpuid[0][EAX];
 	if (basic >= 1) {
 		data->family = (raw->basic_cpuid[1][EAX] >> 8) & 0xf;
@@ -339,6 +411,73 @@ static int cpuid_basic_identify(struct cpu_raw_data_t* raw, struct cpu_id_t* dat
 	data->hypervisor_vendor = cpuid_get_hypervisor(data);
 	return set_error(ERR_OK);
 }
+
+static bool cpu_ident_apic_id(logical_cpu_t logical_cpu, struct cpu_raw_data_t* raw, struct internal_apic_info_t* apic_info)
+{
+	uint8_t subleaf;
+	uint8_t level_type = 0;
+	uint8_t mask_core_shift = 0;
+	uint32_t mask_smt_shift, core_plus_mask_width, package_mask, core_mask, smt_mask = 0;
+	cpu_vendor_t vendor = VENDOR_UNKNOWN;
+	char vendor_str[VENDOR_STR_MAX];
+
+	apic_info_t_constructor(apic_info, logical_cpu);
+	vendor = cpuid_vendor_identify(raw->basic_cpuid[0], vendor_str);
+	if (vendor == VENDOR_UNKNOWN) {
+		set_error(ERR_CPU_UNKN);
+		return false;
+	}
+
+	/* Only AMD and Intel x86 CPUs support Extended Processor Topology Eumeration */
+	switch (vendor) {
+		case VENDOR_INTEL:
+		case VENDOR_AMD:
+			break;
+		default:
+			return false;
+	}
+
+	/* Documentation: Intel® 64 and IA-32 Architectures Software Developer’s Manual
+	   Combined Volumes: 1, 2A, 2B, 2C, 2D, 3A, 3B, 3C, 3D and 4
+	   https://cdrdv2.intel.com/v1/dl/getContent/671200
+	   Examples 8-20 and 8-22 are implemented below.
+	*/
+
+	/* Check if leaf 0Bh is supported and if number of logical processors at this level type is greater than 0 */
+	if ((raw->basic_cpuid[0][EAX] < 11) || (EXTRACTS_BITS(raw->basic_cpuid[11][EBX], 15, 0) == 0))
+		return false;
+
+	/* Derive core mask offsets */
+	for (subleaf = 0; (raw->intel_fn11[subleaf][EAX] != 0x0) && (raw->intel_fn11[subleaf][EBX] != 0x0) && (subleaf < MAX_INTELFN11_LEVEL); subleaf++)
+		mask_core_shift = EXTRACTS_BITS(raw->intel_fn11[subleaf][EAX], 4, 0);
+
+	/* Find mask and ID for SMT and cores */
+	for (subleaf = 0; (raw->intel_fn11[subleaf][EAX] != 0x0) && (raw->intel_fn11[subleaf][EBX] != 0x0) && (subleaf < MAX_INTELFN11_LEVEL); subleaf++) {
+		level_type         = EXTRACTS_BITS(raw->intel_fn11[subleaf][ECX], 15, 8);
+		apic_info->apic_id = raw->intel_fn11[subleaf][EDX];
+		switch (level_type) {
+			case 0x01:
+				mask_smt_shift    = EXTRACTS_BITS(raw->intel_fn11[subleaf][EAX], 4, 0);
+				smt_mask          = ~(((uint32_t) -1) << mask_smt_shift);
+				apic_info->smt_id = apic_info->apic_id & smt_mask;
+				break;
+			case 0x02:
+				core_plus_mask_width = ~(((uint32_t) -1) << mask_core_shift);
+				core_mask            = core_plus_mask_width ^ smt_mask;
+				apic_info->core_id   = apic_info->apic_id & core_mask;
+				break;
+			default:
+				break;
+		}
+	}
+
+	/* Find mask and ID for packages */
+	package_mask          = ((uint32_t) -1) << mask_core_shift;
+	apic_info->package_id = apic_info->apic_id & package_mask;
+
+	return (level_type > 0);
+}
+
 
 /* Interface: */
 
@@ -406,6 +545,29 @@ int cpuid_get_raw_data(struct cpu_raw_data_t* data)
 	return set_error(ERR_OK);
 }
 
+int cpuid_get_all_raw_data(struct cpu_raw_data_array_t* data)
+{
+	int cur_error = set_error(ERR_OK);
+	int ret_error = set_error(ERR_OK);
+	logical_cpu_t logical_cpu = 0;
+	struct cpu_raw_data_t* raw_ptr = NULL;
+
+	if (data == NULL)
+		return set_error(ERR_HANDLE);
+
+	cpu_raw_data_array_t_constructor(data, true);
+	while (set_cpu_affinity(logical_cpu)) {
+		cpuid_grow_raw_data_array(data, logical_cpu + 1);
+		raw_ptr = &data->raw[logical_cpu];
+		cur_error = cpuid_get_raw_data(raw_ptr);
+		if (ret_error == ERR_OK)
+			ret_error = cur_error;
+		logical_cpu++;
+	}
+
+	return ret_error;
+}
+
 int cpu_ident_internal(struct cpu_raw_data_t* raw, struct cpu_id_t* data, struct internal_id_info_t* internal)
 {
 	int r;
@@ -437,12 +599,241 @@ int cpu_ident_internal(struct cpu_raw_data_t* raw, struct cpu_id_t* data, struct
 	return set_error(r);
 }
 
+static cpu_purpose_t cpu_ident_purpose(struct cpu_raw_data_t* raw)
+{
+	cpu_vendor_t vendor = VENDOR_UNKNOWN;
+	cpu_purpose_t purpose = PURPOSE_GENERAL;
+	char vendor_str[VENDOR_STR_MAX];
+
+	vendor = cpuid_vendor_identify(raw->basic_cpuid[0], vendor_str);
+	if (vendor == VENDOR_UNKNOWN) {
+		set_error(ERR_CPU_UNKN);
+		return purpose;
+	}
+
+	switch (vendor) {
+		case VENDOR_INTEL:
+			purpose = cpuid_identify_purpose_intel(raw);
+			break;
+		default:
+			purpose = PURPOSE_GENERAL;
+			break;
+	}
+
+	return purpose;
+}
+
 int cpu_identify(struct cpu_raw_data_t* raw, struct cpu_id_t* data)
 {
 	int r;
 	struct internal_id_info_t throwaway;
 	r = cpu_ident_internal(raw, data, &throwaway);
 	return r;
+}
+
+static void update_cache_instances(struct internal_cache_instances_t* caches,
+                                   struct internal_apic_info_t* apic_info,
+                                   struct internal_id_info_t* id_info)
+{
+	uint32_t cache_id_index = 0;
+	cache_type_t level;
+
+	for (level = 0; level < NUM_CACHE_TYPES; level++) {
+		if (id_info->cache_mask[level] == 0x00000000) {
+			apic_info->cache_id[level] = -1;
+			continue;
+		}
+		apic_info->cache_id[level] = apic_info->apic_id & id_info->cache_mask[level];
+		cache_id_index             = apic_info->cache_id[level] % CACHES_HTABLE_SIZE;
+		if ((caches->htable[level][cache_id_index].cache_id == 0) || (caches->htable[level][cache_id_index].cache_id == apic_info->cache_id[level])) {
+			if (caches->htable[level][cache_id_index].num_logical_cpu == 0)
+				caches->instances[level]++;
+			caches->htable[level][cache_id_index].cache_id = apic_info->cache_id[level];
+			caches->htable[level][cache_id_index].num_logical_cpu++;
+		}
+		else {
+			// Warning: collision at index cache_id_index
+		}
+	}
+}
+
+int cpu_identify_all(struct cpu_raw_data_array_t* raw_array, struct system_id_t* system)
+{
+	int cur_error = set_error(ERR_OK);
+	int ret_error = set_error(ERR_OK);
+	double smt_divisor;
+	bool is_new_cpu_type;
+	bool is_last_item;
+	bool is_smt_supported;
+	bool is_apic_supported = true;
+	uint8_t cpu_type_index = 0;
+	int32_t num_logical_cpus = 0;
+	int32_t cur_package_id = 0;
+	int32_t prev_package_id = 0;
+	logical_cpu_t logical_cpu = 0;
+	cpu_purpose_t purpose;
+	cpu_affinity_mask_t affinity_mask;
+	struct internal_id_info_t id_info;
+	struct internal_apic_info_t apic_info;
+	struct internal_cache_instances_t* caches_type = malloc(sizeof(*caches_type));
+	struct internal_cache_instances_t* caches_all = malloc(sizeof(*caches_all));
+
+	if (!system || !raw_array || !caches_type || !caches_all)
+	{
+		if (caches_type)
+			free(caches_type);
+		if (caches_all)
+			free(caches_all);
+		return set_error(ERR_HANDLE);
+	}
+
+	system_id_t_constructor(system);
+	cache_instances_t_constructor(caches_type);
+	cache_instances_t_constructor(caches_all);
+	if (raw_array->with_affinity)
+		init_affinity_mask(&affinity_mask);
+
+	/* Iterate over all RAW */
+	for (logical_cpu = 0; logical_cpu < raw_array->num_raw; logical_cpu++) {
+		is_new_cpu_type = false;
+		is_last_item    = (logical_cpu + 1 >= raw_array->num_raw);
+		/* Get CPU purpose and APIC ID
+		   For hybrid CPUs, the purpose may be different than the previous iteration (e.g. from P-cores to E-cores)
+		   APIC ID are unique for each logical CPU cores.
+		*/
+		purpose = cpu_ident_purpose(&raw_array->raw[logical_cpu]);
+		if (raw_array->with_affinity && is_apic_supported) {
+			is_apic_supported = cpu_ident_apic_id(logical_cpu, &raw_array->raw[logical_cpu], &apic_info);
+			if (is_apic_supported)
+				cur_package_id = apic_info.package_id;
+		}
+
+		/* Put data to system->cpu_types on the first iteration or when purpose is different than previous core */
+		if ((system->num_cpu_types == 0) || (purpose != system->cpu_types[system->num_cpu_types - 1].purpose) || (cur_package_id != prev_package_id)) {
+			is_new_cpu_type = true;
+			cpu_type_index  = system->num_cpu_types;
+			cpuid_grow_system_id(system, system->num_cpu_types + 1);
+			cur_error = cpu_ident_internal(&raw_array->raw[logical_cpu], &system->cpu_types[cpu_type_index], &id_info);
+			if (ret_error == ERR_OK)
+				ret_error = cur_error;
+		}
+		/* Increment counters only for current purpose */
+		if (raw_array->with_affinity && ((logical_cpu == 0) || !is_new_cpu_type)) {
+			set_affinity_mask_bit(logical_cpu, &affinity_mask);
+			num_logical_cpus++;
+			if (is_apic_supported) {
+				update_cache_instances(caches_type, &apic_info, &id_info);
+				update_cache_instances(caches_all,  &apic_info, &id_info);
+			}
+		}
+
+		/* Update logical and physical CPU counters in system->cpu_types on the last iteration or when purpose is different than previous core */
+		if (raw_array->with_affinity && (is_last_item || (is_new_cpu_type && (system->num_cpu_types > 1)))) {
+			cpu_type_index   = is_new_cpu_type ? system->num_cpu_types - 2 : system->num_cpu_types - 1;
+			is_smt_supported = (system->cpu_types[cpu_type_index].num_logical_cpus % system->cpu_types[cpu_type_index].num_cores) == 0;
+			smt_divisor      = is_smt_supported ? system->cpu_types[cpu_type_index].num_logical_cpus / system->cpu_types[cpu_type_index].num_cores : 1.0;
+			/* Save current values in system->cpu_types[cpu_type_index] and reset values for the next purpose */
+			system->cpu_types[cpu_type_index].num_cores        = (int32_t) (num_logical_cpus / smt_divisor);
+			system->cpu_types[cpu_type_index].num_logical_cpus = num_logical_cpus;
+			num_logical_cpus                                   = 1;
+			copy_affinity_mask(&system->cpu_types[cpu_type_index].affinity_mask, &affinity_mask);
+			if (!is_last_item) {
+				init_affinity_mask(&affinity_mask);
+				set_affinity_mask_bit(logical_cpu, &affinity_mask);
+			}
+			if (is_apic_supported) {
+				system->cpu_types[cpu_type_index].l1_instruction_instances = caches_type->instances[L1I];
+				system->cpu_types[cpu_type_index].l1_data_instances        = caches_type->instances[L1D];
+				system->cpu_types[cpu_type_index].l2_instances             = caches_type->instances[L2];
+				system->cpu_types[cpu_type_index].l3_instances             = caches_type->instances[L3];
+				system->cpu_types[cpu_type_index].l4_instances             = caches_type->instances[L4];
+				if (!is_last_item) {
+					cache_instances_t_constructor(caches_type);
+					update_cache_instances(caches_type, &apic_info, &id_info);
+					update_cache_instances(caches_all,  &apic_info, &id_info);
+				}
+			}
+		}
+		prev_package_id = cur_package_id;
+	}
+
+	/* Update the grand total of cache instances */
+	if (is_apic_supported) {
+		system->l1_instruction_total_instances = caches_all->instances[L1I];
+		system->l1_data_total_instances        = caches_all->instances[L1D];
+		system->l2_total_instances             = caches_all->instances[L2];
+		system->l3_total_instances             = caches_all->instances[L3];
+		system->l4_total_instances             = caches_all->instances[L4];
+	}
+
+	/* Update the total_logical_cpus value for each purpose */
+	for (cpu_type_index = 0; cpu_type_index < system->num_cpu_types; cpu_type_index++)
+		system->cpu_types[cpu_type_index].total_logical_cpus = logical_cpu;
+
+	free(caches_type);
+	free(caches_all);
+	return ret_error;
+}
+
+int cpu_request_core_type(cpu_purpose_t purpose, struct cpu_raw_data_array_t* raw_array, struct cpu_id_t* data)
+{
+	int error;
+	logical_cpu_t logical_cpu = 0;
+	struct cpu_raw_data_array_t my_raw_array;
+	struct internal_id_info_t throwaway;
+
+	if (!raw_array) {
+		if ((error = cpuid_get_all_raw_data(&my_raw_array)) < 0)
+			return set_error(error);
+		raw_array = &my_raw_array;
+	}
+
+	for (logical_cpu = 0; logical_cpu < raw_array->num_raw; logical_cpu++) {
+		if (cpu_ident_purpose(&raw_array->raw[logical_cpu]) == purpose) {
+			cpu_ident_internal(&raw_array->raw[logical_cpu], data, &throwaway);
+			return set_error(ERR_OK);
+		}
+	}
+
+	return set_error(ERR_NOT_FOUND);
+}
+
+const char* cpu_architecture_str(cpu_architecture_t architecture)
+{
+	const struct { cpu_architecture_t architecture; const char* name; }
+	matchtable[] = {
+		{ ARCHITECTURE_UNKNOWN, "unknown" },
+		{ ARCHITECTURE_X86,     "x86"     },
+		{ ARCHITECTURE_ARM,     "ARM"     },
+	};
+	unsigned i, n = COUNT_OF(matchtable);
+	if (n != NUM_CPU_ARCHITECTURES + 1) {
+		// Warning: incomplete library
+		// architecture matchtable size differs from the actual number of architectures.
+	}
+	for (i = 0; i < n; i++)
+		if (matchtable[i].architecture == architecture)
+			return matchtable[i].name;
+	return "";
+}
+
+const char* cpu_purpose_str(cpu_purpose_t purpose)
+{
+	const struct { cpu_purpose_t purpose; const char* name; }
+	matchtable[] = {
+		{ PURPOSE_GENERAL,     "general"     },
+		{ PURPOSE_PERFORMANCE, "performance" },
+		{ PURPOSE_EFFICIENCY,  "efficiency"  },
+	};
+	unsigned i, n = COUNT_OF(matchtable);
+	if (n != NUM_CPU_PURPOSES) {
+		// Warning: incomplete library
+		// purpose matchtable size differs from the actual number of purposes.
+	}
+	for (i = 0; i < n; i++)
+		if (matchtable[i].purpose == purpose)
+			return matchtable[i].name;
+	return "";
 }
 
 char* affinity_mask_str_r(cpu_affinity_mask_t* affinity_mask, char* buffer, uint32_t buffer_len)
@@ -654,4 +1045,18 @@ cpu_vendor_t cpuid_get_vendor(void)
 		}
 	}
 	return vendor;
+}
+
+void cpuid_free_raw_data_array(struct cpu_raw_data_array_t* raw_array)
+{
+	if (raw_array->num_raw <= 0) return;
+	free(raw_array->raw);
+	raw_array->num_raw = 0;
+}
+
+void cpuid_free_system_id(struct system_id_t* system)
+{
+	if (system->num_cpu_types <= 0) return;
+	free(system->cpu_types);
+	system->num_cpu_types = 0;
 }
