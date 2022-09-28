@@ -309,6 +309,7 @@ const struct match_entry_t cpudb_amd[] = {
 	{ 15, -1, -1, 23,  104,  -1,    -1,    -1, NC, RYZEN_|_7           ,     0, "Ryzen 7 (Lucienne)"            },
 	{ 15, -1, -1, 23,  104,  -1,    -1,    -1, NC, RYZEN_|_5           ,     0, "Ryzen 5 (Lucienne)"            },
 	{ 15, -1, -1, 23,  104,  -1,    -1,    -1, NC, RYZEN_|_3           ,     0, "Ryzen 3 (Lucienne)"            },
+	{ 15, -1, -1, 23,  144,  -1,    -1,    -1, NC, _APU_               ,     0, "Zen 2"                         },
 	/* Zen 3 (2020) => https://en.wikichip.org/wiki/amd/microarchitectures/zen_3 */
 	{ 15, -1, -1, 25,    1,  -1,    -1,    -1, NC, EPYC_               ,     0, "EPYC (Milan)"                  },
 	{ 15, -1, -1, 25,   33,  -1,    -1,    -1, NC, RYZEN_|_9           ,     0, "Ryzen 9 (Vermeer)"             },

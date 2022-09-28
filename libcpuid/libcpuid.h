@@ -29,7 +29,7 @@
  * \file     libcpuid.h
  * \author   Veselin Georgiev
  * \date     Oct 2008
- * \version  0.5.1
+ * \version  0.6.0
  *
  * Version history:
  *
@@ -62,6 +62,10 @@
  *                       (a backwards-incompatible change since the sizeof
  *                        cpu_raw_data_t and cpu_id_t is now different).
  * * 0.5.1 (2021-03-20): A lot of DB updates
+ * * 0.6.0 (2022-09-23): Support for hybrid CPUs; CPU cache instances count;
+ *                       a lot of DB updates
+ *                       (a backwards-incompatible change since the sizeof
+ *                        cpu_id_t is now different).
  */
 
 /** @mainpage A simple libcpuid introduction
