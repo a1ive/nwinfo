@@ -59,19 +59,27 @@ static unsigned int popcount64(uint64_t mask)
 static int score(const struct match_entry_t* entry, const struct cpu_id_t* data,
                  int brand_code, uint64_t bits, int model_code)
 {
-	int res = 0;
-	if (entry->family	== data->family    ) res += 2;
-	if (entry->model	== data->model     ) res += 2;
-	if (entry->stepping	== data->stepping  ) res += 2;
-	if (entry->ext_family	== data->ext_family) res += 2;
-	if (entry->ext_model	== data->ext_model ) res += 2;
-	if (entry->ncores	== data->num_cores ) res += 2;
-	if (entry->l2cache	== data->l2_cache  ) res += 1;
-	if (entry->l3cache	== data->l3_cache  ) res += 1;
-	if (entry->brand_code   == brand_code  ) res += 2;
-	if (entry->model_code   == model_code  ) res += 2;
+	int i, tmp, res = 0;
+	const struct { const char* field; int entry; int data; int score; } array[] = {
+		{ "family",     entry->family,     data->family,     2 },
+		{ "model",      entry->model,      data->model,      2 },
+		{ "stepping",   entry->stepping,   data->stepping,   2 },
+		{ "ext_family", entry->ext_family, data->ext_family, 2 },
+		{ "ext_model",  entry->ext_model,  data->ext_model,  2 },
+		{ "ncores",     entry->ncores,     data->num_cores,  2 },
+		{ "l2cache",    entry->l2cache,    data->l2_cache,   1 },
+		{ "l3cache",    entry->l3cache,    data->l3_cache,   1 },
+		{ "brand_code", entry->brand_code, brand_code,       2 },
+		{ "model_code", entry->model_code, model_code,       2 },
+	};
+	for (i = 0; i < sizeof(array) / sizeof(array[0]); i++) {
+		if (array[i].entry == array[i].data) {
+			res += array[i].score;
+		}
+	}
 
-	res += popcount64(entry->model_bits & bits) * 2;
+	tmp = popcount64(entry->model_bits & bits) * 2;
+	res += tmp;
 	return res;
 }
 

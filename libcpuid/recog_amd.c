@@ -219,6 +219,8 @@ const struct match_entry_t cpudb_amd[] = {
 	{ 15,  6, -1, 16,    6,   2,  1024,    -1, NC, ATHLON_|_64_|_X2    ,     0, "Athlon II X2 (Regor)"          },
 	{ 15,  5, -1, 16,    5,   3,   512,    -1, NC, ATHLON_|_64_|_X3    ,     0, "Athlon II X3 (Rana)"           },
 	{ 15,  5, -1, 16,    5,   4,   512,    -1, NC, ATHLON_|_64_|_X4    ,     0, "Athlon II X4 (Propus)"         },
+	/* Opteron derivates: */
+	{ 15,  9, -1, 22,    9,   8,    -1,    -1, NC, OPTERON_            ,     0, "Magny-Cours Opteron"           },
 	/* Llano APUs (2011): */
 	{ 15,  1, -1, 18,    1,   2,    -1,    -1, FUSION_EA, 0            ,     0, "Llano X2"                      },
 	{ 15,  1, -1, 18,    1,   3,    -1,    -1, FUSION_EA, 0            ,     0, "Llano X3"                      },
@@ -276,7 +278,8 @@ const struct match_entry_t cpudb_amd[] = {
 	{ 15,  0,  1, 22,   48,   2,    -1,    -1, FUSION_GX, 0            ,     0, "Steppe Eagle X2"               },
 	{ 15,  0,  1, 22,   48,   4,    -1,    -1, FUSION_GX, 0            ,     0, "Steppe Eagle X4"               },
 
-	/* Family 17h: Zen Architecture (2017) => https://en.wikichip.org/wiki/amd/microarchitectures/zen */
+	/* Family 17h */
+	/* Zen (2017) => https://en.wikichip.org/wiki/amd/microarchitectures/zen */
 	{ 15, -1, -1, 23,    1,  -1,    -1,    -1, NC, EPYC_               ,     0, "EPYC (Naples)"                 },
 	{ 15, -1, -1, 23,    1,  -1,    -1,    -1, NC, RYZEN_TR_           ,     0, "Threadripper (Whitehaven)"     },
 	{ 15, -1, -1, 23,    1,  -1,    -1,    -1, NC, RYZEN_|_7           ,     0, "Ryzen 7 (Summit Ridge)"        },
@@ -286,6 +289,9 @@ const struct match_entry_t cpudb_amd[] = {
 	{ 15, -1, -1, 23,   17,  -1,    -1,    -1, NC, RYZEN_|_5           ,     0, "Ryzen 5 (Raven Ridge)"         },
 	{ 15, -1, -1, 23,   17,  -1,    -1,    -1, NC, RYZEN_|_3           ,     0, "Ryzen 3 (Raven Ridge)"         },
 	{ 15, -1, -1, 23,   17,  -1,    -1,    -1, NC, ATHLON_             ,     0, "Athlon (Raven Ridge)"          },
+	{ 15, -1, -1, 23,   32,  -1,    -1,    -1, NC, RYZEN_|_3           ,     0, "Ryzen 3 (Dali)"                },
+	{ 15, -1, -1, 23,   32,  -1,    -1,    -1, NC, ATHLON_             ,     0, "Athlon (Dali)"                 },
+	{ 15, -1,  1, 23,   32,  -1,    -1,    -1, NC, 0                   ,     0, "Dali"                          },
 	/* Zen+ (2018) => https://en.wikichip.org/wiki/amd/microarchitectures/zen%2B */
 	{ 15, -1, -1, 23,    8,  -1,    -1,    -1, NC, RYZEN_TR_           ,     0, "Threadripper (Colfax)"         },
 	{ 15, -1, -1, 23,    8,  -1,    -1,    -1, NC, RYZEN_|_7           ,     0, "Ryzen 7 (Pinnacle Ridge)"      },
@@ -309,9 +315,18 @@ const struct match_entry_t cpudb_amd[] = {
 	{ 15, -1, -1, 23,  104,  -1,    -1,    -1, NC, RYZEN_|_7           ,     0, "Ryzen 7 (Lucienne)"            },
 	{ 15, -1, -1, 23,  104,  -1,    -1,    -1, NC, RYZEN_|_5           ,     0, "Ryzen 5 (Lucienne)"            },
 	{ 15, -1, -1, 23,  104,  -1,    -1,    -1, NC, RYZEN_|_3           ,     0, "Ryzen 3 (Lucienne)"            },
-	{ 15, -1, -1, 23,  144,  -1,    -1,    -1, NC, _APU_               ,     0, "Zen 2"                         },
+	{ 15, -1,  2, 23,  144,  -1,    -1,    -1, NC, 0                   ,     0, "Van Gogh"                      },
+
+	/* Family 18h */
+	/* Zen Architecture for Hygon (2018) => https://en.wikichip.org/wiki/amd/microarchitectures/zen */
+	{ 15, -1, -1, 24,    0,  -1,    -1,    -1, NC, C86_|_7              ,     0, "C86 7 (Dhyana)"               },
+	{ 15, -1, -1, 24,    0,  -1,    -1,    -1, NC, C86_|_5              ,     0, "C86 5 (Dhyana)"               },
+	{ 15, -1, -1, 24,    0,  -1,    -1,    -1, NC, C86_|_3              ,     0, "C86 3 (Dhyana)"               },
+
+	/* Family 19h */
 	/* Zen 3 (2020) => https://en.wikichip.org/wiki/amd/microarchitectures/zen_3 */
 	{ 15, -1, -1, 25,    1,  -1,    -1,    -1, NC, EPYC_               ,     0, "EPYC (Milan)"                  },
+	{ 15, -1, -1, 25,    8,  -1,    -1,    -1, NC, RYZEN_TR_           ,     0, "Threadripper (Chagall)"        },
 	{ 15, -1, -1, 25,   33,  -1,    -1,    -1, NC, RYZEN_|_9           ,     0, "Ryzen 9 (Vermeer)"             },
 	{ 15, -1, -1, 25,   33,  -1,    -1,    -1, NC, RYZEN_|_7           ,     0, "Ryzen 7 (Vermeer)"             },
 	{ 15, -1, -1, 25,   33,  -1,    -1,    -1, NC, RYZEN_|_5           ,     0, "Ryzen 5 (Vermeer)"             },
@@ -329,15 +344,22 @@ const struct match_entry_t cpudb_amd[] = {
 	{ 15, -1, -1, 25,   68,  -1,    -1,    -1, NC, RYZEN_|_7           ,     0, "Ryzen 7 (Rembrandt)"           },
 	{ 15, -1, -1, 25,   68,  -1,    -1,    -1, NC, RYZEN_|_5           ,     0, "Ryzen 5 (Rembrandt)"           },
 	{ 15, -1, -1, 25,   68,  -1,    -1,    -1, NC, RYZEN_|_3           ,     0, "Ryzen 3 (Rembrandt)"           },
+	/* Zen 4 (2022) => https://en.wikichip.org/wiki/amd/microarchitectures/zen_4 */
+	//{ 15, -1, -1, 25,   ??,  -1,    -1,    -1, NC, EPYC_               ,     0, "EPYC (Genoa)"                  },
+	//{ 15, -1, -1, 25,   ??,  -1,    -1,    -1, NC, RYZEN_TR_           ,     0, "Threadripper (Storm Peak)"     },
+	{ 15, -1,  2, 25,   97,  -1,    -1,    -1, NC, RYZEN_|_9           ,     0, "Ryzen 9 (Raphael)"             },
+	{ 15, -1,  2, 25,   97,  -1,    -1,    -1, NC, RYZEN_|_7           ,     0, "Ryzen 7 (Raphael)"             },
+	{ 15, -1,  2, 25,   97,  -1,    -1,    -1, NC, RYZEN_|_5           ,     0, "Ryzen 5 (Raphael)"             },
+	{ 15, -1,  2, 25,   97,  -1,    -1,    -1, NC, RYZEN_|_3           ,     0, "Ryzen 3 (Raphael)"             },
+	//{ 15, -1, -1, 25,   ??,  -1,    -1,    -1, NC, RYZEN_|_9           ,     0, "Ryzen 9 (Dragon Range)"        },
+	//{ 15, -1, -1, 25,   ??,  -1,    -1,    -1, NC, RYZEN_|_7           ,     0, "Ryzen 7 (Dragon Range)"        },
+	//{ 15, -1, -1, 25,   ??,  -1,    -1,    -1, NC, RYZEN_|_5           ,     0, "Ryzen 5 (Dragon Range)"        },
+	//{ 15, -1, -1, 25,   ??,  -1,    -1,    -1, NC, RYZEN_|_3           ,     0, "Ryzen 3 (Dragon Range)"        },
+	//{ 15, -1, -1, 25,   ??,  -1,    -1,    -1, NC, RYZEN_|_9           ,     0, "Ryzen 9 (Phoenix Point)"       },
+	//{ 15, -1, -1, 25,   ??,  -1,    -1,    -1, NC, RYZEN_|_7           ,     0, "Ryzen 7 (Phoenix Point)"       },
+	//{ 15, -1, -1, 25,   ??,  -1,    -1,    -1, NC, RYZEN_|_5           ,     0, "Ryzen 5 (Phoenix Point)"       },
+	//{ 15, -1, -1, 25,   ??,  -1,    -1,    -1, NC, RYZEN_|_3           ,     0, "Ryzen 3 (Phoenix Point)"       },
 	/* F   M   S  EF    EM  #cores  L2$   L3$  BC  ModelBits          ModelCode  Name                           */
-
-	{ 15, -1, -1, 24,    0,  -1,    -1,    -1, NC, C86_|_7              ,     0, "C86 7 (Dhyana)"               },
-	{ 15, -1, -1, 24,    0,  -1,    -1,    -1, NC, C86_|_5              ,     0, "C86 5 (Dhyana)"               },
-	{ 15, -1, -1, 24,    0,  -1,    -1,    -1, NC, C86_|_3              ,     0, "C86 3 (Dhyana)"               },
-
-
-	/* Newer Opterons: */
-	{ 15,  9, -1, 22,    9,   8,    -1,    -1, NC, OPTERON_            ,     0, "Magny-Cours Opteron"           },
 };
 
 
