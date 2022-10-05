@@ -144,12 +144,12 @@ static int get_total_cpus(void)
 bool set_cpu_affinity(logical_cpu_t logical_cpu)
 {
 /* Credits to https://github.com/PolygonTek/BlueshiftEngine/blob/fbc374cbc391e1147c744649f405a66a27c35d89/Source/Runtime/Private/Platform/Windows/PlatformWinThread.cpp#L27 */
-/* _WIN32_WINNT >= 0x0601 */
-#if 0
+#if (_WIN32_WINNT >= 0x0601)
 	int groups = GetActiveProcessorGroupCount();
 	int total_processors = 0;
 	int group = 0;
 	int number = 0;
+	int found = 0;
 	HANDLE thread = GetCurrentThread();
 	GROUP_AFFINITY groupAffinity;
 
@@ -158,16 +158,19 @@ bool set_cpu_affinity(logical_cpu_t logical_cpu)
 		if (total_processors + processors > logical_cpu) {
 			group = i;
 			number = logical_cpu - total_processors;
+			found = 1;
 			break;
 		}
 		total_processors += processors;
 	}
+	if (!found)
+		return FALSE; // logical CPU # too large, does not exist
 
 	memset(&groupAffinity, 0, sizeof(groupAffinity));
 	groupAffinity.Group = (WORD) group;
 	groupAffinity.Mask = (KAFFINITY) (1ULL << number);
 	return SetThreadGroupAffinity(thread, &groupAffinity, NULL);
-#endif
+#else
 	if (logical_cpu > (sizeof(DWORD_PTR) * 8)) {
 		// Warning: not supported
 		return FALSE;
@@ -175,6 +178,7 @@ bool set_cpu_affinity(logical_cpu_t logical_cpu)
 	HANDLE process = GetCurrentProcess();
 	DWORD_PTR processAffinityMask = 1ULL << logical_cpu;
 	return SetProcessAffinityMask(process, processAffinityMask);
+#endif /* (_WIN32_WINNT >= 0x0601) */
 }
 
 static void load_features_common(struct cpu_raw_data_t* raw, struct cpu_id_t* data)
