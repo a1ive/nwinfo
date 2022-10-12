@@ -336,10 +336,6 @@ const struct match_entry_t cpudb_amd[] = {
 	{ 15, -1, -1, 25,   80,  -1,    -1,    -1, NC, RYZEN_|_5           ,     0, "Ryzen 5 (Cezanne)"             },
 	{ 15, -1, -1, 25,   80,  -1,    -1,    -1, NC, RYZEN_|_3           ,     0, "Ryzen 3 (Cezanne)"             },
 	/* Zen 3+ (2022) */
-	{ 15, -1,  2, 25,   33,  -1,    -1,    -1, NC, RYZEN_|_9           ,     0, "Ryzen 9 (Warhol)"              },
-	{ 15, -1,  2, 25,   33,  -1,    -1,    -1, NC, RYZEN_|_7           ,     0, "Ryzen 7 (Warhol)"              },
-	{ 15, -1,  2, 25,   33,  -1,    -1,    -1, NC, RYZEN_|_5           ,     0, "Ryzen 5 (Warhol)"              },
-	{ 15, -1,  2, 25,   33,  -1,    -1,    -1, NC, RYZEN_|_3           ,     0, "Ryzen 3 (Warhol)"              },
 	{ 15, -1, -1, 25,   68,  -1,    -1,    -1, NC, RYZEN_|_9           ,     0, "Ryzen 9 (Rembrandt)"           },
 	{ 15, -1, -1, 25,   68,  -1,    -1,    -1, NC, RYZEN_|_7           ,     0, "Ryzen 7 (Rembrandt)"           },
 	{ 15, -1, -1, 25,   68,  -1,    -1,    -1, NC, RYZEN_|_5           ,     0, "Ryzen 5 (Rembrandt)"           },

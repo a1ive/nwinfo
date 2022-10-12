@@ -64,7 +64,7 @@ enum _intel_model_t {
 	_9xxx, /* Core i[3579] 9xxx */
 	_10xxx, /* Core i[3579] 10xxx */
 	_11xxx, /* Core i[3579] 11xxx */
-	_12xxx, /* Core i[3579] 11xxx */
+	_12xxx, /* Core i[3579] 12xxx */
 };
 typedef enum _intel_model_t intel_model_t;
 
