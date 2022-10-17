@@ -13,6 +13,8 @@ INT GNW_IconFromAcpi(PNODE node, LPCSTR name)
 		icon = IDI_ICON_TVD_FW;
 	else if (_stricmp(name, "ASF!") == 0)
 		icon = IDI_ICON_TVD_INF;
+	else if (_stricmp(name, "BERT") == 0)
+		icon = IDI_ICON_TVD_INF;
 	else if (_stricmp(name, "BGRT") == 0)
 		icon = IDI_ICON_TVN_EDID;
 	else if (_stricmp(name, "BOOT") == 0)
@@ -21,14 +23,24 @@ INT GNW_IconFromAcpi(PNODE node, LPCSTR name)
 		icon = IDI_ICON_TVD_LNK;
 	else if (_stricmp(name, "DBG2") == 0)
 		icon = IDI_ICON_TVD_LNK;
+	else if (_stricmp(name, "DMAR") == 0)
+		icon = IDI_ICON_TVN_SPD;
 	else if (_stricmp(name, "DSDT") == 0)
 		icon = IDI_ICON_TVN_BAT;
 	else if (_stricmp(name, "FACP") == 0)
+		icon = IDI_ICON_TVN_ACPI;
+	else if (_stricmp(name, "FACS") == 0)
+		icon = IDI_ICON_TVD_FW;
+	else if (_stricmp(name, "FIDT") == 0)
+		icon = IDI_ICON_TVD_FW;
+	else if (_stricmp(name, "FPDT") == 0)
 		icon = IDI_ICON_TVN_ACPI;
 	else if (_stricmp(name, "MCFG") == 0)
 		icon = IDI_ICON_TVN_SPD;
 	else if (_stricmp(name, "MSDM") == 0)
 		icon = IDI_ICON_TVN_SYS;
+	else if (_stricmp(name, "NHLT") == 0)
+		icon = IDI_ICON_TVD_MM;
 	else if (_stricmp(name, "RSDT") == 0)
 		icon = IDI_ICON_TVD_TREE;
 	else if (_stricmp(name, "SSDT") == 0)
@@ -139,9 +151,11 @@ INT GNW_IconFromSmbios(PNODE node, LPCSTR name)
 	case 9:
 		return IDI_ICON_TVD_FW;
 	case 10:
+	case 41:
 		return IDI_ICON_TVN_PCI;
 	case 4:
 	case 7:
+	case 44:
 		return IDI_ICON_TVN_CPU;
 	case 5:
 	case 6:
