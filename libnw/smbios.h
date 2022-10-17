@@ -425,6 +425,17 @@ typedef struct _TYPE_33_
 	DWORD ErrResolution;
 } MemoryErrInfo64, * PMemoryErrInfo64;
 
+typedef struct _TYPE_41_
+{
+	SMBIOSHEADER Header;
+	UCHAR RefDesignation;
+	UCHAR DeviceType;
+	UCHAR DeviceTypeInstance;
+	UINT16 SegmentGroupNum;
+	UCHAR BusNum;
+	UCHAR DevFunNum;
+} OnBoardDevicesExtInfo, * POnBoardDevicesExtInfo;
+
 typedef struct _TYPE_43_
 {
 	SMBIOSHEADER Header;
@@ -437,5 +448,14 @@ typedef struct _TYPE_43_
 	UINT64 Characteristics;
 	DWORD OEM;
 } TPMDevice, * PTPMDevice;
+
+typedef struct _TYPE_44_
+{
+	SMBIOSHEADER Header;
+	UINT16 RefHandle;
+	UCHAR BlockLength;
+	UCHAR ProcessorType;
+	UCHAR ProcessorSpecificData[0];
+} ProcessorAdditionalInfo, * PProcessorAdditionalInfo;
 
 #pragma pack()

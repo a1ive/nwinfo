@@ -1489,6 +1489,47 @@ static void ProcMemoryErrInfo64(PNODE tab, void* p)
 	NWL_NodeAttrSetf(tab, "Error Resolution", 0, "0x%08lX", pMemErrInfo->ErrResolution);
 }
 
+static const CHAR*
+pOnBoardDevExtTypeToStr(UCHAR Type)
+{
+	switch (Type & 0x7f)
+	{
+	case 0x01: return "Other";
+	case 0x03: return "Video";
+	case 0x04: return "SCSI Controller";
+	case 0x05: return "Ethernet";
+	case 0x06: return "Token Ring";
+	case 0x07: return "Sound";
+	case 0x08: return "PATA Controller";
+	case 0x09: return "SATA Controller";
+	case 0x0a: return "SAS Controller";
+	case 0x0b: return "Wireless LAN";
+	case 0x0c: return "Bluetooth";
+	case 0x0d: return "WWAN";
+	case 0x0e: return "eMMC";
+	case 0x0f: return "NVMe Controller";
+	case 0x10: return "UFS Controller";
+	}
+	return "Unknown";
+}
+
+static void ProcOnBoardDevicesExtInfo(PNODE tab, void* p)
+{
+	POnBoardDevicesExtInfo pDevInfo = (POnBoardDevicesExtInfo)p;
+	const char* str = toPointString(p);
+	NWL_NodeAttrSet(tab, "Description", "Onboard Devices Extended Information", 0);
+	if (pDevInfo->Header.Length < 0x0b)
+		return;
+	NWL_NodeAttrSet(tab, "Reference Designation", LocateString(str, pDevInfo->RefDesignation), 0);
+	NWL_NodeAttrSet(tab, "Device Status", (pDevInfo->DeviceType & 0x80) ? "Enabled" : "Disabled", 0);
+	NWL_NodeAttrSet(tab, "Device Type", pOnBoardDevExtTypeToStr(pDevInfo->DeviceType), 0);
+	NWL_NodeAttrSetf(tab, "Device Type Instance", NAFLG_FMT_NUMERIC, "%u", pDevInfo->DeviceTypeInstance);
+	NWL_NodeAttrSetf(tab, "Segment Group Number", NAFLG_FMT_NUMERIC, "%u", pDevInfo->SegmentGroupNum);
+	NWL_NodeAttrSetf(tab, "Bus Number", NAFLG_FMT_NUMERIC, "%u", pDevInfo->BusNum);
+	NWL_NodeAttrSetf(tab, "Device Number", NAFLG_FMT_NUMERIC, "%u", (pDevInfo->DevFunNum & 0xf8) >> 3);
+	NWL_NodeAttrSetf(tab, "Function Number", NAFLG_FMT_NUMERIC, "%u", pDevInfo->DevFunNum & 0x07);
+}
+
 static void ProcTPMDevice(PNODE tab, void* p)
 {
 	PTPMDevice pTPM = (PTPMDevice)p;
@@ -1501,6 +1542,34 @@ static void ProcTPMDevice(PNODE tab, void* p)
 		pTPM->Vendor[2], pTPM->Vendor[3]);
 	NWL_NodeAttrSetf(tab, "Spec Version", 0, "%u%u", pTPM->MajorSpecVer, pTPM->MinorSpecVer);
 	NWL_NodeAttrSet(tab, "TPM Description", LocateString(str, pTPM->Description), 0);
+}
+
+static const CHAR*
+pProcessorAdditionalInfoTypeToStr(UCHAR Type)
+{
+	switch (Type)
+	{
+	case 0x01: return "IA32";
+	case 0x02: return "x64";
+	case 0x03: return "IA64";
+	case 0x04: return "AARCH32";
+	case 0x05: return "AARCH64";
+	}
+	return "Unsupported Architecture";
+}
+
+static void ProcProcessorAdditionalInfo(PNODE tab, void* p)
+{
+	PProcessorAdditionalInfo pProcessor = (PProcessorAdditionalInfo)p;
+	const char* str = toPointString(p);
+	NWL_NodeAttrSet(tab, "Description", "Processor Additional Information", 0);
+	if (pProcessor->Header.Length < 0x06)
+		return;
+	NWL_NodeAttrSetf(tab, "Referenced Handle", NAFLG_FMT_NUMERIC, "%u", pProcessor->RefHandle);
+	if (pProcessor->Header.Length < 0x08)
+		return;
+	NWL_NodeAttrSetf(tab, "Block Length", NAFLG_FMT_NUMERIC, "%u", pProcessor->BlockLength);
+	NWL_NodeAttrSet(tab, "Processor Type", pProcessorAdditionalInfoTypeToStr(pProcessor->ProcessorType), 0);
 }
 
 static void ProcEndTable(PNODE tab, void* p)
@@ -1615,8 +1684,14 @@ static void DumpSMBIOSStruct(PNODE node, void* Addr, UINT Len, UINT8 Type)
 		case 33:
 			ProcMemoryErrInfo64(tab, pHeader);
 			break;
+		case 41:
+			ProcOnBoardDevicesExtInfo(tab, pHeader);
+			break;
 		case 43:
 			ProcTPMDevice(tab, pHeader);
+			break;
+		case 44:
+			ProcProcessorAdditionalInfo(tab, pHeader);
 			break;
 		case 127:
 			ProcEndTable(tab, pHeader);
