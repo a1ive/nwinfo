@@ -1500,7 +1500,7 @@ static void ProcTPMDevice(PNODE tab, void* p)
 		pTPM->Vendor[0], pTPM->Vendor[1],
 		pTPM->Vendor[2], pTPM->Vendor[3]);
 	NWL_NodeAttrSetf(tab, "Spec Version", 0, "%u%u", pTPM->MajorSpecVer, pTPM->MinorSpecVer);
-	NWL_NodeAttrSet(tab, "Description", LocateString(str, pTPM->Description), 0);
+	NWL_NodeAttrSet(tab, "TPM Description", LocateString(str, pTPM->Description), 0);
 }
 
 static void ProcEndTable(PNODE tab, void* p)
