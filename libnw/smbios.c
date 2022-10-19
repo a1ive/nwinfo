@@ -1446,6 +1446,78 @@ static void ProcSysPowerCtrl(PNODE tab, void* p)
 		pSysPowerCtrl->NextPwrOnSecond);
 }
 
+static void ProcVoltageProbe(PNODE tab, void* p)
+{
+	PVoltageProbe pVoltage = (PVoltageProbe)p;
+	const char* str = toPointString(p);
+	NWL_NodeAttrSet(tab, "Description", "Voltage Probe", 0);
+	if (pVoltage->Header.Length < 0x14)
+		return;
+	NWL_NodeAttrSet(tab, "Description", LocateString(str, pVoltage->Description), 0);
+	NWL_NodeAttrSetf(tab, "Location and Status", 0, "%02Xh", pVoltage->LocationStatus);
+	NWL_NodeAttrSetf(tab, "Maximum Value", NAFLG_FMT_NUMERIC, "%u", pVoltage->MaxValue);
+	NWL_NodeAttrSetf(tab, "Minimum Value", NAFLG_FMT_NUMERIC, "%u", pVoltage->MinValue);
+	NWL_NodeAttrSetf(tab, "Resolution", NAFLG_FMT_NUMERIC, "%u", pVoltage->Resolution);
+	NWL_NodeAttrSetf(tab, "Tolerance", NAFLG_FMT_NUMERIC, "%u", pVoltage->Tolerance);
+	NWL_NodeAttrSetf(tab, "Accuracy", NAFLG_FMT_NUMERIC, "%u", pVoltage->Accuracy);
+	NWL_NodeAttrSetf(tab, "OEM-defined", NAFLG_FMT_NUMERIC, "%lu", pVoltage->OEMDefined);
+	NWL_NodeAttrSetf(tab, "Nominal Value", NAFLG_FMT_NUMERIC, "%u", pVoltage->NominalValue);
+}
+
+static void ProcCoolingDevice(PNODE tab, void* p)
+{
+	PCoolingDevice pCoolingDevice = (PCoolingDevice)p;
+	const char* str = toPointString(p);
+	NWL_NodeAttrSet(tab, "Description", "Cooling Device", 0);
+	if (pCoolingDevice->Header.Length < 0x0c)
+		return;
+	NWL_NodeAttrSetf(tab, "Temperature Probe Handle", NAFLG_FMT_NUMERIC,
+		"%u", pCoolingDevice->TempProbeHandle);
+	NWL_NodeAttrSetf(tab, "Device Type and Status", 0,
+		"%02Xh", pCoolingDevice->DeviceTypeStatus);
+	NWL_NodeAttrSetf(tab, "Cooling Unit Group", NAFLG_FMT_NUMERIC,
+		"%u", pCoolingDevice->CoolingUnitGroup);
+	NWL_NodeAttrSetf(tab, "OEM-defined", NAFLG_FMT_NUMERIC, "%lu", pCoolingDevice->OEMDefined);
+	NWL_NodeAttrSetf(tab, "Nominal Speed", NAFLG_FMT_NUMERIC, "%u", pCoolingDevice->NominalSpeed);
+	NWL_NodeAttrSet(tab, "Description", LocateString(str, pCoolingDevice->Description), 0);
+}
+
+static void ProcTempProbe(PNODE tab, void* p)
+{
+	PTempProbe pTemp = (PTempProbe)p;
+	const char* str = toPointString(p);
+	NWL_NodeAttrSet(tab, "Description", "Temperature Probe", 0);
+	if (pTemp->Header.Length < 0x14)
+		return;
+	NWL_NodeAttrSet(tab, "Description", LocateString(str, pTemp->Description), 0);
+	NWL_NodeAttrSetf(tab, "Location and Status", 0, "%02Xh", pTemp->LocationStatus);
+	NWL_NodeAttrSetf(tab, "Maximum Value", NAFLG_FMT_NUMERIC, "%u", pTemp->MaxValue);
+	NWL_NodeAttrSetf(tab, "Minimum Value", NAFLG_FMT_NUMERIC, "%u", pTemp->MinValue);
+	NWL_NodeAttrSetf(tab, "Resolution", NAFLG_FMT_NUMERIC, "%u", pTemp->Resolution);
+	NWL_NodeAttrSetf(tab, "Tolerance", NAFLG_FMT_NUMERIC, "%u", pTemp->Tolerance);
+	NWL_NodeAttrSetf(tab, "Accuracy", NAFLG_FMT_NUMERIC, "%u", pTemp->Accuracy);
+	NWL_NodeAttrSetf(tab, "OEM-defined", NAFLG_FMT_NUMERIC, "%lu", pTemp->OEMDefined);
+	NWL_NodeAttrSetf(tab, "Nominal Value", NAFLG_FMT_NUMERIC, "%u", pTemp->NominalValue);
+}
+
+static void ProcElecCurrentProbe(PNODE tab, void* p)
+{
+	PElecCurrentProbe pCurrent = (PElecCurrentProbe)p;
+	const char* str = toPointString(p);
+	NWL_NodeAttrSet(tab, "Description", "Electrical Current Probe", 0);
+	if (pCurrent->Header.Length < 0x14)
+		return;
+	NWL_NodeAttrSet(tab, "Description", LocateString(str, pCurrent->Description), 0);
+	NWL_NodeAttrSetf(tab, "Location and Status", 0, "%02Xh", pCurrent->LocationStatus);
+	NWL_NodeAttrSetf(tab, "Maximum Value", NAFLG_FMT_NUMERIC, "%u", pCurrent->MaxValue);
+	NWL_NodeAttrSetf(tab, "Minimum Value", NAFLG_FMT_NUMERIC, "%u", pCurrent->MinValue);
+	NWL_NodeAttrSetf(tab, "Resolution", NAFLG_FMT_NUMERIC, "%u", pCurrent->Resolution);
+	NWL_NodeAttrSetf(tab, "Tolerance", NAFLG_FMT_NUMERIC, "%u", pCurrent->Tolerance);
+	NWL_NodeAttrSetf(tab, "Accuracy", NAFLG_FMT_NUMERIC, "%u", pCurrent->Accuracy);
+	NWL_NodeAttrSetf(tab, "OEM-defined", NAFLG_FMT_NUMERIC, "%lu", pCurrent->OEMDefined);
+	NWL_NodeAttrSetf(tab, "Nominal Value", NAFLG_FMT_NUMERIC, "%u", pCurrent->NominalValue);
+}
+
 static void ProcOutOfBandRemoteAccess(PNODE tab, void* p)
 {
 	POutOfBandRemoteAccess pRemoteAccess = (POutOfBandRemoteAccess)p;
@@ -1572,6 +1644,11 @@ static void ProcProcessorAdditionalInfo(PNODE tab, void* p)
 	NWL_NodeAttrSet(tab, "Processor Type", pProcessorAdditionalInfoTypeToStr(pProcessor->ProcessorType), 0);
 }
 
+static void ProcInactive(PNODE tab, void* p)
+{
+	NWL_NodeAttrSet(tab, "Description", "Inactive", 0);
+}
+
 static void ProcEndTable(PNODE tab, void* p)
 {
 	NWL_NodeAttrSet(tab, "Description", "End-of-Table", 0);
@@ -1672,6 +1749,18 @@ static void DumpSMBIOSStruct(PNODE node, void* Addr, UINT Len, UINT8 Type)
 		case 25:
 			ProcSysPowerCtrl(tab, pHeader);
 			break;
+		case 26:
+			ProcVoltageProbe(tab, pHeader);
+			break;
+		case 27:
+			ProcCoolingDevice(tab, pHeader);
+			break;
+		case 28:
+			ProcTempProbe(tab, pHeader);
+			break;
+		case 29:
+			ProcElecCurrentProbe(tab, pHeader);
+			break;
 		case 30:
 			ProcOutOfBandRemoteAccess(tab, pHeader);
 			break;
@@ -1692,6 +1781,9 @@ static void DumpSMBIOSStruct(PNODE node, void* Addr, UINT Len, UINT8 Type)
 			break;
 		case 44:
 			ProcProcessorAdditionalInfo(tab, pHeader);
+			break;
+		case 126:
+			ProcInactive(tab, pHeader);
 			break;
 		case 127:
 			ProcEndTable(tab, pHeader);
