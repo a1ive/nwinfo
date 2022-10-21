@@ -1644,6 +1644,37 @@ static void ProcProcessorAdditionalInfo(PNODE tab, void* p)
 	NWL_NodeAttrSet(tab, "Processor Type", pProcessorAdditionalInfoTypeToStr(pProcessor->ProcessorType), 0);
 }
 
+static void ProcFwInventory(PNODE tab, void* p)
+{
+	PFirmwareInventoryInfo pFirmware = (PFirmwareInventoryInfo)p;
+	const char* str = toPointString(p);
+	NWL_NodeAttrSet(tab, "Description", "Firmware Inventory Information", 0);
+	if (pFirmware->Header.Length < 0x18)
+		return;
+	NWL_NodeAttrSet(tab, "Component Name", LocateString(str, pFirmware->ComponentName), 0);
+	NWL_NodeAttrSet(tab, "Firmware Version", LocateString(str, pFirmware->Version), 0);
+	NWL_NodeAttrSetf(tab, "Version Format", NAFLG_FMT_NUMERIC, "%u", pFirmware->VersionFormat);
+	NWL_NodeAttrSet(tab, "Firmware ID", LocateString(str, pFirmware->ID), 0);
+	NWL_NodeAttrSetf(tab, "ID Format", NAFLG_FMT_NUMERIC, "%u", pFirmware->IDFormat);
+	NWL_NodeAttrSet(tab, "Release Date", LocateString(str, pFirmware->ReleaseDate), 0);
+	NWL_NodeAttrSet(tab, "Manufacturer", LocateString(str, pFirmware->Manufacturer), 0);
+	NWL_NodeAttrSet(tab, "Lowest Supported Firmware Version",
+		LocateString(str, pFirmware->LowestSupportedVersion), 0);
+	NWL_NodeAttrSet(tab, "Image Size", NWL_GetHumanSize(pFirmware->ImageSize, mem_human_sizes, 1024), NAFLG_FMT_HUMAN_SIZE);
+}
+
+static void ProcStringProperty(PNODE tab, void* p)
+{
+	PStringProperty pString = (PStringProperty)p;
+	const char* str = toPointString(p);
+	NWL_NodeAttrSet(tab, "Description", "String Property", 0);
+	if (pString->Header.Length < 0x09)
+		return;
+	NWL_NodeAttrSetf(tab, "String Property ID", NAFLG_FMT_NUMERIC, "%u", pString->ID);
+	NWL_NodeAttrSet(tab, "String Property Value",LocateString(str, pString->Value), 0);
+	NWL_NodeAttrSetf(tab, "Parent Handle", NAFLG_FMT_NUMERIC, "%u", pString->ParentHandle);
+}
+
 static void ProcInactive(PNODE tab, void* p)
 {
 	NWL_NodeAttrSet(tab, "Description", "Inactive", 0);
@@ -1781,6 +1812,12 @@ static void DumpSMBIOSStruct(PNODE node, void* Addr, UINT Len, UINT8 Type)
 			break;
 		case 44:
 			ProcProcessorAdditionalInfo(tab, pHeader);
+			break;
+		case 45:
+			ProcFwInventory(tab, pHeader);
+			break;
+		case 46:
+			ProcStringProperty(tab, pHeader);
 			break;
 		case 126:
 			ProcInactive(tab, pHeader);
