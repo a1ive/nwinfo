@@ -20,8 +20,6 @@
 #define NODE_LUA_DELIM_NL		"\n"	// New line token for LUA output
 #define NODE_LUA_DELIM_INDENT	"  "	// Tab token for LUA output
 
-#define NODE_BUFFER_LEN	32767
-
 static int indent_depth = 0;
 
 static void fprintcx(FILE* file, LPCSTR s, int count)
@@ -35,9 +33,10 @@ PNODE NWL_NodeAlloc(LPCSTR name, INT flags)
 {
 	PNODE node = NULL;
 	SIZE_T size;
+	SIZE_T name_len = strlen(name) + 1;
 
 	// Calculate required size
-	size = sizeof(NODE) + (sizeof(CHAR) * (strlen(name) + 1));
+	size = sizeof(NODE) + (sizeof(CHAR) * name_len);
 
 	// Allocate
 	node = (PNODE)calloc(1, size);
@@ -51,7 +50,7 @@ PNODE NWL_NodeAlloc(LPCSTR name, INT flags)
 
 	// Copy node name
 	node->Name = (LPSTR)(node + 1);
-	strcpy_s(node->Name, NODE_BUFFER_LEN, name);
+	strcpy_s(node->Name, name_len, name);
 
 	// Set flags
 	node->Flags = flags;
@@ -147,13 +146,16 @@ static PNODE_ATT NWL_NodeAllocAttr(LPCSTR key, LPCSTR value, int flags)
 	PNODE_ATT att = NULL;
 	LPCSTR nvalue = NULL;
 	SIZE_T size;
+	SIZE_T key_len, nvalue_len;
 
 	if (NULL == key)
 		return att;
 
 	nvalue = value ? value : "";
 
-	size = sizeof(NODE_ATT) + strlen(key) + 1 + strlen(nvalue) + 1;
+	key_len = strlen(key) + 1;
+	nvalue_len = strlen(nvalue) + 1;
+	size = sizeof(NODE_ATT) + key_len + nvalue_len;
 
 	att = (PNODE_ATT)calloc(1, size);
 	if (!att)
@@ -163,10 +165,10 @@ static PNODE_ATT NWL_NodeAllocAttr(LPCSTR key, LPCSTR value, int flags)
 	}
 
 	att->Key = (LPSTR)(att + 1);
-	strcpy_s(att->Key, NODE_BUFFER_LEN, key);
+	strcpy_s(att->Key, key_len, key);
 
-	att->Value = att->Key + strlen(key) + 1;
-	strcpy_s(att->Value, NODE_BUFFER_LEN, nvalue);
+	att->Value = att->Key + key_len;
+	strcpy_s(att->Value, nvalue_len, nvalue);
 
 	att->Flags = flags;
 
@@ -263,17 +265,33 @@ PNODE_ATT NWL_NodeAttrSet(PNODE node, LPCSTR key, LPCSTR value, INT flags)
 	return att;
 }
 
-static CHAR nsbuf[NODE_BUFFER_LEN];
-
 PNODE_ATT
 NWL_NodeAttrSetf(PNODE node, LPCSTR key, INT flags, LPCSTR _Printf_format_string_ format, ...)
 {
+	int sz;
+	char* buf = NULL;
+	PNODE_ATT att = NULL;
 	va_list ap;
-	//ZeroMemory(nsbuf, sizeof(nsbuf));
 	va_start(ap, format);
-	vsnprintf(nsbuf, sizeof(nsbuf), format, ap);
+	sz = _vscprintf(format, ap) + 1;
+	if (sz <= 0)
+	{
+		va_end(ap);
+		fprintf(stderr, "Failed to calculate string length in NWL_NodeAttrSetf\n");
+		exit(ERROR_INVALID_DATA);
+	}
+	buf = calloc(sizeof(CHAR), sz);
+	if (!buf)
+	{
+		va_end(ap);
+		fprintf(stderr, "Failed to allocate memory in NWL_NodeAttrSetf\n");
+		exit(ERROR_OUTOFMEMORY);
+	}
+	vsnprintf(buf, sz, format, ap);
 	va_end(ap);
-	return NWL_NodeAttrSet(node, key, nsbuf, flags);
+	att = NWL_NodeAttrSet(node, key, buf, flags);
+	free(buf);
+	return att;
 }
 
 static SIZE_T json_escape_content(LPCTSTR input, LPSTR buffer, DWORD bufferSize)
