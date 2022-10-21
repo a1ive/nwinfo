@@ -505,4 +505,30 @@ typedef struct _TYPE_44_
 	UINT8 ProcessorSpecificData[0];
 } ProcessorAdditionalInfo, * PProcessorAdditionalInfo;
 
+typedef struct _TYPE_45_
+{
+	SMBIOSHEADER Header;
+	UINT8 ComponentName;
+	UINT8 Version;
+	UINT8 VersionFormat;
+	UINT8 ID;
+	UINT8 IDFormat;
+	UINT8 ReleaseDate;
+	UINT8 Manufacturer;
+	UINT8 LowestSupportedVersion;
+	UINT64 ImageSize;
+	UINT16 Characteristics;
+	UINT8 State;
+	UINT8 NumOfAssociatedComponents;
+	UINT16 AssociatedComponentHandle[0];
+} FirmwareInventoryInfo, * PFirmwareInventoryInfo;
+
+typedef struct _TYPE_46_
+{
+	SMBIOSHEADER Header;
+	UINT16 ID;
+	UINT8 Value;
+	UINT16 ParentHandle;
+} StringProperty, * PStringProperty;
+
 #pragma pack()
