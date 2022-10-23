@@ -65,6 +65,7 @@ enum _intel_model_t {
 	_10xxx, /* Core i[3579] 10xxx */
 	_11xxx, /* Core i[3579] 11xxx */
 	_12xxx, /* Core i[3579] 12xxx */
+	_13xxx, /* Core i[3579] 13xxx */
 };
 typedef enum _intel_model_t intel_model_t;
 
@@ -425,7 +426,7 @@ const struct match_entry_t cpudb_intel[] = {
 	{  6, 12, -1, -1, 140,  2,    -1,    -1, NC, PENTIUM_      ,     0, "Tiger Lake (Pentium)"     },
 	{  6, 12, -1, -1, 140,  2,    -1,    -1, NC, CELERON_      ,     0, "Tiger Lake (Celeron)"     },
 
-	/* Alder Lake CPUs (12th gen, 10nm, mobile processors): */
+	/* Alder Lake CPUs (2021, 12th gen, 10nm) => https://en.wikichip.org/wiki/intel/microarchitectures/alder_lake */
 	{  6,  7, -1, -1, 151, -1,    -1,    -1, NC, CORE_|_I_|_9  ,_12xxx, "Alder Lake-S (Core i9)"     },
 	{  6,  7, -1, -1, 151, -1,    -1,    -1, NC, CORE_|_I_|_7  ,_12xxx, "Alder Lake-S (Core i7)"     },
 	{  6,  7, -1, -1, 151, -1,    -1,    -1, NC, CORE_|_I_|_5  ,_12xxx, "Alder Lake-S (Core i5)"     },
@@ -434,6 +435,16 @@ const struct match_entry_t cpudb_intel[] = {
 	{  6, 10, -1, -1, 154, -1,    -1,    -1, NC, CORE_|_I_|_7  ,_12xxx, "Alder Lake-P (Core i7)"     },
 	{  6, 10, -1, -1, 154, -1,    -1,    -1, NC, CORE_|_I_|_5  ,_12xxx, "Alder Lake-P (Core i5)"     },
 	{  6, 10, -1, -1, 154, -1,    -1,    -1, NC, CORE_|_I_|_3  ,_12xxx, "Alder Lake-P (Core i3)"     },
+
+	/* Raptor Lake CPUs (2022, 13th gen, 7nm) => https://en.wikichip.org/wiki/intel/microarchitectures/raptor_lake */
+	{  6,  7, -1, -1, 183, -1,    -1,    -1, NC, CORE_|_I_|_9  ,_13xxx, "Raptor Lake-S (Core i9)"    },
+	{  6,  7, -1, -1, 183, -1,    -1,    -1, NC, CORE_|_I_|_7  ,_13xxx, "Raptor Lake-S (Core i7)"    },
+	{  6,  7, -1, -1, 183, -1,    -1,    -1, NC, CORE_|_I_|_5  ,_13xxx, "Raptor Lake-S (Core i5)"    },
+	{  6,  7, -1, -1, 183, -1,    -1,    -1, NC, CORE_|_I_|_3  ,_13xxx, "Raptor Lake-S (Core i3)"    },
+	//{  6, ??, -1, -1, ???, -1,    -1,    -1, NC, CORE_|_I_|_9  ,_13xxx, "Raptor Lake-P (Core i9)"    },
+	//{  6, ??, -1, -1, ???, -1,    -1,    -1, NC, CORE_|_I_|_7  ,_13xxx, "Raptor Lake-P (Core i7)"    },
+	//{  6, ??, -1, -1, ???, -1,    -1,    -1, NC, CORE_|_I_|_5  ,_13xxx, "Raptor Lake-P (Core i5)"    },
+	//{  6, ??, -1, -1, ???, -1,    -1,    -1, NC, CORE_|_I_|_3  ,_13xxx, "Raptor Lake-P (Core i3)"    },
 	/* F   M   S  EF   EM   C     L2     L3               Brand */
 
 
