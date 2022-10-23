@@ -81,9 +81,20 @@ struct internal_apic_info_t {
 	logical_cpu_t logical_cpu;
 };
 
+struct internal_core_id_t {
+	logical_cpu_t num_logical_cpu;
+	int32_t core_id;
+};
+
 struct internal_cache_id_t {
 	logical_cpu_t num_logical_cpu;
 	int32_t cache_id;
+};
+
+#define CORES_HTABLE_SIZE 256
+struct internal_core_instances_t {
+	uint8_t instances;
+	struct internal_core_id_t htable[CORES_HTABLE_SIZE];
 };
 
 #define CACHES_HTABLE_SIZE 256
