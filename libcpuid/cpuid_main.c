@@ -765,7 +765,7 @@ int cpu_identify_all(struct cpu_raw_data_array_t* raw_array, struct system_id_t*
 
 		/* Update logical and physical CPU counters in system->cpu_types on the last iteration or when purpose is different than previous core */
 		if (raw_array->with_affinity && (is_last_item || (is_new_cpu_type && (system->num_cpu_types > 1)))) {
-			cpu_type_index   = is_new_cpu_type ? system->num_cpu_types - 2 : system->num_cpu_types - 1;
+			cpu_type_index = is_new_cpu_type && !is_last_item ? system->num_cpu_types - 2 : system->num_cpu_types - 1;
 			copy_affinity_mask(&system->cpu_types[cpu_type_index].affinity_mask, &affinity_mask);
 			if (!is_last_item) {
 				init_affinity_mask(&affinity_mask);
