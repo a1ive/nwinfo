@@ -763,38 +763,59 @@ int cpu_identify_all(struct cpu_raw_data_array_t* raw_array, struct system_id_t*
 			}
 		}
 
-		/* Update logical and physical CPU counters in system->cpu_types on the last iteration or when purpose is different than previous core */
+		/* Update logical CPU counters, physical CPU counters and cache instance in system->cpu_types
+		   Note: we need to differenciate two events:
+		     - is_new_cpu_type (e.g. purpose was 'efficiency' during previous loop, and now purpose is 'performance')
+		     - is_last_item (i.e. this is the last iteration in raw_array->num_raw)
+		   In some cases, both events can occur during the same iteration, thus we have to update counters twice for the same logical_cpu.
+		   This occurs with single-core CPU type. For instance, Pentacore Lakefield CPU consists of:
+		     - 1 "big" Sunny Cove core
+		     - 4 "little" Tremont cores
+		   On the last iteration, there is no need to reset values for the next purpose.
+		*/
 		if (raw_array->with_affinity && (is_last_item || (is_new_cpu_type && (system->num_cpu_types > 1)))) {
-			cpu_type_index = is_new_cpu_type && !is_last_item ? system->num_cpu_types - 2 : system->num_cpu_types - 1;
-			copy_affinity_mask(&system->cpu_types[cpu_type_index].affinity_mask, &affinity_mask);
-			if (!is_last_item) {
-				init_affinity_mask(&affinity_mask);
-				set_affinity_mask_bit(logical_cpu, &affinity_mask);
-			}
-			if (is_apic_supported) {
-				system->cpu_types[cpu_type_index].num_cores                = cores_type->instances;
-				system->cpu_types[cpu_type_index].l1_instruction_instances = caches_type->instances[L1I];
-				system->cpu_types[cpu_type_index].l1_data_instances        = caches_type->instances[L1D];
-				system->cpu_types[cpu_type_index].l2_instances             = caches_type->instances[L2];
-				system->cpu_types[cpu_type_index].l3_instances             = caches_type->instances[L3];
-				system->cpu_types[cpu_type_index].l4_instances             = caches_type->instances[L4];
-				if (!is_last_item) {
-					core_instances_t_constructor(cores_type);
-					cache_instances_t_constructor(caches_type);
-					update_core_instances(cores_type, &apic_info);
-					update_cache_instances(caches_type, &apic_info, &id_info);
-					update_cache_instances(caches_all,  &apic_info, &id_info);
+			enum event_t {
+				EVENT_NEW_CPU_TYPE = 0,
+				EVENT_LAST_ITEM    = 1
+			};
+			const enum event_t first_event = is_new_cpu_type && (system->num_cpu_types > 1) ? EVENT_NEW_CPU_TYPE : EVENT_LAST_ITEM;
+			const enum event_t last_event  = is_last_item                                   ? EVENT_LAST_ITEM    : EVENT_NEW_CPU_TYPE;
+			for (enum event_t event = first_event; event <= last_event; event++) {
+				switch (event) {
+					case EVENT_NEW_CPU_TYPE: cpu_type_index = system->num_cpu_types - 2; break;
+					case EVENT_LAST_ITEM:    cpu_type_index = system->num_cpu_types - 1; break;
+					default: ret_error = set_error(ERR_NOT_IMP); goto out;
 				}
+				copy_affinity_mask(&system->cpu_types[cpu_type_index].affinity_mask, &affinity_mask);
+				if (event != EVENT_LAST_ITEM) {
+					init_affinity_mask(&affinity_mask);
+					set_affinity_mask_bit(logical_cpu, &affinity_mask);
+				}
+				if (is_apic_supported) {
+					system->cpu_types[cpu_type_index].num_cores                = cores_type->instances;
+					system->cpu_types[cpu_type_index].l1_instruction_instances = caches_type->instances[L1I];
+					system->cpu_types[cpu_type_index].l1_data_instances        = caches_type->instances[L1D];
+					system->cpu_types[cpu_type_index].l2_instances             = caches_type->instances[L2];
+					system->cpu_types[cpu_type_index].l3_instances             = caches_type->instances[L3];
+					system->cpu_types[cpu_type_index].l4_instances             = caches_type->instances[L4];
+					if (event != EVENT_LAST_ITEM) {
+						core_instances_t_constructor(cores_type);
+						cache_instances_t_constructor(caches_type);
+						update_core_instances(cores_type, &apic_info);
+						update_cache_instances(caches_type, &apic_info, &id_info);
+						update_cache_instances(caches_all,  &apic_info, &id_info);
+					}
+				}
+				else {
+					/* Note: if SMT is disabled by BIOS, smt_divisor will no reflect the current state properly */
+					is_smt_supported = (system->cpu_types[cpu_type_index].num_logical_cpus % system->cpu_types[cpu_type_index].num_cores) == 0;
+					smt_divisor      = is_smt_supported ? system->cpu_types[cpu_type_index].num_logical_cpus / system->cpu_types[cpu_type_index].num_cores : 1.0;
+					system->cpu_types[cpu_type_index].num_cores = (int32_t) (num_logical_cpus / smt_divisor);
+				}
+				/* Save current values in system->cpu_types[cpu_type_index] and reset values for the next purpose */
+				system->cpu_types[cpu_type_index].num_logical_cpus = num_logical_cpus;
+				num_logical_cpus = 1;
 			}
-			else {
-				/* Note: if SMT is disabled by BIOS, smt_divisor will no reflect the current state properly */
-				is_smt_supported = (system->cpu_types[cpu_type_index].num_logical_cpus % system->cpu_types[cpu_type_index].num_cores) == 0;
-				smt_divisor = is_smt_supported ? system->cpu_types[cpu_type_index].num_logical_cpus / system->cpu_types[cpu_type_index].num_cores : 1.0;
-				system->cpu_types[cpu_type_index].num_cores = (int32_t) (num_logical_cpus / smt_divisor);
-			}
-			/* Save current values in system->cpu_types[cpu_type_index] and reset values for the next purpose */
-			system->cpu_types[cpu_type_index].num_logical_cpus = num_logical_cpus;
-			num_logical_cpus = 1;
 		}
 		prev_package_id = cur_package_id;
 	}
@@ -812,6 +833,7 @@ int cpu_identify_all(struct cpu_raw_data_array_t* raw_array, struct system_id_t*
 	for (cpu_type_index = 0; cpu_type_index < system->num_cpu_types; cpu_type_index++)
 		system->cpu_types[cpu_type_index].total_logical_cpus = logical_cpu;
 
+out:
 	free(cores_type);
 	free(caches_type);
 	free(caches_all);
