@@ -2523,9 +2523,13 @@ static struct pnp_id PNP_ID_LIST[] =
 	{"LGD", "LG Display" },
 	{"NCV", "NewCoSemi (Beijing) Technology CO., Ltd." },
 	{"EVP", "EverPro Technology Co., Ltd." },
+	{"BCK", "BECK GmbH & Co. Elektronik Bauelemente KG" },
+	{"KLT", "Colorlight" },
+	{"PTX", "Printronix" },
+	{"TMA", "Tianma Microelectronics" },
 	// unknown
-	{ "CHG", "Changcheng Computer" },
-	{ "RTK", "Realtek" },
+	{"CHG", "Changcheng Computer" },
+	{"RTK", "Realtek" },
 };
 
 #define PNP_ID_NUM (sizeof(PNP_ID_LIST) / sizeof(struct pnp_id))
