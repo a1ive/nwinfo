@@ -907,7 +907,7 @@ char* affinity_mask_str_r(cpu_affinity_mask_t* affinity_mask, char* buffer, uint
 	logical_cpu_t str_index = 0;
 	bool do_print = false;
 
-	while (str_index + 1U < buffer_len) {
+	while (((uint32_t)str_index) + 1 < buffer_len) {
 		if (do_print || (mask_index < 4) || (affinity_mask->__bits[mask_index] != 0x00)) {
 			snprintf(&buffer[str_index], 3, "%02X", affinity_mask->__bits[mask_index]);
 			do_print = true;

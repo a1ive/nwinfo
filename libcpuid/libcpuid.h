@@ -29,7 +29,7 @@
  * \file     libcpuid.h
  * \author   Veselin Georgiev
  * \date     Oct 2008
- * \version  0.6.0
+ * \version  0.6.2
  *
  * Version history:
  *
@@ -66,6 +66,9 @@
  *                       a lot of DB updates
  *                       (a backwards-incompatible change since the sizeof
  *                        cpu_id_t is now different).
+ * * 0.6.1 (2022-10-23): A lot of DB updates, fix set_cpu_affinity() on Windows,
+ *                       fix cpu_identify_all() when HT is disabled.
+ * * 0.6.2 (2022-11-11): A lot of DB updates, fix cpu_identify_all() for single-core CPUs.
  */
 
 /** @mainpage A simple libcpuid introduction

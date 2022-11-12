@@ -176,6 +176,7 @@ const struct match_entry_t cpudb_amd[] = {
 	{ 15, -1, -1, 15, 0x5f,   1,   256,    -1, NC, SEMPRON_            ,     0, "Sempron 64 (Manila/256K)"      },
 	{ 15, -1, -1, 15, 0x6b,   2,   256,    -1, NC, SEMPRON_            ,     0, "Sempron 64 Dual (Sherman/256K)"},
 	{ 15, -1, -1, 15, 0x6b,   2,   512,    -1, NC, SEMPRON_            ,     0, "Sempron 64 Dual (Sherman/512K)"},
+	{ 15, -1, -1, 15, 0x7c,   1,   512,    -1, NC, ATHLON_             ,     0, "Athlon 64 (Sherman/515K)"      },
 	{ 15, -1, -1, 15, 0x7f,   1,   256,    -1, NC, SEMPRON_            ,     0, "Sempron 64 (Sparta/256K)"      },
 	{ 15, -1, -1, 15, 0x7f,   1,   512,    -1, NC, SEMPRON_            ,     0, "Sempron 64 (Sparta/512K)"      },
 	{ 15, -1, -1, 15, 0x4c,   1,   256,    -1, NC, MOBILE_| SEMPRON_   ,     0, "Mobile Sempron 64 (Keene/256K)"},
@@ -315,7 +316,12 @@ const struct match_entry_t cpudb_amd[] = {
 	{ 15, -1, -1, 23,  104,  -1,    -1,    -1, NC, RYZEN_|_7           ,     0, "Ryzen 7 (Lucienne)"            },
 	{ 15, -1, -1, 23,  104,  -1,    -1,    -1, NC, RYZEN_|_5           ,     0, "Ryzen 5 (Lucienne)"            },
 	{ 15, -1, -1, 23,  104,  -1,    -1,    -1, NC, RYZEN_|_3           ,     0, "Ryzen 3 (Lucienne)"            },
+	{ 15, -1, -1, 23,   71,  -1,    -1,    -1, NC, 0                   ,     0, "Desktop Kit (Zen 2)"           }, /* 4700S Desktop Kit */
+	{ 15, -1, -1, 23,  132,  -1,    -1,    -1, NC, 0                   ,     0, "Desktop Kit (Zen 2)"           }, /* 4800S Desktop Kit */
 	{ 15, -1,  2, 23,  144,  -1,    -1,    -1, NC, 0                   ,     0, "Van Gogh"                      },
+	{ 15, -1, -1, 23,  160,  -1,    -1,    -1, NC, RYZEN_|_5           ,     0, "Ryzen 5 (Mendocino)"           },
+	{ 15, -1, -1, 23,  160,  -1,    -1,    -1, NC, RYZEN_|_3           ,     0, "Ryzen 3 (Mendocino)"           },
+	{ 15, -1, -1, 23,  160,  -1,    -1,    -1, NC, ATHLON_             ,     0, "Athlon (Mendocino)"            },
 
 	/* Family 18h */
 	/* Zen Architecture for Hygon (2018) => https://en.wikichip.org/wiki/amd/microarchitectures/zen */
@@ -591,7 +597,7 @@ static struct amd_code_and_bits_t decode_amd_codename_part1(const char *bs)
 	return result;
 }
 
-static void decode_amd_codename(struct cpu_raw_data_t* raw, struct cpu_id_t* data, struct internal_id_info_t* internal)
+static void decode_amd_codename(struct cpu_id_t* data, struct internal_id_info_t* internal)
 {
 	struct amd_code_and_bits_t code_and_bits = decode_amd_codename_part1(data->brand_str);
 	int i = 0;
@@ -623,6 +629,6 @@ int cpuid_identify_amd(struct cpu_raw_data_t* raw, struct cpu_id_t* data, struct
 	else
 		decode_amd_cache_info(raw, data);
 	decode_amd_number_of_cores(raw, data);
-	decode_amd_codename(raw, data, internal);
+	decode_amd_codename(data, internal);
 	return 0;
 }

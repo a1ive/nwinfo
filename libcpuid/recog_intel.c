@@ -404,6 +404,7 @@ const struct match_entry_t cpudb_intel[] = {
 	{  6, 14, 12, -1, 142,  4,    -1,    -1, NC, CORE_|_I_|_5  ,_10xxx, "Comet Lake-U (Core i5)"   },
 	{  6, 14, 12, -1, 142,  2,    -1,    -1, NC, PENTIUM_      ,_10xxx, "Comet Lake-U (Pentium)"   },
 	{  6, 14, 12, -1, 142,  2,    -1,    -1, NC, CELERON_      ,_10xxx, "Comet Lake-U (Celeron)"   },
+	{  6, 12, -1, -1, 108,  4,    -1,    -1, NC, XEON_         ,     0, "Ice Lake (Xeon-D)"        },
 	{  6, 14, -1, -1, 126,  4,    -1,    -1, NC, CORE_|_I_|_7  ,_10xxx, "Ice Lake (Core i7)"       },
 	{  6, 14, -1, -1, 126,  4,    -1,    -1, NC, CORE_|_I_|_5  ,_10xxx, "Ice Lake (Core i5)"       },
 	{  6, 14, -1, -1, 126,  2,    -1,    -1, NC, CORE_|_I_|_3  ,_10xxx, "Ice Lake (Core i3)"       },
@@ -621,9 +622,7 @@ static void decode_intel_oldstyle_cache_info(struct cpu_raw_data_t* raw, struct 
 	}
 }
 
-static int decode_intel_extended_topology(struct cpu_raw_data_t* raw,
-                                           struct cpu_id_t* data,
-                                           struct internal_id_info_t* internal)
+static int decode_intel_extended_topology(struct cpu_raw_data_t* raw, struct cpu_id_t* data)
 {
 	int i, level_type, num_smt = -1, num_core = -1;
 
@@ -650,14 +649,12 @@ static int decode_intel_extended_topology(struct cpu_raw_data_t* raw,
 	return 1;
 }
 
-static void decode_intel_number_of_cores(struct cpu_raw_data_t* raw,
-                                         struct cpu_id_t* data,
-                                         struct internal_id_info_t* internal)
+static void decode_intel_number_of_cores(struct cpu_raw_data_t* raw, struct cpu_id_t* data)
 {
 	int logical_cpus = -1, num_cores = -1;
 
 	if (raw->basic_cpuid[0][EAX] >= 11) {
-		if (decode_intel_extended_topology(raw, data, internal)) return;
+		if (decode_intel_extended_topology(raw, data)) return;
 	}
 
 	if (raw->basic_cpuid[0][EAX] >= 1) {
@@ -937,7 +934,7 @@ int cpuid_identify_intel(struct cpu_raw_data_t* raw, struct cpu_id_t* data, stru
 	} else if (raw->basic_cpuid[0][EAX] >= 2) {
 		decode_intel_oldstyle_cache_info(raw, data);
 	}
-	decode_intel_number_of_cores(raw, data, internal);
+	decode_intel_number_of_cores(raw, data);
 	data->purpose = cpuid_identify_purpose_intel(raw);
 
 	brand = get_brand_code_and_bits(data);
