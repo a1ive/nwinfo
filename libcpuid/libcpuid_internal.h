@@ -123,6 +123,10 @@ enum _intel_bits_t {
 	_I_                     = LBIT( 13 ),
 	XEON_                   = LBIT( 14 ),
 	ATOM_                   = LBIT( 15 ),
+	_H                      = LBIT( 16 ),
+	_K                      = LBIT( 17 ),
+	_X                      = LBIT( 18 ),
+	_P                      = LBIT( 19 ),
 };
 typedef enum _intel_bits_t intel_bits_t;
 
