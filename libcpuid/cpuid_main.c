@@ -402,7 +402,7 @@ static int cpuid_basic_identify(struct cpu_raw_data_t* raw, struct cpu_id_t* dat
 			data->ext_family = data->family + xfamily;
 		data->ext_model = data->model + (xmodel << 4);
 	}
-	ext = raw->ext_cpuid[0][EAX] - 0x8000000;
+	ext = raw->ext_cpuid[0][EAX] - 0x80000000;
 
 	/* obtain the brand string, if present: */
 	if (ext >= 4) {
