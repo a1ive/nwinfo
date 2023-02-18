@@ -2528,6 +2528,7 @@ static struct pnp_id PNP_ID_LIST[] =
 	{"PTX", "Printronix" },
 	{"TMA", "Tianma Microelectronics" },
 	{"SGN", "Shenzhen Soogeen Electronics Co., LTD." },
+	{"EAC", "Emotiva Audio Corp." },
 	// unknown
 	{"CHG", "Changcheng Computer" },
 	{"RTK", "Realtek" },
