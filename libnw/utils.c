@@ -100,6 +100,8 @@ NWL_ReadMemory(PVOID buffer, DWORD_PTR address, DWORD length)
 {
 	if (!NWLC->NwDrv)
 		return FALSE;
+	if (address == 0) // Reject 0x0000
+		return FALSE;
 	if (phymem_read(NWLC->NwDrv, address, buffer, length, 1) == 0)
 		return FALSE;
 	return TRUE;
