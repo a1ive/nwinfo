@@ -38,11 +38,19 @@
 
 /* Implementation: */
 
-static int _libcpiud_errno = ERR_OK;
+#if defined(__STDC_VERSION__) && __STDC_VERSION__ == 201112L
+#define INTERNAL_SCOPE _Thread_local
+#elif defined(__GNUC__) // Also works for clang
+#define INTERNAL_SCOPE __thread
+#else
+#define INTERNAL_SCOPE static
+#endif
+
+INTERNAL_SCOPE int _libcpuid_errno = ERR_OK;
 
 int set_error(cpu_error_t err)
 {
-	_libcpiud_errno = (int) err;
+	_libcpuid_errno = (int) err;
 	return (int) err;
 }
 
@@ -147,6 +155,51 @@ static int get_total_cpus(void)
 	return system_info.dwNumberOfProcessors;
 }
 
+#if (_WIN32_WINNT >= 0x0601)
+INTERNAL_SCOPE GROUP_AFFINITY savedGroupAffinity;
+#else
+INTERNAL_SCOPE DWORD_PTR savedAffinityMask = 0;
+#endif
+
+bool save_cpu_affinity()
+{
+#if (_WIN32_WINNT >= 0x0601)
+	HANDLE thread = GetCurrentThread();
+	return GetThreadGroupAffinity(thread, &savedGroupAffinity);
+#else
+/* Credits to https://stackoverflow.com/questions/6601862/query-thread-not-process-processor-affinity#6601917 */
+	HANDLE thread = GetCurrentThread();
+	DWORD_PTR threadAffinityMask = 1;
+	while (threadAffinityMask) {
+		savedAffinityMask = SetThreadAffinityMask(thread, threadAffinityMask);
+		if(savedAffinityMask)
+			return SetThreadAffinityMask(thread, savedAffinityMask);
+		else if (GetLastError() != ERROR_INVALID_PARAMETER)
+			return false;
+
+		threadAffinityMask <<= 1; // try next CPU
+	}
+	return false;
+#endif
+}
+
+bool restore_cpu_affinity()
+{
+#if (_WIN32_WINNT >= 0x0601)
+	if (!savedGroupAffinity.Mask)
+		return false;
+
+	HANDLE thread = GetCurrentThread();
+	return SetThreadGroupAffinity(thread, &savedGroupAffinity, NULL);
+#else
+	if (!savedAffinityMask)
+		return false;
+
+	HANDLE thread = GetCurrentThread();
+	return SetThreadAffinityMask(thread, savedAffinityMask);
+#endif
+}
+
 bool set_cpu_affinity(logical_cpu_t logical_cpu)
 {
 /* Credits to https://github.com/PolygonTek/BlueshiftEngine/blob/fbc374cbc391e1147c744649f405a66a27c35d89/Source/Runtime/Private/Platform/Windows/PlatformWinThread.cpp#L27 */
@@ -169,8 +222,7 @@ bool set_cpu_affinity(logical_cpu_t logical_cpu)
 		}
 		total_processors += processors;
 	}
-	if (!found)
-		return FALSE; // logical CPU # too large, does not exist
+	if (!found) return 0; // logical CPU # too large, does not exist
 
 	memset(&groupAffinity, 0, sizeof(groupAffinity));
 	groupAffinity.Group = (WORD) group;
@@ -181,9 +233,9 @@ bool set_cpu_affinity(logical_cpu_t logical_cpu)
 		// Warning: not supported
 		return FALSE;
 	}
-	HANDLE process = GetCurrentProcess();
-	DWORD_PTR processAffinityMask = 1ULL << logical_cpu;
-	return SetProcessAffinityMask(process, processAffinityMask);
+	HANDLE thread = GetCurrentThread();
+	DWORD_PTR threadAffinityMask = 1ULL << logical_cpu;
+	return SetThreadAffinityMask(thread, threadAffinityMask);
 #endif /* (_WIN32_WINNT >= 0x0601) */
 }
 
@@ -569,6 +621,8 @@ int cpuid_get_all_raw_data(struct cpu_raw_data_array_t* data)
 	if (data == NULL)
 		return set_error(ERR_HANDLE);
 
+	bool affinity_saved = save_cpu_affinity();
+
 	cpu_raw_data_array_t_constructor(data, true);
 	while (set_cpu_affinity(logical_cpu)) {
 		cpuid_grow_raw_data_array(data, logical_cpu + 1);
@@ -578,6 +632,9 @@ int cpuid_get_all_raw_data(struct cpu_raw_data_array_t* data)
 			ret_error = cur_error;
 		logical_cpu++;
 	}
+
+	if (affinity_saved)
+		restore_cpu_affinity();
 
 	return ret_error;
 }
@@ -728,7 +785,7 @@ int cpu_identify_all(struct cpu_raw_data_array_t* raw_array, struct system_id_t*
 	if (raw_array->with_affinity)
 		init_affinity_mask(&affinity_mask);
 
-	/* Iterate over all RAW */
+	/* Iterate over all raw */
 	for (logical_cpu = 0; logical_cpu < raw_array->num_raw; logical_cpu++) {
 		is_new_cpu_type = false;
 		is_last_item    = (logical_cpu + 1 >= raw_array->num_raw);
@@ -759,7 +816,7 @@ int cpu_identify_all(struct cpu_raw_data_array_t* raw_array, struct system_id_t*
 			if (is_apic_supported) {
 				update_core_instances(cores_type, &apic_info);
 				update_cache_instances(caches_type, &apic_info, &id_info);
-				update_cache_instances(caches_all,  &apic_info, &id_info);
+				update_cache_instances(caches_all, &apic_info, &id_info);
 			}
 		}
 
@@ -803,7 +860,7 @@ int cpu_identify_all(struct cpu_raw_data_array_t* raw_array, struct system_id_t*
 						cache_instances_t_constructor(caches_type);
 						update_core_instances(cores_type, &apic_info);
 						update_cache_instances(caches_type, &apic_info, &id_info);
-						update_cache_instances(caches_all,  &apic_info, &id_info);
+						update_cache_instances(caches_all, &apic_info, &id_info);
 					}
 				}
 				else {
@@ -907,7 +964,7 @@ char* affinity_mask_str_r(cpu_affinity_mask_t* affinity_mask, char* buffer, uint
 	logical_cpu_t str_index = 0;
 	bool do_print = false;
 
-	while (((uint32_t)str_index) + 1 < buffer_len) {
+	while (((uint32_t) str_index) + 1 < buffer_len) {
 		if (do_print || (mask_index < 4) || (affinity_mask->__bits[mask_index] != 0x00)) {
 			snprintf(&buffer[str_index], 3, "%02X", affinity_mask->__bits[mask_index]);
 			do_print = true;
@@ -1084,7 +1141,7 @@ const char* cpuid_error(void)
 	};
 	unsigned i;
 	for (i = 0; i < COUNT_OF(matchtable); i++)
-		if (_libcpiud_errno == matchtable[i].error)
+		if (_libcpuid_errno == matchtable[i].error)
 			return matchtable[i].description;
 	return "Unknown error";
 }

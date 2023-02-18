@@ -183,6 +183,7 @@ PrintCpuInfo(PNODE node, struct cpu_id_t* data, struct cpu_raw_data_array_t* raw
 {
 	logical_cpu_t i, first_core = 0xffff;
 	CHAR name[] = "CORE65536";
+	bool affinity_saved = FALSE;
 	NWL_NodeAttrSet(node, "Purpose", cpu_purpose_str(data->purpose), 0);
 	NWL_NodeAttrSet(node, "Vendor", data->vendor_str, 0);
 	NWL_NodeAttrSet(node, "Vendor Name", CpuVendorToStr(data->vendor), 0);
@@ -200,6 +201,7 @@ PrintCpuInfo(PNODE node, struct cpu_id_t* data, struct cpu_raw_data_array_t* raw
 	NWL_NodeAttrSetf(node, "SSE Units", 0, "%d bits (%s)",
 		data->sse_size, data->detection_hints[CPU_HINT_SSE_SIZE_AUTH] ? "authoritative" : "non-authoritative");
 	PrintCache(node, data);
+	affinity_saved = save_cpu_affinity();
 	for (i = 0; i < raw->num_raw; i++)
 	{
 		PNODE core = NULL;
@@ -211,6 +213,8 @@ PrintCpuInfo(PNODE node, struct cpu_id_t* data, struct cpu_raw_data_array_t* raw
 		core = NWL_NodeAppendNew(node, name, 0);
 		PrintCoreMsr(core, data, i);
 	}
+	if (affinity_saved)
+		restore_cpu_affinity();
 	PrintFeatures(node, data);
 	PrintSgx(node, data, raw, first_core);
 }

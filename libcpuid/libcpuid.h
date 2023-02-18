@@ -68,7 +68,7 @@
  *                        cpu_id_t is now different).
  * * 0.6.1 (2022-10-23): A lot of DB updates, fix set_cpu_affinity() on Windows,
  *                       fix cpu_identify_all() when HT is disabled.
- * * 0.6.2 (2022-11-11): A lot of DB updates, fix cpu_identify_all() for single-core CPUs.
+ * * 0.6.6 (2022-11-11): A lot of DB updates, fix cpu_identify_all() for single-core CPUs.
  */
 
 /** @mainpage A simple libcpuid introduction
@@ -408,7 +408,7 @@ struct cpu_id_t {
 	/** Cache associativity for the L1 data cache. -1 if undetermined */
 	int32_t l1_data_assoc;
 
-	/** Cache associativity for the L1 intruction cache. -1 if undetermined */
+	/** Cache associativity for the L1 instruction cache. -1 if undetermined */
 	int32_t l1_instruction_assoc;
 
 	/** Cache associativity for the L2 cache. -1 if undetermined */
@@ -428,7 +428,7 @@ struct cpu_id_t {
 	/** Cache-line size for L1 data cache. -1 if undetermined */
 	int32_t l1_data_cacheline;
 
-	/** Cache-line size for L1 intruction cache. -1 if undetermined */
+	/** Cache-line size for L1 instruction cache. -1 if undetermined */
 	int32_t l1_instruction_cacheline;
 
 	/** Cache-line size for L2 cache. -1 if undetermined */
@@ -443,7 +443,7 @@ struct cpu_id_t {
 	/** Number of L1 data cache instances. -1 if undetermined */
 	int32_t l1_data_instances;
 
-	/** Number of L1 intruction cache instances. -1 if undetermined */
+	/** Number of L1 instruction cache instances. -1 if undetermined */
 	int32_t l1_instruction_instances;
 
 	/** Number of L2 cache instances. -1 if undetermined */
@@ -510,7 +510,7 @@ struct system_id_t {
 	/** Number of total L1 data cache instances. -1 if undetermined */
 	int32_t l1_data_total_instances;
 
-	/** Number of total L1 intruction cache instances. -1 if undetermined */
+	/** Number of total L1 instruction cache instances. -1 if undetermined */
 	int32_t l1_instruction_total_instances;
 
 	/** Number of total L2 cache instances. -1 if undetermined */
@@ -823,6 +823,8 @@ int cpu_identify(struct cpu_raw_data_t* raw, struct cpu_id_t* data);
  * @brief Identifies all the CPUs
  * @param raw_array - Input - a pointer to the array of raw CPUID data, which is obtained
  *              either by cpuid_get_all_raw_data or cpuid_deserialize_all_raw_data.
+ *              Can also be NULL, in which case the functions calls
+ *              cpuid_get_all_raw_data itself.
  * @param system - Output - the decoded CPU features/info is written here for each CPU type.
  * @note The function is similar to cpu_identify. Refer to cpu_identify notes.
  * @note As the memory is dynamically allocated, be sure to call
@@ -877,6 +879,10 @@ char* affinity_mask_str_r(cpu_affinity_mask_t* affinity_mask, char* buffer, uint
  * @returns a string like "0000FFFF", "00FF0000", etc.
  */
 char* affinity_mask_str(cpu_affinity_mask_t *affinity_mask);
+
+bool save_cpu_affinity();
+
+bool restore_cpu_affinity();
 
 bool set_cpu_affinity(logical_cpu_t logical_cpu);
 
@@ -1137,12 +1143,12 @@ const char* cpuid_lib_version(void);
 cpu_vendor_t cpuid_get_vendor(void);
 
 /**
- * @brief Frees a RAW array
+ * @brief Frees a raw array
  *
- * This function deletes all the memory associated with a RAW array, as obtained
+ * This function deletes all the memory associated with a raw array, as obtained
  * by cpuid_get_all_raw_data(), cpuid_deserialize_all_raw_data() and cpu_identify_all()
  *
- * @param raw_array - the RAW array to be free()'d.
+ * @param raw_array - the raw array to be free()'d.
  */
 void cpuid_free_raw_data_array(struct cpu_raw_data_array_t* raw_array);
 
