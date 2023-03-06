@@ -46,14 +46,16 @@ jobs:
         # copy winring0\WinRing0x64.sys nwinfo\WinRing0x64.sys
         copy winring0\HwRwDrv.sys nwinfo\HwRwDrv.sys
         copy winring0\HwRwDrvx64.sys nwinfo\HwRwDrvx64.sys
-    #- name: Run UPX
-    #  uses: crazy-max/ghaction-upx@v1
-    #  with:
-    #    version: latest
-    #    files: |
-    #      .\nwinfo\nwinfo_x64.exe
-    #      .\nwinfo\nwinfo_x86.exe
-    #    args: -fq
+    - name: Run UPX
+      uses: crazy-max/ghaction-upx@v2
+      with:
+        version: latest
+        files: |
+          .\nwinfo\nwinfo_x64.exe
+          .\nwinfo\nwinfo_x86.exe
+          .\nwinfo\gnwinfo_x64.exe
+          .\nwinfo\gnwinfo_x86.exe
+        args: --best
 
     - uses: thedoctor0/zip-release@master
       with:
