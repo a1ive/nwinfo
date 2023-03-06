@@ -31,6 +31,7 @@ jobs:
         curl.exe -o pci.ids https://raw.githubusercontent.com/vcrhonek/hwdata/master/pci.ids
         curl.exe -o usb.ids http://www.linux-usb.org/usb.ids
         curl.exe -o pnp.ids https://raw.githubusercontent.com/vcrhonek/hwdata/master/pnp.ids
+        echo # Version: %date:~0,4%.%date:~5,2%.%date:~8,2%>> pnp.ids
         msbuild /m /p:Configuration=Release /p:platform=x64 ${{env.SOLUTION_FILE_PATH}}
         msbuild /m /p:Configuration=Release /p:platform=x86 ${{env.SOLUTION_FILE_PATH}}
         md nwinfo

@@ -294,55 +294,37 @@ fail:
 const CHAR* NWL_GetIdsDate(LPCSTR lpFileName)
 {
 	static CHAR Date[] = "1453.05.29";
+	DWORD IdsSize = 0;
+	DWORD Offset = 0;
+	CHAR* Ids = NULL;
+	CHAR* Line = NULL;
 
 	strcpy_s(Date, sizeof(Date), "UNKNOWN");
 
-	if (_stricmp(lpFileName, "pci.ids") == 0
-		|| _stricmp(lpFileName, "usb.ids") == 0)
+	Ids = NWL_LoadIdsToMemory(lpFileName, &IdsSize);
+	Line = IdsGetline(Ids, IdsSize, &Offset);
+	while (Line)
 	{
-		DWORD IdsSize = 0;
-		DWORD Offset = 0;
-		CHAR* Ids = NWL_LoadIdsToMemory(lpFileName, &IdsSize);
-		CHAR* Line = IdsGetline(Ids, IdsSize, &Offset);
-		while (Line)
+		// # Version: 2022.09.09
+		if (Line[0] == '#' && isspace(Line[1])
+			&& _strnicmp("Version:", &Line[2], 8) == 0 && isspace(Line[10])
+			&& isdigit(Line[11]) && isdigit(Line[12]) && isdigit(Line[13]) && isdigit(Line[14])
+			&& Line[15] == '.' && isdigit(Line[16]) && isdigit(Line[17])
+			&& Line[18] == '.' && isdigit(Line[19]) && isdigit(Line[20]))
 		{
-			// # Version: 2022.09.09
-			if (Line[0] == '#' && isspace(Line[1])
-				&& _strnicmp("Version:", &Line[2], 8) == 0 && isspace(Line[10])
-				&& isdigit(Line[11]) && isdigit(Line[12]) && isdigit(Line[13]) && isdigit(Line[14])
-				&& Line[15] == '.' && isdigit(Line[16]) && isdigit(Line[17])
-				&& Line[18] == '.' && isdigit(Line[19]) && isdigit(Line[20]))
-			{
-				snprintf(Date, sizeof(Date), "%c%c%c%c.%c%c.%c%c",
-					Line[11], Line[12], Line[13], Line[14],
-					Line[16], Line[17],
-					Line[19], Line[20]);
-				break;
-			}
-			free(Line);
-			Line = IdsGetline(Ids, IdsSize, &Offset);
+			snprintf(Date, sizeof(Date), "%c%c%c%c.%c%c.%c%c",
+				Line[11], Line[12], Line[13], Line[14],
+				Line[16], Line[17],
+				Line[19], Line[20]);
+			break;
 		}
-		if (Line)
-			free(Line);
-		if (Ids)
-			free(Ids);
+		free(Line);
+		Line = IdsGetline(Ids, IdsSize, &Offset);
 	}
-	else
-	{
-		FILETIME Ft = { 0 };
-		SYSTEMTIME St = { 0 };
-		HANDLE Fp = GetIdsHandle(lpFileName);
-		if (Fp != INVALID_HANDLE_VALUE)
-		{
-			if (GetFileTime(Fp, NULL, NULL, &Ft))
-			{
-				if (FileTimeToSystemTime(&Ft, &St))
-				{
-					snprintf(Date, sizeof(Date), "%04d.%02d.%02d",
-						St.wYear, St.wMonth, St.wDay);
-				}
-			}
-		}
-	}
+	if (Line)
+		free(Line);
+	if (Ids)
+		free(Ids);
+
 	return Date;
 }
