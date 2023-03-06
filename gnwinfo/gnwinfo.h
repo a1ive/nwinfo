@@ -70,8 +70,6 @@ VOID GNW_Reload(VOID);
 VOID GNW_Export(VOID);
 VOID __declspec(noreturn) GNW_Exit(INT nExitCode);
 
-PNODE GNW_LibInfo(VOID);
-
 VOID GNW_TreeInit(VOID);
 HTREEITEM GNW_TreeAdd(HTREEITEM hParent, LPCSTR lpszItem, INT nLevel, INT nIcon, LPVOID lpConfig);
 VOID GNW_TreeExpand(HTREEITEM hTree);

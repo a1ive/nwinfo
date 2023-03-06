@@ -101,6 +101,9 @@
     <ClCompile Include="battery.c">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="libinfo.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

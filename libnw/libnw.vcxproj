@@ -131,6 +131,7 @@
     <ClCompile Include="disk.c" />
     <ClCompile Include="display.c" />
     <ClCompile Include="format.c" />
+    <ClCompile Include="libinfo.c" />
     <ClCompile Include="libnw.c" />
     <ClCompile Include="network.c" />
     <ClCompile Include="nt.c" />

@@ -32,6 +32,7 @@ typedef struct _NWLIB_CONTEXT
 	BOOL UsbInfo;
 	BOOL SpdInfo;
 	BOOL BatteryInfo;
+	BOOL LibInfo;
 
 	DWORD AcpiTable;
 	BOOL ActiveNet;
@@ -73,6 +74,7 @@ PNODE NW_Spd(VOID);
 PNODE NW_System(VOID);
 PNODE NW_Usb(VOID);
 PNODE NW_Battery(VOID);
+PNODE NW_Libinfo(VOID);
 
 #ifdef __cplusplus
 } /* extern "C" */

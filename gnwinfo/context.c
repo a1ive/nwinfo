@@ -77,7 +77,7 @@ GNW_Init(HINSTANCE hInstance, INT nCmdShow, DLGPROC lpDialogFunc)
 	UpdateWindow(GNWC.hWnd);
 
 	GNW_Wait();
-	GNWC.pnRoot = GNW_LibInfo();
+	GNWC.pnRoot = NW_Libinfo();
 
 	GNW_ListInit();
 	GNW_TreeInit();
