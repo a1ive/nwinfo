@@ -80,7 +80,7 @@ PNODE NW_Usb(VOID)
 	PNODE node = NWL_NodeAlloc("USB", NFLG_TABLE);
 	if (NWLC->UsbInfo)
 		NWL_NodeAppendChild(NWLC->NwRoot, node);
-	Ids = NWL_LoadFileToMemory("usb.ids", &IdsSize);
+	Ids = NWL_LoadIdsToMemory("usb.ids", &IdsSize);
 	Info = SetupDiGetClassDevsExA(NULL, "USB", NULL, Flags, NULL, NULL, NULL);
 	if (Info == INVALID_HANDLE_VALUE)
 	{

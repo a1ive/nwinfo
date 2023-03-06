@@ -46,7 +46,7 @@ PNODE NW_Pci(VOID)
 	PNODE node = NWL_NodeAlloc("PCI", NFLG_TABLE);
 	if (NWLC->PciInfo)
 		NWL_NodeAppendChild(NWLC->NwRoot, node);
-	Ids = NWL_LoadFileToMemory("pci.ids", &IdsSize);
+	Ids = NWL_LoadIdsToMemory("pci.ids", &IdsSize);
 	Info = SetupDiGetClassDevsExA(NULL, "PCI", NULL, Flags, NULL, NULL, NULL);
 	if (Info == INVALID_HANDLE_VALUE)
 	{
