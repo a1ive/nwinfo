@@ -34,12 +34,14 @@ INT NWL_GetRegDwordValue(HKEY Key, LPCSTR SubKey, LPCSTR ValueName, DWORD* pValu
 CHAR* NWL_GetRegSzValue(HKEY Key, LPCSTR SubKey, LPCSTR ValueName);
 HANDLE NWL_GetDiskHandleById(BOOL Cdrom, BOOL Write, DWORD Id);
 LPCSTR NWL_GetBusTypeString(STORAGE_BUS_TYPE Type);
-VOID NWL_FindId(PNODE nd, CHAR* Ids, DWORD IdsSize, CONST CHAR* v, CONST CHAR* d, CONST CHAR* s, INT usb);
-VOID NWL_FindClass(PNODE nd, CHAR* Ids, DWORD IdsSize, CONST CHAR* Class, INT usb);
-CHAR* NWL_LoadIdsToMemory(LPCSTR lpFileName, LPDWORD lpSize);
 LPCSTR NWL_GuidToStr(UCHAR Guid[16]);
 LPCSTR NWL_WcsToMbs(PWCHAR Wcs);
 
 HANDLE NWL_NtCreateFile(LPCWSTR lpFileName, BOOL bWrite);
 VOID* NWL_NtGetRegValue(HKEY Key, LPCWSTR lpSubKey, LPCWSTR lpValueName, LPDWORD lpType);
 LPCSTR NWL_NtGetPathFromHandle(HANDLE hFile);
+
+VOID NWL_FindId(PNODE nd, CHAR* Ids, DWORD IdsSize, CONST CHAR* v, CONST CHAR* d, CONST CHAR* s, INT usb);
+VOID NWL_FindClass(PNODE nd, CHAR* Ids, DWORD IdsSize, CONST CHAR* Class, INT usb);
+CHAR* NWL_LoadIdsToMemory(LPCSTR lpFileName, LPDWORD lpSize);
+const CHAR* NWL_GetIdsDate(LPCSTR lpFileName);

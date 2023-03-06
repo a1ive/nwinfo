@@ -259,3 +259,48 @@ fail:
 	*lpSize = 0;
 	return NULL;
 }
+
+const CHAR* NWL_GetIdsDate(LPCSTR lpFileName)
+{
+	static CHAR Date[] = "1453.05.29";
+	DWORD IdsSize = 0;
+	CHAR* Ids = NULL;
+	DWORD Offset = 0;
+	CHAR* Line = NULL;
+
+	strcpy_s(Date, sizeof(Date), "UNKNOWN");
+	Ids = NWL_LoadIdsToMemory(lpFileName, &IdsSize);
+	Line = IdsGetline(Ids, IdsSize, &Offset);
+	if (!Line)
+		goto out;
+
+	if (_stricmp(lpFileName, "pci.ids") == 0
+		|| _stricmp(lpFileName, "usb.ids") == 0)
+	{
+		while (Line)
+		{
+			// # Version: 2022.09.09
+			if (Line[0] == '#' && isspace(Line[1])
+				&& _strnicmp("Version:", &Line[2], 8) == 0 && isspace(Line[10])
+				&& isdigit(Line[11]) && isdigit(Line[12]) && isdigit(Line[13]) && isdigit(Line[14])
+				&& Line[15] == '.' && isdigit(Line[16]) && isdigit(Line[17])
+				&& Line[18] == '.' && isdigit(Line[19]) && isdigit(Line[20]))
+			{
+				snprintf(Date, sizeof(Date), "%c%c%c%c.%c%c.%c%c",
+					Line[11], Line[12], Line[13], Line[14],
+					Line[16], Line[17],
+					Line[19], Line[20]);
+				goto out;
+			}
+			free(Line);
+			Line = IdsGetline(Ids, IdsSize, &Offset);
+		}
+	}
+
+out:
+	if (Line)
+		free(Line);
+	if (Ids)
+		free(Ids);
+	return Date;
+}

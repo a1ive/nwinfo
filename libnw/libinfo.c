@@ -54,9 +54,9 @@ PNODE NW_Libinfo(VOID)
 		NWL_NodeAttrSet(pNode, "Driver", "NOT FOUND", 0);
 	NWL_NodeAttrSetf(pNode, "Language ID", 0, "%u", GetUserDefaultUILanguage());
 	NWL_NodeAttrSet(pNode, "Homepage", "https://github.com/a1ive/nwinfo", 0);
-	NWL_NodeAttrSet(pNode, "libcpuid", "https://github.com/anrieff/libcpuid", 0);
-	NWL_NodeAttrSet(pNode, "PCI ID", "https://pci-ids.ucw.cz/", 0);
-	NWL_NodeAttrSet(pNode, "USB ID", "http://www.linux-usb.org/usb-ids.html", 0);
+	NWL_NodeAttrSet(pNode, "libcpuid", cpuid_lib_version(), 0);
+	NWL_NodeAttrSet(pNode, "PCI ID", NWL_GetIdsDate("pci.ids"), 0);
+	NWL_NodeAttrSet(pNode, "USB ID", NWL_GetIdsDate("usb.ids"), 0);
 	NWL_NodeAttrSet(pNode, "PNP ID", "https://uefi.org/uefi-pnp-export", 0);
 	NWL_NodeAttrSet(pNode, "ACPI ID", "https://uefi.org/uefi-acpi-export", 0);
 	return pNode;
