@@ -30,6 +30,8 @@ jobs:
       run: |
         curl.exe -o pci.ids https://raw.githubusercontent.com/pciutils/pciids/master/pci.ids
         curl.exe -o usb.ids http://www.linux-usb.org/usb.ids
+        curl.exe -o pnp.ids https://uefi.org/uefi-pnp-export
+        curl.exe -o acpi.ids https://uefi.org/uefi-acpi-export
         msbuild /m /p:Configuration=Release /p:platform=x64 ${{env.SOLUTION_FILE_PATH}}
         msbuild /m /p:Configuration=Release /p:platform=x86 ${{env.SOLUTION_FILE_PATH}}
         md nwinfo
@@ -40,6 +42,8 @@ jobs:
         copy LICENSE nwinfo\LICENSE
         copy pci.ids nwinfo\pci.ids
         copy usb.ids nwinfo\usb.ids
+        copy pnp.ids nwinfo\pnp.ids
+        copy acpi.ids nwinfo\acpi.ids
         # copy winring0\WinRing0.sys nwinfo\WinRing0.sys
         # copy winring0\WinRing0x64.sys nwinfo\WinRing0x64.sys
         copy winring0\HwRwDrv.sys nwinfo\HwRwDrv.sys
