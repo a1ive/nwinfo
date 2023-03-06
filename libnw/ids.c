@@ -202,34 +202,65 @@ NWL_FindClass(PNODE nd, CHAR* Ids, DWORD IdsSize, CONST CHAR* Class, INT usb)
 	}
 }
 
+VOID
+NWL_GetPnpManufacturer(PNODE nd, CHAR* Ids, DWORD IdsSize, CONST CHAR* Code)
+{
+
+	DWORD Offset = 0;
+	CHAR* Line = NULL;
+
+	Line = IdsGetline(Ids, IdsSize, &Offset);
+	while (Line)
+	{
+		if (isalpha(Line[0]) && isalpha(Line[1]) && isalpha(Line[2]) && isspace(Line[3])
+			&& _strnicmp(Code, Line, 3) == 0)
+		{
+			NWL_NodeAttrSet(nd, "Manufacturer", Line + 4, 0);
+			free(Line);
+			return;
+		}
+		free(Line);
+		Line = IdsGetline(Ids, IdsSize, &Offset);
+	}
+	NWL_NodeAttrSet(nd, "Manufacturer", "UNKNOWN", 0);
+}
+
+static HANDLE
+GetIdsHandle(LPCSTR lpFileName)
+{
+	HANDLE Fp = INVALID_HANDLE_VALUE;
+	CHAR* FilePath = NWLC->NwBuf;
+	CHAR* p;
+	if (!GetModuleFileNameA(NULL, FilePath, MAX_PATH) || strlen(FilePath) == 0)
+	{
+		fprintf(stderr, "GetModuleFileName failed\n");
+		return INVALID_HANDLE_VALUE;
+	}
+	p = strrchr(FilePath, '\\');
+	if (!p)
+	{
+		fprintf(stderr, "Invalid file path %s\n", FilePath);
+		return INVALID_HANDLE_VALUE;
+	}
+	p++;
+	strcpy_s(p, MAX_PATH - (p - FilePath), lpFileName);
+	Fp = CreateFileA(FilePath, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+	if (Fp == NULL)
+		Fp = INVALID_HANDLE_VALUE;
+	if (Fp == INVALID_HANDLE_VALUE)
+		fprintf(stderr, "Cannot open %s\n", FilePath);
+	return Fp;
+}
+
 CHAR* NWL_LoadIdsToMemory(LPCSTR lpFileName, LPDWORD lpSize)
 {
 	HANDLE Fp = INVALID_HANDLE_VALUE;
 	CHAR* Ids = NULL;
 	DWORD dwSize = 0;
 	BOOL bRet = TRUE;
-	CHAR* FilePath = NWLC->NwBuf;
-	CHAR* p;
-	size_t i = 0;
-	if (!GetModuleFileNameA(NULL, FilePath, MAX_PATH) || strlen(FilePath) == 0)
-	{
-		fprintf(stderr, "GetModuleFileName failed\n");
-		goto fail;
-	}
-	p = strrchr(FilePath, '\\');
-	if (!p)
-	{
-		fprintf(stderr, "Invalid file path %s\n", FilePath);
-		goto fail;
-	}
-	p++;
-	strcpy_s(p, MAX_PATH - (p - FilePath), lpFileName);
-	Fp = CreateFileA(FilePath, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+	Fp = GetIdsHandle(lpFileName);
 	if (Fp == INVALID_HANDLE_VALUE)
-	{
-		fprintf(stderr, "Cannot open %s\n", FilePath);
 		goto fail;
-	}
 	dwSize = GetFileSize(Fp, NULL);
 	if (dwSize == INVALID_FILE_SIZE || dwSize == 0)
 	{
@@ -245,7 +276,7 @@ CHAR* NWL_LoadIdsToMemory(LPCSTR lpFileName, LPDWORD lpSize)
 	bRet = ReadFile(Fp, Ids, dwSize, &dwSize, NULL);
 	if (bRet == FALSE)
 	{
-		fprintf(stderr, "%s read error\n", FilePath);
+		fprintf(stderr, "%s read error\n", lpFileName);
 		goto fail;
 	}
 	CloseHandle(Fp);
@@ -263,20 +294,16 @@ fail:
 const CHAR* NWL_GetIdsDate(LPCSTR lpFileName)
 {
 	static CHAR Date[] = "1453.05.29";
-	DWORD IdsSize = 0;
-	CHAR* Ids = NULL;
-	DWORD Offset = 0;
-	CHAR* Line = NULL;
 
 	strcpy_s(Date, sizeof(Date), "UNKNOWN");
-	Ids = NWL_LoadIdsToMemory(lpFileName, &IdsSize);
-	Line = IdsGetline(Ids, IdsSize, &Offset);
-	if (!Line)
-		goto out;
 
 	if (_stricmp(lpFileName, "pci.ids") == 0
 		|| _stricmp(lpFileName, "usb.ids") == 0)
 	{
+		DWORD IdsSize = 0;
+		DWORD Offset = 0;
+		CHAR* Ids = NWL_LoadIdsToMemory(lpFileName, &IdsSize);
+		CHAR* Line = IdsGetline(Ids, IdsSize, &Offset);
 		while (Line)
 		{
 			// # Version: 2022.09.09
@@ -290,17 +317,32 @@ const CHAR* NWL_GetIdsDate(LPCSTR lpFileName)
 					Line[11], Line[12], Line[13], Line[14],
 					Line[16], Line[17],
 					Line[19], Line[20]);
-				goto out;
+				break;
 			}
 			free(Line);
 			Line = IdsGetline(Ids, IdsSize, &Offset);
 		}
+		if (Line)
+			free(Line);
+		if (Ids)
+			free(Ids);
 	}
-
-out:
-	if (Line)
-		free(Line);
-	if (Ids)
-		free(Ids);
+	else
+	{
+		FILETIME Ft = { 0 };
+		SYSTEMTIME St = { 0 };
+		HANDLE Fp = GetIdsHandle(lpFileName);
+		if (Fp != INVALID_HANDLE_VALUE)
+		{
+			if (GetFileTime(Fp, NULL, NULL, &Ft))
+			{
+				if (FileTimeToSystemTime(&Ft, &St))
+				{
+					snprintf(Date, sizeof(Date), "%04d.%02d.%02d",
+						St.wYear, St.wMonth, St.wDay);
+				}
+			}
+		}
+	}
 	return Date;
 }

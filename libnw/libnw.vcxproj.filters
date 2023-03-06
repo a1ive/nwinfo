@@ -18,9 +18,6 @@
     <ClInclude Include="format.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="pnp_id.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="spd.h">
       <Filter>头文件</Filter>
     </ClInclude>

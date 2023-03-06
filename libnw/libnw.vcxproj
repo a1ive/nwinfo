@@ -116,7 +116,6 @@
     <ClInclude Include="disk.h" />
     <ClInclude Include="format.h" />
     <ClInclude Include="libnw.h" />
-    <ClInclude Include="pnp_id.h" />
     <ClInclude Include="smart.h" />
     <ClInclude Include="smbios.h" />
     <ClInclude Include="spd.h" />

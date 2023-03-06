@@ -43,5 +43,6 @@ LPCSTR NWL_NtGetPathFromHandle(HANDLE hFile);
 
 VOID NWL_FindId(PNODE nd, CHAR* Ids, DWORD IdsSize, CONST CHAR* v, CONST CHAR* d, CONST CHAR* s, INT usb);
 VOID NWL_FindClass(PNODE nd, CHAR* Ids, DWORD IdsSize, CONST CHAR* Class, INT usb);
+VOID NWL_GetPnpManufacturer(PNODE nd, CHAR* Ids, DWORD IdsSize, CONST CHAR* Code);
 CHAR* NWL_LoadIdsToMemory(LPCSTR lpFileName, LPDWORD lpSize);
 const CHAR* NWL_GetIdsDate(LPCSTR lpFileName);

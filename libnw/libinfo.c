@@ -44,6 +44,8 @@ PNODE NW_Libinfo(VOID)
 	PNODE pNode = NWL_NodeAlloc("LIBINF", NFLG_TABLE);
 	if (NWLC->LibInfo)
 		NWL_NodeAppendChild(NWLC->NwRoot, pNode);
+	NWL_NodeAttrSet(pNode, "Build Time", __DATE__ " " __TIME__, 0);
+	NWL_NodeAttrSetf(pNode, "MSVC Version", 0, "%u", _MSC_FULL_VER);
 	if (NWLC->NwDrv)
 	{
 		NWL_NodeAttrSet(pNode, "Driver", OLS_DRIVER_NAME, 0);
@@ -57,7 +59,6 @@ PNODE NW_Libinfo(VOID)
 	NWL_NodeAttrSet(pNode, "libcpuid", cpuid_lib_version(), 0);
 	NWL_NodeAttrSet(pNode, "PCI ID", NWL_GetIdsDate("pci.ids"), 0);
 	NWL_NodeAttrSet(pNode, "USB ID", NWL_GetIdsDate("usb.ids"), 0);
-	NWL_NodeAttrSet(pNode, "PNP ID", "https://uefi.org/uefi-pnp-export", 0);
-	NWL_NodeAttrSet(pNode, "ACPI ID", "https://uefi.org/uefi-acpi-export", 0);
+	NWL_NodeAttrSet(pNode, "PNP ID", NWL_GetIdsDate("pnp.ids"), 0);
 	return pNode;
 }

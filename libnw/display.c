@@ -8,7 +8,6 @@
 
 #include "libnw.h"
 #include "utils.h"
-#include "pnp_id.h"
 
 #pragma pack(1)
 struct DetailedTimingDescriptor
@@ -63,20 +62,6 @@ struct EDID
 static const char* hz_human_sizes[6] =
 { "Hz", "kHz", "MHz", "GHz", "THz", "PHz", };
 
-static const char*
-GetPnpManufacturer(const char* Id)
-{
-	DWORD i;
-	if (!Id)
-		return "UNKNOWN";
-	for (i = 0; i < PNP_ID_NUM; i++)
-	{
-		if (strcmp(Id, PNP_ID_LIST[i].id) == 0)
-			return PNP_ID_LIST[i].vendor;
-	}
-	return Id;
-}
-
 static const CHAR*
 InterfaceToStr(UINT8 Interface)
 {
@@ -91,7 +76,7 @@ InterfaceToStr(UINT8 Interface)
 }
 
 static void
-DecodeEDID(PNODE nm, void* pData, DWORD dwSize)
+DecodeEDID(PNODE nm, void* pData, DWORD dwSize, CHAR* Ids, DWORD IdsSize)
 {
 	DWORD i;
 	struct EDID* pEDID = pData;
@@ -110,7 +95,7 @@ DecodeEDID(PNODE nm, void* pData, DWORD dwSize)
 		(CHAR)(((pEDID->Manufacturer & 0x7c00U) >> 10U) + 'A' - 1),
 		(CHAR)(((pEDID->Manufacturer & 0x3e0U) >> 5U) + 'A' - 1),
 		(CHAR)((pEDID->Manufacturer & 0x1fU) + 'A' - 1));
-	NWL_NodeAttrSet(nm, "Manufacturer", GetPnpManufacturer(Manufacturer), 0);
+	NWL_GetPnpManufacturer(nm, Ids, IdsSize, Manufacturer);
 	NWL_NodeAttrSetf(nm, "ID", 0, "%s%04X", Manufacturer, pEDID->Product);
 	NWL_NodeAttrSetf(nm, "Serial Number", 0, "%08X", pEDID->Serial);
 	NWL_NodeAttrSetf(nm, "Date", 0, "%u, Week %u", pEDID->Year + 1990, pEDID->Week & 0x7F);
@@ -160,7 +145,7 @@ DecodeEDID(PNODE nm, void* pData, DWORD dwSize)
 }
 
 static void
-GetEDID(PNODE nm, HDEVINFO devInfo, PSP_DEVINFO_DATA devInfoData)
+GetEDID(PNODE nm, HDEVINFO devInfo, PSP_DEVINFO_DATA devInfoData, CHAR* Ids, DWORD IdsSize)
 {
 	HKEY hDevRegKey;
 	LSTATUS lRet;
@@ -185,7 +170,7 @@ GetEDID(PNODE nm, HDEVINFO devInfo, PSP_DEVINFO_DATA devInfoData)
 	lRet = RegGetValueA(hDevRegKey, NULL, "EDID", RRF_RT_REG_BINARY, NULL, EDIDdata, &EDIDsize);
 	if (lRet == ERROR_SUCCESS || lRet == ERROR_MORE_DATA)
 	{
-		DecodeEDID(nm, EDIDdata, EDIDsize);
+		DecodeEDID(nm, EDIDdata, EDIDsize, Ids, IdsSize);
 	}
 	RegCloseKey(hDevRegKey);
 }
@@ -197,6 +182,8 @@ PNODE NW_Edid(VOID)
 	DWORD i = 0;
 	SP_DEVINFO_DATA DeviceInfoData = { .cbSize = sizeof(SP_DEVINFO_DATA) };
 	DWORD Flags = DIGCF_PRESENT | DIGCF_ALLCLASSES;
+	CHAR* Ids = NULL;
+	DWORD IdsSize = 0;
 	if (NWLC->EdidInfo)
 		NWL_NodeAppendChild(NWLC->NwRoot, node);
 	Info = SetupDiGetClassDevsExA(NULL, "DISPLAY", NULL, Flags, NULL, NULL, NULL);
@@ -205,11 +192,13 @@ PNODE NW_Edid(VOID)
 		fprintf(stderr, "SetupDiGetClassDevs failed.\n");
 		return node;
 	}
+	Ids = NWL_LoadIdsToMemory("pnp.ids", &IdsSize);
 	for (i = 0; SetupDiEnumDeviceInfo(Info, i, &DeviceInfoData); i++)
 	{
 		PNODE nm = NWL_NodeAppendNew(node, "Monitor", NFLG_TABLE_ROW);
-		GetEDID(nm, Info, &DeviceInfoData);
+		GetEDID(nm, Info, &DeviceInfoData, Ids, IdsSize);
 	}
 	SetupDiDestroyDeviceInfoList(Info);
+	free(Ids);
 	return node;
 }
