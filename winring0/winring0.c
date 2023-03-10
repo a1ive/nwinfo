@@ -14,6 +14,9 @@
 
 struct msr_driver_t
 {
+	LPCSTR driver_name;
+	LPCSTR driver_id;
+	LPCSTR driver_obj;
 	CHAR driver_path[MAX_PATH + 1];
 	SC_HANDLE scManager;
 	SC_HANDLE scDriver;
@@ -31,12 +34,12 @@ static BOOL LoadDriver(struct msr_driver_t* drv)
 	if (drv->scManager == NULL)
 		return FALSE;
 retry:
-	drv->scDriver = CreateServiceA(drv->scManager, OLS_DRIVER_ID, OLS_DRIVER_ID,
+	drv->scDriver = CreateServiceA(drv->scManager, drv->driver_id, drv->driver_id,
 		SERVICE_ALL_ACCESS, SERVICE_KERNEL_DRIVER, SERVICE_DEMAND_START, SERVICE_ERROR_IGNORE,
 		drv->driver_path, NULL, NULL, NULL, NULL, NULL);
 	if (drv->scDriver == NULL)
 	{
-		drv->scDriver = OpenServiceA(drv->scManager, OLS_DRIVER_ID, SERVICE_ALL_ACCESS);
+		drv->scDriver = OpenServiceA(drv->scManager, drv->driver_id, SERVICE_ALL_ACCESS);
 		if (drv->scDriver == NULL)
 		{
 			CloseServiceHandle(drv->scManager);
@@ -84,6 +87,18 @@ static BOOL is_running_x64(void)
 #endif
 }
 
+static BOOL is_driver_exist(LPCSTR name)
+{
+	HANDLE hFile = INVALID_HANDLE_VALUE;
+	CHAR cchName[64];
+	snprintf(cchName, sizeof(cchName) - 1, "%s%s.sys", name, is_running_x64() ? "x64" : "");
+	hFile = CreateFileA(cchName, GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING, 0, NULL);
+	if (hFile == INVALID_HANDLE_VALUE)
+		return FALSE;
+	CloseHandle(hFile);
+	return TRUE;
+}
+
 static int extract_driver(struct msr_driver_t* driver)
 {
 	size_t i = 0;
@@ -99,8 +114,22 @@ static int extract_driver(struct msr_driver_t* driver)
 			break;
 		}
 	}
+	if (is_driver_exist(OLS_DRIVER_NAME))
+	{
+		driver->driver_id = OLS_DRIVER_ID;
+		driver->driver_name = OLS_DRIVER_NAME;
+		driver->driver_obj = OLS_DRIVER_OBJ;
+	}
+	else if (is_driver_exist(OLS_ALT_DRIVER_NAME))
+	{
+		driver->driver_id = OLS_ALT_DRIVER_ID;
+		driver->driver_name = OLS_ALT_DRIVER_NAME;
+		driver->driver_obj = OLS_ALT_DRIVER_OBJ;
+	}
+	else
+		return 0;
 	snprintf(driver->driver_path, MAX_PATH, "%s\\%s%s.sys", driver->driver_path,
-		OLS_DRIVER_NAME, is_running_x64() ? "x64" : "");
+		driver->driver_name, is_running_x64() ? "x64" : "");
 	return 1;
 }
 
@@ -123,7 +152,7 @@ struct msr_driver_t* cpu_msr_driver_open(void)
 	}
 	status = LoadDriver(drv);
 	if (status) {
-		drv->hhDriver = CreateFileA("\\\\.\\"OLS_DRIVER_ID,
+		drv->hhDriver = CreateFileA(drv->driver_obj,
 			GENERIC_WRITE | GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE,
 			NULL, OPEN_EXISTING, 0, NULL);
 		if (drv->hhDriver == INVALID_HANDLE_VALUE)
@@ -297,7 +326,7 @@ int cpu_msr_driver_close(struct msr_driver_t* drv)
 		drv->hhDriver = NULL;
 		drv->scManager = OpenSCManagerA(NULL, NULL, SC_MANAGER_ALL_ACCESS);
 		if (drv->scManager)
-			drv->scDriver = OpenServiceA(drv->scManager, OLS_DRIVER_ID, SERVICE_ALL_ACCESS);
+			drv->scDriver = OpenServiceA(drv->scManager, drv->driver_obj, SERVICE_ALL_ACCESS);
 	}
 	if (drv->scDriver) {
 		ControlService(drv->scDriver, SERVICE_CONTROL_STOP, &srvStatus);

@@ -20,32 +20,14 @@
 
 #define OLS_TYPE 40000
 
-//-----------------------------------------------------------------------------
-//
-// Version Information
-//
-//-----------------------------------------------------------------------------
-#ifdef USE_WINRING0_DRIVER
-#define OLS_DRIVER_ID							"WinRing0_1_2_0"
-#define OLS_DRIVER_NAME							"WinRing0"
-#else
+// HwRwDrv.sys
 #define OLS_DRIVER_ID							"HwRwDrv"
 #define OLS_DRIVER_NAME							"HwRwDrv"
-#endif
-
-#define OLS_DRIVER_INSTALL			1
-#define OLS_DRIVER_REMOVE			2
-#define OLS_DRIVER_SYSTEM_INSTALL	3
-#define	OLS_DRIVER_SYSTEM_UNINSTALL	4
-
-#define OLS_DRIVER_MAJOR_VERSION				1
-#define OLS_DRIVER_MINOR_VERSION				2
-#define OLS_DRIVER_REVISION						0
-#define OLS_DRIVER_RELESE						5
-
-#define OLS_DRIVER_VERSION \
-	((OLS_DRIVER_MAJOR_VERSION << 24) | (OLS_DRIVER_MINOR_VERSION << 16) \
-	| (OLS_DRIVER_REVISION << 8) | OLS_DRIVER_RELESE) 
+#define OLS_DRIVER_OBJ							"\\\\.\\HwRwDrv"
+// WinRing0.sys
+#define OLS_ALT_DRIVER_ID						"WinRing0_1_2_0"
+#define OLS_ALT_DRIVER_NAME						"WinRing0"
+#define OLS_ALT_DRIVER_OBJ						"\\\\.\\WinRing0_1_2_0"
 
 // The IOCTL function codes from 0x800 to 0xFFF are for customer use.
 #define IOCTL_OLS_GET_DRIVER_VERSION \

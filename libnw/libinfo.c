@@ -7,6 +7,9 @@
 
 struct msr_driver_t
 {
+	LPCSTR driver_name;
+	LPCSTR driver_id;
+	LPCSTR driver_obj;
 	CHAR driver_path[MAX_PATH + 1];
 	SC_HANDLE scManager;
 	SC_HANDLE scDriver;
@@ -48,7 +51,7 @@ PNODE NW_Libinfo(VOID)
 	NWL_NodeAttrSetf(pNode, "MSVC Version", 0, "%u", _MSC_FULL_VER);
 	if (NWLC->NwDrv)
 	{
-		NWL_NodeAttrSet(pNode, "Driver", OLS_DRIVER_NAME, 0);
+		NWL_NodeAttrSet(pNode, "Driver", NWLC->NwDrv->driver_name, 0);
 		NWL_NodeAttrSet(pNode, "Driver Path", NWLC->NwDrv->driver_path, 0);
 		PrintDriverVerison(pNode, NWLC->NwDrv);
 	}
