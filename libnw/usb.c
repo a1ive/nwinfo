@@ -27,6 +27,7 @@ ParseHwid(PNODE nd, CHAR* Ids, DWORD IdsSize, const CHAR *Hwid)
 	}
 	else
 		snprintf(VendorID, 5, "%s", Hwid + 8);
+	NWL_NodeAttrSet(nd, "Vendor ID", VendorID, 0);
 	if (_strnicmp(Hwid + 12, "&PID_", 5) != 0)
 	{
 		CHAR* p = strstr(Hwid, "PID");
@@ -37,6 +38,7 @@ ParseHwid(PNODE nd, CHAR* Ids, DWORD IdsSize, const CHAR *Hwid)
 	}
 	else
 		snprintf(DeviceID, 5, "%s", Hwid + 17);
+	NWL_NodeAttrSet(nd, "Device ID", DeviceID, 0);
 	NWL_FindId(nd, Ids, IdsSize, VendorID, DeviceID, NULL, 1);
 	return 1;
 }
@@ -65,7 +67,7 @@ ParseHwClass(PNODE nd, CHAR* Ids, DWORD IdsSize, const CHAR* BufferHw)
 		if (len >= 31 + ofs && strncmp(&BufferHw[24 + ofs], "&Prot_", 6) == 0)
 			memcpy(&HwClass[4], &BufferHw[30 + ofs], 2);
 	}
-	//NWL_NodeAttrSet(nd, "USB Class", HwClass, 0);
+	NWL_NodeAttrSet(nd, "Class Code", HwClass, 0);
 	NWL_FindClass(nd, Ids, IdsSize, HwClass, 1);
 }
 
