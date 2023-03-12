@@ -624,7 +624,7 @@ int cpuid_get_all_raw_data(struct cpu_raw_data_array_t* data)
 	bool affinity_saved = save_cpu_affinity();
 
 	cpu_raw_data_array_t_constructor(data, true);
-	while (set_cpu_affinity(logical_cpu)) {
+	while (set_cpu_affinity(logical_cpu) || logical_cpu == 0) {
 		cpuid_grow_raw_data_array(data, logical_cpu + 1);
 		raw_ptr = &data->raw[logical_cpu];
 		cur_error = cpuid_get_raw_data(raw_ptr);
