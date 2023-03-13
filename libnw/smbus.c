@@ -6,60 +6,11 @@
 #include "utils.h"
 #include "spd.h"
 
-#define PCI_CONF_TYPE_NONE 0
-#define PCI_CONF_TYPE_1    1
-#define PCI_CONF_TYPE_2    2
-
-#define PCI_CLASS_DEVICE      0x0a
-#define PCI_CLASS_BRIDGE_HOST 0x0600
-
-static int smbdev = 0, smbfun = 0;
-static unsigned short smbusbase = 0;
 static unsigned char* spd_raw = NULL;
-
-#define I2C_WRITE   0
-#define I2C_READ    1
-
-#define SMBHSTSTS  smbusbase
-#define SMBHSTCNT  smbusbase + 2
-#define SMBHSTCMD  smbusbase + 3
-#define SMBHSTADD  smbusbase + 4
-#define SMBHSTDAT0 smbusbase + 5
-#define SMBHSTDAT1 smbusbase + 6 
-#define SMBBLKDAT  smbusbase + 7
-#define SMBPEC     smbusbase + 8
-#define SMBAUXSTS  smbusbase + 12
-#define SMBAUXCTL  smbusbase + 13
-
-#define SMBHSTSTS_BYTE_DONE     0x80
-#define SMBHSTSTS_INUSE_STS     0x40
-#define SMBHSTSTS_SMBALERT_STS  0x20
-#define SMBHSTSTS_FAILED        0x10
-#define SMBHSTSTS_BUS_ERR       0x08
-#define SMBHSTSTS_DEV_ERR       0x04
-#define SMBHSTSTS_INTR          0x02
-#define SMBHSTSTS_HOST_BUSY     0x01
-
-#define SMBHSTCNT_QUICK             0x00
-#define SMBHSTCNT_BYTE              0x04
-#define SMBHSTCNT_BYTE_DATA         0x08
-#define SMBHSTCNT_WORD_DATA         0x0C
-#define SMBHSTCNT_BLOCK_DATA        0x14
-#define SMBHSTCNT_I2C_BLOCK_DATA    0x18
-#define SMBHSTCNT_LAST_BYTE         0x20
-#define SMBHSTCNT_START             0x40
-
-#define SPD5_MR11 11
-
-static unsigned char pci_conf_type = PCI_CONF_TYPE_NONE;
-
-#define PCI_CONF1_ADDRESS(bus, dev, fn, reg) \
-	(0x80000000 | (bus << 16) | (dev << 11) | (fn << 8) | (reg & ~3))
-
-#define PCI_CONF2_ADDRESS(dev, reg)	(unsigned short)(0xC000 | (dev << 8) | reg)
-
-#define PCI_CONF3_ADDRESS(bus, dev, fn, reg) \
-	(0x80000000 | (((reg >> 8) & 0xF) << 24) | (bus << 16) | ((dev & 0x1F) << 11) | (fn << 8) | (reg & 0xFF))
+static uint16_t smbus_vid = 0xFFFF;
+static uint16_t smbus_did = 0xFFFF;
+static uint32_t smbus_addr = 0xFFFFFFFF;
+static uint16_t smbus_base = 0;
 
 static void usleep(unsigned int usec)
 {
@@ -76,202 +27,68 @@ static void usleep(unsigned int usec)
 	CloseHandle(timer);
 }
 
-static int
-pci_conf_read(unsigned bus, unsigned dev, unsigned fn, unsigned reg, unsigned len, unsigned long* value)
+static uint16_t piix4_get_smbus_base(uint8_t addr)
 {
-	int result;
-
-	if (!value || (bus > 255) || (dev > 31) || (fn > 7) ||
-		(reg > 255 && pci_conf_type != PCI_CONF_TYPE_1))
-		return -1;
-	result = -2;
-	switch (pci_conf_type) {
-	case PCI_CONF_TYPE_1:
-		if (reg < 256) {
-			io_outl(NWLC->NwDrv, 0xCF8, PCI_CONF1_ADDRESS(bus, dev, fn, reg));
-		}
-		else {
-			io_outl(NWLC->NwDrv, 0xCF8, PCI_CONF3_ADDRESS(bus, dev, fn, reg));
-		}
-		switch (len) {
-		case 1:
-			*value = io_inb(NWLC->NwDrv, 0xCFC + (reg & 3));
-			result = 0;
-			break;
-		case 2:
-			*value = io_inw(NWLC->NwDrv, 0xCFC + (reg & 2));
-			result = 0;
-			break;
-		case 4:
-			*value = io_inl(NWLC->NwDrv, 0xCFC);
-			result = 0;
-			break;
-		}
-		break;
-	case PCI_CONF_TYPE_2:
-		io_outb(NWLC->NwDrv, 0xCF8, 0xF0 | (fn << 1));
-		io_outb(NWLC->NwDrv, 0xCFA, bus);
-
-		switch (len) {
-		case 1:
-			*value = io_inb(NWLC->NwDrv, PCI_CONF2_ADDRESS(dev, reg));
-			result = 0;
-			break;
-		case 2:
-			*value = io_inw(NWLC->NwDrv, PCI_CONF2_ADDRESS(dev, reg));
-			result = 0;
-			break;
-		case 4:
-			*value = io_inl(NWLC->NwDrv, PCI_CONF2_ADDRESS(dev, reg));
-			result = 0;
-			break;
-		}
-		io_outb(NWLC->NwDrv, 0xCF8, 0);
-		break;
-	}
-	return result;
-}
-
-static int
-pci_conf_write(unsigned bus, unsigned dev, unsigned fn, unsigned reg, unsigned len, unsigned long value)
-{
-	int result;
-
-	if (!value || (bus > 255) || (dev > 31) || (fn > 7) ||
-		(reg > 255 && pci_conf_type != PCI_CONF_TYPE_1))
-		return -1;
-	result = -2;
-	switch (pci_conf_type)
-	{
-	case PCI_CONF_TYPE_1:
-		if (reg < 256) {
-			io_outl(NWLC->NwDrv, 0xCF8, PCI_CONF1_ADDRESS(bus, dev, fn, reg));
-		}
-		else {
-			io_outl(NWLC->NwDrv, 0xCF8, PCI_CONF3_ADDRESS(bus, dev, fn, reg));
-		}
-		switch (len) {
-		case 1:
-			io_outb(NWLC->NwDrv, 0xCFC + (reg & 3), (uint8_t)value);
-			result = 0;
-			break;
-		case 2:
-			io_outw(NWLC->NwDrv, 0xCFC + (reg & 2), (uint16_t)value);
-			result = 0;
-			break;
-		case 4:
-			io_outl(NWLC->NwDrv, 0xCFC, (uint32_t)value);
-			result = 0;
-			break;
-		}
-		break;
-	case PCI_CONF_TYPE_2:
-		io_outb(NWLC->NwDrv, 0xCF8, 0xF0 | (fn << 1));
-		io_outb(NWLC->NwDrv, 0xCFA, bus);
-
-		switch (len) {
-		case 1:
-			io_outb(NWLC->NwDrv, PCI_CONF2_ADDRESS(dev, reg), (uint8_t)value);
-			result = 0;
-			break;
-		case 2:
-			io_outw(NWLC->NwDrv, PCI_CONF2_ADDRESS(dev, reg), (uint16_t)value);
-			result = 0;
-			break;
-		case 4:
-			io_outl(NWLC->NwDrv, PCI_CONF2_ADDRESS(dev, reg), (uint32_t)value);
-			result = 0;
-			break;
-		}
-		io_outb(NWLC->NwDrv, 0xCF8, 0);
-		break;
-	}
-	return result;
-}
-
-static int
-pci_sanity_check(void)
-{
-	unsigned long value;
-	int result;
-	result = pci_conf_read(0, 0, 0, PCI_CLASS_DEVICE, 2, &value);
-	if (result == 0) {
-		result = -1;
-		if (value == PCI_CLASS_BRIDGE_HOST)
-			result = 0;
-	}
-	return result;
-}
-
-static int
-pci_check_direct(void)
-{
-	unsigned char tmpCFB;
-	unsigned int tmpCF8;
-	struct cpu_raw_data_t raw = { 0 };
-	struct cpu_id_t data = { 0 };
-
-	if (cpuid_get_raw_data(&raw) < 0)
-		goto skip_amd;
-	if (cpu_identify(&raw, &data) < 0)
-		goto skip_amd;
-	if (data.vendor_str[0] == 'A' && data.family == 0xF) {
-		pci_conf_type = PCI_CONF_TYPE_1;
+	uint16_t val = pci_conf_read16(NWLC->NwDrv, smbus_addr, addr);
+	if (val == 0xFFFF)
 		return 0;
-	}
-skip_amd:
-	/* Check if configuration type 1 works. */
-	pci_conf_type = PCI_CONF_TYPE_1;
-	tmpCFB = io_inb(NWLC->NwDrv, 0xCFB);
-	io_outb(NWLC->NwDrv, 0xCFB, 0x01);
-	tmpCF8 = io_inl(NWLC->NwDrv, 0xCF8);
-	io_outl(NWLC->NwDrv, 0xCF8, 0x80000000);
-	if ((io_inl(NWLC->NwDrv, 0xCF8) == 0x80000000) && (pci_sanity_check() == 0)) {
-		io_outl(NWLC->NwDrv, 0xCF8, tmpCF8);
-		io_outb(NWLC->NwDrv, 0xCFB, tmpCFB);
-		return 0;
-	}
-	io_outl(NWLC->NwDrv, 0xCF8, tmpCF8);
-	/* Check if configuration type 2 works. */
-	pci_conf_type = PCI_CONF_TYPE_2;
-	io_outb(NWLC->NwDrv, 0xCFB, 0x00);
-	io_outb(NWLC->NwDrv, 0xCF8, 0x00);
-	io_outb(NWLC->NwDrv, 0xCFA, 0x00);
-	if (io_inb(NWLC->NwDrv, 0xCF8) == 0x00 && io_inb(NWLC->NwDrv, 0xCFA) == 0x00 && (pci_sanity_check() == 0)) {
-		io_outb(NWLC->NwDrv, 0xCFB, tmpCFB);
-		return 0;
-	}
-
-	io_outb(NWLC->NwDrv, 0xCFB, tmpCFB);
-
-	/* Nothing worked return an error */
-	pci_conf_type = PCI_CONF_TYPE_NONE;
-	return -1;
+	return (val & 0xFFF0);
 }
 
-static void ich5_get_smb(void)
+static uint16_t ichx_get_smbus_base(void)
 {
-	unsigned long x = 0;
-	unsigned long tmp = 0;
-	int res;
-	smbusbase = 0;
-	res = pci_conf_read(0, smbdev, smbfun, 0x20, 2, &x);
-	if (res != 0)
-		return;
-	smbusbase = (unsigned short)x & 0xFFFE;
-	res = pci_conf_read(0, smbdev, smbfun, 0x40, 1, &tmp);
-	if (res == 0 && (tmp & 4) == 0)
-		res = pci_conf_write(0, smbdev, smbfun, 0x40, 1, tmp | 0x04);
-	if (res != 0)
-		return;
+	uint8_t tmp;
+	uint16_t val = pci_conf_read16(NWLC->NwDrv, smbus_addr, 0x20);
+	if (val == 0xFFFF)
+		return 0;
+	val &= 0xFFFE;
+	tmp = pci_conf_read8(NWLC->NwDrv, smbus_addr, 0x40);
+	if ((tmp & 4) == 0)
+		pci_conf_write8(NWLC->NwDrv, smbus_addr, 0x40, tmp | 0x04);
 	io_outb(NWLC->NwDrv, SMBHSTSTS, io_inb(NWLC->NwDrv, SMBHSTSTS) & 0x1F);
 	usleep(1000);
+	return val;
 }
 
-static uint8_t ich5_process(void)
+static uint16_t fch_get_smbus_base(void)
+{
+	uint16_t pm_reg;
+	io_outb(NWLC->NwDrv, AMD_INDEX_IO_PORT, AMD_PM_INDEX + 1);
+	pm_reg = io_inb(NWLC->NwDrv, AMD_DATA_IO_PORT) << 8;
+	io_outb(NWLC->NwDrv, AMD_INDEX_IO_PORT, AMD_PM_INDEX);
+	pm_reg |= io_inb(NWLC->NwDrv, AMD_DATA_IO_PORT);
+	// FIXME: Read 0xFED80300
+	if (pm_reg == 0xFFFF)
+		return 0;
+	if ((pm_reg & 0x10) == 0)
+		return 0;
+	return (pm_reg & 0xFF00);
+}
+
+static uint16_t sbx00_get_smbus_base(void)
+{
+	uint16_t pm_reg;
+	io_outb(NWLC->NwDrv, AMD_INDEX_IO_PORT, AMD_SMBUS_BASE_REG + 1);
+	pm_reg = io_inb(NWLC->NwDrv, AMD_DATA_IO_PORT) << 8;
+	io_outb(NWLC->NwDrv, AMD_INDEX_IO_PORT, AMD_SMBUS_BASE_REG);
+	pm_reg |= io_inb(NWLC->NwDrv, AMD_DATA_IO_PORT) & 0xE0;
+	if (pm_reg != 0xFFE0)
+		return pm_reg;
+	return 0;
+}
+
+static uint16_t nv_get_smbus_base(void)
+{
+	uint32_t reg = NV_OLD_SMBUS_ADR_REG;
+	if (smbus_did >= 0x0200)
+		reg = NV_SMBUS_ADR_REG;
+	return (pci_conf_read16(NWLC->NwDrv, smbus_addr, reg) & 0xFFFC);
+}
+
+static uint8_t ichx_process(void)
 {
 	uint8_t status;
-	uint16_t timeout = 0;
+	uint16_t i = 0;
 
 	status = io_inb(NWLC->NwDrv, SMBHSTSTS) & 0x1F;
 
@@ -279,7 +96,8 @@ static uint8_t ich5_process(void)
 	{
 		io_outb(NWLC->NwDrv, SMBHSTSTS, status);
 		usleep(500);
-		if ((status = (0x1F & io_inb(NWLC->NwDrv, SMBHSTSTS))) != 0x00)
+		status = 0x1F & io_inb(NWLC->NwDrv, SMBHSTSTS);
+		if (status != 0x00)
 			return 1;
 	}
 
@@ -290,9 +108,9 @@ static uint8_t ich5_process(void)
 	{
 		usleep(500);
 		status = io_inb(NWLC->NwDrv, SMBHSTSTS);
-	} while ((status & 0x01) && (timeout++ < 100));
+	} while ((status & 0x01) && (i++ < 100));
 
-	if (timeout >= 100)
+	if (i >= 100)
 		return 2;
 
 	if (status & 0x1C)
@@ -304,196 +122,224 @@ static uint8_t ich5_process(void)
 	return 0;
 }
 
-#if 0
-static int ich5_smb_check(unsigned char adr)
+static void ichx_ddr4_set_page(uint8_t page)
 {
-	io_outb(NWLC->NwDrv, SMBHSTSTS, 0xff);
-	while ((io_inb(NWLC->NwDrv, SMBHSTSTS) & 0x40) != 0x40);
-	io_outb(NWLC->NwDrv, SMBHSTADD, (adr << 1) | 0x01);
-	io_outb(NWLC->NwDrv, SMBHSTCMD, 0x00);
-	io_outb(NWLC->NwDrv, SMBHSTCNT, 0x48);
-	while (((io_inb(NWLC->NwDrv, SMBHSTSTS) & 0x44) != 0x44)
-		&& ((io_inb(NWLC->NwDrv, SMBHSTSTS) & 0x42) != 0x42));
-	if ((io_inb(NWLC->NwDrv, SMBHSTSTS) & 0x44) == 0x44)
-		return -1;
-	if ((io_inb(NWLC->NwDrv, SMBHSTSTS) & 0x42) == 0x42)
-		return 0;
-	return -1;
-}
-#endif
-
-static unsigned char ich5_smb_read_byte(unsigned char adr, unsigned char cmd)
-{
-	io_outb(NWLC->NwDrv, SMBHSTADD, (adr << 1) | I2C_READ);
-	io_outb(NWLC->NwDrv, SMBHSTCMD, cmd);
+	if (page > 1)
+		return;
+	io_outb(NWLC->NwDrv, SMBHSTADD, 0x6C + (page << 1));
 	io_outb(NWLC->NwDrv, SMBHSTCNT, SMBHSTCNT_BYTE_DATA);
-	if (ich5_process() == 0)
-		return io_inb(NWLC->NwDrv, SMBHSTDAT0);
-	else
-		return 0xFF;
+	ichx_process();
 }
 
-static void ich5_smb_switch_page(unsigned page)
+static void ichx_ddr5_set_page(uint8_t index, uint8_t page)
 {
-	uint8_t value = 0x6c;
-	if (page)
-		value = 0x6e;
-	io_outb(NWLC->NwDrv, SMBHSTADD, value | I2C_WRITE);
+	if (page >= 8) // offset = 1024 / 128
+		return;
+	io_outb(NWLC->NwDrv, SMBHSTADD, index << 1);
+	io_outb(NWLC->NwDrv, SMBHSTCMD, SPD5_MR11 & 0x7F);
+	io_outb(NWLC->NwDrv, SMBHSTDAT0, page);
 	io_outb(NWLC->NwDrv, SMBHSTCNT, SMBHSTCNT_BYTE_DATA);
-	ich5_process();
+	ichx_process();
 }
 
-struct pci_smbus_controller
+static uint8_t ichx_spd_read_byte(uint8_t type, uint8_t index, uint16_t offset)
 {
-	unsigned vendor;
-	unsigned device;
-	char* name;
-	void (*get_adr)(void);
-};
+	index += 0x50;
 
-static struct pci_smbus_controller smbcontrollers[] =
-{
-	// Intel SMBUS
-	{0x8086, 0x18DF, "Intel CDF",			ich5_get_smb},
-	{0x8086, 0x9DA3, "Intel Cannon Lake",	ich5_get_smb},
-	{0x8086, 0xA323, "Intel Cannon Lake",	ich5_get_smb},
-	{0x8086, 0x31D4, "Intel GL",			ich5_get_smb},
-	{0x8086, 0xA2A3, "Intel 200/Z370",		ich5_get_smb},
-	{0x8086, 0xA223, "Intel Lewisburg",		ich5_get_smb},
-	{0x8086, 0xA1A3, "Intel C620",			ich5_get_smb},
-	{0x8086, 0x5AD4, "Intel Broxton",		ich5_get_smb},
-	{0x8086, 0x19DF, "Intel Atom C3000",	ich5_get_smb},
-	{0x8086, 0x9D23, "Intel Sunrise Point",	ich5_get_smb},
-	{0x8086, 0x0F12, "Intel BayTrail",		ich5_get_smb},
-	{0x8086, 0x9CA2, "Intel Wildcat Point",	ich5_get_smb},
-	{0x8086, 0x8CA2, "Intel Wildcat Point",	ich5_get_smb},
-	{0x8086, 0x23B0, "Intel DH895XCC",		ich5_get_smb},
-	{0x8086, 0x8D22, "Intel C610/X99",		ich5_get_smb},
-	{0x8086, 0x8D7D, "Intel C610/X99 B0",	ich5_get_smb},
-	{0x8086, 0x8D7E, "Intel C610/X99 B1",	ich5_get_smb},
-	{0x8086, 0x8D7F, "Intel C610/X99 B2",	ich5_get_smb},
-	{0x8086, 0x1F3C, "Intel Atom C2000",	ich5_get_smb},
-	{0x8086, 0x2330, "Intel DH89xxCC",		ich5_get_smb},
-	{0x8086, 0x1D22, "Intel C600/X79",		ich5_get_smb},
-	{0x8086, 0x1D70, "Intel C600/X79 B0",	ich5_get_smb},
-	{0x8086, 0x1D71, "Intel C600/X79 B1",	ich5_get_smb},
-	{0x8086, 0x1D72, "Intel C600/X79 B2",	ich5_get_smb},
-	{0x8086, 0x2483, "Intel 82801CA/CAM",	ich5_get_smb},
-	{0x8086, 0x2443, "Intel 82801BA/BAM",	ich5_get_smb},
-	{0x8086, 0x2423, "Intel 82801AB",		ich5_get_smb},
-	{0x8086, 0x2413, "Intel 82801AA",		ich5_get_smb},
-	{0x8086, 0xA123, "Intel SKY",			ich5_get_smb},
-	{0x8086, 0x9C22, "Intel HSW-ULT",		ich5_get_smb},
-	{0x8086, 0x8C22, "Intel HSW",			ich5_get_smb},
-	{0x8086, 0x1E22, "Intel Z77",			ich5_get_smb},
-	{0x8086, 0x1C22, "Intel P67",			ich5_get_smb},
-	{0x8086, 0x3B30, "Intel P55",			ich5_get_smb},
-	{0x8086, 0x3A60, "Intel ICH10B",		ich5_get_smb},
-	{0x8086, 0x3A30, "Intel ICH10R",		ich5_get_smb},
-	{0x8086, 0x2930, "Intel ICH9",			ich5_get_smb},
-	{0x8086, 0x283E, "Intel ICH8",			ich5_get_smb},
-	{0x8086, 0x27DA, "Intel ICH7",			ich5_get_smb},
-	{0x8086, 0x266A, "Intel ICH6",			ich5_get_smb},
-	{0x8086, 0x24D3, "Intel ICH5",			ich5_get_smb},
-	{0x8086, 0x24C3, "Intel ICH4",			ich5_get_smb},
-	{0x8086, 0x25A4, "Intel 6300ESB",		ich5_get_smb},
-	{0x8086, 0x269B, "Intel ESB2",			ich5_get_smb},
-	{0x8086, 0x5032, "Intel EP80579",		ich5_get_smb},
-	{0x8086, 0x0f12, "Intel E3800",			ich5_get_smb},
-	{0x8086, 0x2292, "Intel Braswell",		ich5_get_smb},
-	{0x8086, 0x1BC9, "Intel Emmitsburg",	ich5_get_smb},
-	{0x8086, 0x34A3, "Intel Ice Lake-LP",	ich5_get_smb},
-	{0x8086, 0x38A3, "Intel Ice Lake-N",	ich5_get_smb},
-	{0x8086, 0x02A3, "Intel Comet Lake",	ich5_get_smb},
-	{0x8086, 0x06A3, "Intel Comet Lake-H",	ich5_get_smb},
-	{0x8086, 0x4B23, "Intel Elkhart Lake",	ich5_get_smb},
-	{0x8086, 0xA0A3, "Intel Tiger Lake-LP",	ich5_get_smb},
-	{0x8086, 0x43A3, "Intel Tiger Lake-H",	ich5_get_smb},
-	{0x8086, 0x4DA3, "Intel Jasper Lake",	ich5_get_smb},
-	{0x8086, 0xA3A3, "Intel Comet Lake-V",	ich5_get_smb},
-	{0x8086, 0x7AA3, "Intel Alder Lake-S",	ich5_get_smb},
-	{0x8086, 0x51A3, "Intel Alder Lake-P",	ich5_get_smb},
-	{0x8086, 0x54A3, "Intel Alder Lake-M",	ich5_get_smb},
-	{0x8086, 0x7A23, "Intel Raptor Lake-S", ich5_get_smb},
-	{0, 0, "", NULL}
-};
-
-static int find_smb_controller(void)
-{
-	int i = 0;
-	int result = 0;
-	unsigned long valuev, valued;
-
-	for (smbdev = 0; smbdev < 32; smbdev++) {
-		for (smbfun = 0; smbfun < 8; smbfun++) {
-			result = pci_conf_read(0, smbdev, smbfun, 0, 2, &valuev);
-			if (result != 0 || valuev == 0xFFFF)
-				continue;
-			result = pci_conf_read(0, smbdev, smbfun, 2, 2, &valued);
-			if (result != 0)
-				continue;
-			//printf("PCI %04X %04X\n", valuev, valued);
-			for (i = 0; smbcontrollers[i].vendor > 0; i++) {
-				if (valuev == smbcontrollers[i].vendor && valued == smbcontrollers[i].device)
-					return i;
-			}
-		}
+	switch (type)
+	{
+	case 4:
+	case 5:
+	case 6:
+	case 7:
+	case 8:
+	case 9:
+	case 10:
+	case 11:
+	case 15:
+		if (offset > 0xFF)
+			return 0xFF;
+		break;
+	case 12: /* DDR4 */
+	case 14:
+	case 16:
+		if (offset > 0x1FF)
+			return 0xFF;
+		ichx_ddr4_set_page(offset >> 8);
+		offset &= 0xFF;
+		break;
+	case 18: /* DDR5 */
+		ichx_ddr5_set_page(index, offset >> 7);
+		offset &= 0x7F;
+		offset |= 0x80;
+		break;
+	default:
+		if (offset > 0xFF)
+			return 0xFF;
+		ichx_ddr4_set_page(0);
+		break;
 	}
-	return -1;
+
+	io_outb(NWLC->NwDrv, SMBHSTADD, (index << 1) | 0x01);
+	io_outb(NWLC->NwDrv, SMBHSTCMD, (uint8_t) offset);
+	io_outb(NWLC->NwDrv, SMBHSTCNT, SMBHSTCNT_BYTE_DATA);
+
+	if (ichx_process() == 0)
+		return io_inb(NWLC->NwDrv, SMBHSTDAT0);
+	return 0xFF;
 }
 
-static int smbus_index = -1;
+static uint8_t nv_spd_read_byte(uint8_t index, uint16_t offset)
+{
+	int i;
+	if (offset > 0xFF)
+		return 0xFF;
+	index += 0x50;
+	io_outb(NWLC->NwDrv, NVSMBADD, index << 1);
+	io_outb(NWLC->NwDrv, NVSMBCMD, (uint8_t)offset);
+	io_outb(NWLC->NwDrv, NVSMBCNT, NVSMBCNT_BYTE_DATA | NVSMBCNT_READ);
+	for (i = 500; i > 0; i--) 
+	{
+		usleep(50);
+		if (io_inb(NWLC->NwDrv, NVSMBCNT) == 0)
+			break;
+	}
+	if (i == 0 || io_inb(NWLC->NwDrv, NVSMBSTS) & NVSMBSTS_STATUS)
+		return 0xFF;
+	return io_inb(NWLC->NwDrv, NVSMBDAT(0));
+}
+
+static uint8_t spd_read_byte(uint8_t type, uint8_t index, uint16_t offset)
+{
+	switch (smbus_vid)
+	{
+	case 0x10de: /* nVIDIA */
+		return nv_spd_read_byte(index, offset);
+	default:
+		return ichx_spd_read_byte(type, index, offset);
+	}
+	return 0xFF;
+}
 
 void
 NWL_SpdInit(void)
 {
 	if (NWLC->NwDrv == NULL)
 		return;
-	if (pci_check_direct() != 0) {
-		fprintf(stderr, "pci check failed\n");
-		return;
-	}
-	smbus_index = find_smb_controller();
-	if (smbus_index == -1) {
-		fprintf(stderr, "unsupported smbus controller\n");
-		return;
-	}
 	spd_raw = malloc(SPD_DATA_LEN);
-	if (!spd_raw) {
+	if (!spd_raw)
+	{
 		fprintf(stderr, "out of memory\n");
 		return;
 	}
-	smbcontrollers[smbus_index].get_adr();
+
+	smbus_addr = pci_find_by_class(NWLC->NwDrv, 0x0c, 0x05, 0x00, 0);
+	if (smbus_addr == 0xFFFFFFFF)
+	{
+		fprintf(stderr, "smbus not found\n");
+		return;
+	}
+	smbus_vid = pci_conf_read16(NWLC->NwDrv, smbus_addr, 0);
+	smbus_did = pci_conf_read16(NWLC->NwDrv, smbus_addr, 2);
+	if (smbus_vid == 0xFFFF || smbus_did == 0xFFFF)
+	{
+		fprintf(stderr, "smbus id read error\n");
+		return;
+	}
+	switch (smbus_vid)
+	{
+	case 0x8086: /* Intel */
+		switch (smbus_did)
+		{
+		case 0x7113: /* PIIX4 */
+			smbus_base = piix4_get_smbus_base(PIIX4_SMB_BASE_ADR_DEFAULT);
+			break;
+		default: /* ICHx */
+			smbus_base = ichx_get_smbus_base();
+			break;
+		}
+		break;
+	case 0x1022: /* AMD */
+		switch (smbus_did)
+		{
+		case 0x746A: /* AMD-8111 */
+			smbus_base = sbx00_get_smbus_base();
+			break;
+		case 0x780B: /* FCH */
+		{
+			uint8_t rev_id = pci_conf_read8(NWLC->NwDrv, smbus_addr, 0x08);
+			if (rev_id == 0x42)
+				smbus_base = fch_get_smbus_base();
+			else
+				smbus_base = sbx00_get_smbus_base();
+		}
+			break;
+		case 0x790B: /* FCH */
+			smbus_base = fch_get_smbus_base();
+			break;
+		default:
+			break;
+		}
+		break;
+	case 0x1002: /* ATI */
+		switch (smbus_did)
+		{
+		case 0x4353: /* SB200 */
+		case 0x4363: /* SB300 */
+		case 0x4372: /* SB4x0 */
+			smbus_base = piix4_get_smbus_base(PIIX4_SMB_BASE_ADR_DEFAULT);
+			break;
+		case 0x4385: /* SBx00 */
+		{
+			uint8_t rev_id = pci_conf_read8(NWLC->NwDrv, smbus_addr, 0x08);
+			if (rev_id <= 0x3D)
+				smbus_base = piix4_get_smbus_base(PIIX4_SMB_BASE_ADR_DEFAULT);
+			else
+				smbus_base = sbx00_get_smbus_base();
+		}
+			break;
+		}
+		break;
+	case 0x10de: /* nVIDIA */
+		smbus_base = nv_get_smbus_base();
+		break;
+	}
 }
 
 void*
-NWL_SpdGet(int dimmadr)
+NWL_SpdGet(uint8_t index)
 {
-	unsigned short x;
-	if (smbus_index < 0 || dimmadr < 0)
+	uint8_t spd_type = 0xFF;
+	uint16_t i;
+	uint16_t spd_size = SPD_DATA_LEN;
+	if (!spd_raw || index >= 8
+		|| smbus_did == 0xFFFF || smbus_vid == 0xFFFF
+		|| smbus_addr == 0xFFFFFFFF || smbus_base == 0)
 		return NULL;
+
+	spd_type = spd_read_byte(0xFF, index, 2);
+	if (spd_type == 0xFF)
+		return NULL;
+	
 	ZeroMemory(spd_raw, SPD_DATA_LEN);
-	// switch page 0
-	ich5_smb_switch_page(0);
-	for (x = 0; x < 256; x++)
-	{
-		spd_raw[x] = ich5_smb_read_byte(0x50 + dimmadr, (unsigned char)x);
-		if (x == 1 && (spd_raw[0] == 0xFF && spd_raw[1] == 0xFF))
-			return NULL;
-		if (x == 2 && (spd_raw[2] < 4 || spd_raw[2] > 18))
-			return NULL;
-	}
-	if (spd_raw[2] < 12) // DDR4
-		return spd_raw;
-	// switch page 1
-	ich5_smb_switch_page(1);
-	for (x = 0; x < 256; x++)
-		spd_raw[x + 256] = ich5_smb_read_byte(0x50 + dimmadr, (unsigned char)x);
+
+	if (spd_type == 12 || spd_type == 14 || spd_type == 16)
+		spd_size = 512;
+	else if (spd_type >= 18)
+		spd_size = 1024;
+	else
+		spd_size = 256;
+
+	for (i = 0; i < spd_size; i++)
+		spd_raw[i] = spd_read_byte(spd_type, index, i);
+	
 	return spd_raw;
 }
 
 void
 NWL_SpdFini(void)
 {
-	free(spd_raw);
+	if (spd_raw)
+		free(spd_raw);
+	spd_raw = NULL;
 }

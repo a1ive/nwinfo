@@ -205,7 +205,6 @@ NWL_FindClass(PNODE nd, CHAR* Ids, DWORD IdsSize, CONST CHAR* Class, INT usb)
 VOID
 NWL_GetPnpManufacturer(PNODE nd, CHAR* Ids, DWORD IdsSize, CONST CHAR* Code)
 {
-
 	DWORD Offset = 0;
 	CHAR* Line = NULL;
 
@@ -222,6 +221,49 @@ NWL_GetPnpManufacturer(PNODE nd, CHAR* Ids, DWORD IdsSize, CONST CHAR* Code)
 		free(Line);
 		Line = IdsGetline(Ids, IdsSize, &Offset);
 	}
+	NWL_NodeAttrSet(nd, "Manufacturer", "UNKNOWN", 0);
+}
+
+VOID
+NWL_GetSpdManufacturer(PNODE nd, CHAR* Ids, DWORD IdsSize, UINT Bank, UINT Item)
+{
+	DWORD Offset = 0;
+	CHAR* bLine = NULL;
+	CHAR* iLine = NULL;
+	CHAR* p = NULL;
+
+	Bank++;
+
+	bLine = IdsGetline(Ids, IdsSize, &Offset);
+	while (bLine)
+	{
+		if (isdigit(bLine[0])
+			&& Bank == strtoul(bLine, NULL, 10))
+		{
+			iLine = IdsGetline(Ids, IdsSize, &Offset);
+			while (iLine)
+			{
+				if (!isspace(iLine[0]) || !isdigit(iLine[1]))
+				{
+					free(iLine);
+					free(bLine);
+					goto fail;
+				}
+				if (Item == strtoul(iLine, &p, 10) && isspace(p[0]))
+				{
+					NWL_NodeAttrSet(nd, "Manufacturer", &p[1], 0);
+					free(iLine);
+					free(bLine);
+					return;
+				}
+				free(iLine);
+				iLine = IdsGetline(Ids, IdsSize, &Offset);
+			}
+		}
+		free(bLine);
+		bLine = IdsGetline(Ids, IdsSize, &Offset);
+	}
+fail:
 	NWL_NodeAttrSet(nd, "Manufacturer", "UNKNOWN", 0);
 }
 

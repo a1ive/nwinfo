@@ -63,5 +63,6 @@ PNODE NW_Libinfo(VOID)
 	NWL_NodeAttrSet(pNode, "PCI ID", NWL_GetIdsDate("pci.ids"), 0);
 	NWL_NodeAttrSet(pNode, "USB ID", NWL_GetIdsDate("usb.ids"), 0);
 	NWL_NodeAttrSet(pNode, "PNP ID", NWL_GetIdsDate("pnp.ids"), 0);
+	NWL_NodeAttrSet(pNode, "JEP106 ID", NWL_GetIdsDate("jep106.ids"), 0);
 	return pNode;
 }

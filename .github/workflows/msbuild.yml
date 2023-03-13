@@ -43,6 +43,7 @@ jobs:
         copy pci.ids nwinfo\pci.ids
         copy usb.ids nwinfo\usb.ids
         copy pnp.ids nwinfo\pnp.ids
+        copy jep106.ids nwinfo\jep106.ids
         # copy winring0\WinRing0.sys nwinfo\WinRing0.sys
         # copy winring0\WinRing0x64.sys nwinfo\WinRing0x64.sys
         copy winring0\HwRwDrv.sys nwinfo\HwRwDrv.sys
