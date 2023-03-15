@@ -229,6 +229,12 @@ VOID GNW_TreeDelete(HTREEITEM hTree)
 		TreeView_DeleteItem(hwndTV, hTree);
 }
 
+static VOID
+SpdReadHook(LPCSTR lpszText)
+{
+	SetWindowTextA(GNWC.hWnd, lpszText);
+}
+
 INT_PTR
 GNW_TreeUpdate(HWND hWnd, WPARAM wParam, LPARAM lParam)
 {
@@ -241,7 +247,7 @@ GNW_TreeUpdate(HWND hWnd, WPARAM wParam, LPARAM lParam)
 	if (pnmtv->itemNew.hItem == GNWC.htSpd && !GNWC.pnSpd)
 	{
 		INT i, count;
-		SetWindowTextA(GNWC.hWnd, GNW_GetText("Loading, please wait ..."));
+		GNWC.nCtx.SpdProgress = SpdReadHook;
 		GNWC.pnSpd = NW_Spd();
 		NWL_NodeAppendChild(GNWC.pnRoot, GNWC.pnSpd);
 		SetWindowTextA(GNWC.hWnd, GNWINFO_TITLE);

@@ -306,12 +306,38 @@ NWL_SpdInit(void)
 	}
 }
 
+static BOOL bytes_need(uint16_t type, uint16_t offset)
+{
+	if (offset >= 0 && offset <= 18) return TRUE;
+	if (type == 18) // DDR5
+	{
+		if (offset >= 234 && offset <= 235) return TRUE;
+		if (offset >= 512 && offset <= 541) return TRUE;
+	}
+	else if (type == 16 || type == 14 || type == 12) // DDR4
+	{
+		if (offset >= 320 && offset <= 349) return TRUE;
+	}
+	else if (type == 15 || type == 11) // DDR3
+	{
+		if (offset >= 117 && offset <= 148) return TRUE;
+	}
+	else if (type <= 10) // DDR2, DDR
+	{
+		if (offset >= 64 && offset <= 100) return TRUE;
+	}
+	return FALSE;
+}
+
 void*
 NWL_SpdGet(uint8_t index)
 {
 	uint8_t spd_type = 0xFF;
 	uint16_t i;
 	uint16_t spd_size = SPD_DATA_LEN;
+	char progress[] = "Reading Slot N (XXX)";
+	char num[] = "0123456789ABCDEF";
+
 	if (!spd_raw || index >= 8
 		|| smbus_did == 0xFFFF || smbus_vid == 0xFFFF
 		|| smbus_addr == 0xFFFFFFFF || smbus_base == 0)
@@ -331,7 +357,19 @@ NWL_SpdGet(uint8_t index)
 		spd_size = 256;
 
 	for (i = 0; i < spd_size; i++)
+	{
+		if (!bytes_need(spd_type, i))
+			continue;
+		if (NWLC->SpdProgress)
+		{
+			progress[13] = num[index];
+			progress[16] = num[i >> 8];
+			progress[17] = num[(i >> 4) & 0x0F];
+			progress[18] = num[i & 0x0F];
+			NWLC->SpdProgress(progress);
+		}
 		spd_raw[i] = spd_read_byte(spd_type, index, i);
+	}
 	
 	return spd_raw;
 }

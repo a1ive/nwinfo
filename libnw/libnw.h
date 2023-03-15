@@ -39,6 +39,8 @@ typedef struct _NWLIB_CONTEXT
 	UINT8 SmbiosType;
 	LPCSTR PciClass;
 
+	VOID (*SpdProgress) (LPCSTR lpszText);
+
 	struct acpi_rsdp_v2* NwRsdp;
 	struct acpi_rsdt* NwRsdt;
 	struct acpi_xsdt* NwXsdt;
