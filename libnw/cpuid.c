@@ -244,7 +244,7 @@ PNODE NW_Cpuid(VOID)
 	if (id.l1_data_total_instances >= 0)
 		NWL_NodeAttrSetf(node, "L1 Data Cache Instances", NAFLG_FMT_NUMERIC, "%d", id.l1_data_total_instances);
 	if (id.l1_instruction_total_instances >= 0)
-		NWL_NodeAttrSetf(node, "L1 Intruction Cache Instances", NAFLG_FMT_NUMERIC, "%d", id.l1_instruction_total_instances);
+		NWL_NodeAttrSetf(node, "L1 Instruction Cache Instances", NAFLG_FMT_NUMERIC, "%d", id.l1_instruction_total_instances);
 	if (id.l2_total_instances >= 0)
 		NWL_NodeAttrSetf(node, "L2 Cache Instances", NAFLG_FMT_NUMERIC, "%d", id.l2_total_instances);
 	if (id.l3_total_instances >= 0)
