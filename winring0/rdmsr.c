@@ -65,7 +65,21 @@
 
   AMD Processor Programming Reference (PPR)
   * AMD Family 17h Processors
-  https://support.amd.com/TechDocs/54945_PPR_Family_17h_Models_00h-0Fh.pdf
+  Models 00h-0Fh: https://www.amd.com/system/files/TechDocs/54945-ppr-family-17h-models-00h-0fh-processors.zip
+  Models 01h, 08h, Revision B2: https://www.amd.com/system/files/TechDocs/54945_3.03_ppr_ZP_B2_pub.zip
+  Model 71h, Revision B0: https://www.amd.com/system/files/TechDocs/56176_ppr_Family_17h_Model_71h_B0_pub_Rev_3.06.zip
+  Model 60h, Revision A1: https://www.amd.com/system/files/TechDocs/55922-A1-PUB.zip
+  Model 18h, Revision B1: https://www.amd.com/system/files/TechDocs/55570-B1-PUB.zip
+  Model 20h, Revision A1: https://www.amd.com/system/files/TechDocs/55772-A1-PUB.zip
+  Model 31h, Revision B0 Processors https://www.amd.com/system/files/TechDocs/55803-ppr-family-17h-model-31h-b0-processors.pdf
+  Models A0h-AFh, Revision A0: https://www.amd.com/system/files/TechDocs/57243-A0-PUB.zip
+  * AMD Family 19h Processors
+  Model 01h, Revision B1: https://www.amd.com/system/files/TechDocs/55898_B1_pub_0.50.zip
+  Model 21h, Revision B0: https://www.amd.com/system/files/TechDocs/56214-B0-PUB.zip
+  Model 51h, Revision A1: https://www.amd.com/system/files/TechDocs/56569-A1-PUB.zip
+  Model 11h, Revision B1: https://www.amd.com/system/files/TechDocs/55901_0.25.zip
+  Model 61h, Revision B1: https://www.amd.com/system/files/TechDocs/56713-B1-PUB_3.04.zip
+  Model 70h, Revision A0: https://www.amd.com/system/files/TechDocs/57019-A0-PUB_3.00.zip
 
 - Intel MSRs:
   Intel 64 and IA-32 Architectures Software Developer’s Manual
@@ -171,8 +185,9 @@ static int get_amd_multipliers(struct msr_info_t *info, uint32_t pstate, double 
 	if (pstate < MSR_PSTATE_0 || MSR_PSTATE_7 < pstate)
 		return 1;
 
+	/* Overview of AMD CPU microarchitectures: https://en.wikipedia.org/wiki/List_of_AMD_CPU_microarchitectures#Nomenclature */
 	switch (info->id->ext_family) {
-		case 0x12:
+		case 0x12: /* K10 (Llano) / K12 */
 			/* BKDG 12h, page 469
 			MSRC001_00[6B:64][8:4] is CpuFid
 			MSRC001_00[6B:64][3:0] is CpuDid
@@ -188,7 +203,7 @@ static int get_amd_multipliers(struct msr_info_t *info, uint32_t pstate, double 
 			else
 				err++;
 			break;
-		case 0x14:
+		case 0x14: /* Bobcat */
 			/* BKDG 14h, page 430
 			MSRC001_00[6B:64][8:4] is CpuDidMSD
 			MSRC001_00[6B:64][3:0] is CpuDidLSD
@@ -200,25 +215,28 @@ static int get_amd_multipliers(struct msr_info_t *info, uint32_t pstate, double 
 			err += cpu_rdmsr_range(info->handle, pstate, 3, 0, &CpuDidLSD);
 			*multiplier = (double) (((info->cpu_clock + 5LL) / 100 + magic_constant) / (CpuDid + CpuDidLSD * 0.25 + 1));
 			break;
-		case 0x10:
+		case 0x10: /* K10 */
 			/* BKDG 10h, page 429
 			MSRC001_00[6B:64][8:6] is CpuDid
 			MSRC001_00[6B:64][5:0] is CpuFid
 			CPU COF is (100 MHz * (CpuFid + 10h) / (2^CpuDid))
 			Note: This family contains only CPUs */
-		case 0x11:
+			/* Fall through */
+		case 0x11: /* K8 & K10 "hybrid" */
 			/* BKDG 11h, page 236
 			MSRC001_00[6B:64][8:6] is CpuDid
 			MSRC001_00[6B:64][5:0] is CpuFid
 			CPU COF is ((100 MHz * (CpuFid + 08h)) / (2^CpuDid))
 			Note: This family contains only CPUs */
-		case 0x15:
+			/* Fall through */
+		case 0x15: /* Bulldozer / Piledriver / Steamroller / Excavator */
 			/* BKDG 15h, page 570/580/635/692 (00h-0Fh/10h-1Fh/30h-3Fh/60h-6Fh)
 			MSRC001_00[6B:64][8:6] is CpuDid
 			MSRC001_00[6B:64][5:0] is CpuFid
 			CoreCOF is (100 * (MSRC001_00[6B:64][CpuFid] + 10h) / (2^MSRC001_00[6B:64][CpuDid]))
 			Note: This family contains BOTH CPUs and APUs */
-		case 0x16:
+			/* Fall through */
+		case 0x16: /* Jaguar / Puma */
 			/* BKDG 16h, page 549/611 (00h-0Fh/30h-3Fh)
 			MSRC001_00[6B:64][8:6] is CpuDid
 			MSRC001_00[6B:64][5:0] is CpuFid
@@ -228,16 +246,27 @@ static int get_amd_multipliers(struct msr_info_t *info, uint32_t pstate, double 
 			err += cpu_rdmsr_range(info->handle, pstate, 5, 0, &CpuFid);
 			*multiplier = ((double) (CpuFid + magic_constant) / (1ull << CpuDid)) / divisor;
 			break;
-		case 0x17:
+		case 0x17: /* Zen / Zen+ / Zen 2 */
 			/* PPR 17h, pages 30 and 138-139
 			MSRC001_00[6B:64][13:8] is CpuDfsId
 			MSRC001_00[6B:64][7:0]  is CpuFid
 			CoreCOF is (Core::X86::Msr::PStateDef[CpuFid[7:0]] / Core::X86::Msr::PStateDef[CpuDfsId]) * 200 */
+			/* Fall through */
+		case 0x18: /* Hygon Dhyana */
+			/* Note: Dhyana is "mostly a re-branded Zen CPU for the Chinese server market"
+			https://www.phoronix.com/news/Hygon-Dhyana-AMD-China-CPUs */
+			/* Fall through */
+		case 0x19: /* Zen 3 / Zen 3+ / Zen 4 */
+			/* PPR for AMD Family 19h Model 70h A0, pages 37 and 206-207
+			MSRC001_006[4...B][13:8] is CpuDfsId
+			MSRC001_006[4...B][7:0]  is CpuFid
+			CoreCOF is (Core::X86::Msr::PStateDef[CpuFid[7:0]]/Core::X86::Msr::PStateDef[CpuDfsId]) *200 */
 			err  = cpu_rdmsr_range(info->handle, pstate, 13, 8, &CpuDid);
 			err += cpu_rdmsr_range(info->handle, pstate,  7, 0, &CpuFid);
 			*multiplier = ((double) CpuFid / CpuDid) * 2;
 			break;
 		default:
+			// unsupported CPU extended family
 			err = 1;
 			break;
 	}
@@ -468,7 +497,7 @@ int cpu_rdmsr_range(struct msr_driver_t* handle, uint32_t msr_index, uint8_t hig
 	const uint8_t bits = highbit - lowbit + 1;
 
 	if(highbit > 63 || lowbit > highbit)
-		return set_error(ERR_INVRANGE);
+		return cpuid_set_error(ERR_INVRANGE);
 
 	err = cpu_rdmsr(handle, msr_index, result);
 
@@ -490,7 +519,7 @@ int cpu_msrinfo(struct msr_driver_t* handle, cpu_msrinfo_request_t which)
 	static struct msr_info_t info = { 0 };
 
 	if (handle == NULL) {
-		set_error(ERR_HANDLE);
+		cpuid_set_error(ERR_HANDLE);
 		return CPU_INVALID_VALUE;
 	}
 

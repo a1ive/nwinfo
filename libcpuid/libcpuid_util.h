@@ -76,7 +76,7 @@ int match_all(uint64_t bits, uint64_t mask);
 /*
  * Sets the current errno
  */
-int set_error(cpu_error_t err);
+int cpuid_set_error(cpu_error_t err);
 
 /*
  * Manage cpu_affinity_mask_t type

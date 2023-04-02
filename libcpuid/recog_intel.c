@@ -260,7 +260,7 @@ const struct match_entry_t cpudb_intel[] = {
 	{  6, 10, -1, -1, 26,   4,    -1,    -1, NC, XEON_|_7      ,     0, "Bloomfield (Xeon)"        },
 	{  6, 10, -1, -1, 26,   4,    -1,    -1, NC, CORE_|_I_|_7  ,     0, "Bloomfield (Core i7)"     },
 	{  6, 10, -1, -1, 30,   4,    -1,    -1, NC, CORE_|_I_|_7  ,     0, "Lynnfield (Core i7)"      },
-	{  6,  5, -1, -1, 37,   4,    -1,  8192, NC, CORE_|_I_|_5  ,     0, "Lynnfield (Core i5)"      },
+	{  6,  5, -1, -1, 30,   4,    -1,  8192, NC, CORE_|_I_|_5  ,     0, "Lynnfield (Core i5)"      },
 
 	/* Westmere CPUs (32nm): */
 	{  6,  5, -1, -1, 37,   2,    -1,    -1, NC, 0             ,     0, "Unknown Core i3/i5"       },
@@ -414,6 +414,7 @@ const struct match_entry_t cpudb_intel[] = {
 	{  6, 7, -1, -1, 167,  -1,    -1,    -1, NC, CORE_|_I_|_7  ,_11xxx, "Rocket Lake (Core i7)"    },
 	{  6, 7, -1, -1, 167,  -1,    -1,    -1, NC, CORE_|_I_|_5  ,_11xxx, "Rocket Lake (Core i5)"    },
 	{  6, 7, -1, -1, 167,  -1,    -1,    -1, NC, CORE_|_I_|_3  ,_11xxx, "Rocket Lake (Core i3)"    },
+	{  6, 7, -1, -1, 167,  -1,    -1,    -1, NC, XEON_         ,     0, "Rocket Lake (Xeon-E)"        },
 
 	/* Goldmont Plus CPUs (2017, 14nm, low-power) */
 	{  6, 10, -1, -1, 122,  4,    -1,    -1, NC, PENTIUM_      ,     0, "Gemini Lake (Pentium)"    },
@@ -453,16 +454,23 @@ const struct match_entry_t cpudb_intel[] = {
 	{  6, 10, -1, -1, 154, -1,    -1,    -1, NC, CORE_|_I_|_9|_H  ,  _12xxx, "Alder Lake-H (Core i9)"  },
 	{  6, 10, -1, -1, 154, -1,    -1,    -1, NC, CORE_|_I_|_7|_H  ,  _12xxx, "Alder Lake-H (Core i7)"  },
 	{  6, 10, -1, -1, 154, -1,    -1,    -1, NC, CORE_|_I_|_5|_H  ,  _12xxx, "Alder Lake-H (Core i5)"  },
+	{  6, 14, -1, -1, 190, -1,    -1,    -1, NC, CORE_|_I_|_3|_N  ,       0, "Alder Lake-N (Core i3)"  },
+	{  6, 14, -1, -1, 190, -1,    -1,    -1, NC, ATOM_            ,       0, "Alder Lake-N (Atom)"     },
+	{  6, 14, -1, -1, 190,  4,    -1,    -1, NC, _N               ,       0, "Alder Lake-N"            },
+	{  6, 14, -1, -1, 190,  2,    -1,    -1, NC, _N               ,       0, "Alder Lake-N"            },
 
 	/* Raptor Lake CPUs (2022, 13th gen, 7nm) => https://en.wikichip.org/wiki/intel/microarchitectures/raptor_lake */
 	{  6,  7, -1, -1, 183, -1,    -1,    -1, NC, CORE_|_I_|_9  ,_13xxx, "Raptor Lake-S (Core i9)"    },
 	{  6,  7, -1, -1, 183, -1,    -1,    -1, NC, CORE_|_I_|_7  ,_13xxx, "Raptor Lake-S (Core i7)"    },
 	{  6,  7, -1, -1, 183, -1,    -1,    -1, NC, CORE_|_I_|_5  ,_13xxx, "Raptor Lake-S (Core i5)"    },
 	{  6,  7, -1, -1, 183, -1,    -1,    -1, NC, CORE_|_I_|_3  ,_13xxx, "Raptor Lake-S (Core i3)"    },
-	//{  6, ??, -1, -1, ???, -1,    -1,    -1, NC, CORE_|_I_|_9  ,_13xxx, "Raptor Lake-P (Core i9)"    },
-	//{  6, ??, -1, -1, ???, -1,    -1,    -1, NC, CORE_|_I_|_7  ,_13xxx, "Raptor Lake-P (Core i7)"    },
-	//{  6, ??, -1, -1, ???, -1,    -1,    -1, NC, CORE_|_I_|_5  ,_13xxx, "Raptor Lake-P (Core i5)"    },
-	//{  6, ??, -1, -1, ???, -1,    -1,    -1, NC, CORE_|_I_|_3  ,_13xxx, "Raptor Lake-P (Core i3)"    },
+	{  6, 15, -1, -1, 191, -1,    -1,    -1, NC, CORE_|_I_|_5  ,_13xxx, "Raptor Lake-S (Core i5)"    }, // "Golden Cove" cores
+	{  6, 15, -1, -1, 191, -1,    -1,    -1, NC, CORE_|_I_|_3  ,_13xxx, "Raptor Lake-S (Core i3)"    }, // "Golden Cove" cores
+	{  6, 10,  2, -1, 186, -1,    -1,    -1, NC, CORE_|_I_|_7  ,_13xxx, "Raptor Lake-P (Core i7)"    },
+	{  6, 10,  2, -1, 186, -1,    -1,    -1, NC, CORE_|_I_|_5  ,_13xxx, "Raptor Lake-P (Core i5)"    },
+	{  6, 10,  3, -1, 186, -1,    -1,    -1, NC, CORE_|_I_|_7  ,_13xxx, "Raptor Lake-U (Core i7)"    },
+	{  6, 10,  3, -1, 186, -1,    -1,    -1, NC, CORE_|_I_|_5  ,_13xxx, "Raptor Lake-U (Core i5)"    },
+	{  6, 10,  3, -1, 186, -1,    -1,    -1, NC, CORE_|_I_|_3  ,_13xxx, "Raptor Lake-U (Core i3)"    },
 	/* F   M   S  EF   EM   C     L2     L3               Brand */
 
 
@@ -740,6 +748,7 @@ static intel_code_and_bits_t get_brand_code_and_bits(struct cpu_id_t* data)
 				case 'K': bits |= _K; break;
 				case 'X': bits |= _X; break;
 				case 'P': bits |= _P; break;
+				case 'N': bits |= _N; break;
 			}
 		}
 	}

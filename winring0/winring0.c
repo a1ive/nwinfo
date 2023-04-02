@@ -140,14 +140,14 @@ struct msr_driver_t* cpu_msr_driver_open(void)
 
 	drv = (struct msr_driver_t*)malloc(sizeof(struct msr_driver_t));
 	if (!drv) {
-		set_error(ERR_NO_MEM);
+		cpuid_set_error(ERR_NO_MEM);
 		return NULL;
 	}
 	memset(drv, 0, sizeof(struct msr_driver_t));
 
 	if (!extract_driver(drv)) {
 		free(drv);
-		set_error(ERR_EXTRACT);
+		cpuid_set_error(ERR_EXTRACT);
 		return NULL;
 	}
 	status = LoadDriver(drv);
@@ -160,7 +160,7 @@ struct msr_driver_t* cpu_msr_driver_open(void)
 	}
 
 	if (!status) {
-		set_error(drv->errorcode ? drv->errorcode : ERR_NO_DRIVER);
+		cpuid_set_error(drv->errorcode ? drv->errorcode : ERR_NO_DRIVER);
 		free(drv);
 		return NULL;
 	}
@@ -174,7 +174,7 @@ int cpu_rdmsr(struct msr_driver_t* driver, uint32_t msr_index, uint64_t* result)
 	BOOL Res = FALSE;
 
 	if (!driver)
-		return set_error(ERR_HANDLE);
+		return cpuid_set_error(ERR_HANDLE);
 	Res = DeviceIoControl(driver->hhDriver, IOCTL_OLS_READ_MSR,
 		&msr_index, sizeof(msr_index), &MsrData, sizeof(MsrData), &dwBytesReturned, NULL);
 	if (Res == FALSE)

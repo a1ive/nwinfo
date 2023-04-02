@@ -29,7 +29,7 @@
  * \file     libcpuid.h
  * \author   Veselin Georgiev
  * \date     Oct 2008
- * \version  0.6.2
+ * \version  0.6.3
  *
  * Version history:
  *
@@ -68,7 +68,12 @@
  *                        cpu_id_t is now different).
  * * 0.6.1 (2022-10-23): A lot of DB updates, fix set_cpu_affinity() on Windows,
  *                       fix cpu_identify_all() when HT is disabled.
- * * 0.6.6 (2022-11-11): A lot of DB updates, fix cpu_identify_all() for single-core CPUs.
+ * * 0.6.2 (2022-11-11): A lot of DB updates, fix cpu_identify_all() for single-core CPUs.
+ * * 0.6.3 (2023-04-02): A lot of DB updates, fix infinite loop in set_cpu_affinity() on macOS,
+ *                       fix a misprint of extended CPUID in cpuid_basic_identify(),
+ *                       restore previous thread CPU affinity before returning from cpuid_get_all_raw_data(),
+ *                       query CPU info at least once even if set_cpu_affinity() fails,
+ *                       rename set_error() to cpuid_set_error() and get_error() to cpuid_get_error().
  */
 
 /** @mainpage A simple libcpuid introduction
