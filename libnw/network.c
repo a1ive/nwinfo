@@ -13,7 +13,9 @@ static const char* bps_human_sizes[6] =
 
 static void displayAddress(PNODE pNode, const PSOCKET_ADDRESS Address, LPCSTR key)
 {
-	if (Address->iSockaddrLength < sizeof(SOCKADDR_IN))
+	if (!Address || !Address->lpSockaddr
+		|| Address->iSockaddrLength < sizeof(SOCKADDR_IN)
+		|| Address->iSockaddrLength > sizeof(SOCKADDR_IN6))
 	{
 		//printf("INVALID\n");
 	}
