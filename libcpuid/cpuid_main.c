@@ -155,55 +155,43 @@ static int get_total_cpus(void)
 	return system_info.dwNumberOfProcessors;
 }
 
-#if (_WIN32_WINNT >= 0x0601)
 INTERNAL_SCOPE GROUP_AFFINITY savedGroupAffinity;
-#else
-INTERNAL_SCOPE DWORD_PTR savedAffinityMask = 0;
-#endif
 
 bool save_cpu_affinity(void)
 {
-#if (_WIN32_WINNT >= 0x0601)
+	HMODULE hMod = GetModuleHandleA("kernel32");
+	BOOL (WINAPI *NTGetThreadGroupAffinity)(HANDLE hThread, PGROUP_AFFINITY GroupAffinity) = NULL;
 	HANDLE thread = GetCurrentThread();
-	return GetThreadGroupAffinity(thread, &savedGroupAffinity);
-#else
-/* Credits to https://stackoverflow.com/questions/6601862/query-thread-not-process-processor-affinity#6601917 */
-	HANDLE thread = GetCurrentThread();
+	if (hMod)
+		*(FARPROC*)&NTGetThreadGroupAffinity = GetProcAddress(hMod, "NTGetThreadGroupAffinity");
+	if (NTGetThreadGroupAffinity)
+		return NTGetThreadGroupAffinity(thread, &savedGroupAffinity);
+
+	/* Credits to https://stackoverflow.com/questions/6601862/query-thread-not-process-processor-affinity#6601917 */
 	DWORD_PTR threadAffinityMask = 1;
 	while (threadAffinityMask) {
-		savedAffinityMask = SetThreadAffinityMask(thread, threadAffinityMask);
-		if(savedAffinityMask)
-			return SetThreadAffinityMask(thread, savedAffinityMask);
+		savedGroupAffinity.Mask = SetThreadAffinityMask(thread, threadAffinityMask);
+		if(savedGroupAffinity.Mask)
+			return SetThreadAffinityMask(thread, savedGroupAffinity.Mask);
 		else if (GetLastError() != ERROR_INVALID_PARAMETER)
 			return false;
-
 		threadAffinityMask <<= 1; // try next CPU
 	}
 	return false;
-#endif
 }
 
 bool restore_cpu_affinity(void)
 {
-#if (_WIN32_WINNT >= 0x0601)
 	if (!savedGroupAffinity.Mask)
 		return false;
 
 	HANDLE thread = GetCurrentThread();
 	return SetThreadGroupAffinity(thread, &savedGroupAffinity, NULL);
-#else
-	if (!savedAffinityMask)
-		return false;
-
-	HANDLE thread = GetCurrentThread();
-	return SetThreadAffinityMask(thread, savedAffinityMask);
-#endif
 }
 
 bool set_cpu_affinity(logical_cpu_t logical_cpu)
 {
 /* Credits to https://github.com/PolygonTek/BlueshiftEngine/blob/fbc374cbc391e1147c744649f405a66a27c35d89/Source/Runtime/Private/Platform/Windows/PlatformWinThread.cpp#L27 */
-#if (_WIN32_WINNT >= 0x0601)
 	int groups = GetActiveProcessorGroupCount();
 	int total_processors = 0;
 	int group = 0;
@@ -228,15 +216,6 @@ bool set_cpu_affinity(logical_cpu_t logical_cpu)
 	groupAffinity.Group = (WORD) group;
 	groupAffinity.Mask = (KAFFINITY) (1ULL << number);
 	return SetThreadGroupAffinity(thread, &groupAffinity, NULL);
-#else
-	if (logical_cpu > (sizeof(DWORD_PTR) * 8)) {
-		// Warning: not supported
-		return FALSE;
-	}
-	HANDLE thread = GetCurrentThread();
-	DWORD_PTR threadAffinityMask = 1ULL << logical_cpu;
-	return SetThreadAffinityMask(thread, threadAffinityMask);
-#endif /* (_WIN32_WINNT >= 0x0601) */
 }
 
 static void load_features_common(struct cpu_raw_data_t* raw, struct cpu_id_t* data)
