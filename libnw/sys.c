@@ -229,20 +229,31 @@ static void PrintMemInfo(PNODE node)
 	NWL_NodeAttrSet(npage, "Total", NWL_GetHumanSize(statex.ullTotalPageFile, mem_human_sizes, 1024), NAFLG_FMT_HUMAN_SIZE);
 }
 
-static void PrintBootDev(PNODE node)
+static void PrintBootInfo(PNODE node)
 {
 	DWORD dwType;
 	HANDLE hFile;
 	WCHAR wArcName[MAX_PATH];
 	WCHAR* pFwBootDev = NWL_NtGetRegValue(HKEY_LOCAL_MACHINE,
 		L"SYSTEM\\CurrentControlSet\\Control", L"FirmwareBootDevice", &dwType);
-	if (!pFwBootDev)
-		return;
-	swprintf(wArcName, MAX_PATH, L"\\ArcName\\%s", pFwBootDev);
-	free(pFwBootDev);
-	hFile = NWL_NtCreateFile(wArcName, FALSE);
-	NWL_NodeAttrSet(node, "Boot Device", NWL_NtGetPathFromHandle(hFile), 0);
-	CloseHandle(hFile);
+	if (pFwBootDev)
+	{
+		swprintf(wArcName, MAX_PATH, L"\\ArcName\\%s", pFwBootDev);
+		free(pFwBootDev);
+		hFile = NWL_NtCreateFile(wArcName, FALSE);
+		NWL_NodeAttrSet(node, "Boot Device", NWL_NtGetPathFromHandle(hFile), 0);
+		CloseHandle(hFile);
+	}
+	WCHAR* pStartOption = NWL_NtGetRegValue(HKEY_LOCAL_MACHINE,
+		L"SYSTEM\\CurrentControlSet\\Control", L"SystemStartOptions", &dwType);
+	if (pStartOption)
+	{
+		NWL_NodeAttrSetf(node, "Start Options", 0, "%ls", pStartOption);
+		free(pStartOption);
+	}
+	DWORD dwBitLocker = 0;
+	NWL_GetRegDwordValue(HKEY_LOCAL_MACHINE, "SYSTEM\\CurrentControlSet\\Control\\BitlockerStatus", "BootStatus", &dwBitLocker);
+	NWL_NodeAttrSetBool(node, "BitLocker Boot", dwBitLocker, 0);
 }
 
 PNODE NW_System(VOID)
@@ -253,7 +264,7 @@ PNODE NW_System(VOID)
 	PrintOsVer(node);
 	PrintOsInfo(node);
 	PrintSysMetrics(node);
-	PrintBootDev(node);
+	PrintBootInfo(node);
 	PrintFwInfo(node);
 	PrintTpmInfo(node);
 	PrintMemInfo(node);
