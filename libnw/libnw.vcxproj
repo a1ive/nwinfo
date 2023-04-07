@@ -84,6 +84,10 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
+    <Lib>
+      <IgnoreAllDefaultLibraries>
+      </IgnoreAllDefaultLibraries>
+    </Lib>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -105,10 +109,17 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
+    <Lib>
+      <IgnoreAllDefaultLibraries>
+      </IgnoreAllDefaultLibraries>
+    </Lib>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ProjectReference Include="..\libcpuid\libcpuid.vcxproj">
       <Project>{2da3ea59-bdf3-4fc0-8ac2-5605ce22b800}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\winring0\winring0.vcxproj">
+      <Project>{792baf89-d4da-4626-a147-52fc32bc77b2}</Project>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

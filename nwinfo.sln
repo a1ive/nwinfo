@@ -11,6 +11,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libnw", "libnw\libnw.vcxpro
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "gnwinfo", "gnwinfo\gnwinfo.vcxproj", "{41E31F67-D67C-4699-A15A-67872363913A}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "winring0", "winring0\winring0.vcxproj", "{792BAF89-D4DA-4626-A147-52FC32BC77B2}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Release|x64 = Release|x64
@@ -33,6 +35,10 @@ Global
 		{41E31F67-D67C-4699-A15A-67872363913A}.Release|x64.Build.0 = Release|x64
 		{41E31F67-D67C-4699-A15A-67872363913A}.Release|x86.ActiveCfg = Release|Win32
 		{41E31F67-D67C-4699-A15A-67872363913A}.Release|x86.Build.0 = Release|Win32
+		{792BAF89-D4DA-4626-A147-52FC32BC77B2}.Release|x64.ActiveCfg = Release|x64
+		{792BAF89-D4DA-4626-A147-52FC32BC77B2}.Release|x64.Build.0 = Release|x64
+		{792BAF89-D4DA-4626-A147-52FC32BC77B2}.Release|x86.ActiveCfg = Release|Win32
+		{792BAF89-D4DA-4626-A147-52FC32BC77B2}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -105,6 +105,8 @@
 /* Include C99 booleans: */
 #include <stdbool.h>
 
+#include <winring0.h>
+
 /* Include some integer type specifications: */
 #include "libcpuid_types.h"
 
@@ -1167,47 +1169,6 @@ void cpuid_free_raw_data_array(struct cpu_raw_data_array_t* raw_array);
  */
 void cpuid_free_system_id(struct system_id_t* system);
 
-struct msr_driver_t;
-/**
- * @brief Starts/opens a driver, needed to read MSRs (Model Specific Registers)
- *
- * On systems that support it, this function will create a temporary
- * system driver, that has privileges to execute the RDMSR instruction.
- * After the driver is created, you can read MSRs by calling \ref cpu_rdmsr
- *
- * @returns a handle to the driver on success, and NULL on error.
- *          The error message can be obtained by calling \ref cpuid_error.
- *          @see cpu_error_t
- */
-struct msr_driver_t* cpu_msr_driver_open(void);
-
-/**
- * @brief Reads a Model-Specific Register (MSR)
- *
- * If the CPU has MSRs (as indicated by the CPU_FEATURE_MSR flag), you can
- * read a MSR with the given index by calling this function.
- *
- * There are several prerequisites you must do before reading MSRs:
- * 1) You must ensure the CPU has RDMSR. Check the CPU_FEATURE_MSR flag
- *    in cpu_id_t::flags
- * 2) You must ensure that the CPU implements the specific MSR you intend to
- *    read.
- * 3) You must open a MSR-reader driver. RDMSR is a privileged instruction and
- *    needs ring-0 access in order to work. This temporary driver is created
- *    by calling \ref cpu_msr_driver_open
- *
- * @param handle - a handle to the MSR reader driver, as created by
- *                 cpu_msr_driver_open
- * @param msr_index - the numeric ID of the MSR you want to read
- * @param result - a pointer to a 64-bit integer, where the MSR value is stored
- *
- * @returns zero if successful, and some negative number on error.
- *          The error message can be obtained by calling \ref cpuid_error.
- *          @see cpu_error_t
- */
-int cpu_rdmsr(struct msr_driver_t* handle, uint32_t msr_index, uint64_t* result);
-
-
 typedef enum {
 	INFO_MPERF,                /*!< Maximum performance frequency clock. This
                                     is a counter, which increments as a
@@ -1247,7 +1208,7 @@ typedef enum {
  *          The error message can be obtained by calling \ref cpuid_error.
  *          @see cpu_error_t
  */
-int cpu_rdmsr_range(struct msr_driver_t* handle, uint32_t msr_index, uint8_t highbit,
+int cpu_rdmsr_range(struct wr0_drv_t* handle, uint32_t msr_index, uint8_t highbit,
                     uint8_t lowbit, uint64_t* result);
 
 /**
@@ -1263,22 +1224,8 @@ int cpu_rdmsr_range(struct msr_driver_t* handle, uint32_t msr_index, uint8_t hig
  * @note This function is not MT-safe. If you intend to call it from multiple
  *       threads, guard it through a mutex or a similar primitive.
  */
-int cpu_msrinfo(struct msr_driver_t* handle, cpu_msrinfo_request_t which);
+int cpu_msrinfo(struct wr0_drv_t* handle, cpu_msrinfo_request_t which);
 #define CPU_INVALID_VALUE 0x3fffffff
-
-/**
- * @brief Closes an open MSR driver
- *
- * This function unloads the MSR driver opened by cpu_msr_driver_open and
- * frees any resources associated with it.
- *
- * @param handle - a handle to the MSR reader driver, as created by cpu_msr_driver_open
- *
- * @returns zero if successful, and some negative number on error.
- *          The error message can be obtained by calling \ref cpuid_error.
- *          @see cpu_error_t
- */
-int cpu_msr_driver_close(struct msr_driver_t* handle);
 
 #ifdef __cplusplus
 } /* extern "C" */

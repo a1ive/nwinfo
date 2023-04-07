@@ -8,7 +8,7 @@
 #include <winring0.h>
 
 static void
-speaker_play(struct msr_driver_t* drv, unsigned int hz, unsigned long ms)
+speaker_play(struct wr0_drv_t* drv, unsigned int hz, unsigned long ms)
 {
 	unsigned int div = 0;
 	if (hz == 0)
@@ -37,7 +37,7 @@ speaker_play(struct msr_driver_t* drv, unsigned int hz, unsigned long ms)
 #include "tokyo.h"
 
 static void
-play_default(struct msr_driver_t* drv)
+play_default(struct wr0_drv_t* drv)
 {
 	unsigned i = 0;
 	for (i = 0; i < TOKYO_HOT_COUNT - 1; i+=2)

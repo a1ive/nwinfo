@@ -6,25 +6,8 @@
 #include <winioctl.h>
 #include <winerror.h>
 #include "winring0.h"
-#include "libcpuid.h"
-#include "asm-bits.h"
-#include "libcpuid_util.h"
-#include "libcpuid_internal.h"
-#include "rdtsc.h"
 
-struct msr_driver_t
-{
-	LPCSTR driver_name;
-	LPCSTR driver_id;
-	LPCSTR driver_obj;
-	CHAR driver_path[MAX_PATH + 1];
-	SC_HANDLE scManager;
-	SC_HANDLE scDriver;
-	HANDLE hhDriver;
-	int errorcode;
-};
-
-static BOOL LoadDriver(struct msr_driver_t* drv)
+static BOOL LoadDriver(struct wr0_drv_t* drv)
 {
 	BOOL Ret = FALSE;
 	DWORD Status = 0;
@@ -71,7 +54,7 @@ retry:
 }
 
 typedef BOOL(WINAPI* LPFN_ISWOW64PROCESS) (HANDLE, PBOOL);
-static BOOL is_running_x64(void)
+static BOOL IsX64(void)
 {
 #ifdef _WIN64
 	return TRUE;
@@ -87,11 +70,11 @@ static BOOL is_running_x64(void)
 #endif
 }
 
-static BOOL is_driver_exist(LPCSTR name)
+static BOOL IsDriverExist(LPCSTR name)
 {
 	HANDLE hFile = INVALID_HANDLE_VALUE;
 	CHAR cchName[64];
-	snprintf(cchName, sizeof(cchName) - 1, "%s%s.sys", name, is_running_x64() ? "x64" : "");
+	snprintf(cchName, sizeof(cchName) - 1, "%s%s.sys", name, IsX64() ? "x64" : "");
 	hFile = CreateFileA(cchName, GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING, 0, NULL);
 	if (hFile == INVALID_HANDLE_VALUE)
 		return FALSE;
@@ -99,7 +82,7 @@ static BOOL is_driver_exist(LPCSTR name)
 	return TRUE;
 }
 
-static int extract_driver(struct msr_driver_t* driver)
+static int ExtractDriver(struct wr0_drv_t* driver)
 {
 	size_t i = 0;
 	ZeroMemory(driver->driver_path, sizeof(driver->driver_path));
@@ -114,13 +97,13 @@ static int extract_driver(struct msr_driver_t* driver)
 			break;
 		}
 	}
-	if (is_driver_exist(OLS_DRIVER_NAME))
+	if (IsDriverExist(OLS_DRIVER_NAME))
 	{
 		driver->driver_id = OLS_DRIVER_ID;
 		driver->driver_name = OLS_DRIVER_NAME;
 		driver->driver_obj = OLS_DRIVER_OBJ;
 	}
-	else if (is_driver_exist(OLS_ALT_DRIVER_NAME))
+	else if (IsDriverExist(OLS_ALT_DRIVER_NAME))
 	{
 		driver->driver_id = OLS_ALT_DRIVER_ID;
 		driver->driver_name = OLS_ALT_DRIVER_NAME;
@@ -129,25 +112,23 @@ static int extract_driver(struct msr_driver_t* driver)
 	else
 		return 0;
 	snprintf(driver->driver_path, MAX_PATH, "%s\\%s%s.sys", driver->driver_path,
-		driver->driver_name, is_running_x64() ? "x64" : "");
+		driver->driver_name, IsX64() ? "x64" : "");
 	return 1;
 }
 
-struct msr_driver_t* cpu_msr_driver_open(void)
+struct wr0_drv_t* wr0_driver_open(void)
 {
-	struct msr_driver_t* drv;
+	struct wr0_drv_t* drv;
 	BOOL status = FALSE;
 
-	drv = (struct msr_driver_t*)malloc(sizeof(struct msr_driver_t));
+	drv = (struct wr0_drv_t*)malloc(sizeof(struct wr0_drv_t));
 	if (!drv) {
-		cpuid_set_error(ERR_NO_MEM);
 		return NULL;
 	}
-	memset(drv, 0, sizeof(struct msr_driver_t));
+	memset(drv, 0, sizeof(struct wr0_drv_t));
 
-	if (!extract_driver(drv)) {
+	if (!ExtractDriver(drv)) {
 		free(drv);
-		cpuid_set_error(ERR_EXTRACT);
 		return NULL;
 	}
 	status = LoadDriver(drv);
@@ -160,21 +141,20 @@ struct msr_driver_t* cpu_msr_driver_open(void)
 	}
 
 	if (!status) {
-		cpuid_set_error(drv->errorcode ? drv->errorcode : ERR_NO_DRIVER);
 		free(drv);
 		return NULL;
 	}
 	return drv;
 }
 
-int cpu_rdmsr(struct msr_driver_t* driver, uint32_t msr_index, uint64_t* result)
+int cpu_rdmsr(struct wr0_drv_t* driver, uint32_t msr_index, uint64_t* result)
 {
 	DWORD dwBytesReturned;
 	UINT64 MsrData = 0;
 	BOOL Res = FALSE;
 
 	if (!driver)
-		return cpuid_set_error(ERR_HANDLE);
+		return -1;
 	Res = DeviceIoControl(driver->hhDriver, IOCTL_OLS_READ_MSR,
 		&msr_index, sizeof(msr_index), &MsrData, sizeof(MsrData), &dwBytesReturned, NULL);
 	if (Res == FALSE)
@@ -183,7 +163,7 @@ int cpu_rdmsr(struct msr_driver_t* driver, uint32_t msr_index, uint64_t* result)
 	return 0;
 }
 
-uint8_t io_inb(struct msr_driver_t* drv, uint16_t port)
+uint8_t io_inb(struct wr0_drv_t* drv, uint16_t port)
 {
 	if (!drv || !drv->hhDriver || drv->hhDriver == INVALID_HANDLE_VALUE)
 		return 0;
@@ -198,7 +178,7 @@ uint8_t io_inb(struct msr_driver_t* drv, uint16_t port)
 	return (uint8_t)value;
 }
 
-uint16_t io_inw(struct msr_driver_t* drv, uint16_t port)
+uint16_t io_inw(struct wr0_drv_t* drv, uint16_t port)
 {
 	if (!drv || !drv->hhDriver || drv->hhDriver == INVALID_HANDLE_VALUE)
 		return 0;
@@ -213,7 +193,7 @@ uint16_t io_inw(struct msr_driver_t* drv, uint16_t port)
 	return value;
 }
 
-uint32_t io_inl(struct msr_driver_t* drv, uint16_t port)
+uint32_t io_inl(struct wr0_drv_t* drv, uint16_t port)
 {
 	if (!drv || !drv->hhDriver || drv->hhDriver == INVALID_HANDLE_VALUE)
 		return 0;
@@ -229,7 +209,7 @@ uint32_t io_inl(struct msr_driver_t* drv, uint16_t port)
 	return value;
 }
 
-void io_outb(struct msr_driver_t* drv, uint16_t port, uint8_t value)
+void io_outb(struct wr0_drv_t* drv, uint16_t port, uint8_t value)
 {
 	if (!drv || !drv->hhDriver || drv->hhDriver == INVALID_HANDLE_VALUE)
 		return;
@@ -247,7 +227,7 @@ void io_outb(struct msr_driver_t* drv, uint16_t port, uint8_t value)
 		&inBuf, length, NULL, 0, &returnedLength, NULL);
 }
 
-void io_outw(struct msr_driver_t* drv, uint16_t port, uint16_t value)
+void io_outw(struct wr0_drv_t* drv, uint16_t port, uint16_t value)
 {
 	if (!drv || !drv->hhDriver || drv->hhDriver == INVALID_HANDLE_VALUE)
 		return;
@@ -265,7 +245,7 @@ void io_outw(struct msr_driver_t* drv, uint16_t port, uint16_t value)
 		&inBuf, length, NULL, 0, &returnedLength, NULL);
 }
 
-void io_outl(struct msr_driver_t* drv, uint16_t port, uint32_t value)
+void io_outl(struct wr0_drv_t* drv, uint16_t port, uint32_t value)
 {
 	if (!drv || !drv->hhDriver || drv->hhDriver == INVALID_HANDLE_VALUE)
 		return;
@@ -283,7 +263,7 @@ void io_outl(struct msr_driver_t* drv, uint16_t port, uint32_t value)
 		&inBuf, length, NULL, 0, &returnedLength, NULL);
 }
 
-int pci_conf_read(struct msr_driver_t* drv, uint32_t addr, uint32_t reg, void* value, uint32_t size)
+int pci_conf_read(struct wr0_drv_t* drv, uint32_t addr, uint32_t reg, void* value, uint32_t size)
 {
 	if (!drv || !drv->hhDriver || drv->hhDriver == INVALID_HANDLE_VALUE
 		|| !value || (size == 2 && (reg & 1) != 0) || (size == 4 && (reg & 3) != 0))
@@ -304,7 +284,7 @@ int pci_conf_read(struct msr_driver_t* drv, uint32_t addr, uint32_t reg, void* v
 	return -2;
 }
 
-uint8_t pci_conf_read8(struct msr_driver_t* drv, uint32_t addr, uint32_t reg)
+uint8_t pci_conf_read8(struct wr0_drv_t* drv, uint32_t addr, uint32_t reg)
 {
 	uint8_t ret;
 	if (pci_conf_read(drv, addr, reg, &ret, sizeof(ret)) == 0)
@@ -312,7 +292,7 @@ uint8_t pci_conf_read8(struct msr_driver_t* drv, uint32_t addr, uint32_t reg)
 	return 0xFF;
 }
 
-uint16_t pci_conf_read16(struct msr_driver_t* drv, uint32_t addr, uint32_t reg)
+uint16_t pci_conf_read16(struct wr0_drv_t* drv, uint32_t addr, uint32_t reg)
 {
 	uint16_t ret;
 	if (pci_conf_read(drv, addr, reg, &ret, sizeof(ret)) == 0)
@@ -320,7 +300,7 @@ uint16_t pci_conf_read16(struct msr_driver_t* drv, uint32_t addr, uint32_t reg)
 	return 0xFFFF;
 }
 
-uint32_t pci_conf_read32(struct msr_driver_t* drv, uint32_t addr, uint32_t reg)
+uint32_t pci_conf_read32(struct wr0_drv_t* drv, uint32_t addr, uint32_t reg)
 {
 	uint32_t ret;
 	if (pci_conf_read(drv, addr, reg, &ret, sizeof(ret)) == 0)
@@ -328,7 +308,7 @@ uint32_t pci_conf_read32(struct msr_driver_t* drv, uint32_t addr, uint32_t reg)
 	return 0xFFFFFFFF;
 }
 
-int pci_conf_write(struct msr_driver_t* drv, uint32_t addr, uint32_t reg, void* value, uint32_t size)
+int pci_conf_write(struct wr0_drv_t* drv, uint32_t addr, uint32_t reg, void* value, uint32_t size)
 {
 	if (!drv || !drv->hhDriver || drv->hhDriver == INVALID_HANDLE_VALUE
 		|| !value || (size == 2 && (reg & 1) != 0) || (size == 4 && (reg & 3) != 0))
@@ -355,22 +335,22 @@ int pci_conf_write(struct msr_driver_t* drv, uint32_t addr, uint32_t reg, void* 
 	return -2;
 }
 
-void pci_conf_write8(struct msr_driver_t* drv, uint32_t addr, uint32_t reg, uint8_t value)
+void pci_conf_write8(struct wr0_drv_t* drv, uint32_t addr, uint32_t reg, uint8_t value)
 {
 	pci_conf_write(drv, addr, reg, &value, sizeof(value));
 }
 
-void pci_conf_write16(struct msr_driver_t* drv, uint32_t addr, uint32_t reg, uint16_t value)
+void pci_conf_write16(struct wr0_drv_t* drv, uint32_t addr, uint32_t reg, uint16_t value)
 {
 	pci_conf_write(drv, addr, reg, &value, sizeof(value));
 }
 
-void pci_conf_write32(struct msr_driver_t* drv, uint32_t addr, uint32_t reg, uint32_t value)
+void pci_conf_write32(struct wr0_drv_t* drv, uint32_t addr, uint32_t reg, uint32_t value)
 {
 	pci_conf_write(drv, addr, reg, &value, sizeof(value));
 }
 
-uint32_t pci_find_by_id(struct msr_driver_t* drv, uint16_t vid, uint16_t did, uint8_t index)
+uint32_t pci_find_by_id(struct wr0_drv_t* drv, uint16_t vid, uint16_t did, uint8_t index)
 {
 	uint32_t addr = 0xFFFFFFFF;
 	uint64_t id = 0;
@@ -398,7 +378,7 @@ uint32_t pci_find_by_id(struct msr_driver_t* drv, uint16_t vid, uint16_t did, ui
 						&& pci_conf_read(drv, addr, 0x0E, &type, sizeof(type)) == 0)
 					{
 						if (type & 0x80)
-							multi_func_flag = true;
+							multi_func_flag = TRUE;
 					}
 					if (id == (vid | (((uint32_t)did) << 16)))
 					{
@@ -415,7 +395,7 @@ uint32_t pci_find_by_id(struct msr_driver_t* drv, uint16_t vid, uint16_t did, ui
 	return addr;
 }
 
-uint32_t pci_find_by_class(struct msr_driver_t* drv, uint8_t base, uint8_t sub, uint8_t prog, uint8_t index)
+uint32_t pci_find_by_class(struct wr0_drv_t* drv, uint8_t base, uint8_t sub, uint8_t prog, uint8_t index)
 {
 	uint32_t bus = 0, dev = 0, func = 0;
 	uint32_t count = 0;
@@ -462,7 +442,7 @@ uint32_t pci_find_by_class(struct msr_driver_t* drv, uint8_t base, uint8_t sub, 
 	return 0xFFFFFFFF;
 }
 
-DWORD phymem_read(struct msr_driver_t* drv,
+DWORD phymem_read(struct wr0_drv_t* drv,
 	DWORD_PTR address, PBYTE buffer, DWORD count, DWORD unitSize)
 {
 	if (!drv || !drv->hhDriver || drv->hhDriver == INVALID_HANDLE_VALUE || !buffer)
@@ -495,7 +475,7 @@ DWORD phymem_read(struct msr_driver_t* drv,
 	return 0;
 }
 
-int cpu_msr_driver_close(struct msr_driver_t* drv)
+int wr0_driver_close(struct wr0_drv_t* drv)
 {
 	SERVICE_STATUS srvStatus = { 0 };
 	if (drv == NULL)

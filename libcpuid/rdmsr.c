@@ -34,7 +34,7 @@
 #include "libcpuid_internal.h"
 #include "rdtsc.h"
 
-#include "winring0.h"
+#include <winring0.h>
 
 #include <windows.h>
 #include <winioctl.h>
@@ -137,12 +137,12 @@ static const uint32_t intel_msr[] = {
 
 struct msr_info_t {
 	int cpu_clock;
-	struct msr_driver_t *handle;
+	struct wr0_drv_t *handle;
 	struct cpu_id_t *id;
 	struct internal_id_info_t *internal;
 };
 
-static int perfmsr_measure(struct msr_driver_t* handle, int msr)
+static int perfmsr_measure(struct wr0_drv_t* handle, int msr)
 {
 	int err;
 	uint64_t a, b;
@@ -490,7 +490,7 @@ static double get_info_bus_clock(struct msr_info_t *info)
 	return (double) CPU_INVALID_VALUE / 100;
 }
 
-int cpu_rdmsr_range(struct msr_driver_t* handle, uint32_t msr_index, uint8_t highbit,
+int cpu_rdmsr_range(struct wr0_drv_t* handle, uint32_t msr_index, uint8_t highbit,
 					uint8_t lowbit, uint64_t* result)
 {
 	int err;
@@ -510,7 +510,7 @@ int cpu_rdmsr_range(struct msr_driver_t* handle, uint32_t msr_index, uint8_t hig
 	return err;
 }
 
-int cpu_msrinfo(struct msr_driver_t* handle, cpu_msrinfo_request_t which)
+int cpu_msrinfo(struct wr0_drv_t* handle, cpu_msrinfo_request_t which)
 {
 	static int err = 0, init = 0;
 	struct cpu_raw_data_t raw;

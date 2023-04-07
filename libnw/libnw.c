@@ -24,7 +24,7 @@ BOOL NW_Init(PNWLIB_CONTEXT pContext)
 	NWLC->AcpiTable = 0;
 	NWLC->SmbiosType = 127;
 	NWLC->NwRoot = NWL_NodeAlloc("NWinfo", 0);
-	NWLC->NwDrv = cpu_msr_driver_open();
+	NWLC->NwDrv = wr0_driver_open();
 	NWLC->NwRsdp = NWL_GetRsdp();
 	NWLC->NwRsdt = NWL_GetRsdt();
 	NWLC->NwXsdt = NWL_GetXsdt();
@@ -87,7 +87,7 @@ VOID NW_Fini(VOID)
 	if (NWLC->NwXsdt)
 		free(NWLC->NwXsdt);
 	if (NWLC->NwDrv)
-		cpu_msr_driver_close(NWLC->NwDrv);
+		wr0_driver_close(NWLC->NwDrv);
 	if (NWLC->NwRoot)
 		NWL_NodeFree(NWLC->NwRoot, 1);
 	if (NWLC->NwFile && NWLC->NwFile != stdout)

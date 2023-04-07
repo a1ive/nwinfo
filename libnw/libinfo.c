@@ -5,20 +5,8 @@
 #include <libcpuid.h>
 #include <winring0.h>
 
-struct msr_driver_t
-{
-	LPCSTR driver_name;
-	LPCSTR driver_id;
-	LPCSTR driver_obj;
-	CHAR driver_path[MAX_PATH + 1];
-	SC_HANDLE scManager;
-	SC_HANDLE scDriver;
-	HANDLE hhDriver;
-	int errorcode;
-};
-
 static void
-PrintDriverVerison(PNODE node, struct msr_driver_t* drv)
+PrintDriverVerison(PNODE node, struct wr0_drv_t* drv)
 {
 	DWORD dwLen;
 	LPVOID pBlock = NULL;
