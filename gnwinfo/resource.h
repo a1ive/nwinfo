@@ -55,6 +55,8 @@
 #define IDC_MAIN_TREE                   1003
 #define IDC_MAIN_LIST                   1004
 
+#define IDT_TIMER1                      2001
+
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED

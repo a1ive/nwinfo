@@ -56,6 +56,7 @@ INT NWL_NodeDepth(PNODE node);
 INT NWL_NodeChildCount(PNODE node);
 INT NWL_NodeAppendChild(PNODE parent, PNODE child);
 PNODE NWL_NodeAppendNew(PNODE parent, LPCSTR name, INT flags);
+PNODE NWL_NodeGetChild(PNODE parent, LPCSTR name);
 
 INT NWL_NodeAttrCount(PNODE node);
 LPSTR NWL_NodeAttrGet(PNODE node, LPCSTR key);

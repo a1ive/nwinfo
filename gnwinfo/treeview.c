@@ -241,7 +241,7 @@ GNW_TreeUpdate(HWND hWnd, WPARAM wParam, LPARAM lParam)
 	LPNMTREEVIEWA pnmtv = (LPNMTREEVIEWA)lParam;
 	UNREFERENCED_PARAMETER(wParam);
 	HWND hwndTV = GetDlgItem(hWnd, IDC_MAIN_TREE);
-	if (!hwndTV || pnmtv->hdr.code != (UINT)TVN_SELCHANGINGA)
+	if (pnmtv->hdr.code != (UINT)TVN_SELCHANGINGA)
 		return (INT_PTR)FALSE;
 	GNW_ListClean();
 	if (pnmtv->itemNew.hItem == GNWC.htSpd && !GNWC.pnSpd)
@@ -262,20 +262,8 @@ GNW_TreeUpdate(HWND hWnd, WPARAM wParam, LPARAM lParam)
 			GNW_TreeAdd(GNWC.htSpd, mt, 3, IDI_ICON_TVN_SPD, node);
 		}
 	}
-	if (pnmtv->itemNew.lParam)
-	{
-		BOOL bSkipChild = FALSE;
-		HTREEITEM htParent = TreeView_GetParent(hwndTV, pnmtv->itemNew.hItem);
-		if (htParent == GNWC.htDisk)
-			bSkipChild = TRUE;
-		else if (htParent == GNWC.htCpuid || pnmtv->itemNew.hItem == GNWC.htCpuid)
-			bSkipChild = TRUE;
-		else if (pnmtv->itemNew.hItem == GNWC.htBattery)
-			bSkipChild = TRUE;
-		else if (pnmtv->itemNew.hItem == GNWC.htRoot)
-			bSkipChild = TRUE;
-		GNW_ListAdd((PNODE)pnmtv->itemNew.lParam, bSkipChild);
-	}
+	memcpy(&GNWC.tvCurItem, &pnmtv->itemNew, sizeof(TVITEMA));
+	GNW_ListUpdate();
 	GNW_TreeExpand(pnmtv->itemNew.hItem);
 	return (INT_PTR)TRUE;
 }

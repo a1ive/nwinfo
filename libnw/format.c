@@ -141,6 +141,17 @@ PNODE NWL_NodeAppendNew(PNODE parent, LPCSTR name, INT flags)
 	return node;
 }
 
+PNODE NWL_NodeGetChild(PNODE parent, LPCSTR name)
+{
+	PNODE_LINK link;
+	for (link = &parent->Children[0]; link->LinkedNode != NULL; link++)
+	{
+		if (strcmp(link->LinkedNode->Name, name) == 0)
+			return link->LinkedNode;
+	}
+	return NULL;
+}
+
 static PNODE_ATT NWL_NodeAllocAttr(LPCSTR key, LPCSTR value, int flags)
 {
 	PNODE_ATT att = NULL;

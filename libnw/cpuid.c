@@ -138,21 +138,8 @@ static void
 PrintCoreMsr(PNODE node, const struct cpu_id_t* data, logical_cpu_t core)
 {
 	int value = CPU_INVALID_VALUE;
-	if (!data->flags[CPU_FEATURE_MSR])
-	{
-		fprintf(stderr, "rdmsr not supported\n");
+	if (!data->flags[CPU_FEATURE_MSR] || NWLC->NwDrv == NULL || !set_cpu_affinity(core))
 		return;
-	}
-	if (NWLC->NwDrv == NULL)
-	{
-		fprintf(stderr, "Cannot load driver!\n");
-		return;
-	}
-	if (!set_cpu_affinity(core))
-	{
-		fprintf(stderr, "Cannot set cpu affinity!\n");
-		return;
-	}
 	int min_multi = cpu_msrinfo(NWLC->NwDrv, INFO_MIN_MULTIPLIER);
 	int max_multi = cpu_msrinfo(NWLC->NwDrv, INFO_MAX_MULTIPLIER);
 	int cur_multi = cpu_msrinfo(NWLC->NwDrv, INFO_CUR_MULTIPLIER);
@@ -178,12 +165,35 @@ PrintCoreMsr(PNODE node, const struct cpu_id_t* data, logical_cpu_t core)
 		NWL_NodeAttrSetf(node, "Bus Clock (MHz)", NAFLG_FMT_NUMERIC, "%.2lf", value / 100.0);
 }
 
-static void
-PrintCpuInfo(PNODE node, struct cpu_id_t* data, struct cpu_raw_data_array_t* raw)
+static logical_cpu_t
+PrintCpuMsr(PNODE node, struct cpu_id_t* data, struct cpu_raw_data_array_t* raw)
 {
 	logical_cpu_t i, first_core = 0xffff;
 	CHAR name[] = "CORE65536";
 	bool affinity_saved = FALSE;
+	affinity_saved = save_cpu_affinity();
+	for (i = 0; i < raw->num_raw; i++)
+	{
+		PNODE core = NULL;
+		if (!get_affinity_mask_bit(i, &data->affinity_mask))
+			continue;
+		if (first_core == 0xffff)
+			first_core = i;
+		snprintf(name, sizeof(name), "CORE%u", i);
+		core = NWL_NodeGetChild(node, name);
+		if (core == NULL)
+			core = NWL_NodeAppendNew(node, name, 0);
+		PrintCoreMsr(core, data, i);
+	}
+	if (affinity_saved)
+		restore_cpu_affinity();
+	return first_core;
+}
+
+static void
+PrintCpuInfo(PNODE node, struct cpu_id_t* data, struct cpu_raw_data_array_t* raw)
+{
+	logical_cpu_t first_core;
 	NWL_NodeAttrSet(node, "Purpose", cpu_purpose_str(data->purpose), 0);
 	NWL_NodeAttrSet(node, "Vendor", data->vendor_str, 0);
 	NWL_NodeAttrSet(node, "Vendor Name", CpuVendorToStr(data->vendor), 0);
@@ -201,22 +211,32 @@ PrintCpuInfo(PNODE node, struct cpu_id_t* data, struct cpu_raw_data_array_t* raw
 	NWL_NodeAttrSetf(node, "SSE Units", 0, "%d bits (%s)",
 		data->sse_size, data->detection_hints[CPU_HINT_SSE_SIZE_AUTH] ? "authoritative" : "non-authoritative");
 	PrintCache(node, data);
-	affinity_saved = save_cpu_affinity();
-	for (i = 0; i < raw->num_raw; i++)
-	{
-		PNODE core = NULL;
-		if (!get_affinity_mask_bit(i, &data->affinity_mask))
-			continue;
-		if (first_core == 0xffff)
-			first_core = i;
-		snprintf(name, sizeof(name), "CORE%u", i);
-		core = NWL_NodeAppendNew(node, name, 0);
-		PrintCoreMsr(core, data, i);
-	}
-	if (affinity_saved)
-		restore_cpu_affinity();
+	first_core = PrintCpuMsr(node, data, raw);
 	PrintFeatures(node, data);
 	PrintSgx(node, data, raw, first_core);
+}
+
+PNODE NW_UpdateCpuid(PNODE node)
+{
+	uint8_t i;
+	struct cpu_raw_data_array_t raw = { 0 };
+	struct system_id_t id = { 0 };
+	if (cpuid_get_all_raw_data(&raw) < 0)
+		goto fail;
+	if (cpu_identify_all(&raw, &id) < 0)
+		goto fail;
+	for (i = 0; i < id.num_cpu_types; i++)
+	{
+		CHAR name[32];
+		PNODE cpu = NULL;
+		snprintf(name, sizeof(name), "CPU%u", i);
+		cpu = NWL_NodeGetChild(node, name);
+		PrintCpuMsr(cpu, &id.cpu_types[i], &raw);
+	}
+fail:
+	cpuid_free_system_id(&id);
+	cpuid_free_raw_data_array(&raw);
+	return node;
 }
 
 PNODE NW_Cpuid(VOID)
@@ -224,6 +244,7 @@ PNODE NW_Cpuid(VOID)
 	uint8_t i;
 	struct cpu_raw_data_array_t raw = { 0 };
 	struct system_id_t id = { 0 };
+	
 	PNODE node = NWL_NodeAlloc("CPUID", 0);
 	if (NWLC->CpuInfo)
 		NWL_NodeAppendChild(NWLC->NwRoot, node);
@@ -231,13 +252,13 @@ PNODE NW_Cpuid(VOID)
 	if (cpuid_get_all_raw_data(&raw) < 0)
 	{
 		fprintf(stderr, "Cannot obtain raw CPU data!\n");
-		return node;
+		goto fail;
 	}
 
 	if (cpu_identify_all(&raw, &id) < 0)
 	{
 		fprintf(stderr, "Error identifying the CPU: %s\n", cpuid_error());
-		return node;
+		goto fail;
 	}
 	PrintHypervisor(node, &id.cpu_types[0]);
 	NWL_NodeAttrSetf(node, "Processor Count", NAFLG_FMT_NUMERIC, "%u", id.num_cpu_types);
@@ -252,7 +273,6 @@ PNODE NW_Cpuid(VOID)
 	if (id.l4_total_instances >= 0)
 		NWL_NodeAttrSetf(node, "L4 Cache Instances", NAFLG_FMT_NUMERIC, "%d", id.l4_total_instances);
 	NWL_NodeAttrSetf(node, "CPU Clock (MHz)", NAFLG_FMT_NUMERIC, "%d", cpu_clock());
-
 	for (i = 0; i < id.num_cpu_types; i++)
 	{
 		CHAR name[32];
@@ -261,6 +281,7 @@ PNODE NW_Cpuid(VOID)
 		cpu = NWL_NodeAppendNew(node, name, 0);
 		PrintCpuInfo(cpu, &id.cpu_types[i], &raw);
 	}
+fail:
 	cpuid_free_system_id(&id);
 	cpuid_free_raw_data_array(&raw);
 	return node;

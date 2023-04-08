@@ -100,6 +100,24 @@ VOID GNW_ListAdd(PNODE node, BOOL bSkipChild)
 	}
 }
 
+VOID GNW_ListUpdate(VOID)
+{
+	HWND hwndTV = GetDlgItem(GNWC.hWnd, IDC_MAIN_TREE);
+	if (!hwndTV || !GNWC.tvCurItem.lParam)
+		return;
+	BOOL bSkipChild = FALSE;
+	HTREEITEM htParent = TreeView_GetParent(hwndTV, GNWC.tvCurItem.hItem);
+	if (htParent == GNWC.htDisk)
+		bSkipChild = TRUE;
+	else if (htParent == GNWC.htCpuid || GNWC.tvCurItem.hItem == GNWC.htCpuid)
+		bSkipChild = TRUE;
+	else if (GNWC.tvCurItem.hItem == GNWC.htBattery)
+		bSkipChild = TRUE;
+	else if (GNWC.tvCurItem.hItem == GNWC.htRoot)
+		bSkipChild = TRUE;
+	GNW_ListAdd((PNODE)GNWC.tvCurItem.lParam, bSkipChild);
+}
+
 VOID GNW_ListClean(VOID)
 {
 	HWND hwndLV = GetDlgItem(GNWC.hWnd, IDC_MAIN_LIST);

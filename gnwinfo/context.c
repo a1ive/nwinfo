@@ -82,6 +82,8 @@ GNW_Init(HINSTANCE hInstance, INT nCmdShow, DLGPROC lpDialogFunc)
 	GNW_ListInit();
 	GNW_TreeInit();
 
+	SetTimer(GNWC.hWnd, IDT_TIMER1, 1000, (TIMERPROC)NULL);
+
 	GNW_TreeExpand(GNWC.htRoot);
 }
 
@@ -93,6 +95,7 @@ GNW_Reload(VOID)
 	
 	GNW_Wait();
 	GNW_ListClean();
+	ZeroMemory(&GNWC.tvCurItem, sizeof(TVITEMA));
 	GNW_TreeDelete(TVI_ROOT);
 	GNW_TreeInit();
 
@@ -144,6 +147,7 @@ GNW_Exit(INT nExitCode)
 	if (GNWC.pnRoot)
 		NWL_NodeFree(GNWC.pnRoot, 1);
 	ImageList_Destroy(GNWC.hImageList);
+	KillTimer(GNWC.hWnd, IDT_TIMER1);
 	CloseHandle(GNWC.hMutex);
 	exit(nExitCode);
 }

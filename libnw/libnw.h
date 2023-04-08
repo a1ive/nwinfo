@@ -78,6 +78,10 @@ PNODE NW_Usb(VOID);
 PNODE NW_Battery(VOID);
 PNODE NW_Libinfo(VOID);
 
+PNODE NW_UpdateSystem(PNODE node);
+PNODE NW_UpdateCpuid(PNODE node);
+PNODE NW_UpdateNetwork(PNODE node);
+
 #ifdef __cplusplus
 } /* extern "C" */
 #endif

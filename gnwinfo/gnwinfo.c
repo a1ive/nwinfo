@@ -80,6 +80,16 @@ MainDlgProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	case WM_SIZE:
 		MainDlgResize(hWnd, LOWORD(lParam), HIWORD(lParam));
 		return (INT_PTR)TRUE;
+	case WM_TIMER:
+		if (wParam == IDT_TIMER1)
+		{
+			NW_UpdateSystem(GNWC.pnSystem);
+			NW_UpdateCpuid(GNWC.pnCpuid);
+			NW_UpdateNetwork(GNWC.pnNetwork);
+			GNW_ListClean();
+			GNW_ListUpdate();
+		}
+		return (INT_PTR)TRUE;
 	case WM_SYSCOMMAND:
 		if (wParam == SC_CLOSE)
 			DestroyWindow(hWnd);

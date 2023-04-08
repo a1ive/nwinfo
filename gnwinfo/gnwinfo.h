@@ -31,6 +31,7 @@ typedef struct _GNW_CONTEXT
 	LANGID wLang;
 	HIMAGELIST hImageList;
 	HMENU hMenu;
+	TVITEMA tvCurItem;
 
 	HTREEITEM htRoot;
 	PNODE pnRoot;
@@ -78,6 +79,7 @@ INT_PTR GNW_TreeUpdate(HWND hWnd, WPARAM wParam, LPARAM lParam);
 
 VOID GNW_ListInit(VOID);
 VOID GNW_ListAdd(PNODE node, BOOL bSkipChild);
+VOID GNW_ListUpdate(VOID);
 VOID GNW_ListClean(VOID);
 
 INT GNW_IconFromAcpi(PNODE node, LPCSTR name);
