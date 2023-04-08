@@ -121,9 +121,10 @@ PNODE NW_Network (VOID)
 	pCurrAddresses = pAddresses;
 	while (pCurrAddresses)
 	{
-		PNODE nic = NWL_NodeAppendNew(node, "Interface", NFLG_TABLE_ROW);
+		PNODE nic = NULL;
 		if (NWLC->ActiveNet && pCurrAddresses->OperStatus != IfOperStatusUp)
 			goto next_addr;
+		nic = NWL_NodeAppendNew(node, "Interface", NFLG_TABLE_ROW);
 		NWL_NodeAttrSet(nic, "Network Adapter", pCurrAddresses->AdapterName, NAFLG_FMT_GUID);
 		NWL_NodeAttrSet(nic, "Description", NWL_WcsToMbs(pCurrAddresses->Description), 0);
 		NWL_NodeAttrSet(nic, "Type", IfTypeToStr(pCurrAddresses->IfType), 0);
