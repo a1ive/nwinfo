@@ -18,7 +18,9 @@ OsVersionToStr(OSVERSIONINFOEXW* p)
 		// FUCK YOU MICROSOFT
 		if (p->wProductType != VER_NT_WORKSTATION)
 		{
-			if (p->dwBuildNumber >= 17763U)
+			if (p->dwBuildNumber >= 20348U)
+				return "Server 2022";
+			else if (p->dwBuildNumber >= 17763U)
 				return "Server 2019";
 			else
 				return "Server 2016";
@@ -70,6 +72,12 @@ OsVersionToStr(OSVERSIONINFOEXW* p)
 	{
 		return "XP";
 	}
+#if 0
+	if (p->dwMajorVersion == 5 && p->dwMinorVersion == 0)
+	{
+		return "2000";
+	}
+#endif
 	return "Unknown";
 }
 
