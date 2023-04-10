@@ -242,6 +242,10 @@ static void PrintBootInfo(PNODE node)
 	WCHAR wArcName[MAX_PATH];
 	WCHAR* pFwBootDev = NWL_NtGetRegValue(HKEY_LOCAL_MACHINE,
 		L"SYSTEM\\CurrentControlSet\\Control", L"FirmwareBootDevice", &dwType);
+	WCHAR* pSysBootDev = NWL_NtGetRegValue(HKEY_LOCAL_MACHINE,
+		L"SYSTEM\\CurrentControlSet\\Control", L"SystemBootDevice", &dwType);
+	WCHAR* pStartOption = NWL_NtGetRegValue(HKEY_LOCAL_MACHINE,
+		L"SYSTEM\\CurrentControlSet\\Control", L"SystemStartOptions", &dwType);
 	if (pFwBootDev)
 	{
 		swprintf(wArcName, MAX_PATH, L"\\ArcName\\%s", pFwBootDev);
@@ -250,8 +254,14 @@ static void PrintBootInfo(PNODE node)
 		NWL_NodeAttrSet(node, "Boot Device", NWL_NtGetPathFromHandle(hFile), 0);
 		CloseHandle(hFile);
 	}
-	WCHAR* pStartOption = NWL_NtGetRegValue(HKEY_LOCAL_MACHINE,
-		L"SYSTEM\\CurrentControlSet\\Control", L"SystemStartOptions", &dwType);
+	if (pSysBootDev)
+	{
+		swprintf(wArcName, MAX_PATH, L"\\ArcName\\%s", pSysBootDev);
+		free(pSysBootDev);
+		hFile = NWL_NtCreateFile(wArcName, FALSE);
+		NWL_NodeAttrSet(node, "System Device", NWL_NtGetPathFromHandle(hFile), 0);
+		CloseHandle(hFile);
+	}
 	if (pStartOption)
 	{
 		NWL_NodeAttrSetf(node, "Start Options", 0, "%ls", pStartOption);

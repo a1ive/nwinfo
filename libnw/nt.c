@@ -33,12 +33,12 @@ typedef struct _OBJECT_ATTRIBUTES
 } OBJECT_ATTRIBUTES, *POBJECT_ATTRIBUTES;
 
 #define InitializeObjectAttributes( p, n, a, r, s ) { \
-    (p)->Length = sizeof( OBJECT_ATTRIBUTES ); \
-    (p)->RootDirectory = r; \
-    (p)->Attributes = a; \
-    (p)->ObjectName = n; \
-    (p)->SecurityDescriptor = s; \
-    (p)->SecurityQualityOfService = NULL; \
+	(p)->Length = sizeof( OBJECT_ATTRIBUTES ); \
+	(p)->RootDirectory = r; \
+	(p)->Attributes = a; \
+	(p)->ObjectName = n; \
+	(p)->SecurityDescriptor = s; \
+	(p)->SecurityQualityOfService = NULL; \
 }
 
 #define FILE_SUPERSEDE                  0x00000000
