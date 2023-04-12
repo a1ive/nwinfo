@@ -10,6 +10,78 @@
 
 static const char* GV_GUID = "{8BE4DF61-93CA-11D2-AA0D-00E098032B8C}";
 
+static const CHAR* Win10BuildNumber(DWORD dwBuildNumber)
+{
+	switch (dwBuildNumber)
+	{
+	case 22621U:
+		return "11 22H2"; // Sun Valley 2
+	case 22000U:
+		return "11 21H2"; // Sun Valley
+	case 19045U:
+		return "10 22H2"; // Vibranium 22H2
+	case 19044U:
+		return "10 21H2"; // Vibranium 21H2
+	case 19043U:
+		return "10 21H1"; // Vibranium 21H1
+	case 19042U:
+		return "10 20H2"; // Vibranium 20H2
+	case 19041U:
+		return "10 2004"; // Vibranium 20H1
+	case 18363U:
+		return "10 1909"; // Vanadium 19H2
+	case 18362U:
+		return "10 1903"; // 19H1
+	case 17763U:
+		return "10 1809"; // Redstone 5
+	case 17134U:
+		return "10 1803"; // Redstone 4
+	case 16299U:
+		return "10 1709"; // Redstone 3
+	case 15063U:
+		return "10 1703"; // Redstone 2
+	case 14393U:
+		return "10 1607"; // Redstone
+	case 10586U:
+		return "10 1511"; // Threshold 2
+	case 10240U:
+		return "10 1507"; // Threshold
+	}
+	if (dwBuildNumber >= 22000U)
+		return "11";
+	return "10";
+}
+
+static const CHAR* WinServer2016BuildNumber(DWORD dwBuildNumber)
+{
+	switch (dwBuildNumber)
+	{
+	case 20348U:
+		return "Server 2022";
+	case 19042U:
+		return "Server, version 20H2"; // WTF?
+	case 19041U:
+		return "Server, version 2004"; // WTF?
+	case 18363U:
+		return "Server, version 1909"; // WTF?
+	case 18362U:
+		return "Server, version 1903"; // WTF?
+	case 17763U:
+		return "Server 2019"; // Server, version 1809 ?
+	case 17134U:
+		return "Server, version 1803"; // WTF?
+	case 16299U:
+		return "Server, version 1709"; // WTF?
+	case 14393U:
+		return "Server 2016";
+	}
+	if (dwBuildNumber >= 20348U)
+		return "Server 2022";
+	else if (dwBuildNumber >= 17763U)
+		return "Server 2019";
+	return "Server 2016";
+}
+
 static const CHAR*
 OsVersionToStr(OSVERSIONINFOEXW* p)
 {
@@ -17,21 +89,9 @@ OsVersionToStr(OSVERSIONINFOEXW* p)
 	{
 		// FUCK YOU MICROSOFT
 		if (p->wProductType != VER_NT_WORKSTATION)
-		{
-			if (p->dwBuildNumber >= 20348U)
-				return "Server 2022";
-			else if (p->dwBuildNumber >= 17763U)
-				return "Server 2019";
-			else
-				return "Server 2016";
-		}
+			return WinServer2016BuildNumber(p->dwBuildNumber);
 		else
-		{
-			if (p->dwBuildNumber >= 22000U)
-				return "11";
-			else
-				return "10";
-		}
+			return Win10BuildNumber(p->dwBuildNumber);
 	}
 	if (p->dwMajorVersion == 6 && p->dwMinorVersion == 3)
 	{
@@ -92,10 +152,18 @@ static void PrintOsVer(PNODE node)
 
 	if (RtlGetVersion)
 	{
+		CHAR szSP[] = " SP65535.65535";
 		osInfo.dwOSVersionInfoSize = sizeof(osInfo);
 		RtlGetVersion(&osInfo);
-		NWL_NodeAttrSetf(node, "OS", 0,
-			"Windows %s (%lu.%lu.%lu)", OsVersionToStr(&osInfo),
+		if (osInfo.wServicePackMinor)
+			snprintf(szSP, sizeof(szSP), " SP%u.%u",
+				osInfo.wServicePackMajor, osInfo.wServicePackMinor);
+		else if (osInfo.wServicePackMajor)
+			snprintf(szSP, sizeof(szSP), " SP%u", osInfo.wServicePackMajor);
+		else
+			szSP[0] = '\0';
+		NWL_NodeAttrSetf(node, "OS", 0, "Windows %s%s", OsVersionToStr(&osInfo), szSP);
+		NWL_NodeAttrSetf(node, "Build Number", 0, "%lu.%lu.%lu",
 			osInfo.dwMajorVersion, osInfo.dwMinorVersion, osInfo.dwBuildNumber);
 	}
 }
