@@ -130,13 +130,11 @@
     <ClInclude Include="smart.h" />
     <ClInclude Include="smbios.h" />
     <ClInclude Include="spd.h" />
-    <ClInclude Include="tokyo.h" />
     <ClInclude Include="utils.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="acpi.c" />
     <ClCompile Include="battery.c" />
-    <ClCompile Include="beep.c" />
     <ClCompile Include="cpuid.c" />
     <ClCompile Include="disk.c" />
     <ClCompile Include="display.c" />

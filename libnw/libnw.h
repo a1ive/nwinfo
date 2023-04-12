@@ -63,8 +63,6 @@ BOOL NW_Init(PNWLIB_CONTEXT pContext);
 VOID NW_Print(LPCSTR lpFileName);
 VOID NW_Fini(VOID);
 
-VOID NW_Beep(int argc, char* argv[]);
-
 PNODE NW_Acpi(VOID);
 PNODE NW_Cpuid(VOID);
 PNODE NW_Disk(VOID);

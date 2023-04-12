@@ -20,8 +20,6 @@ static void nwinfo_help(void)
 		"  --display        Print EDID info.\n"
 		"  --pci[=XX]       Print PCI [class=XX] info.\n"
 		"  --usb            Print USB info.\n"
-		"  --beep FREQ TIME [FREQ TIME ...]\n"
-		"                   Play a tune.\n"
 		"  --spd            Print SPD info\n"
 		"  --battery        Print battery info.\n"
 		"  --lib            Print LIBNW info.\n");
@@ -86,13 +84,6 @@ int main(int argc, char* argv[])
 		}
 		else if (_stricmp(argv[i], "--usb") == 0)
 			nwContext.UsbInfo = TRUE;
-		else if (_stricmp(argv[i], "--beep") == 0)
-		{
-			int new_argc = argc - i - 1;
-			char** new_argv = argc > 0 ? &argv[i + 1] : NULL;
-			NW_Beep(new_argc, new_argv);
-			goto main_out;
-		}
 		else if (_stricmp(argv[i], "--spd") == 0)
 			nwContext.SpdInfo = TRUE;
 		else if (_stricmp(argv[i], "--battery") == 0)
@@ -106,7 +97,6 @@ int main(int argc, char* argv[])
 		}
 	}
 
-main_out:
 	NW_Print(lpFileName);
 	NW_Fini();
 	return 0;

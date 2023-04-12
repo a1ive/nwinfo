@@ -21,9 +21,6 @@
     <ClInclude Include="spd.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="tokyo.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="libnw.h">
       <Filter>头文件</Filter>
     </ClInclude>
@@ -45,9 +42,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="acpi.c">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="beep.c">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="cpuid.c">
