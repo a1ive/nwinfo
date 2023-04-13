@@ -125,6 +125,8 @@ OsVersionToStr(OSVERSIONINFOEXW* p)
 	{
 		if (p->wSuiteMask & VER_SUITE_WH_SERVER)
 			return "Home Server";
+		else if (p->wProductType == VER_NT_WORKSTATION)
+			return "XP x64";
 		else
 			return "Server 2003";
 	}
