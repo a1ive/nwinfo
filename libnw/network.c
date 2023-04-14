@@ -8,6 +8,12 @@
 #include "libnw.h"
 #include "utils.h"
 
+#define WORKING_BUFFER_SIZE 15000
+#define MAX_TRIES 3
+
+#define MALLOC(x) HeapAlloc(GetProcessHeap(), 0, (x))
+#define FREE(x) HeapFree(GetProcessHeap(), 0, (x))
+
 static const char* bps_human_sizes[6] =
 { "bps", "Kbps", "Mbps", "Gbps", "Tbps", "Pbps", };
 
@@ -100,6 +106,7 @@ PNODE NW_UpdateNetwork(PNODE node)
 	ULONG flags = GAA_FLAG_INCLUDE_GATEWAYS;
 	PIP_ADAPTER_ADDRESSES pAddresses = NULL;
 	ULONG outBufLen = 0;
+	ULONG Iterations = 0;
 	PIP_ADAPTER_ADDRESSES pCurrAddresses = NULL;
 	PIP_ADAPTER_UNICAST_ADDRESS pUnicast = NULL;
 	PIP_ADAPTER_ANYCAST_ADDRESS pAnycast = NULL;
@@ -108,46 +115,49 @@ PNODE NW_UpdateNetwork(PNODE node)
 	PIP_ADAPTER_GATEWAY_ADDRESS pGateway = NULL;
 	MIB_IFTABLE *IfTable = NULL;
 	ULONG IfTableSize = 0;
+	PVOID pMaxAddress = NULL;
 
-	dwRetVal = GetAdaptersAddresses(AF_UNSPEC, flags, NULL, NULL, &outBufLen);
-
-	if (dwRetVal == ERROR_BUFFER_OVERFLOW)
+	// Allocate a 15 KB buffer to start with.
+	outBufLen = WORKING_BUFFER_SIZE;
+	do
 	{
-		pAddresses = (IP_ADAPTER_ADDRESSES*)malloc(outBufLen);
+		pAddresses = (IP_ADAPTER_ADDRESSES*)MALLOC(outBufLen);
 		if (!pAddresses)
 		{
-			fprintf (stderr, "Memory allocation failed.\n");
+			fprintf(stderr, "Memory allocation failed.\n");
 			return node;
 		}
-	}
-	else if (dwRetVal == ERROR_NO_DATA)
-		return node;
-	else
-	{
-		fprintf(stderr, "GetAdaptersAddresses Error: %d\n", dwRetVal);
-		return node;
-	}
 
-	dwRetVal = GetAdaptersAddresses(AF_UNSPEC, flags, NULL, pAddresses, &outBufLen);
+		dwRetVal = GetAdaptersAddresses(AF_UNSPEC, flags, NULL, pAddresses, &outBufLen);
+		if (dwRetVal == ERROR_BUFFER_OVERFLOW)
+		{
+			FREE(pAddresses);
+			pAddresses = NULL;
+		}
+		else
+			break;
+		Iterations++;
+	} while ((dwRetVal == ERROR_BUFFER_OVERFLOW) && (Iterations < MAX_TRIES));
 
 	if (dwRetVal != NO_ERROR)
 	{
-		fprintf(stderr, "Call to GetAdaptersAddresses failed with error: %d\n", dwRetVal);
-		free(pAddresses);
+		FREE(pAddresses);
 		return node;
 	}
 
 	dwRetVal = GetIfTable(NULL, &IfTableSize, FALSE);
 	if (dwRetVal == ERROR_INSUFFICIENT_BUFFER)
 	{
-		IfTable = (MIB_IFTABLE*)malloc(IfTableSize);
+		IfTable = (MIB_IFTABLE*)MALLOC(IfTableSize);
 		if (IfTable)
 			GetIfTable(IfTable, &IfTableSize, TRUE);
 	}
 
 	pCurrAddresses = pAddresses;
-	while (pCurrAddresses)
+	pMaxAddress = ((PUCHAR)pAddresses) + outBufLen;
+	while (pCurrAddresses && pCurrAddresses < (PIP_ADAPTER_ADDRESSES)pMaxAddress)
 	{
+		printf("while->enter, ptr=%p\n", pCurrAddresses);
 		PNODE nic = NULL;
 		if (NWLC->ActiveNet && pCurrAddresses->OperStatus != IfOperStatusUp)
 			goto next_addr;
@@ -171,7 +181,7 @@ PNODE NW_UpdateNetwork(PNODE node)
 		if (pUnicast != NULL)
 		{
 			PNODE n_unicast = CreateNode(nic, "Unicasts");
-			for (i = 0; pUnicast != NULL; i++)
+			for (i = 0; pUnicast != NULL && pUnicast < (PIP_ADAPTER_UNICAST_ADDRESS)pMaxAddress; i++)
 			{
 				PNODE unicast = NWL_NodeAppendNew(n_unicast, "Unicast Address", NFLG_TABLE_ROW);
 				displayAddress(unicast, &pUnicast->Address, NULL);
@@ -190,7 +200,7 @@ PNODE NW_UpdateNetwork(PNODE node)
 		if (pAnycast)
 		{
 			PNODE n_anycast = CreateNode(nic, "Anycasts");
-			for (i = 0; pAnycast != NULL; i++)
+			for (i = 0; pAnycast != NULL && pAnycast < (PIP_ADAPTER_ANYCAST_ADDRESS)pMaxAddress; i++)
 			{
 				PNODE anycast = NWL_NodeAppendNew(n_anycast, "Anycast Address", NFLG_TABLE_ROW);
 				displayAddress(anycast, &pAnycast->Address, NULL);
@@ -202,7 +212,7 @@ PNODE NW_UpdateNetwork(PNODE node)
 		if (pMulticast)
 		{
 			PNODE n_multicast = CreateNode(nic, "Multicasts");
-			for (i = 0; pMulticast != NULL; i++)
+			for (i = 0; pMulticast != NULL && pMulticast < (PIP_ADAPTER_MULTICAST_ADDRESS)pMaxAddress; i++)
 			{
 				PNODE multicast = NWL_NodeAppendNew(n_multicast, "Multicast Address", NFLG_TABLE_ROW);
 				displayAddress(multicast, &pMulticast->Address, NULL);
@@ -214,7 +224,7 @@ PNODE NW_UpdateNetwork(PNODE node)
 		if (pGateway != NULL)
 		{
 			PNODE n_gateway = CreateNode(nic, "Gateways");
-			for (i = 0; pGateway != NULL; i++)
+			for (i = 0; pGateway != NULL && pGateway < (PIP_ADAPTER_GATEWAY_ADDRESS)pMaxAddress; i++)
 			{
 				PNODE gateway = NWL_NodeAppendNew(n_gateway, "Gateway", NFLG_TABLE_ROW);
 				displayAddress(gateway, &pGateway->Address, NULL);
@@ -226,7 +236,7 @@ PNODE NW_UpdateNetwork(PNODE node)
 		if (pDnServer)
 		{
 			PNODE n_dns = CreateNode(nic, "DNS Servers");
-			for (i = 0; pDnServer != NULL; i++)
+			for (i = 0; pDnServer != NULL && pDnServer < (IP_ADAPTER_DNS_SERVER_ADDRESS*)pMaxAddress; i++)
 			{
 				PNODE dns = NWL_NodeAppendNew(n_dns, "DNS Server", NFLG_TABLE_ROW);
 				displayAddress(dns, &pDnServer->Address, NULL);
@@ -244,9 +254,9 @@ PNODE NW_UpdateNetwork(PNODE node)
 		NWL_NodeAttrSet(nic, "Receive Link Speed",
 			NWL_GetHumanSize(pCurrAddresses->ReceiveLinkSpeed, bps_human_sizes, 1000), NAFLG_FMT_HUMAN_SIZE);
 		NWL_NodeAttrSetf(nic, "MTU (Byte)", NAFLG_FMT_NUMERIC, "%lu", pCurrAddresses->Mtu);
-		if (IfTable && pCurrAddresses->IfIndex > 0)
+		if (IfTable && pCurrAddresses->IfIndex > 0 && pCurrAddresses->IfIndex <= IfTable->dwNumEntries)
 		{
-			ULONG idx = pCurrAddresses->IfIndex - 1;
+			IF_INDEX idx = pCurrAddresses->IfIndex - 1;
 			NWL_NodeAttrSetf(nic, "Received (Octets)", NAFLG_FMT_NUMERIC, "%u", IfTable->table[idx].dwInOctets);
 			NWL_NodeAttrSetf(nic, "Sent (Octets)", NAFLG_FMT_NUMERIC, "%u", IfTable->table[idx].dwOutOctets);
 		}
@@ -254,9 +264,9 @@ next_addr:
 		pCurrAddresses = pCurrAddresses->Next;
 	}
 
-	free(pAddresses);
+	FREE(pAddresses);
 	if (IfTable)
-		free(IfTable);
+		FREE(IfTable);
 	return node;
 }
 
