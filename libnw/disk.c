@@ -7,17 +7,6 @@
 static const char* d_human_sizes[6] =
 { "B", "KB", "MB", "GB", "TB", "PB", };
 
-static LPCSTR
-GuidToStr(GUID* pGuid)
-{
-	static CHAR GuidStr[37] = { 0 };
-	snprintf(GuidStr, 37, "%08lX-%04X-%04X-%02X%02X-%02X%02X%02X%02X%02X%02X",
-		pGuid->Data1, pGuid->Data2, pGuid->Data3,
-		pGuid->Data4[0], pGuid->Data4[1], pGuid->Data4[2], pGuid->Data4[3],
-		pGuid->Data4[4], pGuid->Data4[5], pGuid->Data4[6], pGuid->Data4[7]);
-	return GuidStr;
-}
-
 static LPCSTR GetRealVolumePath(LPCSTR lpszVolume)
 {
 	LPCSTR lpszRealPath;
@@ -33,7 +22,7 @@ static LPCSTR GetRealVolumePath(LPCSTR lpszVolume)
 static LPCSTR
 GetGptFlag(GUID* pGuid)
 {
-	LPCSTR lpszGuid = GuidToStr(pGuid);
+	LPCSTR lpszGuid = NWL_WinGuidToStr(pGuid);
 	if (_stricmp(lpszGuid, "c12a7328-f81f-11d2-ba4b-00a0c93ec93b") == 0)
 		return "ESP";
 	else if (_stricmp(lpszGuid, "e3c9e316-0b5c-4db8-817d-f92df00215ae") == 0)
@@ -82,13 +71,13 @@ PrintPartitionInfo(PNODE pNode, LPCSTR lpszPath, PHY_DRIVE_INFO* pParent)
 	{
 	case PARTITION_STYLE_MBR:
 		NWL_NodeAttrSetf(pNode, "Partition Type", 0, "0x%02X", partInfo.Mbr.PartitionType);
-		NWL_NodeAttrSet(pNode, "Partition ID", GuidToStr(&partInfo.Mbr.PartitionId), NAFLG_FMT_GUID);
+		NWL_NodeAttrSet(pNode, "Partition ID", NWL_WinGuidToStr(&partInfo.Mbr.PartitionId), NAFLG_FMT_GUID);
 		NWL_NodeAttrSetBool(pNode, "Boot Indicator", partInfo.Mbr.BootIndicator, 0);
 		NWL_NodeAttrSet(pNode, "Partition Flag", GetMbrFlag(partInfo.StartingOffset.QuadPart, pParent), 0);
 		break;
 	case PARTITION_STYLE_GPT:
-		NWL_NodeAttrSet(pNode, "Partition Type", GuidToStr(&partInfo.Gpt.PartitionType), NAFLG_FMT_GUID);
-		NWL_NodeAttrSet(pNode, "Partition ID", GuidToStr(&partInfo.Gpt.PartitionId), NAFLG_FMT_GUID);
+		NWL_NodeAttrSet(pNode, "Partition Type", NWL_WinGuidToStr(&partInfo.Gpt.PartitionType), NAFLG_FMT_GUID);
+		NWL_NodeAttrSet(pNode, "Partition ID", NWL_WinGuidToStr(&partInfo.Gpt.PartitionId), NAFLG_FMT_GUID);
 		NWL_NodeAttrSet(pNode, "Partition Flag", GetGptFlag(&partInfo.Gpt.PartitionType), 0);
 		break;
 	}

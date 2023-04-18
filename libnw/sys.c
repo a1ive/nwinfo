@@ -8,6 +8,29 @@
 #include "libnw.h"
 #include "utils.h"
 
+typedef struct _SYSTEM_BOOT_ENVIRONMENT_INFORMATION
+{
+	GUID BootIdentifier;
+	FIRMWARE_TYPE FirmwareType;
+	union
+	{
+		ULONGLONG BootFlags;
+		struct
+		{
+			ULONGLONG DbgMenuOsSelection : 1;
+			ULONGLONG DbgHiberBoot : 1;
+			ULONGLONG DbgSoftBoot : 1;
+			ULONGLONG DbgMeasuredLaunch : 1;
+			ULONGLONG DbgMeasuredLaunchCapable : 1;
+			ULONGLONG DbgSystemHiveReplace : 1;
+			ULONGLONG DbgMeasuredLaunchSmmProtections : 1;
+			ULONGLONG DbgMeasuredLaunchSmmLevel : 7;
+		};
+	};
+} SYSTEM_BOOT_ENVIRONMENT_INFORMATION, * PSYSTEM_BOOT_ENVIRONMENT_INFORMATION;
+
+#define SystemBootEnvironmentInformation 90
+
 static const char* GV_GUID = "{8BE4DF61-93CA-11D2-AA0D-00E098032B8C}";
 
 static const CHAR* Win10BuildNumber(DWORD dwBuildNumber)
@@ -228,12 +251,23 @@ static void PrintFwInfo(PNODE node)
 {
 	DWORD VarSize = 0;
 	UINT8 SecureBoot = 0;
-	NWL_GetFirmwareEnvironmentVariable("", "{00000000-0000-0000-0000-000000000000}", NULL, 0);
-	if (GetLastError() == ERROR_INVALID_FUNCTION)
-		NWL_NodeAttrSet(node, "Firmware", "Legacy BIOS", 0);
+	BOOL IsUefi = FALSE;
+
+	SYSTEM_BOOT_ENVIRONMENT_INFORMATION BootInfo = { 0 };
+	if (NWL_NtQuerySystemInformation(SystemBootEnvironmentInformation, &BootInfo, sizeof(BootInfo), NULL))
+	{
+		NWL_NodeAttrSet(node, "Boot Identifier", NWL_WinGuidToStr(&BootInfo.BootIdentifier), NAFLG_FMT_GUID);
+		IsUefi = (BootInfo.FirmwareType == FirmwareTypeUefi);
+	}
 	else
 	{
-		NWL_NodeAttrSet(node, "Firmware", "UEFI", 0);
+		NWL_GetFirmwareEnvironmentVariable("", "{00000000-0000-0000-0000-000000000000}", NULL, 0);
+		IsUefi = (GetLastError() != ERROR_INVALID_FUNCTION);
+	}
+	NWL_NodeAttrSet(node, "Firmware", IsUefi ? "UEFI" : "Legacy BIOS", 0);
+
+	if (IsUefi)
+	{
 		VarSize = NWL_GetFirmwareEnvironmentVariable("SecureBoot", GV_GUID, &SecureBoot, sizeof(UINT8));
 		if (VarSize)
 			NWL_NodeAttrSetf(node, "Secure Boot", 0, "%s", SecureBoot ? "ENABLED" : "DISABLED");
@@ -342,7 +376,7 @@ static void PrintBootInfo(PNODE node)
 	}
 	if (pStartOption)
 	{
-		NWL_NodeAttrSetf(node, "Start Options", 0, "%ls", pStartOption);
+		NWL_NodeAttrSetf(node, "Start Options", NAFLG_FMT_NEED_QUOTE | NAFLG_FMT_STRING, "%ls", pStartOption);
 		free(pStartOption);
 	}
 	DWORD dwBitLocker = 0;

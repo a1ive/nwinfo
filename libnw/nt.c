@@ -147,3 +147,17 @@ LPCSTR NWL_NtGetPathFromHandle(HANDLE hFile)
 		return NULL;
 	return NWL_WcsToMbs(puName->Buffer);
 }
+
+BOOL NWL_NtQuerySystemInformation(INT SystemInformationClass,
+	PVOID SystemInformation, ULONG SystemInformationLength, PULONG ReturnLength)
+{
+	NTSTATUS (NTAPI * OsNtQuerySystemInformation)(INT SystemInformationClass,
+				PVOID SystemInformation, ULONG SystemInformationLength, PULONG ReturnLength) = NULL;
+	HMODULE hModule = LoadLibraryA("ntdll.dll");
+	if (!hModule)
+		return FALSE;
+	*(FARPROC*)&OsNtQuerySystemInformation = GetProcAddress(hModule, "NtQuerySystemInformation");
+	if (!OsNtQuerySystemInformation)
+		return FALSE;
+	return NT_SUCCESS(OsNtQuerySystemInformation(SystemInformationClass, SystemInformation, SystemInformationLength, ReturnLength));
+}
