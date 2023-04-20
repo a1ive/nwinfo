@@ -5,26 +5,6 @@
 
 version: 2
 updates:
-  - package-ecosystem: "nuget" # See documentation for possible values
-    directory: "/winring0" # Location of package manifests
-    schedule:
-      interval: "daily"
-  - package-ecosystem: "nuget" # See documentation for possible values
-    directory: "/libcpuid" # Location of package manifests
-    schedule:
-      interval: "daily"
-  - package-ecosystem: "nuget" # See documentation for possible values
-    directory: "/libnw" # Location of package manifests
-    schedule:
-      interval: "daily"
-  - package-ecosystem: "nuget" # See documentation for possible values
-    directory: "/gnwinfo" # Location of package manifests
-    schedule:
-      interval: "daily"
-  - package-ecosystem: "nuget" # See documentation for possible values
-    directory: "/" # Location of package manifests
-    schedule:
-      interval: "daily"
   - package-ecosystem: "github-actions" # See documentation for possible values
     directory: "/" # Location of package manifests
     schedule:
