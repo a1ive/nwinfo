@@ -15,8 +15,8 @@
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
-    <ProjectGuid>{d0954ecf-a37a-4de0-8d49-0d0505f56b29}</ProjectGuid>
-    <RootNamespace>libnw</RootNamespace>
+    <ProjectGuid>{4fdae82d-7b0e-4b71-80a9-f5a344a7b9d6}</ProjectGuid>
+    <RootNamespace>libcdi</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -25,7 +25,7 @@
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>v143</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
-    <CharacterSet>MultiByte</CharacterSet>
+    <CharacterSet>Unicode</CharacterSet>
     <DisableAdvancedSupport>true</DisableAdvancedSupport>
     <SupportLTL>true</SupportLTL>
     <CleanImport>true</CleanImport>
@@ -37,7 +37,7 @@
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>v143</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
-    <CharacterSet>MultiByte</CharacterSet>
+    <CharacterSet>Unicode</CharacterSet>
     <DisableAdvancedSupport>true</DisableAdvancedSupport>
     <SupportLTL>true</SupportLTL>
     <CleanImport>true</CleanImport>
@@ -57,12 +57,8 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <LinkIncremental>false</LinkIncremental>
     <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
     <IntDir>$(Platform)\$(Configuration)\</IntDir>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <LinkIncremental>false</LinkIncremental>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -72,22 +68,22 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <PrecompiledHeaderFile>
+      </PrecompiledHeaderFile>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
-      <AdditionalIncludeDirectories>$(SolutionDir)libcpuid;$(SolutionDir)winring0;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <AdditionalIncludeDirectories>$(ProjectDir)Priscilla\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
-      <SubSystem>Console</SubSystem>
+      <SubSystem>
+      </SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
-    <Lib>
-      <IgnoreAllDefaultLibraries>
-      </IgnoreAllDefaultLibraries>
-    </Lib>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -97,65 +93,45 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <PrecompiledHeaderFile>
+      </PrecompiledHeaderFile>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
-      <AdditionalIncludeDirectories>$(SolutionDir)libcpuid;$(SolutionDir)winring0;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <AdditionalIncludeDirectories>$(ProjectDir)Priscilla\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
-      <SubSystem>Console</SubSystem>
+      <SubSystem>
+      </SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
-    <Lib>
-      <IgnoreAllDefaultLibraries>
-      </IgnoreAllDefaultLibraries>
-    </Lib>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ProjectReference Include="..\libcdi\libcdi.vcxproj">
-      <Project>{4fdae82d-7b0e-4b71-80a9-f5a344a7b9d6}</Project>
-    </ProjectReference>
-    <ProjectReference Include="..\libcpuid\libcpuid.vcxproj">
-      <Project>{2da3ea59-bdf3-4fc0-8ac2-5605ce22b800}</Project>
-    </ProjectReference>
-    <ProjectReference Include="..\winring0\winring0.vcxproj">
-      <Project>{792baf89-d4da-4626-a147-52fc32bc77b2}</Project>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="acpi.h" />
-    <ClInclude Include="disk.h" />
-    <ClInclude Include="format.h" />
-    <ClInclude Include="libnw.h" />
-    <ClInclude Include="smbios.h" />
-    <ClInclude Include="spd.h" />
-    <ClInclude Include="utils.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="acpi.c" />
-    <ClCompile Include="battery.c" />
-    <ClCompile Include="cpuid.c" />
-    <ClCompile Include="disk.c" />
-    <ClCompile Include="display.c" />
-    <ClCompile Include="format.c" />
-    <ClCompile Include="ids.c" />
-    <ClCompile Include="libinfo.c" />
-    <ClCompile Include="libnw.c" />
-    <ClCompile Include="network.c" />
-    <ClCompile Include="nt.c" />
-    <ClCompile Include="pci.c" />
-    <ClCompile Include="smbios.c" />
-    <ClCompile Include="smbus.c" />
-    <ClCompile Include="spd.c" />
-    <ClCompile Include="sys.c" />
-    <ClCompile Include="usb.c" />
-    <ClCompile Include="utils.c" />
-  </ItemGroup>
-  <ItemGroup>
     <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="AtaSmart.h" />
+    <ClInclude Include="DnpService.h" />
+    <ClInclude Include="libcdi.h" />
+    <ClInclude Include="NVMeInterpreter.h" />
+    <ClInclude Include="Priscilla\OsInfoFx.h" />
+    <ClInclude Include="Priscilla\UtilityFx.h" />
+    <ClInclude Include="SlotSpeedGetter.h" />
+    <ClInclude Include="SPTIUtil.h" />
+    <ClInclude Include="stdafx.h" />
+    <ClInclude Include="StorageQuery.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="AtaSmart.cpp" />
+    <ClCompile Include="libcdi.cpp" />
+    <ClCompile Include="NVMeInterpreter.cpp" />
+    <ClCompile Include="Priscilla\OsInfoFx.cpp" />
+    <ClCompile Include="Priscilla\UtilityFx.cpp" />
+    <ClCompile Include="SlotSpeedGetter.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
@@ -164,11 +140,11 @@
   </ImportGroup>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
-      <ErrorText>这台计算机上缺少此项目引用的 NuGet 程序包。使用“NuGet 程序包还原”可下载这些程序包。有关更多信息，请参见 http://go.microsoft.com/fwlink/?LinkID=322105。缺少的文件是 {0}。</ErrorText>
+      <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
     </PropertyGroup>
     <Error Condition="!Exists('..\packages\YY.NuGet.Import.Helper.1.0.0.4\build\native\YY.NuGet.Import.Helper.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\YY.NuGet.Import.Helper.1.0.0.4\build\native\YY.NuGet.Import.Helper.props'))" />
     <Error Condition="!Exists('..\packages\YY.NuGet.Import.Helper.1.0.0.4\build\native\YY.NuGet.Import.Helper.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\YY.NuGet.Import.Helper.1.0.0.4\build\native\YY.NuGet.Import.Helper.targets'))" />
-    <Error Condition="!Exists('..\packages\YY-Thunks.1.0.7\build\native\YY-Thunks.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\YY-Thunks.1.0.7\build\native\YY-Thunks.targets'))" />
     <Error Condition="!Exists('..\packages\VC-LTL.5.0.6\build\native\VC-LTL.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\VC-LTL.5.0.6\build\native\VC-LTL.props'))" />
+    <Error Condition="!Exists('..\packages\YY-Thunks.1.0.7\build\native\YY-Thunks.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\YY-Thunks.1.0.7\build\native\YY-Thunks.targets'))" />
   </Target>
 </Project>

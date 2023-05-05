@@ -15,85 +15,58 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="format.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="spd.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="libnw.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="acpi.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="smbios.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="disk.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="utils.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="acpi.c">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="cpuid.c">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="disk.c">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="display.c">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="format.c">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="network.c">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="pci.c">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="smbios.c">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="smbus.c">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="spd.c">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="sys.c">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="usb.c">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="utils.c">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="libnw.c">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="nt.c">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="battery.c">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="libinfo.c">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="ids.c">
-      <Filter>源文件</Filter>
-    </ClCompile>
-  </ItemGroup>
-  <ItemGroup>
     <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="AtaSmart.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="DnpService.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="libcdi.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="NVMeInterpreter.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="SlotSpeedGetter.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="SPTIUtil.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="stdafx.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="StorageQuery.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Priscilla\OsInfoFx.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Priscilla\UtilityFx.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="AtaSmart.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="libcdi.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="NVMeInterpreter.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="SlotSpeedGetter.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Priscilla\OsInfoFx.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Priscilla\UtilityFx.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

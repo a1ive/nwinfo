@@ -3,6 +3,7 @@
 #include "libnw.h"
 #include "disk.h"
 #include "utils.h"
+#include "../libcdi/libcdi.h"
 
 static const char* d_human_sizes[6] =
 { "B", "KB", "MB", "GB", "TB", "PB", };
@@ -390,15 +391,155 @@ next_drive:
 	return dwCount;
 }
 
+static INT
+GetSmartIndex(CDI_SMART* smart, DWORD Id)
+{
+	INT i, count;
+	count = cdi_get_disk_count(smart);
+	for (i = 0; i < count; i++)
+	{
+		if (cdi_get_int(smart, i, CDI_INT_DISK_ID) == Id)
+			return i;
+	}
+	return -1;
+}
+
 static VOID
-PrintDiskInfo(BOOL cdrom, PNODE node)
+PrintSmartInfo(PNODE node, CDI_SMART* ptr, INT index)
+{
+	INT n;
+	DWORD d;
+	DWORD i, count;
+	CHAR* str;
+	BOOL ssd = FALSE;
+	BOOL nvme = FALSE;
+	CDI_SMART_ATTRIBUTE* attr;
+
+	if (index < 0)
+		return;
+	cdi_update_smart(ptr, index);
+
+	NWL_NodeAttrSetf(node, "Temperature (C)", NAFLG_FMT_NUMERIC, "%d", cdi_get_int(ptr, index, CDI_INT_TEMPERATURE));
+
+	n = cdi_get_int(ptr, index, CDI_INT_LIFE);
+	str = cdi_get_string(ptr, index, CDI_STRING_DISK_STATUS);
+	if (n >= 0)
+		NWL_NodeAttrSetf(node, "Health Status", 0, "%s (%d%%)", str, n);
+	else
+		NWL_NodeAttrSet(node, "Health Status", str, 0);
+	cdi_free_string(str);
+
+	str = cdi_get_string(ptr, index, CDI_STRING_TRANSFER_MODE_CUR);
+	NWL_NodeAttrSet(node, "Current Transfer Mode", str, 0);
+	cdi_free_string(str);
+
+	str = cdi_get_string(ptr, index, CDI_STRING_TRANSFER_MODE_MAX);
+	NWL_NodeAttrSet(node, "Max Transfer Mode", str, 0);
+	cdi_free_string(str);
+
+	str = cdi_get_string(ptr, index, CDI_STRING_VERSION_MAJOR);
+	NWL_NodeAttrSet(node, "Standard", str, 0);
+	cdi_free_string(str);
+
+	{
+		char features[128] = "-";
+		snprintf(features, sizeof(features), "%s%s%s%s%s%s%s%s%s%s%s",
+			cdi_get_bool(ptr, index, CDI_BOOL_SMART) ? "S.M.A.R.T., " : "",
+			cdi_get_bool(ptr, index, CDI_BOOL_LBA48) ? "48bit LBA, " : "",
+			cdi_get_bool(ptr, index, CDI_BOOL_AAM) ? "AAM, " : "",
+			cdi_get_bool(ptr, index, CDI_BOOL_APM) ? "APM, " : "",
+			cdi_get_bool(ptr, index, CDI_BOOL_NCQ) ? "NCQ, " : "",
+			cdi_get_bool(ptr, index, CDI_BOOL_NV_CACHE) ? "NV Cache, " : "",
+			cdi_get_bool(ptr, index, CDI_BOOL_DEVSLP) ? "DEVSLP, " : "",
+			cdi_get_bool(ptr, index, CDI_BOOL_STREAMING) ? "Streaming, " : "",
+			cdi_get_bool(ptr, index, CDI_BOOL_GPL) ? "GPL, " : "",
+			cdi_get_bool(ptr, index, CDI_BOOL_TRIM) ? "TRIM, " : "",
+			cdi_get_bool(ptr, index, CDI_BOOL_VOLATILE_WRITE_CACHE) ? "VolatileWriteCache, " : "");
+		features[strlen(features) - 2] = '\0';
+		NWL_NodeAttrSet(node, "Features", features, 0);
+	}
+
+	ssd = cdi_get_bool(ptr, index, CDI_BOOL_SSD);
+	NWL_NodeAttrSetBool(node, "SSD", ssd, 0);
+
+	if (ssd)
+	{
+		nvme = cdi_get_bool(ptr, index, CDI_BOOL_SSD_NVME);
+		n = cdi_get_int(ptr, index, CDI_INT_HOST_READS);
+		if (n < 0)
+			NWL_NodeAttrSet(node, "Total Host Reads", "-", 0);
+		else
+			NWL_NodeAttrSetf(node, "Total Host Reads", 0, "%d GB", n);
+
+		n = cdi_get_int(ptr, index, CDI_INT_HOST_WRITES);
+		if (n < 0)
+			NWL_NodeAttrSet(node, "Total Host Writes", "-", 0);
+		else
+			NWL_NodeAttrSetf(node, "Total Host Writes", 0, "%d GB", n);
+		if (nvme == FALSE)
+		{
+			n = cdi_get_int(ptr, index, CDI_INT_NAND_WRITES);
+			if (n < 0)
+				NWL_NodeAttrSet(node, "Total NAND Writes", "-", 0);
+			else
+				NWL_NodeAttrSetf(node, "Total NAND Writes", 0, "%d GB", n);
+		}
+	}
+	else
+	{
+		d = cdi_get_dword(ptr, index, CDI_DWORD_BUFFER_SIZE);
+		if (d >= 10 * 1024 * 1024) // 10 MB
+			NWL_NodeAttrSetf(node, "Buffer Size", 0, "%d MB", d / 1024 / 1024);
+		else if (d > 1024)
+			NWL_NodeAttrSetf(node, "Buffer Size", 0, "%d KB", d / 1024);
+		else
+			NWL_NodeAttrSetf(node, "Buffer Size", 0, "%d B", d);
+
+		NWL_NodeAttrSetf(node, "Rotation Rate (RPM)",
+			NAFLG_FMT_NUMERIC, "%lu", cdi_get_dword(ptr, index, CDI_DWORD_ROTATION_RATE));
+	}
+
+	NWL_NodeAttrSetf(node, "Power On Count",
+		NAFLG_FMT_NUMERIC, "%lu", cdi_get_dword(ptr, index, CDI_DWORD_POWER_ON_COUNT));
+
+	n = cdi_get_int(ptr, index, CDI_INT_POWER_ON_HOURS);
+	if (n < 0)
+		NWL_NodeAttrSet(node, "Power On Time (Hours)", "-", 0);
+	else
+		NWL_NodeAttrSetf(node, "Power On Time (Hours)",
+			NAFLG_FMT_NUMERIC, "%d", n);
+
+	count = cdi_get_dword(ptr, index, CDI_DWORD_ATTR_COUNT);
+	attr = cdi_get_smart_attribute(ptr, index);
+	if (count)
+	{
+		str = cdi_get_smart_attribute_format(ptr, index);
+		NWL_NodeAttrSet(node, "SMART Format", str, 0);
+		cdi_free_string(str);
+	}
+	for (i = 0; i < count; i++)
+	{
+		char key[] = "SMART XX";
+		char* val;
+		if (attr[i].Id == 0)
+			continue;
+		str = cdi_get_smart_attribute_name(ptr, index, attr[i].Id);
+		val = cdi_get_smart_attribute_value(ptr, index, i);
+		snprintf(key, sizeof(key), "SMART %02X", attr[i].Id);
+		NWL_NodeAttrSetf(node, key, 0, "%s %s", val, str);
+		cdi_free_string(str);
+		cdi_free_string(val);
+	}
+}
+
+static VOID
+PrintDiskInfo(BOOL cdrom, PNODE node, CDI_SMART* smart)
 {
 	PHY_DRIVE_INFO* PhyDriveList = NULL;
 	DWORD PhyDriveCount = 0, i = 0;
 	PhyDriveCount = GetDriveInfoList(cdrom, &PhyDriveList);
 	if (PhyDriveCount == 0)
 		goto out;
-
 	for (i = 0; i < PhyDriveCount; i++)
 	{
 		PNODE nd = NWL_NodeAppendNew(node, "Disk", NFLG_TABLE_ROW);
@@ -441,7 +582,7 @@ PrintDiskInfo(BOOL cdrom, PNODE node)
 			NWL_NodeAttrSet(nd, "GPT GUID", NWL_GuidToStr(PhyDriveList[i].GptGuid), NAFLG_FMT_GUID);
 		}
 		if (!cdrom)
-			NWL_GetDiskProtocolSpecificInfo(nd, i, PhyDriveList[i].BusType);
+			PrintSmartInfo(nd, smart, GetSmartIndex(smart, i));
 		if (PhyDriveList[i].VolumeCount)
 		{
 			DWORD j;
@@ -462,9 +603,15 @@ out:
 PNODE NW_Disk(VOID)
 {
 	PNODE node = NWL_NodeAlloc("Disks", NFLG_TABLE);
+	CDI_SMART* smart;
 	if (NWLC->DiskInfo)
 		NWL_NodeAppendChild(NWLC->NwRoot, node);
-	PrintDiskInfo(FALSE, node);
-	PrintDiskInfo(TRUE, node);
+	smart = cdi_create_smart();
+	if (smart)
+		cdi_init_smart(smart, TRUE, TRUE, FALSE, FALSE, FALSE, FALSE);
+	PrintDiskInfo(FALSE, node, smart);
+	PrintDiskInfo(TRUE, node, smart);
+	if (smart)
+		cdi_destroy_smart(smart);
 	return node;
 }

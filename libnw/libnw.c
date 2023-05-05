@@ -28,6 +28,7 @@ BOOL NW_Init(PNWLIB_CONTEXT pContext)
 	NWLC->NwRsdp = NWL_GetRsdp();
 	NWLC->NwRsdt = NWL_GetRsdt();
 	NWLC->NwXsdt = NWL_GetXsdt();
+	(void)CoInitializeEx(0, COINIT_APARTMENTTHREADED);
 	return TRUE;
 }
 
@@ -93,5 +94,6 @@ VOID NW_Fini(VOID)
 	if (NWLC->NwFile && NWLC->NwFile != stdout)
 		fclose(NWLC->NwFile);
 	ZeroMemory(NWLC, sizeof(NWLIB_CONTEXT));
+	CoUninitialize();
 	NWLC = NULL;
 }
