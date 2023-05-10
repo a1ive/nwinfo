@@ -206,8 +206,9 @@ static void PrintUptime(PNODE node)
 static void PrintOsInfo(PNODE node)
 {
 	DWORD bufCharCount = NWINFO_BUFSZ;
-	SYSTEM_INFO SystemInfo;
+	SYSTEM_INFO siInfo;
 	char* infoBuf = NWLC->NwBuf;
+	char* szHardwareId;
 	if (GetComputerNameA(infoBuf, &bufCharCount))
 		NWL_NodeAttrSet(node, "Computer Name", infoBuf, 0);
 	bufCharCount = NWINFO_BUFSZ;
@@ -222,8 +223,8 @@ static void PrintOsInfo(PNODE node)
 	if (GetWindowsDirectoryA(infoBuf, NWINFO_BUFSZ))
 		NWL_NodeAttrSet(node, "Windows Directory", infoBuf, 0);
 	PrintUptime(node);
-	GetNativeSystemInfo(&SystemInfo);
-	switch (SystemInfo.wProcessorArchitecture)
+	GetNativeSystemInfo(&siInfo);
+	switch (siInfo.wProcessorArchitecture)
 	{
 	case PROCESSOR_ARCHITECTURE_AMD64:
 		NWL_NodeAttrSet(node, "Processor Architecture", "x64", 0);
@@ -235,7 +236,13 @@ static void PrintOsInfo(PNODE node)
 		NWL_NodeAttrSet(node, "Processor Architecture", "UNKNOWN", 0);
 		break;
 	}
-	NWL_NodeAttrSetf(node, "Page Size", NAFLG_FMT_NUMERIC, "%u", SystemInfo.dwPageSize);
+	NWL_NodeAttrSetf(node, "Page Size", NAFLG_FMT_NUMERIC, "%u", siInfo.dwPageSize);
+	szHardwareId = NWL_GetRegSzValue(HKEY_LOCAL_MACHINE, "SYSTEM\\CurrentControlSet\\Control\\SystemInformation", "ComputerHardwareId");
+	if (szHardwareId)
+	{
+		NWL_NodeAttrSet(node, "Computer Hardware Id", szHardwareId, NAFLG_FMT_NEED_QUOTE);
+		free(szHardwareId);
+	}
 }
 
 static void PrintSysMetrics(PNODE node)
