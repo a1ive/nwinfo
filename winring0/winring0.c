@@ -5,24 +5,26 @@
 #include <windows.h>
 #include <winioctl.h>
 #include <winerror.h>
+#include <pathcch.h>
 #include "winring0.h"
+#include "winring0_def.h"
 
-static BOOL LoadDriver(struct wr0_drv_t* drv)
+static BOOL load_driver(struct wr0_drv_t* drv)
 {
 	BOOL Ret = FALSE;
 	DWORD Status = 0;
 	BOOL Retry = TRUE;
 
-	drv->scManager = OpenSCManagerA(NULL, NULL, SC_MANAGER_ALL_ACCESS);
+	drv->scManager = OpenSCManagerW(NULL, NULL, SC_MANAGER_ALL_ACCESS);
 	if (drv->scManager == NULL)
 		return FALSE;
 retry:
-	drv->scDriver = CreateServiceA(drv->scManager, drv->driver_id, drv->driver_id,
+	drv->scDriver = CreateServiceW(drv->scManager, drv->driver_id, drv->driver_id,
 		SERVICE_ALL_ACCESS, SERVICE_KERNEL_DRIVER, SERVICE_DEMAND_START, SERVICE_ERROR_IGNORE,
 		drv->driver_path, NULL, NULL, NULL, NULL, NULL);
 	if (drv->scDriver == NULL)
 	{
-		drv->scDriver = OpenServiceA(drv->scManager, drv->driver_id, SERVICE_ALL_ACCESS);
+		drv->scDriver = OpenServiceW(drv->scManager, drv->driver_id, SERVICE_ALL_ACCESS);
 		if (drv->scDriver == NULL)
 		{
 			CloseServiceHandle(drv->scManager);
@@ -30,7 +32,7 @@ retry:
 		}
 	}
 
-	Ret = StartServiceA(drv->scDriver, 0, NULL);
+	Ret = StartServiceW(drv->scDriver, 0, NULL);
 	if (Ret == FALSE)
 	{
 		Status = GetLastError();
@@ -54,13 +56,13 @@ retry:
 }
 
 typedef BOOL(WINAPI* LPFN_ISWOW64PROCESS) (HANDLE, PBOOL);
-static BOOL IsX64(void)
+static BOOL is_x64(void)
 {
 #ifdef _WIN64
 	return TRUE;
 #else
 	BOOL bIsWow64 = FALSE;
-	HMODULE hMod = GetModuleHandleA("kernel32");
+	HMODULE hMod = GetModuleHandleW(L"kernel32");
 	LPFN_ISWOW64PROCESS fnIsWow64Process = NULL;
 	if (hMod)
 		fnIsWow64Process = (LPFN_ISWOW64PROCESS)GetProcAddress(hMod, "IsWow64Process");
@@ -70,50 +72,38 @@ static BOOL IsX64(void)
 #endif
 }
 
-static BOOL IsDriverExist(LPCSTR name)
+static BOOL find_driver(struct wr0_drv_t* driver)
 {
 	HANDLE hFile = INVALID_HANDLE_VALUE;
-	CHAR cchName[64];
-	snprintf(cchName, sizeof(cchName) - 1, "%s%s.sys", name, IsX64() ? "x64" : "");
-	hFile = CreateFileA(cchName, GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING, 0, NULL);
-	if (hFile == INVALID_HANDLE_VALUE)
-		return FALSE;
-	CloseHandle(hFile);
-	return TRUE;
-}
 
-static int ExtractDriver(struct wr0_drv_t* driver)
-{
-	size_t i = 0;
-	ZeroMemory(driver->driver_path, sizeof(driver->driver_path));
-	if (!GetModuleFileNameA(NULL, driver->driver_path, MAX_PATH)
-		|| strlen(driver->driver_path) == 0)
-		return 0;
-	for (i = strlen(driver->driver_path); i > 0; i--)
-	{
-		if (driver->driver_path[i] == '\\')
-		{
-			driver->driver_path[i] = '\0';
-			break;
-		}
-	}
-	if (IsDriverExist(OLS_DRIVER_NAME))
+	GetModuleFileNameW(NULL, driver->driver_path, MAX_PATH);
+
+	PathCchRemoveFileSpec(driver->driver_path, MAX_PATH);
+	PathCchAppend(driver->driver_path, MAX_PATH, is_x64() ? OLS_DRIVER_NAME_X64 : OLS_DRIVER_NAME);
+	hFile = CreateFileW(driver->driver_path, GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING, 0, NULL);
+	if (hFile != INVALID_HANDLE_VALUE)
 	{
 		driver->driver_id = OLS_DRIVER_ID;
 		driver->driver_name = OLS_DRIVER_NAME;
 		driver->driver_obj = OLS_DRIVER_OBJ;
+		CloseHandle(hFile);
+		return TRUE;
 	}
-	else if (IsDriverExist(OLS_ALT_DRIVER_NAME))
+
+	PathCchRemoveFileSpec(driver->driver_path, MAX_PATH);
+	PathCchAppend(driver->driver_path, MAX_PATH, is_x64() ? OLS_ALT_DRIVER_NAME_X64 : OLS_ALT_DRIVER_NAME);
+	hFile = CreateFileW(driver->driver_path, GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING, 0, NULL);
+	if (hFile != INVALID_HANDLE_VALUE)
 	{
 		driver->driver_id = OLS_ALT_DRIVER_ID;
 		driver->driver_name = OLS_ALT_DRIVER_NAME;
 		driver->driver_obj = OLS_ALT_DRIVER_OBJ;
+		CloseHandle(hFile);
+		return TRUE;
 	}
-	else
-		return 0;
-	snprintf(driver->driver_path, MAX_PATH, "%s\\%s%s.sys", driver->driver_path,
-		driver->driver_name, IsX64() ? "x64" : "");
-	return 1;
+
+	ZeroMemory(driver->driver_path, sizeof(driver->driver_path));
+	return FALSE;
 }
 
 struct wr0_drv_t* wr0_driver_open(void)
@@ -122,29 +112,28 @@ struct wr0_drv_t* wr0_driver_open(void)
 	BOOL status = FALSE;
 
 	drv = (struct wr0_drv_t*)malloc(sizeof(struct wr0_drv_t));
-	if (!drv) {
+	if (!drv)
 		return NULL;
-	}
-	memset(drv, 0, sizeof(struct wr0_drv_t));
+	ZeroMemory(drv, sizeof(struct wr0_drv_t));
 
-	if (!ExtractDriver(drv)) {
-		free(drv);
-		return NULL;
-	}
-	status = LoadDriver(drv);
-	if (status) {
-		drv->hhDriver = CreateFileA(drv->driver_obj,
+	if (!find_driver(drv))
+		goto fail;
+	status = load_driver(drv);
+	if (status)
+	{
+		drv->hhDriver = CreateFileW(drv->driver_obj,
 			GENERIC_WRITE | GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE,
 			NULL, OPEN_EXISTING, 0, NULL);
 		if (drv->hhDriver == INVALID_HANDLE_VALUE)
 			status = FALSE;
 	}
 
-	if (!status) {
-		free(drv);
-		return NULL;
-	}
+	if (!status)
+		goto fail;
 	return drv;
+fail:
+	free(drv);
+	return NULL;
 }
 
 int cpu_rdmsr(struct wr0_drv_t* driver, uint32_t msr_index, uint64_t* result)
@@ -480,20 +469,23 @@ int wr0_driver_close(struct wr0_drv_t* drv)
 	SERVICE_STATUS srvStatus = { 0 };
 	if (drv == NULL)
 		return 0;
-	if (drv->hhDriver && drv->hhDriver != INVALID_HANDLE_VALUE) {
+	if (drv->hhDriver && drv->hhDriver != INVALID_HANDLE_VALUE)
+	{
 		CloseHandle(drv->hhDriver);
 		drv->hhDriver = NULL;
-		drv->scManager = OpenSCManagerA(NULL, NULL, SC_MANAGER_ALL_ACCESS);
+		drv->scManager = OpenSCManagerW(NULL, NULL, SC_MANAGER_ALL_ACCESS);
 		if (drv->scManager)
-			drv->scDriver = OpenServiceA(drv->scManager, drv->driver_obj, SERVICE_ALL_ACCESS);
+			drv->scDriver = OpenServiceW(drv->scManager, drv->driver_obj, SERVICE_ALL_ACCESS);
 	}
-	if (drv->scDriver) {
+	if (drv->scDriver)
+	{
 		ControlService(drv->scDriver, SERVICE_CONTROL_STOP, &srvStatus);
 		DeleteService(drv->scDriver);
 		CloseServiceHandle(drv->scDriver);
 		drv->scDriver = NULL;
 	}
-	if (drv->scManager) {
+	if (drv->scManager)
+	{
 		CloseServiceHandle(drv->scManager);
 		drv->scManager = NULL;
 	}

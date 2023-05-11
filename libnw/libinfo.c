@@ -12,13 +12,13 @@ PrintDriverVerison(PNODE node, struct wr0_drv_t* drv)
 	LPVOID pBlock = NULL;
 	UINT uLen;
 	VS_FIXEDFILEINFO *pInfo;
-	dwLen = GetFileVersionInfoSizeA(drv->driver_path, NULL);
+	dwLen = GetFileVersionInfoSizeW(drv->driver_path, NULL);
 	if (!dwLen)
 		return;
 	pBlock = malloc(dwLen);
 	if (!pBlock)
 		return;
-	if (!GetFileVersionInfoA(drv->driver_path, 0, dwLen, pBlock))
+	if (!GetFileVersionInfoW(drv->driver_path, 0, dwLen, pBlock))
 		goto fail;
 	if (!VerQueryValueA(pBlock, "\\", &pInfo, &uLen))
 		goto fail;
@@ -39,8 +39,8 @@ PNODE NW_Libinfo(VOID)
 	NWL_NodeAttrSetf(pNode, "MSVC Version", 0, "%u", _MSC_FULL_VER);
 	if (NWLC->NwDrv)
 	{
-		NWL_NodeAttrSet(pNode, "Driver", NWLC->NwDrv->driver_name, 0);
-		NWL_NodeAttrSet(pNode, "Driver Path", NWLC->NwDrv->driver_path, 0);
+		NWL_NodeAttrSetf(pNode, "Driver", 0, "%S", NWLC->NwDrv->driver_id);
+		NWL_NodeAttrSetf(pNode, "Driver Path", 0, "%S", NWLC->NwDrv->driver_path);
 		PrintDriverVerison(pNode, NWLC->NwDrv);
 	}
 	else
