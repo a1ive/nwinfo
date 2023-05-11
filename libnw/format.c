@@ -26,7 +26,7 @@ static void fprintcx(FILE* file, LPCSTR s, int count)
 {
 	int i;
 	for (i = 0; i < count; i++)
-		fprintf(file, s);
+		fputs(s, file);
 }
 
 PNODE NWL_NodeAlloc(LPCSTR name, INT flags)
@@ -305,14 +305,16 @@ NWL_NodeAttrSetf(PNODE node, LPCSTR key, INT flags, LPCSTR _Printf_format_string
 	return att;
 }
 
-static SIZE_T json_escape_content(LPCTSTR input, LPSTR buffer, DWORD bufferSize)
+static SIZE_T json_escape_content(LPCSTR input, LPSTR buffer, DWORD bufferSize)
 {
-	LPCTSTR cIn = input;
+	LPCSTR cIn = input;
 	LPSTR cOut = buffer;
-	DWORD newBufferSize = 0;
 
 	while (*cIn != '\0')
 	{
+		// truncate
+		if (cOut - buffer + 2 >= bufferSize)
+			break;
 		switch (*cIn)
 		{
 		case '"':
@@ -346,7 +348,7 @@ static SIZE_T json_escape_content(LPCTSTR input, LPSTR buffer, DWORD bufferSize)
 	return cOut - buffer;
 }
 
-INT NWL_NodeToJson(PNODE node, FILE* file, INT flags)
+INT NWL_NodeToJson(PNODE node, FILE* file)
 {
 	int i = 0;
 	int nodes = 1;
@@ -361,9 +363,9 @@ INT NWL_NodeToJson(PNODE node, FILE* file, INT flags)
 		fprintf(file, "\"%s\": ", node->Name);
 
 	if ((node->Flags & NFLG_TABLE) == 0)
-		fprintf(file, "{");
+		fputs("{", file);
 	else
-		fprintf(file, "[");
+		fputs("[", file);
 
 	// Print attributes
 	if (atts > 0 && (node->Flags & NFLG_TABLE) == 0)
@@ -373,16 +375,16 @@ INT NWL_NodeToJson(PNODE node, FILE* file, INT flags)
 			if (*node->Attributes[i].LinkedAttribute->Value != '\0')
 			{
 				if (plural)
-					fprintf(file, ",");
+					fputs(",", file);
 
 				// Print attribute name
-				fprintf(file, "%s", NODE_JS_DELIM_NL);
+				fputs(NODE_JS_DELIM_NL, file);
 				fprintcx(file, NODE_JS_DELIM_INDENT, indent + 1);
 				fprintf(file, "\"%s\": ", node->Attributes[i].LinkedAttribute->Key);
 
 				// Print value
 				if (node->Attributes[i].LinkedAttribute->Flags & NAFLG_FMT_NUMERIC)
-					fprintf(file, node->Attributes[i].LinkedAttribute->Value);
+					fputs(node->Attributes[i].LinkedAttribute->Value, file);
 				else
 				{
 					json_escape_content(node->Attributes[i].LinkedAttribute->Value, NWLC->NwBuf, NWINFO_BUFSZ);
@@ -400,10 +402,10 @@ INT NWL_NodeToJson(PNODE node, FILE* file, INT flags)
 		for (i = 0; i < children; i++)
 		{
 			if (plural)
-				fprintf(file, ",");
+				fputs(",", file);
 
-			fprintf(file, NODE_JS_DELIM_NL);
-			nodes += NWL_NodeToJson(node->Children[i].LinkedNode, file, flags);
+			fputs(NODE_JS_DELIM_NL, file);
+			nodes += NWL_NodeToJson(node->Children[i].LinkedNode, file);
 			plural = 1;
 		}
 		indent_depth--;
@@ -411,17 +413,17 @@ INT NWL_NodeToJson(PNODE node, FILE* file, INT flags)
 
 	if (atts > 0 || children > 0)
 	{
-		fprintf(file, NODE_JS_DELIM_NL);
+		fputs(NODE_JS_DELIM_NL, file);
 		fprintcx(file, NODE_JS_DELIM_INDENT, indent);
 	}
 	if ((node->Flags & NFLG_TABLE) == 0)
-		fprintf(file, "}");
+		fputs("}", file);
 	else
-		fprintf(file, "]");
+		fputs("]", file);
 	return nodes;
 }
 
-INT NWL_NodeToYaml(PNODE node, FILE* file, INT flags)
+INT NWL_NodeToYaml(PNODE node, FILE* file)
 {
 	int i = 0;
 	int count = 1;
@@ -432,19 +434,19 @@ INT NWL_NodeToYaml(PNODE node, FILE* file, INT flags)
 	CHAR* attVal = NULL;
 
 	if (!node->Parent)
-		fprintf(file, "---%s", NODE_YAML_DELIM_NL);
+		fputs("---"NODE_YAML_DELIM_NL, file);
 
 	fprintcx(file, NODE_YAML_DELIM_INDENT, indent_depth);
 
 	if (NFLG_TABLE_ROW & node->Flags)
-		fprintf(file, "- ");
+		fputs("- ", file);
 
 	fprintf(file, "%s:", node->Name);
 
 	// Print attributes
 	if (atts > 0)
 	{
-		fprintf(file, NODE_YAML_DELIM_NL);
+		fputs(NODE_YAML_DELIM_NL, file);
 		for (i = 0; i < atts; i++)
 		{
 			att = node->Attributes[i].LinkedAttribute;
@@ -462,24 +464,24 @@ INT NWL_NodeToYaml(PNODE node, FILE* file, INT flags)
 	if (children > 0)
 	{
 		if (atts == 0)
-			fprintf(file, NODE_YAML_DELIM_NL);
+			fputs(NODE_YAML_DELIM_NL, file);
 		indent_depth++;
 		for (i = 0; i < children; i++)
 		{
 			child = node->Children[i].LinkedNode;
-			NWL_NodeToYaml(child, file, 0);
+			NWL_NodeToYaml(child, file);
 		}
 		indent_depth--;
 	}
 	else if (atts == 0)
 	{
-		fprintf(file, " ~%s", NODE_YAML_DELIM_NL);
+		fputs(" ~"NODE_YAML_DELIM_NL, file);
 	}
 
 	return count;
 }
 
-INT NWL_NodeToLua(PNODE node, FILE* file, INT flags)
+INT NWL_NodeToLua(PNODE node, FILE* file)
 {
 	int i = 0;
 	int nodes = 1;
@@ -489,7 +491,7 @@ INT NWL_NodeToLua(PNODE node, FILE* file, INT flags)
 	int indent = indent_depth;
 
 	if (!node->Parent)
-		fprintf(file, "#!lua%s_NWINFO = ", NODE_LUA_DELIM_NL);
+		fputs("#!lua"NODE_LUA_DELIM_NL"_NWINFO = ", file);
 
 	// Print header
 	fprintcx(file, NODE_LUA_DELIM_INDENT, indent);
@@ -497,7 +499,7 @@ INT NWL_NodeToLua(PNODE node, FILE* file, INT flags)
 		fprintf(file, "[\"%s\"] = ", node->Name);
 
 	//if ((node->Flags & NFLG_TABLE) == 0)
-	fprintf(file, "{");
+	fputs("{", file);
 
 	// Print attributes
 	if (atts > 0 && (node->Flags & NFLG_TABLE) == 0)
@@ -507,10 +509,10 @@ INT NWL_NodeToLua(PNODE node, FILE* file, INT flags)
 			if (*node->Attributes[i].LinkedAttribute->Value != '\0')
 			{
 				if (plural)
-					fprintf(file, ",");
+					fputs(",", file);
 
 				// Print attribute name
-				fprintf(file, "%s", NODE_LUA_DELIM_NL);
+				fputs(NODE_LUA_DELIM_NL, file);
 				fprintcx(file, NODE_LUA_DELIM_INDENT, indent + 1);
 				fprintf(file, "[\"%s\"] = ", node->Attributes[i].LinkedAttribute->Key);
 
@@ -529,10 +531,10 @@ INT NWL_NodeToLua(PNODE node, FILE* file, INT flags)
 		for (i = 0; i < children; i++)
 		{
 			if (plural)
-				fprintf(file, ",");
+				fputs(",", file);
 
-			fprintf(file, NODE_LUA_DELIM_NL);
-			nodes += NWL_NodeToLua(node->Children[i].LinkedNode, file, flags);
+			fputs(NODE_LUA_DELIM_NL, file);
+			nodes += NWL_NodeToLua(node->Children[i].LinkedNode, file);
 			plural = 1;
 		}
 		indent_depth--;
@@ -540,10 +542,10 @@ INT NWL_NodeToLua(PNODE node, FILE* file, INT flags)
 
 	if (atts > 0 || children > 0)
 	{
-		fprintf(file, NODE_LUA_DELIM_NL);
+		fputs(NODE_LUA_DELIM_NL, file);
 		fprintcx(file, NODE_LUA_DELIM_INDENT, indent);
 	}
 	//if ((node->Flags & NFLG_TABLE) == 0)
-	fprintf(file, "}");
+	fputs("}", file);
 	return nodes;
 }

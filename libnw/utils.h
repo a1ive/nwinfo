@@ -9,7 +9,7 @@ struct acpi_rsdt;
 struct acpi_xsdt;
 
 BOOL NWL_IsAdmin(void);
-DWORD NWL_ObtainPrivileges(LPCSTR privilege);
+DWORD NWL_ObtainPrivileges(LPWSTR privilege);
 LPCSTR NWL_GetHumanSize(UINT64 size, LPCSTR human_sizes[6], UINT64 base);
 
 BOOL NWL_ReadMemory(PVOID buffer, DWORD_PTR address, DWORD length);

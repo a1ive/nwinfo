@@ -187,7 +187,7 @@ static void
 PrintBatteryState(PNODE node)
 {
 	DWORD i;
-	HDEVINFO hdev = SetupDiGetClassDevsA(&GUID_DEVCLASS_BATTERY, 0, 0,
+	HDEVINFO hdev = SetupDiGetClassDevsW(&GUID_DEVCLASS_BATTERY, 0, 0,
 		DIGCF_PRESENT | DIGCF_DEVICEINTERFACE);
 	SP_DEVICE_INTERFACE_DATA did = { .cbSize = sizeof(SP_DEVINFO_DATA) };
 	if (hdev == INVALID_HANDLE_VALUE)
@@ -202,16 +202,16 @@ PrintBatteryState(PNODE node)
 		HANDLE hBattery = INVALID_HANDLE_VALUE;
 		PSP_DEVICE_INTERFACE_DETAIL_DATA pdidd = NULL;
 		snprintf(batName, sizeof(batName), "BAT%u", i);
-		SetupDiGetDeviceInterfaceDetailA(hdev, &did, 0, 0, &cbRequired, 0);
+		SetupDiGetDeviceInterfaceDetailW(hdev, &did, 0, 0, &cbRequired, 0);
 		if (GetLastError() != ERROR_INSUFFICIENT_BUFFER)
 			goto fail;
 		pdidd = (PSP_DEVICE_INTERFACE_DETAIL_DATA)LocalAlloc(LPTR, cbRequired);
 		if (!pdidd)
 			goto fail;
 		pdidd->cbSize = sizeof(*pdidd);
-		if (!SetupDiGetDeviceInterfaceDetailA(hdev, &did, pdidd, cbRequired, &cbRequired, 0))
+		if (!SetupDiGetDeviceInterfaceDetailW(hdev, &did, pdidd, cbRequired, &cbRequired, 0))
 			goto fail;
-		hBattery = CreateFileA(pdidd->DevicePath, GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE,
+		hBattery = CreateFileW(pdidd->DevicePath, GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE,
 			NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
 		if (hBattery == INVALID_HANDLE_VALUE)
 			goto fail;
@@ -220,7 +220,7 @@ PrintBatteryState(PNODE node)
 		{
 			BOOL bcr = FALSE;
 			PNODE pb = NWL_NodeAppendNew(node, batName, 0);
-			NWL_NodeAttrSet(pb, "Path", pdidd->DevicePath, 0);
+			NWL_NodeAttrSetf(pb, "Path", 0, "%S", pdidd->DevicePath);
 			//NWL_NodeAttrSetf(pb, "Battery Tag", NAFLG_FMT_NUMERIC, "%lu", bqi.BatteryTag);
 			PrintBatteryName(pb, hBattery, &bqi);
 			bcr = PrintBatteryInfo(pb, hBattery, &bqi);

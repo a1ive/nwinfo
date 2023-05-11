@@ -16,7 +16,7 @@ BOOL NW_Init(PNWLIB_CONTEXT pContext)
 	}
 	if (NWL_ObtainPrivileges(SE_SYSTEM_ENVIRONMENT_NAME) != ERROR_SUCCESS)
 	{
-		fprintf(stderr, "%s privilege required\n", SE_SYSTEM_ENVIRONMENT_NAME);
+		fprintf(stderr, "%S privilege required\n", SE_SYSTEM_ENVIRONMENT_NAME);
 		return FALSE;
 	}
 	NWLC = pContext;
@@ -68,13 +68,13 @@ VOID NW_Print(LPCSTR lpFileName)
 	switch (NWLC->NwFormat)
 	{
 	case FORMAT_YAML:
-		NWL_NodeToYaml(NWLC->NwRoot, NWLC->NwFile, 0);
+		NWL_NodeToYaml(NWLC->NwRoot, NWLC->NwFile);
 		break;
 	case FORMAT_JSON:
-		NWL_NodeToJson(NWLC->NwRoot, NWLC->NwFile, 0);
+		NWL_NodeToJson(NWLC->NwRoot, NWLC->NwFile);
 		break;
 	case FORMAT_LUA:
-		NWL_NodeToLua(NWLC->NwRoot, NWLC->NwFile, 0);
+		NWL_NodeToLua(NWLC->NwRoot, NWLC->NwFile);
 		break;
 	}
 }

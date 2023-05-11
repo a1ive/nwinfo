@@ -28,7 +28,7 @@ BOOL NWL_IsAdmin(void)
 	return b;
 }
 
-DWORD NWL_ObtainPrivileges(LPCSTR privilege)
+DWORD NWL_ObtainPrivileges(LPWSTR privilege)
 {
 	HANDLE hToken;
 	TOKEN_PRIVILEGES tkp = { 0 };
@@ -36,7 +36,7 @@ DWORD NWL_ObtainPrivileges(LPCSTR privilege)
 	// Obtain required privileges
 	if (!OpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken))
 		return GetLastError();
-	res = LookupPrivilegeValueA(NULL, privilege, &tkp.Privileges[0].Luid);
+	res = LookupPrivilegeValueW(NULL, privilege, &tkp.Privileges[0].Luid);
 	if (!res)
 		return GetLastError();
 	tkp.PrivilegeCount = 1;

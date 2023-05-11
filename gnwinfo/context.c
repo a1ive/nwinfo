@@ -131,11 +131,11 @@ GNW_Export(VOID)
 		return;
 	}
 	if (_strnicmp(FilePath + ofn.nFileExtension, "yaml", 3) == 0)
-		NWL_NodeToYaml(GNWC.nCtx.NwRoot, GNWC.nCtx.NwFile, 0);
+		NWL_NodeToYaml(GNWC.nCtx.NwRoot, GNWC.nCtx.NwFile);
 	else if (_strnicmp(FilePath + ofn.nFileExtension, "json", 3) == 0)
-		NWL_NodeToJson(GNWC.nCtx.NwRoot, GNWC.nCtx.NwFile, 0);
+		NWL_NodeToJson(GNWC.nCtx.NwRoot, GNWC.nCtx.NwFile);
 	else
-		NWL_NodeToLua(GNWC.nCtx.NwRoot, GNWC.nCtx.NwFile, 0);
+		NWL_NodeToLua(GNWC.nCtx.NwRoot, GNWC.nCtx.NwFile);
 	fclose(GNWC.nCtx.NwFile);
 	GNWC.nCtx.NwFile = NULL;
 }
