@@ -159,7 +159,7 @@ INTERNAL_SCOPE GROUP_AFFINITY savedGroupAffinity;
 
 bool save_cpu_affinity(void)
 {
-	HMODULE hMod = GetModuleHandleA("kernel32");
+	HMODULE hMod = GetModuleHandleW(L"kernel32");
 	BOOL (WINAPI *NTGetThreadGroupAffinity)(HANDLE hThread, PGROUP_AFFINITY GroupAffinity) = NULL;
 	HANDLE thread = GetCurrentThread();
 	if (hMod)
