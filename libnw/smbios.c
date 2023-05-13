@@ -530,20 +530,21 @@ pCacheConfToLocation(UINT16 Conf)
 static void
 pCacheSetSRAMType(PNODE tab, LPCSTR key, UINT16 value)
 {
-	size_t len;
-	char str[64];
-	snprintf(str, sizeof(str), "%s%s%s%s%s",
-		value & (1 << 2) ? "Non-Burst," : "",
-		value & (1 << 3) ? "Burst," : "",
-		value & (1 << 4) ? "Pipeline Burst," : "",
-		value & (1 << 5) ? "Synchronous," : "",
-		value & (1 << 6) ? "Asynchronous," : "");
-	len = strlen(str);
-	if (len > 1)
-		str[len - 1] = '\0';
-	else
-		strcpy_s(str, sizeof(str), "Unknown");
-	NWL_NodeAttrSet(tab, key, str, 0);
+	char* str = NULL;
+	if (value & (1 << 2))
+		NWL_NodeAppendMultiSz(&str, "Non-Burst");
+	if (value & (1 << 3))
+		NWL_NodeAppendMultiSz(&str, "Burst");
+	if (value & (1 << 4))
+		NWL_NodeAppendMultiSz(&str, "Pipeline Burst");
+	if (value & (1 << 5))
+		NWL_NodeAppendMultiSz(&str, "Synchronous");
+	if (value & (1 << 6))
+		NWL_NodeAppendMultiSz(&str, "Asynchronous");
+	if (str == NULL)
+		NWL_NodeAppendMultiSz(&str, "Unknown");
+	NWL_NodeAttrSetMulti(tab, key, str, 0);
+	free(str);
 }
 
 static const CHAR*
@@ -962,37 +963,33 @@ static void ProcOnBoardDevInfo(PNODE tab, void* p)
 static void ProcOEMString(PNODE tab, void* p)
 {
 	UCHAR i;
-	PNODE nstr;
+	char* oem = NULL;
 	POEMString pString = (POEMString)p;
 	const char* str = toPointString(p);
 	NWL_NodeAttrSet(tab, "Description", "OEM String", 0);
 	if (pString->Header.Length < 0x05)
 		return;
 	NWL_NodeAttrSetf(tab, "Number of Strings", NAFLG_FMT_NUMERIC, "%u", pString->Count);
-	nstr = NWL_NodeAppendNew(tab, "OEM Strings", NFLG_TABLE);
 	for (i = 1; i <= pString->Count; i++)
-	{
-		PNODE p = NWL_NodeAppendNew(nstr, "OEM String", NFLG_TABLE_ROW);
-		NWL_NodeAttrSet(p, "String", LocateString(str, i), 0);
-	}
+		NWL_NodeAppendMultiSz(&oem, LocateString(str, i));
+	NWL_NodeAttrSetMulti(tab, "OEM Strings", oem, 0);
+	free(oem);
 }
 
 static void ProcSysConfOptions(PNODE tab, void* p)
 {
 	UCHAR i;
-	PNODE nstr;
 	POEMString pString = (POEMString)p;
 	const char* str = toPointString(p);
+	char* conf = NULL;
 	NWL_NodeAttrSet(tab, "Description", "System Configuration Options", 0);
 	if (pString->Header.Length < 0x05)
 		return;
 	NWL_NodeAttrSetf(tab, "Number of Strings", NAFLG_FMT_NUMERIC, "%u", pString->Count);
-	nstr = NWL_NodeAppendNew(tab, "Configuration Strings", NFLG_TABLE);
 	for (i = 1; i <= pString->Count; i++)
-	{
-		PNODE p = NWL_NodeAppendNew(nstr, "String", NFLG_TABLE_ROW);
-		NWL_NodeAttrSet(p, "String", LocateString(str, i), 0);
-	}
+		NWL_NodeAppendMultiSz(&conf, LocateString(str, i));
+	NWL_NodeAttrSetMulti(tab, "Configuration Strings", conf, 0);
+	free(conf);
 }
 
 static void ProcBIOSLangInfo(PNODE tab, void* p)

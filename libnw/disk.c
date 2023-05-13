@@ -442,21 +442,31 @@ PrintSmartInfo(PNODE node, CDI_SMART* ptr, INT index)
 	cdi_free_string(str);
 
 	{
-		char features[128] = "-";
-		snprintf(features, sizeof(features), "%s%s%s%s%s%s%s%s%s%s%s",
-			cdi_get_bool(ptr, index, CDI_BOOL_SMART) ? "S.M.A.R.T., " : "",
-			cdi_get_bool(ptr, index, CDI_BOOL_LBA48) ? "48bit LBA, " : "",
-			cdi_get_bool(ptr, index, CDI_BOOL_AAM) ? "AAM, " : "",
-			cdi_get_bool(ptr, index, CDI_BOOL_APM) ? "APM, " : "",
-			cdi_get_bool(ptr, index, CDI_BOOL_NCQ) ? "NCQ, " : "",
-			cdi_get_bool(ptr, index, CDI_BOOL_NV_CACHE) ? "NV Cache, " : "",
-			cdi_get_bool(ptr, index, CDI_BOOL_DEVSLP) ? "DEVSLP, " : "",
-			cdi_get_bool(ptr, index, CDI_BOOL_STREAMING) ? "Streaming, " : "",
-			cdi_get_bool(ptr, index, CDI_BOOL_GPL) ? "GPL, " : "",
-			cdi_get_bool(ptr, index, CDI_BOOL_TRIM) ? "TRIM, " : "",
-			cdi_get_bool(ptr, index, CDI_BOOL_VOLATILE_WRITE_CACHE) ? "VolatileWriteCache, " : "");
-		features[strlen(features) - 2] = '\0';
-		NWL_NodeAttrSet(node, "Features", features, 0);
+		char* features = NULL;
+		if (cdi_get_bool(ptr, index, CDI_BOOL_SMART))
+			NWL_NodeAppendMultiSz(&features, "S.M.A.R.T.");
+		if (cdi_get_bool(ptr, index, CDI_BOOL_LBA48))
+			NWL_NodeAppendMultiSz(&features, "48bit LBA");
+		if (cdi_get_bool(ptr, index, CDI_BOOL_AAM))
+			NWL_NodeAppendMultiSz(&features, "AAM");
+		if (cdi_get_bool(ptr, index, CDI_BOOL_APM))
+			NWL_NodeAppendMultiSz(&features, "APM");
+		if (cdi_get_bool(ptr, index, CDI_BOOL_NCQ))
+			NWL_NodeAppendMultiSz(&features, "NCQ");
+		if (cdi_get_bool(ptr, index, CDI_BOOL_NV_CACHE))
+			NWL_NodeAppendMultiSz(&features, "NV Cache");
+		if (cdi_get_bool(ptr, index, CDI_BOOL_DEVSLP))
+			NWL_NodeAppendMultiSz(&features, "DEVSLP");
+		if (cdi_get_bool(ptr, index, CDI_BOOL_STREAMING))
+			NWL_NodeAppendMultiSz(&features, "Streaming");
+		if (cdi_get_bool(ptr, index, CDI_BOOL_GPL))
+			NWL_NodeAppendMultiSz(&features, "GPL");
+		if (cdi_get_bool(ptr, index, CDI_BOOL_TRIM))
+			NWL_NodeAppendMultiSz(&features, "TRIM");
+		if (cdi_get_bool(ptr, index, CDI_BOOL_VOLATILE_WRITE_CACHE))
+			NWL_NodeAppendMultiSz(&features, "VolatileWriteCache");
+		NWL_NodeAttrSetMulti(node, "Features", features, 0);
+		free(features);
 	}
 
 	ssd = cdi_get_bool(ptr, index, CDI_BOOL_SSD);

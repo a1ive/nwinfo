@@ -67,6 +67,9 @@ NWL_NodeAttrSetf(PNODE node, LPCSTR key, INT flags, LPCSTR _Printf_format_string
 #define NWL_NodeAttrSetBool(node, key, value, flags) \
 	NWL_NodeAttrSet(node, key, (value ? "Yes" : "No"), flags | NAFLG_FMT_BOOLEAN)
 
+PNODE_ATT NWL_NodeAttrSetMulti(PNODE node, LPCSTR key, LPCSTR value, int flags);
+VOID NWL_NodeAppendMultiSz(LPSTR* lpmszMulti, LPCSTR szNew);
+
 INT NWL_NodeToJson(PNODE node, FILE* file);
 INT NWL_NodeToYaml(PNODE node, FILE* file);
 INT NWL_NodeToLua(PNODE node, FILE* file);

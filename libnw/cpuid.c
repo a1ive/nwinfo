@@ -66,7 +66,7 @@ PrintHypervisor(PNODE node, const struct cpu_id_t* data)
 	NWL_NodeAttrSet(node, "Hypervisor", name, 0);
 	NWL_NodeAttrSet(node, "Hypervisor Signature", data->hypervisor_str, 0);
 }
-
+#ifdef ENABLE_SGX
 static void
 PrintSgx(PNODE node, const struct cpu_id_t* data, struct cpu_raw_data_array_t* raw, logical_cpu_t core)
 {
@@ -93,7 +93,7 @@ PrintSgx(PNODE node, const struct cpu_id_t* data, struct cpu_raw_data_array_t* r
 		NWL_NodeAttrSetf(p, "Size", 0, "0x%llx", (unsigned long long) epc.length);
 	}
 }
-
+#endif
 static void
 PrintCache(PNODE node, const struct cpu_id_t* data)
 {
@@ -129,9 +129,14 @@ static void
 PrintFeatures(PNODE node, const struct cpu_id_t* data)
 {
 	int i = 0;
-	PNODE feature = NWL_NodeAppendNew(node, "Features", NFLG_ATTGROUP);
+	char* str = NULL;
 	for (i = 0; i < NUM_CPU_FEATURES; i++)
-		NWL_NodeAttrSetBool(feature, cpu_feature_str(i), data->flags[i], 0);
+	{
+		if (data->flags[i])
+			NWL_NodeAppendMultiSz(&str, cpu_feature_str(i));
+	}
+	NWL_NodeAttrSetMulti(node, "Features", str, 0);
+	free(str);
 }
 
 static void
@@ -213,7 +218,9 @@ PrintCpuInfo(PNODE node, struct cpu_id_t* data, struct cpu_raw_data_array_t* raw
 	PrintCache(node, data);
 	first_core = PrintCpuMsr(node, data, raw);
 	PrintFeatures(node, data);
+#ifdef ENABLE_SGX
 	PrintSgx(node, data, raw, first_core);
+#endif
 }
 
 PNODE NW_UpdateCpuid(PNODE node)
