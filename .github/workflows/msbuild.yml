@@ -29,7 +29,7 @@ jobs:
       # Add additional options to the MSBuild command line here (like platform or verbosity level).
       # See https://docs.microsoft.com/visualstudio/msbuild/msbuild-command-line-reference
       run: |
-        curl.exe -o pci.ids https://raw.githubusercontent.com/vcrhonek/hwdata/master/pci.ids
+        curl.exe -o pci.ids https://raw.githubusercontent.com/pciutils/pciids/master/pci.ids
         curl.exe -o usb.ids http://www.linux-usb.org/usb.ids
         curl.exe -o pnp.ids https://raw.githubusercontent.com/vcrhonek/hwdata/master/pnp.ids
         Add-Content -Path "pnp.ids" -Value "# Version: $(Get-Date -Format 'yyyy.MM.dd')"
@@ -65,11 +65,12 @@ jobs:
         directory: '.'
         path: 'nwinfo'
 
-    - uses: marvinpinto/action-automatic-releases@v1.2.1
+    - uses: softprops/action-gh-release@v1
       with:
-        repo_token: "${{ secrets.GITHUB_TOKEN }}"
+        token: "${{ secrets.GITHUB_TOKEN }}"
         prerelease: true
-        automatic_release_tag: "latest"
-        title: "Development Build"
+        tag_name: "latest"
+        name: "Development Build"
+        generate_release_notes: true
         files: |
           nwinfo.zip
