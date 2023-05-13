@@ -313,7 +313,7 @@ static SIZE_T json_escape_content(LPCSTR input, LPSTR buffer, DWORD bufferSize)
 	while (*cIn != '\0')
 	{
 		// truncate
-		if (cOut - buffer + 2 >= bufferSize)
+		if (2UL + (cOut - buffer)>= bufferSize)
 			break;
 		switch (*cIn)
 		{
