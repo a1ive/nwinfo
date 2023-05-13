@@ -58,19 +58,22 @@ jobs:
           .\nwinfo\nwinfo_x86.exe
         args: --best
 
-    - uses: thedoctor0/zip-release@master
+    - name: Create ZIP
+      uses: thedoctor0/zip-release@master
       with:
         type: 'zip'
         filename: 'nwinfo.zip'
         directory: '.'
         path: 'nwinfo'
 
-    - uses: softprops/action-gh-release@v1
-      with:
-        token: "${{ secrets.GITHUB_TOKEN }}"
-        prerelease: true
-        tag_name: "latest"
-        name: "Development Build"
-        generate_release_notes: true
-        files: |
+    - name: Release
+      run: |
+        gh release delete latest --cleanup-tag --yes
+        gh release create latest \
+          --title "Development Build" \
+          --generate-notes \
+          --prerelease \
+          --target "${{github.sha}}" \
           nwinfo.zip
+      env:
+        GH_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
