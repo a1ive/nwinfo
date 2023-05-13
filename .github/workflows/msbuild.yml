@@ -67,13 +67,9 @@ jobs:
         path: 'nwinfo'
 
     - name: Release
+      working-directory: ${{env.GITHUB_WORKSPACE}}
       run: |
         gh release delete latest --cleanup-tag --yes
-        gh release create latest \
-          --title "Development Build" \
-          --generate-notes \
-          --prerelease \
-          --target "${{github.sha}}" \
-          nwinfo.zip
+        gh release create latest nwinfo.zip -t "Development Build" -p --generate-notes --target "${{github.sha}}"
       env:
         GH_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
