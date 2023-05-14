@@ -30,8 +30,7 @@ int main(int argc, char* argv[])
 	ZeroMemory(&nwContext, sizeof(NWLIB_CONTEXT));
 	nwContext.NwFormat = FORMAT_YAML;
 	nwContext.HumanSize = FALSE;
-	if (NW_Init(&nwContext) == FALSE)
-		return 1;
+	NW_Init(&nwContext);
 	
 	for (int i = 0; i < argc; i++)
 	{
@@ -99,8 +98,9 @@ int main(int argc, char* argv[])
 		{
 		}
 	}
-
+	(void)CoInitializeEx(0, COINIT_APARTMENTTHREADED);
 	NW_Print(lpFileName);
 	NW_Fini();
+	CoUninitialize();
 	return 0;
 }

@@ -54,12 +54,13 @@ typedef struct _NWLIB_CONTEXT
 	} NwFormat;
 	FILE* NwFile;
 	CHAR* ErrLog;
+	VOID (*ErrLogCallback) (INT nExitCode, LPCSTR lpszText);
 	UCHAR NwBuf[NWINFO_BUFSZ];
 } NWLIB_CONTEXT, *PNWLIB_CONTEXT;
 
 extern PNWLIB_CONTEXT NWLC;
 
-BOOL NW_Init(PNWLIB_CONTEXT pContext);
+VOID NW_Init(PNWLIB_CONTEXT pContext);
 VOID NW_Print(LPCSTR lpFileName);
 VOID NW_Fini(VOID);
 

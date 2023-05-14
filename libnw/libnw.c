@@ -7,19 +7,18 @@
 
 PNWLIB_CONTEXT NWLC = NULL;
 
-BOOL NW_Init(PNWLIB_CONTEXT pContext)
+static VOID
+DefaultErrLogCallback(INT nExitCode, LPCSTR lpszText)
 {
-	if (NWL_IsAdmin() != TRUE)
-	{
-		fprintf(stderr, "permission denied\n");
-		return FALSE;
-	}
-	if (NWL_ObtainPrivileges(SE_SYSTEM_ENVIRONMENT_NAME) != ERROR_SUCCESS)
-	{
-		fprintf(stderr, "%S privilege required\n", SE_SYSTEM_ENVIRONMENT_NAME);
-		return FALSE;
-	}
+	fprintf(stderr, "Error: %s\n", lpszText);
+	exit(nExitCode);
+}
+
+VOID NW_Init(PNWLIB_CONTEXT pContext)
+{
 	NWLC = pContext;
+	if (!NWLC->ErrLogCallback)
+		NWLC->ErrLogCallback = DefaultErrLogCallback;
 	NWLC->NwFile = stdout;
 	NWLC->AcpiTable = 0;
 	NWLC->SmbiosType = 127;
@@ -29,17 +28,16 @@ BOOL NW_Init(PNWLIB_CONTEXT pContext)
 	NWLC->NwRsdt = NWL_GetRsdt();
 	NWLC->NwXsdt = NWL_GetXsdt();
 	NWLC->ErrLog = NULL;
-	(void)CoInitializeEx(0, COINIT_APARTMENTTHREADED);
-	return TRUE;
+	if (NWL_IsAdmin() != TRUE)
+		NWL_NodeAppendMultiSz(&NWLC->ErrLog, "Administrator required");
+	if (NWL_ObtainPrivileges(SE_SYSTEM_ENVIRONMENT_NAME) != ERROR_SUCCESS)
+		NWL_NodeAppendMultiSz(&NWLC->ErrLog, "SeSystemEnvironmentPrivilege required");
 }
 
 VOID NW_Print(LPCSTR lpFileName)
 {
 	if (lpFileName && fopen_s(&NWLC->NwFile, lpFileName, "w"))
-	{
-		fprintf(stderr, "cannot open %s.\n", lpFileName);
-		NWLC->NwFile = NULL;
-	}
+		NWLC->ErrLogCallback(ERROR_OPEN_FAILED, "Cannot open file");
 	if (!NWLC->NwFile)
 		return;
 	if (NWLC->AcpiInfo)
@@ -94,7 +92,6 @@ VOID NW_Fini(VOID)
 	if (NWLC->NwFile && NWLC->NwFile != stdout)
 		fclose(NWLC->NwFile);
 	ZeroMemory(NWLC, sizeof(NWLIB_CONTEXT));
-	CoUninitialize();
 	free(NWLC->ErrLog);
 	NWLC = NULL;
 }

@@ -41,10 +41,7 @@ PNODE NWL_NodeAlloc(LPCSTR name, INT flags)
 	// Allocate
 	node = (PNODE)calloc(1, size);
 	if (!node)
-	{
-		fprintf(stderr, "Failed to allocate memory in "__FUNCTION__"\n");
-		exit(ERROR_OUTOFMEMORY);
-	}
+		NWLC->ErrLogCallback(ERROR_OUTOFMEMORY, "Failed to allocate memory in "__FUNCTION__);
 	node->Children = (PNODE_LINK)calloc(1, sizeof(NODE_LINK));
 	node->Attributes = (PNODE_ATT_LINK)calloc(1, sizeof(NODE_ATT_LINK));
 
@@ -112,10 +109,7 @@ INT NWL_NodeAppendChild(PNODE parent, PNODE child)
 	// Allocate new link list
 	new_links = (PNODE_LINK)calloc(1ULL + new_count, sizeof(NODE_LINK));
 	if (!new_links)
-	{
-		fprintf(stderr, "Failed to allocate memory in "__FUNCTION__"\n");
-		exit(ERROR_OUTOFMEMORY);
-	}
+		NWLC->ErrLogCallback(ERROR_OUTOFMEMORY, "Failed to allocate memory in "__FUNCTION__);
 
 	// Copy old child links
 	for (i = 0; i < old_count; i++)
@@ -170,10 +164,7 @@ static PNODE_ATT NWL_NodeAllocAttr(LPCSTR key, LPCSTR value, int flags)
 
 	att = (PNODE_ATT)calloc(1, size);
 	if (!att)
-	{
-		fprintf(stderr, "Failed to allocate memory in "__FUNCTION__"\n");
-		exit(ERROR_OUTOFMEMORY);
-	}
+		NWLC->ErrLogCallback(ERROR_OUTOFMEMORY, "Failed to allocate memory in "__FUNCTION__);
 
 	att->Key = (LPSTR)(att + 1);
 	strcpy_s(att->Key, key_len, key);
@@ -206,10 +197,7 @@ static PNODE_ATT NWL_NodeAllocAttrMulti(LPCSTR key, LPCSTR value, int flags)
 
 	att = (PNODE_ATT)calloc(1, size);
 	if (!att)
-	{
-		fprintf(stderr, "Failed to allocate memory in "__FUNCTION__"\n");
-		exit(ERROR_OUTOFMEMORY);
-	}
+		NWLC->ErrLogCallback(ERROR_OUTOFMEMORY, "Failed to allocate memory in "__FUNCTION__);
 
 	att->Key = (LPSTR)(att + 1);
 	strcpy_s(att->Key, key_len, key);
@@ -291,10 +279,7 @@ PNODE_ATT NWL_NodeAttrSet(PNODE node, LPCSTR key, LPCSTR value, INT flags)
 		// Allocate new link list
 		new_links = (PNODE_ATT_LINK)calloc(1ULL + new_count, sizeof(NODE_ATT_LINK));
 		if (!new_links)
-		{
-			fprintf(stderr, "Failed to allocate memory in "__FUNCTION__"\n");
-			exit(ERROR_OUTOFMEMORY);
-		}
+			NWLC->ErrLogCallback(ERROR_OUTOFMEMORY, "Failed to allocate memory in "__FUNCTION__);
 
 		// Copy old child links
 		for (i = 0; i < old_count; i++)
@@ -325,15 +310,13 @@ NWL_NodeAttrSetf(PNODE node, LPCSTR key, INT flags, LPCSTR _Printf_format_string
 	if (sz <= 0)
 	{
 		va_end(ap);
-		fprintf(stderr, "Failed to calculate string length in NWL_NodeAttrSetf\n");
-		exit(ERROR_INVALID_DATA);
+		NWLC->ErrLogCallback(ERROR_INVALID_DATA, "Failed to calculate string length in "__FUNCTION__);
 	}
 	buf = calloc(sizeof(CHAR), sz);
 	if (!buf)
 	{
 		va_end(ap);
-		fprintf(stderr, "Failed to allocate memory in "__FUNCTION__"\n");
-		exit(ERROR_OUTOFMEMORY);
+		NWLC->ErrLogCallback(ERROR_OUTOFMEMORY, "Failed to allocate memory in "__FUNCTION__);
 	}
 	vsnprintf(buf, sz, format, ap);
 	va_end(ap);
@@ -376,10 +359,7 @@ PNODE_ATT NWL_NodeAttrSetMulti(PNODE node, LPCSTR key, LPCSTR value, int flags)
 		// Allocate new link list
 		new_links = (PNODE_ATT_LINK)calloc(1ULL + new_count, sizeof(NODE_ATT_LINK));
 		if (!new_links)
-		{
-			fprintf(stderr, "Failed to allocate memory in "__FUNCTION__"\n");
-			exit(ERROR_OUTOFMEMORY);
-		}
+			NWLC->ErrLogCallback(ERROR_OUTOFMEMORY, "Failed to allocate memory in "__FUNCTION__);
 
 		// Copy old child links
 		for (i = 0; i < old_count; i++)
@@ -416,10 +396,7 @@ VOID NWL_NodeAppendMultiSz(LPSTR* lpmszMulti, LPCSTR szNew)
 		// Write new string with two null chars at the end
 		*lpmszMulti = calloc(newSzLength + 1 + 1, sizeof(CHAR));
 		if (NULL == *lpmszMulti)
-		{
-			fprintf(stderr, "Failed to allocate memory in "__FUNCTION__"\n");
-			exit(ERROR_OUTOFMEMORY);
-		}
+			NWLC->ErrLogCallback(ERROR_OUTOFMEMORY, "Failed to allocate memory in "__FUNCTION__);
 		memcpy(*lpmszMulti, szNew, sizeof(CHAR) * newSzLength);
 		return;
 	}
@@ -439,10 +416,7 @@ VOID NWL_NodeAppendMultiSz(LPSTR* lpmszMulti, LPCSTR szNew)
 	// Allocate memory
 	mszResult = calloc(oldLength + newSzLength + 1 + 1, sizeof(CHAR));
 	if (NULL == mszResult)
-	{
-		fprintf(stderr, "Failed to allocate memory in "__FUNCTION__"\n");
-		exit(ERROR_OUTOFMEMORY);
-	}
+		NWLC->ErrLogCallback(ERROR_OUTOFMEMORY, "Failed to allocate memory in "__FUNCTION__);
 
 	// Copy values
 	memcpy(mszResult, mszMulti, oldLength);
