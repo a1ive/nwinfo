@@ -21,8 +21,7 @@ static void nwinfo_help(void)
 		"  --pci[=XX]       Print PCI [class=XX] info.\n"
 		"  --usb            Print USB info.\n"
 		"  --spd            Print SPD info\n"
-		"  --battery        Print battery info.\n"
-		"  --lib            Print LIBNW info.\n");
+		"  --battery        Print battery info.\n");
 }
 
 int main(int argc, char* argv[])
@@ -38,6 +37,14 @@ int main(int argc, char* argv[])
 	{
 		if (i == 0 && argc > 1)
 			continue;
+		else if (_stricmp(argv[i], "--help") == 0
+			|| _stricmp(argv[i], "-h") == 0
+			|| _stricmp(argv[i], "/h") == 0
+			|| _stricmp(argv[i], "/?") == 0)
+		{
+			nwinfo_help();
+			exit(0);
+		}
 		else if (_strnicmp(argv[i], "--format=", 9) == 0 && argv[i][9])
 		{
 			if (_stricmp(&argv[i][9], "YAML") == 0)
@@ -88,12 +95,8 @@ int main(int argc, char* argv[])
 			nwContext.SpdInfo = TRUE;
 		else if (_stricmp(argv[i], "--battery") == 0)
 			nwContext.BatteryInfo = TRUE;
-		else if (_stricmp(argv[i], "--lib") == 0)
-			nwContext.LibInfo = TRUE;
 		else
 		{
-			nwinfo_help();
-			exit(0);
 		}
 	}
 

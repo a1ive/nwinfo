@@ -82,11 +82,11 @@ PNODE NW_Usb(VOID)
 	PNODE node = NWL_NodeAlloc("USB", NFLG_TABLE);
 	if (NWLC->UsbInfo)
 		NWL_NodeAppendChild(NWLC->NwRoot, node);
-	Ids = NWL_LoadIdsToMemory("usb.ids", &IdsSize);
+	Ids = NWL_LoadIdsToMemory(L"usb.ids", &IdsSize);
 	Info = SetupDiGetClassDevsExA(NULL, "USB", NULL, Flags, NULL, NULL, NULL);
 	if (Info == INVALID_HANDLE_VALUE)
 	{
-		fprintf(stderr, "SetupDiGetClassDevs failed.\n");
+		NWL_NodeAppendMultiSz(&NWLC->ErrLog, "SetupDiGetClassDevs failed");
 		goto fail;
 	}
 	for (i = 0; SetupDiEnumDeviceInfo(Info, i, &DeviceInfoData); i++)

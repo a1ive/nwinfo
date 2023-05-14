@@ -48,11 +48,11 @@ PNODE NW_Pci(VOID)
 	PNODE node = NWL_NodeAlloc("PCI", NFLG_TABLE);
 	if (NWLC->PciInfo)
 		NWL_NodeAppendChild(NWLC->NwRoot, node);
-	Ids = NWL_LoadIdsToMemory("pci.ids", &IdsSize);
+	Ids = NWL_LoadIdsToMemory(L"pci.ids", &IdsSize);
 	Info = SetupDiGetClassDevsExA(NULL, "PCI", NULL, Flags, NULL, NULL, NULL);
 	if (Info == INVALID_HANDLE_VALUE)
 	{
-		fprintf(stderr, "SetupDiGetClassDevs failed.\n");
+		NWL_NodeAppendMultiSz(&NWLC->ErrLog, "SetupDiGetClassDevs failed");
 		goto fail;
 	}
 	for (i = 0; SetupDiEnumDeviceInfo(Info, i, &DeviceInfoData); i++)

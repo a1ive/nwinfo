@@ -258,13 +258,13 @@ PNODE NW_Cpuid(VOID)
 	NWL_NodeAttrSetf(node, "Total CPUs", NAFLG_FMT_NUMERIC, "%d", cpuid_get_total_cpus());
 	if (cpuid_get_all_raw_data(&raw) < 0)
 	{
-		fprintf(stderr, "Cannot obtain raw CPU data!\n");
+		NWL_NodeAppendMultiSz(&NWLC->ErrLog, "Cannot obtain raw CPU data");
 		goto fail;
 	}
 
 	if (cpu_identify_all(&raw, &id) < 0)
 	{
-		fprintf(stderr, "Error identifying the CPU: %s\n", cpuid_error());
+		NWL_NodeAppendMultiSz(&NWLC->ErrLog, cpuid_error());
 		goto fail;
 	}
 	PrintHypervisor(node, &id.cpu_types[0]);

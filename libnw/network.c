@@ -124,7 +124,7 @@ PNODE NW_UpdateNetwork(PNODE node)
 		pAddresses = (IP_ADAPTER_ADDRESSES*)MALLOC(outBufLen);
 		if (!pAddresses)
 		{
-			fprintf(stderr, "Memory allocation failed.\n");
+			NWL_NodeAppendMultiSz(&NWLC->ErrLog, "Memory allocation failed in "__FUNCTION__);
 			return node;
 		}
 

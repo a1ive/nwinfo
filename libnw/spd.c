@@ -393,7 +393,7 @@ PNODE NW_Spd(VOID)
 	if (NWLC->SpdInfo)
 		NWL_NodeAppendChild(NWLC->NwRoot, node);
 	NWLC->HumanSize = TRUE;
-	Ids = NWL_LoadIdsToMemory("jep106.ids", &IdsSize);
+	Ids = NWL_LoadIdsToMemory(L"jep106.ids", &IdsSize);
 	NWL_SpdInit();
 	for (i = 0; i < 8; i++)
 	{

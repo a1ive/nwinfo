@@ -229,21 +229,21 @@ NWL_SpdInit(void)
 	spd_raw = malloc(SPD_DATA_LEN);
 	if (!spd_raw)
 	{
-		fprintf(stderr, "out of memory\n");
+		NWL_NodeAppendMultiSz(&NWLC->ErrLog, "Memory allocation failed in "__FUNCTION__);
 		return;
 	}
 
 	smbus_addr = pci_find_by_class(NWLC->NwDrv, 0x0c, 0x05, 0x00, 0);
 	if (smbus_addr == 0xFFFFFFFF)
 	{
-		fprintf(stderr, "smbus not found\n");
+		NWL_NodeAppendMultiSz(&NWLC->ErrLog, "SMBus not found");
 		return;
 	}
 	smbus_vid = pci_conf_read16(NWLC->NwDrv, smbus_addr, 0);
 	smbus_did = pci_conf_read16(NWLC->NwDrv, smbus_addr, 2);
 	if (smbus_vid == 0xFFFF || smbus_did == 0xFFFF)
 	{
-		fprintf(stderr, "smbus id read error\n");
+		NWL_NodeAppendMultiSz(&NWLC->ErrLog, "SMBus id read error");
 		return;
 	}
 	switch (smbus_vid)

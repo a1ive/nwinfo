@@ -32,7 +32,6 @@ typedef struct _NWLIB_CONTEXT
 	BOOL UsbInfo;
 	BOOL SpdInfo;
 	BOOL BatteryInfo;
-	BOOL LibInfo;
 
 	DWORD AcpiTable;
 	BOOL ActiveNet;
@@ -54,6 +53,7 @@ typedef struct _NWLIB_CONTEXT
 		FORMAT_LUA,
 	} NwFormat;
 	FILE* NwFile;
+	CHAR* ErrLog;
 	UCHAR NwBuf[NWINFO_BUFSZ];
 } NWLIB_CONTEXT, *PNWLIB_CONTEXT;
 

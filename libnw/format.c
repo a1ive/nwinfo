@@ -332,7 +332,7 @@ NWL_NodeAttrSetf(PNODE node, LPCSTR key, INT flags, LPCSTR _Printf_format_string
 	if (!buf)
 	{
 		va_end(ap);
-		fprintf(stderr, "Failed to allocate memory in NWL_NodeAttrSetf\n");
+		fprintf(stderr, "Failed to allocate memory in "__FUNCTION__"\n");
 		exit(ERROR_OUTOFMEMORY);
 	}
 	vsnprintf(buf, sz, format, ap);

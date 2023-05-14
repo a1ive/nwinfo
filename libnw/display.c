@@ -87,7 +87,7 @@ DecodeEDID(PNODE nm, void* pData, DWORD dwSize, CHAR* Ids, DWORD IdsSize)
 		return;
 	if (memcmp(pEDID->Magic, Magic, 8) != 0)
 	{
-		fprintf(stderr, "ERROR: bad edid magic\n");
+		NWL_NodeAppendMultiSz(&NWLC->ErrLog, "Bad EDID magic");
 		return;
 	}
 	pEDID->Manufacturer = (pEDID->Manufacturer << 8U) | (pEDID->Manufacturer >> 8U); // BE
@@ -162,7 +162,7 @@ GetEDID(PNODE nm, HDEVINFO devInfo, PSP_DEVINFO_DATA devInfoData, CHAR* Ids, DWO
 
 	if (!hDevRegKey)
 	{
-		fprintf(stderr, "SetupDiOpenDevRegKey failed\n");
+		NWL_NodeAppendMultiSz(&NWLC->ErrLog, "SetupDiOpenDevRegKey failed");
 		return;
 	}
 	EDIDsize = NWINFO_BUFSZ;
@@ -189,10 +189,10 @@ PNODE NW_Edid(VOID)
 	Info = SetupDiGetClassDevsExA(NULL, "DISPLAY", NULL, Flags, NULL, NULL, NULL);
 	if (Info == INVALID_HANDLE_VALUE)
 	{
-		fprintf(stderr, "SetupDiGetClassDevs failed.\n");
+		NWL_NodeAppendMultiSz(&NWLC->ErrLog, "SetupDiGetClassDevs failed");
 		return node;
 	}
-	Ids = NWL_LoadIdsToMemory("pnp.ids", &IdsSize);
+	Ids = NWL_LoadIdsToMemory(L"pnp.ids", &IdsSize);
 	for (i = 0; SetupDiEnumDeviceInfo(Info, i, &DeviceInfoData); i++)
 	{
 		PNODE nm = NWL_NodeAppendNew(node, "Monitor", NFLG_TABLE_ROW);

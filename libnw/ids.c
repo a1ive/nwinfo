@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <windows.h>
+#include <pathcch.h>
 #include "libnw.h"
 #include "utils.h"
 #include <libcpuid.h>
@@ -268,33 +269,25 @@ fail:
 }
 
 static HANDLE
-GetIdsHandle(LPCSTR lpFileName)
+GetIdsHandle(LPCWSTR lpFileName)
 {
 	HANDLE Fp = INVALID_HANDLE_VALUE;
-	CHAR* FilePath = NWLC->NwBuf;
-	CHAR* p;
-	if (!GetModuleFileNameA(NULL, FilePath, MAX_PATH) || strlen(FilePath) == 0)
-	{
-		fprintf(stderr, "GetModuleFileName failed\n");
-		return INVALID_HANDLE_VALUE;
-	}
-	p = strrchr(FilePath, '\\');
-	if (!p)
-	{
-		fprintf(stderr, "Invalid file path %s\n", FilePath);
-		return INVALID_HANDLE_VALUE;
-	}
-	p++;
-	strcpy_s(p, MAX_PATH - (p - FilePath), lpFileName);
-	Fp = CreateFileA(FilePath, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+	WCHAR FilePath[MAX_PATH];
+	GetModuleFileName(NULL, FilePath, MAX_PATH);
+	PathCchRemoveFileSpec(FilePath, MAX_PATH);
+	PathCchAppend(FilePath, MAX_PATH, lpFileName);
+	Fp = CreateFileW(FilePath, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
 	if (Fp == NULL)
 		Fp = INVALID_HANDLE_VALUE;
 	if (Fp == INVALID_HANDLE_VALUE)
-		fprintf(stderr, "Cannot open %s\n", FilePath);
+	{
+		snprintf(NWLC->NwBuf, sizeof(NWLC->NwBuf), "Cannot open %S", FilePath);
+		NWL_NodeAppendMultiSz(&NWLC->ErrLog, NWLC->NwBuf);
+	}
 	return Fp;
 }
 
-CHAR* NWL_LoadIdsToMemory(LPCSTR lpFileName, LPDWORD lpSize)
+CHAR* NWL_LoadIdsToMemory(LPCWSTR lpFileName, LPDWORD lpSize)
 {
 	HANDLE Fp = INVALID_HANDLE_VALUE;
 	CHAR* Ids = NULL;
@@ -306,19 +299,21 @@ CHAR* NWL_LoadIdsToMemory(LPCSTR lpFileName, LPDWORD lpSize)
 	dwSize = GetFileSize(Fp, NULL);
 	if (dwSize == INVALID_FILE_SIZE || dwSize == 0)
 	{
-		fprintf(stderr, "bad %s file\n", lpFileName);
+		snprintf(NWLC->NwBuf, sizeof(NWLC->NwBuf), "Bad %S file", lpFileName);
+		NWL_NodeAppendMultiSz(&NWLC->ErrLog, NWLC->NwBuf);
 		goto fail;
 	}
 	Ids = malloc(dwSize);
 	if (!Ids)
 	{
-		fprintf(stderr, "out of memory\n");
+		NWL_NodeAppendMultiSz(&NWLC->ErrLog, "Memory allocation failed in "__FUNCTION__);
 		goto fail;
 	}
 	bRet = ReadFile(Fp, Ids, dwSize, &dwSize, NULL);
 	if (bRet == FALSE)
 	{
-		fprintf(stderr, "%s read error\n", lpFileName);
+		snprintf(NWLC->NwBuf, sizeof(NWLC->NwBuf), "%S read error", lpFileName);
+		NWL_NodeAppendMultiSz(&NWLC->ErrLog, NWLC->NwBuf);
 		goto fail;
 	}
 	CloseHandle(Fp);
@@ -333,7 +328,7 @@ fail:
 	return NULL;
 }
 
-const CHAR* NWL_GetIdsDate(LPCSTR lpFileName)
+const CHAR* NWL_GetIdsDate(LPCWSTR lpFileName)
 {
 	static CHAR Date[] = "1453.05.29";
 	DWORD IdsSize = 0;

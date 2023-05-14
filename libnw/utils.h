@@ -48,5 +48,5 @@ VOID NWL_FindId(PNODE nd, CHAR* Ids, DWORD IdsSize, CONST CHAR* v, CONST CHAR* d
 VOID NWL_FindClass(PNODE nd, CHAR* Ids, DWORD IdsSize, CONST CHAR* Class, INT usb);
 VOID NWL_GetPnpManufacturer(PNODE nd, CHAR* Ids, DWORD IdsSize, CONST CHAR* Code);
 VOID NWL_GetSpdManufacturer(PNODE nd, CHAR* Ids, DWORD IdsSize, UINT Bank, UINT Item);
-CHAR* NWL_LoadIdsToMemory(LPCSTR lpFileName, LPDWORD lpSize);
-const CHAR* NWL_GetIdsDate(LPCSTR lpFileName);
+CHAR* NWL_LoadIdsToMemory(LPCWSTR lpFileName, LPDWORD lpSize);
+const CHAR* NWL_GetIdsDate(LPCWSTR lpFileName);

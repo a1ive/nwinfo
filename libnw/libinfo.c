@@ -32,9 +32,7 @@ fail:
 
 PNODE NW_Libinfo(VOID)
 {
-	PNODE pNode = NWL_NodeAlloc("LIBINF", NFLG_TABLE);
-	if (NWLC->LibInfo)
-		NWL_NodeAppendChild(NWLC->NwRoot, pNode);
+	PNODE pNode = NWLC->NwRoot;
 	NWL_NodeAttrSet(pNode, "Build Time", __DATE__ " " __TIME__, 0);
 	NWL_NodeAttrSetf(pNode, "MSVC Version", 0, "%u", _MSC_FULL_VER);
 	if (NWLC->NwDrv)
@@ -46,11 +44,11 @@ PNODE NW_Libinfo(VOID)
 	else
 		NWL_NodeAttrSet(pNode, "Driver", "NOT FOUND", 0);
 	NWL_NodeAttrSetf(pNode, "Language ID", 0, "%u", GetUserDefaultUILanguage());
-	NWL_NodeAttrSet(pNode, "Homepage", "https://github.com/a1ive/nwinfo", 0);
 	NWL_NodeAttrSet(pNode, "libcpuid", cpuid_lib_version(), 0);
-	NWL_NodeAttrSet(pNode, "PCI ID", NWL_GetIdsDate("pci.ids"), 0);
-	NWL_NodeAttrSet(pNode, "USB ID", NWL_GetIdsDate("usb.ids"), 0);
-	NWL_NodeAttrSet(pNode, "PNP ID", NWL_GetIdsDate("pnp.ids"), 0);
-	NWL_NodeAttrSet(pNode, "JEP106 ID", NWL_GetIdsDate("jep106.ids"), 0);
+	NWL_NodeAttrSet(pNode, "PCI ID", NWL_GetIdsDate(L"pci.ids"), 0);
+	NWL_NodeAttrSet(pNode, "USB ID", NWL_GetIdsDate(L"usb.ids"), 0);
+	NWL_NodeAttrSet(pNode, "PNP ID", NWL_GetIdsDate(L"pnp.ids"), 0);
+	NWL_NodeAttrSet(pNode, "JEP106 ID", NWL_GetIdsDate(L"jep106.ids"), 0);
+	NWL_NodeAttrSetMulti(pNode, "Error", NWLC->ErrLog, 0);
 	return pNode;
 }
