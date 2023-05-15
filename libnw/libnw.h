@@ -33,6 +33,7 @@ typedef struct _NWLIB_CONTEXT
 	BOOL UsbInfo;
 	BOOL SpdInfo;
 	BOOL BatteryInfo;
+	BOOL UefiInfo;
 
 	DWORD AcpiTable;
 	BOOL ActiveNet;
@@ -79,6 +80,7 @@ PNODE NW_System(VOID);
 PNODE NW_Usb(VOID);
 PNODE NW_Battery(VOID);
 PNODE NW_Libinfo(VOID);
+PNODE NW_Uefi(VOID);
 
 PNODE NW_UpdateSystem(PNODE node);
 PNODE NW_UpdateCpuid(PNODE node);

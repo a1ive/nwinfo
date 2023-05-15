@@ -322,24 +322,6 @@ PVOID NWL_GetAcpiByAddr(DWORD_PTR Addr)
 	return ret;
 }
 
-DWORD
-NWL_GetFirmwareEnvironmentVariable(LPCSTR lpName, LPCSTR lpGuid,
-	PVOID pBuffer, DWORD nSize)
-{
-	DWORD(WINAPI * NT6GetFirmwareEnvironmentVariable)
-		(LPCSTR lpName, LPCSTR lpGuid,
-			PVOID pBuffer, DWORD nSize) = NULL;
-	HMODULE hMod = GetModuleHandleA("kernel32");
-
-	if (hMod)
-		*(FARPROC*)&NT6GetFirmwareEnvironmentVariable = GetProcAddress(hMod, "GetFirmwareEnvironmentVariableA");
-
-	if (NT6GetFirmwareEnvironmentVariable)
-		return NT6GetFirmwareEnvironmentVariable(lpName, lpGuid, pBuffer, nSize);
-	SetLastError(ERROR_INVALID_FUNCTION);
-	return 0;
-}
-
 UINT8
 NWL_AcpiChecksum(VOID* base, UINT size)
 {

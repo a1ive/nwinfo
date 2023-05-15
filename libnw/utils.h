@@ -25,8 +25,11 @@ struct acpi_xsdt* NWL_GetXsdt(VOID);
 PVOID NWL_GetAcpi(DWORD TableId);
 PVOID NWL_GetAcpiByAddr(DWORD_PTR Addr);
 
-DWORD NWL_GetFirmwareEnvironmentVariable(LPCSTR lpName, LPCSTR lpGuid,
-	PVOID pBuffer, DWORD nSize);
+BOOL NWL_IsEfi(VOID);
+DWORD NWL_GetEfiVar(LPCWSTR lpName, LPGUID lpGuid,
+	PVOID pBuffer, DWORD nSize, PDWORD pdwAttribubutes);
+VOID* NWL_GetEfiVarAlloc(LPCWSTR lpName, LPGUID lpGuid,
+	PDWORD pdwSize, PDWORD pdwAttribubutes);
 
 UINT8 NWL_AcpiChecksum(VOID* base, UINT size);
 VOID NWL_TrimString(CHAR* String);

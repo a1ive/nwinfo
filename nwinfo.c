@@ -21,7 +21,8 @@ static void nwinfo_help(void)
 		"  --pci[=XX]       Print PCI [class=XX] info.\n"
 		"  --usb            Print USB info.\n"
 		"  --spd            Print SPD info\n"
-		"  --battery        Print battery info.\n");
+		"  --battery        Print battery info.\n"
+		"  --uefi           Print UEFI info.\n");
 }
 
 int main(int argc, char* argv[])
@@ -94,6 +95,8 @@ int main(int argc, char* argv[])
 			nwContext.SpdInfo = TRUE;
 		else if (_stricmp(argv[i], "--battery") == 0)
 			nwContext.BatteryInfo = TRUE;
+		else if (_stricmp(argv[i], "--uefi") == 0)
+			nwContext.UefiInfo = TRUE;
 		else
 		{
 		}

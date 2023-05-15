@@ -130,6 +130,7 @@
     <ClInclude Include="disk.h" />
     <ClInclude Include="format.h" />
     <ClInclude Include="libnw.h" />
+    <ClInclude Include="nt.h" />
     <ClInclude Include="smbios.h" />
     <ClInclude Include="spd.h" />
     <ClInclude Include="utils.h" />
@@ -140,6 +141,7 @@
     <ClCompile Include="cpuid.c" />
     <ClCompile Include="disk.c" />
     <ClCompile Include="display.c" />
+    <ClCompile Include="efivars.c" />
     <ClCompile Include="format.c" />
     <ClCompile Include="ids.c" />
     <ClCompile Include="libinfo.c" />
@@ -151,6 +153,7 @@
     <ClCompile Include="smbus.c" />
     <ClCompile Include="spd.c" />
     <ClCompile Include="sys.c" />
+    <ClCompile Include="uefi.c" />
     <ClCompile Include="usb.c" />
     <ClCompile Include="utils.c" />
   </ItemGroup>

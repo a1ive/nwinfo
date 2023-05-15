@@ -62,6 +62,8 @@ VOID NW_Print(LPCSTR lpFileName)
 		NW_Usb();
 	if (NWLC->BatteryInfo)
 		NW_Battery();
+	if (NWLC->UefiInfo)
+		NW_Uefi();
 	NW_Libinfo();
 	switch (NWLC->NwFormat)
 	{

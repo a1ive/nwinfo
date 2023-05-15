@@ -36,6 +36,9 @@
     <ClInclude Include="utils.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="nt.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="acpi.c">
@@ -90,6 +93,12 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="ids.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="efivars.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="uefi.c">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
