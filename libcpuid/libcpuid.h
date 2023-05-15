@@ -476,7 +476,7 @@ struct cpu_id_t {
 	 * +--------+--------+-------+-------+-------+---------------------------------------+-----------------------+
 	 * @endcode
 	 */
-	char cpu_codename[64];
+	char cpu_codename[CODENAME_STR_MAX];
 
 	/** SSE execution unit size (64 or 128; -1 if N/A) */
 	int32_t sse_size;

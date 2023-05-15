@@ -43,7 +43,7 @@ struct match_entry_t {
 	int ncores, l2cache, l3cache, brand_code;
 	uint64_t model_bits;
 	int model_code;
-	char name[32];
+	char name[CODENAME_STR_MAX];
 };
 
 // returns the match score:

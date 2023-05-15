@@ -98,7 +98,7 @@ int match_cpu_codename(const struct match_entry_t* matchtable, int count,
 			bestindex = i;
 		}
 	}
-	strcpy_s(data->cpu_codename, sizeof(data->cpu_codename), matchtable[bestindex].name);
+	strncpy_s(data->cpu_codename, CODENAME_STR_MAX, matchtable[bestindex].name, CODENAME_STR_MAX);
 	return bestscore;
 }
 
@@ -143,8 +143,11 @@ struct cpu_id_t* get_cached_cpuid(void)
 	static int initialized = 0;
 	static struct cpu_id_t id;
 	if (initialized) return &id;
-	if (cpu_identify(NULL, &id))
+	if (cpu_identify(NULL, &id) != ERR_OK) {
 		memset(&id, 0, sizeof(id));
+		id.architecture = ARCHITECTURE_UNKNOWN;
+		id.vendor       = VENDOR_UNKNOWN;
+	}
 	initialized = 1;
 	return &id;
 }
