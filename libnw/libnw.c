@@ -7,18 +7,18 @@
 
 PNWLIB_CONTEXT NWLC = NULL;
 
-static VOID
-DefaultErrLogCallback(INT nExitCode, LPCSTR lpszText)
+noreturn VOID NWL_ErrExit(INT nExitCode, LPCSTR lpszText)
 {
-	fprintf(stderr, "Error: %s\n", lpszText);
+	if (!NWLC->ErrLogCallback)
+		fprintf(stderr, "Error: %s\n", lpszText);
+	else
+		NWLC->ErrLogCallback(lpszText);
 	exit(nExitCode);
 }
 
 VOID NW_Init(PNWLIB_CONTEXT pContext)
 {
 	NWLC = pContext;
-	if (!NWLC->ErrLogCallback)
-		NWLC->ErrLogCallback = DefaultErrLogCallback;
 	NWLC->NwFile = stdout;
 	NWLC->AcpiTable = 0;
 	NWLC->SmbiosType = 127;
@@ -37,7 +37,7 @@ VOID NW_Init(PNWLIB_CONTEXT pContext)
 VOID NW_Print(LPCSTR lpFileName)
 {
 	if (lpFileName && fopen_s(&NWLC->NwFile, lpFileName, "w"))
-		NWLC->ErrLogCallback(ERROR_OPEN_FAILED, "Cannot open file");
+		NWL_ErrExit(ERROR_OPEN_FAILED, "Cannot open file");
 	if (!NWLC->NwFile)
 		return;
 	if (NWLC->AcpiInfo)

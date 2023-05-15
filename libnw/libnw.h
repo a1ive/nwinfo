@@ -3,6 +3,7 @@
 
 #include <stdio.h>
 #include <windows.h>
+#include <stdnoreturn.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -54,7 +55,7 @@ typedef struct _NWLIB_CONTEXT
 	} NwFormat;
 	FILE* NwFile;
 	CHAR* ErrLog;
-	VOID (*ErrLogCallback) (INT nExitCode, LPCSTR lpszText);
+	VOID (*ErrLogCallback) (LPCSTR lpszText);
 	UCHAR NwBuf[NWINFO_BUFSZ];
 } NWLIB_CONTEXT, *PNWLIB_CONTEXT;
 
@@ -63,6 +64,8 @@ extern PNWLIB_CONTEXT NWLC;
 VOID NW_Init(PNWLIB_CONTEXT pContext);
 VOID NW_Print(LPCSTR lpFileName);
 VOID NW_Fini(VOID);
+
+noreturn VOID NWL_ErrExit(INT nExitCode, LPCSTR lpszText);
 
 PNODE NW_Acpi(VOID);
 PNODE NW_Cpuid(VOID);
