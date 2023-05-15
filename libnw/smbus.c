@@ -5,12 +5,52 @@
 #include "libnw.h"
 #include "utils.h"
 #include "spd.h"
+#include "smbios.h"
 
 static unsigned char* spd_raw = NULL;
 static uint16_t smbus_vid = 0xFFFF;
 static uint16_t smbus_did = 0xFFFF;
 static uint32_t smbus_addr = 0xFFFFFFFF;
 static uint16_t smbus_base = 0;
+
+static uint8_t get_smbios_memory_type(void)
+{
+	uint8_t type = 15; // DDR3
+	DWORD smbios_size = 0;
+	struct RAW_SMBIOS_DATA* smbios_data = NULL;
+	smbios_size = NWL_GetSystemFirmwareTable('RSMB', 0, NULL, 0);
+	if (smbios_size == 0)
+		return 0xFF;
+	smbios_data = (struct RAW_SMBIOS_DATA*)malloc(smbios_size);
+	if (!smbios_data)
+		return 0xFF;
+	NWL_GetSystemFirmwareTable('RSMB', 0, smbios_data, smbios_size);
+
+	UINT8* p = smbios_data->Data;
+
+	for (;;) {
+		PSMBIOSHEADER hdr = (PSMBIOSHEADER)p;
+		if (hdr->Type == 17 && hdr->Length >= 0x12)
+		{
+			PMemoryDevice md = (PMemoryDevice)p;
+			if (md->MemoryType == 0x1a || md->MemoryType == 0x1e)
+				type = 16; // DDR4
+			else if (md->MemoryType == 0x22 || md->MemoryType == 0x23)
+				type = 18; // DDR5
+			break;
+		}
+		if ((hdr->Type == 127) && (hdr->Length == 4))
+			break;
+		UINT8* nt = p + hdr->Length;
+		while (0 != (*nt | *(nt + 1))) nt++;
+		nt += 2;
+		if (nt >= smbios_data->Data + smbios_data->Length)
+			break;
+		p = nt;
+	}
+	free(smbios_data);
+	return type;
+}
 
 static void usleep(unsigned int usec)
 {
@@ -343,7 +383,8 @@ NWL_SpdGet(uint8_t index)
 		|| smbus_addr == 0xFFFFFFFF || smbus_base == 0)
 		return NULL;
 
-	spd_type = spd_read_byte(0xFF, index, 2);
+	spd_type = get_smbios_memory_type();
+	spd_type = spd_read_byte(spd_type, index, 2);
 	if (spd_type == 0xFF)
 		return NULL;
 	
