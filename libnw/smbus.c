@@ -28,7 +28,8 @@ static uint8_t get_smbios_memory_type(void)
 
 	UINT8* p = smbios_data->Data;
 
-	for (;;) {
+	for (;;)
+	{
 		PSMBIOSHEADER hdr = (PSMBIOSHEADER)p;
 		if (hdr->Type == 17 && hdr->Length >= 0x12)
 		{
@@ -78,7 +79,11 @@ static uint16_t piix4_get_smbus_base(uint8_t addr)
 static uint16_t ichx_get_smbus_base(void)
 {
 	uint8_t tmp;
-	uint16_t val = pci_conf_read16(NWLC->NwDrv, smbus_addr, 0x20);
+	uint16_t val;
+	val = pci_conf_read16(NWLC->NwDrv, smbus_addr, 0x04);
+	if (!(val & 1))
+		pci_conf_write16(NWLC->NwDrv, smbus_addr, 0x04, val | 1);
+	val = pci_conf_read16(NWLC->NwDrv, smbus_addr, 0x20);
 	if (val == 0xFFFF)
 		return 0;
 	val &= 0xFFFE;
