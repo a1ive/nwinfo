@@ -7,6 +7,7 @@
 
 #include "libnw.h"
 #include "utils.h"
+#include "efivars.h"
 
 static const CHAR* Win10BuildNumber(DWORD dwBuildNumber)
 {

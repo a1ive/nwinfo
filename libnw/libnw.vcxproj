@@ -128,6 +128,7 @@
   <ItemGroup>
     <ClInclude Include="acpi.h" />
     <ClInclude Include="disk.h" />
+    <ClInclude Include="efivars.h" />
     <ClInclude Include="format.h" />
     <ClInclude Include="libnw.h" />
     <ClInclude Include="nt.h" />

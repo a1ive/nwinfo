@@ -39,6 +39,9 @@
     <ClInclude Include="nt.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="efivars.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="acpi.c">

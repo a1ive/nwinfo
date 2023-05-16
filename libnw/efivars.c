@@ -7,6 +7,7 @@
 #include "libnw.h"
 #include "utils.h"
 #include "nt.h"
+#include "efivars.h"
 
 #if 0
 NTSYSCALLAPI
