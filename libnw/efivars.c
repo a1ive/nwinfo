@@ -111,3 +111,21 @@ NWL_GetEfiVarAlloc(LPCWSTR lpName, LPGUID lpGuid, PDWORD pdwSize, PDWORD pdwAttr
 	*pdwSize = nSize;
 	return pBuffer;
 }
+
+BOOL
+NWL_EnumerateEfiVar(PVARIABLE_NAME pVarName, PULONG pulSize)
+{
+	NTSTATUS rc;
+	NTSTATUS(NTAPI * OsEnumerateSystemEnvironmentValuesEx)(ULONG InformationClass, PVOID Buffer, PULONG BufferLength) = NULL;
+	HMODULE hModule = GetModuleHandleW(L"ntdll");
+	if (!hModule)
+		goto fail;
+	*(FARPROC*)&OsEnumerateSystemEnvironmentValuesEx = GetProcAddress(hModule, "NtEnumerateSystemEnvironmentValuesEx");
+	if (!OsEnumerateSystemEnvironmentValuesEx)
+		goto fail;
+	rc = OsEnumerateSystemEnvironmentValuesEx(SystemEnvironmentNameInformation, pVarName, pulSize);
+	return NT_SUCCESS(rc);
+fail:
+	*pulSize = 0;
+	return FALSE;
+}

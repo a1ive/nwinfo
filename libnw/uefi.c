@@ -15,7 +15,7 @@ static void PrintBootEnv(PNODE node)
 	SYSTEM_BOOT_ENVIRONMENT_INFORMATION BootInfo = { 0 };
 	if (!NWL_NtQuerySystemInformation(SystemBootEnvironmentInformation, &BootInfo, sizeof(BootInfo), NULL))
 		return;
-	NWL_NodeAttrSet(node, "Boot Identifier", NWL_WinGuidToStr(&BootInfo.BootIdentifier), NAFLG_FMT_GUID);
+	NWL_NodeAttrSet(node, "Boot Identifier", NWL_WinGuidToStr(TRUE, &BootInfo.BootIdentifier), NAFLG_FMT_GUID);
 	switch (BootInfo.FirmwareType)
 	{
 	case FirmwareTypeBios: FirmwareType = "BIOS"; break;
@@ -98,9 +98,43 @@ out:
 		free(BootOrderStr);
 }
 
+static void PrintEfiVars(PNODE node)
+{
+	PNODE nv = NWL_NodeAppendNew(node, "Variables", NFLG_TABLE);
+	PVARIABLE_NAME VarNamePtr = NULL;
+	PVARIABLE_NAME p;
+	ULONG VarNameSize = 0;
+	NWL_EnumerateEfiVar(VarNamePtr, &VarNameSize);
+	if (VarNameSize == 0)
+		return;
+	VarNamePtr = malloc(VarNameSize);
+	if (!VarNamePtr)
+		return;
+	if (NWL_EnumerateEfiVar(VarNamePtr, &VarNameSize) == FALSE)
+	{
+		free(VarNamePtr);
+		return;
+	}
+	for (p = VarNamePtr;
+		((LPBYTE)p < (LPBYTE)VarNamePtr + VarNameSize);
+		p = (PVARIABLE_NAME)((LPBYTE)p + p->NextEntryOffset))
+	{
+		DWORD VarSize = 0;
+		LPCSTR Guid = NWL_WinGuidToStr(TRUE, &p->VendorGuid);
+		PNODE ng = NWL_NodeGetChild(nv, Guid);
+		if (!ng)
+			ng = NWL_NodeAppendNew(nv, Guid, NFLG_TABLE_ROW);
+		snprintf((CHAR*)NWLC->NwBuf, NWINFO_BUFSZ, "%S", p->Name);
+		VarSize = NWL_GetEfiVar(p->Name, &p->VendorGuid, NULL, 0, NULL);
+		NWL_NodeAttrSetf(ng, (CHAR*)NWLC->NwBuf, NAFLG_FMT_NUMERIC, "%lu", VarSize);
+		if (p->NextEntryOffset == 0)
+			break;
+	}
+	free(VarNamePtr);
+}
+
 PNODE NW_Uefi(VOID)
 {
-	
 	PNODE node = NWL_NodeAlloc("UEFI", 0);
 	if (NWLC->UefiInfo)
 		NWL_NodeAppendChild(NWLC->NwRoot, node);
@@ -110,5 +144,6 @@ PNODE NW_Uefi(VOID)
 		return node;
 	PrintOsIndicationsSupported(node);
 	PrintBootInfo(node);
+	PrintEfiVars(node);
 	return node;
 }

@@ -23,7 +23,7 @@ static LPCSTR GetRealVolumePath(LPCSTR lpszVolume)
 static LPCSTR
 GetGptFlag(GUID* pGuid)
 {
-	LPCSTR lpszGuid = NWL_WinGuidToStr(pGuid);
+	LPCSTR lpszGuid = NWL_WinGuidToStr(FALSE, pGuid);
 	if (_stricmp(lpszGuid, "c12a7328-f81f-11d2-ba4b-00a0c93ec93b") == 0)
 		return "ESP";
 	else if (_stricmp(lpszGuid, "e3c9e316-0b5c-4db8-817d-f92df00215ae") == 0)
@@ -72,13 +72,13 @@ PrintPartitionInfo(PNODE pNode, LPCSTR lpszPath, PHY_DRIVE_INFO* pParent)
 	{
 	case PARTITION_STYLE_MBR:
 		NWL_NodeAttrSetf(pNode, "Partition Type", 0, "0x%02X", partInfo.Mbr.PartitionType);
-		NWL_NodeAttrSet(pNode, "Partition ID", NWL_WinGuidToStr(&partInfo.Mbr.PartitionId), NAFLG_FMT_GUID);
+		NWL_NodeAttrSet(pNode, "Partition ID", NWL_WinGuidToStr(TRUE, &partInfo.Mbr.PartitionId), NAFLG_FMT_GUID);
 		NWL_NodeAttrSetBool(pNode, "Boot Indicator", partInfo.Mbr.BootIndicator, 0);
 		NWL_NodeAttrSet(pNode, "Partition Flag", GetMbrFlag(partInfo.StartingOffset.QuadPart, pParent), 0);
 		break;
 	case PARTITION_STYLE_GPT:
-		NWL_NodeAttrSet(pNode, "Partition Type", NWL_WinGuidToStr(&partInfo.Gpt.PartitionType), NAFLG_FMT_GUID);
-		NWL_NodeAttrSet(pNode, "Partition ID", NWL_WinGuidToStr(&partInfo.Gpt.PartitionId), NAFLG_FMT_GUID);
+		NWL_NodeAttrSet(pNode, "Partition Type", NWL_WinGuidToStr(TRUE, &partInfo.Gpt.PartitionType), NAFLG_FMT_GUID);
+		NWL_NodeAttrSet(pNode, "Partition ID", NWL_WinGuidToStr(TRUE, &partInfo.Gpt.PartitionId), NAFLG_FMT_GUID);
 		NWL_NodeAttrSet(pNode, "Partition Flag", GetGptFlag(&partInfo.Gpt.PartitionType), 0);
 		break;
 	}
@@ -589,7 +589,7 @@ PrintDiskInfo(BOOL cdrom, PNODE node, CDI_SMART* smart)
 		else if (PhyDriveList[i].PartMap == 2)
 		{
 			NWL_NodeAttrSet(nd, "Partition Table", "GPT", 0);
-			NWL_NodeAttrSet(nd, "GPT GUID", NWL_GuidToStr(PhyDriveList[i].GptGuid), NAFLG_FMT_GUID);
+			NWL_NodeAttrSetf(nd, "GPT GUID", NAFLG_FMT_GUID, "{%s}", NWL_GuidToStr(PhyDriveList[i].GptGuid));
 		}
 		if (!cdrom)
 			PrintSmartInfo(nd, smart, GetSmartIndex(smart, i));
