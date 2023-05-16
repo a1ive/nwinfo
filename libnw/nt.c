@@ -20,7 +20,7 @@ NWL_NtCreateFile(LPCWSTR lpFileName, BOOL bWrite)
 		POBJECT_ATTRIBUTES ObjectAttributes, PIO_STATUS_BLOCK IoStatusBlock,
 		PLARGE_INTEGER AllocationSize, ULONG FileAttributes, ULONG ShareAccess,
 		ULONG CreateDisposition, ULONG CreateOptions, PVOID EaBuffer, ULONG EaLength) = NULL;
-	HMODULE hModule = LoadLibraryA("ntdll.dll");
+	HMODULE hModule = GetModuleHandleW(L"ntdll");
 	if (!hModule)
 		return INVALID_HANDLE_VALUE;
 	*(FARPROC*)&OsNtCreateFile = GetProcAddress(hModule, "NtCreateFile");
@@ -75,7 +75,7 @@ LPCSTR NWL_NtGetPathFromHandle(HANDLE hFile)
 	PUNICODE_STRING puName = NULL;
 	NTSTATUS (NTAPI *OsNtQueryObject)(HANDLE Handle, OBJECT_INFORMATION_CLASS Info,
 		PVOID Buffer, ULONG BufferSize, PULONG ReturnLength) = NULL;
-	HMODULE hModule = LoadLibraryA("ntdll.dll");
+	HMODULE hModule = GetModuleHandleW(L"ntdll");
 	if (!hModule || !hFile || hFile == INVALID_HANDLE_VALUE)
 		return NULL;
 	*(FARPROC*)&OsNtQueryObject = GetProcAddress(hModule, "NtQueryObject");
@@ -93,7 +93,7 @@ BOOL NWL_NtQuerySystemInformation(INT SystemInformationClass,
 {
 	NTSTATUS (NTAPI * OsNtQuerySystemInformation)(INT SystemInformationClass,
 				PVOID SystemInformation, ULONG SystemInformationLength, PULONG ReturnLength) = NULL;
-	HMODULE hModule = LoadLibraryA("ntdll.dll");
+	HMODULE hModule = GetModuleHandleW(L"ntdll");
 	if (!hModule)
 		return FALSE;
 	*(FARPROC*)&OsNtQuerySystemInformation = GetProcAddress(hModule, "NtQuerySystemInformation");

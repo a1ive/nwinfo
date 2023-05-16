@@ -67,7 +67,7 @@ NWL_GetEfiVar(LPCWSTR lpName, LPGUID lpGuid,
 	ULONG(NTAPI * OsRtlNtStatusToDosError)(NTSTATUS Status) = NULL;
 	VOID(NTAPI * OsRtlInitUnicodeString)(PUNICODE_STRING Src, PCWSTR Dst) = NULL;
 	NTSTATUS(NTAPI * OsQuerySystemEnvironmentValueEx)(PUNICODE_STRING Name, LPGUID Guid, PVOID Value, PULONG Length, PULONG Attributes) = NULL;
-	HMODULE hModule = LoadLibraryA("ntdll.dll");
+	HMODULE hModule = GetModuleHandleW(L"ntdll");
 	if (!hModule)
 		goto fail;
 	*(FARPROC*)&OsRtlNtStatusToDosError = GetProcAddress(hModule, "RtlNtStatusToDosError");

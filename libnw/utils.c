@@ -157,7 +157,7 @@ NWL_GetSystemFirmwareTable(DWORD FirmwareTableProviderSignature, DWORD FirmwareT
 {
 	UINT(WINAPI * NT6GetSystemFirmwareTable)
 		(DWORD FirmwareTableProviderSignature, DWORD FirmwareTableID, PVOID pFirmwareTableBuffer, DWORD BufferSize) = NULL;
-	HMODULE hMod = GetModuleHandleA("kernel32");
+	HMODULE hMod = GetModuleHandleW(L"kernel32");
 
 	if (hMod)
 		*(FARPROC*)&NT6GetSystemFirmwareTable = GetProcAddress(hMod, "GetSystemFirmwareTable");

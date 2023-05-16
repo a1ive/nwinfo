@@ -251,7 +251,7 @@ TpmVersion(UINT32 ver)
 static void PrintTpmInfo(PNODE node)
 {
 	UINT32 (WINAPI *GetTpmInfo) (UINT32 Size, VOID *Info) = NULL;
-	HMODULE hL = LoadLibraryA("tbs.dll");
+	HMODULE hL = NULL;
 	TPM_DEVICE_INFO tpmInfo = { 0 };
 	struct acpi_table_header* AcpiHdr = NULL;
 	AcpiHdr = NWL_GetAcpi('2MPT');
@@ -268,6 +268,7 @@ static void PrintTpmInfo(PNODE node)
 		free(AcpiHdr);
 		return;
 	}
+	hL = LoadLibraryW(L"tbs.dll");
 	if (hL)
 		*(FARPROC*)&GetTpmInfo = GetProcAddress(hL, "Tbsi_GetDeviceInfo");
 	if (GetTpmInfo) {
@@ -276,6 +277,8 @@ static void PrintTpmInfo(PNODE node)
 	}
 	else
 		NWL_NodeAttrSet(node, "TPM", "UNSUPPORTED", 0);
+	if (hL)
+		FreeLibrary(hL);
 }
 
 static const char* mem_human_sizes[6] =
