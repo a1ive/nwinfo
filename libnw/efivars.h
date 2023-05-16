@@ -2,7 +2,163 @@
 
 #pragma once
 
+#include <stddef.h>
 #include <windows.h>
+
+#pragma pack(1)
+
+typedef WCHAR CHAR16;
+typedef CHAR  CHAR8;
+
+typedef struct
+{
+	UINT8    Type;
+	///< 0x01 Hardware Device Path.
+	///< 0x02 ACPI Device Path.
+	///< 0x03 Messaging Device Path.
+	///< 0x04 Media Device Path.
+	///< 0x05 BIOS Boot Specification Device Path.
+	///< 0x7F End of Hardware Device Path.
+
+	UINT8    SubType;
+	///< Varies by Type
+	///< 0xFF End Entire Device Path, or
+	///< 0x01 End This Instance of a Device Path and start a new
+	///< Device Path.
+
+	UINT8    Length[2];
+	///< Specific Device Path data. Type and Sub-Type define
+	///< type of data. Size of data is included in Length.
+} EFI_DEVICE_PATH_PROTOCOL;
+
+///
+/// Device Path protocol definition for backward-compatible with EFI1.1.
+///
+typedef EFI_DEVICE_PATH_PROTOCOL EFI_DEVICE_PATH;
+
+///
+/// Device Type
+///
+#define HARDWARE_DEVICE_PATH              0x01
+#define ACPI_DEVICE_PATH                  0x02
+#define MESSAGING_DEVICE_PATH             0x03
+#define MEDIA_DEVICE_PATH                 0x04 // => This
+#define BBS_DEVICE_PATH                   0x05
+#define END_DEVICE_PATH_TYPE              0x7f
+
+///
+/// Media Device SubType
+///
+#define MEDIA_HARDDRIVE_DP              0x01 // => HD
+#define MEDIA_CDROM_DP                  0x02 // => CD
+#define MEDIA_VENDOR_DP                 0x03
+#define MEDIA_FILEPATH_DP               0x04 // => FILE
+#define MEDIA_PROTOCOL_DP               0x05
+#define MEDIA_PIWG_FW_FILE_DP           0x06
+#define MEDIA_PIWG_FW_VOL_DP            0x07
+#define MEDIA_RELATIVE_OFFSET_RANGE_DP  0x08
+#define MEDIA_RAM_DISK_DP               0x09
+
+typedef struct
+{
+	EFI_DEVICE_PATH_PROTOCOL    Header;
+	///
+	/// Describes the entry in a partition table, starting with entry 1.
+	/// Partition number zero represents the entire device. Valid
+	/// partition numbers for a MBR partition are [1, 4]. Valid
+	/// partition numbers for a GPT partition are [1, NumberOfPartitionEntries].
+	///
+	UINT32                      PartitionNumber;
+	///
+	/// Starting LBA of the partition on the hard drive.
+	///
+	UINT64                      PartitionStart;
+	///
+	/// Size of the partition in units of Logical Blocks.
+	///
+	UINT64                      PartitionSize;
+	///
+	/// Signature unique to this partition:
+	/// If SignatureType is 0, this field has to be initialized with 16 zeros.
+	/// If SignatureType is 1, the MBR signature is stored in the first 4 bytes of this field.
+	/// The other 12 bytes are initialized with zeros.
+	/// If SignatureType is 2, this field contains a 16 byte signature.
+	///
+	UINT8                       Signature[16];
+	///
+	/// Partition Format: (Unused values reserved).
+	/// 0x01 - PC-AT compatible legacy MBR.
+	/// 0x02 - GUID Partition Table.
+	///
+	UINT8                       MBRType;
+	///
+	/// Type of Disk Signature: (Unused values reserved).
+	/// 0x00 - No Disk Signature.
+	/// 0x01 - 32-bit signature from address 0x1b8 of the type 0x01 MBR.
+	/// 0x02 - GUID signature.
+	///
+	UINT8                       SignatureType;
+} HARDDRIVE_DEVICE_PATH;
+
+#define MBR_TYPE_PCAT                        0x01
+#define MBR_TYPE_EFI_PARTITION_TABLE_HEADER  0x02
+
+#define NO_DISK_SIGNATURE    0x00
+#define SIGNATURE_TYPE_MBR   0x01
+#define SIGNATURE_TYPE_GUID  0x02
+
+typedef struct
+{
+	EFI_DEVICE_PATH_PROTOCOL    Header;
+	///
+	/// Boot Entry number from the Boot Catalog. The Initial/Default entry is defined as zero.
+	///
+	UINT32                      BootEntry;
+	///
+	/// Starting RBA of the partition on the medium. CD-ROMs use Relative logical Block Addressing.
+	///
+	UINT64                      PartitionStart;
+	///
+	/// Size of the partition in units of Blocks, also called Sectors.
+	///
+	UINT64                      PartitionSize;
+} CDROM_DEVICE_PATH;
+
+typedef struct
+{
+	EFI_DEVICE_PATH_PROTOCOL    Header;
+	///
+	/// A NULL-terminated Path string including directory and file names.
+	///
+	CHAR16                      PathName[1];
+} FILEPATH_DEVICE_PATH;
+
+#define SIZE_OF_FILEPATH_DEVICE_PATH  offsetof(FILEPATH_DEVICE_PATH,PathName)
+
+///
+/// Union of all possible Device Paths and pointers to Device Paths.
+///
+typedef union
+{
+	EFI_DEVICE_PATH_PROTOCOL                   DevPath;
+	HARDDRIVE_DEVICE_PATH                      HardDrive;
+	CDROM_DEVICE_PATH                          CD;
+	FILEPATH_DEVICE_PATH                       FilePath;
+} EFI_DEV_PATH;
+
+typedef union
+{
+	EFI_DEVICE_PATH_PROTOCOL*                  DevPath;
+	HARDDRIVE_DEVICE_PATH*                     HardDrive;
+	CDROM_DEVICE_PATH*                         CD;
+	FILEPATH_DEVICE_PATH*                      FilePath;
+	UINT8*                                     Raw;
+} EFI_DEV_PATH_PTR;
+
+#pragma pack()
+
+#define END_ENTIRE_DEVICE_PATH_SUBTYPE    0xFF
+#define END_INSTANCE_DEVICE_PATH_SUBTYPE  0x01
 
 #define EFI_VARIABLE_NON_VOLATILE 0x00000001
 #define EFI_VARIABLE_BOOTSERVICE_ACCESS 0x00000002
@@ -45,7 +201,7 @@ typedef struct _EFI_LOAD_OPTION
 	UINT32 Attributes;
 	UINT16 FilePathListLength;
 	WCHAR Description[ANYSIZE_ARRAY];
-	// EFI_DEVICE_PATH_PROTOCOL FilePathList[];
+	// EFI_DEVICE_PATH FilePathList[];
 	// UINT8 OptionalData[];
 } EFI_LOAD_OPTION;
 
