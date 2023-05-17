@@ -48,7 +48,7 @@ static void PrintOsIndicationsSupported(PNODE node)
 	char* features = NULL;
 	UINT64 OsIndicationsSupported = 0;
 	GetEfiGlobalVar(L"OsIndicationsSupported", &OsIndicationsSupported, sizeof(UINT64));
-	NWL_NodeAttrSetf(node,  "Os Indications Supported", 0, "0x%016llX", OsIndicationsSupported);
+	NWL_NodeAttrSetf(node,  "OsIndicationsSupported", 0, "0x%016llX", OsIndicationsSupported);
 	if (OsIndicationsSupported & EFI_OS_INDICATIONS_BOOT_TO_FW_UI)
 		NWL_NodeAppendMultiSz(&features, "BootToFwUI");
 	if (OsIndicationsSupported & EFI_OS_INDICATIONS_TIMESTAMP_REVOCATION)
@@ -65,7 +65,29 @@ static void PrintOsIndicationsSupported(PNODE node)
 		NWL_NodeAppendMultiSz(&features, "StartPlatformRecovery");
 	if (OsIndicationsSupported & EFI_OS_INDICATIONS_JSON_CONFIG_DATA_REFRESH)
 		NWL_NodeAppendMultiSz(&features, "JsonConfigDataRefresh");
-	NWL_NodeAttrSetMulti(node, "Supported Features", features, 0);
+	NWL_NodeAttrSetMulti(node, "Supported OS Indication Features", features, 0);
+	free(features);
+}
+
+static void PrintBootOptionSupport(PNODE node)
+{
+	char* features = NULL;
+	UINT32 BootOptionSupport = 0;
+	GetEfiGlobalVar(L"BootOptionSupport", &BootOptionSupport, sizeof(UINT32));
+	NWL_NodeAttrSetf(node, "BootOptionSupport", 0, "0x%08X", BootOptionSupport);
+	if (BootOptionSupport & EFI_BOOT_OPTION_SUPPORT_KEY)
+	{
+		char KeyCountStr[] = "KeyCount4";
+		UINT32 KeyCount = (BootOptionSupport & EFI_BOOT_OPTION_SUPPORT_COUNT) >> 8;
+		KeyCountStr[8] = '0' + KeyCount;
+		NWL_NodeAppendMultiSz(&features, "Key");
+		NWL_NodeAppendMultiSz(&features, KeyCountStr);
+	}
+	if (BootOptionSupport & EFI_BOOT_OPTION_SUPPORT_APP)
+		NWL_NodeAppendMultiSz(&features, "App");
+	if (BootOptionSupport & EFI_BOOT_OPTION_SUPPORT_SYSPREP)
+		NWL_NodeAppendMultiSz(&features, "SysPrep");
+	NWL_NodeAttrSetMulti(node, "Supported Boot Options", features, 0);
 	free(features);
 }
 
@@ -136,6 +158,7 @@ PNODE NW_Uefi(VOID)
 	if (NWL_IsEfi() == FALSE)
 		return node;
 	PrintOsIndicationsSupported(node);
+	PrintBootOptionSupport(node);
 	PrintBootInfo(node);
 	PrintEfiVars(node);
 	return node;
