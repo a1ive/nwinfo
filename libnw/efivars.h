@@ -184,7 +184,7 @@ typedef struct _VARIABLE_NAME
 	GUID VendorGuid;
 	WCHAR Name[ANYSIZE_ARRAY];
 } VARIABLE_NAME, * PVARIABLE_NAME;
-
+#if 0
 typedef struct _VARIABLE_NAME_AND_VALUE
 {
 	ULONG NextEntryOffset;
@@ -195,7 +195,7 @@ typedef struct _VARIABLE_NAME_AND_VALUE
 	WCHAR Name[ANYSIZE_ARRAY];
 	//BYTE Value[ANYSIZE_ARRAY];
 } VARIABLE_NAME_AND_VALUE, * PVARIABLE_NAME_AND_VALUE;
-
+#endif
 typedef struct _EFI_LOAD_OPTION
 {
 	UINT32 Attributes;
@@ -210,4 +210,4 @@ DWORD NWL_GetEfiVar(LPCWSTR lpName, LPGUID lpGuid,
 	PVOID pBuffer, DWORD nSize, PDWORD pdwAttribubutes);
 VOID* NWL_GetEfiVarAlloc(LPCWSTR lpName, LPGUID lpGuid,
 	PDWORD pdwSize, PDWORD pdwAttribubutes);
-BOOL NWL_EnumerateEfiVar(PVARIABLE_NAME pVarName, PULONG pulSize);
+PVARIABLE_NAME NWL_EnumerateEfiVar(PULONG pulSize);

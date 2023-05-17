@@ -113,8 +113,7 @@ NWL_GetEfiVarAlloc(LPCWSTR lpName, LPGUID lpGuid, PDWORD pdwSize, PDWORD pdwAttr
 	return pBuffer;
 }
 
-BOOL
-NWL_EnumerateEfiVar(PVARIABLE_NAME pVarName, PULONG pulSize)
+static BOOL EnumerateEfiVar(ULONG InformationClass, PVOID Buffer, PULONG BufferLength)
 {
 	NTSTATUS rc;
 	NTSTATUS(NTAPI * OsEnumerateSystemEnvironmentValuesEx)(ULONG InformationClass, PVOID Buffer, PULONG BufferLength) = NULL;
@@ -124,9 +123,29 @@ NWL_EnumerateEfiVar(PVARIABLE_NAME pVarName, PULONG pulSize)
 	*(FARPROC*)&OsEnumerateSystemEnvironmentValuesEx = GetProcAddress(hModule, "NtEnumerateSystemEnvironmentValuesEx");
 	if (!OsEnumerateSystemEnvironmentValuesEx)
 		goto fail;
-	rc = OsEnumerateSystemEnvironmentValuesEx(SystemEnvironmentNameInformation, pVarName, pulSize);
+	rc = OsEnumerateSystemEnvironmentValuesEx(InformationClass, Buffer, BufferLength);
 	return NT_SUCCESS(rc);
 fail:
-	*pulSize = 0;
+	*BufferLength = 0;
 	return FALSE;
+}
+
+PVARIABLE_NAME
+NWL_EnumerateEfiVar(PULONG pulSize)
+{
+	PVOID VarNamePtr = NULL;
+	EnumerateEfiVar(SystemEnvironmentNameInformation, NULL, pulSize);
+	if (*pulSize == 0)
+		goto fail;
+	VarNamePtr = calloc(*pulSize, 1);
+	if (!VarNamePtr)
+		goto fail;
+	if (!EnumerateEfiVar(SystemEnvironmentNameInformation, VarNamePtr, pulSize))
+		goto fail;
+	return VarNamePtr;
+fail:
+	if (VarNamePtr)
+		free(VarNamePtr);
+	*pulSize = 0;
+	return NULL;
 }

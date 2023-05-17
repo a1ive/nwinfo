@@ -105,17 +105,9 @@ static void PrintEfiVars(PNODE node)
 	PVARIABLE_NAME VarNamePtr = NULL;
 	PVARIABLE_NAME p;
 	ULONG VarNameSize = 0;
-	NWL_EnumerateEfiVar(VarNamePtr, &VarNameSize);
-	if (VarNameSize == 0)
+	VarNamePtr = NWL_EnumerateEfiVar(&VarNameSize);
+	if (!VarNamePtr || VarNameSize == 0)
 		return;
-	VarNamePtr = malloc(VarNameSize);
-	if (!VarNamePtr)
-		return;
-	if (NWL_EnumerateEfiVar(VarNamePtr, &VarNameSize) == FALSE)
-	{
-		free(VarNamePtr);
-		return;
-	}
 	for (p = VarNamePtr;
 		((LPBYTE)p < (LPBYTE)VarNamePtr + VarNameSize);
 		p = (PVARIABLE_NAME)((LPBYTE)p + p->NextEntryOffset))
