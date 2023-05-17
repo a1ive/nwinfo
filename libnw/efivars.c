@@ -149,3 +149,83 @@ fail:
 	*pulSize = 0;
 	return NULL;
 }
+
+static LPCWSTR
+GuidToStr(GUID* pGuid)
+{
+	static WCHAR GuidStr[39] = { 0 };
+	swprintf(GuidStr, 39, L"{%08lX-%04X-%04X-%02X%02X-%02X%02X%02X%02X%02X%02X}",
+		pGuid->Data1, pGuid->Data2, pGuid->Data3,
+		pGuid->Data4[0], pGuid->Data4[1], pGuid->Data4[2], pGuid->Data4[3],
+		pGuid->Data4[4], pGuid->Data4[5], pGuid->Data4[6], pGuid->Data4[7]);
+	return GuidStr;
+}
+
+BOOL
+NWL_SetEfiVarEx(LPCWSTR lpName, LPGUID lpGuid, PVOID pBuffer, DWORD nSize, DWORD dwAttributes)
+{
+#if 0
+	NTSTATUS rc;
+	UNICODE_STRING str;
+	ULONG(NTAPI * OsRtlNtStatusToDosError)(NTSTATUS Status) = NULL;
+	VOID(NTAPI * OsRtlInitUnicodeString)(PUNICODE_STRING Src, PCWSTR Dst) = NULL;
+	NTSTATUS(NTAPI * OsSetSystemEnvironmentValueEx)(PUNICODE_STRING Name, LPGUID Guid, PVOID Value, ULONG Length, ULONG Attributes) = NULL;
+	HMODULE hModule = GetModuleHandleW(L"ntdll");
+	if (!hModule)
+		goto fail;
+	*(FARPROC*)&OsRtlNtStatusToDosError = GetProcAddress(hModule, "RtlNtStatusToDosError");
+	if (!OsRtlNtStatusToDosError)
+		goto fail;
+	*(FARPROC*)&OsRtlInitUnicodeString = GetProcAddress(hModule, "RtlInitUnicodeString");
+	if (!OsRtlInitUnicodeString)
+		goto fail;
+	*(FARPROC*)&OsSetSystemEnvironmentValueEx = GetProcAddress(hModule, "NtSetSystemEnvironmentValueEx");
+	if (!OsSetSystemEnvironmentValueEx)
+		goto fail;
+	OsRtlInitUnicodeString(&str, lpName);
+	if (!lpGuid)
+		lpGuid = &EFI_GV_GUID;
+	rc = OsSetSystemEnvironmentValueEx(&str, lpGuid, pBuffer, nSize, dwAttributes);
+	if (!NT_SUCCESS(rc))
+		SetLastError(OsRtlNtStatusToDosError(rc));
+	return NT_SUCCESS(rc);
+#else
+	BOOL(WINAPI * OsSetEfiVarExW)(LPCWSTR lpName, LPCWSTR lpGuid, PVOID pValue, DWORD nSize, DWORD dwAttributes) = NULL;
+	HMODULE hModule = GetModuleHandleW(L"kernel32");
+	if (!hModule)
+		goto fail;
+	*(FARPROC*)&OsSetEfiVarExW = GetProcAddress(hModule, "SetFirmwareEnvironmentVariableExW");
+	if (!OsSetEfiVarExW)
+		goto fail;
+	if (!lpGuid)
+		lpGuid = &EFI_GV_GUID;
+	return OsSetEfiVarExW(lpName, GuidToStr(lpGuid), pBuffer, nSize, dwAttributes);
+#endif
+fail:
+	SetLastError(ERROR_INVALID_FUNCTION);
+	return FALSE;
+}
+
+BOOL
+NWL_SetEfiVar(LPCWSTR lpName, LPGUID lpGuid, PVOID pBuffer, DWORD nSize)
+{
+	BOOL(WINAPI * OsSetEfiVarW)(LPCWSTR lpName, LPCWSTR lpGuid, PVOID pValue, DWORD nSize) = NULL;
+	HMODULE hModule = GetModuleHandleW(L"kernel32");
+	if (!hModule)
+		goto fail;
+	*(FARPROC*)&OsSetEfiVarW = GetProcAddress(hModule, "SetFirmwareEnvironmentVariableW");
+	if (!OsSetEfiVarW)
+		goto fail;
+	if (!lpGuid)
+		lpGuid = &EFI_GV_GUID;
+	return OsSetEfiVarW(lpName, GuidToStr(lpGuid), pBuffer, nSize);
+fail:
+	SetLastError(ERROR_INVALID_FUNCTION);
+	return FALSE;
+}
+
+BOOL
+NWL_DeleteEfiVar(LPCWSTR lpName, LPGUID lpGuid)
+{
+	return NWL_SetEfiVar(lpName, lpGuid, NULL, 0);
+}
