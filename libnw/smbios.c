@@ -7,32 +7,42 @@
 static const char* mem_human_sizes[6] =
 { "B", "KB", "MB", "GB", "TB", "PB", };
 
-static const char* LocateString(const char* str, UINT i)
+static const char* LocateString(UINT8* hdr, UINT8 offset)
 {
-	static const char nul[] = "NULL";
-	if (0 == i || 0 == *str)
-		return nul;
-	while (--i)
-		str += strlen((char*)str) + 1;
-	return str;
-}
+	UINT8* ptr = hdr + hdr[1]; // PSMBIOSHEADER->Length
+	UINT8* end = NWLC->NwSmbios->Data + NWLC->NwSmbios->Length;
+	UINT8 i;
 
-static const char* toPointString(void* p)
-{
-	return (char*)p + ((PSMBIOSHEADER)p)->Length;
+	if (offset == 0)
+		goto fail;
+
+	for (i = 1; *ptr != 0 && ptr < end; i++)
+	{
+		if (i == offset)
+		{
+			const char* str = (const char*)ptr;
+			while (*ptr++ != 0)
+				if (ptr >= end)
+					goto fail;
+			return str;
+		}
+		else
+			while (*ptr++ != 0 && ptr < end);
+	}
+fail:
+	return "NULL";
 }
 
 static void ProcBIOSInfo(PNODE tab, void* p)
 {
 	PBIOSInfo pBIOS = (PBIOSInfo)p;
-	const char* str = toPointString(p);
 	NWL_NodeAttrSet(tab, "Description", "BIOS Information", 0);
 	if (pBIOS->Header.Length < 0x12) // 2.0
 		return;
-	NWL_NodeAttrSet(tab, "Vendor", LocateString(str, pBIOS->Vendor), 0);
-	NWL_NodeAttrSet(tab, "Version", LocateString(str, pBIOS->Version), 0);
+	NWL_NodeAttrSet(tab, "Vendor", LocateString(p, pBIOS->Vendor), 0);
+	NWL_NodeAttrSet(tab, "Version", LocateString(p, pBIOS->Version), 0);
 	NWL_NodeAttrSetf(tab, "Starting Segment", 0, "%04Xh", pBIOS->StartingAddrSeg);
-	NWL_NodeAttrSet(tab, "Release Date", LocateString(str, pBIOS->ReleaseDate), 0);
+	NWL_NodeAttrSet(tab, "Release Date", LocateString(p, pBIOS->ReleaseDate), 0);
 	NWL_NodeAttrSetf(tab, "Image Size (K)", NAFLG_FMT_NUMERIC, "%u", (pBIOS->ROMSize + 1) * 64);
 	NWL_NodeAttrSetf(tab, "BIOS Characteristics", 0, "0x%016llX", pBIOS->Characteristics);
 	if (pBIOS->Header.Length < 0x18) // 2.4
@@ -63,22 +73,21 @@ pWakeUpTypeToStr(UCHAR Type)
 static void ProcSysInfo(PNODE tab, void* p)
 {
 	PSystemInfo pSystem = (PSystemInfo)p;
-	const char* str = toPointString(p);
 	NWL_NodeAttrSet(tab, "Description", "System Information", 0);
 	if (pSystem->Header.Length < 0x08) // 2.0
 		return;
-	NWL_NodeAttrSet(tab, "Manufacturer", LocateString(str, pSystem->Manufacturer), 0);
-	NWL_NodeAttrSet(tab, "Product Name", LocateString(str, pSystem->ProductName), 0);
-	NWL_NodeAttrSet(tab, "Version", LocateString(str, pSystem->Version), 0);
-	NWL_NodeAttrSet(tab, "Serial Number", LocateString(str, pSystem->SN), 0);
+	NWL_NodeAttrSet(tab, "Manufacturer", LocateString(p, pSystem->Manufacturer), 0);
+	NWL_NodeAttrSet(tab, "Product Name", LocateString(p, pSystem->ProductName), 0);
+	NWL_NodeAttrSet(tab, "Version", LocateString(p, pSystem->Version), 0);
+	NWL_NodeAttrSet(tab, "Serial Number", LocateString(p, pSystem->SN), 0);
 	if (pSystem->Header.Length < 0x19) // 2.1
 		return;
 	NWL_NodeAttrSet(tab, "UUID", NWL_GuidToStr(pSystem->UUID), NAFLG_FMT_GUID);
 	NWL_NodeAttrSet(tab, "Wake-up Type", pWakeUpTypeToStr(pSystem->WakeUpType), 0);
 	if (pSystem->Header.Length < 0x1b) // 2.4
 		return;
-	NWL_NodeAttrSet(tab, "SKU Number", LocateString(str, pSystem->SKUNumber), 0);
-	NWL_NodeAttrSet(tab, "Family", LocateString(str, pSystem->Family), 0);
+	NWL_NodeAttrSet(tab, "SKU Number", LocateString(p, pSystem->SKUNumber), 0);
+	NWL_NodeAttrSet(tab, "Family", LocateString(p, pSystem->Family), 0);
 }
 
 static const CHAR*
@@ -105,23 +114,22 @@ pBoardTypeToStr(UCHAR Type)
 static void ProcBoardInfo(PNODE tab, void* p)
 {
 	PBoardInfo pBoard = (PBoardInfo)p;
-	const char* str = toPointString(p);
 	NWL_NodeAttrSet(tab, "Description", "Base Board Information", 0);
 	if (pBoard->Header.Length < 0x08)
 		return;
-	NWL_NodeAttrSet(tab, "Manufacturer", LocateString(str, pBoard->Manufacturer), 0);
-	NWL_NodeAttrSet(tab, "Product Name", LocateString(str, pBoard->Product), 0);
-	NWL_NodeAttrSet(tab, "Version", LocateString(str, pBoard->Version), 0);
-	NWL_NodeAttrSet(tab, "Serial Number", LocateString(str, pBoard->SN), 0);
+	NWL_NodeAttrSet(tab, "Manufacturer", LocateString(p, pBoard->Manufacturer), 0);
+	NWL_NodeAttrSet(tab, "Product Name", LocateString(p, pBoard->Product), 0);
+	NWL_NodeAttrSet(tab, "Version", LocateString(p, pBoard->Version), 0);
+	NWL_NodeAttrSet(tab, "Serial Number", LocateString(p, pBoard->SN), 0);
 	if (pBoard->Header.Length < 0x09)
 		return;
-	NWL_NodeAttrSet(tab, "Asset Tag", LocateString(str, pBoard->AssetTag), 0);
+	NWL_NodeAttrSet(tab, "Asset Tag", LocateString(p, pBoard->AssetTag), 0);
 	if (pBoard->Header.Length < 0x0a)
 		return;
 	NWL_NodeAttrSetf(tab, "Feature Flags", 0, "0x%02X", pBoard->FeatureFlags);
 	if (pBoard->Header.Length < 0x0b)
 		return;
-	NWL_NodeAttrSet(tab, "Location in Chassis", LocateString(str, pBoard->LocationInChassis), 0);
+	NWL_NodeAttrSet(tab, "Location in Chassis", LocateString(p, pBoard->LocationInChassis), 0);
 	if (pBoard->Header.Length < 0x0d)
 		return;
 	NWL_NodeAttrSetf(tab, "Chassis Handle", NAFLG_FMT_NUMERIC, "%u", pBoard->ChassisHandle);
@@ -204,17 +212,16 @@ pSecurityStatusToStr(UCHAR State)
 static void ProcSystemEnclosure(PNODE tab, void* p)
 {
 	PSystemEnclosure pSysEnclosure = (PSystemEnclosure)p;
-	const char* str = toPointString(p);
 	NWL_NodeAttrSet(tab, "Description", "System Enclosure Information", 0);
 	if (pSysEnclosure->Header.Length < 0x09) // 2.0
 		return;
 	NWL_NodeAttrSetf(tab, "Type", 0, "%s%s",
 		(pSysEnclosure->Type & 0x80) ? "[LOCK]" : "",
 		pSystemEnclosureTypeToStr(pSysEnclosure->Type));
-	NWL_NodeAttrSet(tab, "Manufacturer", LocateString(str, pSysEnclosure->Manufacturer), 0);
-	NWL_NodeAttrSet(tab, "Version", LocateString(str, pSysEnclosure->Version), 0);
-	NWL_NodeAttrSet(tab, "Serial Number", LocateString(str, pSysEnclosure->SN), 0);
-	NWL_NodeAttrSet(tab, "Asset Tag", LocateString(str, pSysEnclosure->AssetTag), 0);
+	NWL_NodeAttrSet(tab, "Manufacturer", LocateString(p, pSysEnclosure->Manufacturer), 0);
+	NWL_NodeAttrSet(tab, "Version", LocateString(p, pSysEnclosure->Version), 0);
+	NWL_NodeAttrSet(tab, "Serial Number", LocateString(p, pSysEnclosure->SN), 0);
+	NWL_NodeAttrSet(tab, "Asset Tag", LocateString(p, pSysEnclosure->AssetTag), 0);
 	if (pSysEnclosure->Header.Length < 0x0d) // 2.1
 		return;
 	NWL_NodeAttrSet(tab, "Boot-up State", pBootUpStateToStr(pSysEnclosure->BootupState), 0);
@@ -422,15 +429,14 @@ pProcessorFamilyToStr(UCHAR Family)
 static void ProcProcessorInfo(PNODE tab, void* p)
 {
 	PProcessorInfo	pProcessor = (PProcessorInfo)p;
-	const char* str = toPointString(p);
 	NWL_NodeAttrSet(tab, "Description", "Processor Information", 0);
 	if (pProcessor->Header.Length < 0x1a) // 2.0
 		return;
-	NWL_NodeAttrSet(tab, "Socket Designation", LocateString(str, pProcessor->SocketDesignation), 0);
+	NWL_NodeAttrSet(tab, "Socket Designation", LocateString(p, pProcessor->SocketDesignation), 0);
 	NWL_NodeAttrSet(tab, "Type", pProcessorTypeToStr(pProcessor->Type), 0);
 	NWL_NodeAttrSet(tab, "Processor Family", pProcessorFamilyToStr(pProcessor->Family), 0);
-	NWL_NodeAttrSet(tab, "Processor Manufacturer", LocateString(str, pProcessor->Manufacturer), 0);
-	NWL_NodeAttrSet(tab, "Processor Version", LocateString(str, pProcessor->Version), 0);
+	NWL_NodeAttrSet(tab, "Processor Manufacturer", LocateString(p, pProcessor->Manufacturer), 0);
+	NWL_NodeAttrSet(tab, "Processor Version", LocateString(p, pProcessor->Version), 0);
 	if (!pProcessor->Voltage)
 	{
 		// unsupported
@@ -455,9 +461,9 @@ static void ProcProcessorInfo(PNODE tab, void* p)
 		return;
 	if (pProcessor->Header.Length < 0x23) // 2.3
 		return;
-	NWL_NodeAttrSet(tab, "Serial Number", LocateString(str, pProcessor->Serial), 0);
-	NWL_NodeAttrSet(tab, "Asset Tag", LocateString(str, pProcessor->AssetTag), 0);
-	NWL_NodeAttrSet(tab, "Part Number", LocateString(str, pProcessor->PartNum), 0);
+	NWL_NodeAttrSet(tab, "Serial Number", LocateString(p, pProcessor->Serial), 0);
+	NWL_NodeAttrSet(tab, "Asset Tag", LocateString(p, pProcessor->AssetTag), 0);
+	NWL_NodeAttrSet(tab, "Part Number", LocateString(p, pProcessor->PartNum), 0);
 	if (pProcessor->Header.Length < 0x28) // 2.5
 		return;
 	if (pProcessor->CoreCount == 0xff && pProcessor->Header.Length > 0x2a)
@@ -488,12 +494,11 @@ static void ProcMemCtrlInfo(PNODE tab, void* p)
 static void ProcMemModuleInfo(PNODE tab, void* p)
 {
 	PMemModuleInfo	pMemModule = (PMemModuleInfo)p;
-	const char* str = toPointString(p);
 	UCHAR sz = 0;
 	NWL_NodeAttrSet(tab, "Description", "Memory Module Information", 0);
 	if (pMemModule->Header.Length < 0x0c)
 		return;
-	NWL_NodeAttrSet(tab, "Socket Designation", LocateString(str, pMemModule->SocketDesignation), 0);
+	NWL_NodeAttrSet(tab, "Socket Designation", LocateString(p, pMemModule->SocketDesignation), 0);
 	NWL_NodeAttrSetf(tab, "Current Speed (ns)", NAFLG_FMT_NUMERIC, "%u", pMemModule->CurrentSpeed);
 	sz = pMemModule->InstalledSize & 0x7F;
 	if (sz > 0x7D)
@@ -599,12 +604,11 @@ pCacheAssocToStr(UCHAR Type)
 static void ProcCacheInfo(PNODE tab, void* p)
 {
 	PCacheInfo	pCache = (PCacheInfo)p;
-	const char* str = toPointString(p);
 	UINT64 sz = 0;
 	NWL_NodeAttrSet(tab, "Description", "Cache Information", 0);
 	if (pCache->Header.Length < 0x0f) // 2.0
 		return;
-	NWL_NodeAttrSet(tab, "Socket Designation", LocateString(str, pCache->SocketDesignation), 0);
+	NWL_NodeAttrSet(tab, "Socket Designation", LocateString(p, pCache->SocketDesignation), 0);
 	NWL_NodeAttrSetf(tab, "Cache Configuration", 0, "0x%04X", pCache->Configuration);
 	NWL_NodeAttrSet(tab, "Operational Mode", pCacheConfToOpMode(pCache->Configuration), 0);
 	NWL_NodeAttrSetBool(tab, "Enabled", pCache->Configuration & 0x80, 0);
@@ -749,13 +753,12 @@ pPortTypeToStr(UCHAR Type)
 static void ProcPortConnectInfo(PNODE tab, void* p)
 {
 	PPortConnectInfo pPort = (PPortConnectInfo)p;
-	const char* str = toPointString(p);
 	NWL_NodeAttrSet(tab, "Description", "Port Connector Information", 0);
 	if (pPort->Header.Length < 0x09)
 		return;
-	NWL_NodeAttrSet(tab, "Internal Reference Designator", LocateString(str, pPort->IntDesignator), 0);
+	NWL_NodeAttrSet(tab, "Internal Reference Designator", LocateString(p, pPort->IntDesignator), 0);
 	NWL_NodeAttrSet(tab, "Internal Connector Type", pIntConnectTypeToStr(pPort->IntConnectorType), 0);
-	NWL_NodeAttrSet(tab, "External Reference Designator", LocateString(str, pPort->ExtDesignator), 0);
+	NWL_NodeAttrSet(tab, "External Reference Designator", LocateString(p, pPort->ExtDesignator), 0);
 	NWL_NodeAttrSet(tab, "External Connector Type", pIntConnectTypeToStr(pPort->ExtConnectorType), 0);
 	NWL_NodeAttrSet(tab, "Port Type", pPortTypeToStr(pPort->PortType), 0);
 }
@@ -902,11 +905,10 @@ pSysSlotLengthToStr(UCHAR Length)
 static void ProcPSystemSlots(PNODE tab, void* p)
 {
 	PSystemSlots pSys = (PSystemSlots)p;
-	const char* str = toPointString(p);
 	NWL_NodeAttrSet(tab, "Description", "System Slots", 0);
 	if (pSys->Header.Length < 0x0c) // 2.0
 		return;
-	NWL_NodeAttrSet(tab, "Slot Designation", LocateString(str, pSys->SlotDesignation), 0);
+	NWL_NodeAttrSet(tab, "Slot Designation", LocateString(p, pSys->SlotDesignation), 0);
 	NWL_NodeAttrSet(tab, "Slot Type", pSysSlotTypeToStr(pSys->SlotType), 0);
 	NWL_NodeAttrSet(tab, "Slot Data Bus Width", pSysSlotBusWidthToStr(pSys->SlotDataBusWidth), 0);
 	NWL_NodeAttrSet(tab, "Current Usage", pSysSlotUsageToStr(pSys->CurrentUsage), 0);
@@ -942,7 +944,6 @@ static void ProcOnBoardDevInfo(PNODE tab, void* p)
 	UINT count, i;
 	PNODE ndev;
 	POnBoardDevicesInfo pDev = (POnBoardDevicesInfo)p;
-	const char* str = toPointString(p);
 	NWL_NodeAttrSet(tab, "Description", "On Board Devices Information", 0);
 	if (pDev->Header.Length < 0x04)
 		return;
@@ -951,12 +952,12 @@ static void ProcOnBoardDevInfo(PNODE tab, void* p)
 	ndev = NWL_NodeAppendNew(tab, "On Board Devices", NFLG_TABLE);
 	for (i = 0; i < count; i++)
 	{
-		PNODE p = NWL_NodeAppendNew(ndev, "Device", NFLG_TABLE_ROW);
+		PNODE pd = NWL_NodeAppendNew(ndev, "Device", NFLG_TABLE_ROW);
 		UCHAR type = pDev->DeviceInfo[i].DeviceType & 0x7f;
 		UCHAR status = pDev->DeviceInfo[i].DeviceType & 0x90;
-		NWL_NodeAttrSet(p, "Type", pOnBoardDeviceTypeToStr(type), 0);
-		NWL_NodeAttrSet(p, "Status", status ? "Enabled" : "Disabled", 0);
-		NWL_NodeAttrSet(p, "Description", LocateString(str, pDev->DeviceInfo[i].Description), 0);
+		NWL_NodeAttrSet(pd, "Type", pOnBoardDeviceTypeToStr(type), 0);
+		NWL_NodeAttrSet(pd, "Status", status ? "Enabled" : "Disabled", 0);
+		NWL_NodeAttrSet(pd, "Description", LocateString(p, pDev->DeviceInfo[i].Description), 0);
 	}
 }
 
@@ -965,13 +966,12 @@ static void ProcOEMString(PNODE tab, void* p)
 	UCHAR i;
 	char* oem = NULL;
 	POEMString pString = (POEMString)p;
-	const char* str = toPointString(p);
 	NWL_NodeAttrSet(tab, "Description", "OEM String", 0);
 	if (pString->Header.Length < 0x05)
 		return;
 	NWL_NodeAttrSetf(tab, "Number of Strings", NAFLG_FMT_NUMERIC, "%u", pString->Count);
 	for (i = 1; i <= pString->Count; i++)
-		NWL_NodeAppendMultiSz(&oem, LocateString(str, i));
+		NWL_NodeAppendMultiSz(&oem, LocateString(p, i));
 	NWL_NodeAttrSetMulti(tab, "OEM Strings", oem, 0);
 	free(oem);
 }
@@ -980,14 +980,13 @@ static void ProcSysConfOptions(PNODE tab, void* p)
 {
 	UCHAR i;
 	POEMString pString = (POEMString)p;
-	const char* str = toPointString(p);
 	char* conf = NULL;
 	NWL_NodeAttrSet(tab, "Description", "System Configuration Options", 0);
 	if (pString->Header.Length < 0x05)
 		return;
 	NWL_NodeAttrSetf(tab, "Number of Strings", NAFLG_FMT_NUMERIC, "%u", pString->Count);
 	for (i = 1; i <= pString->Count; i++)
-		NWL_NodeAppendMultiSz(&conf, LocateString(str, i));
+		NWL_NodeAppendMultiSz(&conf, LocateString(p, i));
 	NWL_NodeAttrSetMulti(tab, "Configuration Strings", conf, 0);
 	free(conf);
 }
@@ -995,12 +994,11 @@ static void ProcSysConfOptions(PNODE tab, void* p)
 static void ProcBIOSLangInfo(PNODE tab, void* p)
 {
 	PBIOSLangInfo pLang = (PBIOSLangInfo)p;
-	const char* str = toPointString(p);
 	NWL_NodeAttrSet(tab, "Description", "BIOS Language Information", 0);
 	if (pLang->Header.Length < 0x16)
 		return;
 	NWL_NodeAttrSetf(tab, "Installable Languages", NAFLG_FMT_NUMERIC, "%u", pLang->InstallableLang);
-	NWL_NodeAttrSet(tab, "Current Language", LocateString(str, pLang->CurrentLang), 0);
+	NWL_NodeAttrSet(tab, "Current Language", LocateString(p, pLang->CurrentLang), 0);
 }
 
 static void ProcGroupAssoc(PNODE tab, void* p)
@@ -1008,11 +1006,10 @@ static void ProcGroupAssoc(PNODE tab, void* p)
 	UINT i, count;
 	PNODE ndev;
 	PGroupAssoc pGA = (PGroupAssoc)p;
-	const char* str = toPointString(p);
 	NWL_NodeAttrSet(tab, "Description", "Group Associations", 0);
 	if (pGA->Header.Length < 0x05)
 		return;
-	NWL_NodeAttrSet(tab, "Group Name", LocateString(str, pGA->GroupName), 0);
+	NWL_NodeAttrSet(tab, "Group Name", LocateString(p, pGA->GroupName), 0);
 	count = (pGA->Header.Length - sizeof(pGA->GroupName) - sizeof(SMBIOSHEADER)) / (sizeof(pGA->GAItem[0]));
 	NWL_NodeAttrSetf(tab, "Number of Items", NAFLG_FMT_NUMERIC, "%u", count);
 	ndev = NWL_NodeAppendNew(tab, "Items", NFLG_TABLE);
@@ -1185,13 +1182,12 @@ pMDFormFactorToStr(UCHAR Type)
 static void ProcMemoryDevice(PNODE tab, void* p)
 {
 	PMemoryDevice pMD = (PMemoryDevice)p;
-	const char* str = toPointString(p);
 	UINT64 sz = 0;
 	NWL_NodeAttrSet(tab, "Description", "Memory Device", 0);
 	if (pMD->Header.Length < 0x15) // 2.1
 		return;
-	NWL_NodeAttrSet(tab, "Device Locator", LocateString(str, pMD->DeviceLocator), 0);
-	NWL_NodeAttrSet(tab, "Bank Locator", LocateString(str, pMD->BankLocator), 0);
+	NWL_NodeAttrSet(tab, "Device Locator", LocateString(p, pMD->DeviceLocator), 0);
+	NWL_NodeAttrSet(tab, "Bank Locator", LocateString(p, pMD->BankLocator), 0);
 	NWL_NodeAttrSet(tab, "Form Factor", pMDFormFactorToStr(pMD->FormFactor), 0);
 	if (pMD->TotalWidth)
 		NWL_NodeAttrSetf(tab, "Total Width (bits)", NAFLG_FMT_NUMERIC, "%u", pMD->TotalWidth);
@@ -1209,10 +1205,10 @@ static void ProcMemoryDevice(PNODE tab, void* p)
 		return;
 	if (pMD->Speed)
 		NWL_NodeAttrSetf(tab, "Speed (MT/s)", NAFLG_FMT_NUMERIC, "%u", pMD->Speed);
-	NWL_NodeAttrSet(tab, "Manufacturer", LocateString(str, pMD->Manufacturer), 0);
-	NWL_NodeAttrSet(tab, "Serial Number", LocateString(str, pMD->SN), 0);
-	NWL_NodeAttrSet(tab, "Asset Tag Number", LocateString(str, pMD->AssetTag), 0);
-	NWL_NodeAttrSet(tab, "Part Number", LocateString(str, pMD->PN), 0);
+	NWL_NodeAttrSet(tab, "Manufacturer", LocateString(p, pMD->Manufacturer), 0);
+	NWL_NodeAttrSet(tab, "Serial Number", LocateString(p, pMD->SN), 0);
+	NWL_NodeAttrSet(tab, "Asset Tag Number", LocateString(p, pMD->AssetTag), 0);
+	NWL_NodeAttrSet(tab, "Part Number", LocateString(p, pMD->PN), 0);
 }
 
 static const CHAR*
@@ -1361,15 +1357,14 @@ static void ProcBuiltinPointing(PNODE tab, void* p)
 static void ProcPortableBattery(PNODE tab, void* p)
 {
 	PPortableBattery pPB = (PPortableBattery)p;
-	const char* str = toPointString(p);
 	NWL_NodeAttrSet(tab, "Description", "Portable Battery", 0);
 	if (pPB->Header.Length < 0x1a) // 2.1
 		return;
-	NWL_NodeAttrSet(tab, "Location", LocateString(str, pPB->Location), 0);
-	NWL_NodeAttrSet(tab, "Manufacturer", LocateString(str, pPB->Manufacturer), 0);
-	NWL_NodeAttrSet(tab, "Manufacturer Date", LocateString(str, pPB->Date), 0);
-	NWL_NodeAttrSet(tab, "Serial Number", LocateString(str, pPB->SN), 0);
-	NWL_NodeAttrSet(tab, "Device Name", LocateString(str, pPB->DeviceName), 0);
+	NWL_NodeAttrSet(tab, "Location", LocateString(p, pPB->Location), 0);
+	NWL_NodeAttrSet(tab, "Manufacturer", LocateString(p, pPB->Manufacturer), 0);
+	NWL_NodeAttrSet(tab, "Manufacturer Date", LocateString(p, pPB->Date), 0);
+	NWL_NodeAttrSet(tab, "Serial Number", LocateString(p, pPB->SN), 0);
+	NWL_NodeAttrSet(tab, "Device Name", LocateString(p, pPB->DeviceName), 0);
 }
 
 static const CHAR*
@@ -1446,11 +1441,10 @@ static void ProcSysPowerCtrl(PNODE tab, void* p)
 static void ProcVoltageProbe(PNODE tab, void* p)
 {
 	PVoltageProbe pVoltage = (PVoltageProbe)p;
-	const char* str = toPointString(p);
 	NWL_NodeAttrSet(tab, "Description", "Voltage Probe", 0);
 	if (pVoltage->Header.Length < 0x14)
 		return;
-	NWL_NodeAttrSet(tab, "Description", LocateString(str, pVoltage->Description), 0);
+	NWL_NodeAttrSet(tab, "Description", LocateString(p, pVoltage->Description), 0);
 	NWL_NodeAttrSetf(tab, "Location and Status", 0, "%02Xh", pVoltage->LocationStatus);
 	NWL_NodeAttrSetf(tab, "Maximum Value", NAFLG_FMT_NUMERIC, "%u", pVoltage->MaxValue);
 	NWL_NodeAttrSetf(tab, "Minimum Value", NAFLG_FMT_NUMERIC, "%u", pVoltage->MinValue);
@@ -1464,7 +1458,6 @@ static void ProcVoltageProbe(PNODE tab, void* p)
 static void ProcCoolingDevice(PNODE tab, void* p)
 {
 	PCoolingDevice pCoolingDevice = (PCoolingDevice)p;
-	const char* str = toPointString(p);
 	NWL_NodeAttrSet(tab, "Description", "Cooling Device", 0);
 	if (pCoolingDevice->Header.Length < 0x0c)
 		return;
@@ -1476,17 +1469,16 @@ static void ProcCoolingDevice(PNODE tab, void* p)
 		"%u", pCoolingDevice->CoolingUnitGroup);
 	NWL_NodeAttrSetf(tab, "OEM-defined", NAFLG_FMT_NUMERIC, "%lu", pCoolingDevice->OEMDefined);
 	NWL_NodeAttrSetf(tab, "Nominal Speed", NAFLG_FMT_NUMERIC, "%u", pCoolingDevice->NominalSpeed);
-	NWL_NodeAttrSet(tab, "Description", LocateString(str, pCoolingDevice->Description), 0);
+	NWL_NodeAttrSet(tab, "Description", LocateString(p, pCoolingDevice->Description), 0);
 }
 
 static void ProcTempProbe(PNODE tab, void* p)
 {
 	PTempProbe pTemp = (PTempProbe)p;
-	const char* str = toPointString(p);
 	NWL_NodeAttrSet(tab, "Description", "Temperature Probe", 0);
 	if (pTemp->Header.Length < 0x14)
 		return;
-	NWL_NodeAttrSet(tab, "Description", LocateString(str, pTemp->Description), 0);
+	NWL_NodeAttrSet(tab, "Description", LocateString(p, pTemp->Description), 0);
 	NWL_NodeAttrSetf(tab, "Location and Status", 0, "%02Xh", pTemp->LocationStatus);
 	NWL_NodeAttrSetf(tab, "Maximum Value", NAFLG_FMT_NUMERIC, "%u", pTemp->MaxValue);
 	NWL_NodeAttrSetf(tab, "Minimum Value", NAFLG_FMT_NUMERIC, "%u", pTemp->MinValue);
@@ -1500,11 +1492,10 @@ static void ProcTempProbe(PNODE tab, void* p)
 static void ProcElecCurrentProbe(PNODE tab, void* p)
 {
 	PElecCurrentProbe pCurrent = (PElecCurrentProbe)p;
-	const char* str = toPointString(p);
 	NWL_NodeAttrSet(tab, "Description", "Electrical Current Probe", 0);
 	if (pCurrent->Header.Length < 0x14)
 		return;
-	NWL_NodeAttrSet(tab, "Description", LocateString(str, pCurrent->Description), 0);
+	NWL_NodeAttrSet(tab, "Description", LocateString(p, pCurrent->Description), 0);
 	NWL_NodeAttrSetf(tab, "Location and Status", 0, "%02Xh", pCurrent->LocationStatus);
 	NWL_NodeAttrSetf(tab, "Maximum Value", NAFLG_FMT_NUMERIC, "%u", pCurrent->MaxValue);
 	NWL_NodeAttrSetf(tab, "Minimum Value", NAFLG_FMT_NUMERIC, "%u", pCurrent->MinValue);
@@ -1518,11 +1509,10 @@ static void ProcElecCurrentProbe(PNODE tab, void* p)
 static void ProcOutOfBandRemoteAccess(PNODE tab, void* p)
 {
 	POutOfBandRemoteAccess pRemoteAccess = (POutOfBandRemoteAccess)p;
-	const char* str = toPointString(p);
 	NWL_NodeAttrSet(tab, "Description", "Out-of-Band Remote Access", 0);
 	if (pRemoteAccess->Header.Length < 0x06)
 		return;
-	NWL_NodeAttrSet(tab, "Manufacturer", LocateString(str, pRemoteAccess->Manufacturer), 0);
+	NWL_NodeAttrSet(tab, "Manufacturer", LocateString(p, pRemoteAccess->Manufacturer), 0);
 	NWL_NodeAttrSetBool(tab, "Outbound Connection Enabled", pRemoteAccess->Connections & (1 << 1), 0);
 	NWL_NodeAttrSetBool(tab, "Inbound Connection Enabled", pRemoteAccess->Connections & (1 << 0), 0);
 }
@@ -1585,11 +1575,10 @@ pOnBoardDevExtTypeToStr(UCHAR Type)
 static void ProcOnBoardDevicesExtInfo(PNODE tab, void* p)
 {
 	POnBoardDevicesExtInfo pDevInfo = (POnBoardDevicesExtInfo)p;
-	const char* str = toPointString(p);
 	NWL_NodeAttrSet(tab, "Description", "Onboard Devices Extended Information", 0);
 	if (pDevInfo->Header.Length < 0x0b)
 		return;
-	NWL_NodeAttrSet(tab, "Reference Designation", LocateString(str, pDevInfo->RefDesignation), 0);
+	NWL_NodeAttrSet(tab, "Reference Designation", LocateString(p, pDevInfo->RefDesignation), 0);
 	NWL_NodeAttrSet(tab, "Device Status", (pDevInfo->DeviceType & 0x80) ? "Enabled" : "Disabled", 0);
 	NWL_NodeAttrSet(tab, "Device Type", pOnBoardDevExtTypeToStr(pDevInfo->DeviceType), 0);
 	NWL_NodeAttrSetf(tab, "Device Type Instance", NAFLG_FMT_NUMERIC, "%u", pDevInfo->DeviceTypeInstance);
@@ -1602,7 +1591,6 @@ static void ProcOnBoardDevicesExtInfo(PNODE tab, void* p)
 static void ProcTPMDevice(PNODE tab, void* p)
 {
 	PTPMDevice pTPM = (PTPMDevice)p;
-	const char* str = toPointString(p);
 	NWL_NodeAttrSet(tab, "Description", "TPM Device", 0);
 	if (pTPM->Header.Length < 0x1f)
 		return;
@@ -1610,7 +1598,7 @@ static void ProcTPMDevice(PNODE tab, void* p)
 		pTPM->Vendor[0], pTPM->Vendor[1],
 		pTPM->Vendor[2], pTPM->Vendor[3]);
 	NWL_NodeAttrSetf(tab, "Spec Version", 0, "%u%u", pTPM->MajorSpecVer, pTPM->MinorSpecVer);
-	NWL_NodeAttrSet(tab, "TPM Description", LocateString(str, pTPM->Description), 0);
+	NWL_NodeAttrSet(tab, "TPM Description", LocateString(p, pTPM->Description), 0);
 }
 
 static const CHAR*
@@ -1630,7 +1618,6 @@ pProcessorAdditionalInfoTypeToStr(UCHAR Type)
 static void ProcProcessorAdditionalInfo(PNODE tab, void* p)
 {
 	PProcessorAdditionalInfo pProcessor = (PProcessorAdditionalInfo)p;
-	const char* str = toPointString(p);
 	NWL_NodeAttrSet(tab, "Description", "Processor Additional Information", 0);
 	if (pProcessor->Header.Length < 0x06)
 		return;
@@ -1644,31 +1631,29 @@ static void ProcProcessorAdditionalInfo(PNODE tab, void* p)
 static void ProcFwInventory(PNODE tab, void* p)
 {
 	PFirmwareInventoryInfo pFirmware = (PFirmwareInventoryInfo)p;
-	const char* str = toPointString(p);
 	NWL_NodeAttrSet(tab, "Description", "Firmware Inventory Information", 0);
 	if (pFirmware->Header.Length < 0x18)
 		return;
-	NWL_NodeAttrSet(tab, "Component Name", LocateString(str, pFirmware->ComponentName), 0);
-	NWL_NodeAttrSet(tab, "Firmware Version", LocateString(str, pFirmware->Version), 0);
+	NWL_NodeAttrSet(tab, "Component Name", LocateString(p, pFirmware->ComponentName), 0);
+	NWL_NodeAttrSet(tab, "Firmware Version", LocateString(p, pFirmware->Version), 0);
 	NWL_NodeAttrSetf(tab, "Version Format", NAFLG_FMT_NUMERIC, "%u", pFirmware->VersionFormat);
-	NWL_NodeAttrSet(tab, "Firmware ID", LocateString(str, pFirmware->ID), 0);
+	NWL_NodeAttrSet(tab, "Firmware ID", LocateString(p, pFirmware->ID), 0);
 	NWL_NodeAttrSetf(tab, "ID Format", NAFLG_FMT_NUMERIC, "%u", pFirmware->IDFormat);
-	NWL_NodeAttrSet(tab, "Release Date", LocateString(str, pFirmware->ReleaseDate), 0);
-	NWL_NodeAttrSet(tab, "Manufacturer", LocateString(str, pFirmware->Manufacturer), 0);
+	NWL_NodeAttrSet(tab, "Release Date", LocateString(p, pFirmware->ReleaseDate), 0);
+	NWL_NodeAttrSet(tab, "Manufacturer", LocateString(p, pFirmware->Manufacturer), 0);
 	NWL_NodeAttrSet(tab, "Lowest Supported Firmware Version",
-		LocateString(str, pFirmware->LowestSupportedVersion), 0);
+		LocateString(p, pFirmware->LowestSupportedVersion), 0);
 	NWL_NodeAttrSet(tab, "Image Size", NWL_GetHumanSize(pFirmware->ImageSize, mem_human_sizes, 1024), NAFLG_FMT_HUMAN_SIZE);
 }
 
 static void ProcStringProperty(PNODE tab, void* p)
 {
 	PStringProperty pString = (PStringProperty)p;
-	const char* str = toPointString(p);
 	NWL_NodeAttrSet(tab, "Description", "String Property", 0);
 	if (pString->Header.Length < 0x09)
 		return;
 	NWL_NodeAttrSetf(tab, "String Property ID", NAFLG_FMT_NUMERIC, "%u", pString->ID);
-	NWL_NodeAttrSet(tab, "String Property Value",LocateString(str, pString->Value), 0);
+	NWL_NodeAttrSet(tab, "String Property Value",LocateString(p, pString->Value), 0);
 	NWL_NodeAttrSetf(tab, "Parent Handle", NAFLG_FMT_NUMERIC, "%u", pString->ParentHandle);
 }
 
@@ -1682,14 +1667,15 @@ static void ProcEndTable(PNODE tab, void* p)
 	NWL_NodeAttrSet(tab, "Description", "End-of-Table", 0);
 }
 
-static void DumpSMBIOSStruct(PNODE node, void* Addr, UINT Len, UINT8 Type)
+static void DumpSMBIOS(PNODE node, void* Addr, UINT Len, UINT8 Type)
 {
 	LPBYTE p = (LPBYTE)(Addr);
 	const LPBYTE lastAddress = p + Len;
 	PSMBIOSHEADER pHeader;
 	PNODE tab;
 
-	for (;;) {
+	while (p < lastAddress)
+	{
 		pHeader = (PSMBIOSHEADER)p;
 		if (Type != 127 && pHeader->Type != Type)
 			goto next_table;
@@ -1827,37 +1813,27 @@ static void DumpSMBIOSStruct(PNODE node, void* Addr, UINT Len, UINT8 Type)
 		}
 	next_table:
 		if ((pHeader->Type == 127) && (pHeader->Length == 4))
-			break; // last avaiable tables
-		LPBYTE nt = p + pHeader->Length; // point to struct end
-		while (0 != (*nt | *(nt + 1))) nt++; // skip string area
-		nt += 2;
-		if (nt >= lastAddress)
 			break;
-		p = nt;
+		p += pHeader->Length;
+		while ((*p++ != 0 || *p++ != 0) && p < lastAddress)
+			;
 	}
 }
 
 PNODE NW_Smbios(VOID)
 {
-	DWORD smBiosDataSize = 0;
-	struct RAW_SMBIOS_DATA* smBiosData = NULL;
+	
 	PNODE node = NWL_NodeAlloc("SMBIOS", NFLG_TABLE);
 	PNODE info = NWL_NodeAppendNew(node, "DMI", NFLG_TABLE_ROW);
 	if (NWLC->DmiInfo)
 		NWL_NodeAppendChild(NWLC->NwRoot, node);
-	// Query size of SMBIOS data.
-	smBiosDataSize = NWL_GetSystemFirmwareTable('RSMB', 0, NULL, 0);
-	if (smBiosDataSize == 0)
+	if (!NWLC->NwSmbios)
+		NWLC->NwSmbios = NWL_GetSmbios();
+	if (!NWLC->NwSmbios)
 		return node;
-	// Allocate memory for SMBIOS data
-	smBiosData = (struct RAW_SMBIOS_DATA*)malloc(smBiosDataSize);
-	if (!smBiosData)
-		return node;
-	// Retrieve the SMBIOS table
-	NWL_GetSystemFirmwareTable('RSMB', 0, smBiosData, smBiosDataSize);
-	NWL_NodeAttrSetf(info, "SMBIOS Version", 0, "%u.%u", smBiosData->MajorVersion, smBiosData->MinorVersion);
-	if (smBiosData->DmiRevision)
-		NWL_NodeAttrSetf(info, "DMI Version", NAFLG_FMT_NUMERIC, "%u", smBiosData->DmiRevision);
-	DumpSMBIOSStruct(node, smBiosData->Data, smBiosData->Length, NWLC->SmbiosType);
+	NWL_NodeAttrSetf(info, "SMBIOS Version", 0, "%u.%u", NWLC->NwSmbios->MajorVersion, NWLC->NwSmbios->MinorVersion);
+	NWL_NodeAttrSetf(info, "DMI Reversion", NAFLG_FMT_NUMERIC, "%u", NWLC->NwSmbios->DmiRevision);
+	NWL_NodeAttrSetf(info, "SMBIOS Length", NAFLG_FMT_NUMERIC, "%u", NWLC->NwSmbios->Length);
+	DumpSMBIOS(node, NWLC->NwSmbios->Data, NWLC->NwSmbios->Length, NWLC->SmbiosType);
 	return node;
 }

@@ -46,6 +46,8 @@ typedef struct _NWLIB_CONTEXT
 	struct acpi_rsdt* NwRsdt;
 	struct acpi_xsdt* NwXsdt;
 
+	struct RAW_SMBIOS_DATA* NwSmbios;
+
 	struct wr0_drv_t* NwDrv;
 	struct _NODE* NwRoot;
 	enum

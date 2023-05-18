@@ -4,6 +4,8 @@
 #include <windows.h>
 #include "format.h"
 
+
+struct RAW_SMBIOS_DATA;
 struct acpi_rsdp_v2;
 struct acpi_rsdt;
 struct acpi_xsdt;
@@ -19,6 +21,7 @@ void NWL_ConvertLengthToIpv4Mask(ULONG MaskLength, ULONG* Mask);
 UINT NWL_GetSystemFirmwareTable(DWORD FirmwareTableProviderSignature, DWORD FirmwareTableID,
 	PVOID pFirmwareTableBuffer, DWORD BufferSize);
 
+struct RAW_SMBIOS_DATA* NWL_GetSmbios(void);
 struct acpi_rsdp_v2* NWL_GetRsdp(VOID);
 struct acpi_rsdt* NWL_GetRsdt(VOID);
 struct acpi_xsdt* NWL_GetXsdt(VOID);

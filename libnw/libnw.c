@@ -27,6 +27,7 @@ VOID NW_Init(PNWLIB_CONTEXT pContext)
 	NWLC->NwRsdp = NWL_GetRsdp();
 	NWLC->NwRsdt = NWL_GetRsdt();
 	NWLC->NwXsdt = NWL_GetXsdt();
+	NWLC->NwSmbios = NWL_GetSmbios();
 	NWLC->ErrLog = NULL;
 	if (NWL_IsAdmin() != TRUE)
 		NWL_NodeAppendMultiSz(&NWLC->ErrLog, "Administrator required");
@@ -87,6 +88,8 @@ VOID NW_Fini(VOID)
 		free(NWLC->NwRsdt);
 	if (NWLC->NwXsdt)
 		free(NWLC->NwXsdt);
+	if (NWLC->NwSmbios)
+		free(NWLC->NwSmbios);
 	if (NWLC->NwDrv)
 		wr0_driver_close(NWLC->NwDrv);
 	if (NWLC->NwRoot)

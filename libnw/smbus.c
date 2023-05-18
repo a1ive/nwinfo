@@ -16,19 +16,17 @@ static uint16_t smbus_base = 0;
 static uint8_t get_smbios_memory_type(void)
 {
 	uint8_t type = 15; // DDR3
-	DWORD smbios_size = 0;
-	struct RAW_SMBIOS_DATA* smbios_data = NULL;
-	smbios_size = NWL_GetSystemFirmwareTable('RSMB', 0, NULL, 0);
-	if (smbios_size == 0)
-		return 0xFF;
-	smbios_data = (struct RAW_SMBIOS_DATA*)malloc(smbios_size);
-	if (!smbios_data)
-		return 0xFF;
-	NWL_GetSystemFirmwareTable('RSMB', 0, smbios_data, smbios_size);
+	UINT8* p;
+	UINT8* end;
 
-	UINT8* p = smbios_data->Data;
+	if (!NWLC->NwSmbios)
+		NWLC->NwSmbios = NWL_GetSmbios();
+	if (!NWLC->NwSmbios)
+		return type;
+	p = NWLC->NwSmbios->Data;
+	end = p + NWLC->NwSmbios->Length;
 
-	for (;;)
+	while (p < end)
 	{
 		PSMBIOSHEADER hdr = (PSMBIOSHEADER)p;
 		if (hdr->Type == 17 && hdr->Length >= 0x12)
@@ -42,14 +40,10 @@ static uint8_t get_smbios_memory_type(void)
 		}
 		if ((hdr->Type == 127) && (hdr->Length == 4))
 			break;
-		UINT8* nt = p + hdr->Length;
-		while (0 != (*nt | *(nt + 1))) nt++;
-		nt += 2;
-		if (nt >= smbios_data->Data + smbios_data->Length)
-			break;
-		p = nt;
+		p += hdr->Length;
+		while ((*p++ != 0 || *p++ != 0) && p < end)
+			;
 	}
-	free(smbios_data);
 	return type;
 }
 

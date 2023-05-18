@@ -171,6 +171,26 @@ NWL_GetSystemFirmwareTable(DWORD FirmwareTableProviderSignature, DWORD FirmwareT
 	return 0;
 }
 
+struct RAW_SMBIOS_DATA*
+NWL_GetSmbios(void)
+{
+	struct RAW_SMBIOS_DATA* smBiosData = NULL;
+	DWORD smBiosDataSize = 0;
+	smBiosDataSize = NWL_GetSystemFirmwareTable('RSMB', 0, NULL, 0);
+	if (smBiosDataSize == 0)
+		return NULL;
+	smBiosData = (struct RAW_SMBIOS_DATA*)malloc(smBiosDataSize);
+	if (!smBiosData)
+		return NULL;
+	smBiosDataSize = NWL_GetSystemFirmwareTable('RSMB', 0, smBiosData, smBiosDataSize);
+	if (smBiosDataSize == 0)
+	{
+		free(smBiosData);
+		return NULL;
+	}
+	return smBiosData;
+}
+
 static struct acpi_rsdp_v2*
 NWL_GetRsdpHelper(struct acpi_rsdp_v2* ptr, DWORD_PTR addr)
 {
