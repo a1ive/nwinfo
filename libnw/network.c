@@ -98,6 +98,35 @@ static PNODE CreateIf(PNODE parent, LPCSTR guid)
 	return node;
 }
 
+#if 0
+#include <wininet.h>
+#pragma comment(lib, "wininet.lib")
+static void PrintPublicIp(PNODE node)
+{
+	HINTERNET hInternet = NULL;
+	HINTERNET hFile = NULL;
+	DWORD rSize;
+	CHAR cchBuf[128] = "";
+
+	hInternet = InternetOpenW(NULL, INTERNET_OPEN_TYPE_PRECONFIG, NULL, NULL, 0);
+	if (!hInternet)
+		goto out;
+	hFile = InternetOpenUrlW(hInternet, L"https://api.ipify.org", NULL, 0, INTERNET_FLAG_RELOAD, 0);
+	if (!hFile)
+		goto out;
+
+	InternetReadFile(hFile, cchBuf, sizeof(cchBuf), &rSize);
+	cchBuf[rSize] = '\0';
+
+out:
+	if (hFile)
+		InternetCloseHandle(hFile);
+	if (hInternet)
+		InternetCloseHandle(hInternet);
+	NWL_NodeAttrSet(node, "Public IP", cchBuf, 0);
+}
+#endif
+
 PNODE NW_UpdateNetwork(PNODE node)
 {
 	DWORD dwRetVal = 0;
@@ -157,7 +186,6 @@ PNODE NW_UpdateNetwork(PNODE node)
 	pMaxAddress = ((PUCHAR)pAddresses) + outBufLen;
 	while (pCurrAddresses && pCurrAddresses < (PIP_ADAPTER_ADDRESSES)pMaxAddress)
 	{
-		printf("while->enter, ptr=%p\n", pCurrAddresses);
 		PNODE nic = NULL;
 		if (NWLC->ActiveNet && pCurrAddresses->OperStatus != IfOperStatusUp)
 			goto next_addr;
