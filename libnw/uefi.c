@@ -121,9 +121,71 @@ out:
 		free(BootOrderStr);
 }
 
-static void PrintEfiVars(PNODE node)
+static void PrintLoadOption(PNODE node, EFI_LOAD_OPTION* option, DWORD size)
 {
-	PNODE nv = NWL_NodeAppendNew(node, "Variables", NFLG_TABLE);
+	EFI_DEVICE_PATH* dp = NULL;
+	char* attr = NULL;
+	char* dp_str = NULL;
+	size_t desc_size;
+	if (size < sizeof(EFI_LOAD_OPTION))
+		return;
+	desc_size = wcslen(option->Description) * sizeof(CHAR16);
+	if (size < sizeof(EFI_LOAD_OPTION) + desc_size + option->FilePathListLength)
+		return;
+	if (option->Attributes & EFI_LOAD_OPTION_ACTIVE)
+		NWL_NodeAppendMultiSz(&attr, "Active");
+	if (option->Attributes & EFI_LOAD_OPTION_FORCE_RECONNECT)
+		NWL_NodeAppendMultiSz(&attr, "ForceReconnect");
+	if (option->Attributes & EFI_LOAD_OPTION_HIDDEN)
+		NWL_NodeAppendMultiSz(&attr, "Hidden");
+	if (option->Attributes & EFI_LOAD_OPTION_CATEGORY_APP)
+		NWL_NodeAppendMultiSz(&attr, "App");
+	if (option->Attributes & EFI_LOAD_OPTION_CATEGORY_BOOT)
+		NWL_NodeAppendMultiSz(&attr, "Boot");
+	NWL_NodeAttrSetMulti(node, "Attributes", attr, 0);
+	free(attr);
+	NWL_NodeAttrSetf(node, "Name", 0, "%S", option->Description);
+	dp = (EFI_DEVICE_PATH*)((LPBYTE)option + sizeof(EFI_LOAD_OPTION) + desc_size);
+	dp_str = NWL_GetEfiDpStr(dp);
+	NWL_NodeAttrSet(node, "Device Path", dp_str, NAFLG_FMT_NEED_QUOTE);
+	free(dp_str);
+}
+
+static void PrintEfiBootOption(PNODE node, LPGUID guid, WCHAR* name)
+{
+	PNODE nb = NULL;
+	EFI_LOAD_OPTION* option = NULL;
+	DWORD size = 0;
+	CHAR tmp[] = "BootXXXX";
+	if (memcmp(guid, &EFI_GV_GUID, sizeof(GUID)) != 0)
+		return;
+	if (name[0] != L'B' || name[1] != L'o' || name[2] != L'o' || name[3] != L't' ||
+		!iswxdigit(name[4]) || !iswxdigit(name[5]) || !iswxdigit(name[6]) || !iswxdigit(name[7]) ||
+		name[8] != L'\0')
+		return;
+	snprintf(tmp, sizeof(tmp), "%S", name);
+	nb = NWL_NodeAppendNew(node, tmp, NFLG_ATTGROUP);
+	option = NWL_GetEfiVarAlloc(name, guid, &size, NULL);
+	if (!option)
+		return;
+	PrintLoadOption(nb, option, size);
+	free(option);
+}
+
+static void PrintEfiVarAndSize(PNODE node, LPGUID guid, WCHAR* name)
+{
+	DWORD VarSize = 0;
+	LPCSTR lpszGuid = NWL_WinGuidToStr(TRUE, guid);
+	PNODE ng = NWL_NodeGetChild(node, lpszGuid);
+	if (!ng)
+		ng = NWL_NodeAppendNew(node, lpszGuid, NFLG_TABLE_ROW);
+	snprintf((CHAR*)NWLC->NwBuf, NWINFO_BUFSZ, "%S", name);
+	VarSize = NWL_GetEfiVar(name, guid, NULL, 0, NULL);
+	NWL_NodeAttrSetf(ng, (CHAR*)NWLC->NwBuf, NAFLG_FMT_NUMERIC, "%lu", VarSize);
+}
+
+static void EnumEfiVars(PNODE node, void (*func)(PNODE node, LPGUID guid, WCHAR* name))
+{
 	PVARIABLE_NAME VarNamePtr = NULL;
 	PVARIABLE_NAME p;
 	ULONG VarNameSize = 0;
@@ -134,18 +196,23 @@ static void PrintEfiVars(PNODE node)
 		((LPBYTE)p < (LPBYTE)VarNamePtr + VarNameSize);
 		p = (PVARIABLE_NAME)((LPBYTE)p + p->NextEntryOffset))
 	{
-		DWORD VarSize = 0;
-		LPCSTR Guid = NWL_WinGuidToStr(TRUE, &p->VendorGuid);
-		PNODE ng = NWL_NodeGetChild(nv, Guid);
-		if (!ng)
-			ng = NWL_NodeAppendNew(nv, Guid, NFLG_TABLE_ROW);
-		snprintf((CHAR*)NWLC->NwBuf, NWINFO_BUFSZ, "%S", p->Name);
-		VarSize = NWL_GetEfiVar(p->Name, &p->VendorGuid, NULL, 0, NULL);
-		NWL_NodeAttrSetf(ng, (CHAR*)NWLC->NwBuf, NAFLG_FMT_NUMERIC, "%lu", VarSize);
+		func(node, &p->VendorGuid, p->Name);
 		if (p->NextEntryOffset == 0)
 			break;
 	}
 	free(VarNamePtr);
+}
+
+static void PrintBootXXXX(PNODE node)
+{
+	PNODE nv = NWL_NodeAppendNew(node, "Boot Menu", 0);
+	EnumEfiVars(nv, PrintEfiBootOption);
+}
+
+static void PrintEfiVars(PNODE node)
+{
+	PNODE nv = NWL_NodeAppendNew(node, "Variables", NFLG_TABLE);
+	EnumEfiVars(nv, PrintEfiVarAndSize);
 }
 
 PNODE NW_Uefi(VOID)
@@ -161,5 +228,6 @@ PNODE NW_Uefi(VOID)
 	PrintBootOptionSupport(node);
 	PrintBootInfo(node);
 	PrintEfiVars(node);
+	PrintBootXXXX(node);
 	return node;
 }

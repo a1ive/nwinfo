@@ -9,40 +9,8 @@
 #include "nt.h"
 #include "efivars.h"
 
-#if 0
-NTSYSCALLAPI
-NTSTATUS
-NTAPI
-NtQuerySystemEnvironmentValueEx(
-	_In_ PUNICODE_STRING VariableName,
-	_In_ GUID* VendorGuid,
-	_Out_writes_bytes_opt_(*ValueLength) PVOID Value,
-	_Inout_ PULONG ValueLength,
-	_Out_opt_ PULONG Attributes // EFI_VARIABLE_*
-);
-
-NTSYSCALLAPI
-NTSTATUS
-NTAPI
-NtSetSystemEnvironmentValueEx(
-	_In_ PUNICODE_STRING VariableName,
-	_In_ PGUID VendorGuid,
-	_In_reads_bytes_opt_(ValueLength) PVOID Value,
-	_In_ ULONG ValueLength, // 0 = delete variable
-	_In_ ULONG Attributes // EFI_VARIABLE_*
-);
-
-NTSYSCALLAPI
-NTSTATUS
-NTAPI
-NtEnumerateSystemEnvironmentValuesEx(
-	_In_ ULONG InformationClass, // SYSTEM_ENVIRONMENT_INFORMATION_CLASS
-	_Out_ PVOID Buffer,
-	_Inout_ PULONG BufferLength
-);
-#endif
-static GUID EFI_GV_GUID = { 0x8BE4DF61UL, 0x93CA, 0x11D2, { 0xAA, 0x0D, 0x00, 0xE0, 0x98, 0x03, 0x2B, 0x8C } };
-static GUID EFI_EMPTY_GUID = { 0 };
+GUID EFI_GV_GUID = { 0x8BE4DF61UL, 0x93CA, 0x11D2, { 0xAA, 0x0D, 0x00, 0xE0, 0x98, 0x03, 0x2B, 0x8C } };
+GUID EFI_EMPTY_GUID = { 0 };
 
 BOOL
 NWL_IsEfi(VOID)
@@ -151,7 +119,7 @@ fail:
 }
 
 static LPCWSTR
-GuidToStr(GUID* pGuid)
+GuidToWcs(GUID* pGuid)
 {
 	static WCHAR GuidStr[39] = { 0 };
 	swprintf(GuidStr, 39, L"{%08lX-%04X-%04X-%02X%02X-%02X%02X%02X%02X%02X%02X}",
@@ -164,32 +132,6 @@ GuidToStr(GUID* pGuid)
 BOOL
 NWL_SetEfiVarEx(LPCWSTR lpName, LPGUID lpGuid, PVOID pBuffer, DWORD nSize, DWORD dwAttributes)
 {
-#if 0
-	NTSTATUS rc;
-	UNICODE_STRING str;
-	ULONG(NTAPI * OsRtlNtStatusToDosError)(NTSTATUS Status) = NULL;
-	VOID(NTAPI * OsRtlInitUnicodeString)(PUNICODE_STRING Src, PCWSTR Dst) = NULL;
-	NTSTATUS(NTAPI * OsSetSystemEnvironmentValueEx)(PUNICODE_STRING Name, LPGUID Guid, PVOID Value, ULONG Length, ULONG Attributes) = NULL;
-	HMODULE hModule = GetModuleHandleW(L"ntdll");
-	if (!hModule)
-		goto fail;
-	*(FARPROC*)&OsRtlNtStatusToDosError = GetProcAddress(hModule, "RtlNtStatusToDosError");
-	if (!OsRtlNtStatusToDosError)
-		goto fail;
-	*(FARPROC*)&OsRtlInitUnicodeString = GetProcAddress(hModule, "RtlInitUnicodeString");
-	if (!OsRtlInitUnicodeString)
-		goto fail;
-	*(FARPROC*)&OsSetSystemEnvironmentValueEx = GetProcAddress(hModule, "NtSetSystemEnvironmentValueEx");
-	if (!OsSetSystemEnvironmentValueEx)
-		goto fail;
-	OsRtlInitUnicodeString(&str, lpName);
-	if (!lpGuid)
-		lpGuid = &EFI_GV_GUID;
-	rc = OsSetSystemEnvironmentValueEx(&str, lpGuid, pBuffer, nSize, dwAttributes);
-	if (!NT_SUCCESS(rc))
-		SetLastError(OsRtlNtStatusToDosError(rc));
-	return NT_SUCCESS(rc);
-#else
 	BOOL(WINAPI * OsSetEfiVarExW)(LPCWSTR lpName, LPCWSTR lpGuid, PVOID pValue, DWORD nSize, DWORD dwAttributes) = NULL;
 	HMODULE hModule = GetModuleHandleW(L"kernel32");
 	if (!hModule)
@@ -199,8 +141,7 @@ NWL_SetEfiVarEx(LPCWSTR lpName, LPGUID lpGuid, PVOID pBuffer, DWORD nSize, DWORD
 		goto fail;
 	if (!lpGuid)
 		lpGuid = &EFI_GV_GUID;
-	return OsSetEfiVarExW(lpName, GuidToStr(lpGuid), pBuffer, nSize, dwAttributes);
-#endif
+	return OsSetEfiVarExW(lpName, GuidToWcs(lpGuid), pBuffer, nSize, dwAttributes);
 fail:
 	SetLastError(ERROR_INVALID_FUNCTION);
 	return FALSE;
@@ -218,7 +159,7 @@ NWL_SetEfiVar(LPCWSTR lpName, LPGUID lpGuid, PVOID pBuffer, DWORD nSize)
 		goto fail;
 	if (!lpGuid)
 		lpGuid = &EFI_GV_GUID;
-	return OsSetEfiVarW(lpName, GuidToStr(lpGuid), pBuffer, nSize);
+	return OsSetEfiVarW(lpName, GuidToWcs(lpGuid), pBuffer, nSize);
 fail:
 	SetLastError(ERROR_INVALID_FUNCTION);
 	return FALSE;
@@ -228,4 +169,141 @@ BOOL
 NWL_DeleteEfiVar(LPCWSTR lpName, LPGUID lpGuid)
 {
 	return NWL_SetEfiVar(lpName, lpGuid, NULL, 0);
+}
+
+static CHAR*
+AllocPrintf(LPCSTR _Printf_format_string_ format, ...)
+{
+	int sz;
+	CHAR* buf = NULL;
+	va_list ap;
+	va_start(ap, format);
+	sz = _vscprintf(format, ap) + 1;
+	if (sz <= 0)
+	{
+		va_end(ap);
+		NWL_ErrExit(ERROR_INVALID_DATA, "Failed to calculate string length in "__FUNCTION__);
+	}
+	buf = calloc(sizeof(CHAR), sz);
+	if (!buf)
+	{
+		va_end(ap);
+		NWL_ErrExit(ERROR_OUTOFMEMORY, "Failed to allocate memory in "__FUNCTION__);
+	}
+	vsnprintf(buf, sz, format, ap);
+	va_end(ap);
+	return buf;
+}
+
+CHAR*
+NWL_GetEfiDpStr(EFI_DEVICE_PATH* pDp)
+{
+	CHAR* pStr = NULL;
+	EFI_DEV_PATH_PTR pDpPtr;
+
+	pDpPtr.DevPath = pDp;
+	while(EFI_IS_DP_NODE_VALID(pDpPtr.DevPath))
+	{
+		CHAR* pNode = NULL;
+		CHAR* pTmp = NULL;
+		UINT8 uType = EFI_GET_DP_NODE_TYPE(pDpPtr.DevPath);
+		UINT8 uSubType = EFI_GET_DP_NODE_SUBTYPE(pDpPtr.DevPath);
+		UINT16 uLength = EFI_GET_DP_NODE_LENGTH(pDpPtr.DevPath);
+		switch (uType)
+		{
+		case END_DEVICE_PATH_TYPE:
+			switch (uSubType)
+			{
+			case END_ENTIRE_DEVICE_PATH_SUBTYPE:
+				pNode = AllocPrintf("/EndEntire");
+				break;
+			case END_INSTANCE_DEVICE_PATH_SUBTYPE:
+				pNode = AllocPrintf("/EndThis");
+				break;
+			default:
+				pNode = AllocPrintf("/EndUnknown(%x)", uSubType);
+				break;
+			}
+			break;
+		case HARDWARE_DEVICE_PATH:
+			pNode = AllocPrintf("/Hw(%x,%x)", uSubType, uLength);
+			break;
+		case ACPI_DEVICE_PATH:
+			pNode = AllocPrintf("/Acpi(%x,%x)", uSubType, uLength);
+			break;
+		case MESSAGING_DEVICE_PATH:
+			pNode = AllocPrintf("/Messaging(%x,%x)", uSubType, uLength);
+			break;
+		case MEDIA_DEVICE_PATH:
+			switch (uSubType)
+			{
+			case MEDIA_HARDDRIVE_DP:
+			{
+				CHAR cchSignature[37];
+				LPCSTR lpMBRType = "Unknown";
+				switch (pDpPtr.HardDrive->SignatureType)
+				{
+				case NO_DISK_SIGNATURE:
+					strcpy_s(cchSignature, sizeof(cchSignature), "0");
+					break;
+				case SIGNATURE_TYPE_MBR:
+					snprintf(cchSignature, sizeof(cchSignature), "%02X%02X%02X%02X",
+						pDpPtr.HardDrive->Signature[0],
+						pDpPtr.HardDrive->Signature[1],
+						pDpPtr.HardDrive->Signature[2],
+						pDpPtr.HardDrive->Signature[3]);
+					break;
+				case SIGNATURE_TYPE_GUID:
+					strcpy_s(cchSignature, sizeof(cchSignature), NWL_GuidToStr(pDpPtr.HardDrive->Signature));
+					break;
+				default:
+					strcpy_s(cchSignature, sizeof(cchSignature), "Unknown");
+					break;
+				}
+				switch (pDpPtr.HardDrive->MBRType)
+				{
+				case MBR_TYPE_PCAT: lpMBRType = "MBR"; break;
+				case MBR_TYPE_EFI_PARTITION_TABLE_HEADER: lpMBRType = "GPT"; break;
+				}
+				pNode = AllocPrintf("/Hd(%u,%llx,%llx,%s,%s,%u)",
+					pDpPtr.HardDrive->PartitionNumber,
+					pDpPtr.HardDrive->PartitionStart,
+					pDpPtr.HardDrive->PartitionSize,
+					cchSignature,
+					lpMBRType,
+					pDpPtr.HardDrive->SignatureType);
+			}
+				break;
+			case MEDIA_CDROM_DP:
+				pNode = AllocPrintf("/Cd(%u,%llx,%llx)",
+					pDpPtr.CD->BootEntry,
+					pDpPtr.CD->PartitionStart,
+					pDpPtr.CD->PartitionSize);
+				break;
+			case MEDIA_FILEPATH_DP:
+				pNode = AllocPrintf("/FilePath(%S)",
+					pDpPtr.FilePath->PathName);
+				break;
+			default:
+				pNode = AllocPrintf("/Media(%x,%x)", uSubType, uLength);
+				break;
+			}
+			break;
+		case BBS_DEVICE_PATH:
+			pNode = AllocPrintf("/Bbs(%x,%x)", uSubType, uLength);
+			break;
+		default:
+			pNode = AllocPrintf("/Unknown(%x,%x,%x)", uType, uSubType, uLength);
+			break;
+		}
+		pTmp = pStr;
+		pStr = AllocPrintf("%s%s", pTmp ? pTmp : "", pNode);
+		if (pTmp)
+			free(pTmp);
+		free(pNode);
+		if (EFI_IS_END_ENTIRE_DP(pDpPtr.DevPath))
+			break;
+		pDpPtr.DevPath = EFI_GET_NEXT_DP_NODE(pDpPtr.DevPath);
+	}
+	return pStr;
 }

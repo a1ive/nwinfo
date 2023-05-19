@@ -177,6 +177,27 @@ typedef struct _EFI_LOAD_OPTION
 #define END_ENTIRE_DEVICE_PATH_SUBTYPE    0xFF
 #define END_INSTANCE_DEVICE_PATH_SUBTYPE  0x01
 
+#define EFI_GET_DP_NODE_TYPE(x) \
+	((x)->Type & 0x7f)
+#define EFI_GET_DP_NODE_SUBTYPE(x) \
+	((x)->SubType)
+#define EFI_GET_DP_NODE_LENGTH(x) \
+	((x)->Length[0] | ((x)->Length[1] << 8))
+#define EFI_IS_DP_NODE_VALID(x) \
+	((x) != NULL && EFI_GET_DP_NODE_LENGTH(x) >= 4)
+#define EFI_IS_END_ENTIRE_DP(x) \
+	(!EFI_IS_DP_NODE_VALID (x) || \
+	 ( \
+	  (EFI_GET_DP_NODE_TYPE (x) == END_DEVICE_PATH_TYPE) && \
+	  (EFI_GET_DP_NODE_SUBTYPE (x) == END_ENTIRE_DEVICE_PATH_SUBTYPE) \
+	 ) \
+	)
+#define EFI_GET_NEXT_DP_NODE(x) \
+	(EFI_IS_DP_NODE_VALID (x) ? \
+	 ((EFI_DEVICE_PATH *) ((PUINT8) (x) + EFI_GET_DP_NODE_LENGTH (x))) \
+	 : NULL \
+	)
+
 #define EFI_VARIABLE_NON_VOLATILE                           0x00000001
 #define EFI_VARIABLE_BOOTSERVICE_ACCESS                     0x00000002
 #define EFI_VARIABLE_RUNTIME_ACCESS                         0x00000004
@@ -207,6 +228,9 @@ typedef struct _VARIABLE_NAME
 	WCHAR Name[ANYSIZE_ARRAY];
 } VARIABLE_NAME, * PVARIABLE_NAME;
 
+extern GUID EFI_GV_GUID;
+extern GUID EFI_EMPTY_GUID;
+
 BOOL NWL_IsEfi(VOID);
 DWORD NWL_GetEfiVar(LPCWSTR lpName, LPGUID lpGuid,
 	PVOID pBuffer, DWORD nSize, PDWORD pdwAttribubutes);
@@ -217,3 +241,5 @@ BOOL NWL_SetEfiVarEx(LPCWSTR lpName, LPGUID lpGuid,
 	PVOID pBuffer, DWORD nSize, DWORD dwAttributes);
 BOOL NWL_SetEfiVar(LPCWSTR lpName, LPGUID lpGuid, PVOID pBuffer, DWORD nSize);
 BOOL NWL_DeleteEfiVar(LPCWSTR lpName, LPGUID lpGuid);
+
+CHAR* NWL_GetEfiDpStr(EFI_DEVICE_PATH* pDp);
