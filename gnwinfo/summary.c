@@ -7,10 +7,10 @@ get_node_attr(PNODE node, LPCSTR key)
 {
 	LPCSTR str;
 	if (!node)
-		return "~";
+		return "-";
 	str = NWL_NodeAttrGet(node, key);
 	if (!str)
-		return "~";
+		return "-";
 	return str;
 }
 
@@ -29,7 +29,7 @@ get_smbios_attr(LPCSTR type, LPCSTR key, BOOL(*cond)(PNODE node))
 		if (!cond || cond(tab) == TRUE)
 			return get_node_attr(tab, key);
 	}
-	return "~";
+	return "-";
 }
 
 #define MAIN_GUI_ROW_2_BEGIN \
@@ -169,29 +169,25 @@ draw_processor(struct nk_context* ctx)
 		LPCSTR attr;
 		PNODE tab = g_ctx.smbios->Children[i].LinkedNode;
 		attr = get_node_attr(tab, "Table Type");
-		if (!attr || strcmp(attr, "4") != 0)
+		if (strcmp(attr, "4") != 0)
 			continue;
-		MAIN_GUI_ROW_3_BEGIN;
+		MAIN_GUI_ROW_2_BEGIN;
 		nk_labelf(ctx, NK_TEXT_LEFT, "    CPU%d", j++);
-		MAIN_GUI_ROW_3_MID1;
-		nk_label(ctx, "Version", NK_TEXT_LEFT);
-		MAIN_GUI_ROW_3_MID2;
+		MAIN_GUI_ROW_2_MID1;
 		nk_label_colored(ctx,
 			get_node_attr(tab, "Processor Version"),
 			NK_TEXT_LEFT,
 			nk_rgb(255, 255, 255));
-		MAIN_GUI_ROW_3_END;
-		MAIN_GUI_ROW_3_BEGIN;
+		MAIN_GUI_ROW_2_END;
+		MAIN_GUI_ROW_2_BEGIN;
 		nk_spacer(ctx);
-		MAIN_GUI_ROW_3_MID1;
-		nk_spacer(ctx);
-		MAIN_GUI_ROW_3_MID2;
+		MAIN_GUI_ROW_2_MID1;
 		nk_labelf_colored(ctx, NK_TEXT_LEFT, nk_rgb(255, 255, 255),
 			"%s %s cores %s threads",
 			get_node_attr(tab, "Socket Designation"),
 			get_node_attr(tab, "Core Count"),
 			get_node_attr(tab, "Thread Count"));
-		MAIN_GUI_ROW_3_END;
+		MAIN_GUI_ROW_2_END;
 	}
 }
 
@@ -210,7 +206,7 @@ draw_memory(struct nk_context* ctx)
 	GlobalMemoryStatusEx(&statex);
 	strcpy_s(buf, sizeof(buf), NWL_GetHumanSize(statex.ullAvailPhys, mem_human_sizes, 1024));
 	if (statex.dwMemoryLoad > 60)
-		color = nk_rgb(0, 255, 255); // Yellow
+		color = nk_rgb(255, 255, 0); // Yellow
 	if (statex.dwMemoryLoad > 80)
 		color = nk_rgb(255, 0, 0); // Red
 	MAIN_GUI_LABEL("Memory", g_ctx.image_ram);
@@ -225,10 +221,13 @@ draw_memory(struct nk_context* ctx)
 	count = NWL_NodeChildCount(g_ctx.smbios);
 	for (i = 0; i < count; i++)
 	{
-		LPCSTR attr;
+		LPCSTR attr, ddr;
 		PNODE tab = g_ctx.smbios->Children[i].LinkedNode;
 		attr = get_node_attr(tab, "Table Type");
-		if (!attr || strcmp(attr, "17") != 0)
+		if (strcmp(attr, "17") != 0)
+			continue;
+		ddr = get_node_attr(tab, "Device Type");
+		if (ddr[0] == '-')
 			continue;
 		MAIN_GUI_ROW_2_BEGIN;
 		nk_labelf(ctx, NK_TEXT_LEFT, "    %s", get_node_attr(tab, "Bank Locator"));
@@ -236,7 +235,7 @@ draw_memory(struct nk_context* ctx)
 		nk_labelf_colored(ctx, NK_TEXT_LEFT,
 			nk_rgb(255, 255, 255),
 			"%s-%s %s %s %s",
-			get_node_attr(tab, "Device Type"),
+			ddr,
 			get_node_attr(tab, "Speed (MT/s)"),
 			get_node_attr(tab, "Device Size"),
 			get_node_attr(tab, "Manufacturer"),
@@ -282,11 +281,31 @@ draw_storage(struct nk_context* ctx)
 	count = NWL_NodeChildCount(g_ctx.disk);
 	for (i = 0; i < count; i++)
 	{
+		BOOL cdrom;
+		LPCSTR path, id, type;
 		PNODE disk = g_ctx.disk->Children[i].LinkedNode;
 		if (!disk)
 			continue;
+		path = get_node_attr(disk, "Path");
+		if (strncmp(path, "\\\\.\\CdRom", 9) == 0)
+		{
+			cdrom = TRUE;
+			id = &path[9];
+			type = "CDROM";
+		}
+		else if (strncmp(path, "\\\\.\\PhysicalDrive", 17) == 0)
+		{
+			cdrom = FALSE;
+			id = &path[17];
+			type = strcmp(get_node_attr(disk, "SSD"), "Yes") == 0 ? "SSD" : "HDD";
+		}
+		else
+			continue;
 		MAIN_GUI_ROW_3_BEGIN;
-		nk_labelf(ctx, NK_TEXT_LEFT, "    Disk%d", i);
+		nk_labelf(ctx, NK_TEXT_LEFT,
+			"    %s%s",
+			cdrom ? "CDROM" : "DISK",
+			id);
 		MAIN_GUI_ROW_3_MID1;
 		nk_label(ctx, "Product Name", NK_TEXT_LEFT);
 		MAIN_GUI_ROW_3_MID2;
@@ -306,12 +325,13 @@ draw_storage(struct nk_context* ctx)
 			"%s %s %s %s",
 			get_node_attr(disk, "Size"),
 			get_node_attr(disk, "Type"),
-			strcmp(get_node_attr(disk, "SSD"), "Yes") == 0 ? "SSD" : "HDD",
+			type,
 			get_node_attr(disk, "Partition Table"));
 		MAIN_GUI_ROW_3_END;
 		LPCSTR health = get_node_attr(disk, "Health Status");
-		struct nk_color color = nk_rgb(0, 255, 255); // Yellow
-		if (strcmp(health, "~") == 0)
+		LPCSTR temp = get_node_attr(disk, "Temperature (C)");
+		struct nk_color color = nk_rgb(255, 255, 0); // Yellow
+		if (strcmp(health, "-") == 0)
 			continue;
 		if (strncmp(health, "Good", 4) == 0)
 			color = nk_rgb(0, 255, 0); // Green
@@ -323,8 +343,9 @@ draw_storage(struct nk_context* ctx)
 		nk_label(ctx, "S.M.A.R.T", NK_TEXT_LEFT);
 		MAIN_GUI_ROW_3_MID2;
 		nk_labelf_colored(ctx, NK_TEXT_LEFT,
-			color, "%s %s(C)", health,
-			get_node_attr(disk, "Temperature (C)"));
+			color, "%s %s%s", health,
+			temp[0] != '-' ? temp : "",
+			temp[0] != '-' ? "(C)" : "");
 		MAIN_GUI_ROW_3_END;
 	}
 }
@@ -341,7 +362,7 @@ get_first_ipv4(PNODE node)
 	{
 		PNODE ip = unicasts->Children[i].LinkedNode;
 		LPCSTR addr = get_node_attr(ip, "IPv4");
-		if (strcmp(addr, "~") != 0)
+		if (strcmp(addr, "-") != 0)
 			return addr;
 	}
 	return "";
