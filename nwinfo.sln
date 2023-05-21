@@ -13,6 +13,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "winring0", "winring0\winrin
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libcdi", "libcdi\libcdi.vcxproj", "{4FDAE82D-7B0E-4B71-80A9-F5A344A7B9D6}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "gnwinfo", "gnwinfo\gnwinfo.vcxproj", "{C8356469-07C6-4366-A561-12C610BE1263}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Release|x64 = Release|x64
@@ -39,6 +41,10 @@ Global
 		{4FDAE82D-7B0E-4B71-80A9-F5A344A7B9D6}.Release|x64.Build.0 = Release|x64
 		{4FDAE82D-7B0E-4B71-80A9-F5A344A7B9D6}.Release|x86.ActiveCfg = Release|Win32
 		{4FDAE82D-7B0E-4B71-80A9-F5A344A7B9D6}.Release|x86.Build.0 = Release|Win32
+		{C8356469-07C6-4366-A561-12C610BE1263}.Release|x64.ActiveCfg = Release|x64
+		{C8356469-07C6-4366-A561-12C610BE1263}.Release|x64.Build.0 = Release|x64
+		{C8356469-07C6-4366-A561-12C610BE1263}.Release|x86.ActiveCfg = Release|Win32
+		{C8356469-07C6-4366-A561-12C610BE1263}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

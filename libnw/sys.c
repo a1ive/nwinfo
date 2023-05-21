@@ -169,14 +169,22 @@ static void PrintOsVer(PNODE node)
 	}
 }
 
-static void PrintUptime(PNODE node)
+LPCSTR NWL_GetUptime(VOID)
 {
-	UINT64 Uptime = GetTickCount64();
-	UINT64 Days = Uptime / 1000ULL / 3600ULL / 24ULL;
-	UINT64 Hours = Uptime / 1000ULL / 3600ULL - Days * 24ULL;
-	UINT64 Minutes = Uptime / 1000ULL / 60ULL - Days * 24ULL * 60ULL - Hours * 60ULL;
-	UINT64 Seconds = Uptime / 1000ULL - Days * 24ULL * 3600ULL - Hours * 3600ULL - Minutes * 60ULL;
-	NWL_NodeAttrSetf(node, "Uptime", 0, "%llu days, %llu hours, %llu min, %llu sec", Days, Hours, Minutes, Seconds);
+	UINT64 ullUptime = GetTickCount64();
+	UINT64 ullDays = ullUptime / 1000ULL / 3600ULL / 24ULL;
+	UINT64 ullHours = ullUptime / 1000ULL / 3600ULL - ullDays * 24ULL;
+	UINT64 ullMinutes = ullUptime / 1000ULL / 60ULL - ullDays * 24ULL * 60ULL - ullHours * 60ULL;
+	UINT64 ullSeconds = ullUptime / 1000ULL - ullDays * 24ULL * 3600ULL - ullHours * 3600ULL - ullMinutes * 60ULL;
+	static CHAR szUptime[64];
+	CHAR szDays[32] = "";
+	CHAR szHours[12] = "";
+	if (ullDays)
+		snprintf(szDays, sizeof(szDays), "%llu day%s, ", ullDays, ullDays > 1ULL ? "s" : "");
+	if (ullHours)
+		snprintf(szHours, sizeof(szHours), "%llu hour%s, ", ullHours, ullHours > 1ULL ? "s" : "");
+	snprintf(szUptime, sizeof(szUptime), "%s%s%llu min, %llu sec", szDays, szHours, ullMinutes, ullSeconds);
+	return szUptime;
 }
 
 static void PrintOsInfo(PNODE node)
@@ -198,7 +206,7 @@ static void PrintOsInfo(PNODE node)
 		NWL_NodeAttrSet(node, "System Directory", infoBuf, 0);
 	if (GetWindowsDirectoryA(infoBuf, NWINFO_BUFSZ))
 		NWL_NodeAttrSet(node, "Windows Directory", infoBuf, 0);
-	PrintUptime(node);
+	NWL_NodeAttrSet(node, "Uptime", NWL_GetUptime(), 0);
 	GetNativeSystemInfo(&siInfo);
 	switch (siInfo.wProcessorArchitecture)
 	{
@@ -292,14 +300,10 @@ static void PrintMemInfo(PNODE node)
 	statex.dwLength = sizeof(statex);
 	GlobalMemoryStatusEx(&statex);
 	NWL_NodeAttrSetf(node, "Memory Usage", 0, "%u%%", statex.dwMemoryLoad);
-	nphy = NWL_NodeGetChild(node, "Physical Memory");
-	if (!nphy)
-		nphy = NWL_NodeAppendNew(node, "Physical Memory", NFLG_ATTGROUP);
+	nphy = NWL_NodeAppendNew(node, "Physical Memory", NFLG_ATTGROUP);
 	NWL_NodeAttrSet(nphy, "Free", NWL_GetHumanSize(statex.ullAvailPhys, mem_human_sizes, 1024), NAFLG_FMT_HUMAN_SIZE);
 	NWL_NodeAttrSet(nphy, "Total", NWL_GetHumanSize(statex.ullTotalPhys, mem_human_sizes, 1024), NAFLG_FMT_HUMAN_SIZE);
-	npage = NWL_NodeGetChild(node, "Paging File");
-	if (!npage)
-		npage = NWL_NodeAppendNew(node, "Paging File", NFLG_ATTGROUP);
+	npage = NWL_NodeAppendNew(node, "Paging File", NFLG_ATTGROUP);
 	NWL_NodeAttrSet(npage, "Free", NWL_GetHumanSize(statex.ullAvailPageFile, mem_human_sizes, 1024), NAFLG_FMT_HUMAN_SIZE);
 	NWL_NodeAttrSet(npage, "Total", NWL_GetHumanSize(statex.ullTotalPageFile, mem_human_sizes, 1024), NAFLG_FMT_HUMAN_SIZE);
 }
@@ -339,13 +343,6 @@ static void PrintBootInfo(PNODE node)
 	DWORD dwBitLocker = 0;
 	NWL_GetRegDwordValue(HKEY_LOCAL_MACHINE, "SYSTEM\\CurrentControlSet\\Control\\BitlockerStatus", "BootStatus", &dwBitLocker);
 	NWL_NodeAttrSetBool(node, "BitLocker Boot", dwBitLocker, 0);
-}
-
-PNODE NW_UpdateSystem(PNODE node)
-{
-	PrintUptime(node);
-	PrintMemInfo(node);
-	return node;
 }
 
 PNODE NW_System(VOID)

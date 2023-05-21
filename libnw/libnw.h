@@ -84,9 +84,10 @@ PNODE NW_Battery(VOID);
 PNODE NW_Libinfo(VOID);
 PNODE NW_Uefi(VOID);
 
-PNODE NW_UpdateSystem(PNODE node);
 PNODE NW_UpdateCpuid(PNODE node);
 PNODE NW_UpdateNetwork(PNODE node);
+
+LPCSTR NWL_GetUptime(VOID);
 
 #ifdef __cplusplus
 } /* extern "C" */
