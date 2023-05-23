@@ -41,7 +41,7 @@ wWinMain(_In_ HINSTANCE hInstance,
 
 	WNDCLASSW wc;
 	RECT rect = { 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT };
-	DWORD style = WS_OVERLAPPEDWINDOW;
+	DWORD style = WS_THICKFRAME;
 	DWORD exstyle = WS_EX_APPWINDOW;
 	HWND wnd;
 	int running = 1;
@@ -60,9 +60,10 @@ wWinMain(_In_ HINSTANCE hInstance,
 	AdjustWindowRectEx(&rect, style, FALSE, exstyle);
 
 	wnd = CreateWindowExW(exstyle, wc.lpszClassName, L"NWinfo GUI",
-		style | WS_VISIBLE, CW_USEDEFAULT, CW_USEDEFAULT,
+		style, CW_USEDEFAULT, CW_USEDEFAULT,
 		rect.right - rect.left, rect.bottom - rect.top,
 		NULL, NULL, wc.hInstance, NULL);
+	ShowWindow(wnd, SW_SHOW);
 
 	/* GUI */
 	ctx = nk_gdip_init(wnd, WINDOW_WIDTH, WINDOW_HEIGHT);
@@ -73,6 +74,8 @@ wWinMain(_In_ HINSTANCE hInstance,
 	gnwinfo_ctx_init(hInstance, wnd, ctx);
 	g_ctx.gui_height = WINDOW_HEIGHT;
 	g_ctx.gui_width = WINDOW_WIDTH;
+	ctx->style.button.rounding = 0;
+	ctx->style.window.min_row_height_padding = 2;
 
 	while (running)
 	{

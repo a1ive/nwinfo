@@ -12,6 +12,9 @@ gnwinfo_ctx_error_callback(LPCSTR lpszText)
 	MessageBoxA(g_ctx.wnd, lpszText, "Error", MB_ICONERROR);
 }
 
+#define GDIP_LOAD_IMG(img, x) \
+   img = nk_gdip_load_image_from_memory(x, sizeof(x))
+
 void
 gnwinfo_ctx_init(HINSTANCE inst, HWND wnd, struct nk_context* ctx)
 {
@@ -22,6 +25,7 @@ gnwinfo_ctx_init(HINSTANCE inst, HWND wnd, struct nk_context* ctx)
 	g_ctx.inst = inst;
 	g_ctx.wnd = wnd;
 	g_ctx.nk = ctx;
+	g_ctx.main_flag = ~0U;
 	g_ctx.lib.NwFormat = FORMAT_JSON;
 	g_ctx.lib.HumanSize = TRUE;
 	g_ctx.lib.ErrLogCallback = gnwinfo_ctx_error_callback;
@@ -41,14 +45,17 @@ gnwinfo_ctx_init(HINSTANCE inst, HWND wnd, struct nk_context* ctx)
 	g_ctx.edid = NW_Edid();
 	g_ctx.uefi = NW_Uefi();
 
-	g_ctx.image_os = nk_gdip_load_image_from_memory(ICON_OS, ICON_OS_LEN);
-	g_ctx.image_bios = nk_gdip_load_image_from_memory(ICON_BIOS, ICON_BIOS_LEN);
-	g_ctx.image_board = nk_gdip_load_image_from_memory(ICON_BOARD, ICON_BOARD_LEN);
-	g_ctx.image_cpu = nk_gdip_load_image_from_memory(ICON_CPU, ICON_CPU_LEN);
-	g_ctx.image_ram = nk_gdip_load_image_from_memory(ICON_RAM, ICON_RAM_LEN);
-	g_ctx.image_edid = nk_gdip_load_image_from_memory(ICON_EDID, ICON_EDID_LEN);
-	g_ctx.image_disk = nk_gdip_load_image_from_memory(ICON_DISK, ICON_DISK_LEN);
-	g_ctx.image_net = nk_gdip_load_image_from_memory(ICON_NET, ICON_NET_LEN);
+	GDIP_LOAD_IMG(g_ctx.image_os, ICON_OS);
+	GDIP_LOAD_IMG(g_ctx.image_bios, ICON_BIOS);
+	GDIP_LOAD_IMG(g_ctx.image_board, ICON_BOARD);
+	GDIP_LOAD_IMG(g_ctx.image_cpu, ICON_CPU);
+	GDIP_LOAD_IMG(g_ctx.image_ram, ICON_RAM);
+	GDIP_LOAD_IMG(g_ctx.image_edid, ICON_EDID);
+	GDIP_LOAD_IMG(g_ctx.image_disk, ICON_DISK);
+	GDIP_LOAD_IMG(g_ctx.image_net, ICON_NET);
+	GDIP_LOAD_IMG(g_ctx.image_close, ICON_CLOSE);
+	GDIP_LOAD_IMG(g_ctx.image_smart, ICON_SMART);
+	GDIP_LOAD_IMG(g_ctx.image_cpuid, ICON_CPUID);
 
 	SetTimer(g_ctx.wnd, IDT_TIMER_1S, 1000, (TIMERPROC)NULL);
 	SetTimer(g_ctx.wnd, IDT_TIMER_1M, 60 * 1000, (TIMERPROC)NULL);

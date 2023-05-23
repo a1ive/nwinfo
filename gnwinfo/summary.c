@@ -57,7 +57,7 @@ get_smbios_attr(LPCSTR type, LPCSTR key, BOOL(*cond)(PNODE node))
 
 #define MAIN_GUI_LABEL(title,icon) \
 { \
-	nk_layout_row_begin(ctx, NK_DYNAMIC, GNWINFO_FONT_SIZE + ctx->style.window.spacing.y, 4); \
+	nk_layout_row_begin(ctx, NK_DYNAMIC, 0, 4); \
 	struct nk_rect _rect = nk_layout_widget_bounds(ctx); \
 	nk_layout_row_push(ctx, _rect.h / _rect.w); \
 	nk_image(ctx, icon); \
@@ -158,6 +158,16 @@ draw_motherboard(struct nk_context* ctx)
 	MAIN_GUI_ROW_2_END;
 }
 
+static uint8_t cache_level = 0;
+static BOOL
+is_cache_level_equal(PNODE node)
+{
+	LPCSTR str = get_node_attr(node, "Cache Level");
+	CHAR buf[] = "L1";
+	buf[1] = '0' + cache_level;
+	return (strcmp(str, buf) == 0);
+}
+
 static VOID
 draw_processor(struct nk_context* ctx)
 {
@@ -189,6 +199,28 @@ draw_processor(struct nk_context* ctx)
 			get_node_attr(tab, "Thread Count"));
 		MAIN_GUI_ROW_2_END;
 	}
+
+	LPCSTR cache_size[4];
+	for (cache_level = 1; cache_level <= 4; cache_level++)
+		cache_size[cache_level - 1] = get_smbios_attr("7", "Installed Cache Size", is_cache_level_equal);
+	MAIN_GUI_ROW_2_BEGIN;
+	nk_label(ctx, "    Cache Size", NK_TEXT_LEFT);
+	MAIN_GUI_ROW_2_MID1;
+	if (cache_size[0][0] == '-')
+		nk_label_colored(ctx, cache_size[0], NK_TEXT_LEFT, nk_rgb(255, 255, 255));
+	else if (cache_size[1][0] == '-')
+		nk_labelf_colored(ctx, NK_TEXT_LEFT, nk_rgb(255, 255, 255),
+			"L1 %s", cache_size[0]);
+	else if (cache_size[2][0] == '-')
+		nk_labelf_colored(ctx, NK_TEXT_LEFT, nk_rgb(255, 255, 255),
+			"L1 %s L2 %s", cache_size[0], cache_size[1]);
+	else if (cache_size[3][0] == '-')
+		nk_labelf_colored(ctx, NK_TEXT_LEFT, nk_rgb(255, 255, 255),
+			"L1 %s L2 %s L3 %s", cache_size[0], cache_size[1], cache_size[2]);
+	else
+		nk_labelf_colored(ctx, NK_TEXT_LEFT, nk_rgb(255, 255, 255),
+			"L1 %s L2 %s L3 %s L4 %s", cache_size[0], cache_size[1], cache_size[2], cache_size[3]);
+	MAIN_GUI_ROW_2_END;
 }
 
 LPCSTR NWL_GetHumanSize(UINT64 size, LPCSTR human_sizes[6], UINT64 base);
@@ -394,26 +426,82 @@ draw_network(struct nk_context* ctx)
 			"%s%s",
 			get_first_ipv4(nw),
 			strcmp(get_node_attr(nw, "DHCP Enabled"), "Yes") == 0 ? " DHCP" : "");
-		MAIN_GUI_ROW_2_END;
+		nk_layout_row_end(ctx);
 	}
 }
 
+#define MAIN_INFO_OS        (1U << 0)
+#define MAIN_INFO_BIOS      (1U << 1)
+#define MAIN_INFO_BOARD     (1U << 2)
+#define MAIN_INFO_CPU       (1U << 3)
+#define MAIN_INFO_MEMORY    (1U << 4)
+#define MAIN_INFO_MONITOR   (1U << 5)
+#define MAIN_INFO_STORAGE   (1U << 6)
+#define MAIN_INFO_NETWORK   (1U << 7)
+
 VOID
-gnwinfo_draw_main_window(struct nk_context* ctx, UINT width, UINT height)
+gnwinfo_draw_main_window(struct nk_context* ctx, float width, float height)
 {
 	if (!nk_begin(ctx, "Summary",
-		nk_rect(0, 0, (float)width, (float)height),
-		NK_WINDOW_BACKGROUND | NK_WINDOW_TITLE))
+		nk_rect(0, 0, width, height),
+		NK_WINDOW_BACKGROUND))
 		goto out;
+	nk_layout_row_begin(ctx, NK_DYNAMIC, 20, 12);
+	struct nk_rect rect = nk_layout_widget_bounds(ctx);
+	float ratio = rect.h / rect.w;
+	nk_layout_row_push(ctx, ratio);
+	if (nk_button_image(ctx, g_ctx.image_os))
+		g_ctx.main_flag ^= MAIN_INFO_OS;
+	nk_layout_row_push(ctx, ratio);
+	if (nk_button_image(ctx, g_ctx.image_bios))
+		g_ctx.main_flag ^= MAIN_INFO_BIOS;
+	nk_layout_row_push(ctx, ratio);
+	if (nk_button_image(ctx, g_ctx.image_board))
+		g_ctx.main_flag ^= MAIN_INFO_BOARD;
+	nk_layout_row_push(ctx, ratio);
+	if (nk_button_image(ctx, g_ctx.image_cpu))
+		g_ctx.main_flag ^= MAIN_INFO_CPU;
+	nk_layout_row_push(ctx, ratio);
+	if (nk_button_image(ctx, g_ctx.image_ram))
+		g_ctx.main_flag ^= MAIN_INFO_MEMORY;
+	nk_layout_row_push(ctx, ratio);
+	if (nk_button_image(ctx, g_ctx.image_edid))
+		g_ctx.main_flag ^= MAIN_INFO_MONITOR;
+	nk_layout_row_push(ctx, ratio);
+	if (nk_button_image(ctx, g_ctx.image_disk))
+		g_ctx.main_flag ^= MAIN_INFO_STORAGE;
+	nk_layout_row_push(ctx, ratio);
+	if (nk_button_image(ctx, g_ctx.image_net))
+		g_ctx.main_flag ^= MAIN_INFO_NETWORK;
+	nk_layout_row_push(ctx, 1.0f > 11.0f * ratio ? (1.0f - 11.0f * ratio) : 0);
+	nk_spacer(ctx);
+	nk_layout_row_push(ctx, ratio);
+	if (nk_button_image(ctx, g_ctx.image_cpuid))
+		MessageBoxA(g_ctx.wnd, "CPUID", "Error", MB_ICONERROR);
+	nk_layout_row_push(ctx, ratio);
+	if (nk_button_image(ctx, g_ctx.image_smart))
+		MessageBoxA(g_ctx.wnd, "SMART", "Error", MB_ICONERROR);
+	nk_layout_row_push(ctx, ratio);
+	if (nk_button_image(ctx, g_ctx.image_close))
+		gnwinfo_ctx_exit();
+	nk_layout_row_end(ctx);
 
-	draw_os(ctx);
-	draw_bios(ctx);
-	draw_motherboard(ctx);
-	draw_processor(ctx);
-	draw_memory(ctx);
-	draw_monitor(ctx);
-	draw_storage(ctx);
-	draw_network(ctx);
+	if (g_ctx.main_flag & MAIN_INFO_OS)
+		draw_os(ctx);
+	if (g_ctx.main_flag & MAIN_INFO_BIOS)
+		draw_bios(ctx);
+	if (g_ctx.main_flag & MAIN_INFO_BOARD)
+		draw_motherboard(ctx);
+	if (g_ctx.main_flag & MAIN_INFO_CPU)
+		draw_processor(ctx);
+	if (g_ctx.main_flag & MAIN_INFO_MEMORY)
+		draw_memory(ctx);
+	if (g_ctx.main_flag & MAIN_INFO_MONITOR)
+		draw_monitor(ctx);
+	if (g_ctx.main_flag & MAIN_INFO_STORAGE)
+		draw_storage(ctx);
+	if (g_ctx.main_flag & MAIN_INFO_NETWORK)
+		draw_network(ctx);
 
 out:
 	nk_end(ctx);

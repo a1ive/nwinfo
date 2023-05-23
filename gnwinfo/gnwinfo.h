@@ -33,8 +33,9 @@ typedef struct _GNW_CONTEXT
 	HANDLE mutex;
 	NWLIB_CONTEXT lib;
 	struct nk_context* nk;
-	UINT gui_width;
-	UINT gui_height;
+	float gui_width;
+	float gui_height;
+	UINT32 main_flag;
 
 	struct nk_image image_os;
 	struct nk_image image_bios;
@@ -44,6 +45,9 @@ typedef struct _GNW_CONTEXT
 	struct nk_image image_edid;
 	struct nk_image image_disk;
 	struct nk_image image_net;
+	struct nk_image image_close;
+	struct nk_image image_smart;
+	struct nk_image image_cpuid;
 
 	PNODE system;
 	PNODE cpuid;
@@ -58,4 +62,4 @@ extern GNW_CONTEXT g_ctx;
 
 void gnwinfo_ctx_init(HINSTANCE inst, HWND wnd, struct nk_context* ctx);
 void gnwinfo_ctx_exit();
-VOID gnwinfo_draw_main_window(struct nk_context* ctx, UINT width, UINT height);
+VOID gnwinfo_draw_main_window(struct nk_context* ctx, float width, float height);
