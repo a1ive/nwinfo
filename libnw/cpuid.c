@@ -66,34 +66,7 @@ PrintHypervisor(PNODE node, const struct cpu_id_t* data)
 	NWL_NodeAttrSet(node, "Hypervisor", name, 0);
 	NWL_NodeAttrSet(node, "Hypervisor Signature", data->hypervisor_str, 0);
 }
-#ifdef ENABLE_SGX
-static void
-PrintSgx(PNODE node, const struct cpu_id_t* data, struct cpu_raw_data_array_t* raw, logical_cpu_t core)
-{
-	int i;
-	PNODE nsgx, nepc;
-	if (!data->sgx.present)
-		return;
-	nsgx = NWL_NodeAppendNew(node, "SGX", NFLG_ATTGROUP);
-	NWL_NodeAttrSetf(nsgx, "Max Enclave Size (32-bit)", 0, "2^%d", data->sgx.max_enclave_32bit);
-	NWL_NodeAttrSetf(nsgx, "Max Enclave Size (64-bit)", 0, "2^%d", data->sgx.max_enclave_64bit);
-	NWL_NodeAttrSetBool(nsgx, "SGX1 Extensions", data->sgx.flags[INTEL_SGX1], 0);
-	NWL_NodeAttrSetBool(nsgx, "SGX2 Extensions", data->sgx.flags[INTEL_SGX2], 0);
-	NWL_NodeAttrSetf(nsgx, "MISCSELECT", 0, "%08x", data->sgx.misc_select);
-	NWL_NodeAttrSetf(nsgx, "SECS.ATTRIBUTES Mask", 0, "%016llx", (unsigned long long) data->sgx.secs_attributes);
-	NWL_NodeAttrSetf(nsgx, "SECS.XSAVE Feature Mask", 0, "%016llx", (unsigned long long) data->sgx.secs_xfrm);
-	if (core == 0xffff)
-		return;
-	nepc = NWL_NodeAppendNew(nsgx, "EPC Sections", NFLG_TABLE);
-	for (i = 0; i < data->sgx.num_epc_sections; i++)
-	{
-		struct cpu_epc_t epc = cpuid_get_epc(i, &raw->raw[core]);
-		PNODE p = NWL_NodeAppendNew(nepc, "Section", NFLG_TABLE_ROW);
-		NWL_NodeAttrSetf(p, "Start", 0, "0x%llx", (unsigned long long) epc.start_addr);
-		NWL_NodeAttrSetf(p, "Size", 0, "0x%llx", (unsigned long long) epc.length);
-	}
-}
-#endif
+
 static void
 PrintCache(PNODE node, const struct cpu_id_t* data)
 {
@@ -140,10 +113,10 @@ PrintFeatures(PNODE node, const struct cpu_id_t* data)
 }
 
 static void
-PrintCoreMsr(PNODE node, const struct cpu_id_t* data, logical_cpu_t core)
+PrintCoreMsr(PNODE node, const struct cpu_id_t* data, logical_cpu_t cpu)
 {
 	int value = CPU_INVALID_VALUE;
-	if (!data->flags[CPU_FEATURE_MSR] || NWLC->NwDrv == NULL || !set_cpu_affinity(core))
+	if (!data->flags[CPU_FEATURE_MSR] || NWLC->NwDrv == NULL || !set_cpu_affinity(cpu))
 		return;
 	int min_multi = cpu_msrinfo(NWLC->NwDrv, INFO_MIN_MULTIPLIER);
 	int max_multi = cpu_msrinfo(NWLC->NwDrv, INFO_MAX_MULTIPLIER);
@@ -170,35 +143,33 @@ PrintCoreMsr(PNODE node, const struct cpu_id_t* data, logical_cpu_t core)
 		NWL_NodeAttrSetf(node, "Bus Clock (MHz)", NAFLG_FMT_NUMERIC, "%.2lf", value / 100.0);
 }
 
-static logical_cpu_t
-PrintCpuMsr(PNODE node, struct cpu_id_t* data, struct cpu_raw_data_array_t* raw)
+static void
+PrintCpuMsr(PNODE node, struct cpu_id_t* data)
 {
-	logical_cpu_t i, first_core = 0xffff;
+	int32_t i, logical_cpu_per_core;
 	CHAR name[] = "CORE65536";
 	bool affinity_saved = FALSE;
+	logical_cpu_per_core = data->num_logical_cpus / data->num_cores;
 	affinity_saved = save_cpu_affinity();
-	for (i = 0; i < raw->num_raw; i++)
+	for (i = 0; i < data->num_cores; i++)
 	{
 		PNODE core = NULL;
-		if (!get_affinity_mask_bit(i, &data->affinity_mask))
+		logical_cpu_t id = i * logical_cpu_per_core;
+		if (!get_affinity_mask_bit(id, &data->affinity_mask))
 			continue;
-		if (first_core == 0xffff)
-			first_core = i;
 		snprintf(name, sizeof(name), "CORE%u", i);
 		core = NWL_NodeGetChild(node, name);
 		if (core == NULL)
 			core = NWL_NodeAppendNew(node, name, 0);
-		PrintCoreMsr(core, data, i);
+		PrintCoreMsr(core, data, id);
 	}
 	if (affinity_saved)
 		restore_cpu_affinity();
-	return first_core;
 }
 
 static void
 PrintCpuInfo(PNODE node, struct cpu_id_t* data, struct cpu_raw_data_array_t* raw)
 {
-	logical_cpu_t first_core;
 	NWL_NodeAttrSet(node, "Purpose", cpu_purpose_str(data->purpose), 0);
 	NWL_NodeAttrSet(node, "Vendor", data->vendor_str, 0);
 	NWL_NodeAttrSet(node, "Vendor Name", CpuVendorToStr(data->vendor), 0);
@@ -216,11 +187,8 @@ PrintCpuInfo(PNODE node, struct cpu_id_t* data, struct cpu_raw_data_array_t* raw
 	NWL_NodeAttrSetf(node, "SSE Units", 0, "%d bits (%s)",
 		data->sse_size, data->detection_hints[CPU_HINT_SSE_SIZE_AUTH] ? "authoritative" : "non-authoritative");
 	PrintCache(node, data);
-	first_core = PrintCpuMsr(node, data, raw);
+	PrintCpuMsr(node, data);
 	PrintFeatures(node, data);
-#ifdef ENABLE_SGX
-	PrintSgx(node, data, raw, first_core);
-#endif
 }
 
 PNODE NW_UpdateCpuid(PNODE node)
@@ -238,7 +206,7 @@ PNODE NW_UpdateCpuid(PNODE node)
 		PNODE cpu = NULL;
 		snprintf(name, sizeof(name), "CPU%u", i);
 		cpu = NWL_NodeGetChild(node, name);
-		PrintCpuMsr(cpu, &id.cpu_types[i], &raw);
+		PrintCpuMsr(cpu, &id.cpu_types[i]);
 	}
 fail:
 	cpuid_free_system_id(&id);
