@@ -68,6 +68,7 @@ static void cpu_id_t_constructor(struct cpu_id_t* id)
 	id->l1_data_instances = id->l1_instruction_instances = id->l2_instances = id->l3_instances = id->l4_instances = -1;
 	id->sse_size = -1;
 	init_affinity_mask(&id->affinity_mask);
+	init_affinity_mask(&id->core_affinity_mask);
 	id->purpose = PURPOSE_GENERAL;
 }
 
@@ -685,7 +686,8 @@ int cpu_identify(struct cpu_raw_data_t* raw, struct cpu_id_t* data)
 }
 
 static void update_core_instances(struct internal_core_instances_t* cores,
-	struct internal_apic_info_t* apic_info)
+	struct internal_apic_info_t* apic_info,
+	logical_cpu_t logical_cpu, cpu_affinity_mask_t* mask)
 {
 	uint32_t core_id_index = 0;
 
@@ -693,6 +695,8 @@ static void update_core_instances(struct internal_core_instances_t* cores,
 	if ((cores->htable[core_id_index].core_id == 0) || (cores->htable[core_id_index].core_id == apic_info->core_id)) {
 		if (cores->htable[core_id_index].num_logical_cpu == 0)
 			cores->instances++;
+		else
+			clear_affinity_mask_bit(logical_cpu, mask);
 		cores->htable[core_id_index].core_id = apic_info->core_id;
 		cores->htable[core_id_index].num_logical_cpu++;
 	}
@@ -742,15 +746,21 @@ int cpu_identify_all(struct cpu_raw_data_array_t* raw_array, struct system_id_t*
 	int32_t prev_package_id = 0;
 	logical_cpu_t logical_cpu = 0;
 	cpu_purpose_t purpose;
-	cpu_affinity_mask_t affinity_mask;
+	cpu_affinity_mask_t* affinity_mask = malloc(sizeof(*affinity_mask));
+	cpu_affinity_mask_t *core_affinity_mask = malloc(sizeof(*core_affinity_mask));
 	struct internal_id_info_t id_info;
 	struct internal_apic_info_t apic_info;
 	struct internal_core_instances_t* cores_type = malloc(sizeof(*cores_type));
 	struct internal_cache_instances_t* caches_type = malloc(sizeof(*caches_type));
 	struct internal_cache_instances_t* caches_all = malloc(sizeof(*caches_all));
 
-	if (!system || !raw_array || !cores_type || !caches_type || !caches_all)
+	if (!system || !raw_array
+		|| !cores_type || !caches_type || !caches_all || !affinity_mask || !core_affinity_mask)
 	{
+		if (affinity_mask)
+			free(affinity_mask);
+		if (core_affinity_mask)
+			free(core_affinity_mask);
 		if (cores_type)
 			free(cores_type);
 		if (caches_type)
@@ -765,7 +775,10 @@ int cpu_identify_all(struct cpu_raw_data_array_t* raw_array, struct system_id_t*
 	cache_instances_t_constructor(caches_type);
 	cache_instances_t_constructor(caches_all);
 	if (raw_array->with_affinity)
-		init_affinity_mask(&affinity_mask);
+	{
+		init_affinity_mask(affinity_mask);
+		init_affinity_mask(core_affinity_mask);
+	}
 
 	/* Iterate over all raw */
 	for (logical_cpu = 0; logical_cpu < raw_array->num_raw; logical_cpu++) {
@@ -793,10 +806,11 @@ int cpu_identify_all(struct cpu_raw_data_array_t* raw_array, struct system_id_t*
 		}
 		/* Increment counters only for current purpose */
 		if (raw_array->with_affinity && ((logical_cpu == 0) || !is_new_cpu_type)) {
-			set_affinity_mask_bit(logical_cpu, &affinity_mask);
+			set_affinity_mask_bit(logical_cpu, affinity_mask);
+			set_affinity_mask_bit(logical_cpu, core_affinity_mask);
 			num_logical_cpus++;
 			if (is_apic_supported) {
-				update_core_instances(cores_type, &apic_info);
+				update_core_instances(cores_type, &apic_info, logical_cpu, core_affinity_mask);
 				update_cache_instances(caches_type, &apic_info, &id_info);
 				update_cache_instances(caches_all, &apic_info, &id_info);
 			}
@@ -825,10 +839,13 @@ int cpu_identify_all(struct cpu_raw_data_array_t* raw_array, struct system_id_t*
 					case EVENT_LAST_ITEM:    cpu_type_index = system->num_cpu_types - 1; break;
 					default: ret_error = cpuid_set_error(ERR_NOT_IMP); goto out;
 				}
-				copy_affinity_mask(&system->cpu_types[cpu_type_index].affinity_mask, &affinity_mask);
+				copy_affinity_mask(&system->cpu_types[cpu_type_index].affinity_mask, affinity_mask);
+				copy_affinity_mask(&system->cpu_types[cpu_type_index].core_affinity_mask, core_affinity_mask);
 				if (event != EVENT_LAST_ITEM) {
-					init_affinity_mask(&affinity_mask);
-					set_affinity_mask_bit(logical_cpu, &affinity_mask);
+					init_affinity_mask(affinity_mask);
+					init_affinity_mask(core_affinity_mask);
+					set_affinity_mask_bit(logical_cpu, affinity_mask);
+					set_affinity_mask_bit(logical_cpu, core_affinity_mask);
 				}
 				if (is_apic_supported) {
 					system->cpu_types[cpu_type_index].num_cores                = cores_type->instances;
@@ -840,7 +857,7 @@ int cpu_identify_all(struct cpu_raw_data_array_t* raw_array, struct system_id_t*
 					if (event != EVENT_LAST_ITEM) {
 						core_instances_t_constructor(cores_type);
 						cache_instances_t_constructor(caches_type);
-						update_core_instances(cores_type, &apic_info);
+						update_core_instances(cores_type, &apic_info, logical_cpu, core_affinity_mask);
 						update_cache_instances(caches_type, &apic_info, &id_info);
 						update_cache_instances(caches_all, &apic_info, &id_info);
 					}
@@ -873,6 +890,8 @@ int cpu_identify_all(struct cpu_raw_data_array_t* raw_array, struct system_id_t*
 		system->cpu_types[cpu_type_index].total_logical_cpus = logical_cpu;
 
 out:
+	free(affinity_mask);
+	free(core_affinity_mask);
 	free(cores_type);
 	free(caches_type);
 	free(caches_all);

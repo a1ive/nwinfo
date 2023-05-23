@@ -493,6 +493,7 @@ struct cpu_id_t {
 
 	/** bitmask of the affinity ids this processor type is occupying */
 	cpu_affinity_mask_t affinity_mask;
+	cpu_affinity_mask_t core_affinity_mask;
 
 	/** processor type purpose, relevant in case of hybrid CPU (e.g. PURPOSE_PERFORMANCE) */
 	cpu_purpose_t purpose;

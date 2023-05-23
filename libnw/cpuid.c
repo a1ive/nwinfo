@@ -146,22 +146,20 @@ PrintCoreMsr(PNODE node, const struct cpu_id_t* data, logical_cpu_t cpu)
 static void
 PrintCpuMsr(PNODE node, struct cpu_id_t* data)
 {
-	int32_t i, logical_cpu_per_core;
+	logical_cpu_t i, count;
 	CHAR name[] = "CORE65536";
 	bool affinity_saved = FALSE;
-	logical_cpu_per_core = data->num_logical_cpus / data->num_cores;
 	affinity_saved = save_cpu_affinity();
-	for (i = 0; i < data->num_cores; i++)
+	for (i = 0, count = 0; i < data->num_logical_cpus; i++)
 	{
 		PNODE core = NULL;
-		logical_cpu_t id = i * logical_cpu_per_core;
-		if (!get_affinity_mask_bit(id, &data->affinity_mask))
+		if (!get_affinity_mask_bit(i, &data->core_affinity_mask))
 			continue;
-		snprintf(name, sizeof(name), "CORE%u", i);
+		snprintf(name, sizeof(name), "CORE%u", count++);
 		core = NWL_NodeGetChild(node, name);
 		if (core == NULL)
 			core = NWL_NodeAppendNew(node, name, 0);
-		PrintCoreMsr(core, data, id);
+		PrintCoreMsr(core, data, i);
 	}
 	if (affinity_saved)
 		restore_cpu_affinity();
