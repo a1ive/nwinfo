@@ -20,10 +20,9 @@ get_smbios_attr(LPCSTR type, LPCSTR key, BOOL(*cond)(PNODE node))
 	INT i;
 	for (i = 0; g_ctx.smbios->Children[i].LinkedNode; i++)
 	{
-		LPCSTR attr;
 		PNODE tab = g_ctx.smbios->Children[i].LinkedNode;
-		attr = get_node_attr(tab, "Table Type");
-		if (!attr || strcmp(attr, type) != 0)
+		LPCSTR attr = get_node_attr(tab, "Table Type");
+		if (strcmp(attr, type) != 0)
 			continue;
 		if (!cond || cond(tab) == TRUE)
 			return get_node_attr(tab, key);
@@ -174,9 +173,8 @@ draw_processor(struct nk_context* ctx)
 	MAIN_GUI_LABEL("Processor", g_ctx.image_cpu);
 	for (i = 0, j = 0; g_ctx.smbios->Children[i].LinkedNode; i++)
 	{
-		LPCSTR attr;
 		PNODE tab = g_ctx.smbios->Children[i].LinkedNode;
-		attr = get_node_attr(tab, "Table Type");
+		LPCSTR attr = get_node_attr(tab, "Table Type");
 		if (strcmp(attr, "4") != 0)
 			continue;
 		MAIN_GUI_ROW_2_BEGIN;
@@ -250,12 +248,11 @@ draw_memory(struct nk_context* ctx)
 	MAIN_GUI_ROW_2_END;
 	for (i = 0; g_ctx.smbios->Children[i].LinkedNode; i++)
 	{
-		LPCSTR attr, ddr;
 		PNODE tab = g_ctx.smbios->Children[i].LinkedNode;
-		attr = get_node_attr(tab, "Table Type");
+		LPCSTR attr = get_node_attr(tab, "Table Type");
 		if (strcmp(attr, "17") != 0)
 			continue;
-		ddr = get_node_attr(tab, "Device Type");
+		LPCSTR ddr = get_node_attr(tab, "Device Type");
 		if (ddr[0] == '-')
 			continue;
 		MAIN_GUI_ROW_2_BEGIN;
@@ -278,6 +275,22 @@ draw_display(struct nk_context* ctx)
 {
 	INT i;
 	MAIN_GUI_LABEL("Display Devices", g_ctx.image_edid);
+	for (i = 0; g_ctx.pci->Children[i].LinkedNode; i++)
+	{
+		PNODE pci = g_ctx.pci->Children[i].LinkedNode;
+		LPCSTR attr = get_node_attr(pci, "Class Code");
+		if (strncmp("03", attr, 2) != 0)
+			continue;
+		MAIN_GUI_ROW_2_BEGIN;
+		nk_labelf(ctx, NK_TEXT_LEFT, "    %s",
+			get_node_attr(pci, "Vendor"));
+		MAIN_GUI_ROW_2_MID1;
+		nk_labelf_colored(ctx, NK_TEXT_LEFT,
+			nk_rgb(255, 255, 255),
+			"%s",
+			get_node_attr(pci, "Device"));
+		MAIN_GUI_ROW_2_END;
+	}
 	for (i = 0; g_ctx.edid->Children[i].LinkedNode; i++)
 	{
 		PNODE mon = g_ctx.edid->Children[i].LinkedNode;
@@ -288,11 +301,12 @@ draw_display(struct nk_context* ctx)
 		sz = NWL_NodeGetChild(mon, "Screen Size");
 		MAIN_GUI_ROW_2_BEGIN;
 		nk_labelf(ctx, NK_TEXT_LEFT, "    %s",
-			get_node_attr(mon, "HWID"));
+			get_node_attr(mon, "Manufacturer"));
 		MAIN_GUI_ROW_2_MID1;
 		nk_labelf_colored(ctx, NK_TEXT_LEFT,
 			nk_rgb(255, 255, 255),
-			"%sx%s@%sHz %s\"",
+			"%s %sx%s@%sHz %s\"",
+			get_node_attr(mon, "ID"),
 			get_node_attr(res, "Width"),
 			get_node_attr(res, "Height"),
 			get_node_attr(res, "Refresh Rate (Hz)"),

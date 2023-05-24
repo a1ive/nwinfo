@@ -34,6 +34,7 @@ gnwinfo_ctx_init(HINSTANCE inst, HWND wnd, struct nk_context* ctx)
 	g_ctx.lib.DmiInfo = TRUE;
 	g_ctx.lib.EdidInfo = TRUE;
 	g_ctx.lib.UefiInfo = TRUE;
+	g_ctx.lib.PciInfo = TRUE;
 
 	NW_Init(&g_ctx.lib);
 	g_ctx.lib.NwRoot = NWL_NodeAlloc("NWinfo", 0);
@@ -44,6 +45,7 @@ gnwinfo_ctx_init(HINSTANCE inst, HWND wnd, struct nk_context* ctx)
 	g_ctx.disk = NW_Disk(); // Update: 1MIN
 	g_ctx.edid = NW_Edid();
 	g_ctx.uefi = NW_Uefi();
+	g_ctx.pci = NW_Pci();
 
 	GDIP_LOAD_IMG(g_ctx.image_os, ICON_OS);
 	GDIP_LOAD_IMG(g_ctx.image_bios, ICON_BIOS);
