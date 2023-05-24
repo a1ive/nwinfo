@@ -67,7 +67,7 @@ wWinMain(_In_ HINSTANCE hInstance,
 
 	/* GUI */
 	ctx = nk_gdip_init(wnd, WINDOW_WIDTH, WINDOW_HEIGHT);
-	font = nk_gdipfont_create("Consolas", GNWINFO_FONT_SIZE);
+	font = nk_gdipfont_create("Courier New", GNWINFO_FONT_SIZE);
 	nk_gdip_set_font(font);
 
 	(void)CoInitializeEx(0, COINIT_APARTMENTTHREADED);

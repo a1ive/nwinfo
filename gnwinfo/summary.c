@@ -17,9 +17,8 @@ get_node_attr(PNODE node, LPCSTR key)
 static LPCSTR
 get_smbios_attr(LPCSTR type, LPCSTR key, BOOL(*cond)(PNODE node))
 {
-	INT i, count;
-	count = NWL_NodeChildCount(g_ctx.smbios);
-	for (i = 0; i < count; i++)
+	INT i;
+	for (i = 0; g_ctx.smbios->Children[i].LinkedNode; i++)
 	{
 		LPCSTR attr;
 		PNODE tab = g_ctx.smbios->Children[i].LinkedNode;
@@ -171,10 +170,9 @@ is_cache_level_equal(PNODE node)
 static VOID
 draw_processor(struct nk_context* ctx)
 {
-	INT i, j, count;
+	INT i, j;
 	MAIN_GUI_LABEL("Processor", g_ctx.image_cpu);
-	count = NWL_NodeChildCount(g_ctx.smbios);
-	for (i = 0, j = 0; i < count; i++)
+	for (i = 0, j = 0; g_ctx.smbios->Children[i].LinkedNode; i++)
 	{
 		LPCSTR attr;
 		PNODE tab = g_ctx.smbios->Children[i].LinkedNode;
@@ -230,7 +228,7 @@ static const char* mem_human_sizes[6] =
 static VOID
 draw_memory(struct nk_context* ctx)
 {
-	INT i, count;
+	INT i;
 	struct nk_color color = nk_rgb(0, 255, 0); // Green
 	MEMORYSTATUSEX statex = { 0 };
 	char buf[48];
@@ -250,8 +248,7 @@ draw_memory(struct nk_context* ctx)
 		statex.dwMemoryLoad, buf,
 		NWL_GetHumanSize(statex.ullTotalPhys, mem_human_sizes, 1024));
 	MAIN_GUI_ROW_2_END;
-	count = NWL_NodeChildCount(g_ctx.smbios);
-	for (i = 0; i < count; i++)
+	for (i = 0; g_ctx.smbios->Children[i].LinkedNode; i++)
 	{
 		LPCSTR attr, ddr;
 		PNODE tab = g_ctx.smbios->Children[i].LinkedNode;
@@ -277,12 +274,11 @@ draw_memory(struct nk_context* ctx)
 }
 
 static VOID
-draw_monitor(struct nk_context* ctx)
+draw_display(struct nk_context* ctx)
 {
-	INT i, count;
+	INT i;
 	MAIN_GUI_LABEL("Display Devices", g_ctx.image_edid);
-	count = NWL_NodeChildCount(g_ctx.edid);
-	for (i = 0; i < count; i++)
+	for (i = 0; g_ctx.edid->Children[i].LinkedNode; i++)
 	{
 		PNODE mon = g_ctx.edid->Children[i].LinkedNode;
 		PNODE res, sz;
@@ -308,10 +304,9 @@ draw_monitor(struct nk_context* ctx)
 static VOID
 draw_storage(struct nk_context* ctx)
 {
-	INT i, count;
+	INT i;
 	MAIN_GUI_LABEL("Storage", g_ctx.image_disk);
-	count = NWL_NodeChildCount(g_ctx.disk);
-	for (i = 0; i < count; i++)
+	for (i = 0; g_ctx.disk->Children[i].LinkedNode; i++)
 	{
 		BOOL cdrom;
 		LPCSTR path, id, type;
@@ -385,12 +380,11 @@ draw_storage(struct nk_context* ctx)
 static LPCSTR
 get_first_ipv4(PNODE node)
 {
-	INT i, count;
+	INT i;
 	PNODE unicasts = NWL_NodeGetChild(node, "Unicasts");
 	if (!unicasts)
 		return "";
-	count = NWL_NodeChildCount(unicasts);
-	for (i = 0; i < count; i++)
+	for (i = 0; unicasts->Children[i].LinkedNode; i++)
 	{
 		PNODE ip = unicasts->Children[i].LinkedNode;
 		LPCSTR addr = get_node_attr(ip, "IPv4");
@@ -403,13 +397,12 @@ get_first_ipv4(PNODE node)
 static VOID
 draw_network(struct nk_context* ctx)
 {
-	INT i, count;
+	INT i;
 	if (g_ctx.network)
 		NWL_NodeFree(g_ctx.network, 1);
 	g_ctx.network = NW_Network();
 	MAIN_GUI_LABEL("Network", g_ctx.image_net);
-	count = NWL_NodeChildCount(g_ctx.network);
-	for (i = 0; i < count; i++)
+	for (i = 0; g_ctx.network->Children[i].LinkedNode; i++)
 	{
 		PNODE nw = g_ctx.network->Children[i].LinkedNode;
 		struct nk_color color = nk_rgb(255, 0, 0); // Red
@@ -497,7 +490,7 @@ gnwinfo_draw_main_window(struct nk_context* ctx, float width, float height)
 	if (g_ctx.main_flag & MAIN_INFO_MEMORY)
 		draw_memory(ctx);
 	if (g_ctx.main_flag & MAIN_INFO_MONITOR)
-		draw_monitor(ctx);
+		draw_display(ctx);
 	if (g_ctx.main_flag & MAIN_INFO_STORAGE)
 		draw_storage(ctx);
 	if (g_ctx.main_flag & MAIN_INFO_NETWORK)

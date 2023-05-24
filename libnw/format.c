@@ -88,7 +88,6 @@ INT NWL_NodeDepth(PNODE node)
 INT NWL_NodeChildCount(PNODE node)
 {
 	int count = 0;
-	PNODE_LINK link = node->Children;
 	while (node->Children[count].LinkedNode)
 		count++;
 	return count;
