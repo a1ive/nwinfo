@@ -58,6 +58,7 @@ gnwinfo_ctx_init(HINSTANCE inst, HWND wnd, struct nk_context* ctx)
 	GDIP_LOAD_IMG(g_ctx.image_close, ICON_CLOSE);
 	GDIP_LOAD_IMG(g_ctx.image_smart, ICON_SMART);
 	GDIP_LOAD_IMG(g_ctx.image_cpuid, ICON_CPUID);
+	GDIP_LOAD_IMG(g_ctx.image_dir, ICON_DIR);
 
 	SetTimer(g_ctx.wnd, IDT_TIMER_1S, 1000, (TIMERPROC)NULL);
 	SetTimer(g_ctx.wnd, IDT_TIMER_1M, 60 * 1000, (TIMERPROC)NULL);
@@ -85,5 +86,9 @@ gnwinfo_ctx_exit()
 	nk_gdip_image_free(g_ctx.image_edid);
 	nk_gdip_image_free(g_ctx.image_disk);
 	nk_gdip_image_free(g_ctx.image_net);
+	nk_gdip_image_free(g_ctx.image_close);
+	nk_gdip_image_free(g_ctx.image_smart);
+	nk_gdip_image_free(g_ctx.image_cpuid);
+	nk_gdip_image_free(g_ctx.image_dir);
 	exit(0);
 }

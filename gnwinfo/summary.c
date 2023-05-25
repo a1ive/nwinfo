@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: Unlicense
 
 #include "gnwinfo.h"
+#include <shellapi.h>
 
 static LPCSTR
 get_node_attr(PNODE node, LPCSTR key)
@@ -321,6 +322,53 @@ draw_display(struct nk_context* ctx)
 	}
 }
 
+static LPCSTR
+get_drive_letter(PNODE volume)
+{
+	INT i;
+	PNODE vol_path_name = NWL_NodeGetChild(volume, "Volume Path Names");
+	if (!vol_path_name)
+		goto fail;
+	for (i = 0; vol_path_name->Children[i].LinkedNode; i++)
+	{
+		PNODE mnt = vol_path_name->Children[i].LinkedNode;
+		LPCSTR attr = get_node_attr(mnt, "Drive Letter");
+		if (attr[0] != '-')
+			return attr;
+	}
+fail:
+	return "Volume";
+}
+
+static VOID
+draw_volume(struct nk_context* ctx, PNODE disk)
+{
+	INT i;
+	PNODE vol = NWL_NodeGetChild(disk, "Volumes");
+	if (!vol)
+		return;
+	for (i = 0; vol->Children[i].LinkedNode; i++)
+	{
+		PNODE tab = vol->Children[i].LinkedNode;
+		nk_layout_row_begin(ctx, NK_DYNAMIC, 0, 4);
+		nk_layout_row_push(ctx, 0.20f);
+		nk_spacer(ctx);
+		nk_layout_row_push(ctx, 0.20f);
+		if (nk_button_image_label(ctx, g_ctx.image_dir, get_drive_letter(tab), NK_TEXT_CENTERED))
+			ShellExecuteA(NULL, "explore", get_node_attr(tab, "Volume GUID"), NULL, NULL, SW_NORMAL);
+		nk_layout_row_push(ctx, 0.40f);
+		nk_labelf_colored(ctx, NK_TEXT_LEFT,
+			nk_rgb(255, 255, 255),
+			"%s %s %s",
+			get_node_attr(tab, "Total Space"),
+			get_node_attr(tab, "Filesystem"),
+			get_node_attr(tab, "Label"));
+		nk_layout_row_push(ctx, 0.20f);
+		nk_prog(ctx, strtoul(get_node_attr(tab, "Usage"), NULL, 10), 100, 0);
+		nk_layout_row_end(ctx);
+	}
+}
+
 static VOID
 draw_storage(struct nk_context* ctx)
 {
@@ -354,46 +402,39 @@ draw_storage(struct nk_context* ctx)
 			cdrom ? "CDROM" : "DISK",
 			id);
 		MAIN_GUI_ROW_3_MID1;
-		nk_label(ctx, "Product Name", NK_TEXT_LEFT);
-		MAIN_GUI_ROW_3_MID2;
-		nk_labelf_colored(ctx, NK_TEXT_LEFT,
-			nk_rgb(255, 255, 255),
-			"%s (%s)",
-			get_node_attr(disk, "Product ID"),
-			get_node_attr(disk, "Product Rev"));
-		MAIN_GUI_ROW_3_END;
-		MAIN_GUI_ROW_3_BEGIN;
-		nk_spacer(ctx);
-		MAIN_GUI_ROW_3_MID1;
-		nk_label(ctx, "Info", NK_TEXT_LEFT);
-		MAIN_GUI_ROW_3_MID2;
-		nk_labelf_colored(ctx, NK_TEXT_LEFT,
-			nk_rgb(255, 255, 255),
-			"%s %s %s %s",
-			get_node_attr(disk, "Size"),
+		nk_labelf(ctx, NK_TEXT_LEFT,
+			"%s %s",
 			get_node_attr(disk, "Type"),
-			type,
-			get_node_attr(disk, "Partition Table"));
+			type);
+		MAIN_GUI_ROW_3_MID2;
+		nk_labelf_colored(ctx, NK_TEXT_LEFT,
+			nk_rgb(255, 255, 255),
+			"%s %s %s",
+			get_node_attr(disk, "Size"),
+			get_node_attr(disk, "Partition Table"),
+			get_node_attr(disk, "Product ID"));
 		MAIN_GUI_ROW_3_END;
 		LPCSTR health = get_node_attr(disk, "Health Status");
 		LPCSTR temp = get_node_attr(disk, "Temperature (C)");
 		struct nk_color color = nk_rgb(255, 255, 0); // Yellow
-		if (strcmp(health, "-") == 0)
-			continue;
-		if (strncmp(health, "Good", 4) == 0)
-			color = nk_rgb(0, 255, 0); // Green
-		else if (strncmp(health, "Bad", 3) == 0)
-			color = nk_rgb(255, 0, 0); // Red
-		MAIN_GUI_ROW_3_BEGIN;
-		nk_spacer(ctx);
-		MAIN_GUI_ROW_3_MID1;
-		nk_label(ctx, "S.M.A.R.T", NK_TEXT_LEFT);
-		MAIN_GUI_ROW_3_MID2;
-		nk_labelf_colored(ctx, NK_TEXT_LEFT,
-			color, "%s %s%s", health,
-			temp[0] != '-' ? temp : "",
-			temp[0] != '-' ? "(C)" : "");
-		MAIN_GUI_ROW_3_END;
+		if (strcmp(health, "-") != 0)
+		{
+			if (strncmp(health, "Good", 4) == 0)
+				color = nk_rgb(0, 255, 0); // Green
+			else if (strncmp(health, "Bad", 3) == 0)
+				color = nk_rgb(255, 0, 0); // Red
+			MAIN_GUI_ROW_3_BEGIN;
+			nk_spacer(ctx);
+			MAIN_GUI_ROW_3_MID1;
+			nk_label(ctx, "S.M.A.R.T", NK_TEXT_LEFT);
+			MAIN_GUI_ROW_3_MID2;
+			nk_labelf_colored(ctx, NK_TEXT_LEFT,
+				color, "%s %s%s", health,
+				temp[0] != '-' ? temp : "",
+				temp[0] != '-' ? "(C)" : "");
+			MAIN_GUI_ROW_3_END;
+		}
+		draw_volume(ctx, disk);
 	}
 }
 

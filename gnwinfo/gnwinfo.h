@@ -48,6 +48,7 @@ typedef struct _GNW_CONTEXT
 	struct nk_image image_close;
 	struct nk_image image_smart;
 	struct nk_image image_cpuid;
+	struct nk_image image_dir;
 
 	PNODE system;
 	PNODE cpuid;
