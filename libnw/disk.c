@@ -92,7 +92,8 @@ PrintVolumeInfo(PNODE pNode, LPCSTR lpszVolume, PHY_DRIVE_INFO* pParent)
 	CHAR cchPath[MAX_PATH];
 	LPCH lpszVolumePathNames = NULL;
 	DWORD dwSize = 0;
-	ULARGE_INTEGER Space;
+	ULARGE_INTEGER ulFreeSpace = { 0 };
+	ULARGE_INTEGER ulTotalSpace = { 0 };
 
 	snprintf(cchPath, MAX_PATH, "%s\\", lpszVolume);
 	NWL_NodeAttrSet(pNode, "Path", GetRealVolumePath(lpszVolume), 0);
@@ -103,12 +104,15 @@ PrintVolumeInfo(PNODE pNode, LPCSTR lpszVolume, PHY_DRIVE_INFO* pParent)
 		NWL_NodeAttrSet(pNode, "Label", cchLabel, 0);
 		NWL_NodeAttrSet(pNode, "Filesystem", cchFs, 0);
 	}
-	if (GetDiskFreeSpaceExA(cchPath, NULL, NULL, &Space))
+	if (GetDiskFreeSpaceExA(cchPath, NULL, NULL, &ulFreeSpace))
 		NWL_NodeAttrSet(pNode, "Free Space",
-			NWL_GetHumanSize(Space.QuadPart, d_human_sizes, 1024), NAFLG_FMT_HUMAN_SIZE);
-	if (GetDiskFreeSpaceExA(cchPath, NULL, &Space, NULL))
+			NWL_GetHumanSize(ulFreeSpace.QuadPart, d_human_sizes, 1024), NAFLG_FMT_HUMAN_SIZE);
+	if (GetDiskFreeSpaceExA(cchPath, NULL, &ulTotalSpace, NULL))
 		NWL_NodeAttrSet(pNode, "Total Space",
-			NWL_GetHumanSize(Space.QuadPart, d_human_sizes, 1024), NAFLG_FMT_HUMAN_SIZE);
+			NWL_GetHumanSize(ulTotalSpace.QuadPart, d_human_sizes, 1024), NAFLG_FMT_HUMAN_SIZE);
+	if (ulTotalSpace.QuadPart != 0)
+		NWL_NodeAttrSetf(pNode, "Usage", 0, "%.2f%%",
+			100.0 - (ulFreeSpace.QuadPart * 100.0) / ulTotalSpace.QuadPart);
 	GetVolumePathNamesForVolumeNameA(cchPath, NULL, 0, &dwSize);
 	if (GetLastError() == ERROR_MORE_DATA && dwSize)
 	{
