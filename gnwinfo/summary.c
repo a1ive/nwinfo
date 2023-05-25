@@ -134,25 +134,31 @@ is_motherboard(PNODE node)
 }
 
 static VOID
-draw_motherboard(struct nk_context* ctx)
+draw_computer(struct nk_context* ctx)
 {
-	MAIN_GUI_LABEL("Motherboard", g_ctx.image_board);
+	MAIN_GUI_LABEL("Computer", g_ctx.image_board);
 	MAIN_GUI_ROW_2_BEGIN;
-	nk_label(ctx, "    Product Name", NK_TEXT_LEFT);
+	nk_labelf(ctx, NK_TEXT_LEFT,
+		"    %s",
+		get_smbios_attr("1", "Manufacturer", NULL));
+	MAIN_GUI_ROW_2_MID1;
+	nk_labelf_colored(ctx, NK_TEXT_LEFT,
+		nk_rgb(255, 255, 255),
+		"%s %s %s",
+		get_smbios_attr("1", "Product Name", NULL),
+		get_smbios_attr("3", "Type", NULL),
+		get_smbios_attr("1", "Serial Number", NULL));
+	MAIN_GUI_ROW_2_END;
+	MAIN_GUI_ROW_2_BEGIN;
+	nk_labelf(ctx, NK_TEXT_LEFT,
+		"    %s",
+		get_smbios_attr("2", "Manufacturer", is_motherboard));
 	MAIN_GUI_ROW_2_MID1;
 	nk_labelf_colored(ctx, NK_TEXT_LEFT,
 		nk_rgb(255, 255, 255),
 		"%s %s",
-		get_smbios_attr("2", "Manufacturer", is_motherboard),
-		get_smbios_attr("2", "Product Name", is_motherboard));
-	MAIN_GUI_ROW_2_END;
-	MAIN_GUI_ROW_2_BEGIN;
-	nk_label(ctx, "    Serial Number", NK_TEXT_LEFT);
-	MAIN_GUI_ROW_2_MID1;
-	nk_label_colored(ctx,
-		get_smbios_attr("2", "Serial Number", is_motherboard),
-		NK_TEXT_LEFT,
-		nk_rgb(255, 255, 255));
+		get_smbios_attr("2", "Product Name", is_motherboard),
+		get_smbios_attr("2", "Serial Number", is_motherboard));
 	MAIN_GUI_ROW_2_END;
 }
 
@@ -222,6 +228,25 @@ draw_processor(struct nk_context* ctx)
 LPCSTR NWL_GetHumanSize(UINT64 size, LPCSTR human_sizes[6], UINT64 base);
 static const char* mem_human_sizes[6] =
 { "B", "K", "M", "G", "T", "P", };
+VOID NWL_GetSpdManufacturer(PNODE nd, CHAR* Ids, DWORD IdsSize, UINT Bank, UINT Item);
+CHAR* NWL_LoadIdsToMemory(LPCWSTR lpFileName, LPDWORD lpSize);
+
+static LPCSTR
+get_memory_vendor(PNODE node)
+{
+	UINT id;
+	DWORD size = 0;
+	LPCSTR vendor = get_node_attr(node, "Manufacturer");
+	CHAR* db = NWL_LoadIdsToMemory(L"jep106.ids", &size);
+	if (db == NULL ||
+		!isxdigit(vendor[0]) || !isxdigit(vendor[1]) || !isxdigit(vendor[2]) || !isxdigit(vendor[3]) ||
+		vendor[4] != '\0')
+		return vendor;
+	id = strtoul(vendor, NULL, 16);
+	NWL_GetSpdManufacturer(node, db, size, (id >> 8) & 0x7F, id & 0x7F);
+	free(db);
+	return get_node_attr(node, "Manufacturer");
+}
 
 static VOID
 draw_memory(struct nk_context* ctx)
@@ -264,7 +289,7 @@ draw_memory(struct nk_context* ctx)
 			ddr,
 			get_node_attr(tab, "Speed (MT/s)"),
 			get_node_attr(tab, "Device Size"),
-			get_node_attr(tab, "Manufacturer"),
+			get_memory_vendor(tab),
 			get_node_attr(tab, "Serial Number"));
 		MAIN_GUI_ROW_2_END;
 	}
@@ -498,7 +523,7 @@ gnwinfo_draw_main_window(struct nk_context* ctx, float width, float height)
 	if (g_ctx.main_flag & MAIN_INFO_BIOS)
 		draw_bios(ctx);
 	if (g_ctx.main_flag & MAIN_INFO_BOARD)
-		draw_motherboard(ctx);
+		draw_computer(ctx);
 	if (g_ctx.main_flag & MAIN_INFO_CPU)
 		draw_processor(ctx);
 	if (g_ctx.main_flag & MAIN_INFO_MEMORY)
