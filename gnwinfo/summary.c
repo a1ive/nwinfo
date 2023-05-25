@@ -228,25 +228,6 @@ draw_processor(struct nk_context* ctx)
 LPCSTR NWL_GetHumanSize(UINT64 size, LPCSTR human_sizes[6], UINT64 base);
 static const char* mem_human_sizes[6] =
 { "B", "K", "M", "G", "T", "P", };
-VOID NWL_GetSpdManufacturer(PNODE nd, CHAR* Ids, DWORD IdsSize, UINT Bank, UINT Item);
-CHAR* NWL_LoadIdsToMemory(LPCWSTR lpFileName, LPDWORD lpSize);
-
-static LPCSTR
-get_memory_vendor(PNODE node)
-{
-	UINT id;
-	DWORD size = 0;
-	LPCSTR vendor = get_node_attr(node, "Manufacturer");
-	CHAR* db = NWL_LoadIdsToMemory(L"jep106.ids", &size);
-	if (db == NULL ||
-		!isxdigit(vendor[0]) || !isxdigit(vendor[1]) || !isxdigit(vendor[2]) || !isxdigit(vendor[3]) ||
-		vendor[4] != '\0')
-		return vendor;
-	id = strtoul(vendor, NULL, 16);
-	NWL_GetSpdManufacturer(node, db, size, (id >> 8) & 0x7F, id & 0x7F);
-	free(db);
-	return get_node_attr(node, "Manufacturer");
-}
 
 static VOID
 draw_memory(struct nk_context* ctx)
@@ -289,7 +270,7 @@ draw_memory(struct nk_context* ctx)
 			ddr,
 			get_node_attr(tab, "Speed (MT/s)"),
 			get_node_attr(tab, "Device Size"),
-			get_memory_vendor(tab),
+			get_node_attr(tab, "Manufacturer"),
 			get_node_attr(tab, "Serial Number"));
 		MAIN_GUI_ROW_2_END;
 	}
