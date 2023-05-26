@@ -111,7 +111,7 @@ draw_bios(struct nk_context* ctx)
 	nk_labelf_colored(ctx, NK_TEXT_LEFT,
 		nk_rgb(255, 255, 255),
 		"%s%s%s%s",
-		gnwinfo_get_node_attr(g_ctx.uefi, "Firmware Type"),
+		gnwinfo_get_node_attr(g_ctx.system, "Firmware"),
 		strcmp(gnwinfo_get_node_attr(g_ctx.uefi, "Secure Boot"), "ENABLED") == 0 ? " Secure Boot" : "",
 		tpm[0] == 'v' ? " TPM" : "",
 		tpm[0] == 'v' ? tpm : "");
