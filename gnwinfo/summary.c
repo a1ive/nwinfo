@@ -3,15 +3,15 @@
 #include "gnwinfo.h"
 #include <shellapi.h>
 
-static LPCSTR
-get_node_attr(PNODE node, LPCSTR key)
+LPCSTR
+gnwinfo_get_node_attr(PNODE node, LPCSTR key)
 {
 	LPCSTR str;
 	if (!node)
-		return "-";
+		return "-\0";
 	str = NWL_NodeAttrGet(node, key);
 	if (!str)
-		return "-";
+		return "-\0";
 	return str;
 }
 
@@ -22,11 +22,11 @@ get_smbios_attr(LPCSTR type, LPCSTR key, BOOL(*cond)(PNODE node))
 	for (i = 0; g_ctx.smbios->Children[i].LinkedNode; i++)
 	{
 		PNODE tab = g_ctx.smbios->Children[i].LinkedNode;
-		LPCSTR attr = get_node_attr(tab, "Table Type");
+		LPCSTR attr = gnwinfo_get_node_attr(tab, "Table Type");
 		if (strcmp(attr, type) != 0)
 			continue;
 		if (!cond || cond(tab) == TRUE)
-			return get_node_attr(tab, key);
+			return gnwinfo_get_node_attr(tab, key);
 	}
 	return "-";
 }
@@ -75,9 +75,9 @@ draw_os(struct nk_context* ctx)
 	nk_labelf_colored(ctx, NK_TEXT_LEFT,
 		nk_rgb(255, 255, 255),
 		"%s %s (%s)",
-		get_node_attr(g_ctx.system, "OS"),
-		get_node_attr(g_ctx.system, "Processor Architecture"),
-		get_node_attr(g_ctx.system, "Build Number"));
+		gnwinfo_get_node_attr(g_ctx.system, "OS"),
+		gnwinfo_get_node_attr(g_ctx.system, "Processor Architecture"),
+		gnwinfo_get_node_attr(g_ctx.system, "Build Number"));
 	MAIN_GUI_ROW_2_END;
 	MAIN_GUI_ROW_2_BEGIN;
 	nk_spacer(ctx);
@@ -85,10 +85,10 @@ draw_os(struct nk_context* ctx)
 	nk_labelf_colored(ctx, NK_TEXT_LEFT,
 		nk_rgb(255, 255, 255),
 		"%s@%s%s%s",
-		get_node_attr(g_ctx.system, "Username"),
-		get_node_attr(g_ctx.system, "Computer Name"),
-		strcmp(get_node_attr(g_ctx.system, "Safe Mode"), "Yes") == 0 ? " SafeMode" : "",
-		strcmp(get_node_attr(g_ctx.system, "BitLocker Boot"), "Yes") == 0 ? " BitLocker" : "");
+		gnwinfo_get_node_attr(g_ctx.system, "Username"),
+		gnwinfo_get_node_attr(g_ctx.system, "Computer Name"),
+		strcmp(gnwinfo_get_node_attr(g_ctx.system, "Safe Mode"), "Yes") == 0 ? " SafeMode" : "",
+		strcmp(gnwinfo_get_node_attr(g_ctx.system, "BitLocker Boot"), "Yes") == 0 ? " BitLocker" : "");
 	MAIN_GUI_ROW_2_END;
 	MAIN_GUI_ROW_2_BEGIN;
 	nk_label(ctx, "    Uptime", NK_TEXT_LEFT);
@@ -103,7 +103,7 @@ draw_os(struct nk_context* ctx)
 static VOID
 draw_bios(struct nk_context* ctx)
 {
-	LPCSTR tpm = get_node_attr(g_ctx.system, "TPM");
+	LPCSTR tpm = gnwinfo_get_node_attr(g_ctx.system, "TPM");
 	MAIN_GUI_LABEL("BIOS", g_ctx.image_bios);
 	MAIN_GUI_ROW_2_BEGIN;
 	nk_label(ctx, "    Firmware", NK_TEXT_LEFT);
@@ -111,8 +111,8 @@ draw_bios(struct nk_context* ctx)
 	nk_labelf_colored(ctx, NK_TEXT_LEFT,
 		nk_rgb(255, 255, 255),
 		"%s%s%s%s",
-		get_node_attr(g_ctx.uefi, "Firmware Type"),
-		strcmp(get_node_attr(g_ctx.uefi, "Secure Boot"), "ENABLED") == 0 ? " Secure Boot" : "",
+		gnwinfo_get_node_attr(g_ctx.uefi, "Firmware Type"),
+		strcmp(gnwinfo_get_node_attr(g_ctx.uefi, "Secure Boot"), "ENABLED") == 0 ? " Secure Boot" : "",
 		tpm[0] == 'v' ? " TPM" : "",
 		tpm[0] == 'v' ? tpm : "");
 	MAIN_GUI_ROW_2_END;
@@ -130,7 +130,7 @@ draw_bios(struct nk_context* ctx)
 static BOOL
 is_motherboard(PNODE node)
 {
-	LPCSTR str = get_node_attr(node, "Board Type");
+	LPCSTR str = gnwinfo_get_node_attr(node, "Board Type");
 	return (strcmp(str, "Motherboard") == 0);
 }
 
@@ -167,7 +167,7 @@ static uint8_t cache_level = 0;
 static BOOL
 is_cache_level_equal(PNODE node)
 {
-	LPCSTR str = get_node_attr(node, "Cache Level");
+	LPCSTR str = gnwinfo_get_node_attr(node, "Cache Level");
 	CHAR buf[] = "L1";
 	buf[1] = '0' + cache_level;
 	return (strcmp(str, buf) == 0);
@@ -181,14 +181,14 @@ draw_processor(struct nk_context* ctx)
 	for (i = 0, j = 0; g_ctx.smbios->Children[i].LinkedNode; i++)
 	{
 		PNODE tab = g_ctx.smbios->Children[i].LinkedNode;
-		LPCSTR attr = get_node_attr(tab, "Table Type");
+		LPCSTR attr = gnwinfo_get_node_attr(tab, "Table Type");
 		if (strcmp(attr, "4") != 0)
 			continue;
 		MAIN_GUI_ROW_2_BEGIN;
 		nk_labelf(ctx, NK_TEXT_LEFT, "    CPU%d", j++);
 		MAIN_GUI_ROW_2_MID1;
 		nk_label_colored(ctx,
-			get_node_attr(tab, "Processor Version"),
+			gnwinfo_get_node_attr(tab, "Processor Version"),
 			NK_TEXT_LEFT,
 			nk_rgb(255, 255, 255));
 		MAIN_GUI_ROW_2_END;
@@ -197,9 +197,9 @@ draw_processor(struct nk_context* ctx)
 		MAIN_GUI_ROW_2_MID1;
 		nk_labelf_colored(ctx, NK_TEXT_LEFT, nk_rgb(255, 255, 255),
 			"%s %s cores %s threads",
-			get_node_attr(tab, "Socket Designation"),
-			get_node_attr(tab, "Core Count"),
-			get_node_attr(tab, "Thread Count"));
+			gnwinfo_get_node_attr(tab, "Socket Designation"),
+			gnwinfo_get_node_attr(tab, "Core Count"),
+			gnwinfo_get_node_attr(tab, "Thread Count"));
 		MAIN_GUI_ROW_2_END;
 	}
 
@@ -256,23 +256,23 @@ draw_memory(struct nk_context* ctx)
 	for (i = 0; g_ctx.smbios->Children[i].LinkedNode; i++)
 	{
 		PNODE tab = g_ctx.smbios->Children[i].LinkedNode;
-		LPCSTR attr = get_node_attr(tab, "Table Type");
+		LPCSTR attr = gnwinfo_get_node_attr(tab, "Table Type");
 		if (strcmp(attr, "17") != 0)
 			continue;
-		LPCSTR ddr = get_node_attr(tab, "Device Type");
+		LPCSTR ddr = gnwinfo_get_node_attr(tab, "Device Type");
 		if (ddr[0] == '-')
 			continue;
 		MAIN_GUI_ROW_2_BEGIN;
-		nk_labelf(ctx, NK_TEXT_LEFT, "    %s", get_node_attr(tab, "Bank Locator"));
+		nk_labelf(ctx, NK_TEXT_LEFT, "    %s", gnwinfo_get_node_attr(tab, "Bank Locator"));
 		MAIN_GUI_ROW_2_MID1;
 		nk_labelf_colored(ctx, NK_TEXT_LEFT,
 			nk_rgb(255, 255, 255),
 			"%s-%s %s %s %s",
 			ddr,
-			get_node_attr(tab, "Speed (MT/s)"),
-			get_node_attr(tab, "Device Size"),
-			get_node_attr(tab, "Manufacturer"),
-			get_node_attr(tab, "Serial Number"));
+			gnwinfo_get_node_attr(tab, "Speed (MT/s)"),
+			gnwinfo_get_node_attr(tab, "Device Size"),
+			gnwinfo_get_node_attr(tab, "Manufacturer"),
+			gnwinfo_get_node_attr(tab, "Serial Number"));
 		MAIN_GUI_ROW_2_END;
 	}
 }
@@ -285,17 +285,17 @@ draw_display(struct nk_context* ctx)
 	for (i = 0; g_ctx.pci->Children[i].LinkedNode; i++)
 	{
 		PNODE pci = g_ctx.pci->Children[i].LinkedNode;
-		LPCSTR attr = get_node_attr(pci, "Class Code");
+		LPCSTR attr = gnwinfo_get_node_attr(pci, "Class Code");
 		if (strncmp("03", attr, 2) != 0)
 			continue;
 		MAIN_GUI_ROW_2_BEGIN;
 		nk_labelf(ctx, NK_TEXT_LEFT, "    %s",
-			get_node_attr(pci, "Vendor"));
+			gnwinfo_get_node_attr(pci, "Vendor"));
 		MAIN_GUI_ROW_2_MID1;
 		nk_labelf_colored(ctx, NK_TEXT_LEFT,
 			nk_rgb(255, 255, 255),
 			"%s",
-			get_node_attr(pci, "Device"));
+			gnwinfo_get_node_attr(pci, "Device"));
 		MAIN_GUI_ROW_2_END;
 	}
 	for (i = 0; g_ctx.edid->Children[i].LinkedNode; i++)
@@ -308,16 +308,16 @@ draw_display(struct nk_context* ctx)
 		sz = NWL_NodeGetChild(mon, "Screen Size");
 		MAIN_GUI_ROW_2_BEGIN;
 		nk_labelf(ctx, NK_TEXT_LEFT, "    %s",
-			get_node_attr(mon, "Manufacturer"));
+			gnwinfo_get_node_attr(mon, "Manufacturer"));
 		MAIN_GUI_ROW_2_MID1;
 		nk_labelf_colored(ctx, NK_TEXT_LEFT,
 			nk_rgb(255, 255, 255),
 			"%s %sx%s@%sHz %s\"",
-			get_node_attr(mon, "ID"),
-			get_node_attr(res, "Width"),
-			get_node_attr(res, "Height"),
-			get_node_attr(res, "Refresh Rate (Hz)"),
-			get_node_attr(sz, "Diagonal (in)"));
+			gnwinfo_get_node_attr(mon, "ID"),
+			gnwinfo_get_node_attr(res, "Width"),
+			gnwinfo_get_node_attr(res, "Height"),
+			gnwinfo_get_node_attr(res, "Refresh Rate (Hz)"),
+			gnwinfo_get_node_attr(sz, "Diagonal (in)"));
 		MAIN_GUI_ROW_2_END;
 	}
 }
@@ -332,7 +332,7 @@ get_drive_letter(PNODE volume)
 	for (i = 0; vol_path_name->Children[i].LinkedNode; i++)
 	{
 		PNODE mnt = vol_path_name->Children[i].LinkedNode;
-		LPCSTR attr = get_node_attr(mnt, "Drive Letter");
+		LPCSTR attr = gnwinfo_get_node_attr(mnt, "Drive Letter");
 		if (attr[0] != '-')
 			return attr;
 	}
@@ -355,16 +355,16 @@ draw_volume(struct nk_context* ctx, PNODE disk)
 		nk_spacer(ctx);
 		nk_layout_row_push(ctx, 0.20f);
 		if (nk_button_image_label(ctx, g_ctx.image_dir, get_drive_letter(tab), NK_TEXT_CENTERED))
-			ShellExecuteA(NULL, "explore", get_node_attr(tab, "Volume GUID"), NULL, NULL, SW_NORMAL);
+			ShellExecuteA(NULL, "explore", gnwinfo_get_node_attr(tab, "Volume GUID"), NULL, NULL, SW_NORMAL);
 		nk_layout_row_push(ctx, 0.40f);
 		nk_labelf_colored(ctx, NK_TEXT_LEFT,
 			nk_rgb(255, 255, 255),
 			"%s %s %s",
-			get_node_attr(tab, "Total Space"),
-			get_node_attr(tab, "Filesystem"),
-			get_node_attr(tab, "Label"));
+			gnwinfo_get_node_attr(tab, "Total Space"),
+			gnwinfo_get_node_attr(tab, "Filesystem"),
+			gnwinfo_get_node_attr(tab, "Label"));
 		nk_layout_row_push(ctx, 0.20f);
-		nk_prog(ctx, strtoul(get_node_attr(tab, "Usage"), NULL, 10), 100, 0);
+		nk_prog(ctx, strtoul(gnwinfo_get_node_attr(tab, "Usage"), NULL, 10), 100, 0);
 		nk_layout_row_end(ctx);
 	}
 }
@@ -381,7 +381,7 @@ draw_storage(struct nk_context* ctx)
 		PNODE disk = g_ctx.disk->Children[i].LinkedNode;
 		if (!disk)
 			continue;
-		path = get_node_attr(disk, "Path");
+		path = gnwinfo_get_node_attr(disk, "Path");
 		if (strncmp(path, "\\\\.\\CdRom", 9) == 0)
 		{
 			cdrom = TRUE;
@@ -392,7 +392,7 @@ draw_storage(struct nk_context* ctx)
 		{
 			cdrom = FALSE;
 			id = &path[17];
-			type = strcmp(get_node_attr(disk, "SSD"), "Yes") == 0 ? "SSD" : "HDD";
+			type = strcmp(gnwinfo_get_node_attr(disk, "SSD"), "Yes") == 0 ? "SSD" : "HDD";
 		}
 		else
 			continue;
@@ -404,18 +404,18 @@ draw_storage(struct nk_context* ctx)
 		MAIN_GUI_ROW_3_MID1;
 		nk_labelf(ctx, NK_TEXT_LEFT,
 			"%s %s",
-			get_node_attr(disk, "Type"),
+			gnwinfo_get_node_attr(disk, "Type"),
 			type);
 		MAIN_GUI_ROW_3_MID2;
 		nk_labelf_colored(ctx, NK_TEXT_LEFT,
 			nk_rgb(255, 255, 255),
 			"%s %s %s",
-			get_node_attr(disk, "Size"),
-			get_node_attr(disk, "Partition Table"),
-			get_node_attr(disk, "Product ID"));
+			gnwinfo_get_node_attr(disk, "Size"),
+			gnwinfo_get_node_attr(disk, "Partition Table"),
+			gnwinfo_get_node_attr(disk, "Product ID"));
 		MAIN_GUI_ROW_3_END;
-		LPCSTR health = get_node_attr(disk, "Health Status");
-		LPCSTR temp = get_node_attr(disk, "Temperature (C)");
+		LPCSTR health = gnwinfo_get_node_attr(disk, "Health Status");
+		LPCSTR temp = gnwinfo_get_node_attr(disk, "Temperature (C)");
 		struct nk_color color = nk_rgb(255, 255, 0); // Yellow
 		if (strcmp(health, "-") != 0)
 		{
@@ -448,7 +448,7 @@ get_first_ipv4(PNODE node)
 	for (i = 0; unicasts->Children[i].LinkedNode; i++)
 	{
 		PNODE ip = unicasts->Children[i].LinkedNode;
-		LPCSTR addr = get_node_attr(ip, "IPv4");
+		LPCSTR addr = gnwinfo_get_node_attr(ip, "IPv4");
 		if (strcmp(addr, "-") != 0)
 			return addr;
 	}
@@ -471,15 +471,15 @@ draw_network(struct nk_context* ctx)
 			continue;
 		nk_layout_row_begin(ctx, NK_DYNAMIC, 0, 2);
 		nk_layout_row_push(ctx, 0.60f);
-		nk_labelf(ctx, NK_TEXT_LEFT, "    %s", get_node_attr(nw, "Description"));
+		nk_labelf(ctx, NK_TEXT_LEFT, "    %s", gnwinfo_get_node_attr(nw, "Description"));
 		nk_layout_row_push(ctx, 0.40f);
-		if (strcmp(get_node_attr(nw, "Status"), "Active") == 0)
+		if (strcmp(gnwinfo_get_node_attr(nw, "Status"), "Active") == 0)
 			color = nk_rgb(0, 255, 0); // Green
 		nk_labelf_colored(ctx,
 			NK_TEXT_LEFT, color,
 			"%s%s",
 			get_first_ipv4(nw),
-			strcmp(get_node_attr(nw, "DHCP Enabled"), "Yes") == 0 ? " DHCP" : "");
+			strcmp(gnwinfo_get_node_attr(nw, "DHCP Enabled"), "Yes") == 0 ? " DHCP" : "");
 		nk_layout_row_end(ctx);
 	}
 }
@@ -531,7 +531,7 @@ gnwinfo_draw_main_window(struct nk_context* ctx, float width, float height)
 	nk_spacer(ctx);
 	nk_layout_row_push(ctx, ratio);
 	if (nk_button_image(ctx, g_ctx.image_cpuid))
-		MessageBoxA(g_ctx.wnd, "CPUID", "Error", MB_ICONERROR);
+		g_ctx.gui_cpuid = TRUE;
 	nk_layout_row_push(ctx, ratio);
 	if (nk_button_image(ctx, g_ctx.image_smart))
 		MessageBoxA(g_ctx.wnd, "SMART", "Error", MB_ICONERROR);

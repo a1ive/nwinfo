@@ -36,6 +36,7 @@ typedef struct _GNW_CONTEXT
 	float gui_width;
 	float gui_height;
 	UINT32 main_flag;
+	BOOL gui_cpuid;
 
 	struct nk_image image_os;
 	struct nk_image image_bios;
@@ -64,3 +65,6 @@ extern GNW_CONTEXT g_ctx;
 void gnwinfo_ctx_init(HINSTANCE inst, HWND wnd, struct nk_context* ctx);
 void gnwinfo_ctx_exit();
 VOID gnwinfo_draw_main_window(struct nk_context* ctx, float width, float height);
+VOID gnwinfo_draw_cpuid_window(struct nk_context* ctx, float width, float height);
+
+LPCSTR gnwinfo_get_node_attr(PNODE node, LPCSTR key);
