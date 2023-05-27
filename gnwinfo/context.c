@@ -40,6 +40,7 @@ gnwinfo_ctx_init(HINSTANCE inst, HWND wnd, struct nk_context* ctx, float width, 
 	g_ctx.lib.NwFormat = FORMAT_JSON;
 	g_ctx.lib.HumanSize = TRUE;
 	g_ctx.lib.ErrLogCallback = gnwinfo_ctx_error_callback;
+	g_ctx.lib.CodePage = CP_UTF8;
 
 	g_ctx.lib.SysInfo = TRUE;
 	g_ctx.lib.DmiInfo = TRUE;

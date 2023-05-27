@@ -49,6 +49,7 @@ typedef struct _NWLIB_CONTEXT
 	struct RAW_SMBIOS_DATA* NwSmbios;
 
 	struct wr0_drv_t* NwDrv;
+	UINT CodePage;
 	struct _NODE* NwRoot;
 	enum
 	{

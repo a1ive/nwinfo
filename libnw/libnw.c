@@ -22,6 +22,8 @@ VOID NW_Init(PNWLIB_CONTEXT pContext)
 	NWLC->NwFile = stdout;
 	NWLC->AcpiTable = 0;
 	NWLC->SmbiosType = 127;
+	if (!NWLC->CodePage)
+		NWLC->CodePage = CP_ACP;
 	NWLC->NwRoot = NWL_NodeAlloc("NWinfo", 0);
 	NWLC->NwDrv = wr0_driver_open();
 	NWLC->NwRsdp = NWL_GetRsdp();

@@ -22,6 +22,41 @@
 
 static int indent_depth = 0;
 
+char* NWL_NodeMbsDup(LPCSTR old_str, SIZE_T* new_size)
+{
+	char* new_str = NULL;
+	wchar_t* wstr = NULL;
+	int wsize, size;
+	if (!old_str)
+		old_str = "";
+	if (NWLC->CodePage == CP_ACP)
+		goto fail;
+	wsize = MultiByteToWideChar(CP_ACP, 0, old_str, -1, NULL, 0);
+	if (wsize <= 0)
+		goto fail;
+	wstr = (wchar_t*)calloc(wsize, sizeof(wchar_t));
+	if (!wstr)
+		goto fail;
+	MultiByteToWideChar(CP_ACP, 0, old_str, -1, wstr, wsize);
+	size = WideCharToMultiByte(NWLC->CodePage, 0, wstr, -1, NULL, 0, NULL, NULL);
+	if (size <= 0)
+		goto fail;
+	new_str = (char*)calloc(size, sizeof(char));
+	if (!new_str)
+		goto fail;
+	WideCharToMultiByte(NWLC->CodePage, 0, wstr, -1, new_str, size, NULL, NULL);
+	free(wstr);
+	if (new_size)
+		*new_size = size;
+	return new_str;
+fail:
+	if (wstr)
+		free(wstr);
+	if (new_size)
+		*new_size = strlen(old_str) + 1;
+	return _strdup(old_str);
+}
+
 static void fprintcx(FILE* file, LPCSTR s, int count)
 {
 	int i;
@@ -57,7 +92,7 @@ PNODE NWL_NodeAlloc(LPCSTR name, INT flags)
 
 VOID NWL_NodeFree(PNODE node, INT deep)
 {
-	PNODE_ATT_LINK att;
+	PNODE_ATT_LINK att = NULL;
 	PNODE_LINK child;
 
 	// Free attributes
@@ -148,17 +183,17 @@ PNODE NWL_NodeGetChild(PNODE parent, LPCSTR name)
 static PNODE_ATT NWL_NodeAllocAttr(LPCSTR key, LPCSTR value, int flags)
 {
 	PNODE_ATT att = NULL;
-	LPCSTR nvalue = NULL;
+	char* nvalue = NULL;
 	SIZE_T size;
 	SIZE_T key_len, nvalue_len;
 
 	if (NULL == key)
 		return att;
 
-	nvalue = value ? value : "";
+	
 
 	key_len = strlen(key) + 1;
-	nvalue_len = strlen(nvalue) + 1;
+	nvalue = NWL_NodeMbsDup(value, &nvalue_len);
 	size = sizeof(NODE_ATT) + key_len + nvalue_len;
 
 	att = (PNODE_ATT)calloc(1, size);
@@ -166,10 +201,11 @@ static PNODE_ATT NWL_NodeAllocAttr(LPCSTR key, LPCSTR value, int flags)
 		NWL_ErrExit(ERROR_OUTOFMEMORY, "Failed to allocate memory in "__FUNCTION__);
 
 	att->Key = (LPSTR)(att + 1);
-	strcpy_s(att->Key, key_len, key);
+	memcpy(att->Key, key, key_len);
 
 	att->Value = att->Key + key_len;
-	strcpy_s(att->Value, nvalue_len, nvalue);
+	memcpy(att->Value, nvalue, nvalue_len);
+	free(nvalue);
 
 	att->Flags = flags;
 
