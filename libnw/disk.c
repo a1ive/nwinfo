@@ -503,11 +503,11 @@ PrintSmartInfo(PNODE node, CDI_SMART* ptr, INT index)
 	{
 		d = cdi_get_dword(ptr, index, CDI_DWORD_BUFFER_SIZE);
 		if (d >= 10 * 1024 * 1024) // 10 MB
-			NWL_NodeAttrSetf(node, "Buffer Size", 0, "%d MB", d / 1024 / 1024);
+			NWL_NodeAttrSetf(node, "Buffer Size", 0, "%lu MB", d / 1024 / 1024);
 		else if (d > 1024)
-			NWL_NodeAttrSetf(node, "Buffer Size", 0, "%d KB", d / 1024);
+			NWL_NodeAttrSetf(node, "Buffer Size", 0, "%lu KB", d / 1024);
 		else
-			NWL_NodeAttrSetf(node, "Buffer Size", 0, "%d B", d);
+			NWL_NodeAttrSetf(node, "Buffer Size", 0, "%lu B", d);
 
 		NWL_NodeAttrSetf(node, "Rotation Rate (RPM)",
 			NAFLG_FMT_NUMERIC, "%lu", cdi_get_dword(ptr, index, CDI_DWORD_ROTATION_RATE));
