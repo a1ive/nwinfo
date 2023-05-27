@@ -74,9 +74,7 @@ wWinMain(_In_ HINSTANCE hInstance,
 	nk_gdip_set_font(font);
 
 	(void)CoInitializeEx(0, COINIT_APARTMENTTHREADED);
-	gnwinfo_ctx_init(hInstance, wnd, ctx);
-	g_ctx.gui_height = WINDOW_HEIGHT;
-	g_ctx.gui_width = WINDOW_WIDTH;
+	gnwinfo_ctx_init(hInstance, wnd, ctx, WINDOW_WIDTH, WINDOW_HEIGHT);
 	ctx->style.button.rounding = 0;
 	ctx->style.window.min_row_height_padding = 2;
 

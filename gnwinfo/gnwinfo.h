@@ -62,7 +62,7 @@ typedef struct _GNW_CONTEXT
 } GNW_CONTEXT;
 extern GNW_CONTEXT g_ctx;
 
-void gnwinfo_ctx_init(HINSTANCE inst, HWND wnd, struct nk_context* ctx);
+void gnwinfo_ctx_init(HINSTANCE inst, HWND wnd, struct nk_context* ctx, float width, float height);
 void gnwinfo_ctx_exit();
 VOID gnwinfo_draw_main_window(struct nk_context* ctx, float width, float height);
 VOID gnwinfo_draw_cpuid_window(struct nk_context* ctx, float width, float height);

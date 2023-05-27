@@ -16,12 +16,23 @@ gnwinfo_ctx_error_callback(LPCSTR lpszText)
    img = nk_gdip_load_image_from_memory(x, sizeof(x))
 
 void
-gnwinfo_ctx_init(HINSTANCE inst, HWND wnd, struct nk_context* ctx)
+gnwinfo_ctx_init(HINSTANCE inst, HWND wnd, struct nk_context* ctx, float width, float height)
 {
 	ZeroMemory(&g_ctx, sizeof(GNW_CONTEXT));
 	g_ctx.mutex = CreateMutexW(NULL, TRUE, L"NWinfo{e25f6e37-d51b-4950-8949-510dfc86d913}");
 	if (GetLastError() == ERROR_ALREADY_EXISTS || !g_ctx.mutex)
 		exit(1);
+
+	nk_begin(ctx, "Loading", nk_rect(0, height / 3, width, height / 4), NK_WINDOW_TITLE | NK_WINDOW_BORDER | NK_WINDOW_NO_INPUT);
+	nk_layout_row_dynamic(ctx, 0, 1);
+	nk_spacer(ctx);
+	nk_label (ctx, "Please wait ...", NK_TEXT_CENTERED);
+	nk_spacer(ctx);
+	nk_end(ctx);
+	nk_gdip_render(NK_ANTI_ALIASING_ON, nk_rgb(30, 30, 30));
+
+	g_ctx.gui_height = height;
+	g_ctx.gui_width = width;
 	g_ctx.inst = inst;
 	g_ctx.wnd = wnd;
 	g_ctx.nk = ctx;
