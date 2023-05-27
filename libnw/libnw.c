@@ -4,6 +4,7 @@
 #include "utils.h"
 
 #include <libcpuid.h>
+#include "../libcdi/libcdi.h"
 
 PNWLIB_CONTEXT NWLC = NULL;
 
@@ -30,6 +31,8 @@ VOID NW_Init(PNWLIB_CONTEXT pContext)
 	NWLC->NwRsdt = NWL_GetRsdt();
 	NWLC->NwXsdt = NWL_GetXsdt();
 	NWLC->NwSmbios = NWL_GetSmbios();
+	NWLC->NwSmart = cdi_create_smart();
+	NWLC->NwSmbiosInit = FALSE;
 	NWLC->ErrLog = NULL;
 	if (NWL_IsAdmin() != TRUE)
 		NWL_NodeAppendMultiSz(&NWLC->ErrLog, "Administrator required");
@@ -92,6 +95,8 @@ VOID NW_Fini(VOID)
 		free(NWLC->NwXsdt);
 	if (NWLC->NwSmbios)
 		free(NWLC->NwSmbios);
+	if (NWLC->NwSmart)
+		cdi_destroy_smart(NWLC->NwSmart);
 	if (NWLC->NwDrv)
 		wr0_driver_close(NWLC->NwDrv);
 	if (NWLC->NwRoot)

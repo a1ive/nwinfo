@@ -110,9 +110,10 @@ wWinMain(_In_ HINSTANCE hInstance,
 		gnwinfo_draw_main_window(ctx, g_ctx.gui_width, g_ctx.gui_height);
 		gnwinfo_draw_cpuid_window(ctx, g_ctx.gui_width, g_ctx.gui_height);
 		gnwinfo_draw_about_window(ctx, g_ctx.gui_width, g_ctx.gui_height);
+		gnwinfo_draw_smart_window(ctx, g_ctx.gui_width, g_ctx.gui_height);
 
 		/* Draw */
-		nk_gdip_render(NK_ANTI_ALIASING_ON, nk_rgb(30, 30, 30));
+		nk_gdip_render(NK_ANTI_ALIASING_ON, NK_COLOR_GRAY);
 	}
 
 	CoUninitialize();

@@ -17,6 +17,7 @@ struct wr0_drv_t;
 struct acpi_rsdp_v2;
 struct acpi_rsdt;
 struct acpi_xsdt;
+struct _CDI_SMART;
 
 typedef struct _NWLIB_CONTEXT
 {
@@ -47,6 +48,9 @@ typedef struct _NWLIB_CONTEXT
 	struct acpi_xsdt* NwXsdt;
 
 	struct RAW_SMBIOS_DATA* NwSmbios;
+	BOOL NwSmbiosInit;
+
+	struct _CDI_SMART* NwSmart;
 
 	struct wr0_drv_t* NwDrv;
 	UINT CodePage;

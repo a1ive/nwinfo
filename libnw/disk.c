@@ -595,7 +595,7 @@ PrintDiskInfo(BOOL cdrom, PNODE node, CDI_SMART* smart)
 			NWL_NodeAttrSet(nd, "Partition Table", "GPT", 0);
 			NWL_NodeAttrSetf(nd, "GPT GUID", NAFLG_FMT_GUID, "{%s}", NWL_GuidToStr(PhyDriveList[i].GptGuid));
 		}
-		if (!cdrom)
+		if (!cdrom && smart)
 			PrintSmartInfo(nd, smart, GetSmartIndex(smart, i));
 		if (PhyDriveList[i].VolumeCount)
 		{
@@ -617,15 +617,14 @@ out:
 PNODE NW_Disk(VOID)
 {
 	PNODE node = NWL_NodeAlloc("Disks", NFLG_TABLE);
-	CDI_SMART* smart;
 	if (NWLC->DiskInfo)
 		NWL_NodeAppendChild(NWLC->NwRoot, node);
-	smart = cdi_create_smart();
-	if (smart)
-		cdi_init_smart(smart, TRUE, TRUE, FALSE, FALSE, FALSE, FALSE);
-	PrintDiskInfo(FALSE, node, smart);
-	PrintDiskInfo(TRUE, node, smart);
-	if (smart)
-		cdi_destroy_smart(smart);
+	if (NWLC->NwSmart && NWLC->NwSmbiosInit == FALSE)
+	{
+		cdi_init_smart(NWLC->NwSmart, TRUE, TRUE, FALSE, FALSE, FALSE, FALSE);
+		NWLC->NwSmbiosInit = TRUE;
+	}
+	PrintDiskInfo(FALSE, node, NWLC->NwSmart);
+	PrintDiskInfo(TRUE, node, NWLC->NwSmart);
 	return node;
 }

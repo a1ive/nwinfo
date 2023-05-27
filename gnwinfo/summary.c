@@ -73,7 +73,7 @@ draw_os(struct nk_context* ctx)
 	nk_label(ctx, "    Name", NK_TEXT_LEFT);
 	MAIN_GUI_ROW_2_MID1;
 	nk_labelf_colored(ctx, NK_TEXT_LEFT,
-		nk_rgb(255, 255, 255),
+		NK_COLOR_WHITE,
 		"%s %s (%s)",
 		gnwinfo_get_node_attr(g_ctx.system, "OS"),
 		gnwinfo_get_node_attr(g_ctx.system, "Processor Architecture"),
@@ -83,7 +83,7 @@ draw_os(struct nk_context* ctx)
 	nk_spacer(ctx);
 	MAIN_GUI_ROW_2_MID1;
 	nk_labelf_colored(ctx, NK_TEXT_LEFT,
-		nk_rgb(255, 255, 255),
+		NK_COLOR_WHITE,
 		"%s@%s%s%s",
 		gnwinfo_get_node_attr(g_ctx.system, "Username"),
 		gnwinfo_get_node_attr(g_ctx.system, "Computer Name"),
@@ -96,7 +96,7 @@ draw_os(struct nk_context* ctx)
 	nk_label_colored(ctx,
 		NWL_GetUptime(),
 		NK_TEXT_LEFT,
-		nk_rgb(255, 255, 255));
+		NK_COLOR_WHITE);
 	MAIN_GUI_ROW_2_END;
 }
 
@@ -109,7 +109,7 @@ draw_bios(struct nk_context* ctx)
 	nk_label(ctx, "    Firmware", NK_TEXT_LEFT);
 	MAIN_GUI_ROW_2_MID1;
 	nk_labelf_colored(ctx, NK_TEXT_LEFT,
-		nk_rgb(255, 255, 255),
+		NK_COLOR_WHITE,
 		"%s%s%s%s",
 		gnwinfo_get_node_attr(g_ctx.system, "Firmware"),
 		strcmp(gnwinfo_get_node_attr(g_ctx.uefi, "Secure Boot"), "ENABLED") == 0 ? " Secure Boot" : "",
@@ -120,7 +120,7 @@ draw_bios(struct nk_context* ctx)
 	nk_label(ctx, "    Version", NK_TEXT_LEFT);
 	MAIN_GUI_ROW_2_MID1;
 	nk_labelf_colored(ctx, NK_TEXT_LEFT,
-		nk_rgb(255, 255, 255),
+		NK_COLOR_WHITE,
 		"%s %s",
 		get_smbios_attr("0", "Vendor", NULL),
 		get_smbios_attr("0", "Version", NULL));
@@ -144,7 +144,7 @@ draw_computer(struct nk_context* ctx)
 		get_smbios_attr("1", "Manufacturer", NULL));
 	MAIN_GUI_ROW_2_MID1;
 	nk_labelf_colored(ctx, NK_TEXT_LEFT,
-		nk_rgb(255, 255, 255),
+		NK_COLOR_WHITE,
 		"%s %s %s",
 		get_smbios_attr("1", "Product Name", NULL),
 		get_smbios_attr("3", "Type", NULL),
@@ -156,7 +156,7 @@ draw_computer(struct nk_context* ctx)
 		get_smbios_attr("2", "Manufacturer", is_motherboard));
 	MAIN_GUI_ROW_2_MID1;
 	nk_labelf_colored(ctx, NK_TEXT_LEFT,
-		nk_rgb(255, 255, 255),
+		NK_COLOR_WHITE,
 		"%s %s",
 		get_smbios_attr("2", "Product Name", is_motherboard),
 		get_smbios_attr("2", "Serial Number", is_motherboard));
@@ -190,12 +190,12 @@ draw_processor(struct nk_context* ctx)
 		nk_label_colored(ctx,
 			gnwinfo_get_node_attr(tab, "Processor Version"),
 			NK_TEXT_LEFT,
-			nk_rgb(255, 255, 255));
+			NK_COLOR_WHITE);
 		MAIN_GUI_ROW_2_END;
 		MAIN_GUI_ROW_2_BEGIN;
 		nk_spacer(ctx);
 		MAIN_GUI_ROW_2_MID1;
-		nk_labelf_colored(ctx, NK_TEXT_LEFT, nk_rgb(255, 255, 255),
+		nk_labelf_colored(ctx, NK_TEXT_LEFT, NK_COLOR_WHITE,
 			"%s %s cores %s threads",
 			gnwinfo_get_node_attr(tab, "Socket Designation"),
 			gnwinfo_get_node_attr(tab, "Core Count"),
@@ -210,18 +210,18 @@ draw_processor(struct nk_context* ctx)
 	nk_label(ctx, "    Cache Size", NK_TEXT_LEFT);
 	MAIN_GUI_ROW_2_MID1;
 	if (cache_size[0][0] == '-')
-		nk_label_colored(ctx, cache_size[0], NK_TEXT_LEFT, nk_rgb(255, 255, 255));
+		nk_label_colored(ctx, cache_size[0], NK_TEXT_LEFT, NK_COLOR_WHITE);
 	else if (cache_size[1][0] == '-')
-		nk_labelf_colored(ctx, NK_TEXT_LEFT, nk_rgb(255, 255, 255),
+		nk_labelf_colored(ctx, NK_TEXT_LEFT, NK_COLOR_WHITE,
 			"L1 %s", cache_size[0]);
 	else if (cache_size[2][0] == '-')
-		nk_labelf_colored(ctx, NK_TEXT_LEFT, nk_rgb(255, 255, 255),
+		nk_labelf_colored(ctx, NK_TEXT_LEFT, NK_COLOR_WHITE,
 			"L1 %s L2 %s", cache_size[0], cache_size[1]);
 	else if (cache_size[3][0] == '-')
-		nk_labelf_colored(ctx, NK_TEXT_LEFT, nk_rgb(255, 255, 255),
+		nk_labelf_colored(ctx, NK_TEXT_LEFT, NK_COLOR_WHITE,
 			"L1 %s L2 %s L3 %s", cache_size[0], cache_size[1], cache_size[2]);
 	else
-		nk_labelf_colored(ctx, NK_TEXT_LEFT, nk_rgb(255, 255, 255),
+		nk_labelf_colored(ctx, NK_TEXT_LEFT, NK_COLOR_WHITE,
 			"L1 %s L2 %s L3 %s L4 %s", cache_size[0], cache_size[1], cache_size[2], cache_size[3]);
 	MAIN_GUI_ROW_2_END;
 }
@@ -234,16 +234,16 @@ static VOID
 draw_memory(struct nk_context* ctx)
 {
 	INT i;
-	struct nk_color color = nk_rgb(0, 255, 0); // Green
+	struct nk_color color = NK_COLOR_GREEN;
 	MEMORYSTATUSEX statex = { 0 };
 	char buf[48];
 	statex.dwLength = sizeof(statex);
 	GlobalMemoryStatusEx(&statex);
 	strcpy_s(buf, sizeof(buf), NWL_GetHumanSize(statex.ullAvailPhys, mem_human_sizes, 1024));
 	if (statex.dwMemoryLoad > 60)
-		color = nk_rgb(255, 255, 0); // Yellow
+		color = NK_COLOR_YELLOW;
 	if (statex.dwMemoryLoad > 80)
-		color = nk_rgb(255, 0, 0); // Red
+		color = NK_COLOR_RED;
 	MAIN_GUI_LABEL("Memory", g_ctx.image_ram);
 	MAIN_GUI_ROW_2_BEGIN;
 	nk_label(ctx, "    Usage", NK_TEXT_LEFT);
@@ -266,7 +266,7 @@ draw_memory(struct nk_context* ctx)
 		nk_labelf(ctx, NK_TEXT_LEFT, "    %s", gnwinfo_get_node_attr(tab, "Bank Locator"));
 		MAIN_GUI_ROW_2_MID1;
 		nk_labelf_colored(ctx, NK_TEXT_LEFT,
-			nk_rgb(255, 255, 255),
+			NK_COLOR_WHITE,
 			"%s-%s %s %s %s",
 			ddr,
 			gnwinfo_get_node_attr(tab, "Speed (MT/s)"),
@@ -293,7 +293,7 @@ draw_display(struct nk_context* ctx)
 			gnwinfo_get_node_attr(pci, "Vendor"));
 		MAIN_GUI_ROW_2_MID1;
 		nk_labelf_colored(ctx, NK_TEXT_LEFT,
-			nk_rgb(255, 255, 255),
+			NK_COLOR_WHITE,
 			"%s",
 			gnwinfo_get_node_attr(pci, "Device"));
 		MAIN_GUI_ROW_2_END;
@@ -311,7 +311,7 @@ draw_display(struct nk_context* ctx)
 			gnwinfo_get_node_attr(mon, "Manufacturer"));
 		MAIN_GUI_ROW_2_MID1;
 		nk_labelf_colored(ctx, NK_TEXT_LEFT,
-			nk_rgb(255, 255, 255),
+			NK_COLOR_WHITE,
 			"%s %sx%s@%sHz %s\"",
 			gnwinfo_get_node_attr(mon, "ID"),
 			gnwinfo_get_node_attr(res, "Width"),
@@ -358,7 +358,7 @@ draw_volume(struct nk_context* ctx, PNODE disk)
 			ShellExecuteA(NULL, "explore", gnwinfo_get_node_attr(tab, "Volume GUID"), NULL, NULL, SW_NORMAL);
 		nk_layout_row_push(ctx, 0.40f);
 		nk_labelf_colored(ctx, NK_TEXT_LEFT,
-			nk_rgb(255, 255, 255),
+			NK_COLOR_WHITE,
 			"%s %s %s",
 			gnwinfo_get_node_attr(tab, "Total Space"),
 			gnwinfo_get_node_attr(tab, "Filesystem"),
@@ -408,7 +408,7 @@ draw_storage(struct nk_context* ctx)
 			type);
 		MAIN_GUI_ROW_3_MID2;
 		nk_labelf_colored(ctx, NK_TEXT_LEFT,
-			nk_rgb(255, 255, 255),
+			NK_COLOR_WHITE,
 			"%s %s %s",
 			gnwinfo_get_node_attr(disk, "Size"),
 			gnwinfo_get_node_attr(disk, "Partition Table"),
@@ -416,13 +416,13 @@ draw_storage(struct nk_context* ctx)
 		MAIN_GUI_ROW_3_END;
 		LPCSTR health = gnwinfo_get_node_attr(disk, "Health Status");
 		LPCSTR temp = gnwinfo_get_node_attr(disk, "Temperature (C)");
-		struct nk_color color = nk_rgb(255, 255, 0); // Yellow
+		struct nk_color color = NK_COLOR_YELLOW;
 		if (strcmp(health, "-") != 0)
 		{
 			if (strncmp(health, "Good", 4) == 0)
-				color = nk_rgb(0, 255, 0); // Green
+				color = NK_COLOR_GREEN;
 			else if (strncmp(health, "Bad", 3) == 0)
-				color = nk_rgb(255, 0, 0); // Red
+				color = NK_COLOR_RED;
 			MAIN_GUI_ROW_3_BEGIN;
 			nk_spacer(ctx);
 			MAIN_GUI_ROW_3_MID1;
@@ -431,7 +431,7 @@ draw_storage(struct nk_context* ctx)
 			nk_labelf_colored(ctx, NK_TEXT_LEFT,
 				color, "%s %s%s", health,
 				temp[0] != '-' ? temp : "",
-				temp[0] != '-' ? "(C)" : "");
+				temp[0] != '-' ? u8"¡ãC" : "");
 			MAIN_GUI_ROW_3_END;
 		}
 		draw_volume(ctx, disk);
@@ -466,7 +466,7 @@ draw_network(struct nk_context* ctx)
 	for (i = 0; g_ctx.network->Children[i].LinkedNode; i++)
 	{
 		PNODE nw = g_ctx.network->Children[i].LinkedNode;
-		struct nk_color color = nk_rgb(255, 0, 0); // Red
+		struct nk_color color = NK_COLOR_RED;
 		if (!nw)
 			continue;
 		nk_layout_row_begin(ctx, NK_DYNAMIC, 0, 2);
@@ -474,7 +474,7 @@ draw_network(struct nk_context* ctx)
 		nk_labelf(ctx, NK_TEXT_LEFT, "    %s", gnwinfo_get_node_attr(nw, "Description"));
 		nk_layout_row_push(ctx, 0.40f);
 		if (strcmp(gnwinfo_get_node_attr(nw, "Status"), "Active") == 0)
-			color = nk_rgb(0, 255, 0); // Green
+			color = NK_COLOR_GREEN;
 		nk_labelf_colored(ctx,
 			NK_TEXT_LEFT, color,
 			"%s%s",
@@ -534,7 +534,7 @@ gnwinfo_draw_main_window(struct nk_context* ctx, float width, float height)
 		g_ctx.gui_cpuid = TRUE;
 	nk_layout_row_push(ctx, ratio);
 	if (nk_button_image(ctx, g_ctx.image_smart))
-		MessageBoxA(g_ctx.wnd, "SMART", "Error", MB_ICONERROR);
+		g_ctx.gui_smart = TRUE;
 	nk_layout_row_push(ctx, ratio);
 	if (nk_button_image(ctx, g_ctx.image_info))
 		g_ctx.gui_about = TRUE;

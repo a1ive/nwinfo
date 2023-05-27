@@ -65,10 +65,20 @@ typedef struct _GNW_CONTEXT
 } GNW_CONTEXT;
 extern GNW_CONTEXT g_ctx;
 
+#define NK_COLOR_YELLOW     nk_rgb(0xFF, 0xEA, 0x00)
+#define NK_COLOR_RED        nk_rgb(0xFF, 0x17, 0x44)
+#define NK_COLOR_GREEN      nk_rgb(0x00, 0xE6, 0x76)
+#define NK_COLOR_CYAN       nk_rgb(0x03, 0xDA, 0xC6)
+#define NK_COLOR_BLUE       nk_rgb(0x29, 0x79, 0xFF)
+#define NK_COLOR_WHITE      nk_rgb(0xFF, 0xFF, 0xFF)
+#define NK_COLOR_BLACK      nk_rgb(0x00, 0x00, 0x00)
+#define NK_COLOR_GRAY       nk_rgb(0x1E, 0x1E, 0x1E)
+
 void gnwinfo_ctx_init(HINSTANCE inst, HWND wnd, struct nk_context* ctx, float width, float height);
 void gnwinfo_ctx_exit();
 VOID gnwinfo_draw_main_window(struct nk_context* ctx, float width, float height);
 VOID gnwinfo_draw_cpuid_window(struct nk_context* ctx, float width, float height);
 VOID gnwinfo_draw_about_window(struct nk_context* ctx, float width, float height);
+VOID gnwinfo_draw_smart_window(struct nk_context* ctx, float width, float height);
 
 LPCSTR gnwinfo_get_node_attr(PNODE node, LPCSTR key);

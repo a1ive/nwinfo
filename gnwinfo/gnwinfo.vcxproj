@@ -126,6 +126,7 @@
     <ClCompile Include="context.c" />
     <ClCompile Include="cpuid.c" />
     <ClCompile Include="gnwinfo.c" />
+    <ClCompile Include="smart.c" />
     <ClCompile Include="summary.c" />
   </ItemGroup>
   <ItemGroup>
