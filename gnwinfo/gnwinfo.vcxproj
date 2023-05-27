@@ -122,6 +122,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\nuklear\nuklear.c" />
+    <ClCompile Include="about.c" />
     <ClCompile Include="context.c" />
     <ClCompile Include="cpuid.c" />
     <ClCompile Include="gnwinfo.c" />

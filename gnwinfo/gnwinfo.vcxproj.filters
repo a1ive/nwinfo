@@ -50,6 +50,9 @@
     <ClCompile Include="cpuid.c">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="about.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="gnwinfo.rc">

@@ -527,7 +527,7 @@ gnwinfo_draw_main_window(struct nk_context* ctx, float width, float height)
 	nk_layout_row_push(ctx, ratio);
 	if (nk_button_image(ctx, g_ctx.image_net))
 		g_ctx.main_flag ^= MAIN_INFO_NETWORK;
-	nk_layout_row_push(ctx, 1.0f > 11.0f * ratio ? (1.0f - 11.0f * ratio) : 0);
+	nk_layout_row_push(ctx, 1.0f > 12.0f * ratio ? (1.0f - 12.0f * ratio) : 0);
 	nk_spacer(ctx);
 	nk_layout_row_push(ctx, ratio);
 	if (nk_button_image(ctx, g_ctx.image_cpuid))
@@ -535,6 +535,9 @@ gnwinfo_draw_main_window(struct nk_context* ctx, float width, float height)
 	nk_layout_row_push(ctx, ratio);
 	if (nk_button_image(ctx, g_ctx.image_smart))
 		MessageBoxA(g_ctx.wnd, "SMART", "Error", MB_ICONERROR);
+	nk_layout_row_push(ctx, ratio);
+	if (nk_button_image(ctx, g_ctx.image_info))
+		g_ctx.gui_about = TRUE;
 	nk_layout_row_push(ctx, ratio);
 	if (nk_button_image(ctx, g_ctx.image_close))
 		gnwinfo_ctx_exit();
