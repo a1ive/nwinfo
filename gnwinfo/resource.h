@@ -2,6 +2,8 @@
 //
 #define IDI_ICON1                       101
 
+#define IDR_FONT1                       201
+
 #define IDT_TIMER_1S                    2001
 #define IDT_TIMER_1M                    2002
 

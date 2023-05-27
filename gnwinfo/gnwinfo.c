@@ -5,6 +5,9 @@
 #define WINDOW_WIDTH 600
 #define WINDOW_HEIGHT 800
 
+GdipFont*
+nk_gdip_load_font(LPCWSTR name, int size, WORD fallback);
+
 static LRESULT CALLBACK
 WindowProc(HWND wnd, UINT msg, WPARAM wparam, LPARAM lparam)
 {
@@ -67,7 +70,7 @@ wWinMain(_In_ HINSTANCE hInstance,
 
 	/* GUI */
 	ctx = nk_gdip_init(wnd, WINDOW_WIDTH, WINDOW_HEIGHT);
-	font = nk_gdipfont_create("Courier New", GNWINFO_FONT_SIZE);
+	font = nk_gdip_load_font(L"Courier New", GNWINFO_FONT_SIZE, IDR_FONT1);
 	nk_gdip_set_font(font);
 
 	(void)CoInitializeEx(0, COINIT_APARTMENTTHREADED);

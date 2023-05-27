@@ -138,6 +138,9 @@
   <ItemGroup>
     <Image Include="..\icon.ico" />
   </ItemGroup>
+  <ItemGroup>
+    <Font Include="dos.ttf" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
     <Import Project="..\packages\YY-Thunks.1.0.7\build\native\YY-Thunks.targets" Condition="Exists('..\packages\YY-Thunks.1.0.7\build\native\YY-Thunks.targets')" />

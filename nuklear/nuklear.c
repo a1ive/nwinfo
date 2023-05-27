@@ -19,3 +19,34 @@
 
 #define NK_GDIP_IMPLEMENTATION
 #include <nuklear_gdip.h>
+
+GdipFont*
+nk_gdip_load_font(LPCWSTR name, int size, WORD fallback)
+{
+	GdipFont* font = (GdipFont*)calloc(1, sizeof(GdipFont));
+	GpFontFamily* family;
+
+	if (!font)
+		goto fail;
+
+	if (GdipCreateFontFamilyFromName(name, NULL, &family))
+	{
+		free(font);
+		HRSRC resinfo = FindResourceW(NULL, MAKEINTRESOURCEW(fallback), RT_FONT);
+		if (!resinfo)
+			goto fail;
+		HGLOBAL res = LoadResource(NULL, resinfo);
+		if (!res)
+			goto fail;
+		return nk_gdipfont_create_from_memory(LockResource(res), SizeofResource(NULL, resinfo), size);
+	}
+	else
+	{
+		GdipCreateFont(family, (REAL)size, FontStyleRegular, UnitPixel, &font->handle);
+		GdipDeleteFontFamily(family);
+	}
+
+	return font;
+fail:
+	exit(1);
+}
