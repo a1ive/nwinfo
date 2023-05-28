@@ -51,6 +51,21 @@ extern "C" void cdi_init_smart(CDI_SMART * ptr,
 	BOOL flagChangeDisk = TRUE;
 	ptr->Init(useWmi, advancedDiskSearch, &flagChangeDisk, workaroundHD204UI,
 		workaroundAdataSsd, flagHideNoSmartDisk, flagSortDriveLetter);
+	for (int i = 0; i < ptr->vars.GetCount(); i++)
+	{
+		if (ptr->vars[i].IsSsd)
+			ptr->vars[i].AlarmTemperature = 60;
+		else
+			ptr->vars[i].AlarmTemperature = 50;
+		ptr->vars[i].AlarmHealthStatus = 1;
+
+		ptr->vars[i].Threshold05 = 1;
+		ptr->vars[i].ThresholdC5 = 1;
+		ptr->vars[i].ThresholdC6 = 1;
+		ptr->vars[i].ThresholdFF = 10;
+
+		ptr->vars[i].DiskStatus = ptr->CheckDiskStatus(i);
+	}
 }
 
 extern "C" DWORD cdi_update_smart(CDI_SMART * ptr, int index)
@@ -192,14 +207,14 @@ extern "C" DWORD cdi_get_dword(CDI_SMART * ptr, int index, enum CDI_ATA_DWORD at
 	return 0;
 }
 
-inline LPCTCH get_health_status(DWORD health)
+inline LPCTCH get_health_status(CDI_SMART* ptr, int index)
 {
-	switch (health)
+	switch (ptr->vars[index].DiskStatus)
 	{
 	case CAtaSmart::DISK_STATUS_GOOD:
 		return _T("Good");
 	case CAtaSmart::DISK_STATUS_CAUTION:
-		return _T("Warning");
+		return _T("Caution");
 	case CAtaSmart::DISK_STATUS_BAD:
 		return _T("Bad");
 	}
@@ -231,7 +246,7 @@ extern "C" char* cdi_get_string(CDI_SMART * ptr, int index, enum CDI_ATA_STRING 
 	case CDI_STRING_PNP_ID:
 		return csToString(ptr->vars[index].PnpDeviceId);
 	case CDI_STRING_DISK_STATUS:
-		return csToString(get_health_status(ptr->vars[index].DiskStatus));
+		return csToString(get_health_status(ptr, index));
 	}
 	return NULL;
 }
@@ -272,11 +287,22 @@ extern "C" char* cdi_get_smart_attribute_format(CDI_SMART * ptr, int index)
 	if (ptr->vars[index].DiskVendorId == CAtaSmart::SSD_VENDOR_NVME)
 		fmt = _T("RawValues(6)");
 	else if (ptr->vars[index].IsRawValues8)
-		fmt = _T("RawValues(8)");
+	{
+		if (ptr->vars[index].DiskVendorId == CAtaSmart::SSD_VENDOR_JMICRON)
+			fmt = _T("Cur RawValues(8)");
+		else
+			fmt = _T("RawValues(8)");
+	}
 	else if (ptr->vars[index].IsRawValues7)
 		fmt = _T("Cur Wor Thr RawValues(7)");
 	else
-		fmt = _T("Cur Wor Thr RawValues(6)");
+	{
+		if (ptr->vars[index].IsThresholdCorrect)
+			fmt = _T("Cur Wor Thr RawValues(6)");
+		else
+			fmt = _T("Cur Wor --- RawValues(6)");
+	}
+		
 	return csToString(fmt);
 }
 

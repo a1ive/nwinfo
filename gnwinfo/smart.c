@@ -62,6 +62,8 @@ draw_health(struct nk_context* ctx, CDI_SMART* smart, int disk, float height)
 	}
 }
 
+static nk_bool smart_format_hex = FALSE;
+
 static void
 draw_info(struct nk_context* ctx, CDI_SMART* smart, int disk)
 {
@@ -194,10 +196,108 @@ draw_info(struct nk_context* ctx, CDI_SMART* smart, int disk)
 	}
 }
 
+static struct nk_color
+get_attr_color(BYTE cur, BYTE wor, BYTE thr, BOOL ideal_high)
+{
+	if (ideal_high)
+	{
+		if (cur < thr)
+			return NK_COLOR_RED;
+		if (wor < thr)
+			return NK_COLOR_YELLOW;
+		return NK_COLOR_GREEN;
+	}
+	else
+	{
+		if (cur > thr)
+			return NK_COLOR_RED;
+		if (wor > thr)
+			return NK_COLOR_YELLOW;
+		return NK_COLOR_GREEN;
+	}
+}
+
+static char*
+draw_alert_icon(struct nk_context* ctx, BYTE id, const char* format, char* value, BOOL nvme)
+{
+	static char hex[18];
+	struct nk_color color = NK_COLOR_BLUE;
+	BYTE cur = 0;
+	BYTE wor = 0;
+	BYTE thr = 0;
+	if (nvme && format[0] == 'R')
+	{
+		UINT64 raw = strtoull(value, NULL, 16);
+		strcpy_s(hex, sizeof(hex), value);
+		value[0] = '\0';
+		switch (id)
+		{
+		case 0x01: // Critical Warning
+			if (raw > 0)
+				color = NK_COLOR_RED;
+			else
+				color = NK_COLOR_GREEN;
+			break;
+		}
+		goto draw;
+	}
+	// RawValues(8)
+	// RawValues(6)
+	if (format[0] != 'C' || strlen(format) < 13 || strlen(value) < 13)
+	{
+		strcpy_s(hex, sizeof(hex), value);
+		value[0] = '\0';
+		goto draw;
+	}
+	// Cur RawValues(8)
+	if (format[4] != 'W')
+	{
+		strcpy_s(hex, sizeof(hex), &value[4]);
+		value[4] = '\0';
+		goto draw;
+	}
+	// Cur Wor --- RawValues(6)
+	if (format[8] != 'T')
+	{
+		strcpy_s(hex, sizeof(hex), &value[8]);
+		value[8] = '\0';
+		goto draw;
+	}
+	// Cur Wor Thr RawValues(7)
+	// Cur Wor Thr RawValues(6)
+	cur = strtoul(&value[0], NULL, 16) & 0xFFU;
+	wor = strtoul(&value[4], NULL, 16) & 0xFFU;
+	thr = strtoul(&value[8], NULL, 16) & 0xFFU;
+	strcpy_s(hex, sizeof(hex), &value[12]);
+	value[12] = '\0';
+	color = NK_COLOR_GREEN;
+	switch (id)
+	{
+	case 0x05: // Reallocated Sectors Count
+	case 0x0A: // Spin Retry Count
+	case 0xB8: // End-to-End error / IOEDC
+	case 0xBB: // Reported Uncorrectable Errors
+	case 0xBC: // Command Timeout
+	case 0xC4: // Reallocation Event Count
+	case 0xC5: // Current Pending Sector Count
+	case 0xC6: // Uncorrectable Sector Count
+	case 0xC7: // UltraDMA CRC Error Count
+	case 0xC9: // Soft Read Error Rate
+		color = get_attr_color(cur, wor, thr, FALSE);
+		break;
+	}
+draw:
+	draw_rect(ctx, color, "");
+	return hex;
+}
+
 static void
 draw_smart(struct nk_context* ctx, CDI_SMART* smart, int disk)
 {
-	char* str;
+	char* format;
+	char* value;
+	char* name;
+	char* hex;
 	if (nk_group_begin(ctx, "SMART Attr", NK_WINDOW_BORDER))
 	{
 		CDI_SMART_ATTRIBUTE* attr = cdi_get_smart_attribute(smart, disk);
@@ -206,24 +306,30 @@ draw_smart(struct nk_context* ctx, CDI_SMART* smart, int disk)
 		nk_spacer(ctx);
 		nk_label(ctx, "ID", NK_TEXT_LEFT);
 		nk_label(ctx, "Attribute", NK_TEXT_LEFT);
-		str = cdi_get_smart_attribute_format(smart, disk);
-		nk_label(ctx, str, NK_TEXT_LEFT);
-		cdi_free_string(str);
+		format = cdi_get_smart_attribute_format(smart, disk);
+		nk_label(ctx, format, NK_TEXT_LEFT);
 
 		for (i = 0; i < count; i++)
 		{
 			if (attr[i].Id == 0)
 				continue;
-			draw_rect(ctx, NK_COLOR_BLUE, "");
+			name = cdi_get_smart_attribute_name(smart, disk, attr[i].Id);
+			value = cdi_get_smart_attribute_value(smart, disk, i);
+			hex = draw_alert_icon(ctx, attr[i].Id, format, value,
+				cdi_get_bool(smart, disk, CDI_BOOL_SSD_NVME));
 			nk_labelf_colored(ctx, NK_TEXT_LEFT, NK_COLOR_WHITE, "%02X", attr[i].Id);
-			str = cdi_get_smart_attribute_name(smart, disk, attr[i].Id);
-			nk_label_colored(ctx, str, NK_TEXT_LEFT, NK_COLOR_WHITE);
-			cdi_free_string(str);
-			str = cdi_get_smart_attribute_value(smart, disk, i);
-			nk_label_colored(ctx, str, NK_TEXT_LEFT, NK_COLOR_WHITE);
-			cdi_free_string(str);
+			nk_label_colored(ctx, name, NK_TEXT_LEFT, NK_COLOR_WHITE);
+			if (smart_format_hex)
+				nk_labelf_colored(ctx, NK_TEXT_LEFT, NK_COLOR_WHITE,
+					"%s%s", value, hex);
+			else
+				nk_labelf_colored(ctx, NK_TEXT_LEFT, NK_COLOR_WHITE,
+					"%s%llu", value, strtoull(hex, NULL, 16));
+			cdi_free_string(name);
+			cdi_free_string(value);
 		}
 
+		cdi_free_string(format);
 		nk_group_end(ctx);
 	}
 }
@@ -247,15 +353,17 @@ gnwinfo_draw_smart_window(struct nk_context* ctx, float width, float height)
 
 	count = cdi_get_disk_count(NWLC->NwSmart);
 
-	nk_layout_row(ctx, NK_DYNAMIC, 0, 2, (float[2]) { 0.2f, 0.8f });
-	nk_property_int(ctx, "DISK", 0, &cur_disk, count - 1, 1, 1);
+	nk_layout_row(ctx, NK_DYNAMIC, 0, 4, (float[4]) { 0.12f, 0.6f, 0.2f, 0.08f });
+	nk_property_int(ctx, "", 0, &cur_disk, count - 1, 1, 1);
 	str = cdi_get_string(NWLC->NwSmart, cur_disk, CDI_STRING_MODEL);
 	nk_labelf_colored(ctx, NK_TEXT_CENTERED, NK_COLOR_WHITE,
 		"%s %s",
 		str,
 		NWL_GetHumanSize(cdi_get_dword(NWLC->NwSmart, cur_disk, CDI_DWORD_DISK_SIZE), disk_human_sizes, 1000));
 	cdi_free_string(str);
-
+	if (nk_button_image_label(ctx, g_ctx.image_refresh, "Refresh", NK_TEXT_CENTERED))
+		cdi_update_smart(NWLC->NwSmart, cur_disk);
+	smart_format_hex = nk_check_label(ctx, "HEX", smart_format_hex);
 	
 	nk_layout_row(ctx, NK_DYNAMIC, height / 4.0f, 2, (float[2]) {0.2f, 0.8f});
 	draw_health(ctx, NWLC->NwSmart, cur_disk, height / 4.0f);
