@@ -374,7 +374,7 @@ draw_storage(struct nk_context* ctx)
 			nk_labelf_colored(ctx, NK_TEXT_LEFT,
 				color, "%s %s%s", health,
 				temp[0] != '-' ? temp : "",
-				temp[0] != '-' ? u8"¡ãC" : "");
+				temp[0] != '-' ? u8"\u00B0C" : "");
 		}
 		draw_volume(ctx, disk);
 	}
@@ -406,7 +406,7 @@ draw_network(struct nk_context* ctx)
 	nk_label(ctx, "    Traffic /s", NK_TEXT_LEFT);
 	nk_labelf_colored(ctx, NK_TEXT_LEFT,
 		NK_COLOR_WHITE,
-		u8"¡ü %s ¡ý %s", g_ctx.net_send, g_ctx.net_recv);
+		u8"\u2191 %s \u2193 %s", g_ctx.net_send, g_ctx.net_recv);
 
 	for (i = 0; g_ctx.network->Children[i].LinkedNode; i++)
 	{

@@ -56,7 +56,7 @@ draw_health(struct nk_context* ctx, CDI_SMART* smart, int disk, float height)
 		n = cdi_get_int(smart, disk, CDI_INT_TEMPERATURE);
 		if (n > 0 && n < alarm)
 			color = NK_COLOR_GREEN;
-		snprintf(tmp, sizeof(tmp), u8"%d ¡ãC", n);
+		snprintf(tmp, sizeof(tmp), u8"%d \u00B0C", n);
 		draw_rect(ctx, color, tmp);
 		nk_group_end(ctx);
 	}
