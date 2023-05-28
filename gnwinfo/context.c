@@ -15,6 +15,36 @@ gnwinfo_ctx_error_callback(LPCSTR lpszText)
 #define GDIP_LOAD_IMG(img, x) \
    img = nk_gdip_load_image_from_memory(x, sizeof(x))
 
+LPCSTR NWL_GetHumanSize(UINT64 size, LPCSTR human_sizes[6], UINT64 base);
+static const char* mem_human_sizes[6] =
+{ "B", "K", "M", "G", "T", "P", };
+
+void
+gnwinfo_ctx_update(WPARAM wparam)
+{
+	switch (wparam)
+	{
+	case IDT_TIMER_1S:
+		if (g_ctx.cpuid)
+			NWL_NodeFree(g_ctx.cpuid, 1);
+		g_ctx.cpuid = NW_Cpuid();
+		if (g_ctx.network)
+			NWL_NodeFree(g_ctx.network, 1);
+		g_ctx.network = NW_Network();
+		g_ctx.sys_uptime = NWL_GetUptime();
+		g_ctx.mem_status.dwLength = sizeof(g_ctx.mem_status);
+		GlobalMemoryStatusEx(&g_ctx.mem_status);
+		memcpy(g_ctx.mem_avail, NWL_GetHumanSize(g_ctx.mem_status.ullAvailPhys, mem_human_sizes, 1024), 48);
+		memcpy(g_ctx.mem_total, NWL_GetHumanSize(g_ctx.mem_status.ullTotalPhys, mem_human_sizes, 1024), 48);
+		break;
+	case IDT_TIMER_1M:
+		if (g_ctx.disk)
+			NWL_NodeFree(g_ctx.disk, 1);
+		g_ctx.disk = NW_Disk();
+		break;
+	}
+}
+
 void
 gnwinfo_ctx_init(HINSTANCE inst, HWND wnd, struct nk_context* ctx, float width, float height)
 {
@@ -51,13 +81,13 @@ gnwinfo_ctx_init(HINSTANCE inst, HWND wnd, struct nk_context* ctx, float width, 
 	NW_Init(&g_ctx.lib);
 	g_ctx.lib.NwRoot = NWL_NodeAlloc("NWinfo", 0);
 	g_ctx.system = NW_System();
-	//g_ctx.cpuid = NW_Cpuid();
 	g_ctx.smbios = NW_Smbios();
-	//g_ctx.network = NW_Network(); // Update: 1S
-	g_ctx.disk = NW_Disk(); // Update: 1MIN
 	g_ctx.edid = NW_Edid();
 	g_ctx.uefi = NW_Uefi();
 	g_ctx.pci = NW_Pci();
+
+	gnwinfo_ctx_update(IDT_TIMER_1S);
+	gnwinfo_ctx_update(IDT_TIMER_1M);
 
 	GDIP_LOAD_IMG(g_ctx.image_os, ICON_OS);
 	GDIP_LOAD_IMG(g_ctx.image_bios, ICON_BIOS);
@@ -85,12 +115,9 @@ gnwinfo_ctx_exit()
 	KillTimer(g_ctx.wnd, IDT_TIMER_1M);
 	ReleaseMutex(g_ctx.mutex);
 	CloseHandle(g_ctx.mutex);
-	if (g_ctx.network)
-		NWL_NodeFree(g_ctx.network, 1);
-	if (g_ctx.disk)
-		NWL_NodeFree(g_ctx.disk, 1);
-	if (g_ctx.cpuid)
-		NWL_NodeFree(g_ctx.cpuid, 1);
+	NWL_NodeFree(g_ctx.network, 1);
+	NWL_NodeFree(g_ctx.disk, 1);
+	NWL_NodeFree(g_ctx.cpuid, 1);
 	NW_Fini();
 	nk_gdip_image_free(g_ctx.image_os);
 	nk_gdip_image_free(g_ctx.image_bios);

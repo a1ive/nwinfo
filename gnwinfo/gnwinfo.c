@@ -17,11 +17,7 @@ WindowProc(HWND wnd, UINT msg, WPARAM wparam, LPARAM lparam)
 		PostQuitMessage(0);
 		break;
 	case WM_TIMER:
-		if (wparam == IDT_TIMER_1M)
-		{
-			NWL_NodeFree(g_ctx.disk, 1);
-			g_ctx.disk = NW_Disk();
-		}
+		gnwinfo_ctx_update(wparam);
 		break;
 	case WM_SIZE:
 		g_ctx.gui_height = HIWORD(lparam);

@@ -66,10 +66,7 @@ draw_os(struct nk_context* ctx)
 		strcmp(gnwinfo_get_node_attr(g_ctx.system, "BitLocker Boot"), "Yes") == 0 ? " BitLocker" : "");
 
 	nk_label(ctx, "    Uptime", NK_TEXT_LEFT);
-	nk_label_colored(ctx,
-		NWL_GetUptime(),
-		NK_TEXT_LEFT,
-		NK_COLOR_WHITE);
+	nk_label_colored(ctx, g_ctx.sys_uptime, NK_TEXT_LEFT, NK_COLOR_WHITE);
 }
 
 static VOID
@@ -142,29 +139,30 @@ is_cache_level_equal(PNODE node)
 static VOID
 draw_processor(struct nk_context* ctx)
 {
-	INT i, j;
+	INT i, count;
+	CHAR name[32];
 	MAIN_GUI_LABEL("Processor", g_ctx.image_cpu);
 	nk_layout_row(ctx, NK_DYNAMIC, 0, 2, (float[2]) { 0.4f, 0.6f });
 
-	for (i = 0, j = 0; g_ctx.smbios->Children[i].LinkedNode; i++)
-	{
-		PNODE tab = g_ctx.smbios->Children[i].LinkedNode;
-		LPCSTR attr = gnwinfo_get_node_attr(tab, "Table Type");
-		if (strcmp(attr, "4") != 0)
-			continue;
+	count = strtol(gnwinfo_get_node_attr(g_ctx.cpuid, "Processor Count"), NULL, 10);
 
-		nk_labelf(ctx, NK_TEXT_LEFT, "    CPU%d", j++);
+	for (i = 0; i < count; i++)
+	{
+		snprintf(name, sizeof(name), "CPU%d", i);
+		PNODE cpu = NWL_NodeGetChild(g_ctx.cpuid, name);
+
+		nk_labelf(ctx, NK_TEXT_LEFT, "    %s", name);
 		nk_label_colored(ctx,
-			gnwinfo_get_node_attr(tab, "Processor Version"),
+			gnwinfo_get_node_attr(cpu, "Brand"),
 			NK_TEXT_LEFT,
 			NK_COLOR_WHITE);
 
 		nk_spacer(ctx);
 		nk_labelf_colored(ctx, NK_TEXT_LEFT, NK_COLOR_WHITE,
 			"%s %s cores %s threads",
-			gnwinfo_get_node_attr(tab, "Socket Designation"),
-			gnwinfo_get_node_attr(tab, "Core Count"),
-			gnwinfo_get_node_attr(tab, "Thread Count"));
+			get_smbios_attr("4", "Socket Designation", NULL),
+			gnwinfo_get_node_attr(cpu, "Cores"),
+			gnwinfo_get_node_attr(cpu, "Logical CPUs"));
 	}
 
 	LPCSTR cache_size[4];
@@ -188,23 +186,14 @@ draw_processor(struct nk_context* ctx)
 			"L1 %s L2 %s L3 %s L4 %s", cache_size[0], cache_size[1], cache_size[2], cache_size[3]);
 }
 
-LPCSTR NWL_GetHumanSize(UINT64 size, LPCSTR human_sizes[6], UINT64 base);
-static const char* mem_human_sizes[6] =
-{ "B", "K", "M", "G", "T", "P", };
-
 static VOID
 draw_memory(struct nk_context* ctx)
 {
 	INT i;
 	struct nk_color color = NK_COLOR_GREEN;
-	MEMORYSTATUSEX statex = { 0 };
-	char buf[48];
-	statex.dwLength = sizeof(statex);
-	GlobalMemoryStatusEx(&statex);
-	strcpy_s(buf, sizeof(buf), NWL_GetHumanSize(statex.ullAvailPhys, mem_human_sizes, 1024));
-	if (statex.dwMemoryLoad > 60)
+	if (g_ctx.mem_status.dwMemoryLoad > 60)
 		color = NK_COLOR_YELLOW;
-	if (statex.dwMemoryLoad > 80)
+	if (g_ctx.mem_status.dwMemoryLoad > 80)
 		color = NK_COLOR_RED;
 	MAIN_GUI_LABEL("Memory", g_ctx.image_ram);
 	nk_layout_row(ctx, NK_DYNAMIC, 0, 2, (float[2]) { 0.4f, 0.6f });
@@ -212,8 +201,7 @@ draw_memory(struct nk_context* ctx)
 	nk_label(ctx, "    Usage", NK_TEXT_LEFT);
 	nk_labelf_colored(ctx, NK_TEXT_LEFT, color,
 		"%lu%% %s / %s",
-		statex.dwMemoryLoad, buf,
-		NWL_GetHumanSize(statex.ullTotalPhys, mem_human_sizes, 1024));
+		g_ctx.mem_status.dwMemoryLoad, g_ctx.mem_avail, g_ctx.mem_total);
 
 	for (i = 0; g_ctx.smbios->Children[i].LinkedNode; i++)
 	{
@@ -404,9 +392,6 @@ static VOID
 draw_network(struct nk_context* ctx)
 {
 	INT i;
-	if (g_ctx.network)
-		NWL_NodeFree(g_ctx.network, 1);
-	g_ctx.network = NW_Network();
 	MAIN_GUI_LABEL("Network", g_ctx.image_net);
 	nk_layout_row(ctx, NK_DYNAMIC, 0, 2, (float[2]) { 0.6f, 0.4f });
 	for (i = 0; g_ctx.network->Children[i].LinkedNode; i++)

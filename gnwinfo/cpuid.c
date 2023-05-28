@@ -108,9 +108,6 @@ gnwinfo_draw_cpuid_window(struct nk_context* ctx, float width, float height)
 		g_ctx.gui_cpuid = FALSE;
 		goto out;
 	}
-	if (g_ctx.cpuid)
-		NWL_NodeFree(g_ctx.cpuid, 1);
-	g_ctx.cpuid = NW_Cpuid();
 	//NWL_NodeAttrSet(g_ctx.cpuid, "Processor Count", "2", NAFLG_FMT_NUMERIC);
 	//NWL_NodeAppendNew(g_ctx.cpuid, "CPU1", 0);
 	cpu_count_str = gnwinfo_get_node_attr(g_ctx.cpuid, "Processor Count");

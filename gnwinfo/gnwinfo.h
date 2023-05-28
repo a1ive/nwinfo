@@ -63,6 +63,11 @@ typedef struct _GNW_CONTEXT
 	PNODE edid;
 	PNODE pci;
 	PNODE uefi;
+
+	LPCSTR sys_uptime;
+	MEMORYSTATUSEX mem_status;
+	CHAR mem_total[48];
+	CHAR mem_avail[48];
 } GNW_CONTEXT;
 extern GNW_CONTEXT g_ctx;
 
@@ -75,6 +80,7 @@ extern GNW_CONTEXT g_ctx;
 #define NK_COLOR_BLACK      nk_rgb(0x00, 0x00, 0x00)
 #define NK_COLOR_GRAY       nk_rgb(0x1E, 0x1E, 0x1E)
 
+void gnwinfo_ctx_update(WPARAM wparam);
 void gnwinfo_ctx_init(HINSTANCE inst, HWND wnd, struct nk_context* ctx, float width, float height);
 void gnwinfo_ctx_exit();
 VOID gnwinfo_draw_main_window(struct nk_context* ctx, float width, float height);
