@@ -141,10 +141,19 @@ draw_processor(struct nk_context* ctx)
 {
 	INT i, count;
 	CHAR name[32];
+	struct nk_color color = NK_COLOR_GREEN;
+	if (g_ctx.pdh_val_cpu > 60.0)
+		color = NK_COLOR_YELLOW;
+	if (g_ctx.pdh_val_cpu > 80.0)
+		color = NK_COLOR_RED;
 	MAIN_GUI_LABEL("Processor", g_ctx.image_cpu);
 	nk_layout_row(ctx, NK_DYNAMIC, 0, 2, (float[2]) { 0.4f, 0.6f });
 
 	count = strtol(gnwinfo_get_node_attr(g_ctx.cpuid, "Processor Count"), NULL, 10);
+	nk_label(ctx, "    Usage", NK_TEXT_LEFT);
+	nk_labelf_colored(ctx, NK_TEXT_LEFT, color,
+		"%.2f%% Total %d Logical %s",
+		g_ctx.pdh_val_cpu, count, gnwinfo_get_node_attr(g_ctx.cpuid, "Total CPUs"));
 
 	for (i = 0; i < count; i++)
 	{
@@ -394,6 +403,11 @@ draw_network(struct nk_context* ctx)
 	INT i;
 	MAIN_GUI_LABEL("Network", g_ctx.image_net);
 	nk_layout_row(ctx, NK_DYNAMIC, 0, 2, (float[2]) { 0.6f, 0.4f });
+	nk_label(ctx, "    Traffic /s", NK_TEXT_LEFT);
+	nk_labelf_colored(ctx, NK_TEXT_LEFT,
+		NK_COLOR_WHITE,
+		u8"¡ü %s ¡ý %s", g_ctx.net_send, g_ctx.net_recv);
+
 	for (i = 0; g_ctx.network->Children[i].LinkedNode; i++)
 	{
 		PNODE nw = g_ctx.network->Children[i].LinkedNode;

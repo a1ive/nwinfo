@@ -8,6 +8,7 @@
 #include <string.h>
 #include <limits.h>
 #include <time.h>
+#include <pdh.h>
 
 #define NK_INCLUDE_FIXED_TYPES
 #define NK_INCLUDE_STANDARD_IO
@@ -63,6 +64,14 @@ typedef struct _GNW_CONTEXT
 	PNODE edid;
 	PNODE pci;
 	PNODE uefi;
+
+	PDH_HQUERY pdh;
+	PDH_HCOUNTER pdh_cpu;
+	PDH_HCOUNTER pdh_net_recv;
+	PDH_HCOUNTER pdh_net_send;
+	double pdh_val_cpu;
+	CHAR net_recv[48];
+	CHAR net_send[48];
 
 	LPCSTR sys_uptime;
 	MEMORYSTATUSEX mem_status;

@@ -4,6 +4,8 @@
 
 #include "icons.h"
 
+#pragma comment(lib, "pdh.lib")
+
 GNW_CONTEXT g_ctx;
 
 static void
@@ -16,7 +18,7 @@ gnwinfo_ctx_error_callback(LPCSTR lpszText)
    img = nk_gdip_load_image_from_memory(x, sizeof(x))
 
 LPCSTR NWL_GetHumanSize(UINT64 size, LPCSTR human_sizes[6], UINT64 base);
-static const char* mem_human_sizes[6] =
+static const char* human_sizes[6] =
 { "B", "K", "M", "G", "T", "P", };
 
 void
@@ -34,8 +36,19 @@ gnwinfo_ctx_update(WPARAM wparam)
 		g_ctx.sys_uptime = NWL_GetUptime();
 		g_ctx.mem_status.dwLength = sizeof(g_ctx.mem_status);
 		GlobalMemoryStatusEx(&g_ctx.mem_status);
-		memcpy(g_ctx.mem_avail, NWL_GetHumanSize(g_ctx.mem_status.ullAvailPhys, mem_human_sizes, 1024), 48);
-		memcpy(g_ctx.mem_total, NWL_GetHumanSize(g_ctx.mem_status.ullTotalPhys, mem_human_sizes, 1024), 48);
+		memcpy(g_ctx.mem_avail, NWL_GetHumanSize(g_ctx.mem_status.ullAvailPhys, human_sizes, 1024), 48);
+		memcpy(g_ctx.mem_total, NWL_GetHumanSize(g_ctx.mem_status.ullTotalPhys, human_sizes, 1024), 48);
+		if (g_ctx.pdh && PdhCollectQueryData(g_ctx.pdh) == ERROR_SUCCESS)
+		{
+			PDH_FMT_COUNTERVALUE value = { 0 };
+			if (g_ctx.pdh_cpu && PdhGetFormattedCounterValue(g_ctx.pdh_cpu, PDH_FMT_DOUBLE, NULL, &value) == ERROR_SUCCESS)
+				g_ctx.pdh_val_cpu = value.doubleValue;
+			if (g_ctx.pdh_net_recv && PdhGetFormattedCounterValue(g_ctx.pdh_net_recv, PDH_FMT_LARGE, NULL, &value) == ERROR_SUCCESS)
+				memcpy(g_ctx.net_recv, NWL_GetHumanSize(value.largeValue, human_sizes, 1024), 48);
+			if (g_ctx.pdh_net_send && PdhGetFormattedCounterValue(g_ctx.pdh_net_send, PDH_FMT_LARGE, NULL, &value) == ERROR_SUCCESS)
+				memcpy(g_ctx.net_send, NWL_GetHumanSize(value.largeValue, human_sizes, 1024), 48);
+		}
+
 		break;
 	case IDT_TIMER_1M:
 		if (g_ctx.disk)
@@ -61,6 +74,21 @@ gnwinfo_ctx_init(HINSTANCE inst, HWND wnd, struct nk_context* ctx, float width, 
 	nk_end(ctx);
 	nk_gdip_render(NK_ANTI_ALIASING_ON, NK_COLOR_GRAY);
 
+	if (PdhOpenQueryW(NULL, 0, &g_ctx.pdh) != ERROR_SUCCESS)
+		g_ctx.pdh = NULL;
+	else
+	{
+		if (PdhAddCounterW(g_ctx.pdh, L"\\Processor Information(_Total)\\% Processor Time", 0, &g_ctx.pdh_cpu) != ERROR_SUCCESS)
+			g_ctx.pdh_cpu = NULL;
+		if (PdhAddCounterW(g_ctx.pdh, L"\\Network Interface(*)\\Bytes Sent/sec", 0, &g_ctx.pdh_net_send) != ERROR_SUCCESS)
+			g_ctx.pdh_net_send = NULL;
+		if (PdhAddCounterW(g_ctx.pdh, L"\\Network Interface(*)\\Bytes Received/sec", 0, &g_ctx.pdh_net_recv) != ERROR_SUCCESS)
+			g_ctx.pdh_net_recv = NULL;
+	}
+
+	if (g_ctx.pdh)
+		PdhCollectQueryData(g_ctx.pdh);
+
 	g_ctx.gui_height = height;
 	g_ctx.gui_width = width;
 	g_ctx.inst = inst;
@@ -71,6 +99,7 @@ gnwinfo_ctx_init(HINSTANCE inst, HWND wnd, struct nk_context* ctx, float width, 
 	g_ctx.lib.HumanSize = TRUE;
 	g_ctx.lib.ErrLogCallback = gnwinfo_ctx_error_callback;
 	g_ctx.lib.CodePage = CP_UTF8;
+	g_ctx.lib.ActiveNet = TRUE;
 
 	g_ctx.lib.SysInfo = TRUE;
 	g_ctx.lib.DmiInfo = TRUE;
@@ -111,6 +140,8 @@ gnwinfo_ctx_init(HINSTANCE inst, HWND wnd, struct nk_context* ctx, float width, 
 noreturn void
 gnwinfo_ctx_exit()
 {
+	if (g_ctx.pdh)
+		PdhCloseQuery(g_ctx.pdh);
 	KillTimer(g_ctx.wnd, IDT_TIMER_1S);
 	KillTimer(g_ctx.wnd, IDT_TIMER_1M);
 	ReleaseMutex(g_ctx.mutex);
