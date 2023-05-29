@@ -81,7 +81,7 @@ draw_core(struct nk_context* ctx, PNODE cpu)
 			nk_labelf_colored(ctx, NK_TEXT_LEFT, NK_COLOR_WHITE, "%s MHz",
 				gnwinfo_get_node_attr(core, "Bus Clock (MHz)"));
 			nk_label(ctx, "Temperature", NK_TEXT_LEFT);
-			nk_labelf_colored(ctx, NK_TEXT_LEFT, NK_COLOR_WHITE, "%s (C)",
+			nk_labelf_colored(ctx, NK_TEXT_LEFT, NK_COLOR_WHITE, u8"%s \u00B0C",
 				gnwinfo_get_node_attr(core, "Temperature (C)"));
 			nk_label(ctx, "Voltage", NK_TEXT_LEFT);
 			nk_labelf_colored(ctx, NK_TEXT_LEFT, NK_COLOR_WHITE, "%s V",

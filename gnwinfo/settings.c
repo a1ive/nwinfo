@@ -98,8 +98,8 @@ gnwinfo_draw_settings_window(struct nk_context* ctx, float width, float height)
 	nk_layout_row_dynamic(ctx, 0, 1);
 	nk_label(ctx, "Default window size", NK_TEXT_LEFT);
 	nk_layout_row(ctx, NK_DYNAMIC, 0, 2, (float[2]) { 0.5f, 0.5f });
-	nk_property_int(ctx, "Width", 60, &g_init_width, 1920, 10, 10);
-	nk_property_int(ctx, "Height", 80, &g_init_height, 1080, 10, 10);
+	nk_property_int(ctx, "#Width", 60, &g_init_width, 1920, 10, 10);
+	nk_property_int(ctx, "#Height", 80, &g_init_height, 1080, 10, 10);
 
 	nk_layout_row(ctx, NK_DYNAMIC, 0, 2, (float[2]) { 0.8f, 0.2f });
 	nk_spacer(ctx);
