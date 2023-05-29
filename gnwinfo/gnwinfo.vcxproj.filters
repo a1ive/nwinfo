@@ -56,6 +56,9 @@
     <ClCompile Include="smart.c">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="settings.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="gnwinfo.rc">

@@ -71,7 +71,7 @@ draw_core(struct nk_context* ctx, PNODE cpu)
 		{
 			const float ratio[] = { 0.5f, 0.5f };
 			nk_layout_row(ctx, NK_DYNAMIC, 0, 2, ratio);
-			nk_property_int(ctx, "Core", 0, &cur_core, count - 1, 1, 1);
+			nk_property_int(ctx, "#Core", 0, &cur_core, count - 1, 1, 1);
 			nk_labelf(ctx, NK_TEXT_CENTERED, "Total %s", core_count_str);
 			snprintf(name, sizeof(name), "CORE%d", cur_core);
 			core = NWL_NodeGetChild(cpu, name);
@@ -116,7 +116,7 @@ gnwinfo_draw_cpuid_window(struct nk_context* ctx, float width, float height)
 		goto out;
 
 	CPUID_ROW_BEGIN(2, 0.16f);
-	nk_property_int(ctx, "CPU", 0, &cur_cpu, count - 1, 1, 1);
+	nk_property_int(ctx, "#CPU", 0, &cur_cpu, count - 1, 1, 1);
 	CPUID_ROW_PUSH(0.84f);
 	nk_labelf(ctx, NK_TEXT_CENTERED,
 		"Total %s, %s threads, %s MHz",

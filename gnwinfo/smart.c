@@ -62,8 +62,6 @@ draw_health(struct nk_context* ctx, CDI_SMART* smart, int disk, float height)
 	}
 }
 
-static nk_bool smart_format_hex = FALSE;
-
 static void
 draw_info(struct nk_context* ctx, CDI_SMART* smart, int disk)
 {
@@ -319,7 +317,7 @@ draw_smart(struct nk_context* ctx, CDI_SMART* smart, int disk)
 				cdi_get_bool(smart, disk, CDI_BOOL_SSD_NVME));
 			nk_labelf_colored(ctx, NK_TEXT_LEFT, NK_COLOR_WHITE, "%02X", attr[i].Id);
 			nk_label_colored(ctx, name, NK_TEXT_LEFT, NK_COLOR_WHITE);
-			if (smart_format_hex)
+			if (g_ctx.smart_hex)
 				nk_labelf_colored(ctx, NK_TEXT_LEFT, NK_COLOR_WHITE,
 					"%s%s", value, hex);
 			else
@@ -354,7 +352,7 @@ gnwinfo_draw_smart_window(struct nk_context* ctx, float width, float height)
 	count = cdi_get_disk_count(NWLC->NwSmart);
 
 	nk_layout_row(ctx, NK_DYNAMIC, 0, 4, (float[4]) { 0.12f, 0.6f, 0.2f, 0.08f });
-	nk_property_int(ctx, "", 0, &cur_disk, count - 1, 1, 1);
+	nk_property_int(ctx, "#", 0, &cur_disk, count - 1, 1, 1);
 	str = cdi_get_string(NWLC->NwSmart, cur_disk, CDI_STRING_MODEL);
 	nk_labelf_colored(ctx, NK_TEXT_CENTERED, NK_COLOR_WHITE,
 		"%s %s",
@@ -363,7 +361,7 @@ gnwinfo_draw_smart_window(struct nk_context* ctx, float width, float height)
 	cdi_free_string(str);
 	if (nk_button_image_label(ctx, g_ctx.image_refresh, "Refresh", NK_TEXT_CENTERED))
 		cdi_update_smart(NWLC->NwSmart, cur_disk);
-	smart_format_hex = nk_check_label(ctx, "HEX", smart_format_hex);
+	g_ctx.smart_hex = !nk_check_label(ctx, "HEX", !g_ctx.smart_hex);
 	
 	nk_layout_row(ctx, NK_DYNAMIC, height / 4.0f, 2, (float[2]) {0.2f, 0.8f});
 	draw_health(ctx, NWLC->NwSmart, cur_disk, height / 4.0f);

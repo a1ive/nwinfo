@@ -27,6 +27,17 @@
 
 #define GNWINFO_FONT_SIZE 12
 
+#define MAIN_INFO_OS        (1U << 0)
+#define MAIN_INFO_BIOS      (1U << 1)
+#define MAIN_INFO_BOARD     (1U << 2)
+#define MAIN_INFO_CPU       (1U << 3)
+#define MAIN_INFO_MEMORY    (1U << 4)
+#define MAIN_INFO_MONITOR   (1U << 5)
+#define MAIN_INFO_STORAGE   (1U << 6)
+#define MAIN_INFO_NETWORK   (1U << 7)
+
+#define MAIN_NET_ACTIVE     (1U << 16)
+
 typedef struct _GNW_CONTEXT
 {
 	HINSTANCE inst;
@@ -40,6 +51,8 @@ typedef struct _GNW_CONTEXT
 	BOOL gui_cpuid;
 	BOOL gui_smart;
 	BOOL gui_about;
+	BOOL gui_settings;
+	nk_bool smart_hex;
 
 	struct nk_image image_os;
 	struct nk_image image_bios;
@@ -50,11 +63,10 @@ typedef struct _GNW_CONTEXT
 	struct nk_image image_disk;
 	struct nk_image image_net;
 	struct nk_image image_close;
-	struct nk_image image_smart;
-	struct nk_image image_cpuid;
 	struct nk_image image_dir;
 	struct nk_image image_info;
 	struct nk_image image_refresh;
+	struct nk_image image_set;
 
 	PNODE system;
 	PNODE cpuid;
@@ -96,5 +108,6 @@ VOID gnwinfo_draw_main_window(struct nk_context* ctx, float width, float height)
 VOID gnwinfo_draw_cpuid_window(struct nk_context* ctx, float width, float height);
 VOID gnwinfo_draw_about_window(struct nk_context* ctx, float width, float height);
 VOID gnwinfo_draw_smart_window(struct nk_context* ctx, float width, float height);
+VOID gnwinfo_draw_settings_window(struct nk_context* ctx, float width, float height);
 
 LPCSTR gnwinfo_get_node_attr(PNODE node, LPCSTR key);

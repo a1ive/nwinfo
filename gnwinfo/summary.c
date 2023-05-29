@@ -152,8 +152,11 @@ draw_processor(struct nk_context* ctx)
 	count = strtol(gnwinfo_get_node_attr(g_ctx.cpuid, "Processor Count"), NULL, 10);
 	nk_label(ctx, "    Usage", NK_TEXT_LEFT);
 	nk_labelf_colored(ctx, NK_TEXT_LEFT, color,
-		"%.2f%% Total %d Logical %s",
-		g_ctx.pdh_val_cpu, count, gnwinfo_get_node_attr(g_ctx.cpuid, "Total CPUs"));
+		"%.2f%% %s Total %d Logical %s %s MHz",
+		g_ctx.pdh_val_cpu,
+		get_smbios_attr("4", "Socket Designation", NULL),
+		count, gnwinfo_get_node_attr(g_ctx.cpuid, "Total CPUs"),
+		gnwinfo_get_node_attr(g_ctx.cpuid, "CPU Clock (MHz)"));
 
 	for (i = 0; i < count; i++)
 	{
@@ -168,8 +171,7 @@ draw_processor(struct nk_context* ctx)
 
 		nk_spacer(ctx);
 		nk_labelf_colored(ctx, NK_TEXT_LEFT, NK_COLOR_WHITE,
-			"%s %s cores %s threads",
-			get_smbios_attr("4", "Socket Designation", NULL),
+			"%s cores %s threads",
 			gnwinfo_get_node_attr(cpu, "Cores"),
 			gnwinfo_get_node_attr(cpu, "Logical CPUs"));
 	}
@@ -414,9 +416,11 @@ draw_network(struct nk_context* ctx)
 		struct nk_color color = NK_COLOR_RED;
 		if (!nw)
 			continue;
-		nk_labelf(ctx, NK_TEXT_LEFT, "    %s", gnwinfo_get_node_attr(nw, "Description"));
 		if (strcmp(gnwinfo_get_node_attr(nw, "Status"), "Active") == 0)
 			color = NK_COLOR_GREEN;
+		else if (!(g_ctx.main_flag & MAIN_NET_ACTIVE))
+			continue;
+		nk_labelf(ctx, NK_TEXT_LEFT, "    %s", gnwinfo_get_node_attr(nw, "Description"));
 		nk_labelf_colored(ctx,
 			NK_TEXT_LEFT, color,
 			"%s%s",
@@ -425,15 +429,6 @@ draw_network(struct nk_context* ctx)
 	}
 }
 
-#define MAIN_INFO_OS        (1U << 0)
-#define MAIN_INFO_BIOS      (1U << 1)
-#define MAIN_INFO_BOARD     (1U << 2)
-#define MAIN_INFO_CPU       (1U << 3)
-#define MAIN_INFO_MEMORY    (1U << 4)
-#define MAIN_INFO_MONITOR   (1U << 5)
-#define MAIN_INFO_STORAGE   (1U << 6)
-#define MAIN_INFO_NETWORK   (1U << 7)
-
 VOID
 gnwinfo_draw_main_window(struct nk_context* ctx, float width, float height)
 {
@@ -441,42 +436,19 @@ gnwinfo_draw_main_window(struct nk_context* ctx, float width, float height)
 		nk_rect(0, 0, width, height),
 		NK_WINDOW_BACKGROUND))
 		goto out;
-	nk_layout_row_begin(ctx, NK_DYNAMIC, 20, 12);
+	nk_layout_row_begin(ctx, NK_DYNAMIC, 20, 5);
 	struct nk_rect rect = nk_layout_widget_bounds(ctx);
 	float ratio = rect.h / rect.w;
-	nk_layout_row_push(ctx, ratio);
-	if (nk_button_image(ctx, g_ctx.image_os))
-		g_ctx.main_flag ^= MAIN_INFO_OS;
-	nk_layout_row_push(ctx, ratio);
-	if (nk_button_image(ctx, g_ctx.image_bios))
-		g_ctx.main_flag ^= MAIN_INFO_BIOS;
-	nk_layout_row_push(ctx, ratio);
-	if (nk_button_image(ctx, g_ctx.image_board))
-		g_ctx.main_flag ^= MAIN_INFO_BOARD;
+
 	nk_layout_row_push(ctx, ratio);
 	if (nk_button_image(ctx, g_ctx.image_cpu))
-		g_ctx.main_flag ^= MAIN_INFO_CPU;
-	nk_layout_row_push(ctx, ratio);
-	if (nk_button_image(ctx, g_ctx.image_ram))
-		g_ctx.main_flag ^= MAIN_INFO_MEMORY;
-	nk_layout_row_push(ctx, ratio);
-	if (nk_button_image(ctx, g_ctx.image_edid))
-		g_ctx.main_flag ^= MAIN_INFO_MONITOR;
-	nk_layout_row_push(ctx, ratio);
-	if (nk_button_image(ctx, g_ctx.image_disk))
-		g_ctx.main_flag ^= MAIN_INFO_STORAGE;
-	nk_layout_row_push(ctx, ratio);
-	if (nk_button_image(ctx, g_ctx.image_net))
-		g_ctx.main_flag ^= MAIN_INFO_NETWORK;
-	nk_layout_row_push(ctx, 1.0f > 12.0f * ratio ? (1.0f - 12.0f * ratio) : 0);
-	nk_spacer(ctx);
-	nk_layout_row_push(ctx, ratio);
-	if (nk_button_image(ctx, g_ctx.image_cpuid))
 		g_ctx.gui_cpuid = TRUE;
 	nk_layout_row_push(ctx, ratio);
-	if (nk_button_image(ctx, g_ctx.image_smart))
+	if (nk_button_image(ctx, g_ctx.image_disk))
 		g_ctx.gui_smart = TRUE;
 	nk_layout_row_push(ctx, ratio);
+	if (nk_button_image(ctx, g_ctx.image_set))
+		g_ctx.gui_settings = TRUE;
 	if (nk_button_image(ctx, g_ctx.image_info))
 		g_ctx.gui_about = TRUE;
 	nk_layout_row_push(ctx, ratio);
