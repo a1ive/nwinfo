@@ -273,7 +273,7 @@ GetIdsHandle(LPCWSTR lpFileName)
 {
 	HANDLE Fp = INVALID_HANDLE_VALUE;
 	WCHAR FilePath[MAX_PATH];
-	GetModuleFileName(NULL, FilePath, MAX_PATH);
+	GetModuleFileNameW(NULL, FilePath, MAX_PATH);
 	PathCchRemoveFileSpec(FilePath, MAX_PATH);
 	PathCchAppend(FilePath, MAX_PATH, lpFileName);
 	Fp = CreateFileW(FilePath, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);

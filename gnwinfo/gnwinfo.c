@@ -2,8 +2,10 @@
 
 #include "gnwinfo.h"
 
-#define WINDOW_WIDTH 600
-#define WINDOW_HEIGHT 800
+#include <pathcch.h>
+
+unsigned int g_init_width = 600;
+unsigned int g_init_height = 800;
 
 GdipFont*
 nk_gdip_load_font(LPCWSTR name, int size, WORD fallback);
@@ -37,14 +39,26 @@ wWinMain(_In_ HINSTANCE hInstance,
 {
 	GdipFont* font;
 	struct nk_context* ctx;
+	char* str;
 
 	WNDCLASSW wc;
-	RECT rect = { 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT };
+	RECT rect = { 0 };
 	DWORD style = WS_THICKFRAME;
 	DWORD exstyle = WS_EX_APPWINDOW;
 	HWND wnd;
 	int running = 1;
 	int needs_refresh = 1;
+
+	GetModuleFileNameW(NULL, g_ini_path, MAX_PATH);
+	PathCchRemoveFileSpec(g_ini_path, MAX_PATH);
+	PathCchAppend(g_ini_path, MAX_PATH, L"gnwinfo.ini");
+
+	str = gnwinfo_get_ini_value(L"Window", L"Width", L"600");
+	g_init_width = strtoul(str, NULL, 10);
+	free(str);
+	str = gnwinfo_get_ini_value(L"Window", L"Height", L"800");
+	g_init_height = strtoul(str, NULL, 10);
+	free(str);
 
 	/* Win32 */
 	memset(&wc, 0, sizeof(wc));
@@ -56,6 +70,8 @@ wWinMain(_In_ HINSTANCE hInstance,
 	wc.lpszClassName = L"NwinfoWindowClass";
 	RegisterClassW(&wc);
 
+	rect.right = g_init_width;
+	rect.bottom = g_init_height;
 	AdjustWindowRectEx(&rect, style, FALSE, exstyle);
 
 	wnd = CreateWindowExW(exstyle, wc.lpszClassName, L"NWinfo GUI",
@@ -65,14 +81,21 @@ wWinMain(_In_ HINSTANCE hInstance,
 	ShowWindow(wnd, SW_SHOW);
 
 	/* GUI */
-	ctx = nk_gdip_init(wnd, WINDOW_WIDTH, WINDOW_HEIGHT);
+	ctx = nk_gdip_init(wnd, g_init_width, g_init_height);
 	font = nk_gdip_load_font(L"Courier New", GNWINFO_FONT_SIZE, IDR_FONT1);
 	nk_gdip_set_font(font);
 
 	(void)CoInitializeEx(0, COINIT_APARTMENTTHREADED);
-	gnwinfo_ctx_init(hInstance, wnd, ctx, WINDOW_WIDTH, WINDOW_HEIGHT);
+	gnwinfo_ctx_init(hInstance, wnd, ctx, (float)g_init_width, (float)g_init_height);
 	ctx->style.button.rounding = 0;
 	ctx->style.window.min_row_height_padding = 2;
+
+	str = gnwinfo_get_ini_value(L"Summary", L"HideComponents", L"0xFFFFFFFF"); // ~0U
+	g_ctx.main_flag = strtoul(str, NULL, 16);
+	free(str);
+	str = gnwinfo_get_ini_value(L"Summary", L"SmartFormat", L"0");
+	g_ctx.smart_hex = strtoul(str, NULL, 10);
+	free(str);
 
 	while (running)
 	{

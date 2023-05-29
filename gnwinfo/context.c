@@ -94,7 +94,6 @@ gnwinfo_ctx_init(HINSTANCE inst, HWND wnd, struct nk_context* ctx, float width, 
 	g_ctx.inst = inst;
 	g_ctx.wnd = wnd;
 	g_ctx.nk = ctx;
-	g_ctx.main_flag = ~0U;
 	g_ctx.lib.NwFormat = FORMAT_JSON;
 	g_ctx.lib.HumanSize = TRUE;
 	g_ctx.lib.ErrLogCallback = gnwinfo_ctx_error_callback;

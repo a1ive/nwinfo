@@ -36,7 +36,7 @@
 #define MAIN_INFO_STORAGE   (1U << 6)
 #define MAIN_INFO_NETWORK   (1U << 7)
 
-#define MAIN_NET_ACTIVE     (1U << 16)
+#define MAIN_NET_INACTIVE   (1U << 16)
 
 typedef struct _GNW_CONTEXT
 {
@@ -92,6 +92,10 @@ typedef struct _GNW_CONTEXT
 } GNW_CONTEXT;
 extern GNW_CONTEXT g_ctx;
 
+extern WCHAR g_ini_path[MAX_PATH];
+extern unsigned int g_init_width;
+extern unsigned int g_init_height;
+
 #define NK_COLOR_YELLOW     nk_rgb(0xFF, 0xEA, 0x00)
 #define NK_COLOR_RED        nk_rgb(0xFF, 0x17, 0x44)
 #define NK_COLOR_GREEN      nk_rgb(0x00, 0xE6, 0x76)
@@ -109,5 +113,8 @@ VOID gnwinfo_draw_cpuid_window(struct nk_context* ctx, float width, float height
 VOID gnwinfo_draw_about_window(struct nk_context* ctx, float width, float height);
 VOID gnwinfo_draw_smart_window(struct nk_context* ctx, float width, float height);
 VOID gnwinfo_draw_settings_window(struct nk_context* ctx, float width, float height);
+
+char* gnwinfo_get_ini_value(LPCWSTR section, LPCWSTR key, LPCWSTR fallback);
+void gnwinfo_set_ini_value(LPCWSTR section, LPCWSTR key, LPCWSTR _Printf_format_string_ format, ...);
 
 LPCSTR gnwinfo_get_node_attr(PNODE node, LPCSTR key);

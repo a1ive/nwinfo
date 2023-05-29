@@ -152,9 +152,8 @@ draw_processor(struct nk_context* ctx)
 	count = strtol(gnwinfo_get_node_attr(g_ctx.cpuid, "Processor Count"), NULL, 10);
 	nk_label(ctx, "    Usage", NK_TEXT_LEFT);
 	nk_labelf_colored(ctx, NK_TEXT_LEFT, color,
-		"%.2f%% %s Total %d Logical %s %s MHz",
+		"%.2f%% Total %d Logical %s %s MHz",
 		g_ctx.pdh_val_cpu,
-		get_smbios_attr("4", "Socket Designation", NULL),
 		count, gnwinfo_get_node_attr(g_ctx.cpuid, "Total CPUs"),
 		gnwinfo_get_node_attr(g_ctx.cpuid, "CPU Clock (MHz)"));
 
@@ -418,7 +417,7 @@ draw_network(struct nk_context* ctx)
 			continue;
 		if (strcmp(gnwinfo_get_node_attr(nw, "Status"), "Active") == 0)
 			color = NK_COLOR_GREEN;
-		else if (!(g_ctx.main_flag & MAIN_NET_ACTIVE))
+		else if (!(g_ctx.main_flag & MAIN_NET_INACTIVE))
 			continue;
 		nk_labelf(ctx, NK_TEXT_LEFT, "    %s", gnwinfo_get_node_attr(nw, "Description"));
 		nk_labelf_colored(ctx,
