@@ -66,7 +66,7 @@ wWinMain(_In_ HINSTANCE hInstance,
 	char* str;
 	int x_pos = CW_USEDEFAULT, y_pos = CW_USEDEFAULT;
 	WNDCLASSW wc;
-	DWORD style = WS_THICKFRAME | WS_VISIBLE;
+	DWORD style = WS_SIZEBOX | WS_VISIBLE;
 	DWORD exstyle = WS_EX_LAYERED;
 	HWND wnd;
 	int running = 1;
@@ -119,11 +119,10 @@ wWinMain(_In_ HINSTANCE hInstance,
 		g_init_width, g_init_height,
 		NULL, NULL, wc.hInstance, NULL);
 
+	style = (DWORD)GetWindowLongPtrW(wnd, GWL_STYLE) & ~WS_CAPTION;
 	if (g_bginfo)
-	{
-		style = (DWORD)GetWindowLongPtrW(wnd, GWL_STYLE);
-		SetWindowLongPtrW(wnd, GWL_STYLE, style & ~WS_CAPTION & ~WS_SYSMENU & ~WS_SIZEBOX);
-	}
+		style &= ~WS_SIZEBOX;
+	SetWindowLongPtrW(wnd, GWL_STYLE, style);
 	SetLayeredWindowAttributes(wnd, 0, (BYTE)g_init_alpha, LWA_ALPHA);
 
 	/* GUI */
