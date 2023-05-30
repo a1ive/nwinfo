@@ -95,15 +95,27 @@ extern GNW_CONTEXT g_ctx;
 extern WCHAR g_ini_path[MAX_PATH];
 extern unsigned int g_init_width;
 extern unsigned int g_init_height;
+extern unsigned int g_init_alpha;
+extern nk_bool g_bginfo;
 
-#define NK_COLOR_YELLOW     nk_rgb(0xFF, 0xEA, 0x00)
-#define NK_COLOR_RED        nk_rgb(0xFF, 0x17, 0x44)
-#define NK_COLOR_GREEN      nk_rgb(0x00, 0xE6, 0x76)
-#define NK_COLOR_CYAN       nk_rgb(0x03, 0xDA, 0xC6)
-#define NK_COLOR_BLUE       nk_rgb(0x29, 0x79, 0xFF)
-#define NK_COLOR_WHITE      nk_rgb(0xFF, 0xFF, 0xFF)
-#define NK_COLOR_BLACK      nk_rgb(0x00, 0x00, 0x00)
-#define NK_COLOR_GRAY       nk_rgb(0x1E, 0x1E, 0x1E)
+#define NK_COLOR_YELLOW     {0xFF, 0xEA, 0x00, 0xff}
+#define NK_COLOR_RED        {0xFF, 0x17, 0x44, 0xff}
+#define NK_COLOR_GREEN      {0x00, 0xE6, 0x76, 0xff}
+#define NK_COLOR_CYAN       {0x03, 0xDA, 0xC6, 0xff}
+#define NK_COLOR_BLUE       {0x29, 0x79, 0xFF, 0xff}
+#define NK_COLOR_WHITE      {0xFF, 0xFF, 0xFF, 0xff}
+#define NK_COLOR_BLACK      {0x00, 0x00, 0x00, 0xff}
+#define NK_COLOR_GRAY       {0x1E, 0x1E, 0x1E, 0xff}
+#define NK_COLOR_LIGHT      {0xBF, 0xBF, 0xBF, 0xff}
+#define NK_COLOR_DARK       {0x2D, 0x2D, 0x2D, 0xFF}
+
+extern struct nk_color g_color_warning;
+extern struct nk_color g_color_error;
+extern struct nk_color g_color_good;
+extern struct nk_color g_color_unknown;
+extern struct nk_color g_color_text_l;
+extern struct nk_color g_color_text_d;
+extern struct nk_color g_color_back;
 
 void gnwinfo_ctx_update(WPARAM wparam);
 void gnwinfo_ctx_init(HINSTANCE inst, HWND wnd, struct nk_context* ctx, float width, float height);

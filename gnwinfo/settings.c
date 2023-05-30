@@ -53,6 +53,29 @@ fail:
 	MessageBoxW(NULL, L"Set ini value failed", L"Error", MB_ICONERROR);
 }
 
+static void
+set_ini_color(LPCWSTR key, struct nk_color color)
+{
+	gnwinfo_set_ini_value(L"Color", key, L"%02X%02X%02X", color.r, color.g, color.b);
+}
+
+static void
+draw_color_picker(struct nk_context* ctx, struct nk_color* color)
+{
+	if (nk_combo_begin_color(ctx, *color, nk_vec2(200, 200)))
+	{
+		float ratios[] = { 0.15f, 0.85f };
+		nk_layout_row(ctx, NK_DYNAMIC, 30, 2, ratios);
+		nk_label(ctx, "R:", NK_TEXT_LEFT);
+		color->r = (nk_byte)nk_slide_int(ctx, 0, color->r, 255, 5);
+		nk_label(ctx, "G:", NK_TEXT_LEFT);
+		color->g = (nk_byte)nk_slide_int(ctx, 0, color->g, 255, 5);
+		nk_label(ctx, "B:", NK_TEXT_LEFT);
+		color->b = (nk_byte)nk_slide_int(ctx, 0, color->b, 255, 5);
+		nk_combo_end(ctx);
+	}
+}
+
 VOID
 gnwinfo_draw_settings_window(struct nk_context* ctx, float width, float height)
 {
@@ -96,19 +119,57 @@ gnwinfo_draw_settings_window(struct nk_context* ctx, float width, float height)
 	g_ctx.smart_hex = !nk_check_label(ctx, "Display SMART in HEX format", !g_ctx.smart_hex);
 
 	nk_layout_row_dynamic(ctx, 0, 1);
-	nk_label(ctx, "Default window size", NK_TEXT_LEFT);
+	nk_label(ctx, "Window", NK_TEXT_LEFT);
+	nk_layout_row(ctx, NK_DYNAMIC, 0, 2, (float[2]) { 0.1f, 0.9f });
+	nk_spacer(ctx);
+	g_bginfo = !nk_check_label(ctx, "Background Info", !g_bginfo);
 	nk_layout_row(ctx, NK_DYNAMIC, 0, 2, (float[2]) { 0.5f, 0.5f });
 	nk_property_int(ctx, "#Width", 60, &g_init_width, 1920, 10, 10);
 	nk_property_int(ctx, "#Height", 80, &g_init_height, 1080, 10, 10);
+	nk_property_int(ctx, "#Alpha", 10, &g_init_alpha, 255, 5, 10);
+
+	nk_layout_row_dynamic(ctx, 0, 1);
+	nk_label(ctx, "Color", NK_TEXT_LEFT);
+	nk_layout_row(ctx, NK_DYNAMIC, 25, 3, (float[3]) { 0.1f, 0.4f, 0.5f });
+	nk_spacer(ctx);
+	nk_label(ctx, "BACKGROUND", NK_TEXT_LEFT);
+	draw_color_picker(ctx, &g_color_back);
+	nk_spacer(ctx);
+	nk_label(ctx, "HIGHLIGHT", NK_TEXT_LEFT);
+	draw_color_picker(ctx, &g_color_text_l);
+	nk_spacer(ctx);
+	nk_label(ctx, "DEFAULT", NK_TEXT_LEFT);
+	draw_color_picker(ctx, &g_color_text_d);
+	nk_spacer(ctx);
+	nk_label(ctx, "STATE GOOD", NK_TEXT_LEFT);
+	draw_color_picker(ctx, &g_color_good);
+	nk_spacer(ctx);
+	nk_label(ctx, "STATE WARN", NK_TEXT_LEFT);
+	draw_color_picker(ctx, &g_color_warning);
+	nk_spacer(ctx);
+	nk_label(ctx, "STATE ERROR", NK_TEXT_LEFT);
+	draw_color_picker(ctx, &g_color_error);
+	nk_spacer(ctx);
+	nk_label(ctx, "STATE UNKNOWN", NK_TEXT_LEFT);
+	draw_color_picker(ctx, &g_color_unknown);
 
 	nk_layout_row(ctx, NK_DYNAMIC, 0, 2, (float[2]) { 0.8f, 0.2f });
 	nk_spacer(ctx);
 	if (nk_button_label(ctx, "Save"))
 	{
-		gnwinfo_set_ini_value(L"Summary", L"HideComponents", L"0x%08X", g_ctx.main_flag);
-		gnwinfo_set_ini_value(L"Summary", L"SmartFormat", L"%d", g_ctx.smart_hex);
+		gnwinfo_set_ini_value(L"Widgets", L"HideComponents", L"0x%08X", g_ctx.main_flag);
+		gnwinfo_set_ini_value(L"Widgets", L"SmartFormat", L"%d", g_ctx.smart_hex);
 		gnwinfo_set_ini_value(L"Window", L"Width", L"%u", g_init_width);
 		gnwinfo_set_ini_value(L"Window", L"Height", L"%u", g_init_height);
+		gnwinfo_set_ini_value(L"Window", L"Alpha", L"%u", g_init_alpha);
+		gnwinfo_set_ini_value(L"Window", L"BGInfo", L"%d", g_bginfo);
+		set_ini_color(L"Background", g_color_back);
+		set_ini_color(L"Highlight", g_color_text_l);
+		set_ini_color(L"Default", g_color_text_d);
+		set_ini_color(L"StateGood", g_color_good);
+		set_ini_color(L"StateWarn", g_color_warning);
+		set_ini_color(L"StateError", g_color_error);
+		set_ini_color(L"StateUnknown", g_color_unknown);
 	}
 out:
 	nk_end(ctx);

@@ -50,7 +50,7 @@ draw_os(struct nk_context* ctx)
 
 	nk_label(ctx, "    Name", NK_TEXT_LEFT);
 	nk_labelf_colored(ctx, NK_TEXT_LEFT,
-		NK_COLOR_WHITE,
+		g_color_text_l,
 		"%s %s (%s)",
 		gnwinfo_get_node_attr(g_ctx.system, "OS"),
 		gnwinfo_get_node_attr(g_ctx.system, "Processor Architecture"),
@@ -58,7 +58,7 @@ draw_os(struct nk_context* ctx)
 
 	nk_spacer(ctx);
 	nk_labelf_colored(ctx, NK_TEXT_LEFT,
-		NK_COLOR_WHITE,
+		g_color_text_l,
 		"%s@%s%s%s",
 		gnwinfo_get_node_attr(g_ctx.system, "Username"),
 		gnwinfo_get_node_attr(g_ctx.system, "Computer Name"),
@@ -66,7 +66,7 @@ draw_os(struct nk_context* ctx)
 		strcmp(gnwinfo_get_node_attr(g_ctx.system, "BitLocker Boot"), "Yes") == 0 ? " BitLocker" : "");
 
 	nk_label(ctx, "    Uptime", NK_TEXT_LEFT);
-	nk_label_colored(ctx, g_ctx.sys_uptime, NK_TEXT_LEFT, NK_COLOR_WHITE);
+	nk_label_colored(ctx, g_ctx.sys_uptime, NK_TEXT_LEFT, g_color_text_l);
 }
 
 static VOID
@@ -78,7 +78,7 @@ draw_bios(struct nk_context* ctx)
 
 	nk_label(ctx, "    Firmware", NK_TEXT_LEFT);
 	nk_labelf_colored(ctx, NK_TEXT_LEFT,
-		NK_COLOR_WHITE,
+		g_color_text_l,
 		"%s%s%s%s",
 		gnwinfo_get_node_attr(g_ctx.system, "Firmware"),
 		strcmp(gnwinfo_get_node_attr(g_ctx.uefi, "Secure Boot"), "ENABLED") == 0 ? " Secure Boot" : "",
@@ -87,7 +87,7 @@ draw_bios(struct nk_context* ctx)
 
 	nk_label(ctx, "    Version", NK_TEXT_LEFT);
 	nk_labelf_colored(ctx, NK_TEXT_LEFT,
-		NK_COLOR_WHITE,
+		g_color_text_l,
 		"%s %s",
 		get_smbios_attr("0", "Vendor", NULL),
 		get_smbios_attr("0", "Version", NULL));
@@ -110,7 +110,7 @@ draw_computer(struct nk_context* ctx)
 		"    %s",
 		get_smbios_attr("1", "Manufacturer", NULL));
 	nk_labelf_colored(ctx, NK_TEXT_LEFT,
-		NK_COLOR_WHITE,
+		g_color_text_l,
 		"%s %s %s",
 		get_smbios_attr("1", "Product Name", NULL),
 		get_smbios_attr("3", "Type", NULL),
@@ -120,7 +120,7 @@ draw_computer(struct nk_context* ctx)
 		"    %s",
 		get_smbios_attr("2", "Manufacturer", is_motherboard));
 	nk_labelf_colored(ctx, NK_TEXT_LEFT,
-		NK_COLOR_WHITE,
+		g_color_text_l,
 		"%s %s",
 		get_smbios_attr("2", "Product Name", is_motherboard),
 		get_smbios_attr("2", "Serial Number", is_motherboard));
@@ -141,11 +141,11 @@ draw_processor(struct nk_context* ctx)
 {
 	INT i, count;
 	CHAR name[32];
-	struct nk_color color = NK_COLOR_GREEN;
+	struct nk_color color = g_color_good;
 	if (g_ctx.pdh_val_cpu > 60.0)
-		color = NK_COLOR_YELLOW;
+		color = g_color_warning;
 	if (g_ctx.pdh_val_cpu > 80.0)
-		color = NK_COLOR_RED;
+		color = g_color_error;
 	MAIN_GUI_LABEL("Processor", g_ctx.image_cpu);
 	nk_layout_row(ctx, NK_DYNAMIC, 0, 2, (float[2]) { 0.4f, 0.6f });
 
@@ -166,10 +166,10 @@ draw_processor(struct nk_context* ctx)
 		nk_label_colored(ctx,
 			gnwinfo_get_node_attr(cpu, "Brand"),
 			NK_TEXT_LEFT,
-			NK_COLOR_WHITE);
+			g_color_text_l);
 
 		nk_spacer(ctx);
-		nk_labelf_colored(ctx, NK_TEXT_LEFT, NK_COLOR_WHITE,
+		nk_labelf_colored(ctx, NK_TEXT_LEFT, g_color_text_l,
 			"%s cores %s threads",
 			gnwinfo_get_node_attr(cpu, "Cores"),
 			gnwinfo_get_node_attr(cpu, "Logical CPUs"));
@@ -181,18 +181,18 @@ draw_processor(struct nk_context* ctx)
 
 	nk_label(ctx, "    Cache Size", NK_TEXT_LEFT);
 	if (cache_size[0][0] == '-')
-		nk_label_colored(ctx, cache_size[0], NK_TEXT_LEFT, NK_COLOR_WHITE);
+		nk_label_colored(ctx, cache_size[0], NK_TEXT_LEFT, g_color_text_l);
 	else if (cache_size[1][0] == '-')
-		nk_labelf_colored(ctx, NK_TEXT_LEFT, NK_COLOR_WHITE,
+		nk_labelf_colored(ctx, NK_TEXT_LEFT, g_color_text_l,
 			"L1 %s", cache_size[0]);
 	else if (cache_size[2][0] == '-')
-		nk_labelf_colored(ctx, NK_TEXT_LEFT, NK_COLOR_WHITE,
+		nk_labelf_colored(ctx, NK_TEXT_LEFT, g_color_text_l,
 			"L1 %s L2 %s", cache_size[0], cache_size[1]);
 	else if (cache_size[3][0] == '-')
-		nk_labelf_colored(ctx, NK_TEXT_LEFT, NK_COLOR_WHITE,
+		nk_labelf_colored(ctx, NK_TEXT_LEFT, g_color_text_l,
 			"L1 %s L2 %s L3 %s", cache_size[0], cache_size[1], cache_size[2]);
 	else
-		nk_labelf_colored(ctx, NK_TEXT_LEFT, NK_COLOR_WHITE,
+		nk_labelf_colored(ctx, NK_TEXT_LEFT, g_color_text_l,
 			"L1 %s L2 %s L3 %s L4 %s", cache_size[0], cache_size[1], cache_size[2], cache_size[3]);
 }
 
@@ -200,11 +200,11 @@ static VOID
 draw_memory(struct nk_context* ctx)
 {
 	INT i;
-	struct nk_color color = NK_COLOR_GREEN;
+	struct nk_color color = g_color_good;
 	if (g_ctx.mem_status.dwMemoryLoad > 60)
-		color = NK_COLOR_YELLOW;
+		color = g_color_warning;
 	if (g_ctx.mem_status.dwMemoryLoad > 80)
-		color = NK_COLOR_RED;
+		color = g_color_error;
 	MAIN_GUI_LABEL("Memory", g_ctx.image_ram);
 	nk_layout_row(ctx, NK_DYNAMIC, 0, 2, (float[2]) { 0.4f, 0.6f });
 
@@ -224,7 +224,7 @@ draw_memory(struct nk_context* ctx)
 			continue;
 		nk_labelf(ctx, NK_TEXT_LEFT, "    %s", gnwinfo_get_node_attr(tab, "Bank Locator"));
 		nk_labelf_colored(ctx, NK_TEXT_LEFT,
-			NK_COLOR_WHITE,
+			g_color_text_l,
 			"%s-%s %s %s %s",
 			ddr,
 			gnwinfo_get_node_attr(tab, "Speed (MT/s)"),
@@ -250,7 +250,7 @@ draw_display(struct nk_context* ctx)
 		nk_labelf(ctx, NK_TEXT_LEFT, "    %s",
 			gnwinfo_get_node_attr(pci, "Vendor"));
 		nk_labelf_colored(ctx, NK_TEXT_LEFT,
-			NK_COLOR_WHITE,
+			g_color_text_l,
 			"%s",
 			gnwinfo_get_node_attr(pci, "Device"));
 	}
@@ -265,7 +265,7 @@ draw_display(struct nk_context* ctx)
 		nk_labelf(ctx, NK_TEXT_LEFT, "    %s",
 			gnwinfo_get_node_attr(mon, "Manufacturer"));
 		nk_labelf_colored(ctx, NK_TEXT_LEFT,
-			NK_COLOR_WHITE,
+			g_color_text_l,
 			"%s %sx%s@%sHz %s\"",
 			gnwinfo_get_node_attr(mon, "ID"),
 			gnwinfo_get_node_attr(res, "Width"),
@@ -308,7 +308,7 @@ draw_volume(struct nk_context* ctx, PNODE disk)
 		if (nk_button_image_label(ctx, g_ctx.image_dir, get_drive_letter(tab), NK_TEXT_CENTERED))
 			ShellExecuteA(NULL, "explore", gnwinfo_get_node_attr(tab, "Volume GUID"), NULL, NULL, SW_NORMAL);
 		nk_labelf_colored(ctx, NK_TEXT_LEFT,
-			NK_COLOR_WHITE,
+			g_color_text_l,
 			"%s %s %s",
 			gnwinfo_get_node_attr(tab, "Total Space"),
 			gnwinfo_get_node_attr(tab, "Filesystem"),
@@ -355,7 +355,7 @@ draw_storage(struct nk_context* ctx)
 			gnwinfo_get_node_attr(disk, "Type"),
 			type);
 		nk_labelf_colored(ctx, NK_TEXT_LEFT,
-			NK_COLOR_WHITE,
+			g_color_text_l,
 			"%s %s %s",
 			gnwinfo_get_node_attr(disk, "Size"),
 			gnwinfo_get_node_attr(disk, "Partition Table"),
@@ -363,13 +363,13 @@ draw_storage(struct nk_context* ctx)
 
 		LPCSTR health = gnwinfo_get_node_attr(disk, "Health Status");
 		LPCSTR temp = gnwinfo_get_node_attr(disk, "Temperature (C)");
-		struct nk_color color = NK_COLOR_YELLOW;
+		struct nk_color color = g_color_warning;
 		if (strcmp(health, "-") != 0)
 		{
 			if (strncmp(health, "Good", 4) == 0)
-				color = NK_COLOR_GREEN;
+				color = g_color_good;
 			else if (strncmp(health, "Bad", 3) == 0)
-				color = NK_COLOR_RED;
+				color = g_color_error;
 			nk_spacer(ctx);
 			nk_label(ctx, "S.M.A.R.T", NK_TEXT_LEFT);
 			nk_labelf_colored(ctx, NK_TEXT_LEFT,
@@ -406,17 +406,17 @@ draw_network(struct nk_context* ctx)
 	nk_layout_row(ctx, NK_DYNAMIC, 0, 2, (float[2]) { 0.6f, 0.4f });
 	nk_label(ctx, "    Traffic /s", NK_TEXT_LEFT);
 	nk_labelf_colored(ctx, NK_TEXT_LEFT,
-		NK_COLOR_WHITE,
+		g_color_text_l,
 		u8"\u2191 %s \u2193 %s", g_ctx.net_send, g_ctx.net_recv);
 
 	for (i = 0; g_ctx.network->Children[i].LinkedNode; i++)
 	{
 		PNODE nw = g_ctx.network->Children[i].LinkedNode;
-		struct nk_color color = NK_COLOR_RED;
+		struct nk_color color = g_color_error;
 		if (!nw)
 			continue;
 		if (strcmp(gnwinfo_get_node_attr(nw, "Status"), "Active") == 0)
-			color = NK_COLOR_GREEN;
+			color = g_color_good;
 		else if (!(g_ctx.main_flag & MAIN_NET_INACTIVE))
 			continue;
 		nk_labelf(ctx, NK_TEXT_LEFT, "    %s", gnwinfo_get_node_attr(nw, "Description"));

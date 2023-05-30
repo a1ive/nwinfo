@@ -18,9 +18,9 @@ draw_rect(struct nk_context* ctx, struct nk_color bg, const char* str)
 	style.hover.data.color = bg;
 	style.active.type = NK_STYLE_ITEM_COLOR;
 	style.active.data.color = bg;
-	style.text_normal = NK_COLOR_BLACK;
-	style.text_hover = NK_COLOR_BLACK;
-	style.text_active = NK_COLOR_BLACK;
+	style.text_normal = (struct nk_color)NK_COLOR_BLACK;
+	style.text_hover = (struct nk_color)NK_COLOR_BLACK;
+	style.text_active = (struct nk_color)NK_COLOR_BLACK;
 	nk_button_label_styled(ctx, &style, str);
 }
 
@@ -33,15 +33,15 @@ draw_health(struct nk_context* ctx, CDI_SMART* smart, int disk, float height)
 
 	if (nk_group_begin(ctx, "SMART Health", 0))
 	{
-		struct nk_color color = NK_COLOR_YELLOW;
+		struct nk_color color = g_color_warning;
 		nk_layout_row_dynamic(ctx, height / 5.0f, 1);
 		nk_label(ctx, "Health Status", NK_TEXT_CENTERED);
 		n = cdi_get_int(smart, disk, CDI_INT_LIFE);
 		str = cdi_get_string(smart, disk, CDI_STRING_DISK_STATUS);
 		if (strncmp(str, "Good", 4) == 0)
-			color = NK_COLOR_GREEN;
+			color = g_color_good;
 		else if (strncmp(str, "Bad", 3) == 0)
-			color = NK_COLOR_RED;
+			color = g_color_error;
 		if (n >= 0)
 			snprintf(tmp, sizeof(tmp), "%s\n%d%%", str, n);
 		else
@@ -49,13 +49,13 @@ draw_health(struct nk_context* ctx, CDI_SMART* smart, int disk, float height)
 		draw_rect(ctx, color, tmp);
 		cdi_free_string(str);
 		nk_label(ctx, "Temperature", NK_TEXT_CENTERED);
-		color = NK_COLOR_YELLOW;
+		color = g_color_warning;
 		int alarm = cdi_get_int(smart, disk, CDI_INT_TEMPERATURE_ALARM);
 		if (alarm <= 0)
 			alarm = 60;
 		n = cdi_get_int(smart, disk, CDI_INT_TEMPERATURE);
 		if (n > 0 && n < alarm)
-			color = NK_COLOR_GREEN;
+			color = g_color_good;
 		snprintf(tmp, sizeof(tmp), u8"%d \u00B0C", n);
 		draw_rect(ctx, color, tmp);
 		nk_group_end(ctx);
@@ -81,70 +81,70 @@ draw_info(struct nk_context* ctx, CDI_SMART* smart, int disk)
 
 		nk_label(ctx, "Firmware", NK_TEXT_LEFT);
 		str = cdi_get_string(smart, disk, CDI_STRING_FIRMWARE);
-		nk_label_colored(ctx, str, NK_TEXT_LEFT, NK_COLOR_WHITE);
+		nk_label_colored(ctx, str, NK_TEXT_LEFT, g_color_text_l);
 		cdi_free_string(str);
 		if (is_ssd)
 		{
 			n = cdi_get_int(smart, disk, CDI_INT_HOST_READS);
 			nk_label(ctx, "Total Reads", NK_TEXT_LEFT);
 			if (n < 0)
-				nk_label_colored(ctx, "-", NK_TEXT_RIGHT, NK_COLOR_WHITE);
+				nk_label_colored(ctx, "-", NK_TEXT_RIGHT, g_color_text_l);
 			else
-				nk_labelf_colored(ctx, NK_TEXT_RIGHT, NK_COLOR_WHITE, "%d G", n);
+				nk_labelf_colored(ctx, NK_TEXT_RIGHT, g_color_text_l, "%d G", n);
 		}
 		else
 		{
 			d = cdi_get_dword(smart, disk, CDI_DWORD_BUFFER_SIZE);
 			nk_label(ctx, "Buffer Size", NK_TEXT_LEFT);
 			if (d >= 10 * 1024 * 1024) // 10 MB
-				nk_labelf_colored(ctx, NK_TEXT_RIGHT, NK_COLOR_WHITE, "%lu M", d / 1024 / 1024);
+				nk_labelf_colored(ctx, NK_TEXT_RIGHT, g_color_text_l, "%lu M", d / 1024 / 1024);
 			else if (d > 1024)
-				nk_labelf_colored(ctx, NK_TEXT_RIGHT, NK_COLOR_WHITE, "%lu K", d / 1024);
+				nk_labelf_colored(ctx, NK_TEXT_RIGHT, g_color_text_l, "%lu K", d / 1024);
 			else
-				nk_labelf_colored(ctx, NK_TEXT_RIGHT, NK_COLOR_WHITE, "%lu B", d);
+				nk_labelf_colored(ctx, NK_TEXT_RIGHT, g_color_text_l, "%lu B", d);
 		}
 
 		nk_label(ctx, "S / N", NK_TEXT_LEFT);
 		str = cdi_get_string(smart, disk, CDI_STRING_SN);
-		nk_label_colored(ctx, str, NK_TEXT_LEFT, NK_COLOR_WHITE);
+		nk_label_colored(ctx, str, NK_TEXT_LEFT, g_color_text_l);
 		cdi_free_string(str);
 		if (is_ssd)
 		{
 			n = cdi_get_int(smart, disk, CDI_INT_HOST_WRITES);
 			nk_label(ctx, "Total Writes", NK_TEXT_LEFT);
 			if (n < 0)
-				nk_label_colored(ctx, "-", NK_TEXT_RIGHT, NK_COLOR_WHITE);
+				nk_label_colored(ctx, "-", NK_TEXT_RIGHT, g_color_text_l);
 			else
-				nk_labelf_colored(ctx, NK_TEXT_RIGHT, NK_COLOR_WHITE, "%d G", n);
+				nk_labelf_colored(ctx, NK_TEXT_RIGHT, g_color_text_l, "%d G", n);
 		}
 		else
 		{
 			nk_label(ctx, "-", NK_TEXT_CENTERED);
-			nk_label_colored(ctx, "-", NK_TEXT_RIGHT, NK_COLOR_WHITE);
+			nk_label_colored(ctx, "-", NK_TEXT_RIGHT, g_color_text_l);
 		}
 
 		nk_label(ctx, "Interface", NK_TEXT_LEFT);
 		str = cdi_get_string(smart, disk, CDI_STRING_INTERFACE);
-		nk_label_colored(ctx, str, NK_TEXT_LEFT, NK_COLOR_WHITE);
+		nk_label_colored(ctx, str, NK_TEXT_LEFT, g_color_text_l);
 		cdi_free_string(str);
 		if (is_ssd && !is_nvme)
 		{
 			n = cdi_get_int(smart, disk, CDI_INT_NAND_WRITES);
 			nk_label(ctx, "NAND Writes", NK_TEXT_LEFT);
 			if (n < 0)
-				nk_label_colored(ctx, "-", NK_TEXT_RIGHT, NK_COLOR_WHITE);
+				nk_label_colored(ctx, "-", NK_TEXT_RIGHT, g_color_text_l);
 			else
-				nk_labelf_colored(ctx, NK_TEXT_RIGHT, NK_COLOR_WHITE, "%d G", n);
+				nk_labelf_colored(ctx, NK_TEXT_RIGHT, g_color_text_l, "%d G", n);
 		}
 		else
 		{
 			nk_label(ctx, "RPM", NK_TEXT_LEFT);
 			if (is_ssd)
-				nk_label_colored(ctx, "(SSD)", NK_TEXT_RIGHT, NK_COLOR_WHITE);
+				nk_label_colored(ctx, "(SSD)", NK_TEXT_RIGHT, g_color_text_l);
 			else
 			{
 				d = cdi_get_dword(smart, disk, CDI_DWORD_ROTATION_RATE);
-				nk_labelf_colored(ctx, NK_TEXT_RIGHT, NK_COLOR_WHITE, "%lu", d);
+				nk_labelf_colored(ctx, NK_TEXT_RIGHT, g_color_text_l, "%lu", d);
 			}
 			
 		}
@@ -152,33 +152,33 @@ draw_info(struct nk_context* ctx, CDI_SMART* smart, int disk)
 		nk_label(ctx, "Mode", NK_TEXT_LEFT);
 		str = cdi_get_string(smart, disk, CDI_STRING_TRANSFER_MODE_CUR);
 		tmp = cdi_get_string(smart, disk, CDI_STRING_TRANSFER_MODE_MAX);
-		nk_labelf_colored(ctx, NK_TEXT_LEFT, NK_COLOR_WHITE, "%s|%s", str, tmp);
+		nk_labelf_colored(ctx, NK_TEXT_LEFT, g_color_text_l, "%s|%s", str, tmp);
 		cdi_free_string(str);
 		cdi_free_string(tmp);
 		nk_label(ctx, "Power On Count", NK_TEXT_LEFT);
 		d = cdi_get_dword(smart, disk, CDI_DWORD_POWER_ON_COUNT);
-		nk_labelf_colored(ctx, NK_TEXT_RIGHT, NK_COLOR_WHITE, "%lu", d);
+		nk_labelf_colored(ctx, NK_TEXT_RIGHT, g_color_text_l, "%lu", d);
 
 		nk_label(ctx, "Drive", NK_TEXT_LEFT);
 		str = cdi_get_string(smart, disk, CDI_STRING_DRIVE_MAP);
-		nk_label_colored(ctx, str, NK_TEXT_LEFT, NK_COLOR_WHITE);
+		nk_label_colored(ctx, str, NK_TEXT_LEFT, g_color_text_l);
 		cdi_free_string(str);
 		nk_label(ctx, "Power On Hours", NK_TEXT_LEFT);
 		n = cdi_get_int(smart, disk, CDI_INT_POWER_ON_HOURS);
 		if (n < 0)
-			nk_label_colored(ctx, "-", NK_TEXT_RIGHT, NK_COLOR_WHITE);
+			nk_label_colored(ctx, "-", NK_TEXT_RIGHT, g_color_text_l);
 		else
-			nk_labelf_colored(ctx, NK_TEXT_RIGHT, NK_COLOR_WHITE, "%d", n);
+			nk_labelf_colored(ctx, NK_TEXT_RIGHT, g_color_text_l, "%d", n);
 
 		nk_layout_row(ctx, NK_DYNAMIC, 0, 2, (float[2]) { 0.2f, 0.8f });
 
 		nk_label(ctx, "Standard", NK_TEXT_LEFT);
 		str = cdi_get_string(smart, disk, CDI_STRING_VERSION_MAJOR);
-		nk_label_colored(ctx, str, NK_TEXT_LEFT, NK_COLOR_WHITE);
+		nk_label_colored(ctx, str, NK_TEXT_LEFT, g_color_text_l);
 		cdi_free_string(str);
 
 		nk_label(ctx, "Features", NK_TEXT_LEFT);
-		nk_labelf_colored(ctx, NK_TEXT_LEFT, NK_COLOR_WHITE, "%s%s%s%s%s%s%s%s%s%s",
+		nk_labelf_colored(ctx, NK_TEXT_LEFT, g_color_text_l, "%s%s%s%s%s%s%s%s%s%s",
 			cdi_get_bool(smart, disk, CDI_BOOL_SMART) ? "SMART " : "",
 			cdi_get_bool(smart, disk, CDI_BOOL_AAM) ?  "AAM " : "",
 			cdi_get_bool(smart, disk, CDI_BOOL_APM) ? "APM " : "",
@@ -200,18 +200,18 @@ get_attr_color(BYTE cur, BYTE wor, BYTE thr, BOOL ideal_high)
 	if (ideal_high)
 	{
 		if (cur < thr)
-			return NK_COLOR_RED;
+			return g_color_error;
 		if (wor < thr)
-			return NK_COLOR_YELLOW;
-		return NK_COLOR_GREEN;
+			return g_color_warning;
+		return g_color_good;
 	}
 	else
 	{
 		if (cur > thr)
-			return NK_COLOR_RED;
+			return g_color_error;
 		if (wor > thr)
-			return NK_COLOR_YELLOW;
-		return NK_COLOR_GREEN;
+			return g_color_warning;
+		return g_color_good;
 	}
 }
 
@@ -219,7 +219,7 @@ static char*
 draw_alert_icon(struct nk_context* ctx, BYTE id, const char* format, char* value, BOOL nvme)
 {
 	static char hex[18];
-	struct nk_color color = NK_COLOR_BLUE;
+	struct nk_color color = g_color_unknown;
 	BYTE cur = 0;
 	BYTE wor = 0;
 	BYTE thr = 0;
@@ -232,9 +232,9 @@ draw_alert_icon(struct nk_context* ctx, BYTE id, const char* format, char* value
 		{
 		case 0x01: // Critical Warning
 			if (raw > 0)
-				color = NK_COLOR_RED;
+				color = g_color_error;
 			else
-				color = NK_COLOR_GREEN;
+				color = g_color_good;
 			break;
 		}
 		goto draw;
@@ -268,7 +268,7 @@ draw_alert_icon(struct nk_context* ctx, BYTE id, const char* format, char* value
 	thr = strtoul(&value[8], NULL, 16) & 0xFFU;
 	strcpy_s(hex, sizeof(hex), &value[12]);
 	value[12] = '\0';
-	color = NK_COLOR_GREEN;
+	color = g_color_good;
 	switch (id)
 	{
 	case 0x05: // Reallocated Sectors Count
@@ -315,13 +315,13 @@ draw_smart(struct nk_context* ctx, CDI_SMART* smart, int disk)
 			value = cdi_get_smart_attribute_value(smart, disk, i);
 			hex = draw_alert_icon(ctx, attr[i].Id, format, value,
 				cdi_get_bool(smart, disk, CDI_BOOL_SSD_NVME));
-			nk_labelf_colored(ctx, NK_TEXT_LEFT, NK_COLOR_WHITE, "%02X", attr[i].Id);
-			nk_label_colored(ctx, name, NK_TEXT_LEFT, NK_COLOR_WHITE);
+			nk_labelf_colored(ctx, NK_TEXT_LEFT, g_color_text_l, "%02X", attr[i].Id);
+			nk_label_colored(ctx, name, NK_TEXT_LEFT, g_color_text_l);
 			if (g_ctx.smart_hex)
-				nk_labelf_colored(ctx, NK_TEXT_LEFT, NK_COLOR_WHITE,
+				nk_labelf_colored(ctx, NK_TEXT_LEFT, g_color_text_l,
 					"%s%s", value, hex);
 			else
-				nk_labelf_colored(ctx, NK_TEXT_LEFT, NK_COLOR_WHITE,
+				nk_labelf_colored(ctx, NK_TEXT_LEFT, g_color_text_l,
 					"%s%llu", value, strtoull(hex, NULL, 16));
 			cdi_free_string(name);
 			cdi_free_string(value);
@@ -342,7 +342,7 @@ gnwinfo_draw_smart_window(struct nk_context* ctx, float width, float height)
 	if (g_ctx.gui_smart == FALSE)
 		return;
 	if (!nk_begin(ctx, "S.M.A.R.T.",
-		nk_rect(0, height / 6.0f, width, height / 1.5f),
+		nk_rect(0, height / 6.0f, width * 0.98f, height / 1.5f),
 		NK_WINDOW_BORDER | NK_WINDOW_MOVABLE | NK_WINDOW_SCALABLE | NK_WINDOW_CLOSABLE))
 	{
 		g_ctx.gui_smart = FALSE;
@@ -354,7 +354,7 @@ gnwinfo_draw_smart_window(struct nk_context* ctx, float width, float height)
 	nk_layout_row(ctx, NK_DYNAMIC, 0, 4, (float[4]) { 0.12f, 0.6f, 0.2f, 0.08f });
 	nk_property_int(ctx, "#", 0, &cur_disk, count - 1, 1, 1);
 	str = cdi_get_string(NWLC->NwSmart, cur_disk, CDI_STRING_MODEL);
-	nk_labelf_colored(ctx, NK_TEXT_CENTERED, NK_COLOR_WHITE,
+	nk_labelf_colored(ctx, NK_TEXT_CENTERED, g_color_text_l,
 		"%s %s",
 		str,
 		NWL_GetHumanSize(cdi_get_dword(NWLC->NwSmart, cur_disk, CDI_DWORD_DISK_SIZE), disk_human_sizes, 1000));
