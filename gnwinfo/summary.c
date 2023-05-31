@@ -30,9 +30,25 @@ get_smbios_attr(LPCSTR type, LPCSTR key, BOOL(*cond)(PNODE node))
 	}
 	return "-";
 }
+#if 0
+static void
+draw_label_cl(struct nk_context* ctx, LPCWSTR label, struct nk_color color)
+{
+	char* str = gnwinfo_get_ini_value(L"Translation", label, label);
+	nk_label_colored(ctx, str, NK_TEXT_LEFT, color);
+	free(str);
+}
+#endif
+static void
+draw_label_l(struct nk_context* ctx, LPCWSTR label)
+{
+	char* str = gnwinfo_get_ini_value(L"Translation", label, label);
+	nk_label(ctx, str, NK_TEXT_LEFT);
+	free(str);
+}
 
 static float
-draw_icon_label(struct nk_context* ctx, LPCSTR label, struct nk_image image)
+draw_icon_label(struct nk_context* ctx, LPCWSTR label, struct nk_image image)
 {
 	struct nk_rect rect = nk_layout_widget_bounds(ctx);
 	float ratio[2];
@@ -40,19 +56,19 @@ draw_icon_label(struct nk_context* ctx, LPCSTR label, struct nk_image image)
 	ratio[1] = 1.0f - ratio[0];
 	nk_layout_row(ctx, NK_DYNAMIC, 0, 2, ratio);
 	nk_image(ctx, image);
-	nk_label(ctx, label, NK_TEXT_LEFT);
+	draw_label_l(ctx, label);
 	return ratio[0];
 }
 
 static VOID
 draw_os(struct nk_context* ctx)
 {
-	float ratio = draw_icon_label(ctx, "Operating System", g_ctx.image_os);
+	float ratio = draw_icon_label(ctx, L"Operating System", g_ctx.image_os);
 
 	nk_layout_row(ctx, NK_DYNAMIC, 0, 3, (float[3]) { ratio, 0.3f, 0.7f - ratio });
 
 	nk_spacer(ctx);
-	nk_label(ctx, "Name", NK_TEXT_LEFT);
+	draw_label_l(ctx, L"Name");
 	nk_labelf_colored(ctx, NK_TEXT_LEFT,
 		g_color_text_l,
 		"%s %s (%s)",
@@ -71,7 +87,7 @@ draw_os(struct nk_context* ctx)
 		strcmp(gnwinfo_get_node_attr(g_ctx.system, "BitLocker Boot"), "Yes") == 0 ? " BitLocker" : "");
 
 	nk_spacer(ctx);
-	nk_label(ctx, "Uptime", NK_TEXT_LEFT);
+	draw_label_l(ctx, L"Uptime");
 	nk_label_colored(ctx, g_ctx.sys_uptime, NK_TEXT_LEFT, g_color_text_l);
 }
 
@@ -80,7 +96,7 @@ draw_bios(struct nk_context* ctx)
 {
 	LPCSTR tpm = gnwinfo_get_node_attr(g_ctx.system, "TPM");
 	LPCSTR sb = gnwinfo_get_node_attr(g_ctx.uefi, "Secure Boot");
-	float ratio = draw_icon_label(ctx, "BIOS", g_ctx.image_bios);
+	float ratio = draw_icon_label(ctx, L"BIOS", g_ctx.image_bios);
 
 	if (sb[0] == 'E')
 		sb = " SecureBoot";
@@ -92,7 +108,7 @@ draw_bios(struct nk_context* ctx)
 	nk_layout_row(ctx, NK_DYNAMIC, 0, 3, (float[3]) { ratio, 0.3f, 0.7f - ratio });
 
 	nk_spacer(ctx);
-	nk_label(ctx, "Firmware", NK_TEXT_LEFT);
+	draw_label_l(ctx, L"Firmware");
 	nk_labelf_colored(ctx, NK_TEXT_LEFT,
 		g_color_text_l,
 		"%s%s%s%s",
@@ -102,7 +118,7 @@ draw_bios(struct nk_context* ctx)
 		tpm[0] == 'v' ? tpm : "");
 
 	nk_spacer(ctx);
-	nk_label(ctx, "Version", NK_TEXT_LEFT);
+	draw_label_l(ctx, L"Version");
 	nk_labelf_colored(ctx, NK_TEXT_LEFT,
 		g_color_text_l,
 		"%s %s",
@@ -120,7 +136,7 @@ is_motherboard(PNODE node)
 static VOID
 draw_computer(struct nk_context* ctx)
 {
-	float ratio = draw_icon_label(ctx, "Computer", g_ctx.image_board);
+	float ratio = draw_icon_label(ctx, L"Computer", g_ctx.image_board);
 
 	nk_layout_row(ctx, NK_DYNAMIC, 0, 3, (float[3]) { ratio, 0.3f, 0.7f - ratio });
 
@@ -158,7 +174,7 @@ draw_processor(struct nk_context* ctx)
 	INT i, count;
 	CHAR name[32];
 	struct nk_color color = g_color_good;
-	float ratio = draw_icon_label(ctx, "Processor", g_ctx.image_cpu);
+	float ratio = draw_icon_label(ctx, L"Processor", g_ctx.image_cpu);
 
 	if (g_ctx.pdh_val_cpu > 60.0)
 		color = g_color_warning;
@@ -170,7 +186,7 @@ draw_processor(struct nk_context* ctx)
 	nk_layout_row(ctx, NK_DYNAMIC, 0, 3, (float[3]) { ratio, 0.3f, 0.7f - ratio });
 
 	nk_spacer(ctx);
-	nk_label(ctx, "Usage", NK_TEXT_LEFT);
+	draw_label_l(ctx, L"Usage");
 	nk_labelf_colored(ctx, NK_TEXT_LEFT, color,
 		"%.2f%% %s MHz",
 		g_ctx.pdh_val_cpu,
@@ -201,7 +217,7 @@ draw_processor(struct nk_context* ctx)
 		cache_size[cache_level - 1] = get_smbios_attr("7", "Installed Cache Size", is_cache_level_equal);
 
 	nk_spacer(ctx);
-	nk_label(ctx, "Cache Size", NK_TEXT_LEFT);
+	draw_label_l(ctx, L"Cache");
 	if (cache_size[0][0] == '-')
 		nk_label_colored(ctx, cache_size[0], NK_TEXT_LEFT, g_color_text_l);
 	else if (cache_size[1][0] == '-')
@@ -223,7 +239,7 @@ draw_memory(struct nk_context* ctx)
 {
 	INT i;
 	struct nk_color color = g_color_good;
-	float ratio = draw_icon_label(ctx, "Memory", g_ctx.image_ram);
+	float ratio = draw_icon_label(ctx, L"Memory", g_ctx.image_ram);
 
 	if (g_ctx.mem_status.dwMemoryLoad > 60)
 		color = g_color_warning;
@@ -233,7 +249,7 @@ draw_memory(struct nk_context* ctx)
 	nk_layout_row(ctx, NK_DYNAMIC, 0, 3, (float[3]) { ratio, 0.3f, 0.7f - ratio });
 
 	nk_spacer(ctx);
-	nk_label(ctx, "Usage", NK_TEXT_LEFT);
+	draw_label_l(ctx, L"Usage");
 	nk_labelf_colored(ctx, NK_TEXT_LEFT, color,
 		"%lu%% %s / %s",
 		g_ctx.mem_status.dwMemoryLoad, g_ctx.mem_avail, g_ctx.mem_total);
@@ -264,7 +280,7 @@ static VOID
 draw_display(struct nk_context* ctx)
 {
 	INT i;
-	float ratio = draw_icon_label(ctx, "Display Devices", g_ctx.image_edid);
+	float ratio = draw_icon_label(ctx, L"Display Devices", g_ctx.image_edid);
 
 	nk_layout_row(ctx, NK_DYNAMIC, 0, 3, (float[3]) { ratio, 0.3f, 0.7f - ratio });
 
@@ -349,7 +365,7 @@ static VOID
 draw_storage(struct nk_context* ctx)
 {
 	INT i;
-	float ratio = draw_icon_label(ctx, "Storage", g_ctx.image_disk);
+	float ratio = draw_icon_label(ctx, L"Storage", g_ctx.image_disk);
 	for (i = 0; g_ctx.disk->Children[i].LinkedNode; i++)
 	{
 		BOOL cdrom;
@@ -432,10 +448,10 @@ static VOID
 draw_network(struct nk_context* ctx)
 {
 	INT i;
-	float ratio = draw_icon_label(ctx, "Network", g_ctx.image_net);
+	float ratio = draw_icon_label(ctx, L"Network", g_ctx.image_net);
 	nk_layout_row(ctx, NK_DYNAMIC, 0, 3, (float[3]) { ratio, 0.6f, 0.4f - ratio });
 	nk_spacer(ctx);
-	nk_label(ctx, "Traffic /s", NK_TEXT_LEFT);
+	draw_label_l(ctx, L"Traffic /s");
 	nk_labelf_colored(ctx, NK_TEXT_LEFT,
 		g_color_text_l,
 		u8"\u2191 %s \u2193 %s", g_ctx.net_send, g_ctx.net_recv);
@@ -467,7 +483,7 @@ gnwinfo_draw_main_window(struct nk_context* ctx, float width, float height)
 		nk_rect(0, 0, width, height),
 		NK_WINDOW_BACKGROUND))
 		goto out;
-	nk_layout_row_begin(ctx, NK_DYNAMIC, 20, 5);
+	nk_layout_row_begin(ctx, NK_DYNAMIC, 0, 6);
 	struct nk_rect rect = nk_layout_widget_bounds(ctx);
 	float ratio = rect.h / rect.w;
 
@@ -480,6 +496,10 @@ gnwinfo_draw_main_window(struct nk_context* ctx, float width, float height)
 	nk_layout_row_push(ctx, ratio);
 	if (nk_button_image(ctx, g_ctx.image_set))
 		g_ctx.gui_settings = TRUE;
+	nk_layout_row_push(ctx, ratio);
+	if (nk_button_image(ctx, g_ctx.image_refresh))
+		gnwinfo_ctx_update(IDT_TIMER_1M);
+	nk_layout_row_push(ctx, ratio);
 	if (nk_button_image(ctx, g_ctx.image_info))
 		g_ctx.gui_about = TRUE;
 	nk_layout_row_push(ctx, ratio);

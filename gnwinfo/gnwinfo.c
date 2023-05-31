@@ -66,6 +66,7 @@ wWinMain(_In_ HINSTANCE hInstance,
 	char* str;
 	int x_pos = CW_USEDEFAULT, y_pos = CW_USEDEFAULT;
 	WNDCLASSW wc;
+	RECT rect;
 	DWORD style = WS_SIZEBOX | WS_VISIBLE;
 	DWORD exstyle = WS_EX_LAYERED;
 	HWND wnd;
@@ -103,6 +104,11 @@ wWinMain(_In_ HINSTANCE hInstance,
 	get_ini_color(L"StateWarn", &g_color_warning);
 	get_ini_color(L"StateError", &g_color_error);
 	get_ini_color(L"StateUnknown", &g_color_unknown);
+	rect.left = 0;
+	rect.right = g_init_width;
+	rect.top = 0;
+	rect.bottom = g_init_height;
+	AdjustWindowRectEx(&rect, style, FALSE, exstyle);
 
 	/* Win32 */
 	memset(&wc, 0, sizeof(wc));
@@ -116,13 +122,15 @@ wWinMain(_In_ HINSTANCE hInstance,
 
 	wnd = CreateWindowExW(exstyle, wc.lpszClassName, L"NWinfo GUI",
 		style, x_pos, y_pos,
-		g_init_width, g_init_height,
+		rect.right - rect.left, rect.bottom - rect.top,
 		NULL, NULL, wc.hInstance, NULL);
 
-	style = (DWORD)GetWindowLongPtrW(wnd, GWL_STYLE) & ~WS_CAPTION;
 	if (g_bginfo)
-		style &= ~WS_SIZEBOX;
-	SetWindowLongPtrW(wnd, GWL_STYLE, style);
+	{
+		style = (DWORD)GetWindowLongPtrW(wnd, GWL_STYLE);
+		SetWindowLongPtrW(wnd, GWL_STYLE, style & ~WS_CAPTION & ~WS_SIZEBOX);
+		SetWindowPos(wnd, HWND_BOTTOM, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
+	}
 	SetLayeredWindowAttributes(wnd, 0, (BYTE)g_init_alpha, LWA_ALPHA);
 
 	/* GUI */
