@@ -43,6 +43,7 @@ VOID* NWL_NtGetRegValue(HKEY Key, LPCWSTR lpSubKey, LPCWSTR lpValueName, LPDWORD
 LPCSTR NWL_NtGetPathFromHandle(HANDLE hFile);
 BOOL NWL_NtQuerySystemInformation(INT SystemInformationClass,
 	PVOID SystemInformation, ULONG SystemInformationLength, PULONG ReturnLength);
+VOID NWL_NtGetVersion(LPOSVERSIONINFOEXW osInfo);
 
 VOID NWL_FindId(PNODE nd, CHAR* Ids, DWORD IdsSize, CONST CHAR* v, CONST CHAR* d, CONST CHAR* s, INT usb);
 VOID NWL_FindClass(PNODE nd, CHAR* Ids, DWORD IdsSize, CONST CHAR* Class, INT usb);

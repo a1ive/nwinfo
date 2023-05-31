@@ -8,7 +8,10 @@
 #include <string.h>
 #include <limits.h>
 #include <time.h>
+
+#ifdef USE_PDH
 #include <pdh.h>
+#endif
 
 #define NK_INCLUDE_FIXED_TYPES
 #define NK_INCLUDE_STANDARD_IO
@@ -78,19 +81,23 @@ typedef struct _GNW_CONTEXT
 	PNODE pci;
 	PNODE uefi;
 
+#ifdef USE_PDH
 	PDH_HQUERY pdh;
 	PDH_HCOUNTER pdh_cpu;
 	PDH_HCOUNTER pdh_net_recv;
 	PDH_HCOUNTER pdh_net_send;
-	double pdh_val_cpu;
+#endif
+
 	CHAR net_recv[48];
 	CHAR net_send[48];
-
+	double cpu_usage;
 	LPCSTR sys_uptime;
 	MEMORYSTATUSEX mem_status;
 	CHAR mem_total[48];
 	CHAR mem_avail[48];
+#ifdef PUBLIC_IP
 	CHAR pub_ip[128];
+#endif
 } GNW_CONTEXT;
 extern GNW_CONTEXT g_ctx;
 

@@ -101,3 +101,20 @@ BOOL NWL_NtQuerySystemInformation(INT SystemInformationClass,
 		return FALSE;
 	return NT_SUCCESS(OsNtQuerySystemInformation(SystemInformationClass, SystemInformation, SystemInformationLength, ReturnLength));
 }
+
+VOID NWL_NtGetVersion(LPOSVERSIONINFOEXW osInfo)
+{
+	NTSTATUS(WINAPI * RtlGetVersion)(LPOSVERSIONINFOEXW) = NULL;
+	HMODULE hMod = GetModuleHandleA("ntdll");
+
+	ZeroMemory(osInfo, sizeof(OSVERSIONINFOEXW));
+
+	if (hMod)
+		*(FARPROC*)&RtlGetVersion = GetProcAddress(hMod, "RtlGetVersion");
+
+	if (RtlGetVersion)
+	{
+		osInfo->dwOSVersionInfoSize = sizeof(OSVERSIONINFOEXW);
+		RtlGetVersion(osInfo);
+	}
+}

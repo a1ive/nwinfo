@@ -3,12 +3,13 @@
 #include "gnwinfo.h"
 
 #include "icons.h"
-
+#ifdef PUBLIC_IP
 #include <wininet.h>
-
-#pragma comment(lib, "pdh.lib")
 #pragma comment(lib, "wininet.lib")
-
+#endif
+#ifdef USE_PDH
+#pragma comment(lib, "pdh.lib")
+#endif
 GNW_CONTEXT g_ctx;
 
 static void
@@ -24,6 +25,7 @@ LPCSTR NWL_GetHumanSize(UINT64 size, LPCSTR human_sizes[6], UINT64 base);
 static const char* human_sizes[6] =
 { "B", "K", "M", "G", "T", "P", };
 
+#ifdef PUBLIC_IP
 static void
 update_public_ip(void)
 {
@@ -45,6 +47,65 @@ fail:
 	if (net)
 		InternetCloseHandle(net);
 }
+#endif
+
+#ifndef USE_PDH
+__int64 compare_file_time(const FILETIME* time1, const FILETIME* time2)
+{
+	__int64 a = ((__int64)time1->dwHighDateTime) << 32 | time1->dwLowDateTime;
+	__int64 b = ((__int64)time2->dwHighDateTime) << 32 | time2->dwLowDateTime;
+	return b - a;
+}
+
+static void
+get_cpu_usage_by_api(void)
+{
+	static FILETIME old_idle = { 0 };
+	static FILETIME old_krnl = { 0 };
+	static FILETIME old_user = { 0 };
+	FILETIME idle = { 0 };
+	FILETIME krnl = { 0 };
+	FILETIME user = { 0 };
+	__int64 diff_idle, diff_krnl, diff_user, total;
+	g_ctx.cpu_usage = 0.0;
+	GetSystemTimes(&idle, &krnl, &user);
+	diff_idle = compare_file_time(&idle, &old_idle);
+	diff_krnl = compare_file_time(&krnl, &old_krnl);
+	diff_user = compare_file_time(&user, &old_user);
+	total = diff_krnl + diff_user;
+	if (total != 0)
+		g_ctx.cpu_usage = (100.0 * (total - diff_idle)) / total;
+	if (g_ctx.cpu_usage < 0.0)
+		g_ctx.cpu_usage = -g_ctx.cpu_usage;
+	old_idle = idle;
+	old_krnl = krnl;
+	old_user = user;
+}
+
+static void
+get_network_traffic_by_api(void)
+{
+	static UINT64 old_recv = 0;
+	static UINT64 old_send = 0;
+	UINT64 recv = 0;
+	UINT64 send = 0;
+	UINT64 diff_recv, diff_send, i;
+	for (i = 0; g_ctx.network->Children[i].LinkedNode; i++)
+	{
+		PNODE nw = g_ctx.network->Children[i].LinkedNode;
+		if (!nw)
+			continue;
+		recv += strtoull(gnwinfo_get_node_attr(nw, "Received (Octets)"), NULL, 10);
+		send += strtoull(gnwinfo_get_node_attr(nw, "Sent (Octets)"), NULL, 10);
+	}
+	diff_recv = (recv >= old_recv) ? recv - old_recv : 0;
+	diff_send = (send >= old_send) ? send - old_send : 0;
+	old_recv = recv;
+	old_send = send;
+	memcpy(g_ctx.net_recv, NWL_GetHumanSize(diff_recv, human_sizes, 1024), 48);
+	memcpy(g_ctx.net_send, NWL_GetHumanSize(diff_send, human_sizes, 1024), 48);
+}
+#endif
 
 void
 gnwinfo_ctx_update(WPARAM wparam)
@@ -63,23 +124,29 @@ gnwinfo_ctx_update(WPARAM wparam)
 		GlobalMemoryStatusEx(&g_ctx.mem_status);
 		memcpy(g_ctx.mem_avail, NWL_GetHumanSize(g_ctx.mem_status.ullAvailPhys, human_sizes, 1024), 48);
 		memcpy(g_ctx.mem_total, NWL_GetHumanSize(g_ctx.mem_status.ullTotalPhys, human_sizes, 1024), 48);
+#ifdef USE_PDH
 		if (g_ctx.pdh && PdhCollectQueryData(g_ctx.pdh) == ERROR_SUCCESS)
 		{
 			PDH_FMT_COUNTERVALUE value = { 0 };
 			if (g_ctx.pdh_cpu && PdhGetFormattedCounterValue(g_ctx.pdh_cpu, PDH_FMT_DOUBLE, NULL, &value) == ERROR_SUCCESS)
-				g_ctx.pdh_val_cpu = value.doubleValue;
+				g_ctx.cpu_usage = value.doubleValue;
 			if (g_ctx.pdh_net_recv && PdhGetFormattedCounterValue(g_ctx.pdh_net_recv, PDH_FMT_LARGE, NULL, &value) == ERROR_SUCCESS)
 				memcpy(g_ctx.net_recv, NWL_GetHumanSize(value.largeValue, human_sizes, 1024), 48);
 			if (g_ctx.pdh_net_send && PdhGetFormattedCounterValue(g_ctx.pdh_net_send, PDH_FMT_LARGE, NULL, &value) == ERROR_SUCCESS)
 				memcpy(g_ctx.net_send, NWL_GetHumanSize(value.largeValue, human_sizes, 1024), 48);
 		}
-
+#else
+		get_network_traffic_by_api();
+		get_cpu_usage_by_api();
+#endif
 		break;
 	case IDT_TIMER_1M:
 		if (g_ctx.disk)
 			NWL_NodeFree(g_ctx.disk, 1);
 		g_ctx.disk = NW_Disk();
+#ifdef PUBLIC_IP
 		update_public_ip();
+#endif
 		break;
 	}
 }
@@ -99,7 +166,7 @@ gnwinfo_ctx_init(HINSTANCE inst, HWND wnd, struct nk_context* ctx, float width, 
 	nk_spacer(ctx);
 	nk_end(ctx);
 	nk_gdip_render(NK_ANTI_ALIASING_ON, g_color_back);
-
+#ifdef USE_PDH
 	if (PdhOpenQueryW(NULL, 0, &g_ctx.pdh) != ERROR_SUCCESS)
 		g_ctx.pdh = NULL;
 	else
@@ -114,7 +181,7 @@ gnwinfo_ctx_init(HINSTANCE inst, HWND wnd, struct nk_context* ctx, float width, 
 
 	if (g_ctx.pdh)
 		PdhCollectQueryData(g_ctx.pdh);
-
+#endif
 	g_ctx.gui_height = height;
 	g_ctx.gui_width = width;
 	g_ctx.inst = inst;
@@ -163,8 +230,10 @@ gnwinfo_ctx_init(HINSTANCE inst, HWND wnd, struct nk_context* ctx, float width, 
 noreturn void
 gnwinfo_ctx_exit()
 {
+#ifdef USE_PDH
 	if (g_ctx.pdh)
 		PdhCloseQuery(g_ctx.pdh);
+#endif
 	KillTimer(g_ctx.wnd, IDT_TIMER_1S);
 	KillTimer(g_ctx.wnd, IDT_TIMER_1M);
 	ReleaseMutex(g_ctx.mutex);

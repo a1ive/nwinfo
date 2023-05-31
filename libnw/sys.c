@@ -144,29 +144,18 @@ OsVersionToStr(OSVERSIONINFOEXW* p)
 
 static void PrintOsVer(PNODE node)
 {
-	NTSTATUS(WINAPI * RtlGetVersion)(LPOSVERSIONINFOEXW) = NULL;
 	OSVERSIONINFOEXW osInfo = { 0 };
-	HMODULE hMod = GetModuleHandleA("ntdll");
-
-	if (hMod)
-		*(FARPROC*)&RtlGetVersion = GetProcAddress(hMod, "RtlGetVersion");
-
-	if (RtlGetVersion)
-	{
-		CHAR szSP[] = " SP65535.65535";
-		osInfo.dwOSVersionInfoSize = sizeof(osInfo);
-		RtlGetVersion(&osInfo);
-		if (osInfo.wServicePackMinor)
-			snprintf(szSP, sizeof(szSP), " SP%u.%u",
-				osInfo.wServicePackMajor, osInfo.wServicePackMinor);
-		else if (osInfo.wServicePackMajor)
-			snprintf(szSP, sizeof(szSP), " SP%u", osInfo.wServicePackMajor);
-		else
-			szSP[0] = '\0';
-		NWL_NodeAttrSetf(node, "OS", 0, "Windows %s%s", OsVersionToStr(&osInfo), szSP);
-		NWL_NodeAttrSetf(node, "Build Number", 0, "%lu.%lu.%lu",
-			osInfo.dwMajorVersion, osInfo.dwMinorVersion, osInfo.dwBuildNumber);
-	}
+	CHAR szSP[] = " SP65535.65535";
+	NWL_NtGetVersion(&osInfo);
+	if (osInfo.wServicePackMinor)
+		snprintf(szSP, sizeof(szSP), " SP%u.%u", osInfo.wServicePackMajor, osInfo.wServicePackMinor);
+	else if (osInfo.wServicePackMajor)
+		snprintf(szSP, sizeof(szSP), " SP%u", osInfo.wServicePackMajor);
+	else
+		szSP[0] = '\0';
+	NWL_NodeAttrSetf(node, "OS", 0, "Windows %s%s", OsVersionToStr(&osInfo), szSP);
+	NWL_NodeAttrSetf(node, "Build Number", 0, "%lu.%lu.%lu",
+		osInfo.dwMajorVersion, osInfo.dwMinorVersion, osInfo.dwBuildNumber);
 }
 
 LPCSTR NWL_GetUptime(VOID)

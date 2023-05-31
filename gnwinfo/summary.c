@@ -176,9 +176,9 @@ draw_processor(struct nk_context* ctx)
 	struct nk_color color = g_color_good;
 	float ratio = draw_icon_label(ctx, L"Processor", g_ctx.image_cpu);
 
-	if (g_ctx.pdh_val_cpu > 60.0)
+	if (g_ctx.cpu_usage > 60.0)
 		color = g_color_warning;
-	if (g_ctx.pdh_val_cpu > 80.0)
+	if (g_ctx.cpu_usage > 80.0)
 		color = g_color_error;
 
 	count = strtol(gnwinfo_get_node_attr(g_ctx.cpuid, "Processor Count"), NULL, 10);
@@ -189,7 +189,7 @@ draw_processor(struct nk_context* ctx)
 	draw_label_l(ctx, L"Usage");
 	nk_labelf_colored(ctx, NK_TEXT_LEFT, color,
 		"%.2f%% %s MHz",
-		g_ctx.pdh_val_cpu,
+		g_ctx.cpu_usage,
 		gnwinfo_get_node_attr(g_ctx.cpuid, "CPU Clock (MHz)"));
 
 	for (i = 0; i < count; i++)
@@ -455,6 +455,7 @@ draw_network(struct nk_context* ctx)
 	nk_labelf_colored(ctx, NK_TEXT_LEFT,
 		g_color_text_l,
 		u8"\u2191 %s \u2193 %s", g_ctx.net_send, g_ctx.net_recv);
+#ifdef PUBLIC_IP
 	if (g_ctx.main_flag & MAIN_NET_PUB_IP)
 	{
 		nk_spacer(ctx);
@@ -463,7 +464,7 @@ draw_network(struct nk_context* ctx)
 			g_color_text_l,
 			"%s", g_ctx.pub_ip[0] ? g_ctx.pub_ip : "-");
 	}
-
+#endif
 	for (i = 0; g_ctx.network->Children[i].LinkedNode; i++)
 	{
 		PNODE nw = g_ctx.network->Children[i].LinkedNode;

@@ -285,8 +285,8 @@ PNODE NW_UpdateNetwork(PNODE node)
 		if (IfTable && pCurrAddresses->IfIndex > 0 && pCurrAddresses->IfIndex <= IfTable->dwNumEntries)
 		{
 			IF_INDEX idx = pCurrAddresses->IfIndex - 1;
-			NWL_NodeAttrSetf(nic, "Received (Octets)", NAFLG_FMT_NUMERIC, "%u", IfTable->table[idx].dwInOctets);
-			NWL_NodeAttrSetf(nic, "Sent (Octets)", NAFLG_FMT_NUMERIC, "%u", IfTable->table[idx].dwOutOctets);
+			NWL_NodeAttrSetf(nic, "Received (Octets)", NAFLG_FMT_NUMERIC, "%lu", IfTable->table[idx].dwInOctets);
+			NWL_NodeAttrSetf(nic, "Sent (Octets)", NAFLG_FMT_NUMERIC, "%lu", IfTable->table[idx].dwOutOctets);
 		}
 next_addr:
 		pCurrAddresses = pCurrAddresses->Next;

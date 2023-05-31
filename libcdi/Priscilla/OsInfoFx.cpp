@@ -42,8 +42,8 @@ BOOL IsWindowsVersionOrGreaterFx(WORD wMajorVersion, WORD wMinorVersion, WORD wS
 	UINT64 r, o;
 
 	GetVersionFx(&osvi);
-	o = ((UINT64)osvi.dwMajorVersion & 0xFFFF) << 32 | (osvi.dwMinorVersion & 0xFFFF) << 16 | (osvi.wServicePackMajor & 0xFFFF);
-	r = ((UINT64)wMajorVersion & 0xFFFF) << 32 | (wMinorVersion & 0xFFFF) << 16 | (wServicePackMajor & 0xFFFF);
+	o = ((UINT64)osvi.dwMajorVersion & 0xFFFF) << 32 | ((UINT64)osvi.dwMinorVersion & 0xFFFF) << 16 | (osvi.wServicePackMajor & 0xFFFF);
+	r = ((UINT64)wMajorVersion & 0xFFFF) << 32 | ((UINT64)wMinorVersion & 0xFFFF) << 16 | (wServicePackMajor & 0xFFFF);
 	return (o >= r);
 }
 
