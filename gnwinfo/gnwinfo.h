@@ -37,6 +37,7 @@
 #define MAIN_INFO_NETWORK   (1U << 7)
 
 #define MAIN_NET_INACTIVE   (1U << 16)
+#define MAIN_NET_PUB_IP     (1U << 17)
 
 typedef struct _GNW_CONTEXT
 {
@@ -89,6 +90,7 @@ typedef struct _GNW_CONTEXT
 	MEMORYSTATUSEX mem_status;
 	CHAR mem_total[48];
 	CHAR mem_avail[48];
+	CHAR pub_ip[128];
 } GNW_CONTEXT;
 extern GNW_CONTEXT g_ctx;
 

@@ -455,6 +455,14 @@ draw_network(struct nk_context* ctx)
 	nk_labelf_colored(ctx, NK_TEXT_LEFT,
 		g_color_text_l,
 		u8"\u2191 %s \u2193 %s", g_ctx.net_send, g_ctx.net_recv);
+	if (g_ctx.main_flag & MAIN_NET_PUB_IP)
+	{
+		nk_spacer(ctx);
+		draw_label_l(ctx, L"Public IP");
+		nk_labelf_colored(ctx, NK_TEXT_LEFT,
+			g_color_text_l,
+			"%s", g_ctx.pub_ip[0] ? g_ctx.pub_ip : "-");
+	}
 
 	for (i = 0; g_ctx.network->Children[i].LinkedNode; i++)
 	{

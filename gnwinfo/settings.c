@@ -111,6 +111,8 @@ gnwinfo_draw_settings_window(struct nk_context* ctx, float width, float height)
 	nk_layout_row(ctx, NK_DYNAMIC, 0, 2, (float[2]) { 0.1f, 0.9f });
 	nk_spacer(ctx);
 	nk_checkbox_flags_label(ctx, "Hide inactive network", &g_ctx.main_flag, MAIN_NET_INACTIVE);
+	nk_spacer(ctx);
+	nk_checkbox_flags_label(ctx, "Hide public ip address", &g_ctx.main_flag, MAIN_NET_PUB_IP);
 
 	nk_layout_row_dynamic(ctx, 0, 1);
 	nk_label(ctx, "Storage", NK_TEXT_LEFT);
@@ -119,7 +121,7 @@ gnwinfo_draw_settings_window(struct nk_context* ctx, float width, float height)
 	g_ctx.smart_hex = !nk_check_label(ctx, "Display SMART in HEX format", !g_ctx.smart_hex);
 
 	nk_layout_row_dynamic(ctx, 0, 1);
-	nk_label(ctx, "Window", NK_TEXT_LEFT);
+	nk_label(ctx, "Window (Restart required)", NK_TEXT_LEFT);
 	nk_layout_row(ctx, NK_DYNAMIC, 0, 2, (float[2]) { 0.1f, 0.9f });
 	nk_spacer(ctx);
 	g_bginfo = !nk_check_label(ctx, "Background Info", !g_bginfo);

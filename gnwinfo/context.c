@@ -4,7 +4,10 @@
 
 #include "icons.h"
 
+#include <wininet.h>
+
 #pragma comment(lib, "pdh.lib")
+#pragma comment(lib, "wininet.lib")
 
 GNW_CONTEXT g_ctx;
 
@@ -20,6 +23,28 @@ gnwinfo_ctx_error_callback(LPCSTR lpszText)
 LPCSTR NWL_GetHumanSize(UINT64 size, LPCSTR human_sizes[6], UINT64 base);
 static const char* human_sizes[6] =
 { "B", "K", "M", "G", "T", "P", };
+
+static void
+update_public_ip(void)
+{
+	HINTERNET net = NULL, file = NULL;
+	DWORD size;
+	ZeroMemory(g_ctx.pub_ip, sizeof(g_ctx.pub_ip));
+	if (g_ctx.main_flag & MAIN_NET_PUB_IP)
+		goto fail;
+	net = InternetOpenW(NULL, INTERNET_OPEN_TYPE_PRECONFIG, NULL, NULL, 0);
+	if (!net)
+		goto fail;
+	file = InternetOpenUrlW(net, L"https://api.ipify.org", NULL, 0, INTERNET_FLAG_RELOAD, 0);
+	if (!file)
+		goto fail;
+	InternetReadFile(file, g_ctx.pub_ip, sizeof(g_ctx.pub_ip) - 1, &size);
+fail:
+	if (file)
+		InternetCloseHandle(file);
+	if (net)
+		InternetCloseHandle(net);
+}
 
 void
 gnwinfo_ctx_update(WPARAM wparam)
@@ -54,6 +79,7 @@ gnwinfo_ctx_update(WPARAM wparam)
 		if (g_ctx.disk)
 			NWL_NodeFree(g_ctx.disk, 1);
 		g_ctx.disk = NW_Disk();
+		update_public_ip();
 		break;
 	}
 }
