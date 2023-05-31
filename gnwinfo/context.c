@@ -74,9 +74,7 @@ get_cpu_usage_by_api(void)
 	diff_user = compare_file_time(&user, &old_user);
 	total = diff_krnl + diff_user;
 	if (total != 0)
-		g_ctx.cpu_usage = (100.0 * (total - diff_idle)) / total;
-	if (g_ctx.cpu_usage < 0.0)
-		g_ctx.cpu_usage = -g_ctx.cpu_usage;
+		g_ctx.cpu_usage = (100.0 * _abs64(total - diff_idle)) / _abs64(total);
 	old_idle = idle;
 	old_krnl = krnl;
 	old_user = user;
