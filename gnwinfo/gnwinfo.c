@@ -108,7 +108,8 @@ wWinMain(_In_ HINSTANCE hInstance,
 	rect.right = g_init_width;
 	rect.top = 0;
 	rect.bottom = g_init_height;
-	AdjustWindowRectEx(&rect, style, FALSE, exstyle);
+	if (!g_bginfo)
+		AdjustWindowRectEx(&rect, style, FALSE, exstyle);
 
 	/* Win32 */
 	memset(&wc, 0, sizeof(wc));
