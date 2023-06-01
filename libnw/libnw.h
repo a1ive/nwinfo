@@ -90,7 +90,6 @@ PNODE NW_Libinfo(VOID);
 PNODE NW_Uefi(VOID);
 
 PNODE NW_UpdateCpuid(PNODE node);
-PNODE NW_UpdateNetwork(PNODE node);
 
 LPCSTR NWL_GetUptime(VOID);
 

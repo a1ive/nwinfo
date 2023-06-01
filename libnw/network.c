@@ -65,40 +65,7 @@ IfTypeToStr(IFTYPE Type)
 	return "Other";
 }
 
-static PNODE CreateNode(PNODE parent, LPCSTR name)
-{
-	PNODE_LINK link;
-	for (link = &parent->Children[0]; link->LinkedNode != NULL; link++)
-	{
-		if (strcmp(link->LinkedNode->Name, name) == 0)
-		{
-			NWL_NodeFree(link->LinkedNode, 1);
-			link->LinkedNode = NWL_NodeAlloc(name, NFLG_TABLE);
-			return link->LinkedNode;
-		}
-	}
-	return NWL_NodeAppendNew(parent, name, NFLG_TABLE);
-}
-
-static PNODE CreateIf(PNODE parent, LPCSTR guid)
-{
-	PNODE node = NULL;
-	PNODE_LINK link;
-	for (link = &parent->Children[0]; link->LinkedNode != NULL; link++)
-	{
-		if (strcmp(link->LinkedNode->Name, "Interface") == 0)
-		{
-			LPCSTR name = NWL_NodeAttrGet(link->LinkedNode, "Network Adapter");
-			if (name && strcmp(name, guid) == 0)
-				return link->LinkedNode;
-		}
-	}
-	node = NWL_NodeAppendNew(parent, "Interface", NFLG_TABLE_ROW);
-	NWL_NodeAttrSet(node, "Network Adapter", guid, NAFLG_FMT_GUID);
-	return node;
-}
-
-PNODE NW_UpdateNetwork(PNODE node)
+PNODE NW_Network(VOID)
 {
 	DWORD dwRetVal = 0;
 	unsigned int i = 0;
@@ -116,6 +83,9 @@ PNODE NW_UpdateNetwork(PNODE node)
 	MIB_IFTABLE *IfTable = NULL;
 	ULONG IfTableSize = 0;
 	PVOID pMaxAddress = NULL;
+	PNODE node = NWL_NodeAlloc("Network", NFLG_TABLE);
+	if (NWLC->NetInfo)
+		NWL_NodeAppendChild(NWLC->NwRoot, node);
 
 	// Allocate a 15 KB buffer to start with.
 	outBufLen = WORKING_BUFFER_SIZE;
@@ -160,7 +130,8 @@ PNODE NW_UpdateNetwork(PNODE node)
 		PNODE nic = NULL;
 		if (NWLC->ActiveNet && pCurrAddresses->OperStatus != IfOperStatusUp)
 			goto next_addr;
-		nic = CreateIf(node, pCurrAddresses->AdapterName);
+		nic = NWL_NodeAppendNew(node, "Interface", NFLG_TABLE_ROW);
+		NWL_NodeAttrSet(nic, "Network Adapter", pCurrAddresses->AdapterName, NAFLG_FMT_GUID);
 		NWL_NodeAttrSet(nic, "Description", NWL_WcsToMbs(pCurrAddresses->Description), 0);
 		NWL_NodeAttrSet(nic, "Type", IfTypeToStr(pCurrAddresses->IfType), 0);
 		if (pCurrAddresses->PhysicalAddressLength != 0)
@@ -179,7 +150,7 @@ PNODE NW_UpdateNetwork(PNODE node)
 		pUnicast = pCurrAddresses->FirstUnicastAddress;
 		if (pUnicast != NULL)
 		{
-			PNODE n_unicast = CreateNode(nic, "Unicasts");
+			PNODE n_unicast = NWL_NodeAppendNew(nic, "Unicasts", NFLG_TABLE);
 			for (i = 0; pUnicast != NULL && pUnicast < (PIP_ADAPTER_UNICAST_ADDRESS)pMaxAddress; i++)
 			{
 				PNODE unicast = NWL_NodeAppendNew(n_unicast, "Unicast Address", NFLG_TABLE_ROW);
@@ -198,7 +169,7 @@ PNODE NW_UpdateNetwork(PNODE node)
 		pAnycast = pCurrAddresses->FirstAnycastAddress;
 		if (pAnycast)
 		{
-			PNODE n_anycast = CreateNode(nic, "Anycasts");
+			PNODE n_anycast = NWL_NodeAppendNew(nic, "Anycasts", NFLG_TABLE);
 			for (i = 0; pAnycast != NULL && pAnycast < (PIP_ADAPTER_ANYCAST_ADDRESS)pMaxAddress; i++)
 			{
 				PNODE anycast = NWL_NodeAppendNew(n_anycast, "Anycast Address", NFLG_TABLE_ROW);
@@ -210,7 +181,7 @@ PNODE NW_UpdateNetwork(PNODE node)
 		pMulticast = pCurrAddresses->FirstMulticastAddress;
 		if (pMulticast)
 		{
-			PNODE n_multicast = CreateNode(nic, "Multicasts");
+			PNODE n_multicast = NWL_NodeAppendNew(nic, "Multicasts", NFLG_TABLE);
 			for (i = 0; pMulticast != NULL && pMulticast < (PIP_ADAPTER_MULTICAST_ADDRESS)pMaxAddress; i++)
 			{
 				PNODE multicast = NWL_NodeAppendNew(n_multicast, "Multicast Address", NFLG_TABLE_ROW);
@@ -222,7 +193,7 @@ PNODE NW_UpdateNetwork(PNODE node)
 		pGateway = pCurrAddresses->FirstGatewayAddress;
 		if (pGateway != NULL)
 		{
-			PNODE n_gateway = CreateNode(nic, "Gateways");
+			PNODE n_gateway = NWL_NodeAppendNew(nic, "Gateways", NFLG_TABLE);
 			for (i = 0; pGateway != NULL && pGateway < (PIP_ADAPTER_GATEWAY_ADDRESS)pMaxAddress; i++)
 			{
 				PNODE gateway = NWL_NodeAppendNew(n_gateway, "Gateway", NFLG_TABLE_ROW);
@@ -234,7 +205,7 @@ PNODE NW_UpdateNetwork(PNODE node)
 		pDnServer = pCurrAddresses->FirstDnsServerAddress;
 		if (pDnServer)
 		{
-			PNODE n_dns = CreateNode(nic, "DNS Servers");
+			PNODE n_dns = NWL_NodeAppendNew(nic, "DNS Servers", NFLG_TABLE);
 			for (i = 0; pDnServer != NULL && pDnServer < (IP_ADAPTER_DNS_SERVER_ADDRESS*)pMaxAddress; i++)
 			{
 				PNODE dns = NWL_NodeAppendNew(n_dns, "DNS Server", NFLG_TABLE_ROW);
@@ -267,12 +238,4 @@ next_addr:
 	if (IfTable)
 		FREE(IfTable);
 	return node;
-}
-
-PNODE NW_Network(VOID)
-{
-	PNODE node = NWL_NodeAlloc("Network", NFLG_TABLE);
-	if (NWLC->NetInfo)
-		NWL_NodeAppendChild(NWLC->NwRoot, node);
-	return NW_UpdateNetwork(node);
 }
