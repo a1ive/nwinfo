@@ -85,6 +85,9 @@ typedef struct _GNW_CONTEXT
 	PNODE pci;
 	PNODE uefi;
 
+	LPCSTR sys_boot;
+	LPCSTR sys_disk;
+
 #ifdef USE_PDH
 	PDH_HQUERY pdh;
 	PDH_HCOUNTER pdh_cpu;

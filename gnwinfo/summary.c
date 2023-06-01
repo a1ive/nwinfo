@@ -350,10 +350,14 @@ draw_volume(struct nk_context* ctx, PNODE disk, float ratio)
 	nk_layout_row(ctx, NK_DYNAMIC, 0, 5, (float[5]) { ratio, 0.1f, 0.2f, 0.4f, 0.3f - ratio });
 	for (i = 0; vol->Children[i].LinkedNode; i++)
 	{
+		struct nk_image img = g_ctx.image_dir;
 		PNODE tab = vol->Children[i].LinkedNode;
+		LPCSTR path = gnwinfo_get_node_attr(tab, "Path");
+		if (strcmp(path, g_ctx.sys_disk) == 0)
+			img = g_ctx.image_os;
 		nk_spacer(ctx);
 		nk_spacer(ctx);
-		if (nk_button_image_label(ctx, g_ctx.image_dir, get_drive_letter(tab), NK_TEXT_CENTERED))
+		if (nk_button_image_label(ctx, img, get_drive_letter(tab), NK_TEXT_CENTERED))
 			ShellExecuteA(NULL, "explore", gnwinfo_get_node_attr(tab, "Volume GUID"), NULL, NULL, SW_NORMAL);
 		nk_labelf_colored(ctx, NK_TEXT_LEFT,
 			g_color_text_l,
