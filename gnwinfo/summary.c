@@ -290,8 +290,11 @@ draw_display(struct nk_context* ctx)
 		LPCSTR attr = gnwinfo_get_node_attr(pci, "Class Code");
 		if (strncmp("03", attr, 2) != 0)
 			continue;
+		LPCSTR vendor = gnwinfo_get_node_attr(pci, "Vendor");
+		if (strcmp(vendor, "-") == 0)
+			continue;
 		nk_spacer(ctx);
-		nk_label(ctx, gnwinfo_get_node_attr(pci, "Vendor"), NK_TEXT_LEFT);
+		nk_label(ctx, vendor, NK_TEXT_LEFT);
 		nk_labelf_colored(ctx, NK_TEXT_LEFT,
 			g_color_text_l,
 			"%s",
@@ -300,11 +303,12 @@ draw_display(struct nk_context* ctx)
 	for (i = 0; g_ctx.edid->Children[i].LinkedNode; i++)
 	{
 		PNODE mon = g_ctx.edid->Children[i].LinkedNode;
-		PNODE res, sz;
 		if (!mon)
 			continue;
-		res = NWL_NodeGetChild(mon, "Resolution");
-		sz = NWL_NodeGetChild(mon, "Screen Size");
+		PNODE res = NWL_NodeGetChild(mon, "Resolution");
+		PNODE sz = NWL_NodeGetChild(mon, "Screen Size");
+		if (!res || !sz)
+			continue;
 		nk_spacer(ctx);
 		nk_label(ctx, gnwinfo_get_node_attr(mon, "Manufacturer"), NK_TEXT_LEFT);
 		nk_labelf_colored(ctx, NK_TEXT_LEFT,
