@@ -411,10 +411,9 @@ draw_storage(struct nk_context* ctx)
 			gnwinfo_get_node_attr(disk, "Product ID"));
 
 		LPCSTR health = gnwinfo_get_node_attr(disk, "Health Status");
-		LPCSTR temp = gnwinfo_get_node_attr(disk, "Temperature (C)");
-		struct nk_color color = g_color_warning;
-		if (strcmp(health, "-") != 0)
+		if ((g_ctx.main_flag & MAIN_DISK_SMART) && strcmp(health, "-") != 0)
 		{
+			struct nk_color color = g_color_warning;
 			if (strncmp(health, "Good", 4) == 0)
 				color = g_color_good;
 			else if (strncmp(health, "Bad", 3) == 0)
@@ -423,9 +422,8 @@ draw_storage(struct nk_context* ctx)
 			nk_spacer(ctx);
 			nk_label(ctx, "S.M.A.R.T.", NK_TEXT_LEFT);
 			nk_labelf_colored(ctx, NK_TEXT_LEFT,
-				color, "%s %s%s", health,
-				temp[0] != '-' ? temp : "",
-				temp[0] != '-' ? u8"\u00B0C" : "");
+				color, u8"%s %s\u00B0C", health,
+				gnwinfo_get_node_attr(disk, "Temperature (C)"));
 		}
 		draw_volume(ctx, disk, ratio);
 	}
@@ -471,12 +469,18 @@ draw_network(struct nk_context* ctx)
 #endif
 	for (i = 0; g_ctx.network->Children[i].LinkedNode; i++)
 	{
+		BOOL is_active = FALSE;
 		PNODE nw = g_ctx.network->Children[i].LinkedNode;
 		struct nk_color color = g_color_error;
 		if (!nw)
 			continue;
+		if (strcmp(gnwinfo_get_node_attr(nw, "Type"), "Software Loopback") == 0)
+			continue;
 		if (strcmp(gnwinfo_get_node_attr(nw, "Status"), "Active") == 0)
+		{
 			color = g_color_good;
+			is_active = TRUE;
+		}
 		else if (!(g_ctx.main_flag & MAIN_NET_INACTIVE))
 			continue;
 		nk_spacer(ctx);
@@ -484,8 +488,22 @@ draw_network(struct nk_context* ctx)
 		nk_labelf_colored(ctx,
 			NK_TEXT_LEFT, color,
 			"%s%s",
-			get_first_ipv4(nw),
-			strcmp(gnwinfo_get_node_attr(nw, "DHCP Enabled"), "Yes") == 0 ? " DHCP" : "");
+			strcmp(gnwinfo_get_node_attr(nw, "DHCP Enabled"), "Yes") == 0 ? "DHCP " : "",
+			get_first_ipv4(nw));
+
+		if (g_ctx.main_flag & MAIN_NET_DETAIL)
+		{
+			nk_spacer(ctx);
+			if (is_active)
+				nk_labelf(ctx, NK_TEXT_LEFT, u8"    \u2191\u2193 %s / %s",
+					gnwinfo_get_node_attr(nw, "Transmit Link Speed"),
+					gnwinfo_get_node_attr(nw, "Receive Link Speed"));
+			else
+				nk_spacer(ctx);
+			nk_label_colored(ctx,
+				gnwinfo_get_node_attr(nw, "MAC Address"),
+				NK_TEXT_LEFT, g_color_text_l);
+		}
 	}
 }
 

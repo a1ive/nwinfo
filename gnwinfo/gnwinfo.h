@@ -40,7 +40,11 @@
 #define MAIN_INFO_NETWORK   (1U << 7)
 
 #define MAIN_NET_INACTIVE   (1U << 16)
+#ifdef PUBLIC_IP
 #define MAIN_NET_PUB_IP     (1U << 17)
+#endif
+#define MAIN_NET_DETAIL     (1U << 18)
+#define MAIN_DISK_SMART     (1U << 19)
 
 typedef struct _GNW_CONTEXT
 {

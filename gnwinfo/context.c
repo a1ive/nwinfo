@@ -93,6 +93,8 @@ get_network_traffic_by_api(void)
 		PNODE nw = g_ctx.network->Children[i].LinkedNode;
 		if (!nw)
 			continue;
+		if (strcmp(gnwinfo_get_node_attr(nw, "Type"), "Software Loopback") == 0)
+			continue;
 		recv += strtoull(gnwinfo_get_node_attr(nw, "Received (Octets)"), NULL, 10);
 		send += strtoull(gnwinfo_get_node_attr(nw, "Sent (Octets)"), NULL, 10);
 	}
