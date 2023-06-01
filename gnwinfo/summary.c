@@ -418,6 +418,7 @@ draw_storage(struct nk_context* ctx)
 		if ((g_ctx.main_flag & MAIN_DISK_SMART) && strcmp(health, "-") != 0)
 		{
 			struct nk_color color = g_color_warning;
+			LPCSTR temp = gnwinfo_get_node_attr(disk, "Temperature (C)");
 			if (strncmp(health, "Good", 4) == 0)
 				color = g_color_good;
 			else if (strncmp(health, "Bad", 3) == 0)
@@ -427,7 +428,7 @@ draw_storage(struct nk_context* ctx)
 			nk_label(ctx, "S.M.A.R.T.", NK_TEXT_LEFT);
 			nk_labelf_colored(ctx, NK_TEXT_LEFT,
 				color, u8"%s %s\u00B0C", health,
-				gnwinfo_get_node_attr(disk, "Temperature (C)"));
+				temp[0] == '-' ? "-" : temp);
 		}
 		draw_volume(ctx, disk, ratio);
 	}

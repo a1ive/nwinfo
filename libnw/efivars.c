@@ -29,7 +29,7 @@ NWL_IsEfi(VOID)
 
 DWORD
 NWL_GetEfiVar(LPCWSTR lpName, LPGUID lpGuid,
-	PVOID pBuffer, DWORD nSize, PDWORD pdwAttribubutes)
+	PVOID pBuffer, DWORD nSize, PDWORD pdwAttributes)
 {
 	NTSTATUS rc;
 	UNICODE_STRING str;
@@ -51,9 +51,8 @@ NWL_GetEfiVar(LPCWSTR lpName, LPGUID lpGuid,
 	OsRtlInitUnicodeString(&str, lpName);
 	if (!lpGuid)
 		lpGuid = &EFI_GV_GUID;
-	rc = OsQuerySystemEnvironmentValueEx(&str, lpGuid, pBuffer, &nSize, pdwAttribubutes);
-	if (!NT_SUCCESS(rc))
-		SetLastError(OsRtlNtStatusToDosError(rc));
+	rc = OsQuerySystemEnvironmentValueEx(&str, lpGuid, pBuffer, &nSize, pdwAttributes);
+	SetLastError(OsRtlNtStatusToDosError(rc));
 	return nSize;
 fail:
 	SetLastError(ERROR_INVALID_FUNCTION);

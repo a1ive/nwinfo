@@ -235,7 +235,7 @@ BOOL NWL_IsEfi(VOID);
 DWORD NWL_GetEfiVar(LPCWSTR lpName, LPGUID lpGuid,
 	PVOID pBuffer, DWORD nSize, PDWORD pdwAttribubutes);
 VOID* NWL_GetEfiVarAlloc(LPCWSTR lpName, LPGUID lpGuid,
-	PDWORD pdwSize, PDWORD pdwAttribubutes);
+	PDWORD pdwSize, PDWORD pdwAttributes);
 PVARIABLE_NAME NWL_EnumerateEfiVar(PULONG pulSize);
 BOOL NWL_SetEfiVarEx(LPCWSTR lpName, LPGUID lpGuid,
 	PVOID pBuffer, DWORD nSize, DWORD dwAttributes);

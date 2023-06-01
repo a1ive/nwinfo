@@ -31,7 +31,7 @@ static BOOL GetEfiGlobalVar(LPCWSTR name, LPVOID var, DWORD size)
 	DWORD ret;
 	ZeroMemory(var, size);
 	ret = NWL_GetEfiVar(name, NULL, var, size, NULL);
-	return (ret == size);
+	return (GetLastError() == ERROR_SUCCESS) && (ret == size);
 }
 
 static void PrintSecureBoot(PNODE node)
