@@ -139,7 +139,7 @@ wWinMain(_In_ HINSTANCE hInstance,
 	font = nk_gdip_load_font(L"Courier New", GNWINFO_FONT_SIZE, IDR_FONT1);
 	nk_gdip_set_font(font);
 
-	(void)CoInitializeEx(0, COINIT_APARTMENTTHREADED);
+	(void)CoInitializeEx(0, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE);
 	gnwinfo_ctx_init(hInstance, wnd, ctx, (float)g_init_width, (float)g_init_height);
 	ctx->style.button.rounding = 0;
 	ctx->style.window.min_row_height_padding = 2;

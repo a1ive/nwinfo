@@ -43,6 +43,7 @@ OPTIONS:
 * [DumpSMBIOS](https://github.com/KunYi/DumpSMBIOS)
 * [CrystalDiskInfo](https://github.com/hiyohiyo/CrystalDiskInfo)
 * [CrystalDiskInfoEmbedded](https://github.com/iTXTech/CrystalDiskInfoEmbedded)
+* [Nuklear](https://github.com/Immediate-Mode-UI/Nuklear)
 * [HardInfo](https://github.com/lpereira/hardinfo)
 * [Memtest86+](https://github.com/memtest86plus/memtest86plus)
 * [hwdata](https://github.com/vcrhonek/hwdata)
