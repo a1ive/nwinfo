@@ -341,7 +341,7 @@ fail:
 }
 
 static VOID
-draw_volume(struct nk_context* ctx, PNODE disk, float ratio)
+draw_volume(struct nk_context* ctx, PNODE disk, BOOL cdrom, float ratio)
 {
 	INT i;
 	PNODE vol = NWL_NodeGetChild(disk, "Volumes");
@@ -350,11 +350,13 @@ draw_volume(struct nk_context* ctx, PNODE disk, float ratio)
 	nk_layout_row(ctx, NK_DYNAMIC, 0, 5, (float[5]) { ratio, 0.1f, 0.2f, 0.4f, 0.3f - ratio });
 	for (i = 0; vol->Children[i].LinkedNode; i++)
 	{
-		struct nk_image img = g_ctx.image_dir;
+		struct nk_image img = g_ctx.image_hdd;
 		PNODE tab = vol->Children[i].LinkedNode;
 		LPCSTR path = gnwinfo_get_node_attr(tab, "Path");
 		if (strcmp(path, g_ctx.sys_disk) == 0)
-			img = g_ctx.image_os;
+			img = g_ctx.image_sysdisk;
+		if (cdrom)
+			img = g_ctx.image_cd;
 		nk_spacer(ctx);
 		nk_spacer(ctx);
 		if (nk_button_image_label(ctx, img, get_drive_letter(tab), NK_TEXT_CENTERED))
@@ -430,7 +432,7 @@ draw_storage(struct nk_context* ctx)
 				color, u8"%s %s\u00B0C", health,
 				temp[0] == '-' ? "-" : temp);
 		}
-		draw_volume(ctx, disk, ratio);
+		draw_volume(ctx, disk, cdrom, ratio);
 	}
 }
 
@@ -524,10 +526,10 @@ gnwinfo_draw_main_window(struct nk_context* ctx, float width, float height)
 	float ratio = rect.h / rect.w;
 
 	nk_layout_row_push(ctx, ratio);
-	if (nk_button_image(ctx, g_ctx.image_cpu))
+	if (nk_button_image(ctx, g_ctx.image_cpuid))
 		g_ctx.gui_cpuid = TRUE;
 	nk_layout_row_push(ctx, ratio);
-	if (nk_button_image(ctx, g_ctx.image_disk))
+	if (nk_button_image(ctx, g_ctx.image_smart))
 		g_ctx.gui_smart = TRUE;
 	nk_layout_row_push(ctx, ratio);
 	if (nk_button_image(ctx, g_ctx.image_set))

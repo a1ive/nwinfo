@@ -2,7 +2,6 @@
 
 #include "gnwinfo.h"
 
-#include "icons.h"
 #ifdef PUBLIC_IP
 #include <wininet.h>
 #pragma comment(lib, "wininet.lib")
@@ -12,14 +11,31 @@
 #endif
 GNW_CONTEXT g_ctx;
 
+static struct nk_image
+load_png(WORD id)
+{
+	HRSRC res = FindResourceW(NULL, MAKEINTRESOURCEW(id), RT_RCDATA);
+	if (!res)
+		goto fail;
+	HGLOBAL mem = LoadResource(NULL, res);
+	if (!mem)
+		goto fail;
+	DWORD size = SizeofResource(NULL, res);
+	if (!size)
+		goto fail;
+	void* data = LockResource(mem);
+	if (!data)
+		goto fail;
+	return nk_gdip_load_image_from_memory(data, size);
+fail:
+	return nk_image_id(0);
+}
+
 static void
 gnwinfo_ctx_error_callback(LPCSTR lpszText)
 {
 	MessageBoxA(g_ctx.wnd, lpszText, "Error", MB_ICONERROR);
 }
-
-#define GDIP_LOAD_IMG(img, x) \
-   img = nk_gdip_load_image_from_memory(x, sizeof(x))
 
 LPCSTR NWL_GetHumanSize(UINT64 size, LPCSTR human_sizes[6], UINT64 base);
 static const char* human_sizes[6] =
@@ -212,19 +228,23 @@ gnwinfo_ctx_init(HINSTANCE inst, HWND wnd, struct nk_context* ctx, float width, 
 	gnwinfo_ctx_update(IDT_TIMER_1S);
 	gnwinfo_ctx_update(IDT_TIMER_1M);
 
-	GDIP_LOAD_IMG(g_ctx.image_os, ICON_OS);
-	GDIP_LOAD_IMG(g_ctx.image_bios, ICON_BIOS);
-	GDIP_LOAD_IMG(g_ctx.image_board, ICON_BOARD);
-	GDIP_LOAD_IMG(g_ctx.image_cpu, ICON_CPU);
-	GDIP_LOAD_IMG(g_ctx.image_ram, ICON_RAM);
-	GDIP_LOAD_IMG(g_ctx.image_edid, ICON_EDID);
-	GDIP_LOAD_IMG(g_ctx.image_disk, ICON_DISK);
-	GDIP_LOAD_IMG(g_ctx.image_net, ICON_NET);
-	GDIP_LOAD_IMG(g_ctx.image_close, ICON_CLOSE);
-	GDIP_LOAD_IMG(g_ctx.image_dir, ICON_DIR);
-	GDIP_LOAD_IMG(g_ctx.image_info, ICON_INFO);
-	GDIP_LOAD_IMG(g_ctx.image_refresh, ICON_REFRESH);
-	GDIP_LOAD_IMG(g_ctx.image_set, ICON_SET);
+	g_ctx.image_os = load_png(IDR_PNG_OS);
+	g_ctx.image_bios = load_png(IDR_PNG_FIRMWARE);
+	g_ctx.image_board = load_png(IDR_PNG_PC);
+	g_ctx.image_cpu = load_png(IDR_PNG_CPU);
+	g_ctx.image_ram = load_png(IDR_PNG_MEMORY);
+	g_ctx.image_edid = load_png(IDR_PNG_DISPLAY);
+	g_ctx.image_disk = load_png(IDR_PNG_DISK);
+	g_ctx.image_net = load_png(IDR_PNG_NETWORK);
+	g_ctx.image_close = load_png(IDR_PNG_CLOSE);
+	g_ctx.image_hdd = load_png(IDR_PNG_HDD);
+	g_ctx.image_info = load_png(IDR_PNG_INFO);
+	g_ctx.image_refresh = load_png(IDR_PNG_REFRESH);
+	g_ctx.image_set = load_png(IDR_PNG_SETTINGS);
+	g_ctx.image_sysdisk = load_png(IDR_PNG_SYSDISK);
+	g_ctx.image_smart = load_png(IDR_PNG_SMART);
+	g_ctx.image_cd = load_png(IDR_PNG_CD);
+	g_ctx.image_cpuid = load_png(IDR_PNG_CPUID);
 
 	SetTimer(g_ctx.wnd, IDT_TIMER_1S, 1000, (TIMERPROC)NULL);
 	SetTimer(g_ctx.wnd, IDT_TIMER_1M, 60 * 1000, (TIMERPROC)NULL);
@@ -254,9 +274,13 @@ gnwinfo_ctx_exit()
 	nk_gdip_image_free(g_ctx.image_disk);
 	nk_gdip_image_free(g_ctx.image_net);
 	nk_gdip_image_free(g_ctx.image_close);
-	nk_gdip_image_free(g_ctx.image_dir);
+	nk_gdip_image_free(g_ctx.image_hdd);
 	nk_gdip_image_free(g_ctx.image_info);
 	nk_gdip_image_free(g_ctx.image_refresh);
 	nk_gdip_image_free(g_ctx.image_set);
+	nk_gdip_image_free(g_ctx.image_sysdisk);
+	nk_gdip_image_free(g_ctx.image_smart);
+	nk_gdip_image_free(g_ctx.image_cd);
+	nk_gdip_image_free(g_ctx.image_cpuid);
 	exit(0);
 }

@@ -142,6 +142,8 @@ wWinMain(_In_ HINSTANCE hInstance,
 	(void)CoInitializeEx(0, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE);
 	gnwinfo_ctx_init(hInstance, wnd, ctx, (float)g_init_width, (float)g_init_height);
 	ctx->style.button.rounding = 0;
+	ctx->style.button.border = 1.0f;
+	ctx->style.button.padding = nk_vec2(0.0f, 0.0f);
 	ctx->style.window.min_row_height_padding = 2;
 
 	str = gnwinfo_get_ini_value(L"Widgets", L"HideComponents", L"0xFFFFFFFF"); // ~0U

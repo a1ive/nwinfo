@@ -117,7 +117,6 @@
     <ClInclude Include="..\nuklear\nuklear.h" />
     <ClInclude Include="..\nuklear\nuklear_gdip.h" />
     <ClInclude Include="gnwinfo.h" />
-    <ClInclude Include="icons.h" />
     <ClInclude Include="resource.h" />
   </ItemGroup>
   <ItemGroup>
@@ -140,6 +139,23 @@
   </ItemGroup>
   <ItemGroup>
     <Image Include="..\icon.ico" />
+    <Image Include="icons\cd.png" />
+    <Image Include="icons\close.png" />
+    <Image Include="icons\cpu.png" />
+    <Image Include="icons\cpuid.png" />
+    <Image Include="icons\disk.png" />
+    <Image Include="icons\display.png" />
+    <Image Include="icons\firmware.png" />
+    <Image Include="icons\hdd.png" />
+    <Image Include="icons\info.png" />
+    <Image Include="icons\memory.png" />
+    <Image Include="icons\network.png" />
+    <Image Include="icons\os.png" />
+    <Image Include="icons\pc.png" />
+    <Image Include="icons\refresh.png" />
+    <Image Include="icons\settings.png" />
+    <Image Include="icons\smart.png" />
+    <Image Include="icons\sysdisk.png" />
   </ItemGroup>
   <ItemGroup>
     <Font Include="dos.ttf" />

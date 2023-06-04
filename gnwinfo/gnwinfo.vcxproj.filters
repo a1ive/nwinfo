@@ -30,9 +30,6 @@
     <ClInclude Include="resource.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="icons.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="gnwinfo.c">
@@ -67,6 +64,57 @@
   </ItemGroup>
   <ItemGroup>
     <Image Include="..\icon.ico">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="icons\cd.png">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="icons\cpu.png">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="icons\cpuid.png">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="icons\disk.png">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="icons\display.png">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="icons\firmware.png">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="icons\hdd.png">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="icons\info.png">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="icons\memory.png">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="icons\network.png">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="icons\os.png">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="icons\pc.png">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="icons\refresh.png">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="icons\settings.png">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="icons\sysdisk.png">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="icons\close.png">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="icons\smart.png">
       <Filter>资源文件</Filter>
     </Image>
   </ItemGroup>

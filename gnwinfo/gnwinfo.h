@@ -71,10 +71,14 @@ typedef struct _GNW_CONTEXT
 	struct nk_image image_disk;
 	struct nk_image image_net;
 	struct nk_image image_close;
-	struct nk_image image_dir;
+	struct nk_image image_hdd;
 	struct nk_image image_info;
 	struct nk_image image_refresh;
 	struct nk_image image_set;
+	struct nk_image image_sysdisk;
+	struct nk_image image_smart;
+	struct nk_image image_cpuid;
+	struct nk_image image_cd;
 
 	PNODE system;
 	PNODE cpuid;
