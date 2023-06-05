@@ -60,6 +60,31 @@ draw_icon_label(struct nk_context* ctx, LPCWSTR label, struct nk_image image)
 	return ratio[0];
 }
 
+static struct nk_color
+get_percent_color(double percent)
+{
+	if (percent > 90.0)
+		return g_color_error;
+	if (percent > 70.0)
+		return g_color_warning;
+	return g_color_good;
+}
+
+static void
+draw_percent_prog(struct nk_context* ctx, double percent)
+{
+	nk_size size = (nk_size)percent;
+	struct nk_color color = get_percent_color(percent);
+	if (size == 0)
+		size = 1;
+	else if (size > 100)
+		size = 100;
+	ctx->style.progress.cursor_normal = nk_style_item_color(color);
+	ctx->style.progress.cursor_hover = nk_style_item_color(color);
+	ctx->style.progress.cursor_active = nk_style_item_color(color);
+	nk_progress(ctx, &size, 100, 0);
+}
+
 static VOID
 draw_os(struct nk_context* ctx)
 {
@@ -173,25 +198,20 @@ draw_processor(struct nk_context* ctx)
 {
 	INT i, count;
 	CHAR name[32];
-	struct nk_color color = g_color_good;
 	float ratio = draw_icon_label(ctx, L"Processor", g_ctx.image_cpu);
-
-	if (g_ctx.cpu_usage > 60.0)
-		color = g_color_warning;
-	if (g_ctx.cpu_usage > 80.0)
-		color = g_color_error;
 
 	count = strtol(gnwinfo_get_node_attr(g_ctx.cpuid, "Processor Count"), NULL, 10);
 
-	nk_layout_row(ctx, NK_DYNAMIC, 0, 3, (float[3]) { ratio, 0.3f, 0.7f - ratio });
-
+	nk_layout_row(ctx, NK_DYNAMIC, 0, 4, (float[4]) { ratio, 0.3f, 0.4f, 0.3f - ratio });
 	nk_spacer(ctx);
 	draw_label_l(ctx, L"Usage");
-	nk_labelf_colored(ctx, NK_TEXT_LEFT, color,
+	nk_labelf_colored(ctx, NK_TEXT_LEFT, get_percent_color(g_ctx.cpu_usage),
 		"%.2f%% %s MHz",
 		g_ctx.cpu_usage,
 		gnwinfo_get_node_attr(g_ctx.cpuid, "CPU Clock (MHz)"));
+	draw_percent_prog(ctx, g_ctx.cpu_usage);
 
+	nk_layout_row(ctx, NK_DYNAMIC, 0, 3, (float[3]) { ratio, 0.3f, 0.7f - ratio });
 	for (i = 0; i < count; i++)
 	{
 		snprintf(name, sizeof(name), "CPU%d", i);
@@ -238,22 +258,18 @@ static VOID
 draw_memory(struct nk_context* ctx)
 {
 	INT i;
-	struct nk_color color = g_color_good;
 	float ratio = draw_icon_label(ctx, L"Memory", g_ctx.image_ram);
 
-	if (g_ctx.mem_status.dwMemoryLoad > 60)
-		color = g_color_warning;
-	if (g_ctx.mem_status.dwMemoryLoad > 80)
-		color = g_color_error;
-
-	nk_layout_row(ctx, NK_DYNAMIC, 0, 3, (float[3]) { ratio, 0.3f, 0.7f - ratio });
-
+	nk_layout_row(ctx, NK_DYNAMIC, 0, 4, (float[4]) { ratio, 0.3f, 0.4f, 0.3f - ratio });
 	nk_spacer(ctx);
 	draw_label_l(ctx, L"Usage");
-	nk_labelf_colored(ctx, NK_TEXT_LEFT, color,
+	nk_labelf_colored(ctx, NK_TEXT_LEFT,
+		get_percent_color((double)g_ctx.mem_status.dwMemoryLoad),
 		"%lu%% %s / %s",
 		g_ctx.mem_status.dwMemoryLoad, g_ctx.mem_avail, g_ctx.mem_total);
+	draw_percent_prog(ctx, (double)g_ctx.mem_status.dwMemoryLoad);
 
+	nk_layout_row(ctx, NK_DYNAMIC, 0, 3, (float[3]) { ratio, 0.3f, 0.7f - ratio });
 	for (i = 0; g_ctx.smbios->Children[i].LinkedNode; i++)
 	{
 		PNODE tab = g_ctx.smbios->Children[i].LinkedNode;
@@ -367,7 +383,7 @@ draw_volume(struct nk_context* ctx, PNODE disk, BOOL cdrom, float ratio)
 			gnwinfo_get_node_attr(tab, "Total Space"),
 			gnwinfo_get_node_attr(tab, "Filesystem"),
 			gnwinfo_get_node_attr(tab, "Label"));
-		nk_prog(ctx, strtoul(gnwinfo_get_node_attr(tab, "Usage"), NULL, 10), 100, 0);
+		draw_percent_prog(ctx, strtod(gnwinfo_get_node_attr(tab, "Usage"), NULL));
 	}
 }
 
