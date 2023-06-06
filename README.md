@@ -8,32 +8,32 @@
 </div>
 <br />
 
-
-NWinfo is a Win32 console program that collects system and hardware information.
+NWinfo is a Win32 program that allows you to obtain system and hardware information.
 
 ## Features
-* Collects ACPI, SMBIOS, CPUID, S.M.A.R.T., PCI, EDID, and USB details.
-* Supports JSON, YAML, and LUA Table formats.
-* Compatible with Windows XP to Windows 11.
+* Obtain detailed information about SMBIOS, CPUID, S.M.A.R.T., PCI, EDID, and more.
+* Support exporting in JSON, YAML, and LUA table formats.
+* Compatible with Windows XP.
 
 ## Usage
 ```
-nwinfo.exe OPTIONS
+.\nwinfo.exe OPTIONS
 OPTIONS:
   --format=XXX     Specify output format. [YAML|JSON|LUA]
   --output=FILE    Write to FILE instead of printing to screen.
   --human          Display numbers in human readable format.
   --sys            Print system info.
   --cpu            Print processor details.
-  --net[=active]   Print network infomation for each adapter interface.
+  --net[=active]   Print network information for each adapter interface.
   --acpi[=XXXX]    Print ACPI tables.
   --smbios[=XX]    Print SMBIOS tables.
   --disk           Print disk S.M.A.R.T and partitions.
   --display        Print display monitors information (EDID).
   --pci[=XX]       List PCI devices.
   --usb            List USB devices.
-  --spd            Print SPD infomation of memory modules (Experimental).
-  --battery        Print battery infomation.
+  --spd            Print SPD information of memory modules (Experimental).
+  --battery        Print battery information.
+  --uefi           Print UEFI boot information.
 ```
 
 ## Credits
