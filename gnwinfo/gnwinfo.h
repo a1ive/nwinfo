@@ -88,6 +88,7 @@ typedef struct _GNW_CONTEXT
 	PNODE edid;
 	PNODE pci;
 	PNODE uefi;
+	PNODE battery;
 
 	LPCSTR sys_boot;
 	LPCSTR sys_disk;

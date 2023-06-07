@@ -159,6 +159,35 @@ is_motherboard(PNODE node)
 }
 
 static VOID
+draw_battery(struct nk_context* ctx, float ratio)
+{
+	struct nk_color color = g_color_error;
+	LPCSTR time = NULL;
+	LPCSTR status = gnwinfo_get_node_attr(g_ctx.battery, "Battery Status");
+	if (strcmp(status, "Charging") == 0)
+	{
+		color = g_color_warning;
+		time = gnwinfo_get_node_attr(g_ctx.battery, "Battery Life Full");
+	}
+	else if (strcmp(status, "Not Charging") == 0)
+	{
+		if (strcmp(gnwinfo_get_node_attr(g_ctx.battery, "AC Power"), "Online") == 0)
+			color = g_color_good;
+		time = gnwinfo_get_node_attr(g_ctx.battery, "Battery Life Remaining");
+	}
+	else
+		return;
+	
+	nk_layout_row(ctx, NK_DYNAMIC, 0, 3, (float[3]) { ratio, 0.3f, 0.7f - ratio });
+	nk_spacer(ctx);
+	draw_label_l(ctx, L"Battery");
+	nk_labelf_colored(ctx, NK_TEXT_LEFT, color,
+		u8"\u26a1 %s %s",
+		gnwinfo_get_node_attr(g_ctx.battery, "Battery Life Percentage"),
+		time);
+}
+
+static VOID
 draw_computer(struct nk_context* ctx)
 {
 	float ratio = draw_icon_label(ctx, L"Computer", g_ctx.image_board);
@@ -181,6 +210,8 @@ draw_computer(struct nk_context* ctx)
 		"%s %s",
 		get_smbios_attr("2", "Product Name", is_motherboard),
 		get_smbios_attr("2", "Serial Number", is_motherboard));
+
+	draw_battery(ctx, ratio);
 }
 
 static uint8_t cache_level = 0;

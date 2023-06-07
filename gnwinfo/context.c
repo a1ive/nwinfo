@@ -160,6 +160,12 @@ gnwinfo_ctx_update(WPARAM wparam)
 		if (g_ctx.disk)
 			NWL_NodeFree(g_ctx.disk, 1);
 		g_ctx.disk = NW_Disk();
+		if (g_ctx.battery)
+			NWL_NodeFree(g_ctx.battery, 1);
+		g_ctx.battery = NW_Battery();
+		if (g_ctx.edid)
+			NWL_NodeFree(g_ctx.edid, 1);
+		g_ctx.edid = NW_Edid();
 #ifdef PUBLIC_IP
 		update_public_ip();
 #endif
@@ -210,7 +216,6 @@ gnwinfo_ctx_init(HINSTANCE inst, HWND wnd, struct nk_context* ctx, float width, 
 
 	g_ctx.lib.SysInfo = TRUE;
 	g_ctx.lib.DmiInfo = TRUE;
-	g_ctx.lib.EdidInfo = TRUE;
 	g_ctx.lib.UefiInfo = TRUE;
 	g_ctx.lib.PciInfo = TRUE;
 
@@ -218,7 +223,6 @@ gnwinfo_ctx_init(HINSTANCE inst, HWND wnd, struct nk_context* ctx, float width, 
 	g_ctx.lib.NwRoot = NWL_NodeAlloc("NWinfo", 0);
 	g_ctx.system = NW_System();
 	g_ctx.smbios = NW_Smbios();
-	g_ctx.edid = NW_Edid();
 	g_ctx.uefi = NW_Uefi();
 	g_ctx.pci = NW_Pci();
 
@@ -264,6 +268,8 @@ gnwinfo_ctx_exit()
 	NWL_NodeFree(g_ctx.network, 1);
 	NWL_NodeFree(g_ctx.disk, 1);
 	NWL_NodeFree(g_ctx.cpuid, 1);
+	NWL_NodeFree(g_ctx.battery, 1);
+	NWL_NodeFree(g_ctx.edid, 1);
 	NW_Fini();
 	nk_gdip_image_free(g_ctx.image_os);
 	nk_gdip_image_free(g_ctx.image_bios);
