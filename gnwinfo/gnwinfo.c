@@ -188,6 +188,7 @@ wWinMain(_In_ HINSTANCE hInstance,
 	HWND wnd;
 	int running = 1;
 	int needs_refresh = 1;
+	WCHAR font_name[64];
 
 	GetModuleFileNameW(NULL, g_ini_path, MAX_PATH);
 	PathCchRemoveFileSpec(g_ini_path, MAX_PATH);
@@ -252,7 +253,8 @@ wWinMain(_In_ HINSTANCE hInstance,
 
 	/* GUI */
 	ctx = nk_gdip_init(wnd, g_init_width, g_init_height);
-	font = nk_gdip_load_font(L"Courier New", GNWINFO_FONT_SIZE, IDR_FONT1);
+	GetPrivateProfileStringW(L"Window", L"Font", L"Courier New", font_name, 64, g_ini_path);
+	font = nk_gdip_load_font(font_name, GNWINFO_FONT_SIZE, IDR_FONT1);
 	nk_gdip_set_font(font);
 
 	(void)CoInitializeEx(0, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE);
