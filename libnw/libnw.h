@@ -18,6 +18,8 @@ struct acpi_rsdp_v2;
 struct acpi_rsdt;
 struct acpi_xsdt;
 struct _CDI_SMART;
+struct cpu_raw_data_array_t;
+struct system_id_t;
 
 typedef struct _NWLIB_CONTEXT
 {
@@ -42,6 +44,9 @@ typedef struct _NWLIB_CONTEXT
 	LPCSTR PciClass;
 
 	VOID (*SpdProgress) (LPCSTR lpszText);
+
+	struct cpu_raw_data_array_t* NwCpuRaw;
+	struct system_id_t* NwCpuid;
 
 	struct acpi_rsdp_v2* NwRsdp;
 	struct acpi_rsdt* NwRsdt;
@@ -88,8 +93,6 @@ PNODE NW_Usb(VOID);
 PNODE NW_Battery(VOID);
 PNODE NW_Libinfo(VOID);
 PNODE NW_Uefi(VOID);
-
-PNODE NW_UpdateCpuid(PNODE node);
 
 LPCSTR NWL_GetUptime(VOID);
 

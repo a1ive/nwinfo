@@ -32,6 +32,10 @@ VOID NW_Init(PNWLIB_CONTEXT pContext)
 	NWLC->NwXsdt = NWL_GetXsdt();
 	NWLC->NwSmbios = NWL_GetSmbios();
 	NWLC->NwSmart = cdi_create_smart();
+	NWLC->NwCpuRaw = calloc(1, sizeof(struct cpu_raw_data_array_t));
+	NWLC->NwCpuid = calloc(1, sizeof(struct system_id_t));
+	if (!NWLC->NwCpuRaw || !NWLC->NwCpuid)
+		NWL_ErrExit(ERROR_OUTOFMEMORY, "Cannot allocate memory");
 	NWLC->NwSmbiosInit = FALSE;
 	NWLC->ErrLog = NULL;
 	if (NWL_IsAdmin() != TRUE)
@@ -97,6 +101,10 @@ VOID NW_Fini(VOID)
 		free(NWLC->NwSmbios);
 	if (NWLC->NwSmart)
 		cdi_destroy_smart(NWLC->NwSmart);
+	cpuid_free_system_id(NWLC->NwCpuid);
+	free(NWLC->NwCpuid);
+	cpuid_free_raw_data_array(NWLC->NwCpuRaw);
+	free(NWLC->NwCpuRaw);
 	if (NWLC->NwDrv)
 		wr0_driver_close(NWLC->NwDrv);
 	if (NWLC->NwRoot)

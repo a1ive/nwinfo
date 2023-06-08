@@ -35,15 +35,6 @@ CpuVendorToStr(cpu_vendor_t vendor)
 	}
 }
 
-static LPCSTR
-CacheNumToStr(int32_t num)
-{
-	static char str[12] = "?";
-	if (num > 0)
-		snprintf(str, sizeof(str), "%d", num);
-	return str;
-}
-
 static void
 PrintHypervisor(PNODE node, const struct cpu_id_t* data)
 {
@@ -68,6 +59,21 @@ PrintHypervisor(PNODE node, const struct cpu_id_t* data)
 }
 
 static void
+PrintCacheSize(PNODE node, LPCSTR name, int32_t instances, int32_t size, int32_t assoc)
+{
+	if (size <= 0)
+		return;
+	else if (instances <= 0)
+		NWL_NodeAttrSetf(node, name, 0,
+			"%s, %d-way",
+			NWL_GetHumanSize(size, kb_human_sizes, 1024), assoc);
+	else
+		NWL_NodeAttrSetf(node, name, 0,
+			"%d * %s, %d-way",
+			instances, NWL_GetHumanSize(size, kb_human_sizes, 1024), assoc);
+}
+
+static void
 PrintCache(PNODE node, const struct cpu_id_t* data)
 {
 	PNODE cache;
@@ -75,26 +81,16 @@ PrintCache(PNODE node, const struct cpu_id_t* data)
 	cache = NWL_NodeAppendNew(node, "Cache", NFLG_ATTGROUP);
 	saved_human_size = NWLC->HumanSize;
 	NWLC->HumanSize = TRUE;
-	if (data->l1_data_cache > 0)
-		NWL_NodeAttrSetf(cache, "L1 D", 0, "%s * %s, %d-way",
-			CacheNumToStr(data->l1_data_instances),
-			NWL_GetHumanSize(data->l1_data_cache, kb_human_sizes, 1024), data->l1_data_assoc);
-	if (data->l1_instruction_cache > 0)
-		NWL_NodeAttrSetf(cache, "L1 I", 0, "%s * %s, %d-way",
-			CacheNumToStr(data->l1_instruction_instances),
-			NWL_GetHumanSize(data->l1_instruction_cache, kb_human_sizes, 1024), data->l1_instruction_assoc);
-	if (data->l2_cache > 0)
-		NWL_NodeAttrSetf(cache, "L2", 0, "%s * %s, %d-way",
-			CacheNumToStr(data->l2_instances),
-			NWL_GetHumanSize(data->l2_cache, kb_human_sizes, 1024), data->l2_assoc);
-	if (data->l3_cache > 0)
-		NWL_NodeAttrSetf(cache, "L3", 0, "%s * %s, %d-way",
-			CacheNumToStr(data->l3_instances),
-			NWL_GetHumanSize(data->l3_cache, kb_human_sizes, 1024), data->l3_assoc);
-	if (data->l4_cache > 0)
-		NWL_NodeAttrSetf(cache, "L4", 0, "%s * %s, %d-way",
-			CacheNumToStr(data->l4_instances),
-			NWL_GetHumanSize(data->l4_cache, kb_human_sizes, 1024), data->l4_assoc);
+	PrintCacheSize(cache, "L1 D",
+		data->l1_data_instances, data->l1_data_cache, data->l1_data_assoc);
+	PrintCacheSize(cache, "L1 I",
+		data->l1_instruction_instances, data->l1_instruction_cache, data->l1_instruction_assoc);
+	PrintCacheSize(cache, "L2",
+		data->l2_instances, data->l2_cache, data->l2_assoc);
+	PrintCacheSize(cache, "L3",
+		data->l3_instances, data->l3_cache, data->l3_assoc);
+	PrintCacheSize(cache, "L4",
+		data->l4_instances, data->l4_cache, data->l4_assoc);
 	NWLC->HumanSize = saved_human_size;
 }
 
@@ -166,7 +162,7 @@ PrintCpuMsr(PNODE node, struct cpu_id_t* data)
 }
 
 static void
-PrintCpuInfo(PNODE node, struct cpu_id_t* data, struct cpu_raw_data_array_t* raw)
+PrintCpuInfo(PNODE node, struct cpu_id_t* data)
 {
 	NWL_NodeAttrSet(node, "Purpose", cpu_purpose_str(data->purpose), 0);
 	NWL_NodeAttrSet(node, "Vendor", data->vendor_str, 0);
@@ -189,73 +185,48 @@ PrintCpuInfo(PNODE node, struct cpu_id_t* data, struct cpu_raw_data_array_t* raw
 	PrintFeatures(node, data);
 }
 
-PNODE NW_UpdateCpuid(PNODE node)
-{
-	uint8_t i;
-	struct cpu_raw_data_array_t raw = { 0 };
-	struct system_id_t id = { 0 };
-	if (cpuid_get_all_raw_data(&raw) < 0)
-		goto fail;
-	if (cpu_identify_all(&raw, &id) < 0)
-		goto fail;
-	for (i = 0; i < id.num_cpu_types; i++)
-	{
-		CHAR name[32];
-		PNODE cpu = NULL;
-		snprintf(name, sizeof(name), "CPU%u", i);
-		cpu = NWL_NodeGetChild(node, name);
-		PrintCpuMsr(cpu, &id.cpu_types[i]);
-	}
-fail:
-	cpuid_free_system_id(&id);
-	cpuid_free_raw_data_array(&raw);
-	return node;
-}
-
 PNODE NW_Cpuid(VOID)
 {
 	uint8_t i;
-	struct cpu_raw_data_array_t raw = { 0 };
-	struct system_id_t id = { 0 };
-	
+	struct cpu_raw_data_array_t* raw = NWLC->NwCpuRaw;
+	struct system_id_t* id = NWLC->NwCpuid;
 	PNODE node = NWL_NodeAlloc("CPUID", 0);
 	if (NWLC->CpuInfo)
 		NWL_NodeAppendChild(NWLC->NwRoot, node);
+	cpuid_free_system_id(id);
+	cpuid_free_raw_data_array(raw);
 	NWL_NodeAttrSetf(node, "Total CPUs", NAFLG_FMT_NUMERIC, "%d", cpuid_get_total_cpus());
-	if (cpuid_get_all_raw_data(&raw) < 0)
+	if (cpuid_get_all_raw_data(raw) < 0)
 	{
 		NWL_NodeAppendMultiSz(&NWLC->ErrLog, "Cannot obtain raw CPU data");
 		goto fail;
 	}
-
-	if (cpu_identify_all(&raw, &id) < 0)
+	if (cpu_identify_all(raw, id) < 0)
 	{
 		NWL_NodeAppendMultiSz(&NWLC->ErrLog, cpuid_error());
 		goto fail;
 	}
-	PrintHypervisor(node, &id.cpu_types[0]);
-	NWL_NodeAttrSetf(node, "Processor Count", NAFLG_FMT_NUMERIC, "%u", id.num_cpu_types);
-	if (id.l1_data_total_instances >= 0)
-		NWL_NodeAttrSetf(node, "L1 Data Cache Instances", NAFLG_FMT_NUMERIC, "%d", id.l1_data_total_instances);
-	if (id.l1_instruction_total_instances >= 0)
-		NWL_NodeAttrSetf(node, "L1 Instruction Cache Instances", NAFLG_FMT_NUMERIC, "%d", id.l1_instruction_total_instances);
-	if (id.l2_total_instances >= 0)
-		NWL_NodeAttrSetf(node, "L2 Cache Instances", NAFLG_FMT_NUMERIC, "%d", id.l2_total_instances);
-	if (id.l3_total_instances >= 0)
-		NWL_NodeAttrSetf(node, "L3 Cache Instances", NAFLG_FMT_NUMERIC, "%d", id.l3_total_instances);
-	if (id.l4_total_instances >= 0)
-		NWL_NodeAttrSetf(node, "L4 Cache Instances", NAFLG_FMT_NUMERIC, "%d", id.l4_total_instances);
+	PrintHypervisor(node, &id->cpu_types[0]);
+	NWL_NodeAttrSetf(node, "Processor Count", NAFLG_FMT_NUMERIC, "%u", id->num_cpu_types);
+	if (id->l1_data_total_instances >= 0)
+		NWL_NodeAttrSetf(node, "L1 Data Cache Instances", NAFLG_FMT_NUMERIC, "%d", id->l1_data_total_instances);
+	if (id->l1_instruction_total_instances >= 0)
+		NWL_NodeAttrSetf(node, "L1 Instruction Cache Instances", NAFLG_FMT_NUMERIC, "%d", id->l1_instruction_total_instances);
+	if (id->l2_total_instances >= 0)
+		NWL_NodeAttrSetf(node, "L2 Cache Instances", NAFLG_FMT_NUMERIC, "%d", id->l2_total_instances);
+	if (id->l3_total_instances >= 0)
+		NWL_NodeAttrSetf(node, "L3 Cache Instances", NAFLG_FMT_NUMERIC, "%d", id->l3_total_instances);
+	if (id->l4_total_instances >= 0)
+		NWL_NodeAttrSetf(node, "L4 Cache Instances", NAFLG_FMT_NUMERIC, "%d", id->l4_total_instances);
 	NWL_NodeAttrSetf(node, "CPU Clock (MHz)", NAFLG_FMT_NUMERIC, "%d", cpu_clock());
-	for (i = 0; i < id.num_cpu_types; i++)
+	for (i = 0; i < id->num_cpu_types; i++)
 	{
 		CHAR name[32];
 		PNODE cpu = NULL;
 		snprintf(name, sizeof(name), "CPU%u", i);
 		cpu = NWL_NodeAppendNew(node, name, 0);
-		PrintCpuInfo(cpu, &id.cpu_types[i], &raw);
+		PrintCpuInfo(cpu, &id->cpu_types[i]);
 	}
 fail:
-	cpuid_free_system_id(&id);
-	cpuid_free_raw_data_array(&raw);
 	return node;
 }
