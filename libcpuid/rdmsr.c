@@ -117,20 +117,26 @@ static const uint32_t amd_msr[] = {
 #define IA32_APERF             0xE8
 #define IA32_PERF_STATUS       0x198
 #define IA32_THERM_STATUS      0x19C
+#define IA32_PKG_THERM_STATUS  0x1B1
 #define MSR_EBL_CR_POWERON     0x2A
 #define MSR_TURBO_RATIO_LIMIT  0x1AD
 #define MSR_TEMPERATURE_TARGET 0x1A2
 #define MSR_PERF_STATUS        0x198
+#define MSR_RAPL_POWER_UNIT    0x606
+#define MSR_PKG_ENERGY_STATUS  0x611
 #define MSR_PLATFORM_INFO      0xCE
 static const uint32_t intel_msr[] = {
 	IA32_MPERF,
 	IA32_APERF,
 	IA32_PERF_STATUS,
 	IA32_THERM_STATUS,
+	IA32_PKG_THERM_STATUS,
 	MSR_EBL_CR_POWERON,
 	MSR_TURBO_RATIO_LIMIT,
 	MSR_TEMPERATURE_TARGET,
 	MSR_PERF_STATUS,
+	MSR_RAPL_POWER_UNIT,
+	MSR_PKG_ENERGY_STATUS,
 	MSR_PLATFORM_INFO,
 	CPU_INVALID_VALUE
 };
@@ -423,6 +429,36 @@ static int get_info_temperature(struct msr_info_t *info)
 	return CPU_INVALID_VALUE;
 }
 
+static int get_info_pkg_temperature(struct msr_info_t* info)
+{
+	int err;
+	uint64_t DigitalReadout, TemperatureTarget;
+
+	if (info->id->vendor == VENDOR_INTEL) {
+		err = cpu_rdmsr_range(info->handle, IA32_PKG_THERM_STATUS, 22, 16, &DigitalReadout);
+		err += cpu_rdmsr_range(info->handle, MSR_TEMPERATURE_TARGET, 23, 16, &TemperatureTarget);
+		if (!err) return (int)(TemperatureTarget - DigitalReadout);
+	}
+
+	return CPU_INVALID_VALUE;
+}
+
+static double get_info_pkg_energy(struct msr_info_t* info)
+{
+	int err;
+	uint64_t TotalEnergyConsumed, EnergyStatusUnits;
+
+	if (info->id->vendor == VENDOR_INTEL) {
+		err = cpu_rdmsr_range(info->handle, MSR_PKG_ENERGY_STATUS, 31, 0, &TotalEnergyConsumed);
+		err += cpu_rdmsr_range(info->handle, MSR_RAPL_POWER_UNIT, 12, 8, &EnergyStatusUnits);
+		if (!err) return (double) TotalEnergyConsumed / (1ULL << EnergyStatusUnits);
+		//if (!err) return (int)EnergyStatusUnits;
+	}
+
+	return (double)CPU_INVALID_VALUE / 100;
+	//return CPU_INVALID_VALUE;
+}
+
 static double get_info_voltage(struct msr_info_t *info)
 {
 	int err;
@@ -549,10 +585,15 @@ int cpu_msrinfo(struct wr0_drv_t* handle, cpu_msrinfo_request_t which)
 			return (int) (get_info_max_multiplier(&info) * 100);
 		case INFO_TEMPERATURE:
 			return get_info_temperature(&info);
+		case INFO_PKG_TEMPERATURE:
+			return get_info_pkg_temperature(&info);
 		case INFO_THROTTLING:
 			return CPU_INVALID_VALUE;
 		case INFO_VOLTAGE:
 			return (int) (get_info_voltage(&info) * 100);
+		case INFO_PKG_ENERGY:
+			return (int) (get_info_pkg_energy(&info) * 100);
+			//return get_info_pkg_energy(&info);
 		case INFO_BCLK:
 		case INFO_BUS_CLOCK:
 			return (int) (get_info_bus_clock(&info) * 100);

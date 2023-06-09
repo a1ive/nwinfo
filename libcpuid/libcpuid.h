@@ -1185,9 +1185,12 @@ typedef enum {
 	INFO_MAX_MULTIPLIER,       /*!< Maximum CPU:FSB ratio for this CPU,
                                     multiplied by 100. */
 	INFO_TEMPERATURE,          /*!< The current core temperature in Celsius. */
+	INFO_PKG_TEMPERATURE,      /*!< The current package temperature in Celsius. */
 	INFO_THROTTLING,           /*!< 1 if the current logical processor is
                                     throttling. 0 if it is running normally. */
 	INFO_VOLTAGE,              /*!< The current core voltage in Volt,
+	                            multiplied by 100. */
+	INFO_PKG_ENERGY,            /*!< The current package energy consumption in Joules,
 	                            multiplied by 100. */
 	INFO_BCLK,                 /*!< See \ref INFO_BUS_CLOCK. */
 	INFO_BUS_CLOCK,            /*!< The main bus clock in MHz,

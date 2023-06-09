@@ -9,6 +9,10 @@
 #ifdef USE_PDH
 #pragma comment(lib, "pdh.lib")
 #endif
+
+#include "../libcpuid/libcpuid.h"
+#include "../libcpuid/libcpuid_util.h"
+
 GNW_CONTEXT g_ctx;
 
 static struct nk_image
@@ -97,6 +101,58 @@ get_cpu_usage_by_api(void)
 }
 
 static void
+get_cpu_msr(void)
+{
+	logical_cpu_t i;
+	struct cpu_id_t* data;
+	bool affinity_saved = FALSE;
+	static int old_energy = 0;
+	int value = CPU_INVALID_VALUE;
+	if (g_ctx.lib.NwDrv == NULL ||
+		g_ctx.lib.NwCpuid->num_cpu_types <= g_ctx.cpu_index)
+		return;
+	data = &g_ctx.lib.NwCpuid->cpu_types[g_ctx.cpu_index];
+	if (!data->flags[CPU_FEATURE_MSR])
+		return;
+	affinity_saved = save_cpu_affinity();
+	for (i = 0; i < data->num_logical_cpus; i++)
+	{
+		if (!get_affinity_mask_bit(i, &data->affinity_mask))
+			continue;
+		if (!set_cpu_affinity(i))
+			continue;
+		int min_multi = cpu_msrinfo(g_ctx.lib.NwDrv, INFO_MIN_MULTIPLIER);
+		int max_multi = cpu_msrinfo(g_ctx.lib.NwDrv, INFO_MAX_MULTIPLIER);
+		int cur_multi = cpu_msrinfo(g_ctx.lib.NwDrv, INFO_CUR_MULTIPLIER);
+		if (min_multi == CPU_INVALID_VALUE)
+			min_multi = 0;
+		if (max_multi == CPU_INVALID_VALUE)
+			max_multi = 0;
+		if (cur_multi == CPU_INVALID_VALUE)
+			cur_multi = 0;
+		snprintf(g_ctx.cpu_msr_multi, 48, "%.1lf (%d - %d)", cur_multi / 100.0, min_multi / 100, max_multi / 100);
+		value = cpu_msrinfo(g_ctx.lib.NwDrv, INFO_PKG_TEMPERATURE);
+		if (value != CPU_INVALID_VALUE && value > 0)
+			g_ctx.cpu_msr_temp = value;
+		value = cpu_msrinfo(g_ctx.lib.NwDrv, INFO_VOLTAGE);
+		if (value != CPU_INVALID_VALUE && value > 0)
+			g_ctx.cpu_msr_volt = value / 100.0;
+		value = cpu_msrinfo(g_ctx.lib.NwDrv, INFO_PKG_ENERGY);
+		if (value != CPU_INVALID_VALUE && value > old_energy)
+		{
+			g_ctx.cpu_msr_power = (value - old_energy) / 100.0;
+			old_energy = value;
+		}
+		value = cpu_msrinfo(g_ctx.lib.NwDrv, INFO_BUS_CLOCK);
+		if (value != CPU_INVALID_VALUE && value > 0)
+			g_ctx.cpu_msr_bus = value / 100.0;
+		break;
+	}
+	if (affinity_saved)
+		restore_cpu_affinity();
+}
+
+static void
 get_network_traffic_by_api(void)
 {
 	static UINT64 old_recv = 0;
@@ -129,9 +185,6 @@ gnwinfo_ctx_update(WPARAM wparam)
 	switch (wparam)
 	{
 	case IDT_TIMER_1S:
-		if (g_ctx.cpuid)
-			NWL_NodeFree(g_ctx.cpuid, 1);
-		g_ctx.cpuid = NW_Cpuid();
 		if (g_ctx.network)
 			NWL_NodeFree(g_ctx.network, 1);
 		g_ctx.network = NW_Network();
@@ -155,6 +208,7 @@ gnwinfo_ctx_update(WPARAM wparam)
 		get_network_traffic_by_api();
 		get_cpu_usage_by_api();
 #endif
+		get_cpu_msr();
 		break;
 	case IDT_TIMER_1M:
 		if (g_ctx.disk)
@@ -214,6 +268,7 @@ gnwinfo_ctx_init(HINSTANCE inst, HWND wnd, struct nk_context* ctx, float width, 
 	g_ctx.lib.ErrLogCallback = gnwinfo_ctx_error_callback;
 	g_ctx.lib.CodePage = CP_UTF8;
 
+	g_ctx.lib.CpuInfo = TRUE;
 	g_ctx.lib.SysInfo = TRUE;
 	g_ctx.lib.DmiInfo = TRUE;
 	g_ctx.lib.UefiInfo = TRUE;
@@ -221,6 +276,7 @@ gnwinfo_ctx_init(HINSTANCE inst, HWND wnd, struct nk_context* ctx, float width, 
 
 	NW_Init(&g_ctx.lib);
 	g_ctx.lib.NwRoot = NWL_NodeAlloc("NWinfo", 0);
+	g_ctx.cpuid = NW_Cpuid();
 	g_ctx.system = NW_System();
 	g_ctx.smbios = NW_Smbios();
 	g_ctx.uefi = NW_Uefi();
@@ -267,7 +323,6 @@ gnwinfo_ctx_exit()
 	CloseHandle(g_ctx.mutex);
 	NWL_NodeFree(g_ctx.network, 1);
 	NWL_NodeFree(g_ctx.disk, 1);
-	NWL_NodeFree(g_ctx.cpuid, 1);
 	NWL_NodeFree(g_ctx.battery, 1);
 	NWL_NodeFree(g_ctx.edid, 1);
 	NW_Fini();

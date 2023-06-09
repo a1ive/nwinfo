@@ -128,9 +128,6 @@ PrintCoreMsr(PNODE node, const struct cpu_id_t* data, logical_cpu_t cpu)
 	value = cpu_msrinfo(NWLC->NwDrv, INFO_TEMPERATURE);
 	if (value != CPU_INVALID_VALUE && value > 0)
 		NWL_NodeAttrSetf(node, "Temperature (C)", NAFLG_FMT_NUMERIC, "%d", value);
-	value = cpu_msrinfo(NWLC->NwDrv, INFO_THROTTLING);
-	if (value != CPU_INVALID_VALUE && value > 0)
-		NWL_NodeAttrSetBool(node, "Throttling", value, 0);
 	value = cpu_msrinfo(NWLC->NwDrv, INFO_VOLTAGE);
 	if (value != CPU_INVALID_VALUE && value > 0)
 		NWL_NodeAttrSetf(node, "Core Voltage (V)", NAFLG_FMT_NUMERIC, "%.2lf", value / 100.0);
@@ -218,7 +215,7 @@ PNODE NW_Cpuid(VOID)
 		NWL_NodeAttrSetf(node, "L3 Cache Instances", NAFLG_FMT_NUMERIC, "%d", id->l3_total_instances);
 	if (id->l4_total_instances >= 0)
 		NWL_NodeAttrSetf(node, "L4 Cache Instances", NAFLG_FMT_NUMERIC, "%d", id->l4_total_instances);
-	NWL_NodeAttrSetf(node, "CPU Clock (MHz)", NAFLG_FMT_NUMERIC, "%d", cpu_clock());
+	NWL_NodeAttrSetf(node, "CPU Clock (MHz)", NAFLG_FMT_NUMERIC, "%d", cpu_clock_by_os());
 	for (i = 0; i < id->num_cpu_types; i++)
 	{
 		CHAR name[32];

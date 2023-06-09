@@ -103,6 +103,12 @@ typedef struct _GNW_CONTEXT
 	CHAR net_recv[48];
 	CHAR net_send[48];
 	double cpu_usage;
+	int cpu_index;
+	CHAR cpu_msr_multi[48];
+	int cpu_msr_temp;
+	double cpu_msr_volt;
+	double cpu_msr_bus;
+	double cpu_msr_power;
 	LPCSTR sys_uptime;
 	MEMORYSTATUSEX mem_status;
 	CHAR mem_total[48];
