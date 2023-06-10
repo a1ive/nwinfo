@@ -98,6 +98,8 @@
 #define MSR_PSTATE_5           0xC0010069
 #define MSR_PSTATE_6           0xC001006A
 #define MSR_PSTATE_7           0xC001006B
+#define MSR_PWR_UNIT           0xC0010299
+#define MSR_PKG_ENERGY_STAT    0xC001029B
 static const uint32_t amd_msr[] = {
 	MSR_PSTATE_L,
 	MSR_PSTATE_S,
@@ -109,6 +111,8 @@ static const uint32_t amd_msr[] = {
 	MSR_PSTATE_5,
 	MSR_PSTATE_6,
 	MSR_PSTATE_7,
+	MSR_PWR_UNIT,
+	MSR_PKG_ENERGY_STAT,
 	CPU_INVALID_VALUE
 };
 
@@ -452,11 +456,20 @@ static double get_info_pkg_energy(struct msr_info_t* info)
 		err = cpu_rdmsr_range(info->handle, MSR_PKG_ENERGY_STATUS, 31, 0, &TotalEnergyConsumed);
 		err += cpu_rdmsr_range(info->handle, MSR_RAPL_POWER_UNIT, 12, 8, &EnergyStatusUnits);
 		if (!err) return (double) TotalEnergyConsumed / (1ULL << EnergyStatusUnits);
-		//if (!err) return (int)EnergyStatusUnits;
 	}
-
+	else if (info->id->vendor == VENDOR_AMD || info->id->vendor == VENDOR_HYGON)
+	{
+		// 17h: Zen / Zen+ / Zen 2
+		// 18h: Hygon Dhyana
+		// 19h: Zen 3 / Zen 3+ / Zen 4
+		if (info->id->ext_family >= 0x17)
+		{
+			err = cpu_rdmsr_range(info->handle, MSR_PKG_ENERGY_STAT, 31, 0, &TotalEnergyConsumed);
+			err += cpu_rdmsr_range(info->handle, MSR_PWR_UNIT, 12, 8, &EnergyStatusUnits);
+			if (!err) return (double)TotalEnergyConsumed / (1ULL << EnergyStatusUnits);
+		}
+	}
 	return (double)CPU_INVALID_VALUE / 100;
-	//return CPU_INVALID_VALUE;
 }
 
 static double get_info_voltage(struct msr_info_t *info)
