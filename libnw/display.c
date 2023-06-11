@@ -26,6 +26,39 @@ struct DetailedTimingDescriptor
 	UINT8 Data2[3];
 };
 
+union DisplayDescriptor
+{
+	UINT8 Raw[18];
+	struct DetailedTimingDescriptor DT;
+	struct DisplayDescriptorBlock
+	{
+		// 0x0000 = Display Descriptor
+		UINT16 Reserved1;
+		// 0x00
+		UINT8 Reserved2;
+		// 0x00 - 0x0F = OEM reserved
+		// 0xFF ASCII Serial number
+		// 0xFE ASCII Unspecified text
+		// 0xFD Display Range Limits
+		// 0xFC ASCII Display name
+		UINT8 Type;
+		// 0x00
+		// If Type = 0xFD, Offsets for display range limits
+		UINT8 Reserved3;
+		UINT8 Data[13];
+	} DD;
+};
+
+struct StandardTimingInformation
+{
+	// 00 = reserved
+	// otherwise (value + 31) * 8 (256-2288px)
+	UINT8 X;
+	// Bits 7 - 6 : Aspect ratio, 00 = 16:10, 01 = 4:3, 10 = 5:4, 11 = 16:9
+	// Bits 5 - 0 : Refresh rate, value + 60 (60-123Hz)
+	UINT8 Y;
+};
+
 struct EDID
 {
 	UCHAR Magic[8]; //0-7, 00 FF FF FF FF FF FF 00
@@ -52,8 +85,8 @@ struct EDID
 	UCHAR WXMSB; //33
 	UCHAR WYMSB; //34
 	UCHAR Modes[3]; //35
-	UCHAR StandardTiming[2 * 8]; //38-53
-	struct DetailedTimingDescriptor Desc[4];
+	struct StandardTimingInformation Std[8]; //38-53
+	union DisplayDescriptor Desc[4];
 	UCHAR NumOfExts;
 	UCHAR Checksum;
 };
@@ -75,10 +108,155 @@ InterfaceToStr(UINT8 Interface)
 	return "UNKNOWN";
 }
 
+static UINT64
+GetYRes(PNODE node, UINT64 x, UINT64 AspectRatio, UINT16 ver)
+{
+	switch (AspectRatio)
+	{
+	case 0:
+		if (ver < 0x0103)
+		{
+			NWL_NodeAttrSet(node, "Aspect Ratio", "1:1", 0);
+			return x; // 1:1
+		}
+		NWL_NodeAttrSet(node, "Aspect Ratio", "16:10", 0);
+		return (x * 10) / 16; // 16:10
+	case 1:
+		NWL_NodeAttrSet(node, "Aspect Ratio", "4:3", 0);
+		return (x * 3) / 4; // 4:3
+	case 2:
+		NWL_NodeAttrSet(node, "Aspect Ratio", "5:4", 0);
+		return (x * 4) / 5; // 5:4
+	case 3:
+		NWL_NodeAttrSet(node, "Aspect Ratio", "16:9", 0);
+		return (x * 9) / 16; // 16:9
+	}
+	NWL_NodeAttrSet(node, "Aspect Ratio", "-", 0);
+	return 0;
+}
+
+static void
+DecodeStandardTiming(PNODE nm, struct EDID* pEDID)
+{
+	int i;
+	UINT16 ver = ((UINT16)pEDID->Version << 8) | pEDID->Revision;
+	UINT64 max_w = 0, max_h = 0, max_f = 0;
+	for (i = 0; i < 8; i++)
+	{
+		UINT64 x, y, a, f;
+		CHAR name[32];
+		PNODE nstd;
+
+		snprintf(name, 32, "Standard Timing Block %d", i);
+		nstd = NWL_NodeAppendNew(nm, name, NFLG_ATTGROUP);
+
+		if (pEDID->Std[i].X == 0x01 && pEDID->Std[i].Y == 0x01)
+		{
+			NWL_NodeAttrSet(nstd, "Status", "Disabled", 0);
+			continue;
+		}
+		NWL_NodeAttrSet(nstd, "Status", "Enabled", 0);
+		x = (31ULL + pEDID->Std[i].X) * 8;
+		a = (pEDID->Std[i].Y & 0xC0) >> 6;
+		f = (pEDID->Std[i].Y & 0x3F) + 60;
+		y = GetYRes(nstd, x, a, ver);
+		NWL_NodeAttrSetf(nstd, "Vertical Frequency", NAFLG_FMT_NUMERIC, "%llu", f);
+		NWL_NodeAttrSetf(nstd, "X Resolution", NAFLG_FMT_NUMERIC, "%llu", x);
+		NWL_NodeAttrSetf(nstd, "Y Resolution", NAFLG_FMT_NUMERIC, "%llu", y);
+		if (x * y > max_w * max_h)
+		{
+			max_w = x;
+			max_h = y;
+		}
+		if (f > max_f)
+			max_f = f;
+	}
+	NWL_NodeAttrSetf(nm, "Max Resolution", 0, "%llux%llu", max_w, max_h);
+	NWL_NodeAttrSetf(nm, "Max Refresh Rate (Hz)", NAFLG_FMT_NUMERIC, "%llu", max_f);
+}
+
+static void
+DecodeDetailedTiming(PNODE node, struct DetailedTimingDescriptor* desc)
+{
+	UINT32 ha, va, hb, vb, w, h;
+	UINT64 pc;
+	double hz, inch;
+	NWL_NodeAttrSet(node, "Type", "Detailed Timing Descriptor", 0);
+	pc = ((UINT64)desc->PixelClock) * 10 * 1000;
+	NWL_NodeAttrSet(node, "Pixel Clock", NWL_GetHumanSize(pc, hz_human_sizes, 1000), NAFLG_FMT_HUMAN_SIZE);
+	ha = (UINT32)desc->HActiveLSB + (UINT32)((desc->HPixelsMSB & 0xf0) << 4);
+	va = (UINT32)desc->VActiveLSB + (UINT32)((desc->VLinesMSB & 0xf0) << 4);
+	hb = (UINT32)desc->HBlankingLSB + (UINT32)((desc->HPixelsMSB & 0x0f) << 8);
+	vb = (UINT32)desc->VBlankingLSB + (UINT32)((desc->VLinesMSB & 0x0f) << 8);
+	hz = ((double)pc) / (((UINT64)ha + hb) * ((UINT64)va + vb));
+	NWL_NodeAttrSetf(node, "X Resolution", NAFLG_FMT_NUMERIC, "%u", ha);
+	NWL_NodeAttrSetf(node, "Y Resolution", NAFLG_FMT_NUMERIC, "%u", va);
+	NWL_NodeAttrSetf(node, "Refresh Rate (Hz)", NAFLG_FMT_NUMERIC, "%.2f", hz);
+
+	w = (UINT32)desc->WidthLSB + (UINT32)((desc->WHMSB & 0xf0) << 4);
+	h = (UINT32)desc->HeightLSB + (UINT32)((desc->WHMSB & 0x0f) << 8);
+	inch = sqrt((double)((UINT64)w) * w + ((UINT64)h) * h) * 0.0393701;
+	NWL_NodeAttrSetf(node, "Width (mm)", NAFLG_FMT_NUMERIC, "%u", w);
+	NWL_NodeAttrSetf(node, "Height (mm)", NAFLG_FMT_NUMERIC, "%u", h);
+	NWL_NodeAttrSetf(node, "Diagonal (in)", NAFLG_FMT_NUMERIC, "%.1f", inch);
+}
+
+static void
+DecodeDisplayDescriptor(PNODE node, struct DisplayDescriptorBlock* desc)
+{
+	int i;
+	CHAR text[14] = { 0 };
+	for (i = 0; i < 13; i++)
+	{
+		if (!isprint(desc->Data[i]))
+			break;
+		text[i] = desc->Data[i];
+	}
+	switch (desc->Type)
+	{
+	case 0xFF:
+		NWL_NodeAttrSet(node, "Type", "Display Serial Number", 0);
+		NWL_NodeAttrSet(node, "Text", text, 0);
+		break;
+	case 0xFE:
+		NWL_NodeAttrSet(node, "Type", "Unspecified Text", 0);
+		NWL_NodeAttrSet(node, "Text", text, 0);
+		break;
+	case 0xFD:
+		NWL_NodeAttrSet(node, "Type", "Display Range Limits", 0);
+		// TODO: decode display range limits
+		break;
+	case 0xFC:
+		NWL_NodeAttrSet(node, "Type", "Display Range Limits", 0);
+		NWL_NodeAttrSet(node, "Text", text, 0);
+		break;
+	default:
+		NWL_NodeAttrSet(node, "Type", "Display Descriptor", 0);
+		break;
+	}
+}
+
+static void
+DecodeDescriptor(PNODE nm, struct EDID* pEDID)
+{
+	int i;
+	for (i = 0; i < 4; i++)
+	{
+		CHAR name[32];
+		PNODE nd;
+		snprintf(name, 32, "Descriptor %d", i);
+		nd = NWL_NodeAppendNew(nm, name, NFLG_ATTGROUP);
+		if (pEDID->Desc[i].DD.Reserved1 == 0x0000 &&
+			pEDID->Desc[i].DD.Reserved2 == 0x00)
+			DecodeDisplayDescriptor(nd, &pEDID->Desc[i].DD);
+		else
+			DecodeDetailedTiming(nd, &pEDID->Desc[i].DT);
+	}
+}
+
 static void
 DecodeEDID(PNODE nm, void* pData, DWORD dwSize, CHAR* Ids, DWORD IdsSize)
 {
-	DWORD i;
 	struct EDID* pEDID = pData;
 	static UCHAR Magic[8] = { 0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00 };
 	char Manufacturer[4];
@@ -113,35 +291,14 @@ DecodeEDID(PNODE nm, void* pData, DWORD dwSize, CHAR* Ids, DWORD IdsSize)
 	{
 		NWL_NodeAttrSet(nflags, "Type", "Analog", 0);
 	}
-	for (i = 0; i < 4; i++)
-	{
-		UINT32 ha, va, hb, vb, w, h;
-		UINT64 pc;
-		double hz, inch;
-		PNODE nres, nscr;
-		if (pEDID->Desc[i].PixelClock == 0 && pEDID->Desc[i].HActiveLSB == 0)
-			continue;
-		pc = ((UINT64)pEDID->Desc[i].PixelClock) * 10 * 1000;
-		NWL_NodeAttrSet(nm, "Pixel Clock", NWL_GetHumanSize(pc, hz_human_sizes, 1000), NAFLG_FMT_HUMAN_SIZE);
-		ha = (UINT32)pEDID->Desc[i].HActiveLSB + (UINT32)((pEDID->Desc[i].HPixelsMSB & 0xf0) << 4);
-		va = (UINT32)pEDID->Desc[i].VActiveLSB + (UINT32)((pEDID->Desc[i].VLinesMSB & 0xf0) << 4);
-		hb = (UINT32)pEDID->Desc[i].HBlankingLSB + (UINT32)((pEDID->Desc[i].HPixelsMSB & 0x0f) << 8);
-		vb = (UINT32)pEDID->Desc[i].VBlankingLSB + (UINT32)((pEDID->Desc[i].VLinesMSB & 0x0f) << 8);
-		hz = ((double)pc) / (((UINT64)ha + hb) * ((UINT64)va + vb));
-		nres = NWL_NodeAppendNew(nm, "Resolution", NFLG_ATTGROUP);
-		NWL_NodeAttrSetf(nres, "Width", NAFLG_FMT_NUMERIC, "%u", ha);
-		NWL_NodeAttrSetf(nres, "Height", NAFLG_FMT_NUMERIC, "%u", va);
-		NWL_NodeAttrSetf(nres, "Refresh Rate (Hz)", NAFLG_FMT_NUMERIC, "%.2f", hz);
+	NWL_NodeAttrSetf(nm, "Width (cm)", NAFLG_FMT_NUMERIC, "%u", pEDID->Width);
+	NWL_NodeAttrSetf(nm, "Height (cm)", NAFLG_FMT_NUMERIC, "%u", pEDID->Height);
+	NWL_NodeAttrSetf(nm, "Diagonal (in)", NAFLG_FMT_NUMERIC, "%.1f",
+		sqrt((double)((UINT64)pEDID->Width * pEDID->Width + (UINT64)pEDID->Height * pEDID->Height)) * 0.393701);
 
-		w = (UINT32)pEDID->Desc[i].WidthLSB + (UINT32)((pEDID->Desc[i].WHMSB & 0xf0) << 4);
-		h = (UINT32)pEDID->Desc[i].HeightLSB + (UINT32)((pEDID->Desc[i].WHMSB & 0x0f) << 8);
-		inch = sqrt((double)((UINT64)w) * w + ((UINT64)h) * h) * 0.0393701;
-		nscr = NWL_NodeAppendNew(nm, "Screen Size", NFLG_ATTGROUP);
-		NWL_NodeAttrSetf(nscr, "Width (mm)", NAFLG_FMT_NUMERIC, "%u", w);
-		NWL_NodeAttrSetf(nscr, "Height (mm)", NAFLG_FMT_NUMERIC, "%u", h);
-		NWL_NodeAttrSetf(nscr, "Diagonal (in)", NAFLG_FMT_NUMERIC, "%.1f", inch);
-		break;
-	}
+	DecodeStandardTiming(nm, pEDID);
+
+	DecodeDescriptor(nm, pEDID);
 }
 
 static void

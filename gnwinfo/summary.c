@@ -352,20 +352,15 @@ draw_display(struct nk_context* ctx)
 		PNODE mon = g_ctx.edid->Children[i].LinkedNode;
 		if (!mon)
 			continue;
-		PNODE res = NWL_NodeGetChild(mon, "Resolution");
-		PNODE sz = NWL_NodeGetChild(mon, "Screen Size");
-		if (!res || !sz)
-			continue;
 		nk_spacer(ctx);
 		nk_label(ctx, gnwinfo_get_node_attr(mon, "Manufacturer"), NK_TEXT_LEFT);
 		nk_labelf_colored(ctx, NK_TEXT_LEFT,
 			g_color_text_l,
-			"%s %sx%s@%sHz %s\"",
+			"%s %s@%sHz %s\"",
 			gnwinfo_get_node_attr(mon, "ID"),
-			gnwinfo_get_node_attr(res, "Width"),
-			gnwinfo_get_node_attr(res, "Height"),
-			gnwinfo_get_node_attr(res, "Refresh Rate (Hz)"),
-			gnwinfo_get_node_attr(sz, "Diagonal (in)"));
+			gnwinfo_get_node_attr(mon, "Max Resolution"),
+			gnwinfo_get_node_attr(mon, "Max Refresh Rate (Hz)"),
+			gnwinfo_get_node_attr(mon, "Diagonal (in)"));
 	}
 }
 
