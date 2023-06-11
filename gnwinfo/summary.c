@@ -326,7 +326,7 @@ draw_memory(struct nk_context* ctx)
 static VOID
 draw_display(struct nk_context* ctx)
 {
-	INT i;
+	INT i, j;
 	float ratio = draw_icon_label(ctx, L"Display Devices", g_ctx.image_edid);
 
 	nk_layout_row(ctx, NK_DYNAMIC, 0, 3, (float[3]) { ratio, 0.3f, 0.7f - ratio });
@@ -349,17 +349,37 @@ draw_display(struct nk_context* ctx)
 	}
 	for (i = 0; g_ctx.edid->Children[i].LinkedNode; i++)
 	{
+		CHAR name[32];
+		CHAR res[32] = { 0 };
+		LPCSTR product = NULL;
 		PNODE mon = g_ctx.edid->Children[i].LinkedNode;
 		if (!mon)
 			continue;
 		nk_spacer(ctx);
 		nk_label(ctx, gnwinfo_get_node_attr(mon, "Manufacturer"), NK_TEXT_LEFT);
+		
+		for (j = 0; j < 4; j++)
+		{
+			PNODE desc;
+			snprintf(name, 32, "Descriptor %d", j);
+			desc = NWL_NodeGetChild(mon, name);
+			if (res[0] == '\0' &&
+				strcmp(gnwinfo_get_node_attr(desc, "Type"), "Detailed Timing Descriptor") == 0)
+				snprintf(res, 32, "%sx%s@%sHz",
+					gnwinfo_get_node_attr(desc, "X Resolution"),
+					gnwinfo_get_node_attr(desc, "Y Resolution"),
+					gnwinfo_get_node_attr(desc, "Refresh Rate (Hz)"));
+			if (product == NULL
+				&& strcmp(gnwinfo_get_node_attr(desc, "Type"), "Display Name") == 0)
+				product = gnwinfo_get_node_attr(desc, "Text");
+		}
+		
 		nk_labelf_colored(ctx, NK_TEXT_LEFT,
 			g_color_text_l,
-			"%s %s@%sHz %s\"",
+			"%s %s %s %s\"",
 			gnwinfo_get_node_attr(mon, "ID"),
-			gnwinfo_get_node_attr(mon, "Max Resolution"),
-			gnwinfo_get_node_attr(mon, "Max Refresh Rate (Hz)"),
+			product,
+			res,
 			gnwinfo_get_node_attr(mon, "Diagonal (in)"));
 	}
 }

@@ -227,7 +227,7 @@ DecodeDisplayDescriptor(PNODE node, struct DisplayDescriptorBlock* desc)
 		// TODO: decode display range limits
 		break;
 	case 0xFC:
-		NWL_NodeAttrSet(node, "Type", "Display Range Limits", 0);
+		NWL_NodeAttrSet(node, "Type", "Display Name", 0);
 		NWL_NodeAttrSet(node, "Text", text, 0);
 		break;
 	default:
