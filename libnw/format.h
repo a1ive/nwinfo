@@ -71,7 +71,3 @@ NWL_NodeAttrSetf(PNODE node, LPCSTR key, INT flags, LPCSTR _Printf_format_string
 
 PNODE_ATT NWL_NodeAttrSetMulti(PNODE node, LPCSTR key, LPCSTR value, int flags);
 VOID NWL_NodeAppendMultiSz(LPSTR* lpmszMulti, LPCSTR szNew);
-
-INT NWL_NodeToJson(PNODE node, FILE* file);
-INT NWL_NodeToYaml(PNODE node, FILE* file);
-INT NWL_NodeToLua(PNODE node, FILE* file);

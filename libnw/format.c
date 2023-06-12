@@ -587,7 +587,7 @@ static SIZE_T lua_escape_content(LPCSTR input, LPSTR buffer, DWORD bufferSize)
 	return cOut - buffer;
 }
 
-INT NWL_NodeToJson(PNODE node, FILE* file)
+static INT NWL_NodeToJson(PNODE node, FILE* file)
 {
 	int i = 0;
 	int nodes = 1;
@@ -676,7 +676,7 @@ INT NWL_NodeToJson(PNODE node, FILE* file)
 	return nodes;
 }
 
-INT NWL_NodeToYaml(PNODE node, FILE* file)
+static INT NWL_NodeToYaml(PNODE node, FILE* file)
 {
 	int i = 0;
 	int count = 1;
@@ -751,7 +751,7 @@ INT NWL_NodeToYaml(PNODE node, FILE* file)
 	return count;
 }
 
-INT NWL_NodeToLua(PNODE node, FILE* file)
+static INT NWL_NodeToLua(PNODE node, FILE* file)
 {
 	int i = 0;
 	int nodes = 1;
@@ -835,4 +835,21 @@ INT NWL_NodeToLua(PNODE node, FILE* file)
 	//if ((node->Flags & NFLG_TABLE) == 0)
 	fputs("}", file);
 	return nodes;
+}
+
+VOID NW_Export(PNODE node, FILE* file)
+{
+	indent_depth = 0;
+	switch (NWLC->NwFormat)
+	{
+	case FORMAT_YAML:
+		NWL_NodeToYaml(node, file);
+		break;
+	case FORMAT_JSON:
+		NWL_NodeToJson(node, file);
+		break;
+	case FORMAT_LUA:
+		NWL_NodeToLua(node, file);
+		break;
+	}
 }

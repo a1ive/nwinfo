@@ -75,6 +75,7 @@ typedef struct _NWLIB_CONTEXT
 extern PNWLIB_CONTEXT NWLC;
 
 VOID NW_Init(PNWLIB_CONTEXT pContext);
+VOID NW_Export(PNODE node, FILE* file);
 VOID NW_Print(LPCSTR lpFileName);
 VOID NW_Fini(VOID);
 

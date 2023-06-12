@@ -75,18 +75,7 @@ VOID NW_Print(LPCSTR lpFileName)
 	if (NWLC->UefiInfo)
 		NW_Uefi();
 	NW_Libinfo();
-	switch (NWLC->NwFormat)
-	{
-	case FORMAT_YAML:
-		NWL_NodeToYaml(NWLC->NwRoot, NWLC->NwFile);
-		break;
-	case FORMAT_JSON:
-		NWL_NodeToJson(NWLC->NwRoot, NWLC->NwFile);
-		break;
-	case FORMAT_LUA:
-		NWL_NodeToLua(NWLC->NwRoot, NWLC->NwFile);
-		break;
-	}
+	NW_Export(NWLC->NwRoot, NWLC->NwFile);
 }
 
 VOID NW_Fini(VOID)

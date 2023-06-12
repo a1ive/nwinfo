@@ -320,7 +320,7 @@ CHAR* NWL_LoadIdsToMemory(LPCWSTR lpFileName, LPDWORD lpSize)
 	*lpSize = dwSize;
 	return Ids;
 fail:
-	if (Fp != INVALID_HANDLE_VALUE)
+	if (Fp && Fp != INVALID_HANDLE_VALUE)
 		CloseHandle(Fp);
 	if (Ids)
 		free(Ids);
