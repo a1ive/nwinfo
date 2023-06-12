@@ -190,8 +190,6 @@ static PNODE_ATT NWL_NodeAllocAttr(LPCSTR key, LPCSTR value, int flags)
 	if (NULL == key)
 		return att;
 
-	
-
 	key_len = strlen(key) + 1;
 	nvalue = NWL_NodeMbsDup(value, &nvalue_len);
 	size = sizeof(NODE_ATT) + key_len + nvalue_len;

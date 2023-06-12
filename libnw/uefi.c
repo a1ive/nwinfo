@@ -38,7 +38,7 @@ static void PrintSecureBoot(PNODE node)
 {
 	UINT8 SecureBoot = 0;
 	if (GetEfiGlobalVar(L"SecureBoot", &SecureBoot, sizeof(UINT8)))
-		NWL_NodeAttrSetf(node, "Secure Boot", 0, "%s", SecureBoot ? "ENABLED" : "DISABLED");
+		NWL_NodeAttrSet(node, "Secure Boot", SecureBoot ? "ENABLED" : "DISABLED", 0);
 	else
 		NWL_NodeAttrSet(node, "Secure Boot", "UNSUPPORTED", 0);
 }
@@ -144,7 +144,7 @@ static void PrintLoadOption(PNODE node, EFI_LOAD_OPTION* option, DWORD size)
 		NWL_NodeAppendMultiSz(&attr, "Boot");
 	NWL_NodeAttrSetMulti(node, "Attributes", attr, 0);
 	free(attr);
-	NWL_NodeAttrSetf(node, "Name", 0, "%S", option->Description);
+	NWL_NodeAttrSet(node, "Name", NWL_WcsToMbs(option->Description), 0);
 	dp = (EFI_DEVICE_PATH*)((LPBYTE)option + sizeof(EFI_LOAD_OPTION) + desc_size);
 	dp_str = NWL_GetEfiDpStr(dp);
 	NWL_NodeAttrSet(node, "Device Path", dp_str, NAFLG_FMT_NEED_QUOTE);
