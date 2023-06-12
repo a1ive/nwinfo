@@ -85,7 +85,7 @@ LPCSTR NWL_NtGetPathFromHandle(HANDLE hFile)
 	puName = &((POBJECT_NAME_INFORMATION)tmp)->Name;
 	if (!puName->Length || !puName->Buffer)
 		return NULL;
-	return NWL_WcsToMbs(puName->Buffer);
+	return NWL_Ucs2ToUtf8(puName->Buffer);
 }
 
 BOOL NWL_NtQuerySystemInformation(INT SystemInformationClass,
@@ -105,7 +105,7 @@ BOOL NWL_NtQuerySystemInformation(INT SystemInformationClass,
 VOID NWL_NtGetVersion(LPOSVERSIONINFOEXW osInfo)
 {
 	NTSTATUS(WINAPI * RtlGetVersion)(LPOSVERSIONINFOEXW) = NULL;
-	HMODULE hMod = GetModuleHandleA("ntdll");
+	HMODULE hMod = GetModuleHandleW(L"ntdll");
 
 	ZeroMemory(osInfo, sizeof(OSVERSIONINFOEXW));
 

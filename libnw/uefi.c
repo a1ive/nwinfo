@@ -144,7 +144,7 @@ static void PrintLoadOption(PNODE node, EFI_LOAD_OPTION* option, DWORD size)
 		NWL_NodeAppendMultiSz(&attr, "Boot");
 	NWL_NodeAttrSetMulti(node, "Attributes", attr, 0);
 	free(attr);
-	NWL_NodeAttrSet(node, "Name", NWL_WcsToMbs(option->Description), 0);
+	NWL_NodeAttrSet(node, "Name", NWL_Ucs2ToUtf8(option->Description), 0);
 	dp = (EFI_DEVICE_PATH*)((LPBYTE)option + sizeof(EFI_LOAD_OPTION) + desc_size);
 	dp_str = NWL_GetEfiDpStr(dp);
 	NWL_NodeAttrSet(node, "Device Path", dp_str, NAFLG_FMT_NEED_QUOTE);
@@ -156,15 +156,13 @@ static void PrintEfiBootOption(PNODE node, LPGUID guid, WCHAR* name)
 	PNODE nb = NULL;
 	EFI_LOAD_OPTION* option = NULL;
 	DWORD size = 0;
-	CHAR tmp[] = "BootXXXX";
 	if (memcmp(guid, &EFI_GV_GUID, sizeof(GUID)) != 0)
 		return;
 	if (name[0] != L'B' || name[1] != L'o' || name[2] != L'o' || name[3] != L't' ||
 		!iswxdigit(name[4]) || !iswxdigit(name[5]) || !iswxdigit(name[6]) || !iswxdigit(name[7]) ||
 		name[8] != L'\0')
 		return;
-	snprintf(tmp, sizeof(tmp), "%S", name);
-	nb = NWL_NodeAppendNew(node, tmp, NFLG_ATTGROUP);
+	nb = NWL_NodeAppendNew(node, NWL_Ucs2ToUtf8(name), NFLG_ATTGROUP);
 	option = NWL_GetEfiVarAlloc(name, guid, &size, NULL);
 	if (!option)
 		return;
@@ -179,9 +177,8 @@ static void PrintEfiVarAndSize(PNODE node, LPGUID guid, WCHAR* name)
 	PNODE ng = NWL_NodeGetChild(node, lpszGuid);
 	if (!ng)
 		ng = NWL_NodeAppendNew(node, lpszGuid, NFLG_TABLE_ROW);
-	snprintf((CHAR*)NWLC->NwBuf, NWINFO_BUFSZ, "%S", name);
 	VarSize = NWL_GetEfiVar(name, guid, NULL, 0, NULL);
-	NWL_NodeAttrSetf(ng, (CHAR*)NWLC->NwBuf, NAFLG_FMT_NUMERIC, "%lu", VarSize);
+	NWL_NodeAttrSetf(ng, NWL_Ucs2ToUtf8(name), NAFLG_FMT_NUMERIC, "%lu", VarSize);
 }
 
 static void EnumEfiVars(PNODE node, void (*func)(PNODE node, LPGUID guid, WCHAR* name))

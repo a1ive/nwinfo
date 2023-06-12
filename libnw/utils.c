@@ -421,12 +421,12 @@ CHAR* NWL_GetRegSzValue(HKEY Key, LPCSTR SubKey, LPCSTR ValueName)
 
 HANDLE NWL_GetDiskHandleById(BOOL Cdrom, BOOL Write, DWORD Id)
 {
-	CHAR PhyPath[] = "\\\\.\\PhysicalDrive4294967295";
+	WCHAR PhyPath[] = L"\\\\.\\PhysicalDrive4294967295";
 	if (Cdrom)
-		snprintf(PhyPath, sizeof(PhyPath), "\\\\.\\CdRom%u", Id);
+		swprintf(PhyPath, 28, L"\\\\.\\CdRom%u", Id);
 	else
-		snprintf(PhyPath, sizeof(PhyPath), "\\\\.\\PhysicalDrive%u", Id);
-	return CreateFileA(PhyPath, Write ? (GENERIC_READ | GENERIC_WRITE) : GENERIC_READ,
+		swprintf(PhyPath, 28, L"\\\\.\\PhysicalDrive%u", Id);
+	return CreateFileW(PhyPath, Write ? (GENERIC_READ | GENERIC_WRITE) : GENERIC_READ,
 		FILE_SHARE_READ | FILE_SHARE_WRITE, 0, OPEN_EXISTING, FILE_ATTRIBUTE_SYSTEM, 0);
 }
 
@@ -481,18 +481,33 @@ NWL_WinGuidToStr(BOOL bBracket, GUID* pGuid)
 	return GuidStr;
 }
 
-static CHAR Mbs[256] = { 0 };
-
 LPCSTR
-NWL_WcsToMbs(PWCHAR Wcs)
+NWL_Ucs2ToUtf8(LPCWSTR src)
 {
-	size_t i = 0;
-	for (i = 0; i < 255; i++)
+	static CHAR dest[MAX_PATH + 1];
+	size_t i;
+	CHAR* p = dest;
+	ZeroMemory(dest, sizeof(dest));
+	for (i = 0; i < MAX_PATH; i++)
 	{
-		if (Wcs[i] == 0 || !isprint(Wcs[i]) || Wcs[i] > 128)
+		if (src[i] <= 0x007F)
+			*p++ = (CHAR)src[i];
+		else if (src[i] <= 0x07FF)
+		{
+			*p++ = (src[i] >> 6) | 0xC0;
+			*p++ = (src[i] & 0x3F) | 0x80;
+		}
+		else if (src[i] >= 0xD800 && src[i] <= 0xDFFF)
+		{
+			*p++ = 0;
 			break;
-		Mbs[i] = (CHAR)Wcs[i];
+		}
+		else
+		{
+			*p++ = (src[i] >> 12) | 0xE0;
+			*p++ = ((src[i] >> 6) & 0x3F) | 0x80;
+			*p++ = (src[i] & 0x3F) | 0x80;
+		}
 	}
-	Mbs[i] = 0;
-	return Mbs;
+	return dest;
 }

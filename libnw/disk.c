@@ -8,16 +8,16 @@
 static const char* d_human_sizes[6] =
 { "B", "KB", "MB", "GB", "TB", "PB", };
 
-static LPCSTR GetRealVolumePath(LPCSTR lpszVolume)
+static LPCSTR GetRealVolumePath(LPCWSTR lpszVolume)
 {
 	LPCSTR lpszRealPath;
-	HANDLE hFile = CreateFileA(lpszVolume, 0,
+	HANDLE hFile = CreateFileW(lpszVolume, 0,
 		FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING, 0, NULL);
 	if (!hFile || hFile == INVALID_HANDLE_VALUE)
-		return lpszVolume;
+		return NWL_Ucs2ToUtf8(lpszVolume);
 	lpszRealPath = NWL_NtGetPathFromHandle(hFile);
 	CloseHandle(hFile);
-	return lpszRealPath ? lpszRealPath : lpszVolume;
+	return lpszRealPath ? lpszRealPath : NWL_Ucs2ToUtf8(lpszVolume);
 }
 
 static LPCSTR
@@ -51,13 +51,13 @@ GetMbrFlag(LONGLONG llStartingOffset, PHY_DRIVE_INFO* pParent)
 }
 
 static void
-PrintPartitionInfo(PNODE pNode, LPCSTR lpszPath, PHY_DRIVE_INFO* pParent)
+PrintPartitionInfo(PNODE pNode, LPCWSTR lpszPath, PHY_DRIVE_INFO* pParent)
 {
 	BOOL bRet;
 	HANDLE hDevice = INVALID_HANDLE_VALUE;
 	PARTITION_INFORMATION_EX partInfo = { 0 };
 	DWORD dwPartInfo = sizeof(PARTITION_INFORMATION_EX);
-	hDevice = CreateFileA(lpszPath, GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING, 0, NULL);
+	hDevice = CreateFileW(lpszPath, GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING, 0, NULL);
 	if (!hDevice || hDevice == INVALID_HANDLE_VALUE)
 		return;
 	bRet = DeviceIoControl(hDevice, IOCTL_DISK_GET_PARTITION_INFO_EX, NULL, 0, &partInfo, dwPartInfo, &dwPartInfo, NULL);
@@ -85,47 +85,47 @@ PrintPartitionInfo(PNODE pNode, LPCSTR lpszPath, PHY_DRIVE_INFO* pParent)
 }
 
 static void
-PrintVolumeInfo(PNODE pNode, LPCSTR lpszVolume, PHY_DRIVE_INFO* pParent)
+PrintVolumeInfo(PNODE pNode, LPCWSTR lpszVolume, PHY_DRIVE_INFO* pParent)
 {
-	CHAR cchLabel[MAX_PATH];
-	CHAR cchFs[MAX_PATH];
-	CHAR cchPath[MAX_PATH];
-	LPCH lpszVolumePathNames = NULL;
+	WCHAR cchLabel[MAX_PATH];
+	WCHAR cchFs[MAX_PATH];
+	WCHAR cchPath[MAX_PATH];
+	LPWCH lpszVolumePathNames = NULL;
 	DWORD dwSize = 0;
 	ULARGE_INTEGER ulFreeSpace = { 0 };
 	ULARGE_INTEGER ulTotalSpace = { 0 };
 
-	snprintf(cchPath, MAX_PATH, "%s\\", lpszVolume);
+	swprintf(cchPath, MAX_PATH, L"%s\\", lpszVolume);
 	NWL_NodeAttrSet(pNode, "Path", GetRealVolumePath(lpszVolume), 0);
-	NWL_NodeAttrSet(pNode, "Volume GUID", lpszVolume, 0);
+	NWL_NodeAttrSet(pNode, "Volume GUID", NWL_Ucs2ToUtf8(lpszVolume), 0);
 	PrintPartitionInfo(pNode, lpszVolume, pParent);
-	if (GetVolumeInformationA(cchPath, cchLabel, MAX_PATH, NULL, NULL, NULL, cchFs, MAX_PATH))
+	if (GetVolumeInformationW(cchPath, cchLabel, MAX_PATH, NULL, NULL, NULL, cchFs, MAX_PATH))
 	{
-		NWL_NodeAttrSet(pNode, "Label", cchLabel, 0);
-		NWL_NodeAttrSet(pNode, "Filesystem", cchFs, 0);
+		NWL_NodeAttrSet(pNode, "Label", NWL_Ucs2ToUtf8(cchLabel), 0);
+		NWL_NodeAttrSet(pNode, "Filesystem", NWL_Ucs2ToUtf8(cchFs), 0);
 	}
-	if (GetDiskFreeSpaceExA(cchPath, NULL, NULL, &ulFreeSpace))
+	if (GetDiskFreeSpaceExW(cchPath, NULL, NULL, &ulFreeSpace))
 		NWL_NodeAttrSet(pNode, "Free Space",
 			NWL_GetHumanSize(ulFreeSpace.QuadPart, d_human_sizes, 1024), NAFLG_FMT_HUMAN_SIZE);
-	if (GetDiskFreeSpaceExA(cchPath, NULL, &ulTotalSpace, NULL))
+	if (GetDiskFreeSpaceExW(cchPath, NULL, &ulTotalSpace, NULL))
 		NWL_NodeAttrSet(pNode, "Total Space",
 			NWL_GetHumanSize(ulTotalSpace.QuadPart, d_human_sizes, 1024), NAFLG_FMT_HUMAN_SIZE);
 	if (ulTotalSpace.QuadPart != 0)
 		NWL_NodeAttrSetf(pNode, "Usage", 0, "%.2f%%",
 			100.0 - (ulFreeSpace.QuadPart * 100.0) / ulTotalSpace.QuadPart);
-	GetVolumePathNamesForVolumeNameA(cchPath, NULL, 0, &dwSize);
+	GetVolumePathNamesForVolumeNameW(cchPath, NULL, 0, &dwSize);
 	if (GetLastError() == ERROR_MORE_DATA && dwSize)
 	{
-		lpszVolumePathNames = malloc(dwSize);
+		lpszVolumePathNames = calloc(dwSize, sizeof(WCHAR));
 		if (lpszVolumePathNames)
 		{
-			if (GetVolumePathNamesForVolumeNameA(cchPath, lpszVolumePathNames, dwSize, &dwSize))
+			if (GetVolumePathNamesForVolumeNameW(cchPath, lpszVolumePathNames, dwSize, &dwSize))
 			{
 				PNODE mp = NWL_NodeAppendNew(pNode, "Volume Path Names", NFLG_TABLE);
-				for (CHAR* p = lpszVolumePathNames; p[0] != '\0'; p += strlen(p) + 1)
+				for (WCHAR* p = lpszVolumePathNames; p[0] != L'\0'; p += wcslen(p) + 1)
 				{
 					PNODE mnt = NWL_NodeAppendNew(mp, "Mount Point", NFLG_TABLE_ROW);
-					NWL_NodeAttrSet(mnt, strlen(p) > 3 ? "Path" : "Drive Letter", p, 0);
+					NWL_NodeAttrSet(mnt, wcslen(p) > 3 ? "Path" : "Drive Letter", NWL_Ucs2ToUtf8(p), 0);
 				}
 			}
 			free(lpszVolumePathNames);
@@ -144,11 +144,11 @@ static DWORD GetDriveCount(BOOL Cdrom)
 	return Value;
 }
 
-static HANDLE GetHandleByLetter(CHAR Letter)
+static HANDLE GetHandleByLetter(WCHAR Letter)
 {
-	CHAR PhyPath[] = "\\\\.\\A:";
-	snprintf(PhyPath, sizeof(PhyPath), "\\\\.\\%C:", Letter);
-	return CreateFileA(PhyPath, GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE, 0, OPEN_EXISTING, 0, 0);
+	WCHAR PhyPath[] = L"\\\\.\\A:";
+	PhyPath[4] = Letter;
+	return CreateFileW(PhyPath, GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE, 0, OPEN_EXISTING, 0, 0);
 }
 
 static CHAR *GetDriveHwId(BOOL Cdrom, DWORD Drive)
@@ -224,12 +224,12 @@ GetDiskSize(HANDLE hDisk)
 }
 
 static VOID
-RemoveTrailingBackslash(CHAR* lpszPath)
+RemoveTrailingBackslash(WCHAR* lpszPath)
 {
-	size_t len = strlen(lpszPath);
-	if (len < 1 || lpszPath[len - 1] != '\\')
+	size_t len = wcslen(lpszPath);
+	if (len < 1 || lpszPath[len - 1] != L'\\')
 		return;
-	lpszPath[len - 1] = '\0';
+	lpszPath[len - 1] = L'\0';
 }
 
 static const UINT8 GPT_MAGIC[8] = { 0x45, 0x46, 0x49, 0x20, 0x50, 0x41, 0x52, 0x54 };
@@ -238,7 +238,7 @@ static DWORD GetDriveInfoList(BOOL bIsCdRom, PHY_DRIVE_INFO** pDriveList)
 {
 	DWORD i;
 	DWORD dwCount;
-	BOOL  bRet;
+	BOOL bRet;
 	DWORD dwBytes;
 	PHY_DRIVE_INFO* pInfo;
 
@@ -247,7 +247,7 @@ static DWORD GetDriveInfoList(BOOL bIsCdRom, PHY_DRIVE_INFO** pDriveList)
 	struct gpt_header* GPT = NULL;
 
 	HANDLE hSearch;
-	CHAR cchVolume[MAX_PATH];
+	WCHAR cchVolume[MAX_PATH];
 
 	pSector = malloc(512 + 512);
 	if (!pSector)
@@ -367,13 +367,13 @@ next_drive:
 
 	free(pSector);
 
-	for (bRet = TRUE, hSearch = FindFirstVolumeA(cchVolume, MAX_PATH);
+	for (bRet = TRUE, hSearch = FindFirstVolumeW(cchVolume, MAX_PATH);
 		bRet && hSearch != INVALID_HANDLE_VALUE;
-		bRet = FindNextVolumeA(hSearch, cchVolume, MAX_PATH))
+		bRet = FindNextVolumeW(hSearch, cchVolume, MAX_PATH))
 	{
 		HANDLE hVolume;
 		RemoveTrailingBackslash(cchVolume);
-		hVolume = CreateFileA(cchVolume, 0,
+		hVolume = CreateFileW(cchVolume, 0,
 			FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING, 0, NULL);
 		if (!hVolume || hVolume == INVALID_HANDLE_VALUE)
 			continue;
@@ -385,7 +385,7 @@ next_drive:
 		CloseHandle(hVolume);
 		if (dwBytes >= dwCount || pInfo[dwBytes].VolumeCount >= 32)
 			continue;
-		strcpy_s(pInfo[dwBytes].Volumes[pInfo[dwBytes].VolumeCount], MAX_PATH, cchVolume);
+		wcscpy_s(pInfo[dwBytes].Volumes[pInfo[dwBytes].VolumeCount], MAX_PATH, cchVolume);
 		pInfo[dwBytes].VolumeCount++;
 	}
 

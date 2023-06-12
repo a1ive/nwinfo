@@ -49,8 +49,6 @@ typedef struct _NODE_ATT_LINK
 } NODE_ATT_LINK, * PNODE_ATT_LINK;
 
 // Functions
-char* NWL_NodeMbsDup(LPCSTR old_str, SIZE_T* new_size);
-
 PNODE NWL_NodeAlloc(LPCSTR name, INT flags);
 VOID NWL_NodeFree(PNODE node, INT deep);
 

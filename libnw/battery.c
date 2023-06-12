@@ -108,11 +108,11 @@ PrintBatteryName(PNODE pb, HANDLE* hb, BATTERY_QUERY_INFORMATION* pbqi)
 	pbqi->InformationLevel = BatteryDeviceName;
 	if (DeviceIoControl(hb, IOCTL_BATTERY_QUERY_INFORMATION, pbqi, sizeof(BATTERY_QUERY_INFORMATION),
 		wName, sizeof(wName), &dwOut, NULL))
-		NWL_NodeAttrSetf(pb, "Name", 0, "%S", wName);
+		NWL_NodeAttrSet(pb, "Name", NWL_Ucs2ToUtf8(wName), 0);
 	pbqi->InformationLevel = BatteryUniqueID;
 	if (DeviceIoControl(hb, IOCTL_BATTERY_QUERY_INFORMATION, pbqi, sizeof(BATTERY_QUERY_INFORMATION),
 		wName, sizeof(wName), &dwOut, NULL))
-		NWL_NodeAttrSetf(pb, "ID", 0, "%S", wName);
+		NWL_NodeAttrSet(pb, "ID", NWL_Ucs2ToUtf8(wName), 0);
 }
 
 static void
@@ -136,7 +136,7 @@ PrintBatteryManufacture(PNODE pb, HANDLE* hb, BATTERY_QUERY_INFORMATION* pbqi)
 	pbqi->InformationLevel = BatteryManufactureName;
 	if (DeviceIoControl(hb, IOCTL_BATTERY_QUERY_INFORMATION, pbqi, sizeof(BATTERY_QUERY_INFORMATION),
 		wName, sizeof(wName), &dwOut, NULL))
-		NWL_NodeAttrSetf(pb, "Manufacturer", 0, "%S", wName);
+		NWL_NodeAttrSet(pb, "Manufacturer", NWL_Ucs2ToUtf8(wName), 0);
 	pbqi->InformationLevel = BatteryManufactureDate;
 	if (DeviceIoControl(hb, IOCTL_BATTERY_QUERY_INFORMATION, pbqi, sizeof(BATTERY_QUERY_INFORMATION),
 		&bmDate, sizeof(bmDate), &dwOut, NULL))
@@ -144,7 +144,7 @@ PrintBatteryManufacture(PNODE pb, HANDLE* hb, BATTERY_QUERY_INFORMATION* pbqi)
 	pbqi->InformationLevel = BatterySerialNumber;
 	if (DeviceIoControl(hb, IOCTL_BATTERY_QUERY_INFORMATION, pbqi, sizeof(BATTERY_QUERY_INFORMATION),
 		wName, sizeof(wName), &dwOut, NULL))
-		NWL_NodeAttrSetf(pb, "Serial Number", 0, "%S", wName);
+		NWL_NodeAttrSet(pb, "Serial Number", NWL_Ucs2ToUtf8(wName), 0);
 }
 
 static void
@@ -220,7 +220,7 @@ PrintBatteryState(PNODE node)
 		{
 			BOOL bcr = FALSE;
 			PNODE pb = NWL_NodeAppendNew(node, batName, 0);
-			NWL_NodeAttrSetf(pb, "Path", 0, "%S", pdidd->DevicePath);
+			NWL_NodeAttrSet(pb, "Path", NWL_Ucs2ToUtf8(pdidd->DevicePath), 0);
 			//NWL_NodeAttrSetf(pb, "Battery Tag", NAFLG_FMT_NUMERIC, "%lu", bqi.BatteryTag);
 			PrintBatteryName(pb, hBattery, &bqi);
 			bcr = PrintBatteryInfo(pb, hBattery, &bqi);

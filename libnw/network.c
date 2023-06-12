@@ -140,7 +140,7 @@ PNODE NW_Network(VOID)
 		pCurrAddressesLH = (PIP_ADAPTER_ADDRESSES_LH)pCurrAddresses;
 		nic = NWL_NodeAppendNew(node, "Interface", NFLG_TABLE_ROW);
 		NWL_NodeAttrSet(nic, "Network Adapter", pCurrAddresses->AdapterName, NAFLG_FMT_GUID);
-		NWL_NodeAttrSet(nic, "Description", NWL_WcsToMbs(pCurrAddresses->Description), 0);
+		NWL_NodeAttrSet(nic, "Description", NWL_Ucs2ToUtf8(pCurrAddresses->Description), 0);
 		NWL_NodeAttrSet(nic, "Type", IfTypeToStr(pCurrAddresses->IfType), 0);
 		if (pCurrAddresses->PhysicalAddressLength != 0)
 		{

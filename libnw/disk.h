@@ -96,5 +96,5 @@ typedef struct _PHY_DRIVE_INFO
 	UCHAR GptGuid[16];
 
 	DWORD VolumeCount;
-	CHAR Volumes[32][MAX_PATH];
+	WCHAR Volumes[32][MAX_PATH];
 }PHY_DRIVE_INFO;

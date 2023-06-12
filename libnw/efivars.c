@@ -280,8 +280,8 @@ NWL_GetEfiDpStr(EFI_DEVICE_PATH* pDp)
 					pDpPtr.CD->PartitionSize);
 				break;
 			case MEDIA_FILEPATH_DP:
-				pNode = AllocPrintf("/FilePath(%S)",
-					pDpPtr.FilePath->PathName);
+				pNode = AllocPrintf("/FilePath(%s)",
+					NWL_Ucs2ToUtf8(pDpPtr.FilePath->PathName));
 				break;
 			default:
 				pNode = AllocPrintf("/Media(%x,%x)", uSubType, uLength);

@@ -22,22 +22,23 @@
 
 static int indent_depth = 0;
 
-char* NWL_NodeMbsDup(LPCSTR old_str, SIZE_T* new_size)
+// CP_UTF8 -> CP_ACP
+static char* NWL_NodeMbsDup(LPCSTR old_str, SIZE_T* new_size)
 {
 	char* new_str = NULL;
 	wchar_t* wstr = NULL;
 	int wsize, size;
 	if (!old_str)
 		old_str = "";
-	if (NWLC->CodePage == CP_ACP)
+	if (NWLC->CodePage == CP_UTF8)
 		goto fail;
-	wsize = MultiByteToWideChar(CP_ACP, 0, old_str, -1, NULL, 0);
+	wsize = MultiByteToWideChar(CP_UTF8, 0, old_str, -1, NULL, 0);
 	if (wsize <= 0)
 		goto fail;
 	wstr = (wchar_t*)calloc(wsize, sizeof(wchar_t));
 	if (!wstr)
 		goto fail;
-	MultiByteToWideChar(CP_ACP, 0, old_str, -1, wstr, wsize);
+	MultiByteToWideChar(CP_UTF8, 0, old_str, -1, wstr, wsize);
 	size = WideCharToMultiByte(NWLC->CodePage, 0, wstr, -1, NULL, 0, NULL, NULL);
 	if (size <= 0)
 		goto fail;
@@ -183,7 +184,7 @@ PNODE NWL_NodeGetChild(PNODE parent, LPCSTR name)
 static PNODE_ATT NWL_NodeAllocAttr(LPCSTR key, LPCSTR value, int flags)
 {
 	PNODE_ATT att = NULL;
-	char* nvalue = NULL;
+	LPCSTR nvalue = NULL;
 	SIZE_T size;
 	SIZE_T key_len, nvalue_len;
 
@@ -191,7 +192,8 @@ static PNODE_ATT NWL_NodeAllocAttr(LPCSTR key, LPCSTR value, int flags)
 		return att;
 
 	key_len = strlen(key) + 1;
-	nvalue = NWL_NodeMbsDup(value, &nvalue_len);
+	nvalue = value ? value : "";
+	nvalue_len = strlen(nvalue) + 1;
 	size = sizeof(NODE_ATT) + key_len + nvalue_len;
 
 	att = (PNODE_ATT)calloc(1, size);
@@ -203,7 +205,6 @@ static PNODE_ATT NWL_NodeAllocAttr(LPCSTR key, LPCSTR value, int flags)
 
 	att->Value = att->Key + key_len;
 	memcpy(att->Value, nvalue, nvalue_len);
-	free(nvalue);
 
 	att->Flags = flags;
 
@@ -466,7 +467,8 @@ VOID NWL_NodeAppendMultiSz(LPSTR* lpmszMulti, LPCSTR szNew)
 
 static SIZE_T json_escape_content(LPCSTR input, LPSTR buffer, DWORD bufferSize)
 {
-	LPCSTR cIn = input;
+	CHAR* mbs = NWL_NodeMbsDup(input, NULL);
+	LPCSTR cIn = mbs;
 	LPSTR cOut = buffer;
 
 	while (*cIn != '\0')
@@ -510,12 +512,14 @@ static SIZE_T json_escape_content(LPCSTR input, LPSTR buffer, DWORD bufferSize)
 		cIn++;
 	}
 	*cOut = '\0';
+	free(mbs);
 	return cOut - buffer;
 }
 
 static SIZE_T yaml_escape_content(LPCSTR input, LPSTR buffer, DWORD bufferSize)
 {
-	LPCSTR cIn = input;
+	CHAR* mbs = NWL_NodeMbsDup(input, NULL);
+	LPCSTR cIn = mbs;
 	LPSTR cOut = buffer;
 
 	while (*cIn != '\0')
@@ -537,12 +541,14 @@ static SIZE_T yaml_escape_content(LPCSTR input, LPSTR buffer, DWORD bufferSize)
 		cIn++;
 	}
 	*cOut = '\0';
+	free(mbs);
 	return cOut - buffer;
 }
 
 static SIZE_T lua_escape_content(LPCSTR input, LPSTR buffer, DWORD bufferSize)
 {
-	LPCSTR cIn = input;
+	CHAR* mbs = NWL_NodeMbsDup(input, NULL);
+	LPCSTR cIn = mbs;
 	LPSTR cOut = buffer;
 
 	while (*cIn != '\0')
@@ -584,6 +590,7 @@ static SIZE_T lua_escape_content(LPCSTR input, LPSTR buffer, DWORD bufferSize)
 		cIn++;
 	}
 	*cOut = '\0';
+	free(mbs);
 	return cOut - buffer;
 }
 
@@ -632,7 +639,7 @@ static INT NWL_NodeToJson(PNODE node, FILE* file)
 						if (c != att->Value)
 							fputs(", ", file);
 						json_escape_content(c, NWLC->NwBuf, NWINFO_BUFSZ);
-						fprintf(file, "\"%s\"", c);
+						fprintf(file, "\"%s\"", NWLC->NwBuf);
 					}
 					fputs(" ]", file);
 				}
@@ -715,7 +722,7 @@ static INT NWL_NodeToYaml(PNODE node, FILE* file)
 					if (c != attVal)
 						fputs(", ", file);
 					yaml_escape_content(c, NWLC->NwBuf, NWINFO_BUFSZ);
-					fprintf(file, "\'%s\'", c);
+					fprintf(file, "\'%s\'", NWLC->NwBuf);
 				}
 				fputs(" ]", file);
 			}
@@ -797,7 +804,7 @@ static INT NWL_NodeToLua(PNODE node, FILE* file)
 						if (c != att->Value)
 							fputs(", ", file);
 						lua_escape_content(c, NWLC->NwBuf, NWINFO_BUFSZ);
-						fprintf(file, "\"%s\"", c);
+						fprintf(file, "\"%s\"", NWLC->NwBuf);
 					}
 					fputs(" }", file);
 				}

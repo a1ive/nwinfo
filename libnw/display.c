@@ -310,9 +310,9 @@ GetEDID(PNODE nm, HDEVINFO devInfo, PSP_DEVINFO_DATA devInfoData, CHAR* Ids, DWO
 	UCHAR* EDIDdata = NWLC->NwBuf;
 	DWORD EDIDsize;
 
-	bRet = SetupDiGetDeviceRegistryPropertyA(devInfo, devInfoData,
+	bRet = SetupDiGetDeviceRegistryPropertyW(devInfo, devInfoData,
 		SPDRP_HARDWAREID, NULL, NWLC->NwBuf, NWINFO_BUFSZ, NULL);
-	NWL_NodeAttrSet (nm, "HWID", bRet ? NWLC->NwBuf : "UNKNOWN", 0);
+	NWL_NodeAttrSet(nm, "HWID", bRet ? NWL_Ucs2ToUtf8((LPCWSTR)NWLC->NwBuf) : "UNKNOWN", 0);
 
 	hDevRegKey = SetupDiOpenDevRegKey(devInfo, devInfoData,
 		DICS_FLAG_GLOBAL, 0, DIREG_DEV, KEY_ALL_ACCESS);
@@ -324,7 +324,7 @@ GetEDID(PNODE nm, HDEVINFO devInfo, PSP_DEVINFO_DATA devInfoData, CHAR* Ids, DWO
 	}
 	EDIDsize = NWINFO_BUFSZ;
 	ZeroMemory(EDIDdata, EDIDsize);
-	lRet = RegGetValueA(hDevRegKey, NULL, "EDID", RRF_RT_REG_BINARY, NULL, EDIDdata, &EDIDsize);
+	lRet = RegGetValueW(hDevRegKey, NULL, L"EDID", RRF_RT_REG_BINARY, NULL, EDIDdata, &EDIDsize);
 	if (lRet == ERROR_SUCCESS || lRet == ERROR_MORE_DATA)
 	{
 		DecodeEDID(nm, EDIDdata, EDIDsize, Ids, IdsSize);
@@ -343,7 +343,7 @@ PNODE NW_Edid(VOID)
 	DWORD IdsSize = 0;
 	if (NWLC->EdidInfo)
 		NWL_NodeAppendChild(NWLC->NwRoot, node);
-	Info = SetupDiGetClassDevsExA(NULL, "DISPLAY", NULL, Flags, NULL, NULL, NULL);
+	Info = SetupDiGetClassDevsExW(NULL, L"DISPLAY", NULL, Flags, NULL, NULL, NULL);
 	if (Info == INVALID_HANDLE_VALUE)
 	{
 		NWL_NodeAppendMultiSz(&NWLC->ErrLog, "SetupDiGetClassDevs failed");
