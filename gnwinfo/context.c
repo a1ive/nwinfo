@@ -130,7 +130,7 @@ get_cpu_msr(void)
 			max_multi = 0;
 		if (cur_multi == CPU_INVALID_VALUE)
 			cur_multi = 0;
-		snprintf(g_ctx.cpu_msr_multi, 48, "%.1lf (%d - %d)", cur_multi / 100.0, min_multi / 100, max_multi / 100);
+		snprintf(g_ctx.cpu_msr_multi, GNWC_STR_SIZE, "%.1lf (%d - %d)", cur_multi / 100.0, min_multi / 100, max_multi / 100);
 		value = cpu_msrinfo(g_ctx.lib.NwDrv, INFO_PKG_TEMPERATURE);
 		if (value != CPU_INVALID_VALUE && value > 0)
 			g_ctx.cpu_msr_temp = value;
@@ -174,8 +174,8 @@ get_network_traffic_by_api(void)
 	diff_send = (send >= old_send) ? send - old_send : 0;
 	old_recv = recv;
 	old_send = send;
-	memcpy(g_ctx.net_recv, NWL_GetHumanSize(diff_recv, human_sizes, 1024), 48);
-	memcpy(g_ctx.net_send, NWL_GetHumanSize(diff_send, human_sizes, 1024), 48);
+	memcpy(g_ctx.net_recv, NWL_GetHumanSize(diff_recv, human_sizes, 1024), GNWC_STR_SIZE);
+	memcpy(g_ctx.net_send, NWL_GetHumanSize(diff_send, human_sizes, 1024), GNWC_STR_SIZE);
 }
 #endif
 
@@ -188,11 +188,11 @@ gnwinfo_ctx_update(WPARAM wparam)
 		if (g_ctx.network)
 			NWL_NodeFree(g_ctx.network, 1);
 		g_ctx.network = NW_Network();
-		g_ctx.sys_uptime = NWL_GetUptime();
+		NWL_GetUptime(g_ctx.sys_uptime, GNWC_STR_SIZE);
 		g_ctx.mem_status.dwLength = sizeof(g_ctx.mem_status);
 		GlobalMemoryStatusEx(&g_ctx.mem_status);
-		memcpy(g_ctx.mem_avail, NWL_GetHumanSize(g_ctx.mem_status.ullAvailPhys, human_sizes, 1024), 48);
-		memcpy(g_ctx.mem_total, NWL_GetHumanSize(g_ctx.mem_status.ullTotalPhys, human_sizes, 1024), 48);
+		memcpy(g_ctx.mem_avail, NWL_GetHumanSize(g_ctx.mem_status.ullAvailPhys, human_sizes, 1024), GNWC_STR_SIZE);
+		memcpy(g_ctx.mem_total, NWL_GetHumanSize(g_ctx.mem_status.ullTotalPhys, human_sizes, 1024), GNWC_STR_SIZE);
 #ifdef USE_PDH
 		if (g_ctx.pdh && PdhCollectQueryData(g_ctx.pdh) == ERROR_SUCCESS)
 		{
@@ -200,9 +200,9 @@ gnwinfo_ctx_update(WPARAM wparam)
 			if (g_ctx.pdh_cpu && PdhGetFormattedCounterValue(g_ctx.pdh_cpu, PDH_FMT_DOUBLE, NULL, &value) == ERROR_SUCCESS)
 				g_ctx.cpu_usage = value.doubleValue;
 			if (g_ctx.pdh_net_recv && PdhGetFormattedCounterValue(g_ctx.pdh_net_recv, PDH_FMT_LARGE, NULL, &value) == ERROR_SUCCESS)
-				memcpy(g_ctx.net_recv, NWL_GetHumanSize(value.largeValue, human_sizes, 1024), 48);
+				memcpy(g_ctx.net_recv, NWL_GetHumanSize(value.largeValue, human_sizes, 1024), GNWC_STR_SIZE);
 			if (g_ctx.pdh_net_send && PdhGetFormattedCounterValue(g_ctx.pdh_net_send, PDH_FMT_LARGE, NULL, &value) == ERROR_SUCCESS)
-				memcpy(g_ctx.net_send, NWL_GetHumanSize(value.largeValue, human_sizes, 1024), 48);
+				memcpy(g_ctx.net_send, NWL_GetHumanSize(value.largeValue, human_sizes, 1024), GNWC_STR_SIZE);
 		}
 #else
 		get_network_traffic_by_api();

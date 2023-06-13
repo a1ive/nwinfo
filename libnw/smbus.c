@@ -54,7 +54,7 @@ static void usleep(unsigned int usec)
 
 	ft.QuadPart = -(10 * (__int64)usec);
 
-	timer = CreateWaitableTimerA(NULL, TRUE, NULL);
+	timer = CreateWaitableTimerW(NULL, TRUE, NULL);
 	if (!timer)
 		return;
 	SetWaitableTimer(timer, &ft, 0, NULL, NULL, 0);

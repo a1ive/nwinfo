@@ -95,7 +95,7 @@ PNODE NW_Battery(VOID);
 PNODE NW_Libinfo(VOID);
 PNODE NW_Uefi(VOID);
 
-LPCSTR NWL_GetUptime(VOID);
+VOID NWL_GetUptime(CHAR* szUptime, DWORD dwSize);
 
 #ifdef __cplusplus
 } /* extern "C" */

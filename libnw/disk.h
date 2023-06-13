@@ -83,7 +83,7 @@ typedef struct _PHY_DRIVE_INFO
 	UINT64 SizeInBytes;
 	BYTE DeviceType;
 	BOOL RemovableMedia;
-	CHAR* HwID;
+	WCHAR* HwID;
 	CHAR VendorId[MAX_PATH];
 	CHAR ProductId[MAX_PATH];
 	CHAR ProductRev[MAX_PATH];

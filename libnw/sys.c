@@ -158,44 +158,48 @@ static void PrintOsVer(PNODE node)
 		osInfo.dwMajorVersion, osInfo.dwMinorVersion, osInfo.dwBuildNumber);
 }
 
-LPCSTR NWL_GetUptime(VOID)
+VOID NWL_GetUptime(CHAR* szUptime, DWORD dwSize)
 {
 	UINT64 ullUptime = GetTickCount64();
 	UINT64 ullDays = ullUptime / 1000ULL / 3600ULL / 24ULL;
 	UINT64 ullHours = ullUptime / 1000ULL / 3600ULL - ullDays * 24ULL;
 	UINT64 ullMinutes = ullUptime / 1000ULL / 60ULL - ullDays * 24ULL * 60ULL - ullHours * 60ULL;
 	UINT64 ullSeconds = ullUptime / 1000ULL - ullDays * 24ULL * 3600ULL - ullHours * 3600ULL - ullMinutes * 60ULL;
-	static CHAR szUptime[64];
 	CHAR szDays[32] = "";
 	CHAR szHours[12] = "";
+	szUptime[0] = '\0';
 	if (ullDays)
-		snprintf(szDays, sizeof(szDays), "%llu day%s, ", ullDays, ullDays > 1ULL ? "s" : "");
+		snprintf(szDays, sizeof(szDays), "%llud ", ullDays);
 	if (ullHours)
-		snprintf(szHours, sizeof(szHours), "%llu hour%s, ", ullHours, ullHours > 1ULL ? "s" : "");
-	snprintf(szUptime, sizeof(szUptime), "%s%s%llu min, %llu sec", szDays, szHours, ullMinutes, ullSeconds);
-	return szUptime;
+		snprintf(szHours, sizeof(szHours), "%lluh ", ullHours);
+	snprintf(szUptime, dwSize, "%s%s%llum %llus", szDays, szHours, ullMinutes, ullSeconds);
 }
+
+#define NWINFO_WCS_SIZE (NWINFO_BUFSZ / sizeof(WCHAR))
 
 static void PrintOsInfo(PNODE node)
 {
-	DWORD bufCharCount = NWINFO_BUFSZ;
+	DWORD bufCharCount = NWINFO_WCS_SIZE;
 	SYSTEM_INFO siInfo;
-	char* infoBuf = NWLC->NwBuf;
-	char* szHardwareId;
-	if (GetComputerNameA(infoBuf, &bufCharCount))
-		NWL_NodeAttrSet(node, "Computer Name", infoBuf, 0);
-	bufCharCount = NWINFO_BUFSZ;
-	if (GetUserNameA(infoBuf, &bufCharCount))
-		NWL_NodeAttrSet(node, "Username", infoBuf, 0);
-	if (GetComputerNameExA(ComputerNameDnsDomain, infoBuf, &bufCharCount))
-		NWL_NodeAttrSet(node, "DNS Domain", infoBuf, 0);
-	if (GetComputerNameExA(ComputerNameDnsHostname, infoBuf, &bufCharCount))
-		NWL_NodeAttrSet(node, "DNS Hostname", infoBuf, 0);
-	if (GetSystemDirectoryA(infoBuf, NWINFO_BUFSZ))
-		NWL_NodeAttrSet(node, "System Directory", infoBuf, 0);
-	if (GetWindowsDirectoryA(infoBuf, NWINFO_BUFSZ))
-		NWL_NodeAttrSet(node, "Windows Directory", infoBuf, 0);
-	NWL_NodeAttrSet(node, "Uptime", NWL_GetUptime(), 0);
+	WCHAR* infoBuf = (WCHAR*)NWLC->NwBuf;
+	WCHAR* szHardwareId;
+	if (GetComputerNameW(infoBuf, &bufCharCount))
+		NWL_NodeAttrSet(node, "Computer Name", NWL_Ucs2ToUtf8(infoBuf), 0);
+	bufCharCount = NWINFO_WCS_SIZE;
+	if (GetUserNameW(infoBuf, &bufCharCount))
+		NWL_NodeAttrSet(node, "Username", NWL_Ucs2ToUtf8(infoBuf), 0);
+	bufCharCount = NWINFO_WCS_SIZE;
+	if (GetComputerNameExW(ComputerNameDnsDomain, infoBuf, &bufCharCount))
+		NWL_NodeAttrSet(node, "DNS Domain", NWL_Ucs2ToUtf8(infoBuf), 0);
+	bufCharCount = NWINFO_WCS_SIZE;
+	if (GetComputerNameExW(ComputerNameDnsHostname, infoBuf, &bufCharCount))
+		NWL_NodeAttrSet(node, "DNS Hostname", NWL_Ucs2ToUtf8(infoBuf), 0);
+	if (GetSystemDirectoryW(infoBuf, NWINFO_WCS_SIZE))
+		NWL_NodeAttrSet(node, "System Directory", NWL_Ucs2ToUtf8(infoBuf), 0);
+	if (GetWindowsDirectoryW(infoBuf, NWINFO_WCS_SIZE))
+		NWL_NodeAttrSet(node, "Windows Directory", NWL_Ucs2ToUtf8(infoBuf), 0);
+	NWL_GetUptime((CHAR*)NWLC->NwBuf, NWINFO_BUFSZ);
+	NWL_NodeAttrSet(node, "Uptime", (CHAR*)NWLC->NwBuf, 0);
 	GetNativeSystemInfo(&siInfo);
 	switch (siInfo.wProcessorArchitecture)
 	{
@@ -210,10 +214,10 @@ static void PrintOsInfo(PNODE node)
 		break;
 	}
 	NWL_NodeAttrSetf(node, "Page Size", NAFLG_FMT_NUMERIC, "%u", siInfo.dwPageSize);
-	szHardwareId = NWL_GetRegSzValue(HKEY_LOCAL_MACHINE, "SYSTEM\\CurrentControlSet\\Control\\SystemInformation", "ComputerHardwareId");
+	szHardwareId = NWL_GetRegSzValue(HKEY_LOCAL_MACHINE, L"SYSTEM\\CurrentControlSet\\Control\\SystemInformation", L"ComputerHardwareId");
 	if (szHardwareId)
 	{
-		NWL_NodeAttrSet(node, "Computer Hardware Id", szHardwareId, NAFLG_FMT_NEED_QUOTE);
+		NWL_NodeAttrSet(node, "Computer Hardware Id", NWL_Ucs2ToUtf8(szHardwareId), NAFLG_FMT_NEED_QUOTE);
 		free(szHardwareId);
 	}
 }
@@ -330,7 +334,7 @@ static void PrintBootInfo(PNODE node)
 		free(pStartOption);
 	}
 	DWORD dwBitLocker = 0;
-	NWL_GetRegDwordValue(HKEY_LOCAL_MACHINE, "SYSTEM\\CurrentControlSet\\Control\\BitlockerStatus", "BootStatus", &dwBitLocker);
+	NWL_GetRegDwordValue(HKEY_LOCAL_MACHINE, L"SYSTEM\\CurrentControlSet\\Control\\BitlockerStatus", L"BootStatus", &dwBitLocker);
 	NWL_NodeAttrSetBool(node, "BitLocker Boot", dwBitLocker, 0);
 }
 

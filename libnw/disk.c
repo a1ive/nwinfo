@@ -136,10 +136,10 @@ PrintVolumeInfo(PNODE pNode, LPCWSTR lpszVolume, PHY_DRIVE_INFO* pParent)
 static DWORD GetDriveCount(BOOL Cdrom)
 {
 	DWORD Value = 0;
-	LPCSTR Key = "SYSTEM\\CurrentControlSet\\Services\\disk\\Enum";
+	LPCWSTR Key = L"SYSTEM\\CurrentControlSet\\Services\\disk\\Enum";
 	if (Cdrom)
-		Key = "SYSTEM\\CurrentControlSet\\Services\\cdrom\\Enum";
-	if (NWL_GetRegDwordValue(HKEY_LOCAL_MACHINE, Key, "Count", &Value) != 0)
+		Key = L"SYSTEM\\CurrentControlSet\\Services\\cdrom\\Enum";
+	if (NWL_GetRegDwordValue(HKEY_LOCAL_MACHINE, Key, L"Count", &Value) != 0)
 		Value = 0;
 	return Value;
 }
@@ -151,26 +151,28 @@ static HANDLE GetHandleByLetter(WCHAR Letter)
 	return CreateFileW(PhyPath, GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE, 0, OPEN_EXISTING, 0, 0);
 }
 
-static CHAR *GetDriveHwId(BOOL Cdrom, DWORD Drive)
+static WCHAR *GetDriveHwId(BOOL Cdrom, DWORD Drive)
 {
-	CHAR drvRegKey[] = "4294967295";
-	LPCSTR key = "SYSTEM\\CurrentControlSet\\Services\\disk\\Enum";
+	WCHAR drvRegKey[11]; // "4294967295"
+	LPCWSTR key = L"SYSTEM\\CurrentControlSet\\Services\\disk\\Enum";
 	if (Cdrom)
-		key = "SYSTEM\\CurrentControlSet\\Services\\cdrom\\Enum";
-	snprintf(drvRegKey, sizeof(drvRegKey), "%u", Drive);
+		key = L"SYSTEM\\CurrentControlSet\\Services\\cdrom\\Enum";
+	swprintf(drvRegKey, 11, L"%u", Drive);
 	return NWL_GetRegSzValue(HKEY_LOCAL_MACHINE, key, drvRegKey);
 }
 
-static CHAR* GetDriveHwName(const CHAR* HwId)
+static WCHAR* GetDriveHwName(const WCHAR* HwId)
 {
-	CHAR* HwName = NULL;
-	CHAR* drvRegKey = malloc (2048);
+#define MAX_HW_NAME_LEN 2048
+	WCHAR* HwName = NULL;
+	WCHAR* drvRegKey = malloc (MAX_HW_NAME_LEN * sizeof(WCHAR));
 	if (!drvRegKey)
 		return NULL;
-	snprintf(drvRegKey, 2048, "SYSTEM\\CurrentControlSet\\Enum\\%s", HwId);
-	HwName = NWL_GetRegSzValue(HKEY_LOCAL_MACHINE, drvRegKey, "FriendlyName");
+	swprintf(drvRegKey, MAX_HW_NAME_LEN, L"SYSTEM\\CurrentControlSet\\Enum\\%s", HwId);
+	HwName = NWL_GetRegSzValue(HKEY_LOCAL_MACHINE, drvRegKey, L"FriendlyName");
 	if (!HwName)
-		HwName = NWL_GetRegSzValue(HKEY_LOCAL_MACHINE, drvRegKey, "DeviceDesc");
+		HwName = NWL_GetRegSzValue(HKEY_LOCAL_MACHINE, drvRegKey, L"DeviceDesc");
+	free(drvRegKey);
 	return HwName;
 }
 
@@ -561,12 +563,12 @@ PrintDiskInfo(BOOL cdrom, PNODE node, CDI_SMART* smart)
 			cdrom ? "\\\\.\\CdRom%u" : "\\\\.\\PhysicalDrive%u", i);
 		if (PhyDriveList[i].HwID)
 		{
-			CHAR* hwName = NULL;
-			NWL_NodeAttrSet(nd, "HWID", PhyDriveList[i].HwID, 0);
+			WCHAR* hwName = NULL;
+			NWL_NodeAttrSet(nd, "HWID", NWL_Ucs2ToUtf8(PhyDriveList[i].HwID), 0);
 			hwName = GetDriveHwName(PhyDriveList[i].HwID);
 			if (hwName)
 			{
-				NWL_NodeAttrSet(nd, "HW Name", hwName, 0);
+				NWL_NodeAttrSet(nd, "HW Name", NWL_Ucs2ToUtf8(hwName), 0);
 				free(hwName);
 			}
 			free(PhyDriveList[i].HwID);

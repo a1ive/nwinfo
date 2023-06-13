@@ -377,18 +377,18 @@ VOID NWL_TrimString(CHAR* String)
 	return;
 }
 
-INT NWL_GetRegDwordValue(HKEY Key, LPCSTR SubKey, LPCSTR ValueName, DWORD* pValue)
+INT NWL_GetRegDwordValue(HKEY Key, LPCWSTR SubKey, LPCWSTR ValueName, DWORD* pValue)
 {
 	HKEY hKey;
 	DWORD Type;
 	DWORD Size;
 	LSTATUS lRet;
 	DWORD Value = 0;
-	lRet = RegOpenKeyExA(Key, SubKey, 0, KEY_QUERY_VALUE, &hKey);
+	lRet = RegOpenKeyExW(Key, SubKey, 0, KEY_QUERY_VALUE, &hKey);
 	if (ERROR_SUCCESS == lRet)
 	{
 		Size = sizeof(Value);
-		lRet = RegQueryValueExA(hKey, ValueName, NULL, &Type, (LPBYTE)&Value, &Size);
+		lRet = RegQueryValueExW(hKey, ValueName, NULL, &Type, (LPBYTE)&Value, &Size);
 		*pValue = Value;
 		RegCloseKey(hKey);
 		return 0;
@@ -396,20 +396,20 @@ INT NWL_GetRegDwordValue(HKEY Key, LPCSTR SubKey, LPCSTR ValueName, DWORD* pValu
 	return 1;
 }
 
-CHAR* NWL_GetRegSzValue(HKEY Key, LPCSTR SubKey, LPCSTR ValueName)
+WCHAR* NWL_GetRegSzValue(HKEY Key, LPCWSTR SubKey, LPCWSTR ValueName)
 {
 	HKEY hKey;
-	DWORD Type;
-	DWORD Size = 1024;
+	DWORD dwType;
+	DWORD dwSize = 2048;
 	LSTATUS lRet;
-	CHAR* sRet = NULL;
-	lRet = RegOpenKeyExA(Key, SubKey, 0, KEY_QUERY_VALUE, &hKey);
+	WCHAR* sRet = NULL;
+	lRet = RegOpenKeyExW(Key, SubKey, 0, KEY_QUERY_VALUE, &hKey);
 	if (lRet != ERROR_SUCCESS)
 		return NULL;
-	sRet = malloc(Size);
+	sRet = malloc(dwSize);
 	if (!sRet)
 		return NULL;
-	lRet = RegQueryValueExA(hKey, ValueName, NULL, &Type, (LPBYTE)sRet, &Size);
+	lRet = RegQueryValueExW(hKey, ValueName, NULL, &dwType, (LPBYTE)sRet, &dwSize);
 	if (lRet != ERROR_SUCCESS)
 	{
 		free(sRet);
@@ -421,7 +421,7 @@ CHAR* NWL_GetRegSzValue(HKEY Key, LPCSTR SubKey, LPCSTR ValueName)
 
 HANDLE NWL_GetDiskHandleById(BOOL Cdrom, BOOL Write, DWORD Id)
 {
-	WCHAR PhyPath[] = L"\\\\.\\PhysicalDrive4294967295";
+	WCHAR PhyPath[28]; // L"\\\\.\\PhysicalDrive4294967295"
 	if (Cdrom)
 		swprintf(PhyPath, 28, L"\\\\.\\CdRom%u", Id);
 	else

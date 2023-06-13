@@ -46,6 +46,8 @@
 #define MAIN_NET_DETAIL     (1U << 18)
 #define MAIN_DISK_SMART     (1U << 19)
 
+#define GNWC_STR_SIZE       64
+
 typedef struct _GNW_CONTEXT
 {
 	HINSTANCE inst;
@@ -100,19 +102,19 @@ typedef struct _GNW_CONTEXT
 	PDH_HCOUNTER pdh_net_send;
 #endif
 
-	CHAR net_recv[48];
-	CHAR net_send[48];
+	CHAR net_recv[GNWC_STR_SIZE];
+	CHAR net_send[GNWC_STR_SIZE];
 	double cpu_usage;
 	int cpu_index;
-	CHAR cpu_msr_multi[48];
+	CHAR cpu_msr_multi[GNWC_STR_SIZE];
 	int cpu_msr_temp;
 	double cpu_msr_volt;
 	double cpu_msr_bus;
 	double cpu_msr_power;
-	LPCSTR sys_uptime;
+	CHAR sys_uptime[GNWC_STR_SIZE];
 	MEMORYSTATUSEX mem_status;
-	CHAR mem_total[48];
-	CHAR mem_avail[48];
+	CHAR mem_total[GNWC_STR_SIZE];
+	CHAR mem_avail[GNWC_STR_SIZE];
 #ifdef PUBLIC_IP
 	CHAR pub_ip[128];
 #endif
