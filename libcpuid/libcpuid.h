@@ -666,6 +666,8 @@ typedef enum {
 	CPU_FEATURE_AVX512VBMI, /*!< AVX-512 Vector Bit ManipulationInstructions (version 1) */
 	CPU_FEATURE_AVX512VBMI2, /*!< AVX-512 Vector Bit ManipulationInstructions (version 2) */
 	CPU_FEATURE_HYPERVISOR, /*!< Hypervisor present (always zero on physical CPUs) */
+	CPU_FEATURE_INTEL_DTS, /*!< Intel Digital Thermal Sensor */
+	CPU_FEATURE_INTEL_PTM, /*!< Intel Package Thermal Management */
 	/* termination: */
 	NUM_CPU_FEATURES,
 } cpu_feature_t;

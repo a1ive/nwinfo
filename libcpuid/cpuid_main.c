@@ -1105,6 +1105,8 @@ const char* cpu_feature_str(cpu_feature_t feature)
 		{ CPU_FEATURE_AVX512VBMI, "avx512vbmi" },
 		{ CPU_FEATURE_AVX512VBMI2, "avx512vbmi2" },
 		{ CPU_FEATURE_HYPERVISOR, "hypervisor" },
+		{ CPU_FEATURE_INTEL_DTS, "intel_dts" },
+		{ CPU_FEATURE_INTEL_PTM, "intel_ptm" },
 	};
 	unsigned i, n = COUNT_OF(matchtable);
 	if (n != NUM_CPU_FEATURES) {

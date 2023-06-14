@@ -411,7 +411,7 @@ static int get_info_temperature(struct msr_info_t *info)
 	int err;
 	uint64_t DigitalReadout, ReadingValid, TemperatureTarget;
 
-	if(info->id->vendor == VENDOR_INTEL) {
+	if(info->id->vendor == VENDOR_INTEL && info->id->flags[CPU_FEATURE_INTEL_DTS]) {
 		/* Refer links above
 		Table 35-2.   IA-32 Architectural MSRs
 		IA32_THERM_STATUS[22:16] is Digital Readout
@@ -438,7 +438,7 @@ static int get_info_pkg_temperature(struct msr_info_t* info)
 	int err;
 	uint64_t DigitalReadout, TemperatureTarget;
 
-	if (info->id->vendor == VENDOR_INTEL) {
+	if (info->id->vendor == VENDOR_INTEL && info->id->flags[CPU_FEATURE_INTEL_PTM]) {
 		err = cpu_rdmsr_range(info->handle, IA32_PKG_THERM_STATUS, 22, 16, &DigitalReadout);
 		err += cpu_rdmsr_range(info->handle, MSR_TEMPERATURE_TARGET, 23, 16, &TemperatureTarget);
 		if (!err) return (int)(TemperatureTarget - DigitalReadout);

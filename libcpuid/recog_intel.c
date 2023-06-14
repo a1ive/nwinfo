@@ -552,6 +552,10 @@ static void load_intel_features(struct cpu_raw_data_t* raw, struct cpu_id_t* dat
 		{ 18, CPU_FEATURE_DCA },
 		{ 21, CPU_FEATURE_X2APIC },
 	};
+	const struct feature_map_t matchtable_eax6[] = {
+		{ 0, CPU_FEATURE_INTEL_DTS },
+		{ 6, CPU_FEATURE_INTEL_PTM },
+	};
 	const struct feature_map_t matchtable_edx81[] = {
 		{ 20, CPU_FEATURE_XD },
 	};
@@ -580,6 +584,10 @@ static void load_intel_features(struct cpu_raw_data_t* raw, struct cpu_id_t* dat
 	}
 	if (raw->ext_cpuid[0][EAX] >= 1) {
 		match_features(matchtable_edx81, COUNT_OF(matchtable_edx81), raw->ext_cpuid[1][EDX], data);
+	}
+	// detect INTEL DTM/PTM:
+	if (raw->basic_cpuid[0][EAX] >= 6) {
+		match_features(matchtable_eax6, COUNT_OF(matchtable_eax6), raw->basic_cpuid[6][EAX], data);
 	}
 	// detect TSX/AVX512:
 	if (raw->basic_cpuid[0][EAX] >= 7) {
