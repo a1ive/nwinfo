@@ -96,9 +96,13 @@ static uint16_t fch_get_smbus_base(void)
 	pm_reg = io_inb(NWLC->NwDrv, AMD_DATA_IO_PORT) << 8;
 	io_outb(NWLC->NwDrv, AMD_INDEX_IO_PORT, AMD_PM_INDEX);
 	pm_reg |= io_inb(NWLC->NwDrv, AMD_DATA_IO_PORT);
-	// FIXME: Read 0xFED80300
+
 	if (pm_reg == 0xFFFF)
-		return 0;
+	{
+		if (NWL_ReadMemory(&pm_reg, 0xFED80300, sizeof(pm_reg)) == FALSE)
+			return 0;
+		return (pm_reg & 0xFF00);
+	}
 	if ((pm_reg & 0x10) == 0)
 		return 0;
 	return (pm_reg & 0xFF00);
