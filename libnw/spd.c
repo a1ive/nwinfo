@@ -244,6 +244,13 @@ DDRDate(UINT8 rawYear, UINT8 rawWeek)
 }
 
 static UINT32
+DDR5Speed(UINT8* rawSpd)
+{
+	UINT32 tck = (UINT16)rawSpd[21] << 8 | rawSpd[20];
+	return (UINT32)((1.0f / tck * 2.0f * 1000.0f * 1000.0f) + 50) / 100 * 100;
+}
+
+static UINT32
 DDR4Speed(UINT8* rawSpd)
 {
 	switch (rawSpd[18])
@@ -288,6 +295,7 @@ PrintDDR5(PNODE nd, UINT8* rawSpd, CHAR* Ids, DWORD IdsSize)
 	UINT i = 0;
 	NWL_NodeAttrSetf(nd, "Revision", 0, "%u.%u", rawSpd[1] >> 4, rawSpd[1] & 0x0FU);
 	NWL_NodeAttrSet(nd, "Capacity", DDR5Capacity(rawSpd), 0);
+	NWL_NodeAttrSetf(nd, "Speed (MHz)", NAFLG_FMT_NUMERIC, "%u", DDR5Speed(rawSpd));
 	DDR345Manufacturer(nd, rawSpd[512], rawSpd[513], Ids, IdsSize);
 	NWL_NodeAttrSet(nd, "Date", DDR2345Date(rawSpd[515], rawSpd[516]), 0);
 	NWLC->NwBuf[0] = '\0';

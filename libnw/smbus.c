@@ -351,7 +351,7 @@ NWL_SpdInit(void)
 
 static BOOL bytes_need(uint16_t type, uint16_t offset)
 {
-	if (offset >= 0 && offset <= 18) return TRUE;
+	if (offset >= 0 && offset <= 24) return TRUE;
 	if (type == 18) // DDR5
 	{
 		if (offset >= 234 && offset <= 235) return TRUE;
