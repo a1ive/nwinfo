@@ -318,6 +318,8 @@ struct cpu_sgx_t {
  * @brief This contains the recognized CPU features/info
  */
 struct cpu_id_t {
+	/** index of cpu_types in system_id_t */
+	uint8_t index;
 	/** contains the CPU architecture ID (e.g. ARCHITECTURE_X86) */
 	cpu_architecture_t architecture;
 

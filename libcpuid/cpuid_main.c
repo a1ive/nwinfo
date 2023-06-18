@@ -143,7 +143,10 @@ static void cpuid_grow_system_id(struct system_id_t* system, uint8_t n)
 	}
 
 	for (i = system->num_cpu_types; i < n; i++)
+	{
 		cpu_id_t_constructor(&tmp[i]);
+		tmp[i].index = i;
+	}
 	system->num_cpu_types = n;
 	system->cpu_types     = tmp;
 }

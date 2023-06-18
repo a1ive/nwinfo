@@ -447,7 +447,8 @@ static int amd_k8_temperature(struct msr_info_t* info)
 		info->id->ext_model != 0x6c &&
 		info->id->ext_model != 0x7c)
 		offset += 21;
-	addr = pci_find_by_id(info->handle, AMD_PCI_VENDOR_ID, AMD_PCI_CONTROL_DEVICE_ID, 0);
+	addr = pci_find_by_id(info->handle, AMD_PCI_VENDOR_ID, AMD_PCI_CONTROL_DEVICE_ID, info->id->index);
+
 	if (addr == 0xFFFFFFFF)
 		return CPU_INVALID_VALUE;
 
@@ -476,7 +477,7 @@ static int amd_k10_temperature(struct msr_info_t* info)
 	uint32_t value = 0;
 	uint32_t addr;
 	uint16_t did = 0;
-	bool hasSmuTemperatureRegister = false;
+	bool smu = false;
 	switch (info->id->ext_family)
 	{
 	case 0x10:
@@ -503,13 +504,13 @@ static int amd_k10_temperature(struct msr_info_t* info)
 		case 0x30:
 			did = FAMILY_15H_MODEL_30_MISC_CONTROL_DEVICE_ID;
 			break;
-		case 0x70:
-			did = FAMILY_15H_MODEL_70_MISC_CONTROL_DEVICE_ID;
-			hasSmuTemperatureRegister = true;
-			break;
 		case 0x60:
 			did = FAMILY_15H_MODEL_60_MISC_CONTROL_DEVICE_ID;
-			hasSmuTemperatureRegister = true;
+			smu = true;
+			break;
+		case 0x70:
+			did = FAMILY_15H_MODEL_70_MISC_CONTROL_DEVICE_ID;
+			smu = true;
 			break;
 		}
 		break;
@@ -525,16 +526,17 @@ static int amd_k10_temperature(struct msr_info_t* info)
 		};
 		break;
 	}
-	addr = pci_find_by_id(info->handle, AMD_PCI_VENDOR_ID, did, 0);
-	if (addr == 0xFFFFFFFF)
-		return CPU_INVALID_VALUE;
-	if (hasSmuTemperatureRegister)
+
+	if (smu)
 	{
 		pci_conf_write32(info->handle, 0, 0xB8, SMU_REPORTED_TEMP_CTRL_OFFSET);
 		value = pci_conf_read32(info->handle, 0, 0xBC);
 	}
 	else
 	{
+		addr = pci_find_by_id(info->handle, AMD_PCI_VENDOR_ID, did, info->id->index);
+		if (addr == 0xFFFFFFFF)
+			return CPU_INVALID_VALUE;
 		value = pci_conf_read32(info->handle, addr, 0xA4);
 	}
 	if ((info->id->ext_family == 0x15 ||
@@ -555,14 +557,10 @@ static int amd_k10_temperature(struct msr_info_t* info)
 static float amd_17h_temperature(struct msr_info_t* info)
 {
 	uint32_t temperature;
+	float offset = 0.0f;
 
 	pci_conf_write32(info->handle, 0, FAMILY_17H_PCI_CONTROL_REGISTER, F17H_M01H_THM_TCON_CUR_TMP);
 	temperature = pci_conf_read32(info->handle, 0, FAMILY_17H_PCI_CONTROL_REGISTER + 4);
-
-	bool tempOffsetFlag = (temperature & F17H_TEMP_OFFSET_FLAG) != 0;
-	temperature = (temperature >> 21) * 125;
-
-	float offset = 0.0f;
 
 	if (strstr(info->id->brand_str, "1600X") ||
 		strstr(info->id->brand_str, "1700X") ||
@@ -574,10 +572,10 @@ static float amd_17h_temperature(struct msr_info_t* info)
 		strstr(info->id->brand_str, "Threadripper 29"))
 		offset = -27.0f;
 
-	float t = temperature * 0.001f;
-	if (tempOffsetFlag)
-		t += -49.0f;
-	return t + offset;
+	if ((temperature & F17H_TEMP_OFFSET_FLAG))
+		offset += -49.0f;
+
+	return 0.001f * ((temperature >> 21) * 125) + offset;
 }
 
 static int get_info_pkg_temperature(struct msr_info_t* info)
