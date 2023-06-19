@@ -594,6 +594,9 @@ gnwinfo_draw_main_window(struct nk_context* ctx, float width, float height)
 	if (nk_button_image(ctx, g_ctx.image_smart))
 		g_ctx.gui_smart = TRUE;
 	nk_layout_row_push(ctx, ratio);
+	if (nk_button_image(ctx, g_ctx.image_pci))
+		g_ctx.gui_pci = TRUE;
+	nk_layout_row_push(ctx, ratio);
 	if (nk_button_image(ctx, g_ctx.image_set))
 		g_ctx.gui_settings = TRUE;
 	nk_layout_row_push(ctx, ratio);

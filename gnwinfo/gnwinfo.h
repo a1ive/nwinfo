@@ -62,6 +62,7 @@ typedef struct _GNW_CONTEXT
 	BOOL gui_smart;
 	BOOL gui_about;
 	BOOL gui_settings;
+	BOOL gui_pci;
 	nk_bool smart_hex;
 
 	struct nk_image image_os;
@@ -81,6 +82,8 @@ typedef struct _GNW_CONTEXT
 	struct nk_image image_smart;
 	struct nk_image image_cpuid;
 	struct nk_image image_cd;
+	struct nk_image image_pci;
+	struct nk_image image_mm;
 
 	PNODE system;
 	PNODE cpuid;
@@ -154,6 +157,7 @@ VOID gnwinfo_draw_cpuid_window(struct nk_context* ctx, float width, float height
 VOID gnwinfo_draw_about_window(struct nk_context* ctx, float width, float height);
 VOID gnwinfo_draw_smart_window(struct nk_context* ctx, float width, float height);
 VOID gnwinfo_draw_settings_window(struct nk_context* ctx, float width, float height);
+VOID gnwinfo_draw_pci_window(struct nk_context* ctx, float width, float height);
 
 char* gnwinfo_get_ini_value(LPCWSTR section, LPCWSTR key, LPCWSTR fallback);
 void gnwinfo_set_ini_value(LPCWSTR section, LPCWSTR key, LPCWSTR _Printf_format_string_ format, ...);

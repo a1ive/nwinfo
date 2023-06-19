@@ -304,6 +304,7 @@ wWinMain(_In_ HINSTANCE hInstance,
 		gnwinfo_draw_about_window(ctx, g_ctx.gui_width, g_ctx.gui_height);
 		gnwinfo_draw_smart_window(ctx, g_ctx.gui_width, g_ctx.gui_height);
 		gnwinfo_draw_settings_window(ctx, g_ctx.gui_width, g_ctx.gui_height);
+		gnwinfo_draw_pci_window(ctx, g_ctx.gui_width, g_ctx.gui_height);
 
 		/* Draw */
 		nk_gdip_render(NK_ANTI_ALIASING_ON, (struct nk_color)NK_COLOR_BLACK);

@@ -19,6 +19,8 @@
 #define IDR_PNG_SETTINGS                124
 #define IDR_PNG_SMART                   125
 #define IDR_PNG_SYSDISK                 126
+#define IDR_PNG_PCI                     127
+#define IDR_PNG_MM                      128
 
 #define IDR_FONT1                       201
 

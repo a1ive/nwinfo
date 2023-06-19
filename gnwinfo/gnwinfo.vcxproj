@@ -125,6 +125,7 @@
     <ClCompile Include="context.c" />
     <ClCompile Include="cpuid.c" />
     <ClCompile Include="gnwinfo.c" />
+    <ClCompile Include="pci.c" />
     <ClCompile Include="settings.c" />
     <ClCompile Include="smart.c" />
     <ClCompile Include="summary.c" />
@@ -149,9 +150,11 @@
     <Image Include="icons\hdd.png" />
     <Image Include="icons\info.png" />
     <Image Include="icons\memory.png" />
+    <Image Include="icons\mm.png" />
     <Image Include="icons\network.png" />
     <Image Include="icons\os.png" />
     <Image Include="icons\pc.png" />
+    <Image Include="icons\pci.png" />
     <Image Include="icons\refresh.png" />
     <Image Include="icons\settings.png" />
     <Image Include="icons\smart.png" />
