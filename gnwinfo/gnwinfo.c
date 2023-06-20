@@ -30,6 +30,8 @@ window_proc(HWND wnd, UINT msg, WPARAM wparam, LPARAM lparam)
 	case WM_TIMER:
 		gnwinfo_ctx_update(wparam);
 		break;
+	case WM_DPICHANGED:
+		break;
 	case WM_SIZE:
 		g_ctx.gui_height = HIWORD(lparam);
 		g_ctx.gui_width = LOWORD(lparam);
@@ -226,7 +228,7 @@ wWinMain(_In_ HINSTANCE hInstance,
 	rect.top = 0;
 	rect.bottom = g_init_height;
 	if (!g_bginfo)
-		AdjustWindowRectEx(&rect, style, FALSE, exstyle);
+		AdjustWindowRectExForDpi(&rect, style, FALSE, exstyle, USER_DEFAULT_SCREEN_DPI);
 
 	/* Win32 */
 	memset(&wc, 0, sizeof(wc));
