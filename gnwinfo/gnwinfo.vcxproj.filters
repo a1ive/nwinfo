@@ -59,6 +59,9 @@
     <ClCompile Include="pci.c">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="dmi.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="gnwinfo.rc">
@@ -124,6 +127,9 @@
       <Filter>资源文件</Filter>
     </Image>
     <Image Include="icons\mm.png">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="icons\dmi.png">
       <Filter>资源文件</Filter>
     </Image>
   </ItemGroup>

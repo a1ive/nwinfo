@@ -124,6 +124,7 @@
     <ClCompile Include="about.c" />
     <ClCompile Include="context.c" />
     <ClCompile Include="cpuid.c" />
+    <ClCompile Include="dmi.c" />
     <ClCompile Include="gnwinfo.c" />
     <ClCompile Include="pci.c" />
     <ClCompile Include="settings.c" />
@@ -146,6 +147,7 @@
     <Image Include="icons\cpuid.png" />
     <Image Include="icons\disk.png" />
     <Image Include="icons\display.png" />
+    <Image Include="icons\dmi.png" />
     <Image Include="icons\firmware.png" />
     <Image Include="icons\hdd.png" />
     <Image Include="icons\info.png" />
