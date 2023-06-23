@@ -66,8 +66,8 @@ PrintPartitionInfo(PNODE pNode, LPCWSTR lpszPath, PHY_DRIVE_INFO* pParent)
 		return;
 	if (partInfo.StartingOffset.QuadPart == 0) // CDROM
 		return;
-	NWL_NodeAttrSetf(pNode, "Starting LBA", 0, "%llu", partInfo.StartingOffset.QuadPart >> 9);
-	//NWL_NodeAttrSetf(pNode, "Partition Number", 0, "%u", partInfo.PartitionNumber);
+	NWL_NodeAttrSetf(pNode, "Starting LBA", NAFLG_FMT_NUMERIC, "%llu", partInfo.StartingOffset.QuadPart >> 9);
+	NWL_NodeAttrSetf(pNode, "Partition Number", NAFLG_FMT_NUMERIC, "%lu", partInfo.PartitionNumber);
 	switch (partInfo.PartitionStyle)
 	{
 	case PARTITION_STYLE_MBR:
