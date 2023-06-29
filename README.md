@@ -15,6 +15,11 @@ NWinfo is a Win32 program that allows you to obtain system and hardware informat
 * Support exporting in JSON, YAML, and LUA table formats.
 * Compatible with Windows XP.
 
+## Note
+For Windows 11, the "Memory Integrity" option should be disabled.
+
+![win11](doc/win11.png)
+
 ## Usage
 ```
 .\nwinfo.exe OPTIONS
