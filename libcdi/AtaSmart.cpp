@@ -11669,7 +11669,7 @@ DWORD CAtaSmart::CheckDiskStatus(DWORD i)
 // [2023/06/26] Correct attribute data. compatible CDiskInfoDlg::UpdateListCtrl
 // Please maintain according to the specification of CAtaSmart::CheckDiskStatus
 DWORD CAtaSmart::CorrectDiskAttributeStatus(DWORD index, BYTE(&status)[MAX_ATTRIBUTE], UINT RawValueFormat, TCHAR(&text)[MAX_ATTRIBUTE][5][32]) const {
-	if( index >= vars.GetCount() ) return DISK_STATUS_UNKNOWN;
+	if( index >= (DWORD)vars.GetCount() ) return DISK_STATUS_UNKNOWN;
 
 	BYTE tmp[MAX_ATTRIBUTE]{};
 	BYTE highest_stat = DISK_STATUS_UNKNOWN;
@@ -11839,8 +11839,8 @@ DWORD CAtaSmart::CorrectDiskAttributeStatus(DWORD index, BYTE(&status)[MAX_ATTRI
 
 		if ( ven_id == SSD_VENDOR_SANDFORCE)
 		{
-			_sntprintf_s(text[j][0], 32, _TRUNCATE, _T("%d"), var->Attribute[j].CurrentValue);
-			_sntprintf_s(text[j][0], 32, _TRUNCATE, _T("%d"), var->Attribute[j].WorstValue);
+			_sntprintf_s(text[j][1], 32, _TRUNCATE, _T("%d"), var->Attribute[j].CurrentValue);
+			_sntprintf_s(text[j][2], 32, _TRUNCATE, _T("%d"), var->Attribute[j].WorstValue);
 			if (var->IsThresholdCorrect)
 			{
 				_sntprintf_s(text[j][3], 32, _TRUNCATE, _T("%d"), var->Threshold[j].ThresholdValue);
