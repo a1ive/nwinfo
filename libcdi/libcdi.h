@@ -43,6 +43,7 @@ enum CDI_ATA_INT
 	CDI_INT_GB_ERASED,
 	CDI_INT_WEAR_LEVELING_COUNT,
 	CDI_INT_LIFE,
+	CDI_INT_MAX_ATTRIBUTE,
 };
 
 enum CDI_ATA_DWORD
@@ -97,6 +98,21 @@ typedef	struct _CDI_SMART_THRESHOLD
 
 #pragma	pack(pop)
 
+enum CDI_DISK_STATUS
+{
+	CDI_DISK_STATUS_UNKNOWN = 0,
+	CDI_DISK_STATUS_GOOD,
+	CDI_DISK_STATUS_CAUTION,
+	CDI_DISK_STATUS_BAD
+};
+
+typedef struct _CDI_SMART_STATUS
+{
+	int MaxAttribute;
+	DWORD HighestStatus;
+	DWORD Status[1];
+} CDI_SMART_STATUS;
+
 #ifdef __cplusplus
 
 typedef CAtaSmart CDI_SMART;
@@ -130,5 +146,7 @@ CDI_SMART_THRESHOLD* cdi_get_smart_threshold(CDI_SMART* ptr, int index);
 char* cdi_get_smart_attribute_name(CDI_SMART * ptr, int index, BYTE id);
 char* cdi_get_smart_attribute_format(CDI_SMART* ptr, int index);
 char* cdi_get_smart_attribute_value(CDI_SMART* ptr, int index, int attr);
+
+CDI_SMART_STATUS* cdi_get_smart_status(CDI_SMART* ptr, int index);
 
 #endif

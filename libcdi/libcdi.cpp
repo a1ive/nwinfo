@@ -175,6 +175,8 @@ extern "C" INT cdi_get_int(CDI_SMART * ptr, int index, enum CDI_ATA_INT attr)
 		return ptr->vars[index].WearLevelingCount;
 	case CDI_INT_LIFE:
 		return ptr->vars[index].Life;
+	case CDI_INT_MAX_ATTRIBUTE:
+		return CAtaSmart::MAX_ATTRIBUTE;
 	}
 	return -1;
 }
@@ -207,9 +209,9 @@ extern "C" DWORD cdi_get_dword(CDI_SMART * ptr, int index, enum CDI_ATA_DWORD at
 	return 0;
 }
 
-inline LPCTCH get_health_status(CDI_SMART* ptr, int index)
+inline LPCTCH get_health_status(DWORD status)
 {
-	switch (ptr->vars[index].DiskStatus)
+	switch (status)
 	{
 	case CAtaSmart::DISK_STATUS_GOOD:
 		return _T("Good");
@@ -246,7 +248,7 @@ extern "C" char* cdi_get_string(CDI_SMART * ptr, int index, enum CDI_ATA_STRING 
 	case CDI_STRING_PNP_ID:
 		return csToString(ptr->vars[index].PnpDeviceId);
 	case CDI_STRING_DISK_STATUS:
-		return csToString(get_health_status(ptr, index));
+		return csToString(get_health_status(ptr->vars[index].DiskStatus));
 	}
 	return NULL;
 }
@@ -394,4 +396,26 @@ extern "C" char* cdi_get_smart_attribute_value(CDI_SMART * ptr, int index, int a
 		}
 	}
 	return csToString(cstr);
+}
+
+extern "C" CDI_SMART_STATUS* cdi_get_smart_status(CDI_SMART * ptr, int index)
+{
+	static union
+	{
+		struct
+		{
+			int MaxAttribute;
+			DWORD HighestStatus;
+			DWORD Status[CAtaSmart::MAX_ATTRIBUTE];
+		};
+		CDI_SMART_STATUS status;
+	} ret;
+	BYTE attr_status[CAtaSmart::MAX_ATTRIBUTE]{};
+	TCHAR attr_text[CAtaSmart::MAX_ATTRIBUTE][5][32]{};
+	int i;
+	ret.MaxAttribute = CAtaSmart::MAX_ATTRIBUTE;
+	ret.HighestStatus = ptr->CorrectDiskAttributeStatus(index, attr_status, 0, attr_text);
+	for (i = 0; i < CAtaSmart::MAX_ATTRIBUTE; i++)
+		ret.Status[i] = attr_status[i];
+	return &ret.status;
 }
