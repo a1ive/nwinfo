@@ -51,6 +51,12 @@
     <ClInclude Include="rdtsc.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="centaur_code_t.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="recog_centaur.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="asm-bits.c">
@@ -72,6 +78,9 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="rdmsr.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="recog_centaur.c">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

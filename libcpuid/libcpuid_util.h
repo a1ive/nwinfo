@@ -100,6 +100,9 @@ void clear_affinity_mask_bit(logical_cpu_t logical_cpu, cpu_affinity_mask_t *aff
 /* assign cache values in cpu_id_t type */
 void assign_cache_data(uint8_t on, cache_type_t cache, int size, int assoc, int linesize, struct cpu_id_t* data);
 
+/* generic way to retrieve core count for x86 CPUs */
+void decode_number_of_cores_x86(struct cpu_raw_data_t* raw, struct cpu_id_t* data);
+
 /* generic way to retrieve cache topology for x86 CPUs */
 void decode_deterministic_cache_info_x86(uint32_t cache_regs[][NUM_REGS],
                                          uint8_t subleaf_count,

@@ -720,35 +720,6 @@ static int decode_intel_extended_topology(struct cpu_raw_data_t* raw, struct cpu
 	return 1;
 }
 
-static void decode_intel_number_of_cores(struct cpu_raw_data_t* raw, struct cpu_id_t* data)
-{
-	int logical_cpus = -1, num_cores = -1;
-
-	if (raw->basic_cpuid[0][EAX] >= 11) {
-		if (decode_intel_extended_topology(raw, data)) return;
-	}
-
-	if (raw->basic_cpuid[0][EAX] >= 1) {
-		logical_cpus = (raw->basic_cpuid[1][EBX] >> 16) & 0xff;
-		if (raw->basic_cpuid[0][EAX] >= 4) {
-			num_cores = 1 + ((raw->basic_cpuid[4][EAX] >> 26) & 0x3f);
-		}
-	}
-	if (data->flags[CPU_FEATURE_HT]) {
-		if (num_cores > 1) {
-			data->num_cores = num_cores;
-			data->num_logical_cpus = logical_cpus;
-		} else {
-			data->num_cores = 1;
-			data->num_logical_cpus = (logical_cpus >= 1 ? logical_cpus : 1);
-			if (data->num_logical_cpus == 1)
-				data->flags[CPU_FEATURE_HT] = 0;
-		}
-	} else {
-		data->num_cores = data->num_logical_cpus = 1;
-	}
-}
-
 static intel_code_and_bits_t get_brand_code_and_bits(struct cpu_id_t* data)
 {
 	intel_code_t code = (intel_code_t) NC;
@@ -1060,7 +1031,8 @@ int cpuid_identify_intel(struct cpu_raw_data_t* raw, struct cpu_id_t* data, stru
 	} else if (raw->basic_cpuid[0][EAX] >= 2) {
 		decode_intel_oldstyle_cache_info(raw, data);
 	}
-	decode_intel_number_of_cores(raw, data);
+	if ((raw->basic_cpuid[0][EAX] < 11) || (decode_intel_extended_topology(raw, data) == 0))
+		decode_number_of_cores_x86(raw, data);
 	data->purpose = cpuid_identify_purpose_intel(raw);
 
 	brand = get_brand_code_and_bits(data);

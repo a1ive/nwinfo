@@ -121,6 +121,7 @@
   <ItemGroup>
     <ClInclude Include="amd_code_t.h" />
     <ClInclude Include="asm-bits.h" />
+    <ClInclude Include="centaur_code_t.h" />
     <ClInclude Include="intel_code_t.h" />
     <ClInclude Include="libcpuid.h" />
     <ClInclude Include="libcpuid_constants.h" />
@@ -129,6 +130,7 @@
     <ClInclude Include="libcpuid_util.h" />
     <ClInclude Include="rdtsc.h" />
     <ClInclude Include="recog_amd.h" />
+    <ClInclude Include="recog_centaur.h" />
     <ClInclude Include="recog_intel.h" />
   </ItemGroup>
   <ItemGroup>
@@ -138,6 +140,7 @@
     <ClCompile Include="rdmsr.c" />
     <ClCompile Include="rdtsc.c" />
     <ClCompile Include="recog_amd.c" />
+    <ClCompile Include="recog_centaur.c" />
     <ClCompile Include="recog_intel.c" />
   </ItemGroup>
   <ItemGroup>

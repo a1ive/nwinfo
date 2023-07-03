@@ -25,8 +25,9 @@
  */
 #include "libcpuid.h"
 #include "libcpuid_internal.h"
-#include "recog_intel.h"
 #include "recog_amd.h"
+#include "recog_centaur.h"
+#include "recog_intel.h"
 #include "asm-bits.h"
 #include "libcpuid_util.h"
 
@@ -642,6 +643,9 @@ int cpu_ident_internal(struct cpu_raw_data_t* raw, struct cpu_id_t* data, struct
 		case VENDOR_AMD:
 		case VENDOR_HYGON:
 			r = cpuid_identify_amd(raw, data, internal);
+			break;
+		case VENDOR_CENTAUR:
+			r = cpuid_identify_centaur(raw, data, internal);
 			break;
 		default:
 			break;

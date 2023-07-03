@@ -253,6 +253,31 @@ void assign_cache_data(uint8_t on, cache_type_t cache, int size, int assoc, int 
 	}
 }
 
+void decode_number_of_cores_x86(struct cpu_raw_data_t* raw, struct cpu_id_t* data)
+{
+	int logical_cpus = -1, num_cores = -1;
+
+	if (raw->basic_cpuid[0][EAX] >= 1) {
+		logical_cpus = (raw->basic_cpuid[1][EBX] >> 16) & 0xff;
+		if (raw->basic_cpuid[0][EAX] >= 4) {
+			num_cores = 1 + ((raw->basic_cpuid[4][EAX] >> 26) & 0x3f);
+		}
+	}
+	if (data->flags[CPU_FEATURE_HT]) {
+		if (num_cores > 1) {
+			data->num_cores = num_cores;
+			data->num_logical_cpus = logical_cpus;
+		} else {
+			data->num_cores = 1;
+			data->num_logical_cpus = (logical_cpus >= 1 ? logical_cpus : 1);
+			if (data->num_logical_cpus == 1)
+				data->flags[CPU_FEATURE_HT] = 0;
+		}
+	} else {
+		data->num_cores = data->num_logical_cpus = (logical_cpus >= 1 ? logical_cpus : 1);
+	}
+}
+
 void decode_deterministic_cache_info_x86(uint32_t cache_regs[][NUM_REGS],
                                          uint8_t subleaf_count,
                                          struct cpu_id_t* data,

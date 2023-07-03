@@ -55,6 +55,11 @@ enum _amd_code_t {
 };
 typedef enum _amd_code_t amd_code_t;
 
+enum _centaur_code_t {
+	#include "centaur_code_t.h"
+};
+typedef enum _centaur_code_t centaur_code_t;
+
 enum _intel_code_t {
 	#include "intel_code_t.h"
 };
@@ -64,8 +69,9 @@ typedef enum _intel_code_t intel_code_t;
 
 struct internal_id_info_t {
 	union {
-		amd_code_t   amd;
-		intel_code_t intel;
+		amd_code_t     amd;
+		centaur_code_t centaur;
+		intel_code_t   intel;
 	} code;
 	uint64_t bits;
 	int score; // detection (matchtable) score
@@ -161,6 +167,29 @@ enum _amd_bits_t {
 };
 typedef enum _amd_bits_t amd_bits_t;
 
+enum _via_bits_t {
+	SAMUEL_            = LBIT( 10 ),
+	EZRA_              = LBIT( 11 ),
+	NEHEMIAH_          = LBIT( 12 ),
+	ESTHER_            = LBIT( 13 ),
+	EDEN_              = LBIT( 14 ),
+	CNA_               = LBIT( 15 ),
+	NANO_              = LBIT( 16 ),
+	QUADCORE_          = LBIT( 17 ),
+};
+typedef enum _via_bits_t via_bits_t;
+
+enum _zhaoxin_bits_t {
+	KAISHENG_          = LBIT( 10 ),
+	KAIXIAN_           = LBIT( 11 ),
+	_KH_               = LBIT( 12 ),
+	_KX_               = LBIT( 13 ),
+	_ZX_               = LBIT( 14 ),
+	_C                 = LBIT( 15 ),
+	_D                 = LBIT( 16 ),
+	_E                 = LBIT( 17 ),
+};
+typedef enum _zhaoxin_bits_t zhaoxin_bits_t;
 
 
 int cpu_ident_internal(struct cpu_raw_data_t* raw, struct cpu_id_t* data,
