@@ -305,6 +305,12 @@ gnwinfo_draw_smart_window(struct nk_context* ctx, float width, float height)
 	}
 
 	count = cdi_get_disk_count(NWLC->NwSmart);
+	if (count <= 0)
+	{
+		nk_layout_row_dynamic(ctx, 0, 1);
+		nk_label(ctx, "No disks found", NK_TEXT_CENTERED);
+		goto out;
+	}
 	nk_layout_row(ctx, NK_DYNAMIC, 0, 4, (float[4]) { 0.12f, 0.6f, 0.2f, 0.08f });
 	nk_property_int(ctx, "#", 0, &cur_disk, count - 1, 1, 1);
 	str = cdi_get_string(NWLC->NwSmart, cur_disk, CDI_STRING_MODEL);

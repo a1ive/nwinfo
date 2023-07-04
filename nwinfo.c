@@ -17,6 +17,7 @@ static void nwinfo_help(void)
 		"  --acpi[=XXXX]    Print ACPI [table=XXXX] info.\n"
 		"  --smbios[=XX]    Print SMBIOS [type=XX] info.\n"
 		"  --disk           Print disk info.\n"
+		"  --no-smart       Don't print disk S.M.A.R.T. info.\n"
 		"  --display        Print EDID info.\n"
 		"  --pci[=XX]       Print PCI [class=XX] info.\n"
 		"  --usb            Print USB info.\n"
@@ -81,6 +82,8 @@ int main(int argc, char* argv[])
 		}
 		else if (_stricmp(argv[i], "--disk") == 0)
 			nwContext.DiskInfo = TRUE;
+		else if (_stricmp(argv[i], "--no-smart") == 0)
+			nwContext.DisableSmart = TRUE;
 		else if (_stricmp(argv[i], "--display") == 0)
 			nwContext.EdidInfo = TRUE;
 		else if (_strnicmp(argv[i], "--pci", 5) == 0)

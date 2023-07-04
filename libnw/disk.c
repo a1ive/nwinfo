@@ -597,7 +597,7 @@ PrintDiskInfo(BOOL cdrom, PNODE node, CDI_SMART* smart)
 			NWL_NodeAttrSet(nd, "Partition Table", "GPT", 0);
 			NWL_NodeAttrSetf(nd, "GPT GUID", NAFLG_FMT_GUID, "{%s}", NWL_GuidToStr(PhyDriveList[i].GptGuid));
 		}
-		if (!cdrom && smart)
+		if (!cdrom && NWLC->DisableSmart == FALSE && smart)
 			PrintSmartInfo(nd, smart, GetSmartIndex(smart, i));
 		if (PhyDriveList[i].VolumeCount)
 		{
@@ -621,7 +621,7 @@ PNODE NW_Disk(VOID)
 	PNODE node = NWL_NodeAlloc("Disks", NFLG_TABLE);
 	if (NWLC->DiskInfo)
 		NWL_NodeAppendChild(NWLC->NwRoot, node);
-	if (NWLC->NwSmart && NWLC->NwSmbiosInit == FALSE)
+	if (NWLC->DisableSmart == FALSE && NWLC->NwSmart && NWLC->NwSmbiosInit == FALSE)
 	{
 		cdi_init_smart(NWLC->NwSmart, TRUE, TRUE, FALSE, FALSE, FALSE, FALSE);
 		NWLC->NwSmbiosInit = TRUE;

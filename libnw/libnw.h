@@ -42,6 +42,7 @@ typedef struct _NWLIB_CONTEXT
 	BOOL ActiveNet;
 	UINT8 SmbiosType;
 	LPCSTR PciClass;
+	BOOL DisableSmart;
 
 	VOID (*SpdProgress) (LPCSTR lpszText);
 
