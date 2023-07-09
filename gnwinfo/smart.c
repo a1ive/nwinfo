@@ -25,7 +25,7 @@ draw_rect(struct nk_context* ctx, struct nk_color bg, const char* str)
 }
 
 static struct nk_color
-get_attr_color(DWORD status)
+get_attr_color(int status)
 {
 	switch (status)
 	{
@@ -43,26 +43,22 @@ static void
 draw_health(struct nk_context* ctx, CDI_SMART* smart, int disk, float height)
 {
 	int n;
-	char* str;
 	char tmp[32];
 
 	if (nk_group_begin(ctx, "SMART Health", 0))
 	{
+		int health;
 		struct nk_color color = g_color_warning;
 		nk_layout_row_dynamic(ctx, height / 5.0f, 1);
 		nk_label(ctx, "Health Status", NK_TEXT_CENTERED);
 		n = cdi_get_int(smart, disk, CDI_INT_LIFE);
-		str = cdi_get_string(smart, disk, CDI_STRING_DISK_STATUS);
-		if (strncmp(str, "Good", 4) == 0)
-			color = g_color_good;
-		else if (strncmp(str, "Bad", 3) == 0)
-			color = g_color_error;
+		health = cdi_get_int(smart, disk, CDI_INT_DISK_STATUS);
 		if (n >= 0)
-			snprintf(tmp, sizeof(tmp), "%s\n%d%%", str, n);
+			snprintf(tmp, sizeof(tmp), "%s\n%d%%", cdi_get_health_status(health), n);
 		else
-			snprintf(tmp, sizeof(tmp), "%s", str);
-		draw_rect(ctx, color, tmp);
-		cdi_free_string(str);
+			snprintf(tmp, sizeof(tmp), "%s", cdi_get_health_status(health));
+		draw_rect(ctx, get_attr_color(health), tmp);
+
 		nk_label(ctx, "Temperature", NK_TEXT_CENTERED);
 		color = g_color_warning;
 		int alarm = cdi_get_int(smart, disk, CDI_INT_TEMPERATURE_ALARM);
@@ -210,7 +206,7 @@ draw_info(struct nk_context* ctx, CDI_SMART* smart, int disk)
 }
 
 static char*
-draw_alert_icon(struct nk_context* ctx, BYTE id, DWORD status, const char* format, char* value)
+draw_alert_icon(struct nk_context* ctx, BYTE id, int status, const char* format, char* value)
 {
 	static char hex[18];
 	// RawValues(8)
@@ -253,24 +249,23 @@ draw_smart(struct nk_context* ctx, CDI_SMART* smart, int disk)
 	char* hex;
 	if (nk_group_begin(ctx, "SMART Attr", NK_WINDOW_BORDER))
 	{
-		CDI_SMART_ATTRIBUTE* attr = cdi_get_smart_attribute(smart, disk);
-		CDI_SMART_STATUS* status = cdi_get_smart_status(NWLC->NwSmart, disk);
 		DWORD i, count = cdi_get_dword(smart, disk, CDI_DWORD_ATTR_COUNT);
 		nk_layout_row(ctx, NK_DYNAMIC, 0, 4, (float[4]) { 0.05f, 0.05f, 0.55f, 0.35f });
 		nk_spacer(ctx);
 		nk_label(ctx, "ID", NK_TEXT_LEFT);
 		nk_label(ctx, "Attribute", NK_TEXT_LEFT);
-		format = cdi_get_smart_attribute_format(smart, disk);
+		format = cdi_get_smart_format(smart, disk);
 		nk_label(ctx, format, NK_TEXT_LEFT);
 
 		for (i = 0; i < count; i++)
 		{
-			if (attr[i].Id == 0)
+			int id = cdi_get_smart_id(smart, disk, i);
+			if (id == 0)
 				continue;
-			name = cdi_get_smart_attribute_name(smart, disk, attr[i].Id);
-			value = cdi_get_smart_attribute_value(smart, disk, i);
-			hex = draw_alert_icon(ctx, attr[i].Id, status->Status[i], format, value);
-			nk_labelf_colored(ctx, NK_TEXT_LEFT, g_color_text_l, "%02X", attr[i].Id);
+			name = cdi_get_smart_name(smart, disk, id);
+			value = cdi_get_smart_value(smart, disk, i);
+			hex = draw_alert_icon(ctx, id, cdi_get_smart_status(smart, disk, i), format, value);
+			nk_labelf_colored(ctx, NK_TEXT_LEFT, g_color_text_l, "%02X", id);
 			nk_label_colored(ctx, name, NK_TEXT_LEFT, g_color_text_l);
 			if (g_ctx.smart_hex)
 				nk_labelf_colored(ctx, NK_TEXT_LEFT, g_color_text_l,

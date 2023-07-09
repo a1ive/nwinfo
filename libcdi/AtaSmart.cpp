@@ -838,7 +838,7 @@ VOID CAtaSmart::Init(BOOL useWmi, BOOL advancedDiskSearch, PBOOL flagChangeDisk,
 					goto safeRelease;
 				}
 				int workaround = 0;
-				while (pEnumCOMDevs && SUCCEEDED(pEnumCOMDevs->Next(10000, 1, &pCOMDev, &uReturned)) && uReturned == 1 && workaround < 512)
+				while (pEnumCOMDevs && SUCCEEDED(pEnumCOMDevs->Next(10, 1, &pCOMDev, &uReturned)) && uReturned == 1 && workaround < 512)
 				{
 					workaround++;
 					VARIANT  pVal;

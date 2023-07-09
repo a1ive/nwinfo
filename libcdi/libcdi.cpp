@@ -5,7 +5,8 @@
 #include <pathcch.h>
 #include "libcdi.h"
 
-extern "C" CDI_SMART * cdi_create_smart()
+extern "C" CDI_SMART *
+cdi_create_smart(VOID)
 {
 	auto ata = new CDI_SMART;
 	//SetDebugMode(1);
@@ -33,7 +34,8 @@ extern "C" CDI_SMART * cdi_create_smart()
 	return ata;
 }
 
-extern "C" void cdi_destroy_smart(CDI_SMART * ptr)
+extern "C" VOID
+cdi_destroy_smart(CDI_SMART * ptr)
 {
 	if (ptr)
 	{
@@ -43,7 +45,8 @@ extern "C" void cdi_destroy_smart(CDI_SMART * ptr)
 	//CoUninitialize();
 }
 
-extern "C" void cdi_init_smart(CDI_SMART * ptr,
+extern "C" VOID
+cdi_init_smart(CDI_SMART * ptr,
 	BOOL useWmi, BOOL advancedDiskSearch,
 	BOOL workaroundHD204UI, BOOL workaroundAdataSsd,
 	BOOL flagHideNoSmartDisk, BOOL flagSortDriveLetter)
@@ -51,7 +54,7 @@ extern "C" void cdi_init_smart(CDI_SMART * ptr,
 	BOOL flagChangeDisk = TRUE;
 	ptr->Init(useWmi, advancedDiskSearch, &flagChangeDisk, workaroundHD204UI,
 		workaroundAdataSsd, flagHideNoSmartDisk, flagSortDriveLetter);
-	for (int i = 0; i < ptr->vars.GetCount(); i++)
+	for (INT i = 0; i < ptr->vars.GetCount(); i++)
 	{
 		if (ptr->vars[i].IsSsd)
 			ptr->vars[i].AlarmTemperature = 60;
@@ -68,29 +71,32 @@ extern "C" void cdi_init_smart(CDI_SMART * ptr,
 	}
 }
 
-extern "C" DWORD cdi_update_smart(CDI_SMART * ptr, int index)
+extern "C" DWORD
+cdi_update_smart(CDI_SMART * ptr, INT index)
 {
 	return ptr->UpdateSmartInfo(index);
 }
 
-char* csToString(CString str)
+CHAR* cs_to_string(CString str)
 {
 	auto len = str.GetLength() + 1;
 	auto buff = new TCHAR[len];
 	memcpy(buff, (LPCTSTR)str, sizeof(TCHAR) * (len));
-	auto charBuf = (char*)CoTaskMemAlloc(len);
+	auto charBuf = (CHAR*)CoTaskMemAlloc(len);
 	size_t converted;
 	wcstombs_s(&converted, charBuf, len, buff, len);
 	delete[] buff;
 	return charBuf;
 }
 
-extern "C" int cdi_get_disk_count(CDI_SMART * ptr)
+extern "C" INT
+cdi_get_disk_count(CDI_SMART * ptr)
 {
-	return (int)ptr->vars.GetCount();
+	return (INT)ptr->vars.GetCount();
 }
 
-extern "C" BOOL cdi_get_bool(CDI_SMART * ptr, int index, enum CDI_ATA_BOOL attr)
+extern "C" BOOL
+cdi_get_bool(CDI_SMART * ptr, INT index, enum CDI_ATA_BOOL attr)
 {
 	switch (attr)
 	{
@@ -130,12 +136,15 @@ extern "C" BOOL cdi_get_bool(CDI_SMART * ptr, int index, enum CDI_ATA_BOOL attr)
 	return FALSE;
 }
 
-extern "C" INT cdi_get_int(CDI_SMART * ptr, int index, enum CDI_ATA_INT attr)
+extern "C" INT
+cdi_get_int(CDI_SMART * ptr, INT index, enum CDI_ATA_INT attr)
 {
 	switch (attr)
 	{
 	case CDI_INT_DISK_ID:
 		return ptr->vars[index].PhysicalDriveId;
+	case CDI_INT_DISK_STATUS:
+		return (INT)ptr->vars[index].DiskStatus;
 	case CDI_INT_SCSI_PORT:
 		return ptr->vars[index].ScsiPort;
 	case CDI_INT_SCSI_TARGET_ID:
@@ -181,7 +190,8 @@ extern "C" INT cdi_get_int(CDI_SMART * ptr, int index, enum CDI_ATA_INT attr)
 	return -1;
 }
 
-extern "C" DWORD cdi_get_dword(CDI_SMART * ptr, int index, enum CDI_ATA_DWORD attr)
+extern "C" DWORD
+cdi_get_dword(CDI_SMART * ptr, INT index, enum CDI_ATA_DWORD attr)
 {
 	switch (attr)
 	{
@@ -201,75 +211,50 @@ extern "C" DWORD cdi_get_dword(CDI_SMART * ptr, int index, enum CDI_ATA_DWORD at
 		return ptr->vars[index].NominalMediaRotationRate;
 	case CDI_DWORD_DRIVE_LETTER:
 		return ptr->vars[index].DriveLetterMap;
-	case CDI_DWORD_DISK_STATUS:
-		return ptr->vars[index].DiskStatus;
 	case CDI_DWORD_DISK_VENDOR_ID:
 		return ptr->vars[index].DiskVendorId;
 	}
 	return 0;
 }
 
-inline LPCTCH get_health_status(DWORD status)
-{
-	switch (status)
-	{
-	case CAtaSmart::DISK_STATUS_GOOD:
-		return _T("Good");
-	case CAtaSmart::DISK_STATUS_CAUTION:
-		return _T("Caution");
-	case CAtaSmart::DISK_STATUS_BAD:
-		return _T("Bad");
-	}
-	return _T("Unknown");
-}
-
-extern "C" char* cdi_get_string(CDI_SMART * ptr, int index, enum CDI_ATA_STRING attr)
+extern "C" CHAR*
+cdi_get_string(CDI_SMART * ptr, INT index, enum CDI_ATA_STRING attr)
 {
 	switch (attr)
 	{
 	case CDI_STRING_SN:
-		return csToString(ptr->vars[index].SerialNumber);
+		return cs_to_string(ptr->vars[index].SerialNumber);
 	case CDI_STRING_FIRMWARE:
-		return csToString(ptr->vars[index].FirmwareRev);
+		return cs_to_string(ptr->vars[index].FirmwareRev);
 	case CDI_STRING_MODEL:
-		return csToString(ptr->vars[index].Model);
+		return cs_to_string(ptr->vars[index].Model);
 	case CDI_STRING_DRIVE_MAP:
-		return csToString(ptr->vars[index].DriveMap);
+		return cs_to_string(ptr->vars[index].DriveMap);
 	case CDI_STRING_TRANSFER_MODE_MAX:
-		return csToString(ptr->vars[index].MaxTransferMode);
+		return cs_to_string(ptr->vars[index].MaxTransferMode);
 	case CDI_STRING_TRANSFER_MODE_CUR:
-		return csToString(ptr->vars[index].CurrentTransferMode);
+		return cs_to_string(ptr->vars[index].CurrentTransferMode);
 	case CDI_STRING_INTERFACE:
-		return csToString(ptr->vars[index].Interface);
+		return cs_to_string(ptr->vars[index].Interface);
 	case CDI_STRING_VERSION_MAJOR:
-		return csToString(ptr->vars[index].MajorVersion);
+		return cs_to_string(ptr->vars[index].MajorVersion);
 	case CDI_STRING_VERSION_MINOR:
-		return csToString(ptr->vars[index].MinorVersion);
+		return cs_to_string(ptr->vars[index].MinorVersion);
 	case CDI_STRING_PNP_ID:
-		return csToString(ptr->vars[index].PnpDeviceId);
-	case CDI_STRING_DISK_STATUS:
-		return csToString(get_health_status(ptr->vars[index].DiskStatus));
+		return cs_to_string(ptr->vars[index].PnpDeviceId);
 	}
 	return NULL;
 }
 
-extern "C" void cdi_free_string(char* ptr)
+extern "C" VOID
+cdi_free_string(CHAR* ptr)
 {
 	if (ptr)
 		CoTaskMemFree(ptr);
 }
 
-extern "C" CDI_SMART_ATTRIBUTE * cdi_get_smart_attribute(CDI_SMART * ptr, int index)
-{
-	return reinterpret_cast<CDI_SMART_ATTRIBUTE *>(ptr->vars[index].Attribute);
-}
-
-extern "C" CDI_SMART_THRESHOLD * cdi_get_smart_threshold(CDI_SMART * ptr, int index)
-{
-	return reinterpret_cast<CDI_SMART_THRESHOLD *>(ptr->vars[index].Threshold);
-}
-
-extern "C" char* cdi_get_smart_attribute_name(CDI_SMART * ptr, int index, BYTE id)
+extern "C" CHAR*
+cdi_get_smart_name(CDI_SMART * ptr, INT index, BYTE id)
 {
 	TCHAR ini[MAX_PATH];
 	GetModuleFileName(NULL, ini, MAX_PATH);
@@ -280,10 +265,11 @@ extern "C" char* cdi_get_smart_attribute_name(CDI_SMART * ptr, int index, BYTE i
 	key.Format(_T("%02X"), id);
 	GetPrivateProfileStringFx(ptr->vars[index].SmartKeyName, key, _T("Vendor Specific"), val.GetBuffer(256), 256, ini);
 	val.ReleaseBuffer();
-	return csToString(val);
+	return cs_to_string(val);
 }
 
-extern "C" char* cdi_get_smart_attribute_format(CDI_SMART * ptr, int index)
+extern "C" CHAR*
+cdi_get_smart_format(CDI_SMART * ptr, INT index)
 {
 	CString fmt;
 	if (ptr->vars[index].DiskVendorId == CAtaSmart::SSD_VENDOR_NVME)
@@ -305,10 +291,17 @@ extern "C" char* cdi_get_smart_attribute_format(CDI_SMART * ptr, int index)
 			fmt = _T("Cur Wor --- RawValues(6)");
 	}
 		
-	return csToString(fmt);
+	return cs_to_string(fmt);
 }
 
-extern "C" char* cdi_get_smart_attribute_value(CDI_SMART * ptr, int index, int attr)
+extern "C" BYTE
+cdi_get_smart_id(CDI_SMART * ptr, INT index, INT attr)
+{
+	return ptr->vars[index].Attribute[attr].Id;
+}
+
+extern "C" CHAR*
+cdi_get_smart_value(CDI_SMART * ptr, INT index, INT attr)
 {
 	CString cstr;
 	if (ptr->vars[index].DiskVendorId == CAtaSmart::SSD_VENDOR_NVME)
@@ -395,27 +388,14 @@ extern "C" char* cdi_get_smart_attribute_value(CDI_SMART * ptr, int index, int a
 			);
 		}
 	}
-	return csToString(cstr);
+	return cs_to_string(cstr);
 }
 
-extern "C" CDI_SMART_STATUS* cdi_get_smart_status(CDI_SMART * ptr, int index)
+extern "C" INT
+cdi_get_smart_status(CDI_SMART * ptr, INT index, INT attr)
 {
-	static union
-	{
-		struct
-		{
-			int MaxAttribute;
-			DWORD HighestStatus;
-			DWORD Status[CAtaSmart::MAX_ATTRIBUTE];
-		};
-		CDI_SMART_STATUS status;
-	} ret;
 	BYTE attr_status[CAtaSmart::MAX_ATTRIBUTE]{};
 	TCHAR attr_text[CAtaSmart::MAX_ATTRIBUTE][5][32]{};
-	int i;
-	ret.MaxAttribute = CAtaSmart::MAX_ATTRIBUTE;
-	ret.HighestStatus = ptr->CorrectDiskAttributeStatus(index, attr_status, 0, attr_text);
-	for (i = 0; i < CAtaSmart::MAX_ATTRIBUTE; i++)
-		ret.Status[i] = attr_status[i];
-	return &ret.status;
+	ptr->CorrectDiskAttributeStatus(index, attr_status, 0, attr_text);
+	return (INT)attr_status[attr];
 }

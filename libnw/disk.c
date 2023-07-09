@@ -419,7 +419,6 @@ PrintSmartInfo(PNODE node, CDI_SMART* ptr, INT index)
 	CHAR* str;
 	BOOL ssd = FALSE;
 	BOOL nvme = FALSE;
-	CDI_SMART_ATTRIBUTE* attr;
 
 	if (index < 0)
 		return;
@@ -428,12 +427,10 @@ PrintSmartInfo(PNODE node, CDI_SMART* ptr, INT index)
 	NWL_NodeAttrSetf(node, "Temperature (C)", NAFLG_FMT_NUMERIC, "%d", cdi_get_int(ptr, index, CDI_INT_TEMPERATURE));
 
 	n = cdi_get_int(ptr, index, CDI_INT_LIFE);
-	str = cdi_get_string(ptr, index, CDI_STRING_DISK_STATUS);
 	if (n >= 0)
-		NWL_NodeAttrSetf(node, "Health Status", 0, "%s (%d%%)", str, n);
+		NWL_NodeAttrSetf(node, "Health Status", 0, "%s (%d%%)", cdi_get_health_status(cdi_get_int(ptr, index, CDI_INT_DISK_STATUS)), n);
 	else
-		NWL_NodeAttrSet(node, "Health Status", str, 0);
-	cdi_free_string(str);
+		NWL_NodeAttrSet(node, "Health Status", cdi_get_health_status(cdi_get_int(ptr, index, CDI_INT_DISK_STATUS)), 0);
 
 	str = cdi_get_string(ptr, index, CDI_STRING_TRANSFER_MODE_CUR);
 	NWL_NodeAttrSet(node, "Current Transfer Mode", str, 0);
@@ -526,10 +523,9 @@ PrintSmartInfo(PNODE node, CDI_SMART* ptr, INT index)
 			NAFLG_FMT_NUMERIC, "%d", n);
 
 	count = cdi_get_dword(ptr, index, CDI_DWORD_ATTR_COUNT);
-	attr = cdi_get_smart_attribute(ptr, index);
 	if (count)
 	{
-		str = cdi_get_smart_attribute_format(ptr, index);
+		str = cdi_get_smart_format(ptr, index);
 		NWL_NodeAttrSet(node, "SMART Format", str, 0);
 		cdi_free_string(str);
 	}
@@ -537,11 +533,12 @@ PrintSmartInfo(PNODE node, CDI_SMART* ptr, INT index)
 	{
 		char key[] = "SMART XX";
 		char* val;
-		if (attr[i].Id == 0)
+		int id = cdi_get_smart_id(ptr, index, i);
+		if (id == 0)
 			continue;
-		str = cdi_get_smart_attribute_name(ptr, index, attr[i].Id);
-		val = cdi_get_smart_attribute_value(ptr, index, i);
-		snprintf(key, sizeof(key), "SMART %02X", attr[i].Id);
+		str = cdi_get_smart_name(ptr, index, id);
+		val = cdi_get_smart_value(ptr, index, i);
+		snprintf(key, sizeof(key), "SMART %02X", id);
 		NWL_NodeAttrSetf(node, key, 0, "%s %s", val, str);
 		cdi_free_string(str);
 		cdi_free_string(val);

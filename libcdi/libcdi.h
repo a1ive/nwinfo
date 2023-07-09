@@ -30,6 +30,7 @@ enum CDI_ATA_BOOL
 enum CDI_ATA_INT
 {
 	CDI_INT_DISK_ID = 0,
+	CDI_INT_DISK_STATUS,
 	CDI_INT_SCSI_PORT,
 	CDI_INT_SCSI_TARGET_ID,
 	CDI_INT_SCSI_BUS,
@@ -58,7 +59,6 @@ enum CDI_ATA_DWORD
 	CDI_DWORD_POWER_ON_COUNT,
 	CDI_DWORD_ROTATION_RATE,
 	CDI_DWORD_DRIVE_LETTER,
-	CDI_DWORD_DISK_STATUS,
 	CDI_DWORD_DISK_VENDOR_ID, // SSD_VENDOR_NVME = 19
 };
 
@@ -74,29 +74,7 @@ enum CDI_ATA_STRING
 	CDI_STRING_VERSION_MAJOR,
 	CDI_STRING_VERSION_MINOR,
 	CDI_STRING_PNP_ID,
-	CDI_STRING_DISK_STATUS,
 };
-
-#pragma pack(push,1)
-
-typedef	struct _CDI_SMART_ATTRIBUTE
-{
-	BYTE	Id;
-	WORD	StatusFlags;
-	BYTE	CurrentValue;
-	BYTE	WorstValue;
-	BYTE	RawValue[6];
-	BYTE	Reserved;
-} CDI_SMART_ATTRIBUTE;
-
-typedef	struct _CDI_SMART_THRESHOLD
-{
-	BYTE	Id;
-	BYTE	ThresholdValue;
-	BYTE	Reserved[10];
-} CDI_SMART_THRESHOLD;
-
-#pragma	pack(pop)
 
 enum CDI_DISK_STATUS
 {
@@ -106,13 +84,6 @@ enum CDI_DISK_STATUS
 	CDI_DISK_STATUS_BAD
 };
 
-typedef struct _CDI_SMART_STATUS
-{
-	int MaxAttribute;
-	DWORD HighestStatus;
-	DWORD Status[1];
-} CDI_SMART_STATUS;
-
 #ifdef __cplusplus
 
 typedef CAtaSmart CDI_SMART;
@@ -121,32 +92,44 @@ typedef CAtaSmart CDI_SMART;
 
 typedef struct _CDI_SMART CDI_SMART;
 
-CDI_SMART* cdi_create_smart(void);
-void cdi_destroy_smart(CDI_SMART* ptr);
-void cdi_init_smart(CDI_SMART* ptr,
+CDI_SMART* cdi_create_smart(VOID);
+VOID cdi_destroy_smart(CDI_SMART* ptr);
+VOID cdi_init_smart(CDI_SMART* ptr,
 	BOOL use_wmi,
 	BOOL advanced_disk_search,
 	BOOL workaround_hd204ui,
 	BOOL workaround_adata_ssd,
 	BOOL flag_hide_no_smart_disk,
 	BOOL flag_sort_drive_letter);
-DWORD cdi_update_smart(CDI_SMART* ptr, int index);
+DWORD cdi_update_smart(CDI_SMART* ptr, INT index);
 
-int cdi_get_disk_count(CDI_SMART* ptr);
+INT cdi_get_disk_count(CDI_SMART* ptr);
 
-BOOL cdi_get_bool(CDI_SMART* ptr, int index, enum CDI_ATA_BOOL attr);
-INT cdi_get_int(CDI_SMART* ptr, int index, enum CDI_ATA_INT attr);
-DWORD cdi_get_dword(CDI_SMART* ptr, int index, enum CDI_ATA_DWORD attr);
-char* cdi_get_string(CDI_SMART* ptr, int index, enum CDI_ATA_STRING attr);
-void cdi_free_string(char* ptr);
+BOOL cdi_get_bool(CDI_SMART* ptr, INT index, enum CDI_ATA_BOOL attr);
+INT cdi_get_int(CDI_SMART* ptr, INT index, enum CDI_ATA_INT attr);
+DWORD cdi_get_dword(CDI_SMART* ptr, INT index, enum CDI_ATA_DWORD attr);
+CHAR* cdi_get_string(CDI_SMART* ptr, INT index, enum CDI_ATA_STRING attr);
+VOID cdi_free_string(CHAR* ptr);
 
-CDI_SMART_ATTRIBUTE* cdi_get_smart_attribute(CDI_SMART* ptr, int index);
-CDI_SMART_THRESHOLD* cdi_get_smart_threshold(CDI_SMART* ptr, int index);
+CHAR* cdi_get_smart_name(CDI_SMART * ptr, INT index, BYTE id);
+CHAR* cdi_get_smart_format(CDI_SMART* ptr, INT index);
+BYTE cdi_get_smart_id(CDI_SMART* ptr, INT index, INT attr);
+CHAR* cdi_get_smart_value(CDI_SMART* ptr, INT index, INT attr);
+INT cdi_get_smart_status(CDI_SMART* ptr, INT index, INT attr);
 
-char* cdi_get_smart_attribute_name(CDI_SMART * ptr, int index, BYTE id);
-char* cdi_get_smart_attribute_format(CDI_SMART* ptr, int index);
-char* cdi_get_smart_attribute_value(CDI_SMART* ptr, int index, int attr);
-
-CDI_SMART_STATUS* cdi_get_smart_status(CDI_SMART* ptr, int index);
+static inline LPCSTR
+cdi_get_health_status(enum CDI_DISK_STATUS status)
+{
+	switch (status)
+	{
+	case CDI_DISK_STATUS_GOOD:
+		return "Good";
+	case CDI_DISK_STATUS_CAUTION:
+		return "Caution";
+	case CDI_DISK_STATUS_BAD:
+		return "Bad";
+	}
+	return "Unknown";
+}
 
 #endif
