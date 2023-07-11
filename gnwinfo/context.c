@@ -275,6 +275,7 @@ gnwinfo_ctx_init(HINSTANCE inst, HWND wnd, struct nk_context* ctx, float width, 
 	g_ctx.lib.PciInfo = TRUE;
 
 	NW_Init(&g_ctx.lib);
+	g_ctx.lib.NwSmartFlags = ~g_smart_flag;
 	g_ctx.lib.NwRoot = NWL_NodeAlloc("NWinfo", 0);
 	g_ctx.cpuid = NW_Cpuid();
 	g_ctx.system = NW_System();

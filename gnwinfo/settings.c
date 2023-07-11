@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: Unlicense
 
 #include "gnwinfo.h"
+#include "../libcdi/libcdi.h"
 
 WCHAR g_ini_path[MAX_PATH] = { 0 };
 
@@ -125,6 +126,50 @@ gnwinfo_draw_settings_window(struct nk_context* ctx, float width, float height)
 	nk_checkbox_flags_label(ctx, "Hide S.M.A.R.T.", &g_ctx.main_flag, MAIN_DISK_SMART);
 	nk_spacer(ctx);
 	g_ctx.smart_hex = !nk_check_label(ctx, "Display SMART in HEX format", !g_ctx.smart_hex);
+	nk_spacer(ctx);
+	nk_checkbox_flags_label(ctx, "Advanced disk search", &g_smart_flag, CDI_FLAG_ADVANCED_SEARCH);
+	nk_spacer(ctx);
+	nk_checkbox_flags_label(ctx, "HD204UI workaround", &g_smart_flag, CDI_FLAG_WORKAROUND_HD204UI);
+	nk_spacer(ctx);
+	nk_checkbox_flags_label(ctx, "ADATA SSD workaround", &g_smart_flag, CDI_FLAG_WORKAROUND_ADATA);
+	nk_spacer(ctx);
+	nk_checkbox_flags_label(ctx, "ATA pass through", &g_smart_flag, CDI_FLAG_ATA_PASS_THROUGH);
+	nk_spacer(ctx);
+	nk_checkbox_flags_label(ctx, "Enable Nvidia controller", &g_smart_flag, CDI_FLAG_ENABLE_NVIDIA);
+	nk_spacer(ctx);
+	nk_checkbox_flags_label(ctx, "Enable Marvell controller", &g_smart_flag, CDI_FLAG_ENABLE_MARVELL);
+	nk_spacer(ctx);
+	nk_checkbox_flags_label(ctx, "Enable USB SAT", &g_smart_flag, CDI_FLAG_ENABLE_USB_SAT);
+	nk_spacer(ctx);
+	nk_checkbox_flags_label(ctx, "Enable USB I-O DATA", &g_smart_flag, CDI_FLAG_ENABLE_USB_IODATA);
+	nk_spacer(ctx);
+	nk_checkbox_flags_label(ctx, "Enable USB Sunplus", &g_smart_flag, CDI_FLAG_ENABLE_USB_SUNPLUS);
+	nk_spacer(ctx);
+	nk_checkbox_flags_label(ctx, "Enable USB Logitec", &g_smart_flag, CDI_FLAG_ENABLE_USB_LOGITEC);
+	nk_spacer(ctx);
+	nk_checkbox_flags_label(ctx, "Enable USB Prolific", &g_smart_flag, CDI_FLAG_ENABLE_USB_PROLIFIC);
+	nk_spacer(ctx);
+	nk_checkbox_flags_label(ctx, "Enable USB JMicron", &g_smart_flag, CDI_FLAG_ENABLE_USB_JMICRON);
+	nk_spacer(ctx);
+	nk_checkbox_flags_label(ctx, "Enable USB Cypress", &g_smart_flag, CDI_FLAG_ENABLE_USB_CYPRESS);
+	nk_spacer(ctx);
+	nk_checkbox_flags_label(ctx, "Enable ASMedia ASM1352R", &g_smart_flag, CDI_FLAG_ENABLE_ASM1352R);
+	nk_spacer(ctx);
+	nk_checkbox_flags_label(ctx, "Enable USB Memory", &g_smart_flag, CDI_FLAG_ENABLE_USB_MEMORY);
+	nk_spacer(ctx);
+	nk_checkbox_flags_label(ctx, "Enable NVMe JMicron 3", &g_smart_flag, CDI_FLAG_ENABLE_NVME_JMICRON3);
+	nk_spacer(ctx);
+	nk_checkbox_flags_label(ctx, "Enable NVMe JMicron", &g_smart_flag, CDI_FLAG_ENABLE_NVME_JMICRON);
+	nk_spacer(ctx);
+	nk_checkbox_flags_label(ctx, "Enable NVMe ASMedia", &g_smart_flag, CDI_FLAG_ENABLE_NVME_ASMEDIA);
+	nk_spacer(ctx);
+	nk_checkbox_flags_label(ctx, "Enable NVMe Realtek", &g_smart_flag, CDI_FLAG_ENABLE_NVME_REALTEK);
+	nk_spacer(ctx);
+	nk_checkbox_flags_label(ctx, "Enable MegaRAID", &g_smart_flag, CDI_FLAG_ENABLE_MEGA_RAID);
+	nk_spacer(ctx);
+	nk_checkbox_flags_label(ctx, "Enable Intel VROC", &g_smart_flag, CDI_FLAG_ENABLE_INTEL_VROC);
+	nk_spacer(ctx);
+	nk_checkbox_flags_label(ctx, "Enable AMD RC2", &g_smart_flag, CDI_FLAG_ENABLE_AMD_RC2);
 
 	nk_layout_row_dynamic(ctx, 0, 1);
 	nk_label(ctx, "Window (Restart required)", NK_TEXT_LEFT);
@@ -167,6 +212,7 @@ gnwinfo_draw_settings_window(struct nk_context* ctx, float width, float height)
 	{
 		gnwinfo_set_ini_value(L"Widgets", L"HideComponents", L"0x%08X", g_ctx.main_flag);
 		gnwinfo_set_ini_value(L"Widgets", L"SmartFormat", L"%d", g_ctx.smart_hex);
+		gnwinfo_set_ini_value(L"Widgets", L"SmartFlags", L"0x%08X", g_smart_flag);
 		gnwinfo_set_ini_value(L"Window", L"Width", L"%u", g_init_width);
 		gnwinfo_set_ini_value(L"Window", L"Height", L"%u", g_init_height);
 		gnwinfo_set_ini_value(L"Window", L"Alpha", L"%u", g_init_alpha);
