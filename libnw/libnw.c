@@ -32,6 +32,7 @@ VOID NW_Init(PNWLIB_CONTEXT pContext)
 	NWLC->NwXsdt = NWL_GetXsdt();
 	NWLC->NwSmbios = NWL_GetSmbios();
 	NWLC->NwSmart = cdi_create_smart();
+	NWLC->NwSmartFlags = CDI_FLAG_DEFAULT;
 	NWLC->NwCpuRaw = calloc(1, sizeof(struct cpu_raw_data_array_t));
 	NWLC->NwCpuid = calloc(1, sizeof(struct system_id_t));
 	if (!NWLC->NwCpuRaw || !NWLC->NwCpuid)

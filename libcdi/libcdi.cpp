@@ -10,26 +10,6 @@ cdi_create_smart(VOID)
 {
 	auto ata = new CDI_SMART;
 	//SetDebugMode(1);
-	//(void)CoInitializeEx(0, COINIT_APARTMENTTHREADED);
-	ata->SetAtaPassThroughSmart(TRUE);
-
-	ata->FlagNvidiaController = TRUE;
-	ata->FlagMarvellController = TRUE;
-	ata->FlagUsbSat = TRUE;
-	ata->FlagUsbSunplus = TRUE;
-	ata->FlagUsbIodata = TRUE;
-	ata->FlagUsbLogitec = TRUE;
-	ata->FlagUsbProlific = TRUE;
-	ata->FlagUsbJmicron = TRUE;
-	ata->FlagUsbCypress = TRUE;
-	ata->FlagUsbMemory = TRUE;
-	ata->FlagUsbNVMeJMicron3 = TRUE;
-	ata->FlagUsbNVMeJMicron = TRUE;
-	ata->FlagUsbNVMeASMedia = TRUE;
-	ata->FlagUsbNVMeRealtek = TRUE;
-	ata->FlagMegaRAID = TRUE;
-	ata->FlagIntelVROC = TRUE;
-	ata->FlagUsbASM1352R = TRUE;
 
 	return ata;
 }
@@ -42,18 +22,48 @@ cdi_destroy_smart(CDI_SMART * ptr)
 		delete ptr;
 		ptr = nullptr;
 	}
-	//CoUninitialize();
+}
+
+inline BOOL
+check_flag(UINT64 flags, UINT64 mask)
+{
+	return (flags & mask) ? TRUE : FALSE;
 }
 
 extern "C" VOID
-cdi_init_smart(CDI_SMART * ptr,
-	BOOL useWmi, BOOL advancedDiskSearch,
-	BOOL workaroundHD204UI, BOOL workaroundAdataSsd,
-	BOOL flagHideNoSmartDisk, BOOL flagSortDriveLetter)
+cdi_init_smart(CDI_SMART * ptr, UINT64 flags)
 {
-	BOOL flagChangeDisk = TRUE;
-	ptr->Init(useWmi, advancedDiskSearch, &flagChangeDisk, workaroundHD204UI,
-		workaroundAdataSsd, flagHideNoSmartDisk, flagSortDriveLetter);
+	BOOL change_disk = TRUE;
+
+	ptr->FlagNoWakeUp = check_flag(flags, CDI_FLAG_NO_WAKEUP);
+	ptr->SetAtaPassThroughSmart(check_flag(flags, CDI_FLAG_ATA_PASS_THROUGH));
+
+	ptr->FlagNvidiaController = check_flag(flags, CDI_FLAG_ENABLE_NVIDIA);
+	ptr->FlagMarvellController = check_flag(flags, CDI_FLAG_ENABLE_MARVELL);
+	ptr->FlagUsbSat = check_flag(flags, CDI_FLAG_ENABLE_USB_SAT);
+	ptr->FlagUsbSunplus = check_flag(flags, CDI_FLAG_ENABLE_USB_SUNPLUS);
+	ptr->FlagUsbIodata = check_flag(flags, CDI_FLAG_ENABLE_USB_IODATA);
+	ptr->FlagUsbLogitec = check_flag(flags, CDI_FLAG_ENABLE_USB_LOGITEC);
+	ptr->FlagUsbProlific = check_flag(flags, CDI_FLAG_ENABLE_USB_PROLIFIC);
+	ptr->FlagUsbJmicron = check_flag(flags, CDI_FLAG_ENABLE_USB_JMICRON);
+	ptr->FlagUsbCypress = check_flag(flags, CDI_FLAG_ENABLE_USB_CYPRESS);
+	ptr->FlagUsbMemory = check_flag(flags, CDI_FLAG_ENABLE_USB_MEMORY);
+	ptr->FlagUsbNVMeJMicron3 = check_flag(flags, CDI_FLAG_ENABLE_NVME_JMICRON3);
+	ptr->FlagUsbNVMeJMicron = check_flag(flags, CDI_FLAG_ENABLE_NVME_JMICRON);
+	ptr->FlagUsbNVMeASMedia = check_flag(flags, CDI_FLAG_ENABLE_NVME_ASMEDIA);
+	ptr->FlagUsbNVMeRealtek = check_flag(flags, CDI_FLAG_ENABLE_NVME_REALTEK);
+	ptr->FlagMegaRAID = check_flag(flags, CDI_FLAG_ENABLE_MEGA_RAID);
+	ptr->FlagIntelVROC = check_flag(flags, CDI_FLAG_ENABLE_INTEL_VROC);
+	ptr->FlagUsbASM1352R = check_flag(flags, CDI_FLAG_ENABLE_ASM1352R);
+	ptr->FlagAMD_RC2 = check_flag(flags, CDI_FLAG_ENABLE_AMD_RC2);
+
+	ptr->Init(check_flag(flags, CDI_FLAG_USE_WMI),
+		check_flag(flags, CDI_FLAG_ADVANCED_SEARCH),
+		&change_disk,
+		check_flag(flags, CDI_FLAG_WORKAROUND_HD204UI),
+		check_flag(flags, CDI_FLAG_WORKAROUND_ADATA),
+		check_flag(flags, CDI_FLAG_HIDE_NO_SMART),
+		check_flag(flags, CDI_FLAG_SORT_DRIVE_LETTER));
 	for (INT i = 0; i < ptr->vars.GetCount(); i++)
 	{
 		if (ptr->vars[i].IsSsd)

@@ -620,7 +620,7 @@ PNODE NW_Disk(VOID)
 		NWL_NodeAppendChild(NWLC->NwRoot, node);
 	if (NWLC->DisableSmart == FALSE && NWLC->NwSmart && NWLC->NwSmbiosInit == FALSE)
 	{
-		cdi_init_smart(NWLC->NwSmart, TRUE, TRUE, FALSE, FALSE, FALSE, FALSE);
+		cdi_init_smart(NWLC->NwSmart, NWLC->NwSmartFlags);
 		NWLC->NwSmbiosInit = TRUE;
 	}
 	PrintDiskInfo(FALSE, node, NWLC->NwSmart);

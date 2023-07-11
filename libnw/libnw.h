@@ -57,6 +57,7 @@ typedef struct _NWLIB_CONTEXT
 	BOOL NwSmbiosInit;
 
 	struct _CDI_SMART* NwSmart;
+	UINT64 NwSmartFlags;
 
 	struct wr0_drv_t* NwDrv;
 	UINT CodePage;
