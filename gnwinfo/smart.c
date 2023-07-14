@@ -209,27 +209,25 @@ static char*
 draw_alert_icon(struct nk_context* ctx, BYTE id, int status, const char* format, char* value)
 {
 	static char hex[18];
-	// RawValues(8)
-	// RawValues(6)
+	// RawValues(N)
 	if (format[0] == 'R')
 	{
 		strcpy_s(hex, sizeof(hex), value);
 		value[0] = '\0';
 	}
-	// Cur RawValues(8)
+	// Cur RawValues(N)
 	else if (strncmp(format, "Cur R", 5) == 0)
 	{
 		strcpy_s(hex, sizeof(hex), &value[4]);
 		value[4] = '\0';
 	}
-	// Cur Wor --- RawValues(6)
+	// Cur Wor --- RawValues(N)
 	else if (strncmp(format, "Cur Wor --- R", 13) == 0)
 	{
 		strcpy_s(hex, sizeof(hex), &value[8]);
 		value[8] = '\0';
 	}
-	// Cur Wor Thr RawValues(7)
-	// Cur Wor Thr RawValues(6)
+	// Cur Wor Thr RawValues(N)
 	else
 	{
 		strcpy_s(hex, sizeof(hex), &value[12]);
@@ -263,16 +261,11 @@ draw_smart(struct nk_context* ctx, CDI_SMART* smart, int disk)
 			if (id == 0)
 				continue;
 			name = cdi_get_smart_name(smart, disk, id);
-			value = cdi_get_smart_value(smart, disk, i);
+			value = cdi_get_smart_value(smart, disk, i, g_ctx.smart_hex);
 			hex = draw_alert_icon(ctx, id, cdi_get_smart_status(smart, disk, i), format, value);
 			nk_labelf_colored(ctx, NK_TEXT_LEFT, g_color_text_l, "%02X", id);
 			nk_label_colored(ctx, name, NK_TEXT_LEFT, g_color_text_l);
-			if (g_ctx.smart_hex)
-				nk_labelf_colored(ctx, NK_TEXT_LEFT, g_color_text_l,
-					"%s%s", value, hex);
-			else
-				nk_labelf_colored(ctx, NK_TEXT_LEFT, g_color_text_l,
-					"%s%llu", value, strtoull(hex, NULL, 16));
+			nk_labelf_colored(ctx, NK_TEXT_LEFT, g_color_text_l, "%s%s", value, hex);
 			cdi_free_string(name);
 			cdi_free_string(value);
 		}
@@ -306,6 +299,8 @@ gnwinfo_draw_smart_window(struct nk_context* ctx, float width, float height)
 		nk_label(ctx, "No disks found", NK_TEXT_CENTERED);
 		goto out;
 	}
+	if (cur_disk >= count)
+		cur_disk = 0;
 	nk_layout_row(ctx, NK_DYNAMIC, 0, 4, (float[4]) { 0.12f, 0.6f, 0.2f, 0.08f });
 	nk_property_int(ctx, "#", 0, &cur_disk, count - 1, 1, 1);
 	str = cdi_get_string(NWLC->NwSmart, cur_disk, CDI_STRING_MODEL);

@@ -3,7 +3,7 @@
 #define VC_EXTRALEAN
 #include <windows.h>
 
-#define CDI_VERSION "9.1.0"
+#define CDI_VERSION "9.1.1"
 
 enum CDI_ATA_BOOL
 {
@@ -69,6 +69,7 @@ enum CDI_ATA_STRING
 	CDI_STRING_VERSION_MAJOR,
 	CDI_STRING_VERSION_MINOR,
 	CDI_STRING_PNP_ID,
+	CDI_STRING_SMART_KEY,
 };
 
 enum CDI_DISK_STATUS
@@ -80,7 +81,7 @@ enum CDI_DISK_STATUS
 };
 
 #define CDI_FLAG_USE_WMI				(1ULL << 0) // TRUE
-#define CDI_FLAG_ADVANCED_SEARCH		(1ULL << 1) // TRUE
+#define CDI_FLAG_ADVANCED_SEARCH		(1ULL << 1) // FALSE
 #define CDI_FLAG_WORKAROUND_HD204UI		(1ULL << 2) // FALSE
 #define CDI_FLAG_WORKAROUND_ADATA		(1ULL << 3) // FALSE
 #define CDI_FLAG_HIDE_NO_SMART			(1ULL << 4) // FALSE
@@ -112,7 +113,6 @@ enum CDI_DISK_STATUS
 #define CDI_FLAG_DEFAULT \
 	( \
 		CDI_FLAG_USE_WMI | \
-		CDI_FLAG_ADVANCED_SEARCH | \
 		CDI_FLAG_ATA_PASS_THROUGH | \
 		CDI_FLAG_ENABLE_NVIDIA | \
 		CDI_FLAG_ENABLE_MARVELL | \
@@ -140,24 +140,23 @@ typedef CAtaSmart CDI_SMART;
 
 typedef struct _CDI_SMART CDI_SMART;
 
-CDI_SMART* cdi_create_smart(VOID);
-VOID cdi_destroy_smart(CDI_SMART* ptr);
-VOID cdi_init_smart(CDI_SMART* ptr, UINT64 flags);
-DWORD cdi_update_smart(CDI_SMART* ptr, INT index);
+CDI_SMART*	WINAPI cdi_create_smart(VOID);
+VOID		WINAPI cdi_destroy_smart(CDI_SMART* ptr);
+VOID		WINAPI cdi_init_smart(CDI_SMART* ptr, UINT64 flags);
+DWORD		WINAPI cdi_update_smart(CDI_SMART* ptr, INT index);
+INT			WINAPI cdi_get_disk_count(CDI_SMART* ptr);
 
-INT cdi_get_disk_count(CDI_SMART* ptr);
+BOOL		WINAPI cdi_get_bool(CDI_SMART* ptr, INT index, enum CDI_ATA_BOOL attr);
+INT			WINAPI cdi_get_int(CDI_SMART* ptr, INT index, enum CDI_ATA_INT attr);
+DWORD		WINAPI cdi_get_dword(CDI_SMART* ptr, INT index, enum CDI_ATA_DWORD attr);
+CHAR*		WINAPI cdi_get_string(CDI_SMART* ptr, INT index, enum CDI_ATA_STRING attr);
+VOID		WINAPI cdi_free_string(CHAR* ptr);
 
-BOOL cdi_get_bool(CDI_SMART* ptr, INT index, enum CDI_ATA_BOOL attr);
-INT cdi_get_int(CDI_SMART* ptr, INT index, enum CDI_ATA_INT attr);
-DWORD cdi_get_dword(CDI_SMART* ptr, INT index, enum CDI_ATA_DWORD attr);
-CHAR* cdi_get_string(CDI_SMART* ptr, INT index, enum CDI_ATA_STRING attr);
-VOID cdi_free_string(CHAR* ptr);
-
-CHAR* cdi_get_smart_name(CDI_SMART* ptr, INT index, BYTE id);
-CHAR* cdi_get_smart_format(CDI_SMART* ptr, INT index);
-BYTE cdi_get_smart_id(CDI_SMART* ptr, INT index, INT attr);
-CHAR* cdi_get_smart_value(CDI_SMART* ptr, INT index, INT attr);
-INT cdi_get_smart_status(CDI_SMART* ptr, INT index, INT attr);
+CHAR*		WINAPI cdi_get_smart_name(CDI_SMART* ptr, INT index, BYTE id);
+CHAR*		WINAPI cdi_get_smart_format(CDI_SMART* ptr, INT index);
+BYTE		WINAPI cdi_get_smart_id(CDI_SMART* ptr, INT index, INT attr);
+CHAR*		WINAPI cdi_get_smart_value(CDI_SMART* ptr, INT index, INT attr, BOOL hex);
+INT			WINAPI cdi_get_smart_status(CDI_SMART* ptr, INT index, INT attr);
 
 static inline LPCSTR
 cdi_get_health_status(enum CDI_DISK_STATUS status)

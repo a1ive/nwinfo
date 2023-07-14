@@ -537,7 +537,7 @@ PrintSmartInfo(PNODE node, CDI_SMART* ptr, INT index)
 		if (id == 0)
 			continue;
 		str = cdi_get_smart_name(ptr, index, id);
-		val = cdi_get_smart_value(ptr, index, i);
+		val = cdi_get_smart_value(ptr, index, i, TRUE);
 		snprintf(key, sizeof(key), "SMART %02X", id);
 		NWL_NodeAttrSetf(node, key, 0, "%s %s", val, str);
 		cdi_free_string(str);

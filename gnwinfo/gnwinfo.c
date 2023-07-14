@@ -8,7 +8,7 @@ unsigned int g_init_width = 600;
 unsigned int g_init_height = 800;
 unsigned int g_init_alpha = 255;
 nk_bool g_bginfo = 0;
-unsigned int g_smart_flag = 0xFE04007C; // ~0x01FBFF83
+unsigned int g_smart_flag = 0xFE04007E; // ~0x01FBFF81
 struct nk_color g_color_warning = NK_COLOR_YELLOW;
 struct nk_color g_color_error = NK_COLOR_RED;
 struct nk_color g_color_good = NK_COLOR_GREEN;
@@ -197,7 +197,7 @@ wWinMain(_In_ HINSTANCE hInstance,
 	PathCchRemoveFileSpec(g_ini_path, MAX_PATH);
 	PathCchAppend(g_ini_path, MAX_PATH, L"gnwinfo.ini");
 
-	str = gnwinfo_get_ini_value(L"Widgets", L"SmartFlags", L"0xFE04007C");
+	str = gnwinfo_get_ini_value(L"Widgets", L"SmartFlags", L"0xFE04007E");
 	g_smart_flag = strtoul(str, NULL, 16);
 	free(str);
 	str = gnwinfo_get_ini_value(L"Window", L"Width", L"600");

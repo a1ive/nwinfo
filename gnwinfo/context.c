@@ -213,6 +213,7 @@ gnwinfo_ctx_update(WPARAM wparam)
 	case IDT_TIMER_1M:
 		if (g_ctx.disk)
 			NWL_NodeFree(g_ctx.disk, 1);
+		g_ctx.lib.NwSmbiosInit = FALSE;
 		g_ctx.disk = NW_Disk();
 		if (g_ctx.battery)
 			NWL_NodeFree(g_ctx.battery, 1);

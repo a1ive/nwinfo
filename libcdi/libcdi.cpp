@@ -5,7 +5,7 @@
 #include <pathcch.h>
 #include "libcdi.h"
 
-extern "C" CDI_SMART *
+extern "C" CDI_SMART* WINAPI
 cdi_create_smart(VOID)
 {
 	auto ata = new CDI_SMART;
@@ -14,7 +14,7 @@ cdi_create_smart(VOID)
 	return ata;
 }
 
-extern "C" VOID
+extern "C" VOID WINAPI
 cdi_destroy_smart(CDI_SMART * ptr)
 {
 	if (ptr)
@@ -30,7 +30,7 @@ check_flag(UINT64 flags, UINT64 mask)
 	return (flags & mask) ? TRUE : FALSE;
 }
 
-extern "C" VOID
+extern "C" VOID WINAPI
 cdi_init_smart(CDI_SMART * ptr, UINT64 flags)
 {
 	BOOL change_disk = TRUE;
@@ -81,13 +81,13 @@ cdi_init_smart(CDI_SMART * ptr, UINT64 flags)
 	}
 }
 
-extern "C" DWORD
+extern "C" DWORD WINAPI
 cdi_update_smart(CDI_SMART * ptr, INT index)
 {
 	return ptr->UpdateSmartInfo(index);
 }
 
-CHAR* cs_to_string(CString str)
+CHAR* cs_to_str(CString str)
 {
 	auto len = str.GetLength() + 1;
 	auto buff = new TCHAR[len];
@@ -99,13 +99,13 @@ CHAR* cs_to_string(CString str)
 	return charBuf;
 }
 
-extern "C" INT
+extern "C" INT WINAPI
 cdi_get_disk_count(CDI_SMART * ptr)
 {
 	return (INT)ptr->vars.GetCount();
 }
 
-extern "C" BOOL
+extern "C" BOOL WINAPI
 cdi_get_bool(CDI_SMART * ptr, INT index, enum CDI_ATA_BOOL attr)
 {
 	switch (attr)
@@ -146,7 +146,7 @@ cdi_get_bool(CDI_SMART * ptr, INT index, enum CDI_ATA_BOOL attr)
 	return FALSE;
 }
 
-extern "C" INT
+extern "C" INT WINAPI
 cdi_get_int(CDI_SMART * ptr, INT index, enum CDI_ATA_INT attr)
 {
 	switch (attr)
@@ -200,7 +200,7 @@ cdi_get_int(CDI_SMART * ptr, INT index, enum CDI_ATA_INT attr)
 	return -1;
 }
 
-extern "C" DWORD
+extern "C" DWORD WINAPI
 cdi_get_dword(CDI_SMART * ptr, INT index, enum CDI_ATA_DWORD attr)
 {
 	switch (attr)
@@ -227,43 +227,45 @@ cdi_get_dword(CDI_SMART * ptr, INT index, enum CDI_ATA_DWORD attr)
 	return 0;
 }
 
-extern "C" CHAR*
+extern "C" CHAR* WINAPI
 cdi_get_string(CDI_SMART * ptr, INT index, enum CDI_ATA_STRING attr)
 {
 	switch (attr)
 	{
 	case CDI_STRING_SN:
-		return cs_to_string(ptr->vars[index].SerialNumber);
+		return cs_to_str(ptr->vars[index].SerialNumber);
 	case CDI_STRING_FIRMWARE:
-		return cs_to_string(ptr->vars[index].FirmwareRev);
+		return cs_to_str(ptr->vars[index].FirmwareRev);
 	case CDI_STRING_MODEL:
-		return cs_to_string(ptr->vars[index].Model);
+		return cs_to_str(ptr->vars[index].Model);
 	case CDI_STRING_DRIVE_MAP:
-		return cs_to_string(ptr->vars[index].DriveMap);
+		return cs_to_str(ptr->vars[index].DriveMap);
 	case CDI_STRING_TRANSFER_MODE_MAX:
-		return cs_to_string(ptr->vars[index].MaxTransferMode);
+		return cs_to_str(ptr->vars[index].MaxTransferMode);
 	case CDI_STRING_TRANSFER_MODE_CUR:
-		return cs_to_string(ptr->vars[index].CurrentTransferMode);
+		return cs_to_str(ptr->vars[index].CurrentTransferMode);
 	case CDI_STRING_INTERFACE:
-		return cs_to_string(ptr->vars[index].Interface);
+		return cs_to_str(ptr->vars[index].Interface);
 	case CDI_STRING_VERSION_MAJOR:
-		return cs_to_string(ptr->vars[index].MajorVersion);
+		return cs_to_str(ptr->vars[index].MajorVersion);
 	case CDI_STRING_VERSION_MINOR:
-		return cs_to_string(ptr->vars[index].MinorVersion);
+		return cs_to_str(ptr->vars[index].MinorVersion);
 	case CDI_STRING_PNP_ID:
-		return cs_to_string(ptr->vars[index].PnpDeviceId);
+		return cs_to_str(ptr->vars[index].PnpDeviceId);
+	case CDI_STRING_SMART_KEY:
+		return cs_to_str(ptr->vars[index].SmartKeyName);
 	}
 	return NULL;
 }
 
-extern "C" VOID
+extern "C" VOID WINAPI
 cdi_free_string(CHAR* ptr)
 {
 	if (ptr)
 		CoTaskMemFree(ptr);
 }
 
-extern "C" CHAR*
+extern "C" CHAR* WINAPI
 cdi_get_smart_name(CDI_SMART * ptr, INT index, BYTE id)
 {
 	TCHAR ini[MAX_PATH];
@@ -275,24 +277,27 @@ cdi_get_smart_name(CDI_SMART * ptr, INT index, BYTE id)
 	key.Format(_T("%02X"), id);
 	GetPrivateProfileStringFx(ptr->vars[index].SmartKeyName, key, _T("Vendor Specific"), val.GetBuffer(256), 256, ini);
 	val.ReleaseBuffer();
-	return cs_to_string(val);
+	return cs_to_str(val);
 }
 
-extern "C" CHAR*
+extern "C" CHAR* WINAPI
 cdi_get_smart_format(CDI_SMART * ptr, INT index)
 {
 	CString fmt;
-	if (ptr->vars[index].DiskVendorId == CAtaSmart::SSD_VENDOR_NVME)
-		fmt = _T("RawValues(6)");
-	else if (ptr->vars[index].IsRawValues8)
+	if (ptr->vars[index].DiskVendorId == CAtaSmart::SSD_VENDOR_SANDFORCE)
 	{
-		if (ptr->vars[index].DiskVendorId == CAtaSmart::SSD_VENDOR_JMICRON)
-			fmt = _T("Cur RawValues(8)");
+		if (ptr->vars[index].IsThresholdCorrect)
+			fmt = _T("Cur Wor Thr RawValues(7)");
 		else
-			fmt = _T("RawValues(8)");
+			fmt = _T("Cur Wor --- RawValues(7)");
 	}
-	else if (ptr->vars[index].IsRawValues7)
-		fmt = _T("Cur Wor Thr RawValues(7)");
+	else if (ptr->vars[index].DiskVendorId == CAtaSmart::SSD_VENDOR_JMICRON
+		&& ptr->vars[index].IsRawValues8)
+		fmt = _T("Cur RawValues(8)");
+	else if (ptr->vars[index].DiskVendorId == CAtaSmart::SSD_VENDOR_INDILINX)
+		fmt = _T("RawValues(8)");
+	else if (ptr->vars[index].DiskVendorId == CAtaSmart::SSD_VENDOR_NVME)
+		fmt = _T("RawValues(7)");
 	else
 	{
 		if (ptr->vars[index].IsThresholdCorrect)
@@ -301,111 +306,283 @@ cdi_get_smart_format(CDI_SMART * ptr, INT index)
 			fmt = _T("Cur Wor --- RawValues(6)");
 	}
 		
-	return cs_to_string(fmt);
+	return cs_to_str(fmt);
 }
 
-extern "C" BYTE
+extern "C" BYTE WINAPI
 cdi_get_smart_id(CDI_SMART * ptr, INT index, INT attr)
 {
 	return ptr->vars[index].Attribute[attr].Id;
 }
 
-extern "C" CHAR*
-cdi_get_smart_value(CDI_SMART * ptr, INT index, INT attr)
+extern "C" CHAR* WINAPI
+cdi_get_smart_value(CDI_SMART * ptr, INT index, INT attr, BOOL hex)
 {
 	CString cstr;
-	if (ptr->vars[index].DiskVendorId == CAtaSmart::SSD_VENDOR_NVME)
+	UINT64 raw;
+	SMART_ATTRIBUTE* data = &ptr->vars[index].Attribute[attr];
+
+	if (ptr->vars[index].DiskVendorId == CAtaSmart::SSD_VENDOR_SANDFORCE)
 	{
-		cstr.Format(_T("%02X%02X%02X%02X%02X%02X"),
-			ptr->vars[index].Attribute[attr].RawValue[5],
-			ptr->vars[index].Attribute[attr].RawValue[4],
-			ptr->vars[index].Attribute[attr].RawValue[3],
-			ptr->vars[index].Attribute[attr].RawValue[2],
-			ptr->vars[index].Attribute[attr].RawValue[1],
-			ptr->vars[index].Attribute[attr].RawValue[0]
-		);
+		raw = ((UINT64)data->Reserved << 48) +
+			((UINT64)data->RawValue[5] << 40) +
+			((UINT64)data->RawValue[4] << 32) +
+			((UINT64)data->RawValue[3] << 24) +
+			((UINT64)data->RawValue[2] << 16) +
+			((UINT64)data->RawValue[1] << 8) +
+			((UINT64)data->RawValue[0]);
+		if (ptr->vars[index].IsThresholdCorrect)
+			cstr.Format(hex ? _T("%3d %3d %3d %014llX") : _T("%3d %3d %3d %I64u"),
+				data->CurrentValue, data->WorstValue, ptr->vars[index].Threshold[attr].ThresholdValue, raw);
+		else
+			cstr.Format(hex ? _T("%3d %3d --- %014llX") : _T("%3d %3d --- %I64u"),
+				data->CurrentValue, data->WorstValue, raw);
 	}
-	else if (ptr->vars[index].DiskVendorId == CAtaSmart::SSD_VENDOR_SANDFORCE)
+	else if (ptr->vars[index].DiskVendorId == CAtaSmart::SSD_VENDOR_JMICRON
+		&& ptr->vars[index].IsRawValues8)
 	{
-		cstr.Format(_T("%3d %3d %3d %02X%02X%02X%02X%02X%02X%02X"),
-			ptr->vars[index].Attribute[attr].CurrentValue,
-			ptr->vars[index].Attribute[attr].WorstValue,
-			ptr->vars[index].Threshold[attr].ThresholdValue,
-			ptr->vars[index].Attribute[attr].Reserved,
-			ptr->vars[index].Attribute[attr].RawValue[5],
-			ptr->vars[index].Attribute[attr].RawValue[4],
-			ptr->vars[index].Attribute[attr].RawValue[3],
-			ptr->vars[index].Attribute[attr].RawValue[2],
-			ptr->vars[index].Attribute[attr].RawValue[1],
-			ptr->vars[index].Attribute[attr].RawValue[0]
-		);
-	}
-	// For JMicron 60x
-	else if (ptr->vars[index].DiskVendorId == CAtaSmart::SSD_VENDOR_JMICRON && ptr->vars[index].IsRawValues8)
-	{
-		cstr.Format(_T("%3d %02X%02X%02X%02X%02X%02X%02X%02X"),
-			ptr->vars[index].Attribute[attr].CurrentValue,
-			ptr->vars[index].Attribute[attr].Reserved,
-			ptr->vars[index].Attribute[attr].RawValue[5],
-			ptr->vars[index].Attribute[attr].RawValue[4],
-			ptr->vars[index].Attribute[attr].RawValue[3],
-			ptr->vars[index].Attribute[attr].RawValue[2],
-			ptr->vars[index].Attribute[attr].RawValue[1],
-			ptr->vars[index].Attribute[attr].RawValue[0],
-			ptr->vars[index].Attribute[attr].WorstValue
-		);
+		raw = ((UINT64)data->Reserved << 56) +
+			((UINT64)data->RawValue[5] << 48) +
+			((UINT64)data->RawValue[4] << 40) +
+			((UINT64)data->RawValue[3] << 32) +
+			((UINT64)data->RawValue[2] << 24) +
+			((UINT64)data->RawValue[1] << 16) +
+			((UINT64)data->RawValue[0] << 8) +
+			((UINT64)data->WorstValue);
+		cstr.Format(hex ? _T("%3d %016llX") : _T("%3d %I64u"),
+			data->CurrentValue, raw);
 	}
 	else if (ptr->vars[index].DiskVendorId == CAtaSmart::SSD_VENDOR_INDILINX)
 	{
-		cstr.Format(_T("%02X%02X%02X%02X%02X%02X%02X%02X"),
-			ptr->vars[index].Attribute[attr].RawValue[5],
-			ptr->vars[index].Attribute[attr].RawValue[4],
-			ptr->vars[index].Attribute[attr].RawValue[3],
-			ptr->vars[index].Attribute[attr].RawValue[2],
-			ptr->vars[index].Attribute[attr].RawValue[1],
-			ptr->vars[index].Attribute[attr].RawValue[0],
-			ptr->vars[index].Attribute[attr].WorstValue,
-			ptr->vars[index].Attribute[attr].CurrentValue
-		);
+		raw = ((UINT64)data->RawValue[5] << 56) +
+			((UINT64)data->RawValue[4] << 48) +
+			((UINT64)data->RawValue[3] << 40) +
+			((UINT64)data->RawValue[2] << 32) +
+			((UINT64)data->RawValue[1] << 24) +
+			((UINT64)data->RawValue[0] << 16) +
+			((UINT64)data->WorstValue << 8) +
+			((UINT64)data->CurrentValue);
+		cstr.Format(hex ? _T("%016llX") : _T("%I64u"), raw);
+	}
+	else if (ptr->vars[index].DiskVendorId == CAtaSmart::SSD_VENDOR_NVME)
+	{
+		raw = ((UINT64)data->Reserved << 48) +
+			((UINT64)data->RawValue[5] << 40) +
+			((UINT64)data->RawValue[4] << 32) +
+			((UINT64)data->RawValue[3] << 24) +
+			((UINT64)data->RawValue[2] << 16) +
+			((UINT64)data->RawValue[1] << 8) +
+			((UINT64)data->RawValue[0]);
+		cstr.Format(hex ? _T("%014llX") : _T("%I64u"), raw);
 	}
 	else
 	{
+		raw = ((UINT64)data->RawValue[5] << 40) +
+			((UINT64)data->RawValue[4] << 32) +
+			((UINT64)data->RawValue[3] << 24) +
+			((UINT64)data->RawValue[2] << 16) +
+			((UINT64)data->RawValue[1] << 8) +
+			((UINT64)data->RawValue[0]);
 		if (ptr->vars[index].IsThresholdCorrect)
 		{
-			cstr.Format(_T("%3d %3d %3d %02X%02X%02X%02X%02X%02X"),
-				ptr->vars[index].Attribute[attr].CurrentValue,
-				ptr->vars[index].Attribute[attr].WorstValue,
-				ptr->vars[index].Threshold[attr].ThresholdValue,
-				ptr->vars[index].Attribute[attr].RawValue[5],
-				ptr->vars[index].Attribute[attr].RawValue[4],
-				ptr->vars[index].Attribute[attr].RawValue[3],
-				ptr->vars[index].Attribute[attr].RawValue[2],
-				ptr->vars[index].Attribute[attr].RawValue[1],
-				ptr->vars[index].Attribute[attr].RawValue[0]
-			);
+			cstr.Format(hex ? _T("%3d %3d %3d %012llX") : _T("%3d %3d %3d %I64u"),
+				data->CurrentValue, data->WorstValue, ptr->vars[index].Threshold[attr].ThresholdValue, raw);
 		}
 		else
 		{
-			cstr.Format(_T("%3d %3d --- %02X%02X%02X%02X%02X%02X"),
-				ptr->vars[index].Attribute[attr].CurrentValue,
-				ptr->vars[index].Attribute[attr].WorstValue,
-				ptr->vars[index].Attribute[attr].RawValue[5],
-				ptr->vars[index].Attribute[attr].RawValue[4],
-				ptr->vars[index].Attribute[attr].RawValue[3],
-				ptr->vars[index].Attribute[attr].RawValue[2],
-				ptr->vars[index].Attribute[attr].RawValue[1],
-				ptr->vars[index].Attribute[attr].RawValue[0]
-			);
+			cstr.Format(hex ? _T("%3d %3d --- %012llX") : _T("%3d %3d --- %I64u"),
+				data->CurrentValue, data->WorstValue, raw);
 		}
 	}
-	return cs_to_string(cstr);
+
+	return cs_to_str(cstr);
 }
 
-extern "C" INT
+extern "C" INT WINAPI
 cdi_get_smart_status(CDI_SMART * ptr, INT index, INT attr)
 {
-	BYTE attr_status[CAtaSmart::MAX_ATTRIBUTE]{};
-	TCHAR attr_text[CAtaSmart::MAX_ATTRIBUTE][5][32]{};
-	ptr->CorrectDiskAttributeStatus(index, attr_status, 0, attr_text);
-	return (INT)attr_status[attr];
+	INT stat = CDI_DISK_STATUS_UNKNOWN;
+	const BYTE attr_id = ptr->vars[index].Attribute[attr].Id;
+	const DWORD ven_id = ptr->vars[index].DiskVendorId;
+
+	if (attr_id == 0x00 || attr_id == 0xFF)
+		return stat;
+
+	if (ptr->vars[index].IsNVMe)
+	{
+		stat = CDI_DISK_STATUS_GOOD;
+		if (ptr->vars[index].Model.Find(_T("Parallels")) == 0
+			|| ptr->vars[index].Model.Find(_T("VMware")) == 0
+			|| ptr->vars[index].Model.Find(_T("QEMU")) == 0)  stat = CDI_DISK_STATUS_UNKNOWN;
+		else
+		{
+			switch (attr_id)
+			{
+			case 0x01:
+				if (ptr->vars[index].Attribute[attr].RawValue[0])  stat = CDI_DISK_STATUS_BAD;
+				break;
+			case 0x02:
+			{
+				const int temperature = (int)(MAKEWORD(ptr->vars[index].Attribute[1].RawValue[0], ptr->vars[index].Attribute[1].RawValue[1])) - 273;
+				if (temperature >= ptr->vars[index].AlarmTemperature)  stat = CDI_DISK_STATUS_BAD;
+				else if (temperature == ptr->vars[index].AlarmTemperature)  stat = CDI_DISK_STATUS_CAUTION;
+			}
+			break;
+			case 0x03:
+				// 2022/10/02 Workaround for no support Available Spare Threshold devices
+				// https://github.com/hiyohiyo/CrystalDiskInfo/issues/186
+				if (ptr->vars[index].Attribute[3].RawValue[0] > 100)
+					stat = CDI_DISK_STATUS_GOOD;
+				// 2022/03/26 Workaround for WD_BLACK AN1500 (No support Available Spare/Available Spare Threshold)
+				else if (ptr->vars[index].Attribute[2].RawValue[0] == 0 && ptr->vars[index].Attribute[3].RawValue[0] == 0) 
+					stat = CDI_DISK_STATUS_GOOD;
+				else if (ptr->vars[index].Attribute[2].RawValue[0] < ptr->vars[index].Attribute[3].RawValue[0])
+					stat = CDI_DISK_STATUS_BAD;
+				else if (ptr->vars[index].Attribute[2].RawValue[0] == ptr->vars[index].Attribute[3].RawValue[0] && ptr->vars[index].Attribute[3].RawValue[0] != 100)
+					stat = CDI_DISK_STATUS_CAUTION;
+				break;
+			case 0x05:
+				if ((100 - ptr->vars[index].Attribute[attr].RawValue[0]) <= ptr->vars[index].ThresholdFF)
+					stat = CDI_DISK_STATUS_CAUTION;
+				break;
+			}
+		}
+	}
+	else if (ptr->vars[index].IsSmartCorrect && ptr->vars[index].IsThresholdCorrect && !ptr->vars[index].IsThresholdBug)
+	{
+		if (!ptr->vars[index].IsSsd &&
+			(attr_id == 0x05 // Reallocated Sectors Count
+				|| attr_id == 0xC5 // Current Pending Sector Count
+				|| attr_id == 0xC6 // Off-Line Scan Uncorrectable Sector Count
+				))
+		{
+			if (ptr->vars[index].Threshold[attr].ThresholdValue
+				&& ptr->vars[index].Attribute[attr].CurrentValue < ptr->vars[index].Threshold[attr].ThresholdValue)
+				stat = CDI_DISK_STATUS_BAD;
+			else
+			{
+				WORD threshold = 0;
+				switch (attr_id)
+				{
+				case 0x05:
+					threshold = ptr->vars[index].Threshold05;
+					break;
+				case 0xC5:
+					threshold = ptr->vars[index].ThresholdC5;
+					break;
+				case 0xC6:
+					threshold = ptr->vars[index].ThresholdC6;
+					break;
+				}
+				if (threshold && (MAKEWORD(ptr->vars[index].Attribute[attr].RawValue[0], ptr->vars[index].Attribute[attr].RawValue[1])) >= threshold)
+					stat = CDI_DISK_STATUS_CAUTION;
+				else
+					stat = CDI_DISK_STATUS_GOOD;
+			}
+		}
+		// [2021/12/15] Workaround for SanDisk USB Memory
+		else if (attr_id == 0xE8 && ptr->vars[index].FlagLifeSanDiskUsbMemory)
+			stat = CDI_DISK_STATUS_GOOD;
+		// Temperature
+		else if (attr_id == 0xC2)
+			stat = CDI_DISK_STATUS_GOOD;
+		// End-to-End Error
+		// https://crystalmark.info/bbs/c-board.cgi?cmd=one;no=1090;id=diskinfo#1090
+		// http://h20000.www2.hp.com/bc/docs/support/SupportManual/c01159621/c01159621.pdf
+		else if (attr_id == 0xB8)
+			stat = CDI_DISK_STATUS_GOOD;
+		// Life for WDC/SanDisk
+		else if (attr_id == 0xE6 && (ptr->vars[index].DiskVendorId == ptr->SSD_VENDOR_WDC || ptr->vars[index].DiskVendorId == ptr->SSD_VENDOR_SANDISK))
+		{
+			int life = -1;
+
+			if (ptr->vars[index].FlagLifeSanDiskUsbMemory)
+				life = -1;
+			else if (ptr->vars[index].FlagLifeSanDisk0_1)
+				life = 100 - (ptr->vars[index].Attribute[attr].RawValue[1] * 256 + ptr->vars[index].Attribute[attr].RawValue[0]) / 100;
+			else if (ptr->vars[index].FlagLifeSanDisk1)
+				life = 100 - ptr->vars[index].Attribute[attr].RawValue[1];
+			else if (ptr->vars[index].FlagLifeSanDiskLenovo)
+				life = ptr->vars[index].Attribute[attr].CurrentValue;
+			else
+				life = 100 - ptr->vars[index].Attribute[attr].RawValue[1];
+
+			if (life < 0)
+				life = 0;
+
+			if (ptr->vars[index].FlagLifeSanDiskUsbMemory)
+				stat = CDI_DISK_STATUS_GOOD;
+			else if (life == 0)
+				stat = CDI_DISK_STATUS_BAD;
+			else if (life <= ptr->vars[index].ThresholdFF)
+				stat = CDI_DISK_STATUS_CAUTION;
+			else
+				stat = CDI_DISK_STATUS_GOOD;
+		}
+		// Life
+		else if (
+			(attr_id == 0xA9 && (ven_id == ptr->SSD_VENDOR_REALTEK || (ven_id == ptr->SSD_VENDOR_KINGSTON && ptr->vars[index].HostReadsWritesUnit == ptr->HOST_READS_WRITES_32MB) || ven_id == ptr->SSD_VENDOR_SILICONMOTION))
+			|| (attr_id == 0xAD && (ven_id == ptr->SSD_VENDOR_TOSHIBA || ven_id == ptr->SSD_VENDOR_KIOXIA))
+			|| (attr_id == 0xB1 && ven_id == ptr->SSD_VENDOR_SAMSUNG)
+			|| (attr_id == 0xBB && ven_id == ptr->SSD_VENDOR_MTRON)
+			|| (attr_id == 0xCA && (ven_id == ptr->SSD_VENDOR_MICRON || ven_id == ptr->SSD_VENDOR_MICRON_MU03 || ven_id == ptr->SSD_VENDOR_INTEL_DC))
+			|| (attr_id == 0xD1 && ven_id == ptr->SSD_VENDOR_INDILINX)
+			|| (attr_id == 0xE7 && (ven_id == ptr->SSD_VENDOR_SANDFORCE || ven_id == ptr->SSD_VENDOR_CORSAIR || ven_id == ptr->SSD_VENDOR_KINGSTON || ven_id == ptr->SSD_VENDOR_SKHYNIX
+				|| ven_id == ptr->SSD_VENDOR_REALTEK || ven_id == ptr->SSD_VENDOR_SANDISK || ven_id == ptr->SSD_VENDOR_SSSTC || ven_id == ptr->SSD_VENDOR_APACER
+				|| ven_id == ptr->SSD_VENDOR_JMICRON || ven_id == ptr->SSD_VENDOR_SEAGATE || ven_id == ptr->SSD_VENDOR_MAXIOTEK
+				|| ven_id == ptr->SSD_VENDOR_YMTC || ven_id == ptr->SSD_VENDOR_SCY || ven_id == ptr->SSD_VENDOR_RECADATA))
+			|| (attr_id == 0xE8 && ven_id == ptr->SSD_VENDOR_PLEXTOR)
+			|| (attr_id == 0xE9 && (ven_id == ptr->SSD_VENDOR_INTEL || ven_id == ptr->SSD_VENDOR_OCZ || ven_id == ptr->SSD_VENDOR_OCZ_VECTOR || ven_id == ptr->SSD_VENDOR_SKHYNIX))
+			|| (attr_id == 0xE9 && ven_id == ptr->SSD_VENDOR_SANDISK_LENOVO_HELEN_VENUS)
+			|| (attr_id == 0xE6 && (ven_id == ptr->SSD_VENDOR_SANDISK_LENOVO || ven_id == ptr->SSD_VENDOR_SANDISK_DELL))
+			|| (attr_id == 0xC9 && (ven_id == ptr->SSD_VENDOR_SANDISK_HP || ven_id == ptr->SSD_VENDOR_SANDISK_HP_VENUS))
+			)
+		{
+			if (ptr->vars[index].FlagLifeRawValue || ptr->vars[index].FlagLifeRawValueIncrement)
+				stat = CDI_DISK_STATUS_GOOD;
+			else if (ptr->vars[index].Attribute[attr].CurrentValue == 0
+				|| ptr->vars[index].Attribute[attr].CurrentValue < ptr->vars[index].Threshold[attr].ThresholdValue)
+				stat = CDI_DISK_STATUS_BAD;
+			else if (ptr->vars[index].Attribute[attr].CurrentValue <= ptr->vars[index].ThresholdFF)
+				stat = CDI_DISK_STATUS_CAUTION;
+			else
+				stat = CDI_DISK_STATUS_GOOD;
+		}
+		else if (attr_id == 0x01 // Read Error Rate for SandForce Bug
+			&& ven_id == ptr->SSD_VENDOR_SANDFORCE)
+		{
+			if (ptr->vars[index].Attribute[attr].CurrentValue == 0
+				&& ptr->vars[index].Attribute[attr].RawValue[0] == 0
+				&& ptr->vars[index].Attribute[attr].RawValue[1] == 0)
+				stat = CDI_DISK_STATUS_GOOD;
+			else if (ptr->vars[index].Threshold[attr].ThresholdValue
+				&& ptr->vars[index].Attribute[attr].CurrentValue < ptr->vars[index].Threshold[attr].ThresholdValue)
+				stat = CDI_DISK_STATUS_BAD;
+			else
+				stat = CDI_DISK_STATUS_GOOD;
+		}
+		else if ((ptr->vars[index].IsSsd && !ptr->vars[index].IsRawValues8)
+			|| ((0x01 <= attr_id && attr_id <= 0x0D)
+				|| attr_id == 0x16
+				|| (0xBB <= attr_id && attr_id <= 0xC1)
+				|| (0xC3 <= attr_id && attr_id <= 0xD1)
+				|| (0xD3 <= attr_id && attr_id <= 0xD4)
+				|| (0xDC <= attr_id && attr_id <= 0xE4)
+				|| (0xE6 <= attr_id && attr_id <= 0xE7)
+				|| attr_id == 0xF0
+				|| attr_id == 0xFA
+				|| attr_id == 0xFE
+				))
+		{
+			if (ptr->vars[index].Threshold[attr].ThresholdValue
+				&& ptr->vars[index].Attribute[attr].CurrentValue < ptr->vars[index].Threshold[attr].ThresholdValue)
+				stat = CDI_DISK_STATUS_BAD;
+			else
+				stat = CDI_DISK_STATUS_GOOD;
+		}
+		else
+			stat = CDI_DISK_STATUS_GOOD;
+	}
+
+	return stat;
 }
