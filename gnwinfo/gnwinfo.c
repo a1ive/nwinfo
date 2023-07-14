@@ -264,8 +264,8 @@ wWinMain(_In_ HINSTANCE hInstance,
 	nk_gdip_set_font(font);
 
 	(void)CoInitializeEx(0, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE);
-	gnwinfo_ctx_init(hInstance, wnd, ctx, (float)g_init_width, (float)g_init_height);
 	set_style(ctx);
+	gnwinfo_ctx_init(hInstance, wnd, ctx, (float)g_init_width, (float)g_init_height);
 
 	str = gnwinfo_get_ini_value(L"Widgets", L"HideComponents", L"0xFFFFFFFF"); // ~0U
 	g_ctx.main_flag = strtoul(str, NULL, 16);
