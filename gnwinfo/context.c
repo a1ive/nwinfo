@@ -2,10 +2,6 @@
 
 #include "gnwinfo.h"
 
-#ifdef PUBLIC_IP
-#include <wininet.h>
-#pragma comment(lib, "wininet.lib")
-#endif
 #ifdef USE_PDH
 #pragma comment(lib, "pdh.lib")
 #endif
@@ -44,30 +40,6 @@ gnwinfo_ctx_error_callback(LPCSTR lpszText)
 LPCSTR NWL_GetHumanSize(UINT64 size, LPCSTR human_sizes[6], UINT64 base);
 static const char* human_sizes[6] =
 { "B", "K", "M", "G", "T", "P", };
-
-#ifdef PUBLIC_IP
-static void
-update_public_ip(void)
-{
-	HINTERNET net = NULL, file = NULL;
-	DWORD size;
-	ZeroMemory(g_ctx.pub_ip, sizeof(g_ctx.pub_ip));
-	if (g_ctx.main_flag & MAIN_NET_PUB_IP)
-		goto fail;
-	net = InternetOpenW(NULL, INTERNET_OPEN_TYPE_PRECONFIG, NULL, NULL, 0);
-	if (!net)
-		goto fail;
-	file = InternetOpenUrlW(net, L"https://api.ipify.org", NULL, 0, INTERNET_FLAG_RELOAD, 0);
-	if (!file)
-		goto fail;
-	InternetReadFile(file, g_ctx.pub_ip, sizeof(g_ctx.pub_ip) - 1, &size);
-fail:
-	if (file)
-		InternetCloseHandle(file);
-	if (net)
-		InternetCloseHandle(net);
-}
-#endif
 
 #ifndef USE_PDH
 __int64 compare_file_time(const FILETIME* time1, const FILETIME* time2)
@@ -221,9 +193,6 @@ gnwinfo_ctx_update(WPARAM wparam)
 		if (g_ctx.edid)
 			NWL_NodeFree(g_ctx.edid, 1);
 		g_ctx.edid = NW_Edid();
-#ifdef PUBLIC_IP
-		update_public_ip();
-#endif
 		break;
 	}
 }

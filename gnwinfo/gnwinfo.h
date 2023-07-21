@@ -40,9 +40,7 @@
 #define MAIN_INFO_NETWORK   (1U << 7)
 
 #define MAIN_NET_INACTIVE   (1U << 16)
-#ifdef PUBLIC_IP
-#define MAIN_NET_PUB_IP     (1U << 17)
-#endif
+
 #define MAIN_NET_DETAIL     (1U << 18)
 #define MAIN_DISK_SMART     (1U << 19)
 
@@ -120,9 +118,6 @@ typedef struct _GNW_CONTEXT
 	MEMORYSTATUSEX mem_status;
 	CHAR mem_total[GNWC_STR_SIZE];
 	CHAR mem_avail[GNWC_STR_SIZE];
-#ifdef PUBLIC_IP
-	CHAR pub_ip[128];
-#endif
 } GNW_CONTEXT;
 extern GNW_CONTEXT g_ctx;
 
