@@ -46,16 +46,13 @@ window_proc(HWND wnd, UINT msg, WPARAM wparam, LPARAM lparam)
 static void
 get_ini_color(LPCWSTR key, struct nk_color* color)
 {
-	char* str;
 	WCHAR fallback[7];
 	UINT32 hex;
 	swprintf(fallback, 7, L"%02X%02X%02X", color->r, color->g, color->b);
-	str = gnwinfo_get_ini_value(L"Color", key, fallback);
-	hex = strtoul(str, NULL, 16);
+	hex = strtoul(gnwinfo_get_ini_value(L"Color", key, fallback), NULL, 16);
 	color->r = (hex >> 16) & 0xFF;
 	color->g = (hex >> 8) & 0xFF;
 	color->b = hex & 0xFF;
-	free(str);
 }
 
 static struct nk_color
@@ -182,7 +179,7 @@ wWinMain(_In_ HINSTANCE hInstance,
 {
 	GdipFont* font;
 	struct nk_context* ctx;
-	char* str;
+	const char* str;
 	int x_pos = CW_USEDEFAULT, y_pos = CW_USEDEFAULT;
 	WNDCLASSW wc;
 	RECT rect;
@@ -197,18 +194,10 @@ wWinMain(_In_ HINSTANCE hInstance,
 	PathCchRemoveFileSpec(g_ini_path, MAX_PATH);
 	PathCchAppend(g_ini_path, MAX_PATH, L"gnwinfo.ini");
 
-	str = gnwinfo_get_ini_value(L"Widgets", L"SmartFlags", L"0xFE04007E");
-	g_smart_flag = strtoul(str, NULL, 16);
-	free(str);
-	str = gnwinfo_get_ini_value(L"Window", L"Width", L"600");
-	g_init_width = strtoul(str, NULL, 10);
-	free(str);
-	str = gnwinfo_get_ini_value(L"Window", L"Height", L"800");
-	g_init_height = strtoul(str, NULL, 10);
-	free(str);
-	str = gnwinfo_get_ini_value(L"Window", L"Alpha", L"255");
-	g_init_alpha = strtoul(str, NULL, 10);
-	free(str);
+	g_smart_flag = strtoul(gnwinfo_get_ini_value(L"Widgets", L"SmartFlags", L"0xFE04007E"), NULL, 16);
+	g_init_width = strtoul(gnwinfo_get_ini_value(L"Window", L"Width", L"600"), NULL, 10);
+	g_init_height = strtoul(gnwinfo_get_ini_value(L"Window", L"Height", L"800"), NULL, 10);
+	g_init_alpha = strtoul(gnwinfo_get_ini_value(L"Window", L"Alpha", L"255"), NULL, 10);
 	str = gnwinfo_get_ini_value(L"Window", L"BGInfo", L"0");
 	if (str[0] != '0')
 	{
@@ -219,7 +208,6 @@ wWinMain(_In_ HINSTANCE hInstance,
 		x_pos = desktop.right > (LONG)g_init_width ? (desktop.right - (LONG)g_init_width) : 0;
 		y_pos = 0;
 	}
-	free(str);
 	get_ini_color(L"Background", &g_color_back);
 	get_ini_color(L"Highlight", &g_color_text_l);
 	get_ini_color(L"Default", &g_color_text_d);
@@ -267,12 +255,8 @@ wWinMain(_In_ HINSTANCE hInstance,
 	set_style(ctx);
 	gnwinfo_ctx_init(hInstance, wnd, ctx, (float)g_init_width, (float)g_init_height);
 
-	str = gnwinfo_get_ini_value(L"Widgets", L"HideComponents", L"0xFFFFFFFF"); // ~0U
-	g_ctx.main_flag = strtoul(str, NULL, 16);
-	free(str);
-	str = gnwinfo_get_ini_value(L"Widgets", L"SmartFormat", L"0");
-	g_ctx.smart_hex = strtoul(str, NULL, 10);
-	free(str);
+	g_ctx.main_flag = strtoul(gnwinfo_get_ini_value(L"Widgets", L"HideComponents", L"0xFFFFFFFF"), NULL, 16);
+	g_ctx.smart_hex = strtoul(gnwinfo_get_ini_value(L"Widgets", L"SmartFormat", L"0"), NULL, 10);
 
 	while (running)
 	{

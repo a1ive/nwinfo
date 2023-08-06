@@ -330,7 +330,7 @@ static void PrintBootInfo(PNODE node)
 	}
 	if (pStartOption)
 	{
-		NWL_NodeAttrSetf(node, "Start Options", NAFLG_FMT_NEED_QUOTE | NAFLG_FMT_STRING, "%ls", pStartOption);
+		NWL_NodeAttrSet(node, "Start Options", NWL_Ucs2ToUtf8(pStartOption), NAFLG_FMT_NEED_QUOTE | NAFLG_FMT_STRING);
 		free(pStartOption);
 	}
 	DWORD dwBitLocker = 0;

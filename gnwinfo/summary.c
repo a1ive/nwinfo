@@ -30,22 +30,6 @@ get_smbios_attr(LPCSTR type, LPCSTR key, BOOL(*cond)(PNODE node))
 	}
 	return "-";
 }
-#if 0
-static void
-draw_label_cl(struct nk_context* ctx, LPCWSTR label, struct nk_color color)
-{
-	char* str = gnwinfo_get_ini_value(L"Translation", label, label);
-	nk_label_colored(ctx, str, NK_TEXT_LEFT, color);
-	free(str);
-}
-#endif
-static void
-draw_label_l(struct nk_context* ctx, LPCWSTR label)
-{
-	char* str = gnwinfo_get_ini_value(L"Translation", label, label);
-	nk_label(ctx, str, NK_TEXT_LEFT);
-	free(str);
-}
 
 static float
 draw_icon_label(struct nk_context* ctx, LPCWSTR label, struct nk_image image)
@@ -56,7 +40,7 @@ draw_icon_label(struct nk_context* ctx, LPCWSTR label, struct nk_image image)
 	ratio[1] = 1.0f - ratio[0];
 	nk_layout_row(ctx, NK_DYNAMIC, 0, 2, ratio);
 	nk_image(ctx, image);
-	draw_label_l(ctx, label);
+	gnwinfo_draw_label_l(ctx, label);
 	return ratio[0];
 }
 
@@ -93,7 +77,7 @@ draw_os(struct nk_context* ctx)
 	nk_layout_row(ctx, NK_DYNAMIC, 0, 3, (float[3]) { ratio, 0.3f, 0.7f - ratio });
 
 	nk_spacer(ctx);
-	draw_label_l(ctx, L"Name");
+	gnwinfo_draw_label_l(ctx, L"Name");
 	nk_labelf_colored(ctx, NK_TEXT_LEFT,
 		g_color_text_l,
 		"%s %s (%s)",
@@ -112,7 +96,7 @@ draw_os(struct nk_context* ctx)
 		strcmp(gnwinfo_get_node_attr(g_ctx.system, "BitLocker Boot"), "Yes") == 0 ? " BitLocker" : "");
 
 	nk_spacer(ctx);
-	draw_label_l(ctx, L"Uptime");
+	gnwinfo_draw_label_l(ctx, L"Uptime");
 	nk_label_colored(ctx, g_ctx.sys_uptime, NK_TEXT_LEFT, g_color_text_l);
 }
 
@@ -133,7 +117,7 @@ draw_bios(struct nk_context* ctx)
 	nk_layout_row(ctx, NK_DYNAMIC, 0, 3, (float[3]) { ratio, 0.3f, 0.7f - ratio });
 
 	nk_spacer(ctx);
-	draw_label_l(ctx, L"Firmware");
+	gnwinfo_draw_label_l(ctx, L"Firmware");
 	nk_labelf_colored(ctx, NK_TEXT_LEFT,
 		g_color_text_l,
 		"%s%s%s%s",
@@ -143,7 +127,7 @@ draw_bios(struct nk_context* ctx)
 		tpm[0] == 'v' ? tpm : "");
 
 	nk_spacer(ctx);
-	draw_label_l(ctx, L"Version");
+	gnwinfo_draw_label_l(ctx, L"Version");
 	nk_labelf_colored(ctx, NK_TEXT_LEFT,
 		g_color_text_l,
 		"%s %s",
@@ -180,7 +164,7 @@ draw_battery(struct nk_context* ctx, float ratio)
 	
 	nk_layout_row(ctx, NK_DYNAMIC, 0, 3, (float[3]) { ratio, 0.3f, 0.7f - ratio });
 	nk_spacer(ctx);
-	draw_label_l(ctx, L"Battery");
+	gnwinfo_draw_label_l(ctx, L"Battery");
 	nk_labelf_colored(ctx, NK_TEXT_LEFT, color,
 		u8"\u26a1 %s %s",
 		gnwinfo_get_node_attr(g_ctx.battery, "Battery Life Percentage"),
@@ -235,7 +219,7 @@ draw_processor(struct nk_context* ctx)
 
 	nk_layout_row(ctx, NK_DYNAMIC, 0, 4, (float[4]) { ratio, 0.3f, 0.4f, 0.3f - ratio });
 	nk_spacer(ctx);
-	draw_label_l(ctx, L"Usage");
+	gnwinfo_draw_label_l(ctx, L"Usage");
 	nk_labelf_colored(ctx, NK_TEXT_LEFT, get_percent_color(g_ctx.cpu_usage),
 		"%.2f%% %s MHz",
 		g_ctx.cpu_usage,
@@ -268,7 +252,7 @@ draw_processor(struct nk_context* ctx)
 		cache_size[cache_level - 1] = get_smbios_attr("7", "Installed Cache Size", is_cache_level_equal);
 
 	nk_spacer(ctx);
-	draw_label_l(ctx, L"Cache");
+	gnwinfo_draw_label_l(ctx, L"Cache");
 	if (cache_size[0][0] == '-')
 		nk_label_colored(ctx, cache_size[0], NK_TEXT_LEFT, g_color_text_l);
 	else if (cache_size[1][0] == '-')
@@ -293,7 +277,7 @@ draw_memory(struct nk_context* ctx)
 
 	nk_layout_row(ctx, NK_DYNAMIC, 0, 4, (float[4]) { ratio, 0.3f, 0.4f, 0.3f - ratio });
 	nk_spacer(ctx);
-	draw_label_l(ctx, L"Usage");
+	gnwinfo_draw_label_l(ctx, L"Usage");
 	nk_labelf_colored(ctx, NK_TEXT_LEFT,
 		get_percent_color((double)g_ctx.mem_status.dwMemoryLoad),
 		"%lu%% %s / %s",
@@ -522,7 +506,7 @@ draw_network(struct nk_context* ctx)
 	float ratio = draw_icon_label(ctx, L"Network", g_ctx.image_net);
 	nk_layout_row(ctx, NK_DYNAMIC, 0, 3, (float[3]) { ratio, 0.6f, 0.4f - ratio });
 	nk_spacer(ctx);
-	draw_label_l(ctx, L"Traffic /s");
+	gnwinfo_draw_label_l(ctx, L"Traffic /s");
 	nk_labelf_colored(ctx, NK_TEXT_LEFT,
 		g_color_text_l,
 		u8"\u2191 %s \u2193 %s", g_ctx.net_send, g_ctx.net_recv);

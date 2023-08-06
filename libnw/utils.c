@@ -511,3 +511,49 @@ NWL_Ucs2ToUtf8(LPCWSTR src)
 	}
 	return dest;
 }
+
+static inline int
+IsUtf8TrailingOctet(uint8_t c)
+{
+	/* 10 00 00 00 - 10 11 11 11 */
+	return (c >= 0x80 && c <= 0xBF);
+}
+
+LPCWSTR
+NWL_Utf8ToUcs2(LPCSTR src)
+{
+	static WCHAR dest[MAX_PATH + 1];
+	size_t i;
+	WCHAR* p = dest;
+	ZeroMemory(dest, sizeof(dest));
+	for (i = 0; src[0] && i < MAX_PATH; i++)
+	{
+		if (src[0] <= 0x7F)
+		{
+			*p++ = 0x007F & src[0];
+			src += 1;
+		}
+		else if (src[0] <= 0xDF
+			&& IsUtf8TrailingOctet(src[1]))
+		{
+			*p++ = ((0x001F & src[0]) << 6)
+				| (0x003F & src[1]);
+			src += 2;
+		}
+		else if (src[0] <= 0xEF
+			&& IsUtf8TrailingOctet(src[1])
+			&& IsUtf8TrailingOctet(src[2]))
+		{
+			*p++ = ((0x000F & src[0]) << 12)
+				| ((0x003F & src[1]) << 6)
+				| (0x003F & src[2]);
+			src += 3;
+		}
+		else
+		{
+			*p++ = 0;
+			break;
+		}
+	}
+	return dest;
+}

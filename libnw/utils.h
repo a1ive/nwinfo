@@ -37,6 +37,7 @@ LPCSTR NWL_GetBusTypeString(STORAGE_BUS_TYPE Type);
 LPCSTR NWL_GuidToStr(UCHAR Guid[16]);
 LPCSTR NWL_WinGuidToStr(BOOL bBracket, GUID* pGuid);
 LPCSTR NWL_Ucs2ToUtf8(LPCWSTR src);
+LPCWSTR NWL_Utf8ToUcs2(LPCSTR src);
 
 HANDLE NWL_NtCreateFile(LPCWSTR lpFileName, BOOL bWrite);
 VOID* NWL_NtGetRegValue(HKEY Key, LPCWSTR lpSubKey, LPCWSTR lpValueName, LPDWORD lpType);

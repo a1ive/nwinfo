@@ -3,27 +3,23 @@
 #include "gnwinfo.h"
 #include "../libcdi/libcdi.h"
 
+LPCSTR NWL_Ucs2ToUtf8(LPCWSTR src);
+LPCWSTR NWL_Utf8ToUcs2(LPCSTR src);
+
 WCHAR g_ini_path[MAX_PATH] = { 0 };
 
-char*
+LPCSTR
 gnwinfo_get_ini_value(LPCWSTR section, LPCWSTR key, LPCWSTR fallback)
 {
-	CHAR* value = NULL;
-	int size;
 	WCHAR wvalue[MAX_PATH];
-
 	GetPrivateProfileStringW(section, key, fallback, wvalue, MAX_PATH, g_ini_path);
-	size = WideCharToMultiByte(CP_UTF8, 0, wvalue, -1, NULL, 0, NULL, NULL);
-	if (size <= 0)
-		goto fail;
-	value = (char*)calloc(size, sizeof(char));
-	if (!value)
-		goto fail;
-	WideCharToMultiByte(CP_UTF8, 0, wvalue, -1, value, size, NULL, NULL);
-	return value;
-fail:
-	MessageBoxW(NULL, L"Get ini value failed", L"Error", MB_ICONERROR);
-	exit(1);
+	return NWL_Ucs2ToUtf8(wvalue);
+}
+
+void
+gnwinfo_draw_label_l(struct nk_context* ctx, LPCWSTR label)
+{
+	nk_label(ctx, gnwinfo_get_ini_value(L"Translation", label, label), NK_TEXT_LEFT);
 }
 
 void

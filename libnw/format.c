@@ -7,6 +7,7 @@
 #include <string.h>
 #include <windows.h>
 #include "libnw.h"
+#include "utils.h"
 
 // Macros for printing nodes to JSON
 #define NODE_JS_DELIM_NL		"\n"	// New line for JSON output
@@ -26,19 +27,13 @@ static int indent_depth = 0;
 static char* NWL_NodeMbsDup(LPCSTR old_str, SIZE_T* new_size)
 {
 	char* new_str = NULL;
-	wchar_t* wstr = NULL;
-	int wsize, size;
+	LPCWSTR wstr = NULL;
+	int size;
 	if (!old_str)
 		old_str = "";
 	if (NWLC->CodePage == CP_UTF8)
 		goto fail;
-	wsize = MultiByteToWideChar(CP_UTF8, 0, old_str, -1, NULL, 0);
-	if (wsize <= 0)
-		goto fail;
-	wstr = (wchar_t*)calloc(wsize, sizeof(wchar_t));
-	if (!wstr)
-		goto fail;
-	MultiByteToWideChar(CP_UTF8, 0, old_str, -1, wstr, wsize);
+	wstr = NWL_Utf8ToUcs2(old_str);
 	size = WideCharToMultiByte(NWLC->CodePage, 0, wstr, -1, NULL, 0, NULL, NULL);
 	if (size <= 0)
 		goto fail;
@@ -46,13 +41,10 @@ static char* NWL_NodeMbsDup(LPCSTR old_str, SIZE_T* new_size)
 	if (!new_str)
 		goto fail;
 	WideCharToMultiByte(NWLC->CodePage, 0, wstr, -1, new_str, size, NULL, NULL);
-	free(wstr);
 	if (new_size)
 		*new_size = size;
 	return new_str;
 fail:
-	if (wstr)
-		free(wstr);
 	if (new_size)
 		*new_size = strlen(old_str) + 1;
 	return _strdup(old_str);

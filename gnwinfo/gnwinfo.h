@@ -158,7 +158,8 @@ VOID gnwinfo_draw_settings_window(struct nk_context* ctx, float width, float hei
 VOID gnwinfo_draw_pci_window(struct nk_context* ctx, float width, float height);
 VOID gnwinfo_draw_dmi_window(struct nk_context* ctx, float width, float height);
 
-char* gnwinfo_get_ini_value(LPCWSTR section, LPCWSTR key, LPCWSTR fallback);
+LPCSTR gnwinfo_get_ini_value(LPCWSTR section, LPCWSTR key, LPCWSTR fallback);
+void gnwinfo_draw_label_l(struct nk_context* ctx, LPCWSTR label);
 void gnwinfo_set_ini_value(LPCWSTR section, LPCWSTR key, LPCWSTR _Printf_format_string_ format, ...);
 
 LPCSTR gnwinfo_get_node_attr(PNODE node, LPCSTR key);
