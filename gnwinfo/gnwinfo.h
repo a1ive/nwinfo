@@ -28,6 +28,9 @@
 
 #include "resource.h"
 
+GdipFont*
+nk_gdip_load_font(LPCWSTR name, int size, WORD fallback);
+
 #define GNWINFO_FONT_SIZE 12
 
 #define MAIN_INFO_OS        (1U << 0)

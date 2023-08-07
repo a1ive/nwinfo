@@ -17,9 +17,6 @@ struct nk_color g_color_text_l = NK_COLOR_WHITE;
 struct nk_color g_color_text_d = NK_COLOR_LIGHT;
 struct nk_color g_color_back = NK_COLOR_GRAY;
 
-GdipFont*
-nk_gdip_load_font(LPCWSTR name, int size, WORD fallback);
-
 static LRESULT CALLBACK
 window_proc(HWND wnd, UINT msg, WPARAM wparam, LPARAM lparam)
 {
@@ -180,7 +177,7 @@ wWinMain(_In_ HINSTANCE hInstance,
 	GdipFont* font;
 	struct nk_context* ctx;
 	const char* str;
-	int x_pos = CW_USEDEFAULT, y_pos = CW_USEDEFAULT;
+	int x_pos = 100, y_pos = 100;
 	WNDCLASSW wc;
 	RECT rect;
 	DWORD style = WS_SIZEBOX | WS_VISIBLE;
@@ -215,10 +212,10 @@ wWinMain(_In_ HINSTANCE hInstance,
 	get_ini_color(L"StateWarn", &g_color_warning);
 	get_ini_color(L"StateError", &g_color_error);
 	get_ini_color(L"StateUnknown", &g_color_unknown);
-	rect.left = 0;
-	rect.right = g_init_width;
-	rect.top = 0;
-	rect.bottom = g_init_height;
+	rect.left = x_pos;
+	rect.right = x_pos + g_init_width;
+	rect.top = y_pos;
+	rect.bottom = y_pos + g_init_height;
 	if (!g_bginfo)
 		AdjustWindowRectExForDpi(&rect, style, FALSE, exstyle, USER_DEFAULT_SCREEN_DPI);
 
@@ -233,7 +230,7 @@ wWinMain(_In_ HINSTANCE hInstance,
 	RegisterClassW(&wc);
 
 	wnd = CreateWindowExW(exstyle, wc.lpszClassName, L"NWinfo GUI",
-		style, x_pos, y_pos,
+		style, rect.left, rect.top,
 		rect.right - rect.left, rect.bottom - rect.top,
 		NULL, NULL, wc.hInstance, NULL);
 
