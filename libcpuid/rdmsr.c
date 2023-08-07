@@ -632,6 +632,21 @@ static double get_info_pkg_energy(struct msr_info_t* info)
 	return (double)CPU_INVALID_VALUE / 100;
 }
 
+static double get_info_pkg_power(struct msr_info_t* info)
+{
+	double x, y;
+	x = get_info_pkg_energy(info);
+	if (x == (double)CPU_INVALID_VALUE / 100)
+		goto fail;
+	Sleep(10);
+	y = get_info_pkg_energy(info);
+	if (y == (double)CPU_INVALID_VALUE / 100 || x >= y)
+		goto fail;
+	return (y - x) * 100;
+fail:
+	return (double)CPU_INVALID_VALUE / 100;
+}
+
 static double get_info_voltage(struct msr_info_t *info)
 {
 	int err;
@@ -766,7 +781,8 @@ int cpu_msrinfo(struct wr0_drv_t* handle, cpu_msrinfo_request_t which)
 			return (int) (get_info_voltage(&info) * 100);
 		case INFO_PKG_ENERGY:
 			return (int) (get_info_pkg_energy(&info) * 100);
-			//return get_info_pkg_energy(&info);
+		case INFO_PKG_POWER:
+			return (int)(get_info_pkg_power(&info) * 100);
 		case INFO_BCLK:
 		case INFO_BUS_CLOCK:
 			return (int) (get_info_bus_clock(&info) * 100);

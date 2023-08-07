@@ -109,50 +109,49 @@ PrintFeatures(PNODE node, const struct cpu_id_t* data)
 }
 
 static void
-PrintCoreMsr(PNODE node, const struct cpu_id_t* data, logical_cpu_t cpu)
-{
-	int value = CPU_INVALID_VALUE;
-	if (!data->flags[CPU_FEATURE_MSR] || NWLC->NwDrv == NULL || !set_cpu_affinity(cpu))
-		return;
-	int min_multi = cpu_msrinfo(NWLC->NwDrv, INFO_MIN_MULTIPLIER);
-	int max_multi = cpu_msrinfo(NWLC->NwDrv, INFO_MAX_MULTIPLIER);
-	int cur_multi = cpu_msrinfo(NWLC->NwDrv, INFO_CUR_MULTIPLIER);
-	if (min_multi == CPU_INVALID_VALUE)
-		min_multi = 0;
-	if (max_multi == CPU_INVALID_VALUE)
-		max_multi = 0;
-	if (cur_multi == CPU_INVALID_VALUE)
-		cur_multi = 0;
-	NWL_NodeAttrSetf(node, "Multiplier", 0, "%.1lf (%d - %d)",
-		cur_multi / 100.0, min_multi / 100, max_multi / 100);
-	value = cpu_msrinfo(NWLC->NwDrv, INFO_TEMPERATURE);
-	if (value != CPU_INVALID_VALUE && value > 0)
-		NWL_NodeAttrSetf(node, "Temperature (C)", NAFLG_FMT_NUMERIC, "%d", value);
-	value = cpu_msrinfo(NWLC->NwDrv, INFO_VOLTAGE);
-	if (value != CPU_INVALID_VALUE && value > 0)
-		NWL_NodeAttrSetf(node, "Core Voltage (V)", NAFLG_FMT_NUMERIC, "%.2lf", value / 100.0);
-	value = cpu_msrinfo(NWLC->NwDrv, INFO_BUS_CLOCK);
-	if (value != CPU_INVALID_VALUE && value > 0)
-		NWL_NodeAttrSetf(node, "Bus Clock (MHz)", NAFLG_FMT_NUMERIC, "%.2lf", value / 100.0);
-}
-
-static void
 PrintCpuMsr(PNODE node, struct cpu_id_t* data)
 {
-	logical_cpu_t i, count;
-	CHAR name[] = "CORE65536";
+	logical_cpu_t i;
 	bool affinity_saved = FALSE;
+	int value = CPU_INVALID_VALUE;
+	if (!data->flags[CPU_FEATURE_MSR] || NWLC->NwDrv == NULL)
+		return;
 	affinity_saved = save_cpu_affinity();
-	for (i = 0, count = 0; i < data->num_logical_cpus; i++)
+	for (i = 0; i < data->num_logical_cpus; i++)
 	{
-		PNODE core = NULL;
-		if (!get_affinity_mask_bit(i, &data->core_affinity_mask))
+		if (!get_affinity_mask_bit(i, &data->affinity_mask))
 			continue;
-		snprintf(name, sizeof(name), "CORE%u", count++);
-		core = NWL_NodeGetChild(node, name);
-		if (core == NULL)
-			core = NWL_NodeAppendNew(node, name, 0);
-		PrintCoreMsr(core, data, i);
+		if (!set_cpu_affinity(i))
+			continue;
+		int min_multi = cpu_msrinfo(NWLC->NwDrv, INFO_MIN_MULTIPLIER);
+		int max_multi = cpu_msrinfo(NWLC->NwDrv, INFO_MAX_MULTIPLIER);
+		int cur_multi = cpu_msrinfo(NWLC->NwDrv, INFO_CUR_MULTIPLIER);
+		if (min_multi == CPU_INVALID_VALUE)
+			min_multi = 0;
+		if (max_multi == CPU_INVALID_VALUE)
+			max_multi = 0;
+		if (cur_multi == CPU_INVALID_VALUE)
+			cur_multi = 0;
+		NWL_NodeAttrSetf(node, "Multiplier", 0, "%.1lf (%d - %d)",
+			cur_multi / 100.0, min_multi / 100, max_multi / 100);
+		value = cpu_msrinfo(NWLC->NwDrv, INFO_PKG_TEMPERATURE);
+		if (value != CPU_INVALID_VALUE && value > 0)
+			NWL_NodeAttrSetf(node, "Temperature (C)", NAFLG_FMT_NUMERIC, "%d", value);
+		value = cpu_msrinfo(NWLC->NwDrv, INFO_VOLTAGE);
+		if (value != CPU_INVALID_VALUE && value > 0)
+			NWL_NodeAttrSetf(node, "Core Voltage (V)", NAFLG_FMT_NUMERIC, "%.2lf", value / 100.0);
+		value = cpu_msrinfo(NWLC->NwDrv, INFO_BUS_CLOCK);
+		if (value != CPU_INVALID_VALUE && value > 0)
+			NWL_NodeAttrSetf(node, "Bus Clock (MHz)", NAFLG_FMT_NUMERIC, "%.2lf", value / 100.0);
+		value = cpu_msrinfo(NWLC->NwDrv, INFO_PKG_ENERGY);
+		if (value != CPU_INVALID_VALUE && value > 0)
+			NWL_NodeAttrSetf(node, "Energy (J)", NAFLG_FMT_NUMERIC, "%.2lf", value / 100.0);
+#if 0
+		value = cpu_msrinfo(NWLC->NwDrv, INFO_PKG_POWER);
+		if (value != CPU_INVALID_VALUE && value > 0)
+			NWL_NodeAttrSetf(node, "Power (W)", NAFLG_FMT_NUMERIC, "%.2lf", value / 100.0);
+#endif
+		break;
 	}
 	if (affinity_saved)
 		restore_cpu_affinity();

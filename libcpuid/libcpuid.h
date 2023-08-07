@@ -495,7 +495,6 @@ struct cpu_id_t {
 
 	/** bitmask of the affinity ids this processor type is occupying */
 	cpu_affinity_mask_t affinity_mask;
-	cpu_affinity_mask_t core_affinity_mask;
 
 	/** processor type purpose, relevant in case of hybrid CPU (e.g. PURPOSE_PERFORMANCE) */
 	cpu_purpose_t purpose;
@@ -1195,6 +1194,8 @@ typedef enum {
 	INFO_VOLTAGE,              /*!< The current core voltage in Volt,
 	                            multiplied by 100. */
 	INFO_PKG_ENERGY,            /*!< The current package energy consumption in Joules,
+	                            multiplied by 100. */
+	INFO_PKG_POWER,             /*!< The current package power in Watts,
 	                            multiplied by 100. */
 	INFO_BCLK,                 /*!< See \ref INFO_BUS_CLOCK. */
 	INFO_BUS_CLOCK,            /*!< The main bus clock in MHz,
