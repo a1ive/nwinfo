@@ -8,10 +8,10 @@
 static void
 PrintU8Str(PNODE pNode, LPCSTR Key, UINT8 *Str, DWORD Len)
 {
-	DWORD i = 0;
-	NWLC->NwBuf[0] = '\0';
-	for (i = 0; i < Len; i++)
-		snprintf(NWLC->NwBuf, NWINFO_BUFSZ, "%s%c", NWLC->NwBuf, Str[i]);
+	if (Len > NWINFO_BUFSZ)
+		Len = NWINFO_BUFSZ - 1;
+	memcpy(NWLC->NwBuf, Str, Len);
+	NWLC->NwBuf[Len] = 0;
 	NWL_NodeAttrSet(pNode, Key, NWLC->NwBuf, 0);
 }
 
