@@ -16,10 +16,14 @@ gnwinfo_get_ini_value(LPCWSTR section, LPCWSTR key, LPCWSTR fallback)
 	return NWL_Ucs2ToUtf8(wvalue);
 }
 
-void
-gnwinfo_draw_label_l(struct nk_context* ctx, LPCWSTR label)
+LPCSTR
+gnwinfo_get_text(LPCWSTR text)
 {
-	nk_label(ctx, gnwinfo_get_ini_value(L"Translation", label, label), NK_TEXT_LEFT);
+	WCHAR section[MAX_PATH];
+	WCHAR wvalue[MAX_PATH];
+	swprintf(section, MAX_PATH, L"Lang%u", GetUserDefaultUILanguage());
+	GetPrivateProfileStringW(section, text, text, wvalue, MAX_PATH, g_ini_path);
+	return NWL_Ucs2ToUtf8(wvalue);
 }
 
 void
