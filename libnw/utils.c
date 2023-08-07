@@ -481,13 +481,14 @@ NWL_WinGuidToStr(BOOL bBracket, GUID* pGuid)
 	return GuidStr;
 }
 
+static CHAR Utf8Buf[NWINFO_BUFSZ + 1];
+
 LPCSTR
 NWL_Ucs2ToUtf8(LPCWSTR src)
 {
-	static CHAR dest[MAX_PATH + 1];
 	size_t i;
-	CHAR* p = dest;
-	ZeroMemory(dest, sizeof(dest));
+	CHAR* p = Utf8Buf;
+	ZeroMemory(Utf8Buf, sizeof(Utf8Buf));
 	for (i = 0; i < MAX_PATH; i++)
 	{
 		if (src[i] <= 0x007F)
@@ -509,7 +510,7 @@ NWL_Ucs2ToUtf8(LPCWSTR src)
 			*p++ = (src[i] & 0x3F) | 0x80;
 		}
 	}
-	return dest;
+	return Utf8Buf;
 }
 
 static inline int
@@ -519,14 +520,15 @@ IsUtf8TrailingOctet(uint8_t c)
 	return (c >= 0x80 && c <= 0xBF);
 }
 
+static WCHAR Ucs2Buf[NWINFO_BUFSZ + 1];
+
 LPCWSTR
 NWL_Utf8ToUcs2(LPCSTR src)
 {
-	static WCHAR dest[MAX_PATH + 1];
 	size_t i;
-	WCHAR* p = dest;
-	ZeroMemory(dest, sizeof(dest));
-	for (i = 0; src[0] && i < MAX_PATH; i++)
+	WCHAR* p = Ucs2Buf;
+	ZeroMemory(Ucs2Buf, sizeof(Ucs2Buf));
+	for (i = 0; src[0] && i < NWINFO_BUFSZ; i++)
 	{
 		if (src[0] <= 0x7F)
 		{
@@ -555,5 +557,5 @@ NWL_Utf8ToUcs2(LPCSTR src)
 			break;
 		}
 	}
-	return dest;
+	return Ucs2Buf;
 }
