@@ -33,6 +33,7 @@ OPTIONS:
   --acpi[=XXXX]    Print ACPI tables.
   --smbios[=XX]    Print SMBIOS tables.
   --disk           Print disk S.M.A.R.T and partitions.
+  --no-smart       Don't print disk S.M.A.R.T. info.
   --display        Print display monitors information (EDID).
   --pci[=XX]       List PCI devices.
   --usb            List USB devices.
