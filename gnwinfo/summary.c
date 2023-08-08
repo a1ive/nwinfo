@@ -3,6 +3,9 @@
 #include "gnwinfo.h"
 #include <shellapi.h>
 
+LPCSTR NWL_Ucs2ToUtf8(LPCWSTR src);
+LPCWSTR NWL_Utf8ToUcs2(LPCSTR src);
+
 LPCSTR
 gnwinfo_get_node_attr(PNODE node, LPCSTR key)
 {
@@ -105,14 +108,15 @@ draw_bios(struct nk_context* ctx)
 {
 	LPCSTR tpm = gnwinfo_get_node_attr(g_ctx.system, "TPM");
 	LPCSTR sb = gnwinfo_get_node_attr(g_ctx.uefi, "Secure Boot");
+	LPCWSTR wsb;
 	float ratio = draw_icon_label(ctx, L"BIOS", g_ctx.image_bios);
 
 	if (sb[0] == 'E')
-		sb = " SecureBoot";
+		wsb = L"SecureBoot";
 	else if (sb[0] == 'D')
-		sb = " SecureBootOff";
+		wsb = L"SecureBootOff";
 	else
-		sb = "";
+		wsb = L"";
 
 	nk_layout_row(ctx, NK_DYNAMIC, 0, 3, (float[3]) { ratio, 0.3f, 0.7f - ratio });
 
@@ -120,9 +124,10 @@ draw_bios(struct nk_context* ctx)
 	nk_label(ctx, gnwinfo_get_text(L"Firmware"), NK_TEXT_LEFT);
 	nk_labelf_colored(ctx, NK_TEXT_LEFT,
 		g_color_text_l,
-		"%s%s%s%s",
+		"%s%s%s%s%s",
 		gnwinfo_get_node_attr(g_ctx.system, "Firmware"),
-		sb,
+		wsb[0] ? " " : "",
+		gnwinfo_get_text(wsb),
 		tpm[0] == 'v' ? " TPM" : "",
 		tpm[0] == 'v' ? tpm : "");
 
@@ -231,6 +236,7 @@ draw_processor(struct nk_context* ctx)
 	{
 		snprintf(name, sizeof(name), "CPU%d", i);
 		PNODE cpu = NWL_NodeGetChild(g_ctx.cpuid, name);
+		CHAR buf[MAX_PATH];
 
 		nk_spacer(ctx);
 		nk_label(ctx, name, NK_TEXT_LEFT);
@@ -241,10 +247,9 @@ draw_processor(struct nk_context* ctx)
 
 		nk_spacer(ctx);
 		nk_spacer(ctx);
-		nk_labelf_colored(ctx, NK_TEXT_LEFT, g_color_text_l,
-			"%s cores %s threads",
-			gnwinfo_get_node_attr(cpu, "Cores"),
-			gnwinfo_get_node_attr(cpu, "Logical CPUs"));
+		snprintf(buf, MAX_PATH, "%s %s", gnwinfo_get_node_attr(cpu, "Cores"), gnwinfo_get_text(L"cores"));
+		snprintf(buf, MAX_PATH, "%s %s %s", buf, gnwinfo_get_node_attr(cpu, "Logical CPUs"), gnwinfo_get_text(L"threads"));
+		nk_label_colored(ctx, buf, NK_TEXT_LEFT, g_color_text_l);
 	}
 
 	LPCSTR cache_size[4];
@@ -465,17 +470,32 @@ draw_storage(struct nk_context* ctx)
 		LPCSTR health = gnwinfo_get_node_attr(disk, "Health Status");
 		if ((g_ctx.main_flag & MAIN_DISK_SMART) && strcmp(health, "-") != 0)
 		{
-			struct nk_color color = g_color_warning;
+			LPCSTR life = strchr(health, '(');
+			LPCWSTR whealth = L"Unknown";
+			struct nk_color color = g_color_unknown;
 			LPCSTR temp = gnwinfo_get_node_attr(disk, "Temperature (C)");
 			if (strncmp(health, "Good", 4) == 0)
+			{
 				color = g_color_good;
+				whealth = L"Good";
+			}
+			else if (strncmp(health, "Caution", 7) == 0)
+			{
+				color = g_color_warning;
+				whealth = L"Caution";
+			}
 			else if (strncmp(health, "Bad", 3) == 0)
+			{
 				color = g_color_error;
+				whealth = L"Bad";
+			}
+			if (life == NULL)
+				life = "";
 			nk_spacer(ctx);
 			nk_spacer(ctx);
 			nk_label(ctx, "S.M.A.R.T.", NK_TEXT_LEFT);
 			nk_labelf_colored(ctx, NK_TEXT_LEFT,
-				color, u8"%s %s\u00B0C", health,
+				color, u8"%s%s %s\u00B0C", gnwinfo_get_text(whealth), life,
 				temp[0] == '-' ? "-" : temp);
 		}
 		draw_volume(ctx, disk, cdrom, ratio);

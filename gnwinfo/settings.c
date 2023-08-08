@@ -19,10 +19,8 @@ gnwinfo_get_ini_value(LPCWSTR section, LPCWSTR key, LPCWSTR fallback)
 LPCSTR
 gnwinfo_get_text(LPCWSTR text)
 {
-	WCHAR section[MAX_PATH];
 	WCHAR wvalue[MAX_PATH];
-	swprintf(section, MAX_PATH, L"Lang%u", GetUserDefaultUILanguage());
-	GetPrivateProfileStringW(section, text, text, wvalue, MAX_PATH, g_ini_path);
+	GetPrivateProfileStringW(g_ctx.lang, text, text, wvalue, MAX_PATH, g_ini_path);
 	return NWL_Ucs2ToUtf8(wvalue);
 }
 

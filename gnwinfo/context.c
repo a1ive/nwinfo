@@ -205,10 +205,14 @@ gnwinfo_ctx_init(HINSTANCE inst, HWND wnd, struct nk_context* ctx, float width, 
 	if (GetLastError() == ERROR_ALREADY_EXISTS || !g_ctx.mutex)
 		exit(1);
 
-	nk_begin(ctx, "Loading", nk_rect(width * 0.2f, height / 3, width * 0.6f, height / 4), NK_WINDOW_TITLE | NK_WINDOW_BORDER | NK_WINDOW_NO_INPUT);
+	swprintf(g_ctx.lang, 10, L"Lang%u", GetUserDefaultUILanguage());
+
+	nk_begin(ctx, gnwinfo_get_text(L"Loading"),
+		nk_rect(width * 0.2f, height / 3, width * 0.6f, height / 4),
+		NK_WINDOW_TITLE | NK_WINDOW_BORDER | NK_WINDOW_NO_INPUT);
 	nk_layout_row_dynamic(ctx, 0, 1);
 	nk_spacer(ctx);
-	nk_label (ctx, "Please wait ...", NK_TEXT_CENTERED);
+	nk_label (ctx, gnwinfo_get_text(L"Please wait ..."), NK_TEXT_CENTERED);
 	nk_spacer(ctx);
 	nk_end(ctx);
 	nk_gdip_render(NK_ANTI_ALIASING_ON, g_color_back);

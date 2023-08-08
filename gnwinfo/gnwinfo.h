@@ -54,6 +54,7 @@ typedef struct _GNW_CONTEXT
 	HINSTANCE inst;
 	HWND wnd;
 	HANDLE mutex;
+	WCHAR lang[10];
 	NWLIB_CONTEXT lib;
 	struct nk_context* nk;
 	float gui_width;
