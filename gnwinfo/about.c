@@ -7,7 +7,7 @@ gnwinfo_draw_about_window(struct nk_context* ctx, float width, float height)
 {
 	if (g_ctx.gui_about == FALSE)
 		return;
-	if (!nk_begin(ctx, "About",
+	if (!nk_begin(ctx, gnwinfo_get_text(L"About"),
 		nk_rect(width / 4.0f, height / 3.0f, width / 2.0f, height / 5.0f),
 		NK_WINDOW_BORDER | NK_WINDOW_MOVABLE | NK_WINDOW_SCALABLE | NK_WINDOW_CLOSABLE))
 	{

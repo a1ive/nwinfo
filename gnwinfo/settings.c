@@ -80,7 +80,7 @@ gnwinfo_draw_settings_window(struct nk_context* ctx, float width, float height)
 {
 	if (g_ctx.gui_settings == FALSE)
 		return;
-	if (!nk_begin(ctx, "Settings",
+	if (!nk_begin(ctx, gnwinfo_get_text(L"Settings"),
 		nk_rect(width / 4.0f, height / 3.0f, width / 2.0f, height / 3.0f),
 		NK_WINDOW_BORDER | NK_WINDOW_MOVABLE | NK_WINDOW_SCALABLE | NK_WINDOW_CLOSABLE))
 	{
@@ -89,94 +89,94 @@ gnwinfo_draw_settings_window(struct nk_context* ctx, float width, float height)
 	}
 
 	nk_layout_row_dynamic(ctx, 0, 1);
-	nk_label(ctx, "Hide components", NK_TEXT_LEFT);
+	nk_label(ctx, gnwinfo_get_text(L"Hide components"), NK_TEXT_LEFT);
 
 	nk_layout_row(ctx, NK_DYNAMIC, 0, 3, (float[3]) { 0.1f, 0.45f, 0.45f });
 	nk_spacer(ctx);
-	nk_checkbox_flags_label(ctx, "OS", &g_ctx.main_flag, MAIN_INFO_OS);
-	nk_checkbox_flags_label(ctx, "BIOS", &g_ctx.main_flag, MAIN_INFO_BIOS);
+	nk_checkbox_flags_label(ctx, gnwinfo_get_text(L"Operating System"), &g_ctx.main_flag, MAIN_INFO_OS);
+	nk_checkbox_flags_label(ctx, gnwinfo_get_text(L"BIOS"), &g_ctx.main_flag, MAIN_INFO_BIOS);
 	nk_spacer(ctx);
-	nk_checkbox_flags_label(ctx, "Computer", &g_ctx.main_flag, MAIN_INFO_BOARD);
-	nk_checkbox_flags_label(ctx, "CPU", &g_ctx.main_flag, MAIN_INFO_CPU);
+	nk_checkbox_flags_label(ctx, gnwinfo_get_text(L"Computer"), &g_ctx.main_flag, MAIN_INFO_BOARD);
+	nk_checkbox_flags_label(ctx, gnwinfo_get_text(L"Processor"), &g_ctx.main_flag, MAIN_INFO_CPU);
 	nk_spacer(ctx);
-	nk_checkbox_flags_label(ctx, "Memory", &g_ctx.main_flag, MAIN_INFO_MEMORY);
-	nk_checkbox_flags_label(ctx, "Display Devices", &g_ctx.main_flag, MAIN_INFO_MONITOR);
+	nk_checkbox_flags_label(ctx, gnwinfo_get_text(L"Memory"), &g_ctx.main_flag, MAIN_INFO_MEMORY);
+	nk_checkbox_flags_label(ctx, gnwinfo_get_text(L"Display Devices"), &g_ctx.main_flag, MAIN_INFO_MONITOR);
 	nk_spacer(ctx);
-	nk_checkbox_flags_label(ctx, "Storage", &g_ctx.main_flag, MAIN_INFO_STORAGE);
-	nk_checkbox_flags_label(ctx, "Network", &g_ctx.main_flag, MAIN_INFO_NETWORK);
+	nk_checkbox_flags_label(ctx, gnwinfo_get_text(L"Storage"), &g_ctx.main_flag, MAIN_INFO_STORAGE);
+	nk_checkbox_flags_label(ctx, gnwinfo_get_text(L"Network"), &g_ctx.main_flag, MAIN_INFO_NETWORK);
 
 	nk_layout_row_dynamic(ctx, 0, 1);
-	nk_label(ctx, "Network", NK_TEXT_LEFT);
+	nk_label(ctx, gnwinfo_get_text(L"Network"), NK_TEXT_LEFT);
 	nk_layout_row(ctx, NK_DYNAMIC, 0, 2, (float[2]) { 0.1f, 0.9f });
 	nk_spacer(ctx);
-	nk_checkbox_flags_label(ctx, "Hide inactive network", &g_ctx.main_flag, MAIN_NET_INACTIVE);
+	nk_checkbox_flags_label(ctx, gnwinfo_get_text(L"Hide inactive network"), &g_ctx.main_flag, MAIN_NET_INACTIVE);
 	nk_spacer(ctx);
-	nk_checkbox_flags_label(ctx, "Hide details (MAC)", &g_ctx.main_flag, MAIN_NET_DETAIL);
+	nk_checkbox_flags_label(ctx, gnwinfo_get_text(L"Hide details (MAC)"), &g_ctx.main_flag, MAIN_NET_DETAIL);
 
 	nk_layout_row_dynamic(ctx, 0, 1);
-	nk_label(ctx, "Storage", NK_TEXT_LEFT);
+	nk_label(ctx, gnwinfo_get_text(L"Storage"), NK_TEXT_LEFT);
 	nk_layout_row(ctx, NK_DYNAMIC, 0, 2, (float[2]) { 0.1f, 0.9f });
 	nk_spacer(ctx);
-	nk_checkbox_flags_label(ctx, "Hide S.M.A.R.T.", &g_ctx.main_flag, MAIN_DISK_SMART);
+	nk_checkbox_flags_label(ctx, gnwinfo_get_text(L"Hide SMART"), &g_ctx.main_flag, MAIN_DISK_SMART);
 	nk_spacer(ctx);
-	g_ctx.smart_hex = !nk_check_label(ctx, "Display SMART in HEX format", !g_ctx.smart_hex);
+	g_ctx.smart_hex = !nk_check_label(ctx, gnwinfo_get_text(L"Display SMART in HEX format"), !g_ctx.smart_hex);
 	nk_spacer(ctx);
-	nk_checkbox_flags_label(ctx, "Advanced disk search", &g_smart_flag, CDI_FLAG_ADVANCED_SEARCH);
+	nk_checkbox_flags_label(ctx, gnwinfo_get_text(L"Advanced disk search"), &g_smart_flag, CDI_FLAG_ADVANCED_SEARCH);
 	nk_spacer(ctx);
-	nk_checkbox_flags_label(ctx, "HD204UI workaround", &g_smart_flag, CDI_FLAG_WORKAROUND_HD204UI);
+	nk_checkbox_flags_label(ctx, gnwinfo_get_text(L"HD204UI workaround"), &g_smart_flag, CDI_FLAG_WORKAROUND_HD204UI);
 	nk_spacer(ctx);
-	nk_checkbox_flags_label(ctx, "ADATA SSD workaround", &g_smart_flag, CDI_FLAG_WORKAROUND_ADATA);
+	nk_checkbox_flags_label(ctx, gnwinfo_get_text(L"ADATA SSD workaround"), &g_smart_flag, CDI_FLAG_WORKAROUND_ADATA);
 	nk_spacer(ctx);
-	nk_checkbox_flags_label(ctx, "ATA pass through", &g_smart_flag, CDI_FLAG_ATA_PASS_THROUGH);
+	nk_checkbox_flags_label(ctx, gnwinfo_get_text(L"ATA pass through"), &g_smart_flag, CDI_FLAG_ATA_PASS_THROUGH);
 	nk_spacer(ctx);
-	nk_checkbox_flags_label(ctx, "Enable Nvidia controller", &g_smart_flag, CDI_FLAG_ENABLE_NVIDIA);
+	nk_checkbox_flags_label(ctx, gnwinfo_get_text(L"Enable Nvidia controller"), &g_smart_flag, CDI_FLAG_ENABLE_NVIDIA);
 	nk_spacer(ctx);
-	nk_checkbox_flags_label(ctx, "Enable Marvell controller", &g_smart_flag, CDI_FLAG_ENABLE_MARVELL);
+	nk_checkbox_flags_label(ctx, gnwinfo_get_text(L"Enable Marvell controller"), &g_smart_flag, CDI_FLAG_ENABLE_MARVELL);
 	nk_spacer(ctx);
-	nk_checkbox_flags_label(ctx, "Enable USB SAT", &g_smart_flag, CDI_FLAG_ENABLE_USB_SAT);
+	nk_checkbox_flags_label(ctx, gnwinfo_get_text(L"Enable USB SAT"), &g_smart_flag, CDI_FLAG_ENABLE_USB_SAT);
 	nk_spacer(ctx);
-	nk_checkbox_flags_label(ctx, "Enable USB I-O DATA", &g_smart_flag, CDI_FLAG_ENABLE_USB_IODATA);
+	nk_checkbox_flags_label(ctx, gnwinfo_get_text(L"Enable USB I-O DATA"), &g_smart_flag, CDI_FLAG_ENABLE_USB_IODATA);
 	nk_spacer(ctx);
-	nk_checkbox_flags_label(ctx, "Enable USB Sunplus", &g_smart_flag, CDI_FLAG_ENABLE_USB_SUNPLUS);
+	nk_checkbox_flags_label(ctx, gnwinfo_get_text(L"Enable USB Sunplus"), &g_smart_flag, CDI_FLAG_ENABLE_USB_SUNPLUS);
 	nk_spacer(ctx);
-	nk_checkbox_flags_label(ctx, "Enable USB Logitec", &g_smart_flag, CDI_FLAG_ENABLE_USB_LOGITEC);
+	nk_checkbox_flags_label(ctx, gnwinfo_get_text(L"Enable USB Logitec"), &g_smart_flag, CDI_FLAG_ENABLE_USB_LOGITEC);
 	nk_spacer(ctx);
-	nk_checkbox_flags_label(ctx, "Enable USB Prolific", &g_smart_flag, CDI_FLAG_ENABLE_USB_PROLIFIC);
+	nk_checkbox_flags_label(ctx, gnwinfo_get_text(L"Enable USB Prolific"), &g_smart_flag, CDI_FLAG_ENABLE_USB_PROLIFIC);
 	nk_spacer(ctx);
-	nk_checkbox_flags_label(ctx, "Enable USB JMicron", &g_smart_flag, CDI_FLAG_ENABLE_USB_JMICRON);
+	nk_checkbox_flags_label(ctx, gnwinfo_get_text(L"Enable USB JMicron"), &g_smart_flag, CDI_FLAG_ENABLE_USB_JMICRON);
 	nk_spacer(ctx);
-	nk_checkbox_flags_label(ctx, "Enable USB Cypress", &g_smart_flag, CDI_FLAG_ENABLE_USB_CYPRESS);
+	nk_checkbox_flags_label(ctx, gnwinfo_get_text(L"Enable USB Cypress"), &g_smart_flag, CDI_FLAG_ENABLE_USB_CYPRESS);
 	nk_spacer(ctx);
-	nk_checkbox_flags_label(ctx, "Enable ASMedia ASM1352R", &g_smart_flag, CDI_FLAG_ENABLE_ASM1352R);
+	nk_checkbox_flags_label(ctx, gnwinfo_get_text(L"Enable ASMedia ASM1352R"), &g_smart_flag, CDI_FLAG_ENABLE_ASM1352R);
 	nk_spacer(ctx);
-	nk_checkbox_flags_label(ctx, "Enable USB Memory", &g_smart_flag, CDI_FLAG_ENABLE_USB_MEMORY);
+	nk_checkbox_flags_label(ctx, gnwinfo_get_text(L"Enable USB Memory"), &g_smart_flag, CDI_FLAG_ENABLE_USB_MEMORY);
 	nk_spacer(ctx);
-	nk_checkbox_flags_label(ctx, "Enable NVMe JMicron 3", &g_smart_flag, CDI_FLAG_ENABLE_NVME_JMICRON3);
+	nk_checkbox_flags_label(ctx, gnwinfo_get_text(L"Enable NVMe JMicron3"), &g_smart_flag, CDI_FLAG_ENABLE_NVME_JMICRON3);
 	nk_spacer(ctx);
-	nk_checkbox_flags_label(ctx, "Enable NVMe JMicron", &g_smart_flag, CDI_FLAG_ENABLE_NVME_JMICRON);
+	nk_checkbox_flags_label(ctx, gnwinfo_get_text(L"Enable NVMe JMicron"), &g_smart_flag, CDI_FLAG_ENABLE_NVME_JMICRON);
 	nk_spacer(ctx);
-	nk_checkbox_flags_label(ctx, "Enable NVMe ASMedia", &g_smart_flag, CDI_FLAG_ENABLE_NVME_ASMEDIA);
+	nk_checkbox_flags_label(ctx, gnwinfo_get_text(L"Enable NVMe ASMedia"), &g_smart_flag, CDI_FLAG_ENABLE_NVME_ASMEDIA);
 	nk_spacer(ctx);
-	nk_checkbox_flags_label(ctx, "Enable NVMe Realtek", &g_smart_flag, CDI_FLAG_ENABLE_NVME_REALTEK);
+	nk_checkbox_flags_label(ctx, gnwinfo_get_text(L"Enable NVMe Realtek"), &g_smart_flag, CDI_FLAG_ENABLE_NVME_REALTEK);
 	nk_spacer(ctx);
-	nk_checkbox_flags_label(ctx, "Enable MegaRAID", &g_smart_flag, CDI_FLAG_ENABLE_MEGA_RAID);
+	nk_checkbox_flags_label(ctx, gnwinfo_get_text(L"Enable MegaRAID"), &g_smart_flag, CDI_FLAG_ENABLE_MEGA_RAID);
 	nk_spacer(ctx);
-	nk_checkbox_flags_label(ctx, "Enable Intel VROC", &g_smart_flag, CDI_FLAG_ENABLE_INTEL_VROC);
+	nk_checkbox_flags_label(ctx, gnwinfo_get_text(L"Enable Intel VROC"), &g_smart_flag, CDI_FLAG_ENABLE_INTEL_VROC);
 	nk_spacer(ctx);
-	nk_checkbox_flags_label(ctx, "Enable AMD RC2", &g_smart_flag, CDI_FLAG_ENABLE_AMD_RC2);
+	nk_checkbox_flags_label(ctx, gnwinfo_get_text(L"Enable AMD RC2"), &g_smart_flag, CDI_FLAG_ENABLE_AMD_RC2);
 
 	nk_layout_row_dynamic(ctx, 0, 1);
-	nk_label(ctx, "Window (Restart required)", NK_TEXT_LEFT);
+	nk_label(ctx, gnwinfo_get_text(L"Window (Restart required)"), NK_TEXT_LEFT);
 	nk_layout_row(ctx, NK_DYNAMIC, 0, 2, (float[2]) { 0.1f, 0.9f });
 	nk_spacer(ctx);
-	g_bginfo = !nk_check_label(ctx, "Background Info", !g_bginfo);
+	g_bginfo = !nk_check_label(ctx, gnwinfo_get_text(L"Background Info"), !g_bginfo);
 	nk_layout_row(ctx, NK_DYNAMIC, 0, 2, (float[2]) { 0.5f, 0.5f });
-	nk_property_int(ctx, "#Width", 60, &g_init_width, 1920, 10, 10);
-	nk_property_int(ctx, "#Height", 80, &g_init_height, 1080, 10, 10);
-	nk_property_int(ctx, "#Alpha", 10, &g_init_alpha, 255, 5, 10);
+	nk_property_int(ctx, gnwinfo_get_text(L"#Width"), 60, &g_init_width, 1920, 10, 10);
+	nk_property_int(ctx, gnwinfo_get_text(L"#Height"), 80, &g_init_height, 1080, 10, 10);
+	nk_property_int(ctx, gnwinfo_get_text(L"#Alpha"), 10, &g_init_alpha, 255, 5, 10);
 
 	nk_layout_row_dynamic(ctx, 0, 1);
-	nk_label(ctx, "Color", NK_TEXT_LEFT);
+	nk_label(ctx, gnwinfo_get_text(L"Color"), NK_TEXT_LEFT);
 	nk_layout_row(ctx, NK_DYNAMIC, 25, 3, (float[3]) { 0.1f, 0.4f, 0.5f });
 	nk_spacer(ctx);
 	nk_label(ctx, "BACKGROUND", NK_TEXT_LEFT);
@@ -202,7 +202,7 @@ gnwinfo_draw_settings_window(struct nk_context* ctx, float width, float height)
 
 	nk_layout_row(ctx, NK_DYNAMIC, 0, 2, (float[2]) { 0.8f, 0.2f });
 	nk_spacer(ctx);
-	if (nk_button_label(ctx, "Save"))
+	if (nk_button_label(ctx, gnwinfo_get_text(L"Save")))
 	{
 		gnwinfo_set_ini_value(L"Widgets", L"HideComponents", L"0x%08X", g_ctx.main_flag);
 		gnwinfo_set_ini_value(L"Widgets", L"SmartFormat", L"%d", g_ctx.smart_hex);
