@@ -144,18 +144,16 @@ OsVersionToStr(OSVERSIONINFOEXW* p)
 
 static void PrintOsVer(PNODE node)
 {
-	OSVERSIONINFOEXW osInfo = { 0 };
 	CHAR szSP[] = " SP65535.65535";
-	NWL_NtGetVersion(&osInfo);
-	if (osInfo.wServicePackMinor)
-		snprintf(szSP, sizeof(szSP), " SP%u.%u", osInfo.wServicePackMajor, osInfo.wServicePackMinor);
-	else if (osInfo.wServicePackMajor)
-		snprintf(szSP, sizeof(szSP), " SP%u", osInfo.wServicePackMajor);
+	if (NWLC->NwOsInfo.wServicePackMinor)
+		snprintf(szSP, sizeof(szSP), " SP%u.%u", NWLC->NwOsInfo.wServicePackMajor, NWLC->NwOsInfo.wServicePackMinor);
+	else if (NWLC->NwOsInfo.wServicePackMajor)
+		snprintf(szSP, sizeof(szSP), " SP%u", NWLC->NwOsInfo.wServicePackMajor);
 	else
 		szSP[0] = '\0';
-	NWL_NodeAttrSetf(node, "OS", 0, "Windows %s%s", OsVersionToStr(&osInfo), szSP);
+	NWL_NodeAttrSetf(node, "OS", 0, "Windows %s%s", OsVersionToStr(&NWLC->NwOsInfo), szSP);
 	NWL_NodeAttrSetf(node, "Build Number", 0, "%lu.%lu.%lu",
-		osInfo.dwMajorVersion, osInfo.dwMinorVersion, osInfo.dwBuildNumber);
+		NWLC->NwOsInfo.dwMajorVersion, NWLC->NwOsInfo.dwMinorVersion, NWLC->NwOsInfo.dwBuildNumber);
 }
 
 VOID NWL_GetUptime(CHAR* szUptime, DWORD dwSize)

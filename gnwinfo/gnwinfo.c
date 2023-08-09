@@ -252,9 +252,6 @@ wWinMain(_In_ HINSTANCE hInstance,
 	set_style(ctx);
 	gnwinfo_ctx_init(hInstance, wnd, ctx, (float)g_init_width, (float)g_init_height);
 
-	g_ctx.main_flag = strtoul(gnwinfo_get_ini_value(L"Widgets", L"HideComponents", L"0xFFFFFFFF"), NULL, 16);
-	g_ctx.smart_hex = strtoul(gnwinfo_get_ini_value(L"Widgets", L"SmartFormat", L"0"), NULL, 10);
-
 	while (running)
 	{
 		/* Input */

@@ -118,14 +118,12 @@ PNODE NW_Network(VOID)
 	PIP_ADAPTER_GATEWAY_ADDRESS_LH pGateway = NULL;
 	MIB_IFROW ifRow;
 	PVOID pMaxAddress = NULL;
-	OSVERSIONINFOEXW osInfo;
 	BOOL bLonghornOrLater;
 	PNODE node = NWL_NodeAlloc("Network", NFLG_TABLE);
 	if (NWLC->NetInfo)
 		NWL_NodeAppendChild(NWLC->NwRoot, node);
 
-	NWL_NtGetVersion(&osInfo);
-	bLonghornOrLater = (osInfo.dwMajorVersion >= 6);
+	bLonghornOrLater = (NWLC->NwOsInfo.dwMajorVersion >= 6);
 
 	pAddresses = GetXpAdaptersAddresses(&pMaxAddress);
 	if (!pAddresses)

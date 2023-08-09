@@ -2,9 +2,7 @@
 
 #include "gnwinfo.h"
 
-#ifdef USE_PDH
 #pragma comment(lib, "pdh.lib")
-#endif
 
 #include "../libcpuid/libcpuid.h"
 #include "../libcpuid/libcpuid_util.h"
@@ -41,7 +39,6 @@ LPCSTR NWL_GetHumanSize(UINT64 size, LPCSTR human_sizes[6], UINT64 base);
 static const char* human_sizes[6] =
 { "B", "K", "M", "G", "T", "P", };
 
-#ifndef USE_PDH
 __int64 compare_file_time(const FILETIME* time1, const FILETIME* time2)
 {
 	__int64 a = ((__int64)time1->dwHighDateTime) << 32 | time1->dwLowDateTime;
@@ -50,7 +47,7 @@ __int64 compare_file_time(const FILETIME* time1, const FILETIME* time2)
 }
 
 static void
-get_cpu_usage_by_api(void)
+get_cpu_usage(void)
 {
 	static FILETIME old_idle = { 0 };
 	static FILETIME old_krnl = { 0 };
@@ -125,7 +122,7 @@ get_cpu_msr(void)
 }
 
 static void
-get_network_traffic_by_api(void)
+get_network_traffic(void)
 {
 	static UINT64 old_recv = 0;
 	static UINT64 old_send = 0;
@@ -149,7 +146,35 @@ get_network_traffic_by_api(void)
 	memcpy(g_ctx.net_recv, NWL_GetHumanSize(diff_recv, human_sizes, 1024), GNWC_STR_SIZE);
 	memcpy(g_ctx.net_send, NWL_GetHumanSize(diff_send, human_sizes, 1024), GNWC_STR_SIZE);
 }
-#endif
+
+static void
+get_memory_usage(void)
+{
+	g_ctx.mem_status.dwLength = sizeof(g_ctx.mem_status);
+	GlobalMemoryStatusEx(&g_ctx.mem_status);
+	memcpy(g_ctx.mem_avail, NWL_GetHumanSize(g_ctx.mem_status.ullAvailPhys, human_sizes, 1024), GNWC_STR_SIZE);
+	memcpy(g_ctx.mem_total, NWL_GetHumanSize(g_ctx.mem_status.ullTotalPhys, human_sizes, 1024), GNWC_STR_SIZE);
+}
+
+static void
+get_pdh_data(void)
+{
+	PDH_FMT_COUNTERVALUE value = { 0 };
+	if (!g_ctx.pdh)
+		return;
+	if (PdhCollectQueryData(g_ctx.pdh) != ERROR_SUCCESS)
+	{
+		PdhCloseQuery(g_ctx.pdh);
+		g_ctx.pdh = NULL;
+		return;
+	}
+	if (g_ctx.pdh_cpu && PdhGetFormattedCounterValue(g_ctx.pdh_cpu, PDH_FMT_DOUBLE, NULL, &value) == ERROR_SUCCESS)
+		g_ctx.cpu_usage = value.doubleValue;
+	if (g_ctx.pdh_net_recv && PdhGetFormattedCounterValue(g_ctx.pdh_net_recv, PDH_FMT_LARGE, NULL, &value) == ERROR_SUCCESS)
+		memcpy(g_ctx.net_recv, NWL_GetHumanSize(value.largeValue, human_sizes, 1024), GNWC_STR_SIZE);
+	if (g_ctx.pdh_net_send && PdhGetFormattedCounterValue(g_ctx.pdh_net_send, PDH_FMT_LARGE, NULL, &value) == ERROR_SUCCESS)
+		memcpy(g_ctx.net_send, NWL_GetHumanSize(value.largeValue, human_sizes, 1024), GNWC_STR_SIZE);
+}
 
 void
 gnwinfo_ctx_update(WPARAM wparam)
@@ -161,25 +186,13 @@ gnwinfo_ctx_update(WPARAM wparam)
 			NWL_NodeFree(g_ctx.network, 1);
 		g_ctx.network = NW_Network();
 		NWL_GetUptime(g_ctx.sys_uptime, GNWC_STR_SIZE);
-		g_ctx.mem_status.dwLength = sizeof(g_ctx.mem_status);
-		GlobalMemoryStatusEx(&g_ctx.mem_status);
-		memcpy(g_ctx.mem_avail, NWL_GetHumanSize(g_ctx.mem_status.ullAvailPhys, human_sizes, 1024), GNWC_STR_SIZE);
-		memcpy(g_ctx.mem_total, NWL_GetHumanSize(g_ctx.mem_status.ullTotalPhys, human_sizes, 1024), GNWC_STR_SIZE);
-#ifdef USE_PDH
-		if (g_ctx.pdh && PdhCollectQueryData(g_ctx.pdh) == ERROR_SUCCESS)
+		get_memory_usage();
+		get_pdh_data();
+		if (!g_ctx.pdh)
 		{
-			PDH_FMT_COUNTERVALUE value = { 0 };
-			if (g_ctx.pdh_cpu && PdhGetFormattedCounterValue(g_ctx.pdh_cpu, PDH_FMT_DOUBLE, NULL, &value) == ERROR_SUCCESS)
-				g_ctx.cpu_usage = value.doubleValue;
-			if (g_ctx.pdh_net_recv && PdhGetFormattedCounterValue(g_ctx.pdh_net_recv, PDH_FMT_LARGE, NULL, &value) == ERROR_SUCCESS)
-				memcpy(g_ctx.net_recv, NWL_GetHumanSize(value.largeValue, human_sizes, 1024), GNWC_STR_SIZE);
-			if (g_ctx.pdh_net_send && PdhGetFormattedCounterValue(g_ctx.pdh_net_send, PDH_FMT_LARGE, NULL, &value) == ERROR_SUCCESS)
-				memcpy(g_ctx.net_send, NWL_GetHumanSize(value.largeValue, human_sizes, 1024), GNWC_STR_SIZE);
+			get_network_traffic();
+			get_cpu_usage();
 		}
-#else
-		get_network_traffic_by_api();
-		get_cpu_usage_by_api();
-#endif
 		get_cpu_msr();
 		break;
 	case IDT_TIMER_1M:
@@ -206,6 +219,8 @@ gnwinfo_ctx_init(HINSTANCE inst, HWND wnd, struct nk_context* ctx, float width, 
 		exit(1);
 
 	swprintf(g_ctx.lang, 10, L"Lang%u", GetUserDefaultUILanguage());
+	g_ctx.main_flag = strtoul(gnwinfo_get_ini_value(L"Widgets", L"MainFlags", L"0xFFFFFFFF"), NULL, 16);
+	g_ctx.smart_hex = strtoul(gnwinfo_get_ini_value(L"Widgets", L"SmartFormat", L"0"), NULL, 10);
 
 	nk_begin(ctx, gnwinfo_get_text(L"Loading"),
 		nk_rect(width * 0.2f, height / 3, width * 0.6f, height / 4),
@@ -216,22 +231,7 @@ gnwinfo_ctx_init(HINSTANCE inst, HWND wnd, struct nk_context* ctx, float width, 
 	nk_spacer(ctx);
 	nk_end(ctx);
 	nk_gdip_render(NK_ANTI_ALIASING_ON, g_color_back);
-#ifdef USE_PDH
-	if (PdhOpenQueryW(NULL, 0, &g_ctx.pdh) != ERROR_SUCCESS)
-		g_ctx.pdh = NULL;
-	else
-	{
-		if (PdhAddCounterW(g_ctx.pdh, L"\\Processor Information(_Total)\\% Processor Time", 0, &g_ctx.pdh_cpu) != ERROR_SUCCESS)
-			g_ctx.pdh_cpu = NULL;
-		if (PdhAddCounterW(g_ctx.pdh, L"\\Network Interface(*)\\Bytes Sent/sec", 0, &g_ctx.pdh_net_send) != ERROR_SUCCESS)
-			g_ctx.pdh_net_send = NULL;
-		if (PdhAddCounterW(g_ctx.pdh, L"\\Network Interface(*)\\Bytes Received/sec", 0, &g_ctx.pdh_net_recv) != ERROR_SUCCESS)
-			g_ctx.pdh_net_recv = NULL;
-	}
 
-	if (g_ctx.pdh)
-		PdhCollectQueryData(g_ctx.pdh);
-#endif
 	g_ctx.gui_height = height;
 	g_ctx.gui_width = width;
 	g_ctx.inst = inst;
@@ -259,6 +259,23 @@ gnwinfo_ctx_init(HINSTANCE inst, HWND wnd, struct nk_context* ctx, float width, 
 
 	g_ctx.sys_boot = gnwinfo_get_node_attr(g_ctx.system, "Boot Device");
 	g_ctx.sys_disk = gnwinfo_get_node_attr(g_ctx.system, "System Device");
+
+	if (!(g_ctx.main_flag & MAIN_NO_PDH)
+		&& PdhOpenQueryW(NULL, 0, &g_ctx.pdh) == ERROR_SUCCESS)
+	{
+		LPCWSTR cpu_str = L"\\Processor Information(_Total)\\% Processor Time";
+		if (g_ctx.lib.NwOsInfo.dwMajorVersion >= 10)
+			cpu_str = L"\\Processor Information(_Total)\\% Processor Utility";
+		if (PdhAddCounterW(g_ctx.pdh, cpu_str, 0, &g_ctx.pdh_cpu) != ERROR_SUCCESS)
+			g_ctx.pdh_cpu = NULL;
+		if (PdhAddCounterW(g_ctx.pdh, L"\\Network Interface(*)\\Bytes Sent/sec", 0, &g_ctx.pdh_net_send) != ERROR_SUCCESS)
+			g_ctx.pdh_net_send = NULL;
+		if (PdhAddCounterW(g_ctx.pdh, L"\\Network Interface(*)\\Bytes Received/sec", 0, &g_ctx.pdh_net_recv) != ERROR_SUCCESS)
+			g_ctx.pdh_net_recv = NULL;
+		PdhCollectQueryData(g_ctx.pdh);
+	}
+	else
+		g_ctx.pdh = NULL;
 
 	gnwinfo_ctx_update(IDT_TIMER_1S);
 	gnwinfo_ctx_update(IDT_TIMER_1M);
@@ -291,10 +308,9 @@ gnwinfo_ctx_init(HINSTANCE inst, HWND wnd, struct nk_context* ctx, float width, 
 noreturn void
 gnwinfo_ctx_exit()
 {
-#ifdef USE_PDH
 	if (g_ctx.pdh)
 		PdhCloseQuery(g_ctx.pdh);
-#endif
+
 	KillTimer(g_ctx.wnd, IDT_TIMER_1S);
 	KillTimer(g_ctx.wnd, IDT_TIMER_1M);
 	ReleaseMutex(g_ctx.mutex);

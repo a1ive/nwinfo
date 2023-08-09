@@ -170,6 +170,8 @@ gnwinfo_draw_settings_window(struct nk_context* ctx, float width, float height)
 	nk_layout_row(ctx, NK_DYNAMIC, 0, 2, (float[2]) { 0.1f, 0.9f });
 	nk_spacer(ctx);
 	g_bginfo = !nk_check_label(ctx, gnwinfo_get_text(L"Background Info"), !g_bginfo);
+	nk_spacer(ctx);
+	nk_checkbox_flags_label(ctx, gnwinfo_get_text(L"Enable PDH"), &g_ctx.main_flag, MAIN_NO_PDH);
 	nk_layout_row(ctx, NK_DYNAMIC, 0, 2, (float[2]) { 0.5f, 0.5f });
 	nk_property_int(ctx, gnwinfo_get_text(L"#Width"), 60, &g_init_width, 1920, 10, 10);
 	nk_property_int(ctx, gnwinfo_get_text(L"#Height"), 80, &g_init_height, 1080, 10, 10);
@@ -204,7 +206,7 @@ gnwinfo_draw_settings_window(struct nk_context* ctx, float width, float height)
 	nk_spacer(ctx);
 	if (nk_button_label(ctx, gnwinfo_get_text(L"Save")))
 	{
-		gnwinfo_set_ini_value(L"Widgets", L"HideComponents", L"0x%08X", g_ctx.main_flag);
+		gnwinfo_set_ini_value(L"Widgets", L"MainFlags", L"0x%08X", g_ctx.main_flag);
 		gnwinfo_set_ini_value(L"Widgets", L"SmartFormat", L"%d", g_ctx.smart_hex);
 		gnwinfo_set_ini_value(L"Widgets", L"SmartFlags", L"0x%08X", g_smart_flag);
 		gnwinfo_set_ini_value(L"Window", L"Width", L"%u", g_init_width);

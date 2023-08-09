@@ -8,10 +8,7 @@
 #include <string.h>
 #include <limits.h>
 #include <time.h>
-
-#ifdef USE_PDH
 #include <pdh.h>
-#endif
 
 #define NK_INCLUDE_FIXED_TYPES
 #define NK_INCLUDE_STANDARD_IO
@@ -43,7 +40,7 @@ nk_gdip_load_font(LPCWSTR name, int size, WORD fallback);
 #define MAIN_INFO_NETWORK   (1U << 7)
 
 #define MAIN_NET_INACTIVE   (1U << 16)
-
+#define MAIN_NO_PDH         (1U << 17)
 #define MAIN_NET_DETAIL     (1U << 18)
 #define MAIN_DISK_SMART     (1U << 19)
 
@@ -102,12 +99,10 @@ typedef struct _GNW_CONTEXT
 	LPCSTR sys_boot;
 	LPCSTR sys_disk;
 
-#ifdef USE_PDH
 	PDH_HQUERY pdh;
 	PDH_HCOUNTER pdh_cpu;
 	PDH_HCOUNTER pdh_net_recv;
 	PDH_HCOUNTER pdh_net_send;
-#endif
 
 	CHAR net_recv[GNWC_STR_SIZE];
 	CHAR net_send[GNWC_STR_SIZE];
