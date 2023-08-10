@@ -46,6 +46,16 @@ nk_gdip_load_font(LPCWSTR name, int size, WORD fallback);
 
 #define GNWC_STR_SIZE       64
 
+typedef struct _GNW_CPU_INFO
+{
+	CHAR cpu_msr_multi[GNWC_STR_SIZE];
+	int cpu_msr_temp;
+	double cpu_msr_volt;
+	double cpu_msr_bus;
+	int cpu_energy;
+	double cpu_msr_power;
+}GNW_CPU_INFO;
+
 typedef struct _GNW_CONTEXT
 {
 	HINSTANCE inst;
@@ -107,12 +117,9 @@ typedef struct _GNW_CONTEXT
 	CHAR net_recv[GNWC_STR_SIZE];
 	CHAR net_send[GNWC_STR_SIZE];
 	double cpu_usage;
-	int cpu_index;
-	CHAR cpu_msr_multi[GNWC_STR_SIZE];
-	int cpu_msr_temp;
-	double cpu_msr_volt;
-	double cpu_msr_bus;
-	double cpu_msr_power;
+	int cpu_count;
+	GNW_CPU_INFO* cpu_info;
+	
 	CHAR sys_uptime[GNWC_STR_SIZE];
 	MEMORYSTATUSEX mem_status;
 	CHAR mem_total[GNWC_STR_SIZE];

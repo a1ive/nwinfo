@@ -56,7 +56,7 @@ draw:
 }
 
 static void
-draw_msr(struct nk_context* ctx, PNODE cpu)
+draw_msr(struct nk_context* ctx, int index)
 {
 	if (nk_group_begin(ctx, gnwinfo_get_text(L"MSR"), NK_WINDOW_BORDER | NK_WINDOW_TITLE))
 	{
@@ -64,15 +64,15 @@ draw_msr(struct nk_context* ctx, PNODE cpu)
 		nk_layout_row(ctx, NK_DYNAMIC, 0, 2, ratio);
 
 		nk_label(ctx, gnwinfo_get_text(L"Multiplier"), NK_TEXT_LEFT);
-		nk_label_colored(ctx, g_ctx.cpu_msr_multi, NK_TEXT_LEFT, g_color_text_l);
+		nk_label_colored(ctx, g_ctx.cpu_info[index].cpu_msr_multi, NK_TEXT_LEFT, g_color_text_l);
 		nk_label(ctx, gnwinfo_get_text(L"Bus Clock"), NK_TEXT_LEFT);
-		nk_labelf_colored(ctx, NK_TEXT_LEFT, g_color_text_l, "%.2f MHz", g_ctx.cpu_msr_bus);
+		nk_labelf_colored(ctx, NK_TEXT_LEFT, g_color_text_l, "%.2f MHz", g_ctx.cpu_info[index].cpu_msr_bus);
 		nk_label(ctx, gnwinfo_get_text(L"Temperature"), NK_TEXT_LEFT);
-		nk_labelf_colored(ctx, NK_TEXT_LEFT, g_color_text_l, u8"%d \u00B0C", g_ctx.cpu_msr_temp);
+		nk_labelf_colored(ctx, NK_TEXT_LEFT, g_color_text_l, u8"%d \u00B0C", g_ctx.cpu_info[index].cpu_msr_temp);
 		nk_label(ctx, gnwinfo_get_text(L"Voltage"), NK_TEXT_LEFT);
-		nk_labelf_colored(ctx, NK_TEXT_LEFT, g_color_text_l, "%.2f V", g_ctx.cpu_msr_volt);
+		nk_labelf_colored(ctx, NK_TEXT_LEFT, g_color_text_l, "%.2f V", g_ctx.cpu_info[index].cpu_msr_volt);
 		nk_label(ctx, gnwinfo_get_text(L"Power"), NK_TEXT_LEFT);
-		nk_labelf_colored(ctx, NK_TEXT_LEFT, g_color_text_l, "%.2f W", g_ctx.cpu_msr_power);
+		nk_labelf_colored(ctx, NK_TEXT_LEFT, g_color_text_l, "%.2f W", g_ctx.cpu_info[index].cpu_msr_power);
 
 		nk_group_end(ctx);
 	}
@@ -81,11 +81,10 @@ draw_msr(struct nk_context* ctx, PNODE cpu)
 VOID
 gnwinfo_draw_cpuid_window(struct nk_context* ctx, float width, float height)
 {
-	INT count;
 	CHAR name[32];
 	CHAR buf[MAX_PATH];
-	LPCSTR cpu_count_str;
 	PNODE cpu = NULL;
+	static int cpu_index = 0;
 	if (g_ctx.gui_cpuid == FALSE)
 		return;
 	if (!nk_begin(ctx, "CPUID",
@@ -96,22 +95,22 @@ gnwinfo_draw_cpuid_window(struct nk_context* ctx, float width, float height)
 		goto out;
 	}
 
-	cpu_count_str = gnwinfo_get_node_attr(g_ctx.cpuid, "Processor Count");
-	count = strtol(cpu_count_str, NULL, 10);
-	if (count <= 0)
+	if (g_ctx.cpu_count <= 0 || !g_ctx.cpu_info)
 		goto out;
+	if (cpu_index >= g_ctx.cpu_count)
+		cpu_index = 0;
 
 	CPUID_ROW_BEGIN(2, 0.16f);
-	nk_property_int(ctx, "#CPU", 0, &g_ctx.cpu_index, count - 1, 1, 1);
+	nk_property_int(ctx, "#CPU", 0, &cpu_index, g_ctx.cpu_count - 1, 1, 1);
 	CPUID_ROW_PUSH(0.84f);
-	snprintf(buf, MAX_PATH, "%s %s,", gnwinfo_get_text(L"Total"), cpu_count_str);
+	snprintf(buf, MAX_PATH, "%s %d,", gnwinfo_get_text(L"Total"), g_ctx.cpu_count);
 	snprintf(buf, MAX_PATH, "%s %s %s, %s MHz", buf,
 		gnwinfo_get_node_attr(g_ctx.cpuid, "Total CPUs"), gnwinfo_get_text(L"threads"),
 		gnwinfo_get_node_attr(g_ctx.cpuid, "CPU Clock (MHz)"));
 	nk_label(ctx, buf, NK_TEXT_CENTERED);
 	CPUID_ROW_END;
 
-	snprintf(name, sizeof(name), "CPU%d", g_ctx.cpu_index);
+	snprintf(name, sizeof(name), "CPU%d", cpu_index);
 	cpu = NWL_NodeGetChild(g_ctx.cpuid, name);
 
 	CPUID_ROW_BEGIN(2, 0.2f);
@@ -177,7 +176,7 @@ gnwinfo_draw_cpuid_window(struct nk_context* ctx, float width, float height)
 	CPUID_ROW_PUSH(0.4f);
 	draw_cache(ctx, cpu);
 	CPUID_ROW_PUSH(0.4f);
-	draw_msr(ctx, cpu);
+	draw_msr(ctx, cpu_index);
 	CPUID_ROW_END;
 
 out:

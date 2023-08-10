@@ -70,20 +70,14 @@ get_cpu_usage(void)
 }
 
 static void
-get_cpu_msr(void)
+get_cpu_info(int index)
 {
 	logical_cpu_t i;
 	struct cpu_id_t* data;
-	bool affinity_saved = FALSE;
-	static int old_energy = 0;
 	int value = CPU_INVALID_VALUE;
-	if (g_ctx.lib.NwDrv == NULL ||
-		g_ctx.lib.NwCpuid->num_cpu_types <= g_ctx.cpu_index)
-		return;
-	data = &g_ctx.lib.NwCpuid->cpu_types[g_ctx.cpu_index];
+	data = &g_ctx.lib.NwCpuid->cpu_types[index];
 	if (!data->flags[CPU_FEATURE_MSR])
 		return;
-	affinity_saved = save_cpu_affinity();
 	for (i = 0; i < data->num_logical_cpus; i++)
 	{
 		if (!get_affinity_mask_bit(i, &data->affinity_mask))
@@ -99,24 +93,38 @@ get_cpu_msr(void)
 			max_multi = 0;
 		if (cur_multi == CPU_INVALID_VALUE)
 			cur_multi = 0;
-		snprintf(g_ctx.cpu_msr_multi, GNWC_STR_SIZE, "%.1lf (%d - %d)", cur_multi / 100.0, min_multi / 100, max_multi / 100);
+		snprintf(g_ctx.cpu_info[index].cpu_msr_multi, GNWC_STR_SIZE, "%.1lf (%d - %d)", cur_multi / 100.0, min_multi / 100, max_multi / 100);
 		value = cpu_msrinfo(g_ctx.lib.NwDrv, INFO_PKG_TEMPERATURE);
 		if (value != CPU_INVALID_VALUE && value > 0)
-			g_ctx.cpu_msr_temp = value;
+			g_ctx.cpu_info[index].cpu_msr_temp = value;
 		value = cpu_msrinfo(g_ctx.lib.NwDrv, INFO_VOLTAGE);
 		if (value != CPU_INVALID_VALUE && value > 0)
-			g_ctx.cpu_msr_volt = value / 100.0;
+			g_ctx.cpu_info[index].cpu_msr_volt = value / 100.0;
 		value = cpu_msrinfo(g_ctx.lib.NwDrv, INFO_PKG_ENERGY);
-		if (value != CPU_INVALID_VALUE && value > old_energy)
+		if (value != CPU_INVALID_VALUE && value > g_ctx.cpu_info[index].cpu_energy)
 		{
-			g_ctx.cpu_msr_power = (value - old_energy) / 100.0;
-			old_energy = value;
+			g_ctx.cpu_info[index].cpu_msr_power = (value - g_ctx.cpu_info[index].cpu_energy) / 100.0;
+			g_ctx.cpu_info[index].cpu_energy = value;
 		}
 		value = cpu_msrinfo(g_ctx.lib.NwDrv, INFO_BUS_CLOCK);
 		if (value != CPU_INVALID_VALUE && value > 0)
-			g_ctx.cpu_msr_bus = value / 100.0;
+			g_ctx.cpu_info[index].cpu_msr_bus = value / 100.0;
 		break;
 	}
+}
+
+static void
+get_cpu_msr(void)
+{
+	int i;
+	bool affinity_saved = FALSE;
+	static int old_energy = 0;
+	int value = CPU_INVALID_VALUE;
+	if (g_ctx.lib.NwDrv == NULL)
+		return;
+	affinity_saved = save_cpu_affinity();
+	for (i = 0; i < g_ctx.cpu_count; i++)
+		get_cpu_info(i);
 	if (affinity_saved)
 		restore_cpu_affinity();
 }
@@ -277,6 +285,12 @@ gnwinfo_ctx_init(HINSTANCE inst, HWND wnd, struct nk_context* ctx, float width, 
 	else
 		g_ctx.pdh = NULL;
 
+	g_ctx.cpu_count = (int)g_ctx.lib.NwCpuid->num_cpu_types;
+	if (g_ctx.cpu_count > 0)
+		g_ctx.cpu_info = calloc((size_t)g_ctx.cpu_count, sizeof(GNW_CPU_INFO));
+	else
+		g_ctx.cpu_info = NULL;
+
 	gnwinfo_ctx_update(IDT_TIMER_1S);
 	gnwinfo_ctx_update(IDT_TIMER_1M);
 
@@ -308,11 +322,15 @@ gnwinfo_ctx_init(HINSTANCE inst, HWND wnd, struct nk_context* ctx, float width, 
 noreturn void
 gnwinfo_ctx_exit()
 {
+	KillTimer(g_ctx.wnd, IDT_TIMER_1S);
+	KillTimer(g_ctx.wnd, IDT_TIMER_1M);
+
 	if (g_ctx.pdh)
 		PdhCloseQuery(g_ctx.pdh);
 
-	KillTimer(g_ctx.wnd, IDT_TIMER_1S);
-	KillTimer(g_ctx.wnd, IDT_TIMER_1M);
+	if (g_ctx.cpu_info)
+		free(g_ctx.cpu_info);
+
 	ReleaseMutex(g_ctx.mutex);
 	CloseHandle(g_ctx.mutex);
 	NWL_NodeFree(g_ctx.network, 1);

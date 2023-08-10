@@ -216,11 +216,9 @@ is_cache_level_equal(PNODE node)
 static VOID
 draw_processor(struct nk_context* ctx)
 {
-	INT i, count;
+	INT i;
 	CHAR name[32];
 	float ratio = draw_icon_label(ctx, L"Processor", g_ctx.image_cpu);
-
-	count = strtol(gnwinfo_get_node_attr(g_ctx.cpuid, "Processor Count"), NULL, 10);
 
 	nk_layout_row(ctx, NK_DYNAMIC, 0, 4, (float[4]) { ratio, 0.3f, 0.4f, 0.3f - ratio });
 	nk_spacer(ctx);
@@ -231,25 +229,31 @@ draw_processor(struct nk_context* ctx)
 		gnwinfo_get_node_attr(g_ctx.cpuid, "CPU Clock (MHz)"));
 	draw_percent_prog(ctx, g_ctx.cpu_usage);
 
-	nk_layout_row(ctx, NK_DYNAMIC, 0, 3, (float[3]) { ratio, 0.3f, 0.7f - ratio });
-	for (i = 0; i < count; i++)
+	for (i = 0; i < g_ctx.cpu_count; i++)
 	{
 		snprintf(name, sizeof(name), "CPU%d", i);
 		PNODE cpu = NWL_NodeGetChild(g_ctx.cpuid, name);
 		CHAR buf[MAX_PATH];
 
+		nk_layout_row(ctx, NK_DYNAMIC, 0, 3, (float[3]) { ratio, 0.3f, 0.7f - ratio });
 		nk_spacer(ctx);
 		nk_label(ctx, name, NK_TEXT_LEFT);
-		nk_label_colored(ctx,
-			gnwinfo_get_node_attr(cpu, "Brand"),
-			NK_TEXT_LEFT,
-			g_color_text_l);
+		nk_label_colored(ctx, gnwinfo_get_node_attr(cpu, "Brand"), NK_TEXT_LEFT, g_color_text_l);
 
+		nk_layout_row(ctx, NK_DYNAMIC, 0, 4, (float[4]) { ratio, 0.3f, 0.4f, 0.3f - ratio });
 		nk_spacer(ctx);
 		nk_spacer(ctx);
 		snprintf(buf, MAX_PATH, "%s %s", gnwinfo_get_node_attr(cpu, "Cores"), gnwinfo_get_text(L"cores"));
 		snprintf(buf, MAX_PATH, "%s %s %s", buf, gnwinfo_get_node_attr(cpu, "Logical CPUs"), gnwinfo_get_text(L"threads"));
+		if (g_ctx.cpu_info[i].cpu_msr_power > 0.0)
+			snprintf(buf, MAX_PATH, "%s %.2f W", buf, g_ctx.cpu_info[i].cpu_msr_power);
+
 		nk_label_colored(ctx, buf, NK_TEXT_LEFT, g_color_text_l);
+		if (g_ctx.cpu_info[i].cpu_msr_temp > 0)
+			nk_labelf_colored(ctx, NK_TEXT_LEFT, get_percent_color((double)g_ctx.cpu_info[i].cpu_msr_temp),
+				u8"%d \u00B0C", g_ctx.cpu_info[i].cpu_msr_temp);
+		else
+			nk_spacer(ctx);
 	}
 
 	LPCSTR cache_size[4];
