@@ -248,7 +248,7 @@ draw_processor(struct nk_context* ctx)
 		nk_spacer(ctx);
 		nk_spacer(ctx);
 		snprintf(buf, MAX_PATH, "%s %s", gnwinfo_get_node_attr(cpu, "Cores"), gnwinfo_get_text(L"cores"));
-		snprintf(buf, MAX_PATH, "%s %s %s %s", buf, gnwinfo_get_node_attr(cpu, "Logical CPUs"), gnwinfo_get_text(L"threads"), g_ctx.pdh ? "PDH" : "API");
+		snprintf(buf, MAX_PATH, "%s %s %s", buf, gnwinfo_get_node_attr(cpu, "Logical CPUs"), gnwinfo_get_text(L"threads"));
 		nk_label_colored(ctx, buf, NK_TEXT_LEFT, g_color_text_l);
 	}
 
