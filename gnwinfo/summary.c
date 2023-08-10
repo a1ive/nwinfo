@@ -18,6 +18,18 @@ gnwinfo_get_node_attr(PNODE node, LPCSTR key)
 	return str;
 }
 
+struct nk_color
+gnwinfo_get_color(double value, double warn, double err)
+{
+	if (value > err)
+		return g_color_error;
+	if (value > warn)
+		return g_color_warning;
+	if (value <= 0.0)
+		return g_color_unknown;
+	return g_color_good;
+}
+
 static LPCSTR
 get_smbios_attr(LPCSTR type, LPCSTR key, BOOL(*cond)(PNODE node))
 {
@@ -47,21 +59,11 @@ draw_icon_label(struct nk_context* ctx, LPCWSTR label, struct nk_image image)
 	return ratio[0];
 }
 
-static struct nk_color
-get_percent_color(double percent)
-{
-	if (percent > 90.0)
-		return g_color_error;
-	if (percent > 70.0)
-		return g_color_warning;
-	return g_color_good;
-}
-
 static void
 draw_percent_prog(struct nk_context* ctx, double percent)
 {
 	nk_size size = (nk_size)percent;
-	struct nk_color color = get_percent_color(percent);
+	struct nk_color color = gnwinfo_get_color(percent, 70.0, 90.0);
 	if (size == 0)
 		size = 1;
 	else if (size > 100)
@@ -223,7 +225,7 @@ draw_processor(struct nk_context* ctx)
 	nk_layout_row(ctx, NK_DYNAMIC, 0, 4, (float[4]) { ratio, 0.3f, 0.4f, 0.3f - ratio });
 	nk_spacer(ctx);
 	nk_label(ctx, gnwinfo_get_text(L"Usage"), NK_TEXT_LEFT);
-	nk_labelf_colored(ctx, NK_TEXT_LEFT, get_percent_color(g_ctx.cpu_usage),
+	nk_labelf_colored(ctx, NK_TEXT_LEFT, gnwinfo_get_color(g_ctx.cpu_usage, 70.0, 90.0),
 		"%.2f%% %s MHz",
 		g_ctx.cpu_usage,
 		gnwinfo_get_node_attr(g_ctx.cpuid, "CPU Clock (MHz)"));
@@ -250,7 +252,7 @@ draw_processor(struct nk_context* ctx)
 
 		nk_label_colored(ctx, buf, NK_TEXT_LEFT, g_color_text_l);
 		if (g_ctx.cpu_info[i].cpu_msr_temp > 0)
-			nk_labelf_colored(ctx, NK_TEXT_LEFT, get_percent_color((double)g_ctx.cpu_info[i].cpu_msr_temp),
+			nk_labelf_colored(ctx, NK_TEXT_LEFT, gnwinfo_get_color((double)g_ctx.cpu_info[i].cpu_msr_temp, 65.0, 85.0),
 				u8"%d \u00B0C", g_ctx.cpu_info[i].cpu_msr_temp);
 		else
 			nk_spacer(ctx);
@@ -289,7 +291,7 @@ draw_memory(struct nk_context* ctx)
 	nk_spacer(ctx);
 	nk_label(ctx, gnwinfo_get_text(L"Usage"), NK_TEXT_LEFT);
 	nk_labelf_colored(ctx, NK_TEXT_LEFT,
-		get_percent_color((double)g_ctx.mem_status.dwMemoryLoad),
+		gnwinfo_get_color((double)g_ctx.mem_status.dwMemoryLoad, 70.0, 90.0),
 		"%lu%% %s / %s",
 		g_ctx.mem_status.dwMemoryLoad, g_ctx.mem_avail, g_ctx.mem_total);
 	draw_percent_prog(ctx, (double)g_ctx.mem_status.dwMemoryLoad);

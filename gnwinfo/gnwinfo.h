@@ -169,3 +169,4 @@ LPCSTR gnwinfo_get_text(LPCWSTR text);
 void gnwinfo_set_ini_value(LPCWSTR section, LPCWSTR key, LPCWSTR _Printf_format_string_ format, ...);
 
 LPCSTR gnwinfo_get_node_attr(PNODE node, LPCSTR key);
+struct nk_color gnwinfo_get_color(double value, double warn, double err);

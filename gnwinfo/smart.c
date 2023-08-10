@@ -65,7 +65,6 @@ draw_health(struct nk_context* ctx, CDI_SMART* smart, int disk, float height)
 	if (nk_group_begin(ctx, "SMART Health", 0))
 	{
 		int health;
-		struct nk_color color = g_color_warning;
 		nk_layout_row_dynamic(ctx, height / 5.0f, 1);
 		nk_label(ctx, gnwinfo_get_text(L"Health Status"), NK_TEXT_CENTERED);
 		n = cdi_get_int(smart, disk, CDI_INT_LIFE);
@@ -77,15 +76,12 @@ draw_health(struct nk_context* ctx, CDI_SMART* smart, int disk, float height)
 		draw_rect(ctx, get_attr_color(health), tmp);
 
 		nk_label(ctx, gnwinfo_get_text(L"Temperature"), NK_TEXT_CENTERED);
-		color = g_color_warning;
 		int alarm = cdi_get_int(smart, disk, CDI_INT_TEMPERATURE_ALARM);
 		if (alarm <= 0)
 			alarm = 60;
 		n = cdi_get_int(smart, disk, CDI_INT_TEMPERATURE);
-		if (n > 0 && n < alarm)
-			color = g_color_good;
 		snprintf(tmp, sizeof(tmp), u8"%d \u00B0C", n);
-		draw_rect(ctx, color, tmp);
+		draw_rect(ctx, gnwinfo_get_color((double)n, (double) alarm, 90.0), tmp);
 		nk_group_end(ctx);
 	}
 }
