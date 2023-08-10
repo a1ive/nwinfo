@@ -260,6 +260,7 @@ draw_processor(struct nk_context* ctx)
 	for (cache_level = 1; cache_level <= 4; cache_level++)
 		cache_size[cache_level - 1] = get_smbios_attr("7", "Installed Cache Size", is_cache_level_equal);
 
+	nk_layout_row(ctx, NK_DYNAMIC, 0, 3, (float[3]) { ratio, 0.3f, 0.7f - ratio });
 	nk_spacer(ctx);
 	nk_label(ctx, gnwinfo_get_text(L"Cache"), NK_TEXT_LEFT);
 	if (cache_size[0][0] == '-')
