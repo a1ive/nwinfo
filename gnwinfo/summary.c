@@ -581,11 +581,15 @@ draw_network(struct nk_context* ctx)
 VOID
 gnwinfo_draw_main_window(struct nk_context* ctx, float width, float height)
 {
-	if (!nk_begin(ctx, "Summary",
+	if (!nk_begin(ctx, "NWinfo GUI",
 		nk_rect(0, 0, width, height),
-		NK_WINDOW_BACKGROUND))
-		goto out;
-	nk_layout_row_begin(ctx, NK_DYNAMIC, 0, 6);
+		NK_WINDOW_BACKGROUND | NK_WINDOW_CLOSABLE | NK_WINDOW_TITLE))
+	{
+		nk_end(ctx);
+		gnwinfo_ctx_exit();
+	}
+
+	nk_layout_row_begin(ctx, NK_DYNAMIC, 0, 7);
 	struct nk_rect rect = nk_layout_widget_bounds(ctx);
 	float ratio = rect.h / rect.w;
 
@@ -610,9 +614,6 @@ gnwinfo_draw_main_window(struct nk_context* ctx, float width, float height)
 	nk_layout_row_push(ctx, ratio);
 	if (nk_button_image(ctx, g_ctx.image_info))
 		g_ctx.gui_about = TRUE;
-	nk_layout_row_push(ctx, ratio);
-	if (nk_button_image(ctx, g_ctx.image_close))
-		gnwinfo_ctx_exit();
 	nk_layout_row_end(ctx);
 
 	if (g_ctx.main_flag & MAIN_INFO_OS)
@@ -632,6 +633,5 @@ gnwinfo_draw_main_window(struct nk_context* ctx, float width, float height)
 	if (g_ctx.main_flag & MAIN_INFO_NETWORK)
 		draw_network(ctx);
 
-out:
 	nk_end(ctx);
 }

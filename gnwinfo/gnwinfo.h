@@ -64,6 +64,7 @@ typedef struct _GNW_CONTEXT
 	WCHAR lang[10];
 	NWLIB_CONTEXT lib;
 	struct nk_context* nk;
+	float gui_title;
 	float gui_width;
 	float gui_height;
 	UINT32 main_flag;

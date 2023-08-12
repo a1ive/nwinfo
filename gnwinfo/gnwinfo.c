@@ -3,6 +3,7 @@
 #include "gnwinfo.h"
 
 #include <pathcch.h>
+#include <windowsx.h>
 
 unsigned int g_init_width = 600;
 unsigned int g_init_height = 800;
@@ -17,6 +18,11 @@ struct nk_color g_color_text_l = NK_COLOR_WHITE;
 struct nk_color g_color_text_d = NK_COLOR_LIGHT;
 struct nk_color g_color_back = NK_COLOR_GRAY;
 
+#define REGION_MASK_LEFT    (1 << 0)
+#define REGION_MASK_RIGHT   (1 << 1)
+#define REGION_MASK_TOP     (1 << 2)
+#define REGION_MASK_BOTTOM  (1 << 3)
+
 static LRESULT CALLBACK
 window_proc(HWND wnd, UINT msg, WPARAM wparam, LPARAM lparam)
 {
@@ -29,6 +35,38 @@ window_proc(HWND wnd, UINT msg, WPARAM wparam, LPARAM lparam)
 		gnwinfo_ctx_update(wparam);
 		break;
 	case WM_DPICHANGED:
+		break;
+	case WM_NCHITTEST:
+		if (!g_bginfo)
+		{
+			RECT rect = { 0 };
+			LONG result = 0;
+			LONG x = GET_X_LPARAM(lparam);
+			LONG y = GET_Y_LPARAM(lparam);
+			LONG w = GetSystemMetricsForDpi(SM_CXFRAME, USER_DEFAULT_SCREEN_DPI)
+				+ GetSystemMetricsForDpi(SM_CXPADDEDBORDER, USER_DEFAULT_SCREEN_DPI);
+			LONG h = GetSystemMetricsForDpi(SM_CYFRAME, USER_DEFAULT_SCREEN_DPI)
+				+ GetSystemMetricsForDpi(SM_CXPADDEDBORDER, USER_DEFAULT_SCREEN_DPI);
+			GetWindowRect(wnd, &rect);
+			result = REGION_MASK_LEFT * (x < (rect.left + w)) |
+				REGION_MASK_RIGHT * (x >= (rect.right - w)) |
+				REGION_MASK_TOP * (y < (rect.top + h)) |
+				REGION_MASK_BOTTOM * (y >= (rect.bottom - h));
+			switch (result)
+			{
+			case REGION_MASK_LEFT: return HTLEFT;
+			case REGION_MASK_RIGHT: return HTRIGHT;
+			case REGION_MASK_TOP: return HTTOP;
+			case REGION_MASK_BOTTOM: return HTBOTTOM;
+			case REGION_MASK_TOP | REGION_MASK_LEFT: return HTTOPLEFT;
+			case REGION_MASK_TOP | REGION_MASK_RIGHT: return HTTOPRIGHT;
+			case REGION_MASK_BOTTOM | REGION_MASK_LEFT: return HTBOTTOMLEFT;
+			case REGION_MASK_BOTTOM | REGION_MASK_RIGHT: return HTBOTTOMRIGHT;
+			}
+			if (y <= (LONG)(rect.top + g_ctx.gui_title) &&
+				x <= (LONG)(rect.right - 3 * g_ctx.gui_title))
+				return HTCAPTION;
+		}
 		break;
 	case WM_SIZE:
 		g_ctx.gui_height = HIWORD(lparam);
@@ -179,8 +217,7 @@ wWinMain(_In_ HINSTANCE hInstance,
 	const char* str;
 	int x_pos = 100, y_pos = 100;
 	WNDCLASSW wc;
-	RECT rect;
-	DWORD style = WS_SIZEBOX | WS_VISIBLE;
+	DWORD style = WS_POPUP | WS_VISIBLE;
 	DWORD exstyle = WS_EX_LAYERED;
 	HWND wnd;
 	int running = 1;
@@ -212,12 +249,6 @@ wWinMain(_In_ HINSTANCE hInstance,
 	get_ini_color(L"StateWarn", &g_color_warning);
 	get_ini_color(L"StateError", &g_color_error);
 	get_ini_color(L"StateUnknown", &g_color_unknown);
-	rect.left = x_pos;
-	rect.right = x_pos + g_init_width;
-	rect.top = y_pos;
-	rect.bottom = y_pos + g_init_height;
-	if (!g_bginfo)
-		AdjustWindowRectExForDpi(&rect, style, FALSE, exstyle, USER_DEFAULT_SCREEN_DPI);
 
 	/* Win32 */
 	memset(&wc, 0, sizeof(wc));
@@ -229,17 +260,11 @@ wWinMain(_In_ HINSTANCE hInstance,
 	wc.lpszClassName = L"NwinfoWindowClass";
 	RegisterClassW(&wc);
 
-	wnd = CreateWindowExW(exstyle, wc.lpszClassName, L"NWinfo GUI",
-		style, rect.left, rect.top,
-		rect.right - rect.left, rect.bottom - rect.top,
-		NULL, NULL, wc.hInstance, NULL);
+	wnd = CreateWindowExW(exstyle, wc.lpszClassName, L"NWinfo GUI", style,
+		x_pos, y_pos, (int)g_init_width, (int)g_init_height, NULL, NULL, wc.hInstance, NULL);
 
 	if (g_bginfo)
-	{
-		style = (DWORD)GetWindowLongPtrW(wnd, GWL_STYLE);
-		SetWindowLongPtrW(wnd, GWL_STYLE, style & ~WS_CAPTION & ~WS_SIZEBOX);
 		SetWindowPos(wnd, HWND_BOTTOM, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
-	}
 	SetLayeredWindowAttributes(wnd, 0, (BYTE)g_init_alpha, LWA_ALPHA);
 
 	/* GUI */
