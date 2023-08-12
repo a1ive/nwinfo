@@ -169,13 +169,13 @@ gnwinfo_draw_settings_window(struct nk_context* ctx, float width, float height)
 	nk_label(ctx, gnwinfo_get_text(L"Window (Restart required)"), NK_TEXT_LEFT);
 	nk_layout_row(ctx, NK_DYNAMIC, 0, 2, (float[2]) { 0.1f, 0.9f });
 	nk_spacer(ctx);
-	g_bginfo = !nk_check_label(ctx, gnwinfo_get_text(L"Background Info"), !g_bginfo);
+	nk_checkbox_label(ctx, gnwinfo_get_text(L"Background Info"), &g_ctx.gui_bginfo);
 	nk_spacer(ctx);
 	nk_checkbox_flags_label(ctx, gnwinfo_get_text(L"Enable PDH"), &g_ctx.main_flag, MAIN_NO_PDH);
-	nk_layout_row(ctx, NK_DYNAMIC, 0, 2, (float[2]) { 0.5f, 0.5f });
+	nk_spacer(ctx);
 	nk_property_int(ctx, gnwinfo_get_text(L"#Width"), 60, &g_init_width, 1920, 10, 10);
+	nk_spacer(ctx);
 	nk_property_int(ctx, gnwinfo_get_text(L"#Height"), 80, &g_init_height, 1080, 10, 10);
-	nk_property_int(ctx, gnwinfo_get_text(L"#Alpha"), 10, &g_init_alpha, 255, 5, 10);
 
 	nk_layout_row_dynamic(ctx, 0, 1);
 	nk_label(ctx, gnwinfo_get_text(L"Color"), NK_TEXT_LEFT);
@@ -211,8 +211,7 @@ gnwinfo_draw_settings_window(struct nk_context* ctx, float width, float height)
 		gnwinfo_set_ini_value(L"Widgets", L"SmartFlags", L"0x%08X", g_smart_flag);
 		gnwinfo_set_ini_value(L"Window", L"Width", L"%u", g_init_width);
 		gnwinfo_set_ini_value(L"Window", L"Height", L"%u", g_init_height);
-		gnwinfo_set_ini_value(L"Window", L"Alpha", L"%u", g_init_alpha);
-		gnwinfo_set_ini_value(L"Window", L"BGInfo", L"%d", g_bginfo);
+		gnwinfo_set_ini_value(L"Window", L"BGInfo", L"%d", !g_ctx.gui_bginfo);
 		set_ini_color(L"Background", g_color_back);
 		set_ini_color(L"Highlight", g_color_text_l);
 		set_ini_color(L"Default", g_color_text_d);

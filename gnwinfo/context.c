@@ -243,6 +243,7 @@ gnwinfo_ctx_init(HINSTANCE inst, HWND wnd, struct nk_context* ctx, float width, 
 
 	g_ctx.gui_height = height;
 	g_ctx.gui_width = width;
+	g_ctx.gui_bginfo = !g_bginfo;
 	g_ctx.gui_title = GNWINFO_FONT_SIZE + ctx->style.window.header.padding.y + ctx->style.window.header.label_padding.y;
 	g_ctx.inst = inst;
 	g_ctx.wnd = wnd;

@@ -75,6 +75,7 @@ typedef struct _GNW_CONTEXT
 	BOOL gui_pci;
 	BOOL gui_dmi;
 	nk_bool smart_hex;
+	nk_bool gui_bginfo;
 
 	struct nk_image image_os;
 	struct nk_image image_bios;
@@ -131,7 +132,6 @@ extern GNW_CONTEXT g_ctx;
 extern WCHAR g_ini_path[MAX_PATH];
 extern unsigned int g_init_width;
 extern unsigned int g_init_height;
-extern unsigned int g_init_alpha;
 extern nk_bool g_bginfo;
 extern unsigned int g_smart_flag;
 
