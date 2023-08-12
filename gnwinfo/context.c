@@ -2,7 +2,9 @@
 
 #include "gnwinfo.h"
 
+#ifdef GNWINFO_ENABLE_PDH
 #pragma comment(lib, "pdh.lib")
+#endif
 
 #include "../libcpuid/libcpuid.h"
 #include "../libcpuid/libcpuid_util.h"
@@ -164,6 +166,7 @@ get_memory_usage(void)
 	memcpy(g_ctx.mem_total, NWL_GetHumanSize(g_ctx.mem_status.ullTotalPhys, human_sizes, 1024), GNWC_STR_SIZE);
 }
 
+#ifdef GNWINFO_ENABLE_PDH
 static void
 get_pdh_data(void)
 {
@@ -183,6 +186,7 @@ get_pdh_data(void)
 	if (g_ctx.pdh_net_send && PdhGetFormattedCounterValue(g_ctx.pdh_net_send, PDH_FMT_LARGE, NULL, &value) == ERROR_SUCCESS)
 		memcpy(g_ctx.net_send, NWL_GetHumanSize(value.largeValue, human_sizes, 1024), GNWC_STR_SIZE);
 }
+#endif
 
 void
 gnwinfo_ctx_update(WPARAM wparam)
@@ -195,8 +199,10 @@ gnwinfo_ctx_update(WPARAM wparam)
 		g_ctx.network = NW_Network();
 		NWL_GetUptime(g_ctx.sys_uptime, GNWC_STR_SIZE);
 		get_memory_usage();
+#ifdef GNWINFO_ENABLE_PDH
 		get_pdh_data();
 		if (!g_ctx.pdh)
+#endif
 		{
 			get_network_traffic();
 			get_cpu_usage();
@@ -273,6 +279,7 @@ gnwinfo_ctx_init(HINSTANCE inst, HWND wnd, struct nk_context* ctx, float width, 
 	g_ctx.sys_boot = gnwinfo_get_node_attr(g_ctx.system, "Boot Device");
 	g_ctx.sys_disk = gnwinfo_get_node_attr(g_ctx.system, "System Device");
 
+#ifdef GNWINFO_ENABLE_PDH
 	if (!(g_ctx.main_flag & MAIN_NO_PDH)
 		&& PdhOpenQueryW(NULL, 0, &g_ctx.pdh) == ERROR_SUCCESS)
 	{
@@ -289,6 +296,7 @@ gnwinfo_ctx_init(HINSTANCE inst, HWND wnd, struct nk_context* ctx, float width, 
 	}
 	else
 		g_ctx.pdh = NULL;
+#endif
 
 	g_ctx.cpu_count = (int)g_ctx.lib.NwCpuid->num_cpu_types;
 	if (g_ctx.cpu_count > 0)
@@ -330,8 +338,10 @@ gnwinfo_ctx_exit()
 	KillTimer(g_ctx.wnd, IDT_TIMER_1S);
 	KillTimer(g_ctx.wnd, IDT_TIMER_1M);
 
+#ifdef GNWINFO_ENABLE_PDH
 	if (g_ctx.pdh)
 		PdhCloseQuery(g_ctx.pdh);
+#endif
 
 	if (g_ctx.cpu_info)
 		free(g_ctx.cpu_info);

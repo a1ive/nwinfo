@@ -2,13 +2,18 @@
 
 #pragma once
 
+#define GNWINFO_ENABLE_PDH
+
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <stdio.h>
 #include <string.h>
 #include <limits.h>
 #include <time.h>
+
+#ifdef GNWINFO_ENABLE_PDH
 #include <pdh.h>
+#endif
 
 #define NK_INCLUDE_FIXED_TYPES
 #define NK_INCLUDE_STANDARD_IO
@@ -112,10 +117,12 @@ typedef struct _GNW_CONTEXT
 	LPCSTR sys_boot;
 	LPCSTR sys_disk;
 
+#ifdef GNWINFO_ENABLE_PDH
 	PDH_HQUERY pdh;
 	PDH_HCOUNTER pdh_cpu;
 	PDH_HCOUNTER pdh_net_recv;
 	PDH_HCOUNTER pdh_net_send;
+#endif
 
 	CHAR net_recv[GNWC_STR_SIZE];
 	CHAR net_send[GNWC_STR_SIZE];
