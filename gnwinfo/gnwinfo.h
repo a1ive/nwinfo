@@ -75,6 +75,7 @@ typedef struct _GNW_CONTEXT
 	BOOL gui_pci;
 	BOOL gui_dmi;
 	nk_bool smart_hex;
+	UINT32 smart_flag;
 	nk_bool gui_bginfo;
 
 	struct nk_image image_os;
@@ -133,7 +134,6 @@ extern WCHAR g_ini_path[MAX_PATH];
 extern unsigned int g_init_width;
 extern unsigned int g_init_height;
 extern nk_bool g_bginfo;
-extern unsigned int g_smart_flag;
 
 #define NK_COLOR_YELLOW     {0xFF, 0xEA, 0x00, 0xff}
 #define NK_COLOR_RED        {0xFF, 0x17, 0x44, 0xff}
