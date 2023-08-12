@@ -207,6 +207,7 @@ gnwinfo_ctx_update(WPARAM wparam)
 		if (g_ctx.disk)
 			NWL_NodeFree(g_ctx.disk, 1);
 		g_ctx.lib.NwSmbiosInit = FALSE;
+		g_ctx.lib.DisableSmart = (g_ctx.main_flag & MAIN_DISK_SMART) ? FALSE : TRUE;
 		g_ctx.disk = NW_Disk();
 		if (g_ctx.battery)
 			NWL_NodeFree(g_ctx.battery, 1);
