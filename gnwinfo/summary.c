@@ -348,8 +348,10 @@ draw_display(struct nk_context* ctx)
 		CHAR name[32];
 		CHAR res[32] = { 0 };
 		LPCSTR product = NULL;
+		LPCSTR id = NULL;
 		PNODE mon = g_ctx.edid->Children[i].LinkedNode;
-		if (!mon)
+		id = gnwinfo_get_node_attr(mon, "ID");
+		if (id[0] == '-')
 			continue;
 		nk_spacer(ctx);
 		nk_label(ctx, gnwinfo_get_node_attr(mon, "Manufacturer"), NK_TEXT_LEFT);
@@ -373,7 +375,7 @@ draw_display(struct nk_context* ctx)
 		nk_labelf_colored(ctx, NK_TEXT_LEFT,
 			g_color_text_l,
 			"%s %s %s %s\"",
-			gnwinfo_get_node_attr(mon, "ID"),
+			id,
 			product,
 			res,
 			gnwinfo_get_node_attr(mon, "Diagonal (in)"));
