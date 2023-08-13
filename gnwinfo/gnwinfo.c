@@ -111,6 +111,7 @@ set_style(HWND wnd, struct nk_context* ctx)
 	ctx->style.text.color = g_color_text_d;
 
 	ctx->style.window.background = g_color_back;
+	ctx->style.window.scaler = nk_style_item_color(g_color_text_d);
 	ctx->style.window.fixed_background = nk_style_item_color(g_color_back);
 	ctx->style.window.min_row_height_padding = 2;
 	ctx->style.window.header.normal = nk_style_item_color(back_p2);
@@ -204,9 +205,9 @@ set_style(HWND wnd, struct nk_context* ctx)
 	ctx->style.scrollv = ctx->style.scrollh;
 
 	if (g_bginfo)
+	{
 		SetLayeredWindowAttributes(wnd, RGB(g_color_back.r, g_color_back.g, g_color_back.b), 0, LWA_COLORKEY);
-	else
-		SetLayeredWindowAttributes(wnd, 0, 255, LWA_ALPHA);
+	}
 }
 
 int APIENTRY
@@ -221,7 +222,7 @@ wWinMain(_In_ HINSTANCE hInstance,
 	int x_pos = 100, y_pos = 100;
 	WNDCLASSW wc;
 	DWORD style = WS_POPUP | WS_VISIBLE;
-	DWORD exstyle = WS_EX_LAYERED;
+	DWORD exstyle = 0;
 	HWND wnd;
 	int running = 1;
 	int needs_refresh = 1;
@@ -238,7 +239,7 @@ wWinMain(_In_ HINSTANCE hInstance,
 	{
 		RECT desktop = {0, 0, 1024, 768};
 		g_bginfo = 1;
-		exstyle |= WS_EX_NOACTIVATE;
+		exstyle |= WS_EX_NOACTIVATE | WS_EX_TOOLWINDOW | WS_EX_LAYERED;
 		GetWindowRect(GetDesktopWindow(), &desktop);
 		x_pos = desktop.right > (LONG)g_init_width ? (desktop.right - (LONG)g_init_width) : 0;
 		y_pos = 0;
@@ -317,7 +318,7 @@ wWinMain(_In_ HINSTANCE hInstance,
 		gnwinfo_draw_dmi_window(ctx, g_ctx.gui_width, g_ctx.gui_height);
 
 		/* Draw */
-		nk_gdip_render(NK_ANTI_ALIASING_ON, (struct nk_color)NK_COLOR_BLACK);
+		nk_gdip_render(NK_ANTI_ALIASING_ON, g_color_back);
 	}
 
 	CoUninitialize();
