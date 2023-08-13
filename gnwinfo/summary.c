@@ -535,10 +535,10 @@ draw_network(struct nk_context* ctx)
 	float ratio = draw_icon_label(ctx, L"Network", g_ctx.image_net);
 	nk_layout_row(ctx, NK_DYNAMIC, 0, 3, (float[3]) { ratio, 0.6f, 0.4f - ratio });
 	nk_spacer(ctx);
-	nk_label(ctx, gnwinfo_get_text(L"Traffic"), NK_TEXT_LEFT);
+	nk_label(ctx, gnwinfo_get_text(L"Traffic /s"), NK_TEXT_LEFT);
 	nk_labelf_colored(ctx, NK_TEXT_LEFT,
 		g_color_text_l,
-		u8"\u2191 %s/s \u2193 %s/s", g_ctx.net_send, g_ctx.net_recv);
+		u8"\u2191 %s \u2193 %s", g_ctx.net_send, g_ctx.net_recv);
 
 	for (i = 0; g_ctx.network->Children[i].LinkedNode; i++)
 	{
