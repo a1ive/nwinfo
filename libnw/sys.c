@@ -287,7 +287,7 @@ static void PrintTpmInfo(PNODE node)
 static const char* mem_human_sizes[6] =
 { "B", "K", "M", "G", "T", "P", };
 
-static BOOL
+static BOOL WINAPI
 EnumPageFileCallback(LPVOID pContext, PENUM_PAGE_FILE_INFORMATION pPageFileInfo, LPCWSTR lpFilename)
 {
 	PNWLIB_MEM_INFO pMemInfo = (PNWLIB_MEM_INFO)pContext;
