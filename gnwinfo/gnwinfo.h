@@ -131,9 +131,11 @@ typedef struct _GNW_CONTEXT
 	GNW_CPU_INFO* cpu_info;
 	
 	CHAR sys_uptime[GNWC_STR_SIZE];
-	MEMORYSTATUSEX mem_status;
+	NWLIB_MEM_INFO mem_status;
 	CHAR mem_total[GNWC_STR_SIZE];
 	CHAR mem_avail[GNWC_STR_SIZE];
+	CHAR page_total[GNWC_STR_SIZE];
+	CHAR page_avail[GNWC_STR_SIZE];
 } GNW_CONTEXT;
 extern GNW_CONTEXT g_ctx;
 

@@ -288,13 +288,22 @@ draw_memory(struct nk_context* ctx)
 	float ratio = draw_icon_label(ctx, L"Memory", g_ctx.image_ram);
 
 	nk_layout_row(ctx, NK_DYNAMIC, 0, 4, (float[4]) { ratio, 0.3f, 0.4f, 0.3f - ratio });
+
 	nk_spacer(ctx);
 	nk_label(ctx, gnwinfo_get_text(L"Usage"), NK_TEXT_LEFT);
 	nk_labelf_colored(ctx, NK_TEXT_LEFT,
-		gnwinfo_get_color((double)g_ctx.mem_status.dwMemoryLoad, 70.0, 90.0),
-		"%lu%% %s / %s",
-		g_ctx.mem_status.dwMemoryLoad, g_ctx.mem_avail, g_ctx.mem_total);
-	draw_percent_prog(ctx, (double)g_ctx.mem_status.dwMemoryLoad);
+		gnwinfo_get_color((double)g_ctx.mem_status.PhysUsage, 70.0, 90.0),
+		"%3lu%% %s / %s",
+		g_ctx.mem_status.PhysUsage, g_ctx.mem_avail, g_ctx.mem_total);
+	draw_percent_prog(ctx, (double)g_ctx.mem_status.PhysUsage);
+
+	nk_spacer(ctx);
+	nk_label(ctx, gnwinfo_get_text(L"Page File"), NK_TEXT_LEFT);
+	nk_labelf_colored(ctx, NK_TEXT_LEFT,
+		gnwinfo_get_color((double)g_ctx.mem_status.PageUsage, 70.0, 90.0),
+		"%3lu%% %s / %s",
+		g_ctx.mem_status.PageUsage, g_ctx.page_avail, g_ctx.page_total);
+	draw_percent_prog(ctx, (double)g_ctx.mem_status.PageUsage);
 
 	nk_layout_row(ctx, NK_DYNAMIC, 0, 3, (float[3]) { ratio, 0.3f, 0.7f - ratio });
 	for (i = 0; g_ctx.smbios->Children[i].LinkedNode; i++)

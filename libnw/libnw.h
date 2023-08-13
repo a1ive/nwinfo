@@ -101,6 +101,22 @@ PNODE NW_Uefi(VOID);
 
 VOID NWL_GetUptime(CHAR* szUptime, DWORD dwSize);
 
+typedef struct _NWLIB_MEM_INFO
+{
+	DWORD PhysUsage;
+	DWORD PageUsage;
+	DWORDLONG PhysTotal;
+	DWORDLONG PhysInUse;
+	DWORDLONG PhysAvail;
+	DWORDLONG PageTotal;
+	DWORDLONG PageInUse;
+	DWORDLONG PageAvail;
+	SIZE_T SystemCache;
+	SIZE_T PageSize;
+} NWLIB_MEM_INFO, *PNWLIB_MEM_INFO;
+
+VOID NWL_GetMemInfo(PNWLIB_MEM_INFO pMemInfo);
+
 #ifdef __cplusplus
 } /* extern "C" */
 #endif

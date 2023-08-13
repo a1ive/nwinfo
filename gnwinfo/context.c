@@ -160,10 +160,11 @@ get_network_traffic(void)
 static void
 get_memory_usage(void)
 {
-	g_ctx.mem_status.dwLength = sizeof(g_ctx.mem_status);
-	GlobalMemoryStatusEx(&g_ctx.mem_status);
-	memcpy(g_ctx.mem_avail, NWL_GetHumanSize(g_ctx.mem_status.ullAvailPhys, human_sizes, 1024), GNWC_STR_SIZE);
-	memcpy(g_ctx.mem_total, NWL_GetHumanSize(g_ctx.mem_status.ullTotalPhys, human_sizes, 1024), GNWC_STR_SIZE);
+	NWL_GetMemInfo(&g_ctx.mem_status);
+	memcpy(g_ctx.mem_avail, NWL_GetHumanSize(g_ctx.mem_status.PhysAvail, human_sizes, 1024), GNWC_STR_SIZE);
+	memcpy(g_ctx.mem_total, NWL_GetHumanSize(g_ctx.mem_status.PhysTotal, human_sizes, 1024), GNWC_STR_SIZE);
+	memcpy(g_ctx.page_avail, NWL_GetHumanSize(g_ctx.mem_status.PageAvail, human_sizes, 1024), GNWC_STR_SIZE);
+	memcpy(g_ctx.page_total, NWL_GetHumanSize(g_ctx.mem_status.PageTotal, human_sizes, 1024), GNWC_STR_SIZE);
 }
 
 #ifdef GNWINFO_ENABLE_PDH
