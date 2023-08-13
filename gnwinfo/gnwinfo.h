@@ -140,6 +140,7 @@ extern GNW_CONTEXT g_ctx;
 extern WCHAR g_ini_path[MAX_PATH];
 extern unsigned int g_init_width;
 extern unsigned int g_init_height;
+extern unsigned int g_init_alpha;
 extern nk_bool g_bginfo;
 
 #define NK_COLOR_YELLOW     {0xFF, 0xEA, 0x00, 0xFF}

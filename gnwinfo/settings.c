@@ -178,6 +178,8 @@ gnwinfo_draw_settings_window(struct nk_context* ctx, float width, float height)
 	nk_property_int(ctx, gnwinfo_get_text(L"#Width"), 60, &g_init_width, 1920, 10, 10);
 	nk_spacer(ctx);
 	nk_property_int(ctx, gnwinfo_get_text(L"#Height"), 80, &g_init_height, 1080, 10, 10);
+	nk_spacer(ctx);
+	nk_property_int(ctx, gnwinfo_get_text(L"#Alpha"), 10, &g_init_alpha, 255, 5, 10);
 
 	nk_layout_row_dynamic(ctx, 0, 1);
 	nk_label(ctx, gnwinfo_get_text(L"Color"), NK_TEXT_LEFT);
@@ -213,6 +215,7 @@ gnwinfo_draw_settings_window(struct nk_context* ctx, float width, float height)
 		gnwinfo_set_ini_value(L"Widgets", L"SmartFlags", L"0x%08X", g_ctx.smart_flag);
 		gnwinfo_set_ini_value(L"Window", L"Width", L"%u", g_init_width);
 		gnwinfo_set_ini_value(L"Window", L"Height", L"%u", g_init_height);
+		gnwinfo_set_ini_value(L"Window", L"Alpha", L"%u", g_init_alpha);
 		gnwinfo_set_ini_value(L"Window", L"BGInfo", L"%d", !g_ctx.gui_bginfo);
 		set_ini_color(L"Background", g_color_back);
 		set_ini_color(L"Highlight", g_color_text_l);

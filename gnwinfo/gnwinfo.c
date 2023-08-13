@@ -7,6 +7,7 @@
 
 unsigned int g_init_width = 600;
 unsigned int g_init_height = 800;
+unsigned int g_init_alpha = 255;
 nk_bool g_bginfo = 0;
 struct nk_color g_color_warning = NK_COLOR_YELLOW;
 struct nk_color g_color_error = NK_COLOR_RED;
@@ -98,7 +99,7 @@ convert_color(struct nk_color color, float offset)
 }
 
 static void
-set_style(HWND wnd, struct nk_context* ctx)
+set_style(struct nk_context* ctx)
 {
 	struct nk_color text_p10 = convert_color(g_color_text_d, -0.10f);
 	struct nk_color text_p20 = convert_color(g_color_text_d, -0.20f);
@@ -203,11 +204,6 @@ set_style(HWND wnd, struct nk_context* ctx)
 	ctx->style.scrollh.cursor_hover = nk_style_item_color(text_p20);
 	ctx->style.scrollh.cursor_active = nk_style_item_color(text_p10);
 	ctx->style.scrollv = ctx->style.scrollh;
-
-	if (g_bginfo)
-	{
-		SetLayeredWindowAttributes(wnd, RGB(g_color_back.r, g_color_back.g, g_color_back.b), 0, LWA_COLORKEY);
-	}
 }
 
 int APIENTRY
@@ -222,7 +218,7 @@ wWinMain(_In_ HINSTANCE hInstance,
 	int x_pos = 100, y_pos = 100;
 	WNDCLASSW wc;
 	DWORD style = WS_POPUP | WS_VISIBLE;
-	DWORD exstyle = 0;
+	DWORD exstyle = WS_EX_LAYERED;
 	HWND wnd;
 	int running = 1;
 	int needs_refresh = 1;
@@ -234,12 +230,13 @@ wWinMain(_In_ HINSTANCE hInstance,
 
 	g_init_width = strtoul(gnwinfo_get_ini_value(L"Window", L"Width", L"600"), NULL, 10);
 	g_init_height = strtoul(gnwinfo_get_ini_value(L"Window", L"Height", L"800"), NULL, 10);
+	g_init_alpha = strtoul(gnwinfo_get_ini_value(L"Window", L"Alpha", L"255"), NULL, 10);
 	str = gnwinfo_get_ini_value(L"Window", L"BGInfo", L"0");
 	if (str[0] != '0')
 	{
 		RECT desktop = {0, 0, 1024, 768};
 		g_bginfo = 1;
-		exstyle |= WS_EX_NOACTIVATE | WS_EX_TOOLWINDOW | WS_EX_LAYERED;
+		exstyle |= WS_EX_NOACTIVATE | WS_EX_TOOLWINDOW;
 		GetWindowRect(GetDesktopWindow(), &desktop);
 		x_pos = desktop.right > (LONG)g_init_width ? (desktop.right - (LONG)g_init_width) : 0;
 		y_pos = 0;
@@ -267,6 +264,7 @@ wWinMain(_In_ HINSTANCE hInstance,
 
 	if (g_bginfo)
 		SetWindowPos(wnd, HWND_BOTTOM, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
+	SetLayeredWindowAttributes(wnd, 0, (BYTE)g_init_alpha, LWA_ALPHA);
 
 	/* GUI */
 	ctx = nk_gdip_init(wnd, g_init_width, g_init_height);
@@ -275,7 +273,7 @@ wWinMain(_In_ HINSTANCE hInstance,
 	nk_gdip_set_font(font);
 
 	(void)CoInitializeEx(0, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE);
-	set_style(wnd, ctx);
+	set_style(ctx);
 	gnwinfo_ctx_init(hInstance, wnd, ctx, (float)g_init_width, (float)g_init_height);
 
 	while (running)
@@ -308,7 +306,7 @@ wWinMain(_In_ HINSTANCE hInstance,
 
 		/* GUI */
 		if (g_ctx.gui_settings == TRUE)
-			set_style(wnd, ctx);
+			set_style(ctx);
 		gnwinfo_draw_main_window(ctx, g_ctx.gui_width, g_ctx.gui_height);
 		gnwinfo_draw_cpuid_window(ctx, g_ctx.gui_width, g_ctx.gui_height);
 		gnwinfo_draw_about_window(ctx, g_ctx.gui_width, g_ctx.gui_height);
