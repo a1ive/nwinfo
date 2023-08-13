@@ -9,6 +9,10 @@
 #include "utils.h"
 #include "efivars.h"
 
+#define PSAPI_VERSION 1
+#include <psapi.h>
+#pragma comment(lib, "psapi.lib")
+
 static const CHAR* Win10BuildNumber(DWORD dwBuildNumber)
 {
 	switch (dwBuildNumber)
@@ -211,7 +215,6 @@ static void PrintOsInfo(PNODE node)
 		NWL_NodeAttrSet(node, "Processor Architecture", "UNKNOWN", 0);
 		break;
 	}
-	NWL_NodeAttrSetf(node, "Page Size", NAFLG_FMT_NUMERIC, "%u", siInfo.dwPageSize);
 	szHardwareId = NWL_GetRegSzValue(HKEY_LOCAL_MACHINE, L"SYSTEM\\CurrentControlSet\\Control\\SystemInformation", L"ComputerHardwareId");
 	if (szHardwareId)
 	{
@@ -284,19 +287,38 @@ static void PrintTpmInfo(PNODE node)
 static const char* mem_human_sizes[6] =
 { "B", "K", "M", "G", "T", "P", };
 
+static BOOL
+EnumPageFileCallback(LPVOID pContext, PENUM_PAGE_FILE_INFORMATION pPageFileInfo, LPCWSTR lpFilename)
+{
+	LPMEMORYSTATUSEX lpStatusEx = (LPMEMORYSTATUSEX)pContext;
+	DWORDLONG ullAvailSize = 0;
+	if (pPageFileInfo->TotalInUse <= pPageFileInfo->TotalSize)
+		ullAvailSize = pPageFileInfo->TotalSize - pPageFileInfo->TotalInUse;
+	lpStatusEx->ullAvailPageFile += ullAvailSize;
+	lpStatusEx->ullTotalPageFile += pPageFileInfo->TotalSize;
+	return TRUE;
+}
+
 static void PrintMemInfo(PNODE node)
 {
 	PNODE nphy, npage;
-	MEMORYSTATUSEX statex = { 0 };
-	statex.dwLength = sizeof(statex);
+	MEMORYSTATUSEX statex = { .dwLength = sizeof(MEMORYSTATUSEX) };
+	PERFORMANCE_INFORMATION perf = { .cb = sizeof(PERFORMANCE_INFORMATION) };
+
 	GlobalMemoryStatusEx(&statex);
 	NWL_NodeAttrSetf(node, "Memory Usage", 0, "%u%%", statex.dwMemoryLoad);
 	nphy = NWL_NodeAppendNew(node, "Physical Memory", NFLG_ATTGROUP);
 	NWL_NodeAttrSet(nphy, "Free", NWL_GetHumanSize(statex.ullAvailPhys, mem_human_sizes, 1024), NAFLG_FMT_HUMAN_SIZE);
 	NWL_NodeAttrSet(nphy, "Total", NWL_GetHumanSize(statex.ullTotalPhys, mem_human_sizes, 1024), NAFLG_FMT_HUMAN_SIZE);
+
+	GetPerformanceInfo(&perf, sizeof(PERFORMANCE_INFORMATION));
+	NWL_NodeAttrSetf(node, "Page Size", NAFLG_FMT_NUMERIC, "%Id", perf.PageSize);
+	statex.ullAvailPageFile = 0;
+	statex.ullTotalPageFile = 0;
+	EnumPageFilesW(EnumPageFileCallback, &statex);
 	npage = NWL_NodeAppendNew(node, "Paging File", NFLG_ATTGROUP);
-	NWL_NodeAttrSet(npage, "Free", NWL_GetHumanSize(statex.ullAvailPageFile, mem_human_sizes, 1024), NAFLG_FMT_HUMAN_SIZE);
-	NWL_NodeAttrSet(npage, "Total", NWL_GetHumanSize(statex.ullTotalPageFile, mem_human_sizes, 1024), NAFLG_FMT_HUMAN_SIZE);
+	NWL_NodeAttrSet(npage, "Free", NWL_GetHumanSize(statex.ullAvailPageFile * perf.PageSize, mem_human_sizes, 1024), NAFLG_FMT_HUMAN_SIZE);
+	NWL_NodeAttrSet(npage, "Total", NWL_GetHumanSize(statex.ullTotalPageFile * perf.PageSize, mem_human_sizes, 1024), NAFLG_FMT_HUMAN_SIZE);
 }
 
 static void PrintBootInfo(PNODE node)
