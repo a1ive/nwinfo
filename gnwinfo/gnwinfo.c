@@ -35,6 +35,32 @@ window_proc(HWND wnd, UINT msg, WPARAM wparam, LPARAM lparam)
 		break;
 	case WM_DPICHANGED:
 		break;
+	case WM_MOUSEMOVE:
+		if (g_bginfo && !g_ctx.mouse)
+		{
+			TRACKMOUSEEVENT tme;
+			tme.cbSize = sizeof(TRACKMOUSEEVENT);
+			tme.dwFlags = TME_HOVER | TME_LEAVE;
+			tme.hwndTrack = wnd;
+			tme.dwHoverTime = 100;
+			TrackMouseEvent(&tme);
+			g_ctx.mouse = TRUE;
+		}
+		break;
+	case WM_MOUSEHOVER:
+		if (g_bginfo)
+		{
+			g_ctx.mouse = FALSE;
+			SetLayeredWindowAttributes(wnd, 0, (BYTE)g_init_alpha, LWA_ALPHA);
+		}
+		break;
+	case WM_MOUSELEAVE:
+		if (g_bginfo)
+		{
+			g_ctx.mouse = FALSE;
+			SetLayeredWindowAttributes(wnd, RGB(g_color_back.r, g_color_back.g, g_color_back.b), 0, LWA_COLORKEY);
+		}
+		break;
 	case WM_NCHITTEST:
 		if (!g_bginfo)
 		{
@@ -263,8 +289,12 @@ wWinMain(_In_ HINSTANCE hInstance,
 		x_pos, y_pos, (int)g_init_width, (int)g_init_height, NULL, NULL, wc.hInstance, NULL);
 
 	if (g_bginfo)
+	{
 		SetWindowPos(wnd, HWND_BOTTOM, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
-	SetLayeredWindowAttributes(wnd, 0, (BYTE)g_init_alpha, LWA_ALPHA);
+		SetLayeredWindowAttributes(wnd, RGB(g_color_back.r, g_color_back.g, g_color_back.b), 0, LWA_COLORKEY);
+	}
+	else
+		SetLayeredWindowAttributes(wnd, 0, (BYTE)g_init_alpha, LWA_ALPHA);
 
 	/* GUI */
 	ctx = nk_gdip_init(wnd, g_init_width, g_init_height);

@@ -67,6 +67,7 @@ typedef struct _GNW_CONTEXT
 	HWND wnd;
 	HANDLE mutex;
 	WCHAR lang[10];
+	BOOL mouse;
 	NWLIB_CONTEXT lib;
 	struct nk_context* nk;
 	float gui_title;
