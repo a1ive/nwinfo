@@ -41,6 +41,7 @@ LPCWSTR NWL_Utf8ToUcs2(LPCSTR src);
 
 HANDLE NWL_NtCreateFile(LPCWSTR lpFileName, BOOL bWrite);
 VOID* NWL_NtGetRegValue(HKEY Key, LPCWSTR lpSubKey, LPCWSTR lpValueName, LPDWORD lpdwSize, LPDWORD lpType);
+BOOL NWL_NtSetRegValue(HKEY Key, LPCWSTR lpSubKey, LPCWSTR lpValueName, LPCVOID lpData, DWORD dwSize, DWORD dwType);
 LPCSTR NWL_NtGetPathFromHandle(HANDLE hFile);
 BOOL NWL_NtQuerySystemInformation(INT SystemInformationClass,
 	PVOID SystemInformation, ULONG SystemInformationLength, PULONG ReturnLength);

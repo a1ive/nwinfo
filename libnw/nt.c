@@ -15,7 +15,7 @@ NWL_NtCreateFile(LPCWSTR lpFileName, BOOL bWrite)
 	ACCESS_MASK mask;
 	IO_STATUS_BLOCK status;
 	OBJECT_ATTRIBUTES attributes = { 0 };
-	VOID(NTAPI * OsRtlInitUnicodeString)(PUNICODE_STRING Src, PCWSTR Dst) = NULL;
+	VOID(NTAPI * OsRtlInitUnicodeString)(PUNICODE_STRING Dst, PCWSTR Src) = NULL;
 	NTSTATUS(NTAPI * OsNtCreateFile)(PHANDLE FileHandle, ACCESS_MASK DesiredAccess,
 		POBJECT_ATTRIBUTES ObjectAttributes, PIO_STATUS_BLOCK IoStatusBlock,
 		PLARGE_INTEGER AllocationSize, ULONG FileAttributes, ULONG ShareAccess,
@@ -74,6 +74,19 @@ fail:
 	if (lpdwSize)
 		*lpdwSize = 0;
 	return NULL;
+}
+
+BOOL
+NWL_NtSetRegValue(HKEY Key, LPCWSTR lpSubKey, LPCWSTR lpValueName, LPCVOID lpData, DWORD dwSize, DWORD dwType)
+{
+	HKEY hKey = NULL;
+	LSTATUS lRet;
+	lRet = RegOpenKeyExW(Key, lpSubKey, 0, KEY_SET_VALUE, &hKey);
+	if (lRet != ERROR_SUCCESS)
+		return FALSE;
+	lRet = RegSetValueExW(hKey, lpValueName, 0, dwType, lpData, dwSize);
+	RegCloseKey(hKey);
+	return lRet == ERROR_SUCCESS;
 }
 
 LPCSTR NWL_NtGetPathFromHandle(HANDLE hFile)
