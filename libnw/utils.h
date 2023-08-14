@@ -40,7 +40,7 @@ LPCSTR NWL_Ucs2ToUtf8(LPCWSTR src);
 LPCWSTR NWL_Utf8ToUcs2(LPCSTR src);
 
 HANDLE NWL_NtCreateFile(LPCWSTR lpFileName, BOOL bWrite);
-VOID* NWL_NtGetRegValue(HKEY Key, LPCWSTR lpSubKey, LPCWSTR lpValueName, LPDWORD lpType);
+VOID* NWL_NtGetRegValue(HKEY Key, LPCWSTR lpSubKey, LPCWSTR lpValueName, LPDWORD lpdwSize, LPDWORD lpType);
 LPCSTR NWL_NtGetPathFromHandle(HANDLE hFile);
 BOOL NWL_NtQuerySystemInformation(INT SystemInformationClass,
 	PVOID SystemInformation, ULONG SystemInformationLength, PULONG ReturnLength);

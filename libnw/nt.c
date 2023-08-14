@@ -43,29 +43,37 @@ NWL_NtCreateFile(LPCWSTR lpFileName, BOOL bWrite)
 	return NULL;
 }
 
-VOID* NWL_NtGetRegValue(HKEY Key, LPCWSTR lpSubKey, LPCWSTR lpValueName, LPDWORD lpType)
+VOID* NWL_NtGetRegValue(HKEY Key, LPCWSTR lpSubKey, LPCWSTR lpValueName, LPDWORD lpdwSize, LPDWORD lpType)
 {
-	HKEY hKey;
+	HKEY hKey = NULL;
 	DWORD cbSize = 0;
 	LSTATUS lRet;
 	VOID* lpData = NULL;
+
 	lRet = RegOpenKeyExW(Key, lpSubKey, 0, KEY_QUERY_VALUE, &hKey);
 	if (lRet != ERROR_SUCCESS)
-		return NULL;
+		goto fail;
 	lRet = RegQueryValueExW(hKey, lpValueName, NULL, lpType, NULL, &cbSize);
 	if (lRet != ERROR_SUCCESS || cbSize == 0)
-		return NULL;
+		goto fail;
 	lpData = malloc(cbSize);
 	if (!lpData)
-		return NULL;
+		goto fail;
 	lRet = RegQueryValueExW(hKey, lpValueName, NULL, lpType, lpData, &cbSize);
 	if (lRet != ERROR_SUCCESS)
-	{
-		free(lpData);
-		return NULL;
-	}
+		goto fail;
 	RegCloseKey(hKey);
+	if (lpdwSize)
+		*lpdwSize = cbSize;
 	return lpData;
+fail:
+	if (hKey)
+		RegCloseKey(hKey);
+	if (lpData)
+		free(lpData);
+	if (lpdwSize)
+		*lpdwSize = 0;
+	return NULL;
 }
 
 LPCSTR NWL_NtGetPathFromHandle(HANDLE hFile)

@@ -345,11 +345,11 @@ static void PrintBootInfo(PNODE node)
 	HANDLE hFile;
 	WCHAR wArcName[MAX_PATH];
 	WCHAR* pFwBootDev = NWL_NtGetRegValue(HKEY_LOCAL_MACHINE,
-		L"SYSTEM\\CurrentControlSet\\Control", L"FirmwareBootDevice", &dwType);
+		L"SYSTEM\\CurrentControlSet\\Control", L"FirmwareBootDevice", NULL, &dwType);
 	WCHAR* pSysBootDev = NWL_NtGetRegValue(HKEY_LOCAL_MACHINE,
-		L"SYSTEM\\CurrentControlSet\\Control", L"SystemBootDevice", &dwType);
+		L"SYSTEM\\CurrentControlSet\\Control", L"SystemBootDevice", NULL, &dwType);
 	WCHAR* pStartOption = NWL_NtGetRegValue(HKEY_LOCAL_MACHINE,
-		L"SYSTEM\\CurrentControlSet\\Control", L"SystemStartOptions", &dwType);
+		L"SYSTEM\\CurrentControlSet\\Control", L"SystemStartOptions", NULL, &dwType);
 	if (pFwBootDev)
 	{
 		swprintf(wArcName, MAX_PATH, L"\\ArcName\\%s", pFwBootDev);
