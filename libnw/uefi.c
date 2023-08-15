@@ -7,7 +7,6 @@
 
 #include "libnw.h"
 #include "utils.h"
-#include "nt.h"
 #include "efivars.h"
 
 static void PrintBootEnv(PNODE node)

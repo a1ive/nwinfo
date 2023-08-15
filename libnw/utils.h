@@ -3,7 +3,7 @@
 
 #include <windows.h>
 #include "format.h"
-
+#include "nt.h"
 
 struct RAW_SMBIOS_DATA;
 struct acpi_rsdp_v2;
@@ -43,8 +43,10 @@ HANDLE NWL_NtCreateFile(LPCWSTR lpFileName, BOOL bWrite);
 VOID* NWL_NtGetRegValue(HKEY Key, LPCWSTR lpSubKey, LPCWSTR lpValueName, LPDWORD lpdwSize, LPDWORD lpType);
 BOOL NWL_NtSetRegValue(HKEY Key, LPCWSTR lpSubKey, LPCWSTR lpValueName, LPCVOID lpData, DWORD dwSize, DWORD dwType);
 LPCSTR NWL_NtGetPathFromHandle(HANDLE hFile);
-BOOL NWL_NtQuerySystemInformation(INT SystemInformationClass,
+BOOL NWL_NtQuerySystemInformation(SYSTEM_INFORMATION_CLASS SystemInformationClass,
 	PVOID SystemInformation, ULONG SystemInformationLength, PULONG ReturnLength);
+BOOL NWL_NtSetSystemInformation(SYSTEM_INFORMATION_CLASS SystemInformationClass,
+	PVOID SystemInformation, ULONG SystemInformationLength);
 VOID NWL_NtGetVersion(LPOSVERSIONINFOEXW osInfo);
 
 VOID NWL_FindId(PNODE nd, CHAR* Ids, DWORD IdsSize, CONST CHAR* v, CONST CHAR* d, CONST CHAR* s, INT usb);

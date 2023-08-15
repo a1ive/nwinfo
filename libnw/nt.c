@@ -4,7 +4,6 @@
 #include <winioctl.h>
 #include "libnw.h"
 #include "utils.h"
-#include "nt.h"
 
 HANDLE
 NWL_NtCreateFile(LPCWSTR lpFileName, BOOL bWrite)
@@ -109,10 +108,10 @@ LPCSTR NWL_NtGetPathFromHandle(HANDLE hFile)
 	return NWL_Ucs2ToUtf8(puName->Buffer);
 }
 
-BOOL NWL_NtQuerySystemInformation(INT SystemInformationClass,
+BOOL NWL_NtQuerySystemInformation(SYSTEM_INFORMATION_CLASS SystemInformationClass,
 	PVOID SystemInformation, ULONG SystemInformationLength, PULONG ReturnLength)
 {
-	NTSTATUS (NTAPI * OsNtQuerySystemInformation)(INT SystemInformationClass,
+	NTSTATUS (NTAPI * OsNtQuerySystemInformation)(SYSTEM_INFORMATION_CLASS SystemInformationClass,
 				PVOID SystemInformation, ULONG SystemInformationLength, PULONG ReturnLength) = NULL;
 	HMODULE hModule = GetModuleHandleW(L"ntdll");
 	if (!hModule)
@@ -121,6 +120,20 @@ BOOL NWL_NtQuerySystemInformation(INT SystemInformationClass,
 	if (!OsNtQuerySystemInformation)
 		return FALSE;
 	return NT_SUCCESS(OsNtQuerySystemInformation(SystemInformationClass, SystemInformation, SystemInformationLength, ReturnLength));
+}
+
+BOOL NWL_NtSetSystemInformation(SYSTEM_INFORMATION_CLASS SystemInformationClass,
+	PVOID SystemInformation, ULONG SystemInformationLength)
+{
+	NTSTATUS(NTAPI * OsNtSetSystemInformation)(SYSTEM_INFORMATION_CLASS SystemInformationClass,
+		PVOID SystemInformation, ULONG SystemInformationLength) = NULL;
+	HMODULE hModule = GetModuleHandleW(L"ntdll");
+	if (!hModule)
+		return FALSE;
+	*(FARPROC*)&OsNtSetSystemInformation = GetProcAddress(hModule, "NtSetSystemInformation");
+	if (!OsNtSetSystemInformation)
+		return FALSE;
+	return NT_SUCCESS(OsNtSetSystemInformation(SystemInformationClass, SystemInformation, SystemInformationLength));
 }
 
 VOID NWL_NtGetVersion(LPOSVERSIONINFOEXW osInfo)
