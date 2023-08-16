@@ -62,6 +62,9 @@
     <ClCompile Include="dmi.c">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="memory.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="gnwinfo.rc">

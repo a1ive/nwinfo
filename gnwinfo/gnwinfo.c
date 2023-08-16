@@ -344,6 +344,7 @@ wWinMain(_In_ HINSTANCE hInstance,
 		gnwinfo_draw_settings_window(ctx, g_ctx.gui_width, g_ctx.gui_height);
 		gnwinfo_draw_pci_window(ctx, g_ctx.gui_width, g_ctx.gui_height);
 		gnwinfo_draw_dmi_window(ctx, g_ctx.gui_width, g_ctx.gui_height);
+		gnwinfo_draw_mm_window(ctx, g_ctx.gui_width, g_ctx.gui_height);
 
 		/* Draw */
 		nk_gdip_render(NK_ANTI_ALIASING_ON, g_color_back);

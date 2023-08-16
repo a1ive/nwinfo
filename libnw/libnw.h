@@ -105,12 +105,16 @@ typedef struct _NWLIB_MEM_INFO
 {
 	DWORD PhysUsage;
 	DWORD PageUsage;
+	DWORD SfciUsage;
 	DWORDLONG PhysTotal;
 	DWORDLONG PhysInUse;
 	DWORDLONG PhysAvail;
 	DWORDLONG PageTotal;
 	DWORDLONG PageInUse;
 	DWORDLONG PageAvail;
+	DWORDLONG SfciTotal;
+	DWORDLONG SfciInUse;
+	DWORDLONG SfciAvail;
 	SIZE_T SystemCache;
 	SIZE_T PageSize;
 } NWLIB_MEM_INFO, *PNWLIB_MEM_INFO;

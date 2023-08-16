@@ -165,6 +165,8 @@ get_memory_usage(void)
 	memcpy(g_ctx.mem_total, NWL_GetHumanSize(g_ctx.mem_status.PhysTotal, human_sizes, 1024), GNWC_STR_SIZE);
 	memcpy(g_ctx.page_avail, NWL_GetHumanSize(g_ctx.mem_status.PageAvail, human_sizes, 1024), GNWC_STR_SIZE);
 	memcpy(g_ctx.page_total, NWL_GetHumanSize(g_ctx.mem_status.PageTotal, human_sizes, 1024), GNWC_STR_SIZE);
+	memcpy(g_ctx.sfci_avail, NWL_GetHumanSize(g_ctx.mem_status.SfciAvail, human_sizes, 1024), GNWC_STR_SIZE);
+	memcpy(g_ctx.sfci_total, NWL_GetHumanSize(g_ctx.mem_status.SfciTotal, human_sizes, 1024), GNWC_STR_SIZE);
 }
 
 #ifdef GNWINFO_ENABLE_PDH

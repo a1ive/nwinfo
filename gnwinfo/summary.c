@@ -59,8 +59,8 @@ draw_icon_label(struct nk_context* ctx, LPCWSTR label, struct nk_image image)
 	return ratio[0];
 }
 
-static void
-draw_percent_prog(struct nk_context* ctx, double percent)
+void
+gnwinfo_draw_percent_prog(struct nk_context* ctx, double percent)
 {
 	nk_size size = (nk_size)percent;
 	struct nk_color color = gnwinfo_get_color(percent, 70.0, 90.0);
@@ -229,7 +229,7 @@ draw_processor(struct nk_context* ctx)
 		"%.2f%% %s MHz",
 		g_ctx.cpu_usage,
 		gnwinfo_get_node_attr(g_ctx.cpuid, "CPU Clock (MHz)"));
-	draw_percent_prog(ctx, g_ctx.cpu_usage);
+	gnwinfo_draw_percent_prog(ctx, g_ctx.cpu_usage);
 
 	for (i = 0; i < g_ctx.cpu_count; i++)
 	{
@@ -287,7 +287,7 @@ draw_memory(struct nk_context* ctx)
 	INT i;
 	float ratio = draw_icon_label(ctx, L"Memory", g_ctx.image_ram);
 
-	nk_layout_row(ctx, NK_DYNAMIC, 0, 4, (float[4]) { ratio, 0.3f, 0.4f, 0.3f - ratio });
+	nk_layout_row(ctx, NK_DYNAMIC, 0, 5, (float[5]) { ratio, 0.3f, 0.4f - ratio, ratio, 0.3f - ratio });
 
 	nk_spacer(ctx);
 	nk_label(ctx, gnwinfo_get_text(L"Usage"), NK_TEXT_LEFT);
@@ -295,15 +295,9 @@ draw_memory(struct nk_context* ctx)
 		gnwinfo_get_color((double)g_ctx.mem_status.PhysUsage, 70.0, 90.0),
 		"%3lu%% %s / %s",
 		g_ctx.mem_status.PhysUsage, g_ctx.mem_avail, g_ctx.mem_total);
-	draw_percent_prog(ctx, (double)g_ctx.mem_status.PhysUsage);
-
-	nk_spacer(ctx);
-	nk_label(ctx, gnwinfo_get_text(L"Page File"), NK_TEXT_LEFT);
-	nk_labelf_colored(ctx, NK_TEXT_LEFT,
-		gnwinfo_get_color((double)g_ctx.mem_status.PageUsage, 70.0, 90.0),
-		"%3lu%% %s / %s",
-		g_ctx.mem_status.PageUsage, g_ctx.page_avail, g_ctx.page_total);
-	draw_percent_prog(ctx, (double)g_ctx.mem_status.PageUsage);
+	if (nk_button_symbol(ctx, NK_SYMBOL_PLUS))
+		g_ctx.gui_mm = TRUE;
+	gnwinfo_draw_percent_prog(ctx, (double)g_ctx.mem_status.PhysUsage);
 
 	nk_layout_row(ctx, NK_DYNAMIC, 0, 3, (float[3]) { ratio, 0.3f, 0.7f - ratio });
 	for (i = 0; g_ctx.smbios->Children[i].LinkedNode; i++)
@@ -436,7 +430,7 @@ draw_volume(struct nk_context* ctx, PNODE disk, BOOL cdrom, float ratio)
 			gnwinfo_get_node_attr(tab, "Total Space"),
 			gnwinfo_get_node_attr(tab, "Filesystem"),
 			gnwinfo_get_node_attr(tab, "Label"));
-		draw_percent_prog(ctx, strtod(gnwinfo_get_node_attr(tab, "Usage"), NULL));
+		gnwinfo_draw_percent_prog(ctx, strtod(gnwinfo_get_node_attr(tab, "Usage"), NULL));
 	}
 }
 

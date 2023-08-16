@@ -300,6 +300,7 @@ VOID NWL_GetMemInfo(PNWLIB_MEM_INFO pMemInfo)
 {
 	MEMORYSTATUSEX statex = { .dwLength = sizeof(MEMORYSTATUSEX) };
 	PERFORMANCE_INFORMATION perf = { .cb = sizeof(PERFORMANCE_INFORMATION) };
+	SYSTEM_FILECACHE_INFORMATION sfci = { 0 };
 
 	ZeroMemory(pMemInfo, sizeof(NWLIB_MEM_INFO));
 
@@ -320,6 +321,13 @@ VOID NWL_GetMemInfo(PNWLIB_MEM_INFO pMemInfo)
 	pMemInfo->PageAvail *= pMemInfo->PageSize;
 	pMemInfo->PageInUse *= pMemInfo->PageSize;
 	pMemInfo->PageTotal *= pMemInfo->PageSize;
+
+	NWL_NtQuerySystemInformation(SystemFileCacheInformation, &sfci, sizeof(sfci), NULL);
+	pMemInfo->SfciInUse = sfci.CurrentSize;
+	pMemInfo->SfciTotal = sfci.PeakSize;
+	pMemInfo->SfciAvail = sfci.PeakSize - sfci.CurrentSize;
+	if (pMemInfo->SfciTotal && pMemInfo->SfciTotal >= pMemInfo->SfciInUse)
+		pMemInfo->SfciUsage = (DWORD)(pMemInfo->SfciInUse * 100 / pMemInfo->SfciTotal);
 }
 
 static void PrintMemInfo(PNODE node)

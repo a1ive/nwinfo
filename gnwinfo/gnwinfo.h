@@ -80,6 +80,7 @@ typedef struct _GNW_CONTEXT
 	BOOL gui_settings;
 	BOOL gui_pci;
 	BOOL gui_dmi;
+	BOOL gui_mm;
 	nk_bool smart_hex;
 	UINT32 smart_flag;
 	nk_bool gui_bginfo;
@@ -137,6 +138,9 @@ typedef struct _GNW_CONTEXT
 	CHAR mem_avail[GNWC_STR_SIZE];
 	CHAR page_total[GNWC_STR_SIZE];
 	CHAR page_avail[GNWC_STR_SIZE];
+	CHAR sfci_total[GNWC_STR_SIZE];
+	CHAR sfci_avail[GNWC_STR_SIZE];
+
 } GNW_CONTEXT;
 extern GNW_CONTEXT g_ctx;
 
@@ -175,6 +179,7 @@ VOID gnwinfo_draw_smart_window(struct nk_context* ctx, float width, float height
 VOID gnwinfo_draw_settings_window(struct nk_context* ctx, float width, float height);
 VOID gnwinfo_draw_pci_window(struct nk_context* ctx, float width, float height);
 VOID gnwinfo_draw_dmi_window(struct nk_context* ctx, float width, float height);
+VOID gnwinfo_draw_mm_window(struct nk_context* ctx, float width, float height);
 
 LPCSTR gnwinfo_get_ini_value(LPCWSTR section, LPCWSTR key, LPCWSTR fallback);
 LPCSTR gnwinfo_get_text(LPCWSTR text);
@@ -182,3 +187,4 @@ void gnwinfo_set_ini_value(LPCWSTR section, LPCWSTR key, LPCWSTR _Printf_format_
 
 LPCSTR gnwinfo_get_node_attr(PNODE node, LPCSTR key);
 struct nk_color gnwinfo_get_color(double value, double warn, double err);
+void gnwinfo_draw_percent_prog(struct nk_context* ctx, double percent);

@@ -126,6 +126,7 @@
     <ClCompile Include="cpuid.c" />
     <ClCompile Include="dmi.c" />
     <ClCompile Include="gnwinfo.c" />
+    <ClCompile Include="memory.c" />
     <ClCompile Include="pci.c" />
     <ClCompile Include="settings.c" />
     <ClCompile Include="smart.c" />
