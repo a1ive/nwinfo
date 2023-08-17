@@ -89,21 +89,16 @@ clean_memory(UINT32 clean_flag)
 }
 
 static void
-set_page_file_reg(WCHAR drive, LPCWSTR path, nk_size min_mb, nk_size max_mb)
+append_reg_multi_sz(HKEY root, LPCWSTR key, LPCWSTR value, LPCWSTR buf)
 {
-	WCHAR buf[MAX_PATH];
-	WCHAR * old_reg = NULL;
-	WCHAR * new_reg = NULL;
+	WCHAR* old_reg = NULL;
+	WCHAR* new_reg = NULL;
 	DWORD old_size = 0;
 	DWORD new_size = 0;
 	DWORD type = 0;
 	DWORD pos = 0;
 
-	swprintf(buf, MAX_PATH, L"%C:\\%s %" PRIuPTR " %" PRIuPTR, drive, path, min_mb, max_mb);
-
-	old_reg = NWL_NtGetRegValue(HKEY_LOCAL_MACHINE,
-			L"SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Memory Management",
-			L"PagingFiles", &old_size, &type);
+	old_reg = NWL_NtGetRegValue(root, key, value, &old_size, &type);
 	if (type != REG_MULTI_SZ)
 		goto fail;
 	old_size /= sizeof(WCHAR);
@@ -119,14 +114,25 @@ set_page_file_reg(WCHAR drive, LPCWSTR path, nk_size min_mb, nk_size max_mb)
 		memcpy(new_reg, old_reg, old_size * sizeof(WCHAR));
 	memcpy(&new_reg[pos], buf, wcslen(buf) * sizeof(WCHAR));
 	new_reg[new_size - 1] = L'\0';
-	NWL_NtSetRegValue(HKEY_LOCAL_MACHINE,
-		L"SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Memory Management",
-		L"PagingFiles", new_reg, new_size * sizeof(WCHAR), REG_MULTI_SZ);
+	NWL_NtSetRegValue(root, key, value, new_reg, new_size * sizeof(WCHAR), REG_MULTI_SZ);
 fail:
 	if (old_reg)
 		free(old_reg);
 	if (new_reg)
 		free(new_reg);
+}
+
+#define PAGE_FILE_REG L"SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Memory Management"
+static void
+set_page_file_reg(WCHAR drive, LPCWSTR path, nk_size min_mb, nk_size max_mb)
+{
+	WCHAR buf[MAX_PATH];
+	LPCWSTR key = L"SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Memory Management";
+
+	swprintf(buf, MAX_PATH, L"%C:%s %" PRIuPTR " %" PRIuPTR, drive, path, min_mb, max_mb);
+	append_reg_multi_sz(HKEY_LOCAL_MACHINE, PAGE_FILE_REG, L"PagingFiles", buf);
+	swprintf(buf, MAX_PATH, L"\\??\\%C:%s", drive, path);
+	append_reg_multi_sz(HKEY_LOCAL_MACHINE, PAGE_FILE_REG, L"ExistingPageFiles", buf);
 }
 
 static WCHAR
