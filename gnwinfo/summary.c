@@ -134,12 +134,12 @@ draw_bios(struct nk_context* ctx)
 		tpm[0] == 'v' ? tpm : "");
 
 	nk_spacer(ctx);
+	nk_label(ctx, gnwinfo_get_text(L"Vendor"), NK_TEXT_LEFT);
+	nk_label_colored(ctx, get_smbios_attr("0", "Vendor", NULL), NK_TEXT_LEFT, g_color_text_l);
+
+	nk_spacer(ctx);
 	nk_label(ctx, gnwinfo_get_text(L"Version"), NK_TEXT_LEFT);
-	nk_labelf_colored(ctx, NK_TEXT_LEFT,
-		g_color_text_l,
-		"%s %s",
-		get_smbios_attr("0", "Vendor", NULL),
-		get_smbios_attr("0", "Version", NULL));
+	nk_label_colored(ctx, get_smbios_attr("0", "Version", NULL), NK_TEXT_LEFT, g_color_text_l);
 }
 
 static BOOL
