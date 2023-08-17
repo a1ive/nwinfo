@@ -296,7 +296,10 @@ draw_memory(struct nk_context* ctx)
 		"%3lu%% %s / %s",
 		g_ctx.mem_status.PhysUsage, g_ctx.mem_avail, g_ctx.mem_total);
 	if (nk_button_symbol(ctx, NK_SYMBOL_PLUS))
+	{
 		g_ctx.gui_mm = TRUE;
+		gnwinfo_init_mm_window(ctx);
+	}
 	gnwinfo_draw_percent_prog(ctx, (double)g_ctx.mem_status.PhysUsage);
 
 	nk_layout_row(ctx, NK_DYNAMIC, 0, 3, (float[3]) { ratio, 0.3f, 0.7f - ratio });

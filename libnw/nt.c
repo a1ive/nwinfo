@@ -42,6 +42,46 @@ NWL_NtCreateFile(LPCWSTR lpFileName, BOOL bWrite)
 	return NULL;
 }
 
+#define MB_TO_BYTES(mb) (1024ULL * 1024ULL * mb)
+BOOL
+NWL_NtCreatePageFile(WCHAR wDrive, LPCWSTR lpPath, UINT64 minSizeInMb, UINT64 maxSizeInMb)
+{
+	NTSTATUS rc;
+	UNICODE_STRING str;
+	WCHAR device[] = L"C:";
+	WCHAR buf[MAX_PATH];
+	ULARGE_INTEGER minSize, maxSize;
+	VOID(NTAPI * OsRtlInitUnicodeString)(PUNICODE_STRING Dst, PCWSTR Src) = NULL;
+	NTSTATUS(NTAPI * NtCreatePagingFile)(PUNICODE_STRING Path, PULARGE_INTEGER MinSize, PULARGE_INTEGER MaxSize, ULONG Priority) = NULL;
+	HMODULE hModule = GetModuleHandleW(L"ntdll");
+	if (!hModule)
+		return FALSE;
+	*(FARPROC*)&NtCreatePagingFile = GetProcAddress(hModule, "NtCreatePagingFile");
+	if (!NtCreatePagingFile)
+		return FALSE;
+	*(FARPROC*)&OsRtlInitUnicodeString = GetProcAddress(hModule, "RtlInitUnicodeString");
+	if (!OsRtlInitUnicodeString)
+		return FALSE;
+	if (NWL_ObtainPrivileges(SE_CREATE_PAGEFILE_NAME) != ERROR_SUCCESS)
+		return FALSE;
+	if (maxSizeInMb < minSizeInMb)
+		maxSizeInMb = minSizeInMb;
+	if (lpPath == NULL)
+		lpPath = L"\\pagefile.sys";
+	device[0] = towupper(wDrive);
+	if (QueryDosDeviceW(device, buf, MAX_PATH) > 0)
+		wcscat_s(buf, MAX_PATH, lpPath);
+	else
+		return FALSE;
+	OsRtlInitUnicodeString(&str, buf);
+	minSize.QuadPart = MB_TO_BYTES(minSizeInMb);
+	maxSize.QuadPart = MB_TO_BYTES(maxSizeInMb);
+	rc = NtCreatePagingFile(&str, &minSize, &maxSize, 0);
+	if (!NT_SUCCESS(rc))
+		return FALSE;
+	return TRUE;
+}
+
 VOID* NWL_NtGetRegValue(HKEY Key, LPCWSTR lpSubKey, LPCWSTR lpValueName, LPDWORD lpdwSize, LPDWORD lpType)
 {
 	HKEY hKey = NULL;

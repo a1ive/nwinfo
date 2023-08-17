@@ -230,6 +230,22 @@ set_style(struct nk_context* ctx)
 	ctx->style.scrollh.cursor_hover = nk_style_item_color(text_p20);
 	ctx->style.scrollh.cursor_active = nk_style_item_color(text_p10);
 	ctx->style.scrollv = ctx->style.scrollh;
+
+	ctx->style.edit.normal = nk_style_item_color(back_p3);
+	ctx->style.edit.hover = nk_style_item_color(back_p3);
+	ctx->style.edit.active = nk_style_item_color(back_p3);
+	ctx->style.edit.cursor_normal = g_color_text_d;
+	ctx->style.edit.cursor_hover = g_color_text_d;
+	ctx->style.edit.cursor_text_normal = back_p3;
+	ctx->style.edit.cursor_text_hover = back_p3;
+	ctx->style.edit.text_normal = g_color_text_d;
+	ctx->style.edit.text_hover = g_color_text_d;
+	ctx->style.edit.text_active = g_color_text_d;
+	ctx->style.edit.selected_normal = g_color_text_d;
+	ctx->style.edit.selected_hover = g_color_text_d;
+	ctx->style.edit.selected_text_normal = back_p3;
+	ctx->style.edit.selected_text_hover = back_p3;
+	//ctx->style.edit.padding = nk_vec2(0.0f, 0.0f);
 }
 
 int APIENTRY

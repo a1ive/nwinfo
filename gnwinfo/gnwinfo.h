@@ -179,6 +179,8 @@ VOID gnwinfo_draw_smart_window(struct nk_context* ctx, float width, float height
 VOID gnwinfo_draw_settings_window(struct nk_context* ctx, float width, float height);
 VOID gnwinfo_draw_pci_window(struct nk_context* ctx, float width, float height);
 VOID gnwinfo_draw_dmi_window(struct nk_context* ctx, float width, float height);
+
+VOID gnwinfo_init_mm_window(struct nk_context* ctx);
 VOID gnwinfo_draw_mm_window(struct nk_context* ctx, float width, float height);
 
 LPCSTR gnwinfo_get_ini_value(LPCWSTR section, LPCWSTR key, LPCWSTR fallback);
