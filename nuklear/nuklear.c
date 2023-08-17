@@ -50,3 +50,41 @@ nk_gdip_load_font(LPCWSTR name, int size, WORD fallback)
 fail:
 	exit(1);
 }
+
+void
+nk_image_label(struct nk_context* ctx, struct nk_image img,
+	const char* str, nk_flags align, struct nk_color color)
+{
+	struct nk_window* win;
+	const struct nk_style* style;
+	struct nk_rect bounds;
+	struct nk_rect icon;
+	struct nk_text text;
+	int len;
+
+	NK_ASSERT(ctx);
+	NK_ASSERT(ctx->current);
+	NK_ASSERT(ctx->current->layout);
+	if (!ctx || !ctx->current || !ctx->current->layout) return;
+
+	win = ctx->current;
+	style = &ctx->style;
+	len = nk_strlen(str);
+	if (!nk_widget(&bounds, ctx))
+		return;
+
+	icon.w = icon.h = bounds.h;
+	icon.x = bounds.x;
+	icon.y = bounds.y;
+
+	nk_draw_image(&win->buffer, icon, &img, nk_white);
+
+	bounds.x = icon.x + icon.w + style->window.padding.x + style->window.border;
+	bounds.w -= icon.w + style->window.padding.x + style->window.border;
+
+	text.padding.x = style->text.padding.x;
+	text.padding.y = style->text.padding.y;
+	text.background = style->window.background;
+	text.text = color;
+	nk_widget_text(&win->buffer, bounds, str, len, &text, align, style->font);
+}
