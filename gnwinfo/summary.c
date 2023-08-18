@@ -384,6 +384,17 @@ fail:
 }
 
 static VOID
+open_folder(LPCSTR drive_letter, LPCSTR volume_guid)
+{
+	LPCWSTR path = NULL;
+	if (drive_letter[1] == ':')
+		path = NWL_Utf8ToUcs2(drive_letter);
+	else
+		path = NWL_Utf8ToUcs2(volume_guid);
+	ShellExecuteW(NULL, L"explore", path, NULL, NULL, SW_NORMAL);
+}
+
+static VOID
 draw_volume(struct nk_context* ctx, PNODE disk, BOOL cdrom)
 {
 	INT i;
@@ -396,13 +407,14 @@ draw_volume(struct nk_context* ctx, PNODE disk, BOOL cdrom)
 		struct nk_image img = g_ctx.image_hdd;
 		PNODE tab = vol->Children[i].LinkedNode;
 		LPCSTR path = gnwinfo_get_node_attr(tab, "Path");
+		LPCSTR drive = get_drive_letter(tab);
 		if (strcmp(path, g_ctx.sys_disk) == 0)
 			img = g_ctx.image_sysdisk;
 		if (cdrom)
 			img = g_ctx.image_cd;
 		nk_spacer(ctx);
-		if (nk_button_image_label(ctx, img, get_drive_letter(tab), NK_TEXT_CENTERED))
-			ShellExecuteA(NULL, "explore", gnwinfo_get_node_attr(tab, "Volume GUID"), NULL, NULL, SW_NORMAL);
+		if (nk_button_image_label(ctx, img, drive, NK_TEXT_CENTERED))
+			open_folder(drive, gnwinfo_get_node_attr(tab, "Volume GUID"));
 		nk_labelf_colored(ctx, NK_TEXT_LEFT,
 			g_color_text_l,
 			"%s %s %s",
@@ -440,7 +452,7 @@ draw_volume_compact(struct nk_context* ctx, PNODE disk)
 		buf[0] = drive[0];
 		nk_layout_row_push(ctx, g_ctx.gui_ratio);
 		if (nk_button_label(ctx, buf))
-			ShellExecuteA(NULL, "explore", gnwinfo_get_node_attr(tab, "Volume GUID"), NULL, NULL, SW_NORMAL);
+			open_folder(drive, gnwinfo_get_node_attr(tab, "Volume GUID"));
 	}
 	nk_layout_row_end(ctx);
 }
