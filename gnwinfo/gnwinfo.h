@@ -61,7 +61,7 @@ nk_space_label(struct nk_context* ctx, const char* str, nk_flags align);
 #define MAIN_B_VENDOR       (1U << 23)
 #define MAIN_CPU_DETAIL     (1U << 24)
 #define MAIN_CPU_CACHE      (1U << 25)
-
+#define MAIN_DISK_COMPACT   (1U << 26)
 #define MAIN_MEM_DETAIL     (1U << 27)
 
 #define GNWC_STR_SIZE       64

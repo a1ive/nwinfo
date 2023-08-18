@@ -414,6 +414,38 @@ draw_volume(struct nk_context* ctx, PNODE disk, BOOL cdrom)
 }
 
 static VOID
+draw_volume_compact(struct nk_context* ctx, PNODE disk)
+{
+	INT i;
+	INT count;
+	CHAR buf[] = "A";
+	PNODE vol = NWL_NodeGetChild(disk, "Volumes");
+	if (!vol)
+		return;
+	for (i = 0, count = 0; vol->Children[i].LinkedNode; i++)
+	{
+		LPCSTR drive = get_drive_letter(vol->Children[i].LinkedNode);
+		if (drive[1] == ':')
+			count++;
+	}
+	nk_layout_row_begin(ctx, NK_DYNAMIC, 0, count + 1);
+	nk_layout_row_push(ctx, 0.3f);
+	nk_spacer(ctx);
+	for (i = 0; vol->Children[i].LinkedNode; i++)
+	{
+		PNODE tab = vol->Children[i].LinkedNode;
+		LPCSTR drive = get_drive_letter(tab);
+		if (drive[1] != ':')
+			continue;
+		buf[0] = drive[0];
+		nk_layout_row_push(ctx, g_ctx.gui_ratio);
+		if (nk_button_label(ctx, buf))
+			ShellExecuteA(NULL, "explore", gnwinfo_get_node_attr(tab, "Volume GUID"), NULL, NULL, SW_NORMAL);
+	}
+	nk_layout_row_end(ctx);
+}
+
+static VOID
 draw_storage(struct nk_context* ctx)
 {
 	INT i;
@@ -488,7 +520,10 @@ draw_storage(struct nk_context* ctx)
 				color, u8"%s%s %s\u00B0C", gnwinfo_get_text(whealth), life,
 				temp[0] == '-' ? "-" : temp);
 		}
-		draw_volume(ctx, disk, cdrom);
+		if (g_ctx.main_flag & MAIN_DISK_COMPACT)
+			draw_volume(ctx, disk, cdrom);
+		else
+			draw_volume_compact(ctx, disk);
 	}
 }
 

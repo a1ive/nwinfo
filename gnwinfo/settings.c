@@ -147,6 +147,8 @@ gnwinfo_draw_settings_window(struct nk_context* ctx, float width, float height)
 	nk_label(ctx, gnwinfo_get_text(L"Storage"), NK_TEXT_LEFT);
 	nk_layout_row(ctx, NK_DYNAMIC, 0, 2, (float[2]) { 0.1f, 0.9f });
 	nk_spacer(ctx);
+	nk_checkbox_flags_label(ctx, gnwinfo_get_text(L"Compact view"), &g_ctx.main_flag, MAIN_DISK_COMPACT);
+	nk_spacer(ctx);
 	nk_checkbox_flags_label(ctx, gnwinfo_get_text(L"Hide SMART"), &g_ctx.main_flag, MAIN_DISK_SMART);
 	nk_spacer(ctx);
 	g_ctx.smart_hex = !nk_check_label(ctx, gnwinfo_get_text(L"Display SMART in HEX format"), !g_ctx.smart_hex);

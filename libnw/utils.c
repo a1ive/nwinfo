@@ -449,7 +449,7 @@ LPCSTR NWL_GetBusTypeString(STORAGE_BUS_TYPE Type)
 	case BusTypeSd: return "SD";
 	case BusTypeMmc: return "MMC";
 	case BusTypeVirtual: return "Virtual";
-	case BusTypeFileBackedVirtual: return "FileBackedVirtual";
+	case BusTypeFileBackedVirtual: return "File";
 	case BusTypeSpaces: return "Spaces";
 	case BusTypeNvme: return "NVMe";
 	case BusTypeSCM: return "SCM";
