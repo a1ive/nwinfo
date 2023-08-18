@@ -266,7 +266,7 @@ draw_memory(struct nk_context* ctx)
 {
 	INT i;
 
-	nk_layout_row(ctx, NK_DYNAMIC, 0, 4, (float[4]) { 0.3f, 0.4f, g_ctx.gui_ratio, 0.3f - g_ctx.gui_ratio });
+	nk_layout_row(ctx, NK_DYNAMIC, 0, 4, (float[4]) { 0.3f, 0.4f - g_ctx.gui_ratio, g_ctx.gui_ratio, 0.3f });
 
 	nk_image_label(ctx, g_ctx.image_ram, gnwinfo_get_text(L"Memory"), NK_TEXT_LEFT, g_color_text_d);
 	nk_labelf_colored(ctx, NK_TEXT_LEFT,
