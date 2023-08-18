@@ -111,31 +111,29 @@ gnwinfo_draw_settings_window(struct nk_context* ctx, float width, float height)
 	nk_spacer(ctx);
 	nk_checkbox_flags_label(ctx, gnwinfo_get_text(L"Hide uptime"), &g_ctx.main_flag, MAIN_OS_UPTIME);
 	nk_spacer(ctx);
-	nk_checkbox_flags_label(ctx, gnwinfo_get_text(L"Compact mode"), &g_ctx.main_flag, MAIN_OS_NO_COMPACT);
+	nk_checkbox_flags_label(ctx, gnwinfo_get_text(L"Hide login status"), &g_ctx.main_flag, MAIN_OS_DETAIL);
 
 	nk_layout_row_dynamic(ctx, 0, 1);
 	nk_label(ctx, gnwinfo_get_text(L"BIOS"), NK_TEXT_LEFT);
 	nk_layout_row(ctx, NK_DYNAMIC, 0, 2, (float[2]) { 0.1f, 0.9f });
 	nk_spacer(ctx);
-	nk_checkbox_flags_label(ctx, gnwinfo_get_text(L"Hide vendor and version"), &g_ctx.main_flag, MAIN_B_DETAIL);
+	nk_checkbox_flags_label(ctx, gnwinfo_get_text(L"Hide vendor"), &g_ctx.main_flag, MAIN_B_VENDOR);
 	nk_spacer(ctx);
-	nk_checkbox_flags_label(ctx, gnwinfo_get_text(L"Compact mode"), &g_ctx.main_flag, MAIN_B_NO_COMPACT);
+	nk_checkbox_flags_label(ctx, gnwinfo_get_text(L"Hide version"), &g_ctx.main_flag, MAIN_B_VERSION);
 
 	nk_layout_row_dynamic(ctx, 0, 1);
 	nk_label(ctx, gnwinfo_get_text(L"Processor"), NK_TEXT_LEFT);
 	nk_layout_row(ctx, NK_DYNAMIC, 0, 2, (float[2]) { 0.1f, 0.9f });
 	nk_spacer(ctx);
-	nk_checkbox_flags_label(ctx, gnwinfo_get_text(L"Hide cache"), &g_ctx.main_flag, MAIN_CPU_CACHE);
+	nk_checkbox_flags_label(ctx, gnwinfo_get_text(L"Hide details"), &g_ctx.main_flag, MAIN_CPU_DETAIL);
 	nk_spacer(ctx);
-	nk_checkbox_flags_label(ctx, gnwinfo_get_text(L"Compact mode"), &g_ctx.main_flag, MAIN_CPU_NO_COMPACT);
+	nk_checkbox_flags_label(ctx, gnwinfo_get_text(L"Hide cache"), &g_ctx.main_flag, MAIN_CPU_CACHE);
 
 	nk_layout_row_dynamic(ctx, 0, 1);
 	nk_label(ctx, gnwinfo_get_text(L"Memory"), NK_TEXT_LEFT);
 	nk_layout_row(ctx, NK_DYNAMIC, 0, 2, (float[2]) { 0.1f, 0.9f });
 	nk_spacer(ctx);
 	nk_checkbox_flags_label(ctx, gnwinfo_get_text(L"Hide details"), &g_ctx.main_flag, MAIN_MEM_DETAIL);
-	nk_spacer(ctx);
-	nk_checkbox_flags_label(ctx, gnwinfo_get_text(L"Compact mode"), &g_ctx.main_flag, MAIN_MEM_NO_COMPACT);
 
 	nk_layout_row_dynamic(ctx, 0, 1);
 	nk_label(ctx, gnwinfo_get_text(L"Network"), NK_TEXT_LEFT);

@@ -88,3 +88,33 @@ nk_image_label(struct nk_context* ctx, struct nk_image img,
 	text.text = color;
 	nk_widget_text(&win->buffer, bounds, str, len, &text, align, style->font);
 }
+
+void
+nk_space_label(struct nk_context* ctx, const char* str, nk_flags align)
+{
+	struct nk_window* win;
+	const struct nk_style* style;
+	struct nk_rect bounds;
+	struct nk_text text;
+	int len;
+
+	NK_ASSERT(ctx);
+	NK_ASSERT(ctx->current);
+	NK_ASSERT(ctx->current->layout);
+	if (!ctx || !ctx->current || !ctx->current->layout) return;
+
+	win = ctx->current;
+	style = &ctx->style;
+	len = nk_strlen(str);
+	if (!nk_widget(&bounds, ctx))
+		return;
+
+	bounds.x += bounds.h + style->window.padding.x + style->window.border;
+	bounds.w -= bounds.h + style->window.padding.x + style->window.border;
+
+	text.padding.x = style->text.padding.x;
+	text.padding.y = style->text.padding.y;
+	text.background = style->window.background;
+	text.text = style->text.color;
+	nk_widget_text(&win->buffer, bounds, str, len, &text, align, style->font);
+}

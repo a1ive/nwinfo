@@ -37,6 +37,9 @@ void
 nk_image_label(struct nk_context* ctx, struct nk_image img,
 	const char* str, nk_flags align, struct nk_color color);
 
+void
+nk_space_label(struct nk_context* ctx, const char* str, nk_flags align);
+
 #define GNWINFO_FONT_SIZE 12
 
 #define MAIN_INFO_OS        (1U << 0)
@@ -52,13 +55,13 @@ nk_image_label(struct nk_context* ctx, struct nk_image img,
 #define MAIN_NO_PDH         (1U << 17)
 #define MAIN_NET_DETAIL     (1U << 18)
 #define MAIN_DISK_SMART     (1U << 19)
-#define MAIN_OS_NO_COMPACT  (1U << 20)
+#define MAIN_OS_DETAIL      (1U << 20)
 #define MAIN_OS_UPTIME      (1U << 21)
-#define MAIN_B_NO_COMPACT   (1U << 22)
-#define MAIN_B_DETAIL       (1U << 23)
-#define MAIN_CPU_NO_COMPACT (1U << 24)
+#define MAIN_B_VERSION      (1U << 22)
+#define MAIN_B_VENDOR       (1U << 23)
+#define MAIN_CPU_DETAIL     (1U << 24)
 #define MAIN_CPU_CACHE      (1U << 25)
-#define MAIN_MEM_NO_COMPACT (1U << 26)
+
 #define MAIN_MEM_DETAIL     (1U << 27)
 
 #define GNWC_STR_SIZE       64
