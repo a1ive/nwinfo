@@ -477,7 +477,7 @@ draw_storage(struct nk_context* ctx)
 			continue;
 
 		nk_layout_row(ctx, NK_DYNAMIC, 0, 3, (float[3]) { 0.12f, 0.18f, 0.7f });
-		snprintf(name, 32, "%s%s", cdrom ? "CD" : "DISK", id);
+		snprintf(name, 32, "%s%s", cdrom ? "CD" : "HD", id);
 		nk_space_label(ctx, name, NK_TEXT_LEFT);
 		nk_labelf(ctx, NK_TEXT_LEFT,
 			"%s %s",

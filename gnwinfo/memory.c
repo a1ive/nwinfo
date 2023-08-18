@@ -209,13 +209,12 @@ draw_size_editor(struct nk_context* ctx, WCHAR drive)
 }
 
 static void
-draw_page_file(struct nk_context* ctx, float height)
+draw_page_file(struct nk_context* ctx)
 {
 	WCHAR drive = L'C';
 
-	nk_layout_row_dynamic(ctx, height, 1);
 	if (!nk_group_begin(ctx, gnwinfo_get_text(L"Create Paging Files"), NK_WINDOW_BORDER | NK_WINDOW_TITLE))
-		goto out;
+		return;
 
 	nk_layout_row_dynamic(ctx, 8, 1);
 	nk_spacer(ctx);
@@ -254,7 +253,7 @@ draw_page_file(struct nk_context* ctx, float height)
 		nk_label_colored(ctx, gnwinfo_get_text(L"FAILED"), NK_TEXT_CENTERED, g_color_error);
 	else
 		nk_spacer(ctx);
-out:
+
 	nk_group_end(ctx);
 }
 
@@ -305,7 +304,9 @@ gnwinfo_draw_mm_window(struct nk_context* ctx, float width, float height)
 
 	nk_layout_row_dynamic(ctx, 8, 1);
 	nk_spacer(ctx);
-	draw_page_file(ctx, m_ctx.col_height * 9);
+
+	nk_layout_row_dynamic(ctx, m_ctx.col_height * 9, 1);
+	draw_page_file(ctx);
 
 out:
 	nk_end(ctx);
