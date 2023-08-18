@@ -391,7 +391,7 @@ open_folder(LPCSTR drive_letter, LPCSTR volume_guid)
 		path = NWL_Utf8ToUcs2(drive_letter);
 	else
 		path = NWL_Utf8ToUcs2(volume_guid);
-	ShellExecuteW(NULL, L"explore", path, NULL, NULL, SW_NORMAL);
+	ShellExecuteW(NULL, L"open", path, NULL, NULL, SW_NORMAL);
 }
 
 static VOID
