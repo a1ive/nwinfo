@@ -133,6 +133,7 @@ set_style(struct nk_context* ctx)
 	struct nk_color back_p2 = convert_color(g_color_back, -0.02f);
 	struct nk_color back_p3 = convert_color(g_color_back, -0.03f);
 	struct nk_color back_p4 = convert_color(g_color_back, -0.04f);
+	struct nk_color back_p8 = convert_color(g_color_back, -0.08f);
 	struct nk_color back_n2 = convert_color(g_color_back, 0.02f);
 
 	ctx->style.text.color = g_color_text_d;
@@ -154,6 +155,14 @@ set_style(struct nk_context* ctx)
 	ctx->style.window.header.close_button.text_hover = g_color_text_d;
 	ctx->style.window.header.close_button.text_active = g_color_text_d;
 
+	ctx->style.window.border_color = back_p8;
+	ctx->style.window.popup_border_color = back_p8;
+	ctx->style.window.combo_border_color = back_p8;
+	ctx->style.window.contextual_border_color = back_p8;
+	ctx->style.window.menu_border_color = back_p8;
+	ctx->style.window.group_border_color = back_p8;
+	ctx->style.window.tooltip_border_color = back_p8;
+
 	ctx->style.button.text_normal = g_color_text_d;
 	ctx->style.button.text_hover = g_color_text_d;
 	ctx->style.button.text_active = g_color_text_d;
@@ -164,6 +173,7 @@ set_style(struct nk_context* ctx)
 	ctx->style.button.rounding = 0;
 	ctx->style.button.border = 1.0f;
 	ctx->style.button.padding = nk_vec2(0.0f, 0.0f);
+	ctx->style.button.border_color = back_p8;
 
 	ctx->style.checkbox.text_normal = g_color_text_d;
 	ctx->style.checkbox.text_hover = g_color_text_d;
@@ -181,17 +191,19 @@ set_style(struct nk_context* ctx)
 	ctx->style.slider.cursor_normal = nk_style_item_color(text_p30);
 	ctx->style.slider.cursor_hover = nk_style_item_color(text_p20);
 	ctx->style.slider.cursor_active = nk_style_item_color(text_p10);
+	ctx->style.slider.border_color = back_p8;
 
 	ctx->style.progress.normal = nk_style_item_color(g_color_back);
 	ctx->style.progress.hover = nk_style_item_color(g_color_back);
 	ctx->style.progress.active = nk_style_item_color(g_color_back);
-	ctx->style.progress.border_color = ctx->style.button.border_color;
+	ctx->style.progress.border_color = back_p8;
 	ctx->style.progress.padding = nk_vec2(4.0f, 4.0f);
 	ctx->style.progress.border = 1.0f;
 
 	ctx->style.combo.normal = nk_style_item_color(g_color_back);
 	ctx->style.combo.hover = nk_style_item_color(g_color_back);
 	ctx->style.combo.active = nk_style_item_color(g_color_back);
+	ctx->style.combo.border_color = back_p8;
 	ctx->style.combo.label_normal = g_color_text_d;
 	ctx->style.combo.label_hover = g_color_text_d;
 	ctx->style.combo.label_active = g_color_text_d;
@@ -236,6 +248,8 @@ set_style(struct nk_context* ctx)
 	ctx->style.scrollh.cursor_normal = nk_style_item_color(text_p30);
 	ctx->style.scrollh.cursor_hover = nk_style_item_color(text_p20);
 	ctx->style.scrollh.cursor_active = nk_style_item_color(text_p10);
+	ctx->style.scrollh.border_color = back_p2;
+	ctx->style.scrollh.cursor_border_color = back_p2;
 	ctx->style.scrollv = ctx->style.scrollh;
 
 	ctx->style.edit.normal = nk_style_item_color(back_p3);
@@ -252,10 +266,12 @@ set_style(struct nk_context* ctx)
 	ctx->style.edit.selected_hover = g_color_text_d;
 	ctx->style.edit.selected_text_normal = back_p3;
 	ctx->style.edit.selected_text_hover = back_p3;
+	ctx->style.edit.border_color = back_p8;
 	//ctx->style.edit.padding = nk_vec2(0.0f, 0.0f);
 
 	ctx->style.tab.background = nk_style_item_color(back_p2);
 	ctx->style.tab.text = g_color_text_d;
+	ctx->style.tab.border_color = back_p8;
 	ctx->style.tab.tab_minimize_button.normal = nk_style_item_color(back_p2);
 	ctx->style.tab.tab_minimize_button.hover = nk_style_item_color(back_p2);
 	ctx->style.tab.tab_minimize_button.active = nk_style_item_color(back_p2);
@@ -271,6 +287,7 @@ set_style(struct nk_context* ctx)
 	ctx->style.contextual_button.text_normal = g_color_text_d;
 	ctx->style.contextual_button.text_hover = g_color_text_d;
 	ctx->style.contextual_button.text_active = g_color_text_d;
+	ctx->style.contextual_button.border_color = back_p8;
 }
 
 int APIENTRY
@@ -290,6 +307,7 @@ wWinMain(_In_ HINSTANCE hInstance,
 	int running = 1;
 	int needs_refresh = 1;
 	WCHAR font_name[64];
+	DWORD layered_flag = LWA_ALPHA;
 
 	GetModuleFileNameW(NULL, g_ini_path, MAX_PATH);
 	PathCchRemoveFileSpec(g_ini_path, MAX_PATH);
@@ -332,10 +350,10 @@ wWinMain(_In_ HINSTANCE hInstance,
 	if (g_bginfo)
 	{
 		SetWindowPos(wnd, HWND_BOTTOM, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
-		SetLayeredWindowAttributes(wnd, RGB(g_color_back.r, g_color_back.g, g_color_back.b), (BYTE)g_init_alpha, LWA_COLORKEY | LWA_ALPHA);
+		layered_flag |= LWA_COLORKEY;
 	}
-	else
-		SetLayeredWindowAttributes(wnd, 0, (BYTE)g_init_alpha, LWA_ALPHA);
+
+	SetLayeredWindowAttributes(wnd, RGB(g_color_back.r, g_color_back.g, g_color_back.b), (BYTE)g_init_alpha, layered_flag);
 
 	/* GUI */
 	ctx = nk_gdip_init(wnd, g_init_width, g_init_height);
