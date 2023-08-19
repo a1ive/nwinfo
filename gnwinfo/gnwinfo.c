@@ -184,10 +184,14 @@ set_style(struct nk_context* ctx)
 	ctx->style.progress.normal = nk_style_item_color(back_p3);
 	ctx->style.progress.hover = nk_style_item_color(back_p3);
 	ctx->style.progress.active = nk_style_item_color(back_p3);
+	ctx->style.progress.padding = nk_vec2(2.0f, 2.0f);
 
 	ctx->style.combo.normal = nk_style_item_color(g_color_back);
 	ctx->style.combo.hover = nk_style_item_color(g_color_back);
 	ctx->style.combo.active = nk_style_item_color(g_color_back);
+	ctx->style.combo.label_normal = g_color_text_d;
+	ctx->style.combo.label_hover = g_color_text_d;
+	ctx->style.combo.label_active = g_color_text_d;
 	ctx->style.combo.button.normal = nk_style_item_color(g_color_back);
 	ctx->style.combo.button.hover = nk_style_item_color(g_color_back);
 	ctx->style.combo.button.active = nk_style_item_color(g_color_back);
@@ -246,6 +250,24 @@ set_style(struct nk_context* ctx)
 	ctx->style.edit.selected_text_normal = back_p3;
 	ctx->style.edit.selected_text_hover = back_p3;
 	//ctx->style.edit.padding = nk_vec2(0.0f, 0.0f);
+
+	ctx->style.tab.background = nk_style_item_color(back_p2);
+	ctx->style.tab.text = g_color_text_d;
+	ctx->style.tab.tab_minimize_button.normal = nk_style_item_color(back_p2);
+	ctx->style.tab.tab_minimize_button.hover = nk_style_item_color(back_p2);
+	ctx->style.tab.tab_minimize_button.active = nk_style_item_color(back_p2);
+	ctx->style.tab.tab_minimize_button.text_background = back_p2;
+	ctx->style.tab.tab_minimize_button.text_normal = g_color_text_d;
+	ctx->style.tab.tab_minimize_button.text_hover = g_color_text_d;
+	ctx->style.tab.tab_minimize_button.text_active = g_color_text_d;
+
+	ctx->style.contextual_button.normal = nk_style_item_color(back_n2);
+	ctx->style.contextual_button.hover = nk_style_item_color(back_p2);
+	ctx->style.contextual_button.active = nk_style_item_color(back_p4);
+	ctx->style.contextual_button.text_background = g_color_back;
+	ctx->style.contextual_button.text_normal = g_color_text_d;
+	ctx->style.contextual_button.text_hover = g_color_text_d;
+	ctx->style.contextual_button.text_active = g_color_text_d;
 }
 
 int APIENTRY
