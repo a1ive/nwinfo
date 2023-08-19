@@ -5,6 +5,7 @@
 #include <libcpuid.h>
 #include <winring0.h>
 #include "../libcdi/libcdi.h"
+#include "version.h"
 
 static void
 PrintDriverVerison(PNODE node, struct wr0_drv_t* drv)
@@ -35,6 +36,7 @@ PNODE NW_Libinfo(VOID)
 {
 	PNODE pNode = NWLC->NwRoot;
 	NWL_NodeAttrSet(pNode, "Build Time", __DATE__ " " __TIME__, 0);
+	NWL_NodeAttrSet(pNode, "libnw", "v" NWINFO_VERSION_STR, 0);
 	NWL_NodeAttrSetf(pNode, "MSVC Version", 0, "%u", _MSC_FULL_VER);
 	if (NWLC->NwDrv)
 	{

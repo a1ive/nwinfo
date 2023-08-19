@@ -1,12 +1,16 @@
 // SPDX-License-Identifier: Unlicense
 
 #include <libnw.h>
+#include <version.h>
 
 static NWLIB_CONTEXT nwContext;
 
 static void nwinfo_help(void)
 {
-	printf("Usage: nwinfo OPTIONS\n"
+	printf(NWINFO_CLI " v" NWINFO_VERSION_STR "\n"
+		NWINFO_FILEDESC "\n"
+		NWINFO_COPYRIGHT "\n"
+		"Usage: nwinfo OPTIONS\n"
 		"OPTIONS:\n"
 		"  --format=XXX     Specify output format. [YAML|JSON|LUA]\n"
 		"  --output=FILE    Write to FILE instead of printing to screen.\n"

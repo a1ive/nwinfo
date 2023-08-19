@@ -135,6 +135,7 @@
     <ClInclude Include="smbios.h" />
     <ClInclude Include="spd.h" />
     <ClInclude Include="utils.h" />
+    <ClInclude Include="version.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="acpi.c" />
