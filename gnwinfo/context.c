@@ -241,6 +241,7 @@ gnwinfo_ctx_init(HINSTANCE inst, HWND wnd, struct nk_context* ctx, float width, 
 	g_ctx.smart_hex = strtoul(gnwinfo_get_ini_value(L"Widgets", L"SmartFormat", L"0"), NULL, 10);
 	// ~0x01FBFF81
 	g_ctx.smart_flag = strtoul(gnwinfo_get_ini_value(L"Widgets", L"SmartFlags", L"0xFE04007E"), NULL, 16);
+	g_ctx.gui_aa = strtoul(gnwinfo_get_ini_value(L"GUI", L"AntiAliasing", L"0"), NULL, 10);
 
 	nk_begin(ctx, gnwinfo_get_text(L"Loading"),
 		nk_rect(width * 0.2f, height / 3, width * 0.6f, height / 4),
@@ -250,7 +251,7 @@ gnwinfo_ctx_init(HINSTANCE inst, HWND wnd, struct nk_context* ctx, float width, 
 	nk_label (ctx, gnwinfo_get_text(L"Please wait ..."), NK_TEXT_CENTERED);
 	nk_spacer(ctx);
 	nk_end(ctx);
-	nk_gdip_render(NK_ANTI_ALIASING_OFF, g_color_back);
+	nk_gdip_render(g_ctx.gui_aa, g_color_back);
 
 	g_ctx.gui_height = height;
 	g_ctx.gui_width = width;

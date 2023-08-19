@@ -207,6 +207,8 @@ gnwinfo_draw_settings_window(struct nk_context* ctx, float width, float height)
 	nk_checkbox_flags_label(ctx, gnwinfo_get_text(L"Enable PDH"), &g_ctx.main_flag, MAIN_NO_PDH);
 #endif
 	nk_spacer(ctx);
+	nk_checkbox_label(ctx, gnwinfo_get_text(L"Disable anti-aliasing"), &g_ctx.gui_aa);
+	nk_spacer(ctx);
 	nk_property_int(ctx, gnwinfo_get_text(L"#Width"), 60, &g_init_width, 1920, 10, 10);
 	nk_spacer(ctx);
 	nk_property_int(ctx, gnwinfo_get_text(L"#Height"), 80, &g_init_height, 1080, 10, 10);

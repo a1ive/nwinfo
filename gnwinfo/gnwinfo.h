@@ -100,6 +100,7 @@ typedef struct _GNW_CONTEXT
 	nk_bool smart_hex;
 	UINT32 smart_flag;
 	nk_bool gui_bginfo;
+	nk_bool gui_aa;
 
 	struct nk_image image_os;
 	struct nk_image image_bios;
