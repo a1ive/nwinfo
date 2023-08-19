@@ -58,7 +58,7 @@ window_proc(HWND wnd, UINT msg, WPARAM wparam, LPARAM lparam)
 		if (g_bginfo)
 		{
 			g_ctx.mouse = FALSE;
-			SetLayeredWindowAttributes(wnd, RGB(g_color_back.r, g_color_back.g, g_color_back.b), 0, LWA_COLORKEY);
+			SetLayeredWindowAttributes(wnd, RGB(g_color_back.r, g_color_back.g, g_color_back.b), (BYTE)g_init_alpha, LWA_COLORKEY | LWA_ALPHA);
 		}
 		break;
 	case WM_NCHITTEST:
@@ -329,7 +329,7 @@ wWinMain(_In_ HINSTANCE hInstance,
 	if (g_bginfo)
 	{
 		SetWindowPos(wnd, HWND_BOTTOM, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
-		SetLayeredWindowAttributes(wnd, RGB(g_color_back.r, g_color_back.g, g_color_back.b), 0, LWA_COLORKEY);
+		SetLayeredWindowAttributes(wnd, RGB(g_color_back.r, g_color_back.g, g_color_back.b), (BYTE)g_init_alpha, LWA_COLORKEY | LWA_ALPHA);
 	}
 	else
 		SetLayeredWindowAttributes(wnd, 0, (BYTE)g_init_alpha, LWA_ALPHA);
@@ -385,7 +385,7 @@ wWinMain(_In_ HINSTANCE hInstance,
 		gnwinfo_draw_mm_window(ctx, g_ctx.gui_width, g_ctx.gui_height);
 
 		/* Draw */
-		nk_gdip_render(NK_ANTI_ALIASING_ON, g_color_back);
+		nk_gdip_render(NK_ANTI_ALIASING_OFF, g_color_back);
 	}
 
 	CoUninitialize();

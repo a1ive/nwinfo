@@ -250,7 +250,7 @@ gnwinfo_ctx_init(HINSTANCE inst, HWND wnd, struct nk_context* ctx, float width, 
 	nk_label (ctx, gnwinfo_get_text(L"Please wait ..."), NK_TEXT_CENTERED);
 	nk_spacer(ctx);
 	nk_end(ctx);
-	nk_gdip_render(NK_ANTI_ALIASING_ON, g_color_back);
+	nk_gdip_render(NK_ANTI_ALIASING_OFF, g_color_back);
 
 	g_ctx.gui_height = height;
 	g_ctx.gui_width = width;
