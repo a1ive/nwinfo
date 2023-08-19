@@ -127,7 +127,10 @@ draw_bios(struct nk_context* ctx)
 	if (g_ctx.main_flag & MAIN_B_VERSION)
 	{
 		nk_space_label(ctx, gnwinfo_get_text(L"Version"), NK_TEXT_LEFT);
-		nk_label_colored(ctx, get_smbios_attr("0", "Version", NULL), NK_TEXT_LEFT, g_color_text_l);
+		nk_labelf_colored(ctx, NK_TEXT_LEFT, g_color_text_l,
+			"%s %s",
+			get_smbios_attr("0", "Version", NULL),
+			get_smbios_attr("0", "Release Date", NULL));
 	}
 }
 
