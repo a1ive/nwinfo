@@ -157,7 +157,8 @@ set_style(struct nk_context* ctx)
 	ctx->style.button.text_normal = g_color_text_d;
 	ctx->style.button.text_hover = g_color_text_d;
 	ctx->style.button.text_active = g_color_text_d;
-	ctx->style.button.normal = nk_style_item_color(back_n2);
+	//ctx->style.button.normal = nk_style_item_color(back_n2);
+	ctx->style.button.normal = nk_style_item_color(g_color_back);
 	ctx->style.button.hover = nk_style_item_color(back_p2);
 	ctx->style.button.active = nk_style_item_color(back_p4);
 	ctx->style.button.rounding = 0;
@@ -181,10 +182,12 @@ set_style(struct nk_context* ctx)
 	ctx->style.slider.cursor_hover = nk_style_item_color(text_p20);
 	ctx->style.slider.cursor_active = nk_style_item_color(text_p10);
 
-	ctx->style.progress.normal = nk_style_item_color(back_p3);
-	ctx->style.progress.hover = nk_style_item_color(back_p3);
-	ctx->style.progress.active = nk_style_item_color(back_p3);
-	ctx->style.progress.padding = nk_vec2(2.0f, 2.0f);
+	ctx->style.progress.normal = nk_style_item_color(g_color_back);
+	ctx->style.progress.hover = nk_style_item_color(g_color_back);
+	ctx->style.progress.active = nk_style_item_color(g_color_back);
+	ctx->style.progress.border_color = ctx->style.button.border_color;
+	ctx->style.progress.padding = nk_vec2(4.0f, 4.0f);
+	ctx->style.progress.border = 1.0f;
 
 	ctx->style.combo.normal = nk_style_item_color(g_color_back);
 	ctx->style.combo.hover = nk_style_item_color(g_color_back);
