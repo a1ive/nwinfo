@@ -251,6 +251,7 @@ gnwinfo_draw_settings_window(struct nk_context* ctx, float width, float height)
 		gnwinfo_set_ini_value(L"Window", L"Height", L"%u", g_init_height);
 		gnwinfo_set_ini_value(L"Window", L"Alpha", L"%u", g_init_alpha);
 		gnwinfo_set_ini_value(L"Window", L"BGInfo", L"%d", !g_ctx.gui_bginfo);
+		gnwinfo_set_ini_value(L"Window", L"AntiAliasing", L"%u", g_ctx.gui_aa);
 		set_ini_color(L"Background", g_color_back);
 		set_ini_color(L"Highlight", g_color_text_l);
 		set_ini_color(L"Default", g_color_text_d);
