@@ -36,7 +36,7 @@ gnwinfo_init_mm_window(struct nk_context* ctx)
 	m_ctx.page_drive_mb = 0;
 	m_ctx.page_file_size = 8192;
 	m_ctx.page_rc = 0;
-	m_ctx.col_height = GNWINFO_FONT_SIZE + ctx->style.edit.padding.y * 2;
+	m_ctx.col_height = g_font_size + ctx->style.edit.padding.y * 2;
 }
 
 static UINT64

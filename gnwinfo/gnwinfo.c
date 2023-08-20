@@ -8,6 +8,7 @@
 unsigned int g_init_width = 600;
 unsigned int g_init_height = 800;
 unsigned int g_init_alpha = 255;
+unsigned int g_font_size = 12;
 nk_bool g_bginfo = 0;
 struct nk_color g_color_warning = NK_COLOR_YELLOW;
 struct nk_color g_color_error = NK_COLOR_RED;
@@ -369,7 +370,8 @@ wWinMain(_In_ HINSTANCE hInstance,
 	/* GUI */
 	ctx = nk_gdip_init(wnd, g_init_width, g_init_height);
 	GetPrivateProfileStringW(L"Window", L"Font", L"Courier New", font_name, 64, g_ini_path);
-	font = nk_gdip_load_font(font_name, GNWINFO_FONT_SIZE, IDR_FONT1);
+	g_font_size = strtoul(gnwinfo_get_ini_value(L"Window", L"FontSize", L"12"), NULL, 10);
+	font = nk_gdip_load_font(font_name, g_font_size, IDR_FONT1);
 	nk_gdip_set_font(font);
 
 	(void)CoInitializeEx(0, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE);

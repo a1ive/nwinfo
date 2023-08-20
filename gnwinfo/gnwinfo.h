@@ -43,8 +43,6 @@ nk_space_label(struct nk_context* ctx, const char* str, nk_flags align);
 nk_bool
 nk_combo_begin_color_dynamic(struct nk_context* ctx, struct nk_color color);
 
-#define GNWINFO_FONT_SIZE 12
-
 #define MAIN_INFO_OS        (1U << 0)
 #define MAIN_INFO_BIOS      (1U << 1)
 #define MAIN_INFO_BOARD     (1U << 2)
@@ -169,6 +167,7 @@ extern WCHAR g_ini_path[MAX_PATH];
 extern unsigned int g_init_width;
 extern unsigned int g_init_height;
 extern unsigned int g_init_alpha;
+extern unsigned int g_font_size;
 extern nk_bool g_bginfo;
 
 #define NK_COLOR_YELLOW     {0xFF, 0xEA, 0x00, 0xFF}
