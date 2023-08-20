@@ -35,6 +35,17 @@ window_proc(HWND wnd, UINT msg, WPARAM wparam, LPARAM lparam)
 		break;
 	case WM_DPICHANGED:
 		break;
+	case WM_DISPLAYCHANGE:
+		if (g_bginfo)
+		{
+			int x = 0;
+			RECT desktop = { 0, 0, 1024, 768 };
+			GetWindowRect(GetDesktopWindow(), &desktop);
+			if (desktop.right > (LONG)g_init_width)
+				x = desktop.right - (LONG)g_init_width;
+			SetWindowPos(wnd, HWND_BOTTOM, x, 0, 0, 0, SWP_NOSIZE | SWP_NOACTIVATE);
+		}
+		break;
 	case WM_MOUSEMOVE:
 		if (g_bginfo && !g_ctx.mouse)
 		{
