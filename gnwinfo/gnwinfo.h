@@ -40,6 +40,9 @@ nk_image_label(struct nk_context* ctx, struct nk_image img,
 void
 nk_space_label(struct nk_context* ctx, const char* str, nk_flags align);
 
+nk_bool
+nk_combo_begin_color_dynamic(struct nk_context* ctx, struct nk_color color);
+
 #define GNWINFO_FONT_SIZE 12
 
 #define MAIN_INFO_OS        (1U << 0)

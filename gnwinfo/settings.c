@@ -61,10 +61,10 @@ set_ini_color(LPCWSTR key, struct nk_color color)
 static void
 draw_color_picker(struct nk_context* ctx, struct nk_color* color)
 {
-	if (nk_combo_begin_color(ctx, *color, nk_vec2(200, 200)))
+	if (nk_combo_begin_color_dynamic(ctx, *color))
 	{
 		float ratios[] = { 0.15f, 0.85f };
-		nk_layout_row(ctx, NK_DYNAMIC, 30, 2, ratios);
+		nk_layout_row(ctx, NK_DYNAMIC, 0, 2, ratios);
 		nk_label(ctx, "R:", NK_TEXT_LEFT);
 		color->r = (nk_byte)nk_slide_int(ctx, 0, color->r, 255, 5);
 		nk_label(ctx, "G:", NK_TEXT_LEFT);
