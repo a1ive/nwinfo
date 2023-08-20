@@ -331,6 +331,7 @@ gnwinfo_ctx_init(HINSTANCE inst, HWND wnd, struct nk_context* ctx, float width, 
 	g_ctx.image_pci = load_png(IDR_PNG_PCI);
 	g_ctx.image_mm = load_png(IDR_PNG_MM);
 	g_ctx.image_dmi = load_png(IDR_PNG_DMI);
+	g_ctx.image_rocket = load_png(IDR_PNG_ROCKET);
 
 	SetTimer(g_ctx.wnd, IDT_TIMER_1S, 1000, (TIMERPROC)NULL);
 	SetTimer(g_ctx.wnd, IDT_TIMER_1M, 60 * 1000, (TIMERPROC)NULL);
@@ -377,5 +378,6 @@ gnwinfo_ctx_exit()
 	nk_gdip_image_free(g_ctx.image_pci);
 	nk_gdip_image_free(g_ctx.image_mm);
 	nk_gdip_image_free(g_ctx.image_dmi);
+	nk_gdip_image_free(g_ctx.image_rocket);
 	exit(0);
 }

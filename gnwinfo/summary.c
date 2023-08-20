@@ -276,7 +276,7 @@ draw_memory(struct nk_context* ctx)
 		gnwinfo_get_color((double)g_ctx.mem_status.PhysUsage, 70.0, 90.0),
 		"%lu%% %s / %s",
 		g_ctx.mem_status.PhysUsage, g_ctx.mem_avail, g_ctx.mem_total);
-	if (nk_button_image(ctx, g_ctx.image_set))
+	if (nk_button_image(ctx, g_ctx.image_rocket))
 	{
 		g_ctx.gui_mm = TRUE;
 		gnwinfo_init_mm_window(ctx);

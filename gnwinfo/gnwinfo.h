@@ -122,6 +122,7 @@ typedef struct _GNW_CONTEXT
 	struct nk_image image_pci;
 	struct nk_image image_mm;
 	struct nk_image image_dmi;
+	struct nk_image image_rocket;
 
 	PNODE system;
 	PNODE cpuid;

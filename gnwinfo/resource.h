@@ -22,6 +22,7 @@
 #define IDR_PNG_PCI                     127
 #define IDR_PNG_MM                      128
 #define IDR_PNG_DMI                     129
+#define IDR_PNG_ROCKET                  130
 
 #define IDR_FONT1                       201
 
