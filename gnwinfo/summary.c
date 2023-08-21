@@ -471,7 +471,8 @@ draw_storage(struct nk_context* ctx)
 	for (i = 0; g_ctx.disk->Children[i].LinkedNode; i++)
 	{
 		BOOL cdrom;
-		LPCSTR path, id, type;
+		LPCSTR path, id;
+		LPCSTR ssd = "";
 		PNODE disk = g_ctx.disk->Children[i].LinkedNode;
 		if (!disk)
 			continue;
@@ -480,13 +481,13 @@ draw_storage(struct nk_context* ctx)
 		{
 			cdrom = TRUE;
 			id = &path[9];
-			type = "CDROM";
 		}
 		else if (strncmp(path, "\\\\.\\PhysicalDrive", 17) == 0)
 		{
 			cdrom = FALSE;
 			id = &path[17];
-			type = strcmp(gnwinfo_get_node_attr(disk, "SSD"), "Yes") == 0 ? "SSD" : "HDD";
+			if (strcmp(gnwinfo_get_node_attr(disk, "SSD"), "Yes") == 0)
+				ssd = " SSD";
 		}
 		else
 			continue;
@@ -495,9 +496,9 @@ draw_storage(struct nk_context* ctx)
 		snprintf(name, 32, "%s%s", cdrom ? "CD" : "HD", id);
 		nk_space_label(ctx, name, NK_TEXT_LEFT);
 		nk_labelf(ctx, NK_TEXT_LEFT,
-			"%s %s",
+			"%s%s",
 			gnwinfo_get_node_attr(disk, "Type"),
-			type);
+			ssd);
 		nk_labelf_colored(ctx, NK_TEXT_LEFT,
 			g_color_text_l,
 			"%s %s %s",
