@@ -140,9 +140,4 @@
       <Filter>资源文件</Filter>
     </Image>
   </ItemGroup>
-  <ItemGroup>
-    <Font Include="dos.ttf">
-      <Filter>资源文件</Filter>
-    </Font>
-  </ItemGroup>
 </Project>

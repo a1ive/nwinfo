@@ -31,7 +31,7 @@
 #include "resource.h"
 
 GdipFont*
-nk_gdip_load_font(LPCWSTR name, int size, WORD fallback);
+nk_gdip_load_font(LPCWSTR name, int size);
 
 void
 nk_image_label(struct nk_context* ctx, struct nk_image img,

@@ -24,8 +24,6 @@
 #define IDR_PNG_DMI                     129
 #define IDR_PNG_ROCKET                  130
 
-#define IDR_FONT1                       201
-
 #define IDT_TIMER_1S                    2001
 #define IDT_TIMER_1M                    2002
 

@@ -171,9 +171,6 @@
     <Image Include="icons\smart.png" />
     <Image Include="icons\sysdisk.png" />
   </ItemGroup>
-  <ItemGroup>
-    <Font Include="dos.ttf" />
-  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
     <Import Project="..\packages\YY.NuGet.Import.Helper.1.0.0.4\build\native\YY.NuGet.Import.Helper.targets" Condition="Exists('..\packages\YY.NuGet.Import.Helper.1.0.0.4\build\native\YY.NuGet.Import.Helper.targets')" />
