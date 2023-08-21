@@ -4,6 +4,7 @@
 
 #include <pathcch.h>
 #include <windowsx.h>
+#include <dbt.h>
 
 unsigned int g_init_width = 600;
 unsigned int g_init_height = 800;
@@ -34,9 +35,24 @@ window_proc(HWND wnd, UINT msg, WPARAM wparam, LPARAM lparam)
 	case WM_TIMER:
 		gnwinfo_ctx_update(wparam);
 		break;
+	case WM_DEVICECHANGE:
+	{
+		switch (wparam)
+		{
+		case DBT_DEVNODES_CHANGED:
+			// TODO: check if this is needed
+			break;
+		case DBT_DEVICEARRIVAL:
+		case DBT_DEVICEREMOVECOMPLETE:
+			gnwinfo_ctx_update(IDT_TIMER_DISK);
+			break;
+		}
+	}
+		break;
 	case WM_DPICHANGED:
 		break;
 	case WM_DISPLAYCHANGE:
+		gnwinfo_ctx_update(IDT_TIMER_DISPLAY);
 		if (g_bginfo)
 		{
 			int x = 0;

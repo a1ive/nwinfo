@@ -640,7 +640,11 @@ gnwinfo_draw_main_window(struct nk_context* ctx, float width, float height)
 		g_ctx.gui_settings = TRUE;
 	nk_layout_row_push(ctx, g_ctx.gui_ratio);
 	if (nk_button_image(ctx, g_ctx.image_refresh))
+	{
 		gnwinfo_ctx_update(IDT_TIMER_1M);
+		gnwinfo_ctx_update(IDT_TIMER_DISK);
+		gnwinfo_ctx_update(IDT_TIMER_DISPLAY);
+	}
 	nk_layout_row_push(ctx, g_ctx.gui_ratio);
 	if (nk_button_image(ctx, g_ctx.image_info))
 		g_ctx.gui_about = TRUE;

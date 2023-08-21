@@ -26,6 +26,8 @@
 
 #define IDT_TIMER_1S                    2001
 #define IDT_TIMER_1M                    2002
+#define IDT_TIMER_DISK                  2003
+#define IDT_TIMER_DISPLAY               2004
 
 // Next default values for new objects
 // 
