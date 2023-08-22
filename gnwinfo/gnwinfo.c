@@ -327,7 +327,7 @@ wWinMain(_In_ HINSTANCE hInstance,
 	GdipFont* font;
 	struct nk_context* ctx;
 	const char* str;
-	int x_pos = 100, y_pos = 100;
+	int x_pos, y_pos;
 	WNDCLASSW wc;
 	DWORD style = WS_POPUP | WS_VISIBLE;
 	DWORD exstyle = WS_EX_LAYERED;
@@ -340,7 +340,8 @@ wWinMain(_In_ HINSTANCE hInstance,
 	GetModuleFileNameW(NULL, g_ini_path, MAX_PATH);
 	PathCchRemoveFileSpec(g_ini_path, MAX_PATH);
 	PathCchAppend(g_ini_path, MAX_PATH, L"gnwinfo.ini");
-
+	x_pos = strtol(gnwinfo_get_ini_value(L"Window", L"X", L"100"), NULL, 10);
+	y_pos = strtol(gnwinfo_get_ini_value(L"Window", L"Y", L"100"), NULL, 10);
 	g_init_width = strtoul(gnwinfo_get_ini_value(L"Window", L"Width", L"600"), NULL, 10);
 	g_init_height = strtoul(gnwinfo_get_ini_value(L"Window", L"Height", L"800"), NULL, 10);
 	g_init_alpha = strtoul(gnwinfo_get_ini_value(L"Window", L"Alpha", L"255"), NULL, 10);
