@@ -76,18 +76,22 @@ draw_os(struct nk_context* ctx)
 
 	if (g_ctx.main_flag & MAIN_OS_DETAIL)
 	{
+		nk_layout_row(ctx, NK_DYNAMIC, 0, 3, (float[3]) { 0.3f, 0.7f - g_ctx.gui_ratio, g_ctx.gui_ratio });
 		nk_space_label(ctx, gnwinfo_get_text(L"Login Status"), NK_TEXT_LEFT);
 		nk_labelf_colored(ctx, NK_TEXT_LEFT,
 			g_color_text_l,
 			"%s@%s%s%s",
 			gnwinfo_get_node_attr(g_ctx.system, "Username"),
-			gnwinfo_get_node_attr(g_ctx.system, "Computer Name"),
+			g_ctx.sys_hostname,
 			strcmp(gnwinfo_get_node_attr(g_ctx.system, "Safe Mode"), "Yes") == 0 ? " SafeMode" : "",
 			strcmp(gnwinfo_get_node_attr(g_ctx.system, "BitLocker Boot"), "Yes") == 0 ? " BitLocker" : "");
+		if (nk_button_image(ctx, g_ctx.image_edit))
+			gnwinfo_init_hostname_window(ctx);
 	}
 
 	if (g_ctx.main_flag & MAIN_OS_UPTIME)
 	{
+		nk_layout_row(ctx, NK_DYNAMIC, 0, 2, (float[2]) { 0.3f, 0.7f });
 		nk_space_label(ctx, gnwinfo_get_text(L"Uptime"), NK_TEXT_LEFT);
 		nk_label_colored(ctx, g_ctx.sys_uptime, NK_TEXT_LEFT, g_color_text_l);
 	}
@@ -277,10 +281,7 @@ draw_memory(struct nk_context* ctx)
 		"%lu%% %s / %s",
 		g_ctx.mem_status.PhysUsage, g_ctx.mem_avail, g_ctx.mem_total);
 	if (nk_button_image(ctx, g_ctx.image_rocket))
-	{
-		g_ctx.gui_mm = TRUE;
 		gnwinfo_init_mm_window(ctx);
-	}
 	gnwinfo_draw_percent_prog(ctx, (double)g_ctx.mem_status.PhysUsage);
 
 	if (g_ctx.main_flag & MAIN_MEM_DETAIL)

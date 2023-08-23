@@ -66,6 +66,9 @@
     <ClCompile Include="memory.c">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="hostname.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="gnwinfo.rc">
@@ -137,6 +140,9 @@
       <Filter>资源文件</Filter>
     </Image>
     <Image Include="icons\rocket.png">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="icons\edit.png">
       <Filter>资源文件</Filter>
     </Image>
   </ItemGroup>

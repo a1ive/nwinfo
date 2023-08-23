@@ -30,6 +30,7 @@ static struct
 VOID
 gnwinfo_init_mm_window(struct nk_context* ctx)
 {
+	g_ctx.gui_mm = TRUE;
 	m_ctx.clean_size = 0;
 	m_ctx.clean_flag = CLEAN_SYS_WORKING_SET | CLEAN_WORKING_SET | CLEAN_STANDBY_LIST | CLEAN_PR0_STANDBY_LIST | CLEAN_MODIFIED_PAGE | CLEAN_COMBINED_MM_LIST;
 	m_ctx.page_drive_change = TRUE;

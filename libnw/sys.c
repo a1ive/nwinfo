@@ -179,14 +179,22 @@ VOID NWL_GetUptime(CHAR* szUptime, DWORD dwSize)
 
 #define NWINFO_WCS_SIZE (NWINFO_BUFSZ / sizeof(WCHAR))
 
+VOID NWL_GetHostname(CHAR* szHostname)
+{
+	WCHAR szHostnameW[MAX_COMPUTERNAME_LENGTH + 1] = L"";
+	DWORD dwSize = MAX_COMPUTERNAME_LENGTH + 1;
+	GetComputerNameW(szHostnameW, &dwSize);
+	memcpy(szHostname, NWL_Ucs2ToUtf8(szHostnameW), MAX_COMPUTERNAME_LENGTH + 1);
+}
+
 static void PrintOsInfo(PNODE node)
 {
 	DWORD bufCharCount = NWINFO_WCS_SIZE;
 	SYSTEM_INFO siInfo;
 	WCHAR* infoBuf = (WCHAR*)NWLC->NwBuf;
 	WCHAR* szHardwareId;
-	if (GetComputerNameW(infoBuf, &bufCharCount))
-		NWL_NodeAttrSet(node, "Computer Name", NWL_Ucs2ToUtf8(infoBuf), 0);
+	NWL_GetHostname((CHAR*)NWLC->NwBuf);
+	NWL_NodeAttrSet(node, "Computer Name", NWLC->NwBuf, 0);
 	bufCharCount = NWINFO_WCS_SIZE;
 	if (GetUserNameW(infoBuf, &bufCharCount))
 		NWL_NodeAttrSet(node, "Username", NWL_Ucs2ToUtf8(infoBuf), 0);

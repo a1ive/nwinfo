@@ -98,6 +98,7 @@ typedef struct _GNW_CONTEXT
 	BOOL gui_pci;
 	BOOL gui_dmi;
 	BOOL gui_mm;
+	BOOL gui_hostname;
 	nk_bool smart_hex;
 	UINT32 smart_flag;
 	nk_bool gui_bginfo;
@@ -124,6 +125,7 @@ typedef struct _GNW_CONTEXT
 	struct nk_image image_mm;
 	struct nk_image image_dmi;
 	struct nk_image image_rocket;
+	struct nk_image image_edit;
 
 	PNODE system;
 	PNODE cpuid;
@@ -150,7 +152,8 @@ typedef struct _GNW_CONTEXT
 	double cpu_usage;
 	int cpu_count;
 	GNW_CPU_INFO* cpu_info;
-	
+
+	CHAR sys_hostname[MAX_COMPUTERNAME_LENGTH + 1];
 	CHAR sys_uptime[GNWC_STR_SIZE];
 	NWLIB_MEM_INFO mem_status;
 	CHAR mem_total[GNWC_STR_SIZE];
@@ -202,6 +205,9 @@ VOID gnwinfo_draw_dmi_window(struct nk_context* ctx, float width, float height);
 
 VOID gnwinfo_init_mm_window(struct nk_context* ctx);
 VOID gnwinfo_draw_mm_window(struct nk_context* ctx, float width, float height);
+
+VOID gnwinfo_init_hostname_window(struct nk_context* ctx);
+VOID gnwinfo_draw_hostname_window(struct nk_context* ctx, float width, float height);
 
 LPCSTR gnwinfo_get_ini_value(LPCWSTR section, LPCWSTR key, LPCWSTR fallback);
 LPCSTR gnwinfo_get_text(LPCWSTR text);

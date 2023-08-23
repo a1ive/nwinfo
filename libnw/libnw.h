@@ -100,6 +100,7 @@ PNODE NW_Libinfo(VOID);
 PNODE NW_Uefi(VOID);
 
 VOID NWL_GetUptime(CHAR* szUptime, DWORD dwSize);
+VOID NWL_GetHostname(CHAR* szHostname);
 
 typedef struct _NWLIB_MEM_INFO
 {

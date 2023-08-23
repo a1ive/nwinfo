@@ -312,6 +312,8 @@ gnwinfo_ctx_init(HINSTANCE inst, HWND wnd, struct nk_context* ctx, float width, 
 	else
 		g_ctx.cpu_info = NULL;
 
+	NWL_GetHostname(g_ctx.sys_hostname);
+
 	gnwinfo_ctx_update(IDT_TIMER_1S);
 	gnwinfo_ctx_update(IDT_TIMER_1M);
 	gnwinfo_ctx_update(IDT_TIMER_DISK);
@@ -338,6 +340,7 @@ gnwinfo_ctx_init(HINSTANCE inst, HWND wnd, struct nk_context* ctx, float width, 
 	g_ctx.image_mm = load_png(IDR_PNG_MM);
 	g_ctx.image_dmi = load_png(IDR_PNG_DMI);
 	g_ctx.image_rocket = load_png(IDR_PNG_ROCKET);
+	g_ctx.image_edit = load_png(IDR_PNG_EDIT);
 
 	SetTimer(g_ctx.wnd, IDT_TIMER_1S, 1000, (TIMERPROC)NULL);
 	SetTimer(g_ctx.wnd, IDT_TIMER_1M, 60 * 1000, (TIMERPROC)NULL);
@@ -385,5 +388,6 @@ gnwinfo_ctx_exit()
 	nk_gdip_image_free(g_ctx.image_mm);
 	nk_gdip_image_free(g_ctx.image_dmi);
 	nk_gdip_image_free(g_ctx.image_rocket);
+	nk_gdip_image_free(g_ctx.image_edit);
 	exit(0);
 }
