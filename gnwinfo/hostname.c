@@ -89,6 +89,10 @@ set_hostname(const char* text)
 	NWL_NtSetRegValue(HKEY_LOCAL_MACHINE, L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Winlogon", L"AltDefaultDomainName", hostname, len, REG_SZ);
 	NWL_NtSetRegValue(HKEY_LOCAL_MACHINE, L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Winlogon", L"DefaultDomainName", hostname, len, REG_SZ);
 
+	// restart Windows Connection Manager Service (Wcmsvc)
+	system("sc stop wcmsvc");
+	system("sc start wcmsvc");
+
 	memcpy(g_ctx.sys_hostname, m_ctx.hostname, MAX_COMPUTERNAME_LENGTH + 1);
 }
 
