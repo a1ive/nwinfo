@@ -79,14 +79,20 @@ window_proc(HWND wnd, UINT msg, WPARAM wparam, LPARAM lparam)
 		if (g_bginfo)
 		{
 			g_ctx.mouse = FALSE;
+#ifdef GNWINFO_TRANSPARENT
 			SetLayeredWindowAttributes(wnd, 0, (BYTE)g_init_alpha, LWA_ALPHA);
+#endif
+			SetForegroundWindow(wnd);
 		}
 		break;
 	case WM_MOUSELEAVE:
 		if (g_bginfo)
 		{
 			g_ctx.mouse = FALSE;
+#ifdef GNWINFO_TRANSPARENT
 			SetLayeredWindowAttributes(wnd, RGB(g_color_back.r, g_color_back.g, g_color_back.b), (BYTE)g_init_alpha, LWA_COLORKEY | LWA_ALPHA);
+#endif
+			SetWindowPos(wnd, HWND_BOTTOM, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
 		}
 		break;
 	case WM_NCHITTEST:
@@ -379,7 +385,9 @@ wWinMain(_In_ HINSTANCE hInstance,
 	if (g_bginfo)
 	{
 		SetWindowPos(wnd, HWND_BOTTOM, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
+#ifdef GNWINFO_TRANSPARENT
 		layered_flag |= LWA_COLORKEY;
+#endif
 	}
 
 	SetLayeredWindowAttributes(wnd, RGB(g_color_back.r, g_color_back.g, g_color_back.b), (BYTE)g_init_alpha, layered_flag);

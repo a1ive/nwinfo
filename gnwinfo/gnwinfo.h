@@ -2,6 +2,7 @@
 
 #pragma once
 
+#define GNWINFO_TRANSPARENT
 #define GNWINFO_ENABLE_PDH
 
 #define WIN32_LEAN_AND_MEAN
