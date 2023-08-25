@@ -56,19 +56,7 @@ gen_hostname(void)
 	tmp[7] = '\0';
 	snprintf(m_ctx.hostname, MAX_COMPUTERNAME_LENGTH + 1, "%s%s", m_ctx.prefix, tmp);
 }
-#if 0
-static inline void
-del_reg(HKEY root, LPCWSTR key, LPCWSTR value)
-{
-	HKEY hkey = NULL;
-	LSTATUS rc;
-	rc = RegOpenKeyExW(root, key, 0, KEY_SET_VALUE, &hkey);
-	if (rc != ERROR_SUCCESS)
-		return;
-	rc = RegDeleteValueW(hkey, value);
-	RegCloseKey(hkey);
-}
-#endif
+
 static void
 set_hostname(const char* text)
 {
@@ -77,8 +65,6 @@ set_hostname(const char* text)
 
 	if (len <= sizeof(WCHAR))
 		return;
-	//del_reg(HKEY_LOCAL_MACHINE, L"SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters", L"Hostname");
-	//del_reg(HKEY_LOCAL_MACHINE, L"SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters", L"NV Hostname");
 
 	NWL_NtSetRegValue(HKEY_LOCAL_MACHINE, L"SYSTEM\\CurrentControlSet\\Control\\ComputerName\\ComputerName", L"ComputerName", hostname, len, REG_SZ);
 	NWL_NtSetRegValue(HKEY_LOCAL_MACHINE, L"SYSTEM\\CurrentControlSet\\Control\\ComputerName\\ActiveComputerName", L"ComputerName", hostname, len, REG_SZ);
@@ -89,9 +75,7 @@ set_hostname(const char* text)
 	NWL_NtSetRegValue(HKEY_LOCAL_MACHINE, L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Winlogon", L"AltDefaultDomainName", hostname, len, REG_SZ);
 	NWL_NtSetRegValue(HKEY_LOCAL_MACHINE, L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Winlogon", L"DefaultDomainName", hostname, len, REG_SZ);
 
-	// restart Windows Connection Manager Service (Wcmsvc)
-	system("sc stop wcmsvc");
-	system("sc start wcmsvc");
+	// TODO: restart Windows Connection Manager Service (Wcmsvc)
 
 	memcpy(g_ctx.sys_hostname, m_ctx.hostname, MAX_COMPUTERNAME_LENGTH + 1);
 }
