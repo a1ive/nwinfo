@@ -92,7 +92,7 @@ nk_image_label(struct nk_context* ctx, struct nk_image img,
 }
 
 void
-nk_space_label(struct nk_context* ctx, const char* str, nk_flags align)
+nk_space_label(struct nk_context* ctx, const char* str, nk_flags align, nk_bool hover)
 {
 	struct nk_window* win;
 	const struct nk_style* style;
@@ -119,6 +119,9 @@ nk_space_label(struct nk_context* ctx, const char* str, nk_flags align)
 	text.background = style->window.background;
 	text.text = style->text.color;
 	nk_widget_text(&win->buffer, bounds, str, len, &text, align, style->font);
+
+	if (hover && nk_input_is_mouse_hovering_rect(&ctx->input, bounds))
+		nk_tooltip(ctx, str);
 }
 
 nk_bool
