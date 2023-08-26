@@ -58,6 +58,31 @@ gen_hostname(void)
 }
 
 static void
+exec_cmd(LPCWSTR cmd)
+{
+	STARTUPINFOW si = { 0 };
+	PROCESS_INFORMATION pi;
+	BOOL rc = FALSE;
+	WCHAR desktop[] = L"WinSta0\\Default";
+	WCHAR buf[MAX_PATH];
+
+	si.cb = sizeof(STARTUPINFOW);
+	si.dwFlags = STARTF_USESHOWWINDOW;
+	si.wShowWindow = SW_HIDE;
+	si.lpDesktop = desktop;
+	wcscpy_s(buf, MAX_PATH, cmd);
+
+	rc = CreateProcessW(NULL, buf, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi);
+	if (rc)
+	{
+		SetProcessWorkingSetSize(GetCurrentProcess(), (SIZE_T)-1, (SIZE_T)-1);
+		WaitForSingleObject(pi.hProcess, INFINITE);
+		CloseHandle(pi.hThread);
+		CloseHandle(pi.hProcess);
+	}
+}
+
+static void
 set_hostname(const char* text)
 {
 	LPCWSTR hostname = NWL_Utf8ToUcs2(text);
@@ -75,9 +100,13 @@ set_hostname(const char* text)
 	NWL_NtSetRegValue(HKEY_LOCAL_MACHINE, L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Winlogon", L"AltDefaultDomainName", hostname, len, REG_SZ);
 	NWL_NtSetRegValue(HKEY_LOCAL_MACHINE, L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Winlogon", L"DefaultDomainName", hostname, len, REG_SZ);
 
-	// TODO: restart Windows Connection Manager Service (Wcmsvc)
-
 	memcpy(g_ctx.sys_hostname, m_ctx.hostname, MAX_COMPUTERNAME_LENGTH + 1);
+
+	// restart Windows Connection Manager Service (WcmSvc)
+	exec_cmd(L"net stop WlanSvc");
+	exec_cmd(L"net stop WcmSvc");
+	exec_cmd(L"net start WcmSvc");
+	exec_cmd(L"net start WlanSvc");
 }
 
 VOID
