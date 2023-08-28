@@ -259,6 +259,7 @@ gnwinfo_draw_settings_window(struct nk_context* ctx, float width, float height)
 		set_ini_color(L"StateWarn", g_color_warning);
 		set_ini_color(L"StateError", g_color_error);
 		set_ini_color(L"StateUnknown", g_color_unknown);
+		g_ctx.gui_settings = FALSE;
 	}
 out:
 	nk_end(ctx);
