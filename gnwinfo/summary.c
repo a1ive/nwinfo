@@ -313,8 +313,10 @@ draw_display(struct nk_context* ctx)
 {
 	INT i, j;
 
-	nk_layout_row_dynamic(ctx, 0, 1);
+	nk_layout_row(ctx, NK_DYNAMIC, 0, 2, (float[2]) { 0.3f, 0.7f });
 	nk_image_label(ctx, g_ctx.image_edid, gnwinfo_get_text(L"Display Devices"), NK_TEXT_LEFT, g_color_text_d);
+	nk_labelf_colored(ctx, NK_TEXT_LEFT, g_color_text_l, "%ldx%ld %u DPI (%u%%)",
+		g_ctx.display_width, g_ctx.display_height, g_ctx.display_dpi, 100 * g_ctx.display_dpi / USER_DEFAULT_SCREEN_DPI);
 
 	nk_layout_row(ctx, NK_DYNAMIC, 0, 2, (float[2]) { 0.3f, 0.7f });
 

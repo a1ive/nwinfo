@@ -164,6 +164,9 @@ typedef struct _GNW_CONTEXT
 	CHAR sfci_total[GNWC_STR_SIZE];
 	CHAR sfci_avail[GNWC_STR_SIZE];
 
+	LONG display_width;
+	LONG display_height;
+	UINT display_dpi;
 } GNW_CONTEXT;
 extern GNW_CONTEXT g_ctx;
 

@@ -191,6 +191,16 @@ get_pdh_data(void)
 }
 #endif
 
+static void
+get_display_info(void)
+{
+	MONITORINFO mni = { .cbSize = sizeof(MONITORINFO) };
+	GetMonitorInfoW(MonitorFromWindow(g_ctx.wnd, MONITOR_DEFAULTTONEAREST), &mni);
+	g_ctx.display_width = mni.rcMonitor.right - mni.rcMonitor.left;
+	g_ctx.display_height = mni.rcMonitor.bottom - mni.rcMonitor.top;
+	g_ctx.display_dpi = GetDpiForWindow(g_ctx.wnd);
+}
+
 void
 gnwinfo_ctx_update(WPARAM wparam)
 {
@@ -211,6 +221,7 @@ gnwinfo_ctx_update(WPARAM wparam)
 			get_cpu_usage();
 		}
 		get_cpu_msr();
+		get_display_info();
 		break;
 	case IDT_TIMER_1M:
 		if (g_ctx.battery)
