@@ -51,6 +51,9 @@ window_proc(HWND wnd, UINT msg, WPARAM wparam, LPARAM lparam)
 		break;
 	case WM_DPICHANGED:
 		break;
+	case WM_POWERBROADCAST:
+		gnwinfo_ctx_update(IDT_TIMER_POWER);
+		break;
 	case WM_DISPLAYCHANGE:
 		gnwinfo_ctx_update(IDT_TIMER_DISPLAY);
 		if (g_bginfo)

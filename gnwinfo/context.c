@@ -224,6 +224,7 @@ gnwinfo_ctx_update(WPARAM wparam)
 		get_display_info();
 		break;
 	case IDT_TIMER_1M:
+	case IDT_TIMER_POWER:
 		if (g_ctx.battery)
 			NWL_NodeFree(g_ctx.battery, 1);
 		g_ctx.battery = NW_Battery();

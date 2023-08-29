@@ -148,9 +148,10 @@ is_motherboard(PNODE node)
 static VOID
 draw_computer(struct nk_context* ctx)
 {
-	struct nk_color color = g_color_error;
-	LPCSTR time = NULL;
+	struct nk_color color = g_color_unknown;
+	LPCSTR time = "";
 	LPCSTR bat = gnwinfo_get_node_attr(g_ctx.battery, "Battery Status");
+	LPCSTR ac = "";
 
 	nk_layout_row(ctx, NK_DYNAMIC, 0, 2, (float[2]) { 0.3f, 0.7f });
 	nk_image_label(ctx, g_ctx.image_board, gnwinfo_get_text(L"Computer"), NK_TEXT_LEFT, g_color_text_d);
@@ -171,22 +172,28 @@ draw_computer(struct nk_context* ctx)
 
 	if (strcmp(bat, "Charging") == 0)
 	{
-		color = g_color_warning;
+		color = g_color_good;
 		time = gnwinfo_get_node_attr(g_ctx.battery, "Battery Life Full");
 	}
 	else if (strcmp(bat, "Not Charging") == 0)
 	{
-		if (strcmp(gnwinfo_get_node_attr(g_ctx.battery, "AC Power"), "Online") == 0)
-			color = g_color_good;
+		color = g_color_warning;
 		time = gnwinfo_get_node_attr(g_ctx.battery, "Battery Life Remaining");
 	}
 	else
 		return;
 
+	if (strcmp(time, "UNKNOWN") == 0)
+		time = "";
+
+	if (strcmp(gnwinfo_get_node_attr(g_ctx.battery, "AC Power"), "Online") == 0)
+		ac = u8"\u26a1 ";
+
 	nk_space_label(ctx, gnwinfo_get_text(L"Battery"), NK_TEXT_LEFT, nk_false);
 	nk_labelf_colored(ctx, NK_TEXT_LEFT, color,
-		u8"\u26a1 %s %s",
+		"%s %s%s",
 		gnwinfo_get_node_attr(g_ctx.battery, "Battery Life Percentage"),
+		ac,
 		time);
 }
 

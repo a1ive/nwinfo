@@ -19,7 +19,7 @@ PrintBatteryTime(PNODE node, LPCSTR key, DWORD value)
 		UINT32 Hours = value / 3600U;
 		UINT32 Minutes = value / 60ULL - Hours * 60ULL;
 		UINT32 Seconds = value - Hours * 3600ULL - Minutes * 60ULL;
-		NWL_NodeAttrSetf(node, key, 0, "%lu hours, %lu min, %lu sec", Hours, Minutes, Seconds);
+		NWL_NodeAttrSetf(node, key, 0, "%luh %lum %lus", Hours, Minutes, Seconds);
 	}
 	else
 		NWL_NodeAttrSet(node, key, "UNKNOWN", 0);
