@@ -304,7 +304,11 @@ gnwinfo_draw_smart_window(struct nk_context* ctx, float width, float height)
 		g_ctx.gui_smart = FALSE;
 		goto out;
 	}
-
+	if (NWLC->NwSmartInit == FALSE)
+	{
+		cdi_init_smart(NWLC->NwSmart, NWLC->NwSmartFlags);
+		NWLC->NwSmartInit = TRUE;
+	}
 	count = cdi_get_disk_count(NWLC->NwSmart);
 	if (count <= 0)
 	{

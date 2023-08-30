@@ -618,10 +618,10 @@ PNODE NW_Disk(VOID)
 	PNODE node = NWL_NodeAlloc("Disks", NFLG_TABLE);
 	if (NWLC->DiskInfo)
 		NWL_NodeAppendChild(NWLC->NwRoot, node);
-	if (NWLC->DisableSmart == FALSE && NWLC->NwSmart && NWLC->NwSmbiosInit == FALSE)
+	if (NWLC->DisableSmart == FALSE && NWLC->NwSmart && NWLC->NwSmartInit == FALSE)
 	{
 		cdi_init_smart(NWLC->NwSmart, NWLC->NwSmartFlags);
-		NWLC->NwSmbiosInit = TRUE;
+		NWLC->NwSmartInit = TRUE;
 	}
 	PrintDiskInfo(FALSE, node, NWLC->NwSmart);
 	PrintDiskInfo(TRUE, node, NWLC->NwSmart);

@@ -56,7 +56,7 @@ typedef struct _NWLIB_CONTEXT
 	struct acpi_xsdt* NwXsdt;
 
 	struct RAW_SMBIOS_DATA* NwSmbios;
-	BOOL NwSmbiosInit;
+	BOOL NwSmartInit;
 
 	struct _CDI_SMART* NwSmart;
 	UINT64 NwSmartFlags;

@@ -38,7 +38,7 @@ VOID NW_Init(PNWLIB_CONTEXT pContext)
 	NWLC->NwCpuid = calloc(1, sizeof(struct system_id_t));
 	if (!NWLC->NwCpuRaw || !NWLC->NwCpuid)
 		NWL_ErrExit(ERROR_OUTOFMEMORY, "Cannot allocate memory");
-	NWLC->NwSmbiosInit = FALSE;
+	NWLC->NwSmartInit = FALSE;
 	NWLC->ErrLog = NULL;
 	if (NWL_IsAdmin() != TRUE)
 		NWL_NodeAppendMultiSz(&NWLC->ErrLog, "Administrator required");
