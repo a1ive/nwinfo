@@ -199,20 +199,6 @@ static BOOL GetDriveByVolume(BOOL bIsCdRom, HANDLE hVolume, DWORD* pDrive)
 	return FALSE;
 }
 
-static BOOL
-DiskRead(HANDLE hDisk, UINT64 Sector, UINT64 Offset, DWORD Size, PVOID pBuf)
-{
-	__int64 distance = Offset + (Sector << 9);
-	LARGE_INTEGER li = { 0 };
-
-	li.QuadPart = distance;
-	li.LowPart = SetFilePointer(hDisk, li.LowPart, &li.HighPart, FILE_BEGIN);
-	if (li.LowPart == INVALID_SET_FILE_POINTER && GetLastError() != NO_ERROR)
-		return FALSE;
-
-	return ReadFile(hDisk, pBuf, Size, &Size, NULL);
-}
-
 static UINT64
 GetDiskSize(HANDLE hDisk)
 {
@@ -223,6 +209,40 @@ GetDiskSize(HANDLE hDisk)
 		&LengthInfo, sizeof(LengthInfo), &dwBytes, NULL))
 		Size = LengthInfo.Length.QuadPart;
 	return Size;
+}
+
+static BOOL
+GetDiskPartMap(HANDLE hDisk, BOOL bIsCdRom, PHY_DRIVE_INFO* pInfo)
+{
+	DRIVE_LAYOUT_INFORMATION_EX* pLayout = (VOID*)NWLC->NwBuf;
+	DWORD dwBytes = NWINFO_BUFSZ;
+
+	if (bIsCdRom)
+		goto fail;
+
+	if (!DeviceIoControl(hDisk, IOCTL_DISK_GET_DRIVE_LAYOUT_EX, NULL, 0,
+		pLayout, dwBytes, &dwBytes, NULL))
+		goto fail;
+	if (dwBytes < sizeof(DRIVE_LAYOUT_INFORMATION_EX) - sizeof(PARTITION_INFORMATION_EX))
+		goto fail;
+
+	pInfo->PartMap = pLayout->PartitionStyle;
+	switch (pInfo->PartMap)
+	{
+	case PARTITION_STYLE_MBR:
+		memcpy(pInfo->MbrSignature, &pLayout->Mbr.Signature, sizeof(DWORD));
+		break;
+	case PARTITION_STYLE_GPT:
+		memcpy(pInfo->GptGuid, &pLayout->Gpt.DiskId, sizeof(GUID));
+		break;
+	default:
+		goto fail;
+	}
+	return TRUE;
+
+fail:
+	pInfo->PartMap = PARTITION_STYLE_RAW;
+	return FALSE;
 }
 
 static VOID
@@ -244,26 +264,13 @@ static DWORD GetDriveInfoList(BOOL bIsCdRom, PHY_DRIVE_INFO** pDriveList)
 	DWORD dwBytes;
 	PHY_DRIVE_INFO* pInfo;
 
-	UINT8 *pSector = NULL;
-	struct mbr_header* MBR = NULL;
-	struct gpt_header* GPT = NULL;
-
 	HANDLE hSearch;
 	WCHAR cchVolume[MAX_PATH];
-
-	pSector = malloc(512 + 512);
-	if (!pSector)
-		return 0;
-	MBR = (struct mbr_header*)pSector;
-	GPT = (struct gpt_header*)(pSector + 512);
 
 	dwCount = GetDriveCount(bIsCdRom);
 	*pDriveList = calloc(dwCount, sizeof(PHY_DRIVE_INFO));
 	if (!*pDriveList)
-	{
-		free(pSector);
 		return 0;
-	}
 	pInfo = *pDriveList;
 
 	for (i = 0; i < dwCount; i++)
@@ -329,36 +336,7 @@ static DWORD GetDriveInfoList(BOOL bIsCdRom, PHY_DRIVE_INFO** pDriveList)
 			NWL_TrimString(pInfo[i].SerialNumber);
 		}
 
-		if (bIsCdRom)
-		{
-			pInfo[i].PartMap = 3;
-			goto next_drive;
-		}
-
-		ZeroMemory(pSector, 512 + 512);
-		bRet = DiskRead(hDrive, 0, 0, 512 + 512, pSector);
-		if (!bRet)
-			goto next_drive;
-
-		if (MBR->signature == 0xaa55)
-		{
-			pInfo[i].PartMap = 1;
-			memcpy(pInfo[i].MbrSignature, MBR->unique_signature, 4);
-			for (int j = 0; j < 4; j++)
-			{
-				pInfo[i].MbrLba[j] = MBR->entries[j].start;
-				if (MBR->entries[j].type == 0xee)
-				{
-					pInfo[i].PartMap = 2;
-					break;
-				}
-			}
-		}
-		if (memcmp(GPT->magic, GPT_MAGIC, sizeof(GPT_MAGIC)) == 0)
-		{
-			memcpy(pInfo[i].GptGuid, GPT->guid, 16);
-			pInfo[i].PartMap = 2;
-		}
+		GetDiskPartMap(hDrive, bIsCdRom, &pInfo[i]);
 
 next_drive:
 		if (pDevDesc)
@@ -366,8 +344,6 @@ next_drive:
 		if (hDrive && hDrive != INVALID_HANDLE_VALUE)
 			CloseHandle(hDrive);
 	}
-
-	free(pSector);
 
 	for (bRet = TRUE, hSearch = FindFirstVolumeW(cchVolume, MAX_PATH);
 		bRet && hSearch != INVALID_HANDLE_VALUE;
@@ -582,17 +558,18 @@ PrintDiskInfo(BOOL cdrom, PNODE node, CDI_SMART* smart)
 		NWL_NodeAttrSetBool(nd, "Removable", PhyDriveList[i].RemovableMedia, 0);
 		NWL_NodeAttrSet(nd, "Size",
 			NWL_GetHumanSize(PhyDriveList[i].SizeInBytes, d_human_sizes, 1024), NAFLG_FMT_HUMAN_SIZE);
-		if (PhyDriveList[i].PartMap == 1)
+		switch (PhyDriveList[i].PartMap)
 		{
+		case PARTITION_STYLE_MBR:
 			NWL_NodeAttrSet(nd, "Partition Table", "MBR", 0);
 			NWL_NodeAttrSetf(nd, "MBR Signature", 0, "%02X %02X %02X %02X",
 				PhyDriveList[i].MbrSignature[0], PhyDriveList[i].MbrSignature[1],
 				PhyDriveList[i].MbrSignature[2], PhyDriveList[i].MbrSignature[3]);
-		}
-		else if (PhyDriveList[i].PartMap == 2)
-		{
+			break;
+		case PARTITION_STYLE_GPT:
 			NWL_NodeAttrSet(nd, "Partition Table", "GPT", 0);
 			NWL_NodeAttrSetf(nd, "GPT GUID", NAFLG_FMT_GUID, "{%s}", NWL_GuidToStr(PhyDriveList[i].GptGuid));
+			break;
 		}
 		if (!cdrom && NWLC->DisableSmart == FALSE && smart)
 			PrintSmartInfo(nd, smart, GetSmartIndex(smart, i));
