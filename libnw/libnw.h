@@ -38,6 +38,8 @@ typedef struct _NWLIB_CONTEXT
 	BOOL BatteryInfo;
 	BOOL UefiInfo;
 
+	BOOL Debug;
+
 	DWORD AcpiTable;
 	BOOL ActiveNet;
 	UINT8 SmbiosType;
@@ -121,6 +123,13 @@ typedef struct _NWLIB_MEM_INFO
 } NWLIB_MEM_INFO, *PNWLIB_MEM_INFO;
 
 VOID NWL_GetMemInfo(PNWLIB_MEM_INFO pMemInfo);
+
+#define NWL_Debugf(...) \
+	do \
+	{ \
+		if (NWLC->Debug) \
+			printf(__VA_ARGS__); \
+	} while (0)
 
 #ifdef __cplusplus
 } /* extern "C" */

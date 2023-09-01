@@ -104,6 +104,8 @@ int main(int argc, char* argv[])
 			nwContext.BatteryInfo = TRUE;
 		else if (_stricmp(argv[i], "--uefi") == 0)
 			nwContext.UefiInfo = TRUE;
+		else if (_stricmp(argv[i], "--debug") == 0)
+			nwContext.Debug = TRUE;
 		else
 		{
 		}

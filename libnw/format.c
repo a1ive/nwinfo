@@ -63,6 +63,8 @@ PNODE NWL_NodeAlloc(LPCSTR name, INT flags)
 	SIZE_T size;
 	SIZE_T name_len = strlen(name) + 1;
 
+	NWL_Debugf("[DBG] ALLOC [%s]\n", name);
+
 	// Calculate required size
 	size = sizeof(NODE) + (sizeof(CHAR) * name_len);
 
@@ -130,6 +132,8 @@ INT NWL_NodeAppendChild(PNODE parent, PNODE child)
 	old_count = NWL_NodeChildCount(parent);
 	if (NULL == child)
 		return old_count;
+
+	NWL_Debugf("[DBG] APPEND [%s] -> [%s]\n", parent->Name, child->Name);
 
 	new_count = old_count + 1;
 
@@ -217,8 +221,8 @@ static PNODE_ATT NWL_NodeAllocAttrMulti(LPCSTR key, LPCSTR value, int flags)
 	nvalue = value ? value : "\0";
 
 	// Calculate size of value
-	for (c = &nvalue[0]; *c != '\0'; c += strlen(c) + 2)
-		;
+	for (c = &nvalue[0]; *c != '\0'; c += strlen(c) + 1)
+		NWL_Debugf("[DBG] MULTI <%s> += {%s}\n", key, c);
 	nvalue_len = c - nvalue + 1;
 
 	key_len = strlen(key) + 1;
@@ -272,6 +276,8 @@ PNODE_ATT NWL_NodeAttrSet(PNODE node, LPCSTR key, LPCSTR value, INT flags)
 	PNODE_ATT_LINK link = NULL;
 	PNODE_ATT_LINK new_link = NULL;
 	PNODE_ATT_LINK new_links = NULL;
+
+	NWL_Debugf("[DBG] SET <%s> = <%s>\n", key, value);
 
 	if (!NWLC->HumanSize && (flags & NAFLG_FMT_HUMAN_SIZE))
 		flags |= NAFLG_FMT_NUMERIC;
