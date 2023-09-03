@@ -153,26 +153,27 @@ static HANDLE GetHandleByLetter(WCHAR Letter)
 
 static WCHAR *GetDriveHwId(BOOL Cdrom, DWORD Drive)
 {
+	DWORD dwType;
 	WCHAR drvRegKey[11]; // "4294967295"
 	LPCWSTR key = L"SYSTEM\\CurrentControlSet\\Services\\disk\\Enum";
 	if (Cdrom)
 		key = L"SYSTEM\\CurrentControlSet\\Services\\cdrom\\Enum";
 	swprintf(drvRegKey, 11, L"%u", Drive);
-	return NWL_GetRegSzValue(HKEY_LOCAL_MACHINE, key, drvRegKey);
+	return NWL_NtGetRegValue(HKEY_LOCAL_MACHINE, key, drvRegKey, NULL, &dwType);
 }
 
 static WCHAR* GetDriveHwName(const WCHAR* HwId)
 {
-#define MAX_HW_NAME_LEN 2048
 	WCHAR* HwName = NULL;
-	WCHAR* drvRegKey = malloc (MAX_HW_NAME_LEN * sizeof(WCHAR));
-	if (!drvRegKey)
+	HKEY hKey = NULL;
+	DWORD dwType;
+	if (RegOpenKeyExW(HKEY_LOCAL_MACHINE, L"SYSTEM\\CurrentControlSet\\Enum",
+		0, KEY_QUERY_VALUE, &hKey) != ERROR_SUCCESS)
 		return NULL;
-	swprintf(drvRegKey, MAX_HW_NAME_LEN, L"SYSTEM\\CurrentControlSet\\Enum\\%s", HwId);
-	HwName = NWL_GetRegSzValue(HKEY_LOCAL_MACHINE, drvRegKey, L"FriendlyName");
+	HwName = NWL_NtGetRegValue(hKey, HwId, L"FriendlyName", NULL, &dwType);
 	if (!HwName)
-		HwName = NWL_GetRegSzValue(HKEY_LOCAL_MACHINE, drvRegKey, L"DeviceDesc");
-	free(drvRegKey);
+		HwName = NWL_NtGetRegValue(hKey, HwId, L"DeviceDesc", NULL, &dwType);
+	RegCloseKey(hKey);
 	return HwName;
 }
 
@@ -253,8 +254,6 @@ RemoveTrailingBackslash(WCHAR* lpszPath)
 		return;
 	lpszPath[len - 1] = L'\0';
 }
-
-static const UINT8 GPT_MAGIC[8] = { 0x45, 0x46, 0x49, 0x20, 0x50, 0x41, 0x52, 0x54 };
 
 static DWORD GetDriveInfoList(BOOL bIsCdRom, PHY_DRIVE_INFO** pDriveList)
 {

@@ -189,6 +189,7 @@ VOID NWL_GetHostname(CHAR* szHostname)
 
 static void PrintOsInfo(PNODE node)
 {
+	DWORD dwType;
 	DWORD bufCharCount = NWINFO_WCS_SIZE;
 	SYSTEM_INFO siInfo;
 	WCHAR* infoBuf = (WCHAR*)NWLC->NwBuf;
@@ -223,7 +224,7 @@ static void PrintOsInfo(PNODE node)
 		NWL_NodeAttrSet(node, "Processor Architecture", "UNKNOWN", 0);
 		break;
 	}
-	szHardwareId = NWL_GetRegSzValue(HKEY_LOCAL_MACHINE, L"SYSTEM\\CurrentControlSet\\Control\\SystemInformation", L"ComputerHardwareId");
+	szHardwareId = NWL_NtGetRegValue(HKEY_LOCAL_MACHINE, L"SYSTEM\\CurrentControlSet\\Control\\SystemInformation", L"ComputerHardwareId", NULL, &dwType);
 	if (szHardwareId)
 	{
 		NWL_NodeAttrSet(node, "Computer Hardware Id", NWL_Ucs2ToUtf8(szHardwareId), NAFLG_FMT_NEED_QUOTE);
@@ -358,6 +359,7 @@ static void PrintMemInfo(PNODE node)
 static void PrintBootInfo(PNODE node)
 {
 	DWORD dwType;
+	DWORD dwBitLocker = 0;
 	HANDLE hFile;
 	WCHAR wArcName[MAX_PATH];
 	WCHAR* pFwBootDev = NWL_NtGetRegValue(HKEY_LOCAL_MACHINE,
@@ -387,7 +389,6 @@ static void PrintBootInfo(PNODE node)
 		NWL_NodeAttrSet(node, "Start Options", NWL_Ucs2ToUtf8(pStartOption), NAFLG_FMT_NEED_QUOTE | NAFLG_FMT_STRING);
 		free(pStartOption);
 	}
-	DWORD dwBitLocker = 0;
 	NWL_GetRegDwordValue(HKEY_LOCAL_MACHINE, L"SYSTEM\\CurrentControlSet\\Control\\BitlockerStatus", L"BootStatus", &dwBitLocker);
 	NWL_NodeAttrSetBool(node, "BitLocker Boot", dwBitLocker, 0);
 }

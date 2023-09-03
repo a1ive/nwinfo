@@ -396,29 +396,6 @@ INT NWL_GetRegDwordValue(HKEY Key, LPCWSTR SubKey, LPCWSTR ValueName, DWORD* pVa
 	return 1;
 }
 
-WCHAR* NWL_GetRegSzValue(HKEY Key, LPCWSTR SubKey, LPCWSTR ValueName)
-{
-	HKEY hKey;
-	DWORD dwType;
-	DWORD dwSize = 2048;
-	LSTATUS lRet;
-	WCHAR* sRet = NULL;
-	lRet = RegOpenKeyExW(Key, SubKey, 0, KEY_QUERY_VALUE, &hKey);
-	if (lRet != ERROR_SUCCESS)
-		return NULL;
-	sRet = malloc(dwSize);
-	if (!sRet)
-		return NULL;
-	lRet = RegQueryValueExW(hKey, ValueName, NULL, &dwType, (LPBYTE)sRet, &dwSize);
-	if (lRet != ERROR_SUCCESS)
-	{
-		free(sRet);
-		return NULL;
-	}
-	RegCloseKey(hKey);
-	return sRet;
-}
-
 HANDLE NWL_GetDiskHandleById(BOOL Cdrom, BOOL Write, DWORD Id)
 {
 	WCHAR PhyPath[28]; // L"\\\\.\\PhysicalDrive4294967295"
@@ -489,9 +466,11 @@ NWL_Ucs2ToUtf8(LPCWSTR src)
 	size_t i;
 	CHAR* p = Utf8Buf;
 	ZeroMemory(Utf8Buf, sizeof(Utf8Buf));
-	for (i = 0; i < MAX_PATH; i++)
+	for (i = 0; i < NWINFO_BUFSZ / 3; i++)
 	{
-		if (src[i] <= 0x007F)
+		if (src[i] == 0x0000)
+			break;
+		else if (src[i] <= 0x007F)
 			*p++ = (CHAR)src[i];
 		else if (src[i] <= 0x07FF)
 		{
