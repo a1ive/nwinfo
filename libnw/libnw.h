@@ -39,6 +39,7 @@ typedef struct _NWLIB_CONTEXT
 	BOOL UefiInfo;
 
 	BOOL Debug;
+	BOOL HideSensitive;
 
 	DWORD AcpiTable;
 	BOOL ActiveNet;

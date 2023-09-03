@@ -148,7 +148,7 @@ PNODE NW_Network(VOID)
 				snprintf(NWLC->NwBuf, NWINFO_BUFSZ, "%s%.2X%s", NWLC->NwBuf,
 					pCurrAddresses->PhysicalAddress[i], (i == (pCurrAddresses->PhysicalAddressLength - 1)) ? "" : "-");
 			}
-			NWL_NodeAttrSet(nic, "MAC Address", NWLC->NwBuf, 0);
+			NWL_NodeAttrSet(nic, "MAC Address", NWLC->NwBuf, NAFLG_FMT_SENSITIVE);
 		}
 
 		NWL_NodeAttrSet(nic, "Status", (pCurrAddresses->OperStatus == IfOperStatusUp) ? "Active" : "Deactive", 0);

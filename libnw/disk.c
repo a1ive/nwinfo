@@ -552,7 +552,7 @@ PrintDiskInfo(BOOL cdrom, PNODE node, CDI_SMART* smart)
 		if (PhyDriveList[i].ProductRev[0])
 			NWL_NodeAttrSet(nd, "Product Rev", PhyDriveList[i].ProductRev, 0);
 		if (PhyDriveList[i].SerialNumber[0])
-			NWL_NodeAttrSet(nd, "Serial Number", PhyDriveList[i].SerialNumber, 0);
+			NWL_NodeAttrSet(nd, "Serial Number", PhyDriveList[i].SerialNumber, NAFLG_FMT_SENSITIVE);
 		NWL_NodeAttrSet(nd, "Type", NWL_GetBusTypeString(PhyDriveList[i].BusType), 0);
 		NWL_NodeAttrSetBool(nd, "Removable", PhyDriveList[i].RemovableMedia, 0);
 		NWL_NodeAttrSet(nd, "Size",

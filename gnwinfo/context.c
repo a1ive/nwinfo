@@ -289,6 +289,7 @@ gnwinfo_ctx_init(HINSTANCE inst, HWND wnd, struct nk_context* ctx, float width, 
 
 	NW_Init(&g_ctx.lib);
 	g_ctx.lib.NwSmartFlags = ~g_ctx.smart_flag;
+	g_ctx.lib.HideSensitive = strtoul(gnwinfo_get_ini_value(L"Window", L"HideSensitive", L"0"), NULL, 10);
 	g_ctx.lib.NwRoot = NWL_NodeAlloc("NWinfo", 0);
 	g_ctx.cpuid = NW_Cpuid();
 	g_ctx.system = NW_System();

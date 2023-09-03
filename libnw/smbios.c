@@ -79,7 +79,7 @@ static void ProcSysInfo(PNODE tab, void* p)
 	NWL_NodeAttrSet(tab, "Manufacturer", LocateString(p, pSystem->Manufacturer), 0);
 	NWL_NodeAttrSet(tab, "Product Name", LocateString(p, pSystem->ProductName), 0);
 	NWL_NodeAttrSet(tab, "Version", LocateString(p, pSystem->Version), 0);
-	NWL_NodeAttrSet(tab, "Serial Number", LocateString(p, pSystem->SN), 0);
+	NWL_NodeAttrSet(tab, "Serial Number", LocateString(p, pSystem->SN), NAFLG_FMT_SENSITIVE);
 	if (pSystem->Header.Length < 0x19) // 2.1
 		return;
 	NWL_NodeAttrSet(tab, "UUID", NWL_GuidToStr(pSystem->UUID), NAFLG_FMT_GUID);
@@ -120,7 +120,7 @@ static void ProcBoardInfo(PNODE tab, void* p)
 	NWL_NodeAttrSet(tab, "Manufacturer", LocateString(p, pBoard->Manufacturer), 0);
 	NWL_NodeAttrSet(tab, "Product Name", LocateString(p, pBoard->Product), 0);
 	NWL_NodeAttrSet(tab, "Version", LocateString(p, pBoard->Version), 0);
-	NWL_NodeAttrSet(tab, "Serial Number", LocateString(p, pBoard->SN), 0);
+	NWL_NodeAttrSet(tab, "Serial Number", LocateString(p, pBoard->SN), NAFLG_FMT_SENSITIVE);
 	if (pBoard->Header.Length < 0x09)
 		return;
 	NWL_NodeAttrSet(tab, "Asset Tag", LocateString(p, pBoard->AssetTag), 0);
@@ -220,7 +220,7 @@ static void ProcSystemEnclosure(PNODE tab, void* p)
 		pSystemEnclosureTypeToStr(pSysEnclosure->Type));
 	NWL_NodeAttrSet(tab, "Manufacturer", LocateString(p, pSysEnclosure->Manufacturer), 0);
 	NWL_NodeAttrSet(tab, "Version", LocateString(p, pSysEnclosure->Version), 0);
-	NWL_NodeAttrSet(tab, "Serial Number", LocateString(p, pSysEnclosure->SN), 0);
+	NWL_NodeAttrSet(tab, "Serial Number", LocateString(p, pSysEnclosure->SN), NAFLG_FMT_SENSITIVE);
 	NWL_NodeAttrSet(tab, "Asset Tag", LocateString(p, pSysEnclosure->AssetTag), 0);
 	if (pSysEnclosure->Header.Length < 0x0d) // 2.1
 		return;
@@ -461,7 +461,7 @@ static void ProcProcessorInfo(PNODE tab, void* p)
 		return;
 	if (pProcessor->Header.Length < 0x23) // 2.3
 		return;
-	NWL_NodeAttrSet(tab, "Serial Number", LocateString(p, pProcessor->Serial), 0);
+	NWL_NodeAttrSet(tab, "Serial Number", LocateString(p, pProcessor->Serial), NAFLG_FMT_SENSITIVE);
 	NWL_NodeAttrSet(tab, "Asset Tag", LocateString(p, pProcessor->AssetTag), 0);
 	NWL_NodeAttrSet(tab, "Part Number", LocateString(p, pProcessor->PartNum), 0);
 	if (pProcessor->Header.Length < 0x28) // 2.5
@@ -1226,7 +1226,7 @@ static void ProcMemoryDevice(PNODE tab, void* p)
 	if (pMD->Speed)
 		NWL_NodeAttrSetf(tab, "Speed (MT/s)", NAFLG_FMT_NUMERIC, "%u", pMD->Speed);
 	JedecIdToVendor(tab, LocateString(p, pMD->Manufacturer));
-	NWL_NodeAttrSet(tab, "Serial Number", LocateString(p, pMD->SN), 0);
+	NWL_NodeAttrSet(tab, "Serial Number", LocateString(p, pMD->SN), NAFLG_FMT_SENSITIVE);
 	NWL_NodeAttrSet(tab, "Asset Tag Number", LocateString(p, pMD->AssetTag), 0);
 	NWL_NodeAttrSet(tab, "Part Number", LocateString(p, pMD->PN), 0);
 }
@@ -1383,7 +1383,7 @@ static void ProcPortableBattery(PNODE tab, void* p)
 	NWL_NodeAttrSet(tab, "Location", LocateString(p, pPB->Location), 0);
 	NWL_NodeAttrSet(tab, "Manufacturer", LocateString(p, pPB->Manufacturer), 0);
 	NWL_NodeAttrSet(tab, "Manufacturer Date", LocateString(p, pPB->Date), 0);
-	NWL_NodeAttrSet(tab, "Serial Number", LocateString(p, pPB->SN), 0);
+	NWL_NodeAttrSet(tab, "Serial Number", LocateString(p, pPB->SN), NAFLG_FMT_SENSITIVE);
 	NWL_NodeAttrSet(tab, "Device Name", LocateString(p, pPB->DeviceName), 0);
 }
 

@@ -200,7 +200,10 @@ static PNODE_ATT NWL_NodeAllocAttr(LPCSTR key, LPCSTR value, int flags)
 	memcpy(att->Key, key, key_len);
 
 	att->Value = att->Key + key_len;
-	memcpy(att->Value, nvalue, nvalue_len);
+	if (NWLC->HideSensitive && (flags & NAFLG_FMT_SENSITIVE))
+		memset(att->Value, '*', nvalue_len);
+	else
+		memcpy(att->Value, nvalue, nvalue_len);
 
 	att->Flags = flags;
 

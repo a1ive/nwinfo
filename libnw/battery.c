@@ -144,7 +144,7 @@ PrintBatteryManufacture(PNODE pb, HANDLE* hb, BATTERY_QUERY_INFORMATION* pbqi)
 	pbqi->InformationLevel = BatterySerialNumber;
 	if (DeviceIoControl(hb, IOCTL_BATTERY_QUERY_INFORMATION, pbqi, sizeof(BATTERY_QUERY_INFORMATION),
 		wName, sizeof(wName), &dwOut, NULL))
-		NWL_NodeAttrSet(pb, "Serial Number", NWL_Ucs2ToUtf8(wName), 0);
+		NWL_NodeAttrSet(pb, "Serial Number", NWL_Ucs2ToUtf8(wName), NAFLG_FMT_SENSITIVE);
 }
 
 static void

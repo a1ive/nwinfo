@@ -207,6 +207,8 @@ gnwinfo_draw_settings_window(struct nk_context* ctx, float width, float height)
 	nk_checkbox_flags_label(ctx, gnwinfo_get_text(L"Enable PDH"), &g_ctx.main_flag, MAIN_NO_PDH);
 #endif
 	nk_spacer(ctx);
+	nk_checkbox_label(ctx, gnwinfo_get_text(L"Show sensitive data"), &g_ctx.lib.HideSensitive);
+	nk_spacer(ctx);
 	nk_checkbox_label(ctx, gnwinfo_get_text(L"Disable anti-aliasing"), &g_ctx.gui_aa);
 	nk_spacer(ctx);
 	nk_property_int(ctx, gnwinfo_get_text(L"#Width"), 60, &g_init_width, 1920, 10, 10);
@@ -251,6 +253,7 @@ gnwinfo_draw_settings_window(struct nk_context* ctx, float width, float height)
 		gnwinfo_set_ini_value(L"Window", L"Height", L"%u", g_init_height);
 		gnwinfo_set_ini_value(L"Window", L"Alpha", L"%u", g_init_alpha);
 		gnwinfo_set_ini_value(L"Window", L"BGInfo", L"%d", !g_ctx.gui_bginfo);
+		gnwinfo_set_ini_value(L"Window", L"HideSensitive", L"%u", g_ctx.lib.HideSensitive);
 		gnwinfo_set_ini_value(L"Window", L"AntiAliasing", L"%u", g_ctx.gui_aa);
 		set_ini_color(L"Background", g_color_back);
 		set_ini_color(L"Highlight", g_color_text_l);

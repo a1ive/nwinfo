@@ -229,7 +229,7 @@ static void PrintOsInfo(PNODE node)
 	szHardwareId = NWL_NtGetRegValue(HKEY_LOCAL_MACHINE, L"SYSTEM\\CurrentControlSet\\Control\\SystemInformation", L"ComputerHardwareId", NULL, &dwType);
 	if (szHardwareId)
 	{
-		NWL_NodeAttrSet(node, "Computer Hardware Id", NWL_Ucs2ToUtf8(szHardwareId), NAFLG_FMT_NEED_QUOTE);
+		NWL_NodeAttrSet(node, "Computer Hardware Id", NWL_Ucs2ToUtf8(szHardwareId), NAFLG_FMT_NEED_QUOTE | NAFLG_FMT_SENSITIVE);
 		free(szHardwareId);
 	}
 }

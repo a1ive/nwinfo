@@ -27,6 +27,8 @@ OPTIONS:
   --format=XXX     Specify output format. [YAML|JSON|LUA]
   --output=FILE    Write to FILE instead of printing to screen.
   --human          Display numbers in human readable format.
+  --debug          Print debug info to stdout.
+  --hide-sensitive Hide sensitive data (MAC & S/N).
   --sys            Print system info.
   --cpu            Print processor details.
   --net[=active]   Print network information for each adapter interface.

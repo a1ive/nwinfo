@@ -15,6 +15,8 @@ static void nwinfo_help(void)
 		"  --format=XXX     Specify output format. [YAML|JSON|LUA]\n"
 		"  --output=FILE    Write to FILE instead of printing to screen.\n"
 		"  --human          Display numbers in human readable format.\n"
+		"  --debug          Print debug info to stdout.\n"
+		"  --hide-sensitive Hide sensitive data (MAC & S/N).\n"
 		"  --sys            Print system info.\n"
 		"  --cpu            Print CPUID info.\n"
 		"  --net[=active]   Print [active] network info\n"
@@ -36,6 +38,8 @@ int main(int argc, char* argv[])
 	ZeroMemory(&nwContext, sizeof(NWLIB_CONTEXT));
 	nwContext.NwFormat = FORMAT_YAML;
 	nwContext.HumanSize = FALSE;
+	nwContext.Debug = FALSE;
+	nwContext.HideSensitive = FALSE;
 	NW_Init(&nwContext);
 	
 	for (int i = 0; i < argc; i++)
@@ -106,6 +110,8 @@ int main(int argc, char* argv[])
 			nwContext.UefiInfo = TRUE;
 		else if (_stricmp(argv[i], "--debug") == 0)
 			nwContext.Debug = TRUE;
+		else if (_stricmp(argv[i], "--hide-sensitive") == 0)
+			nwContext.HideSensitive = TRUE;
 		else
 		{
 		}

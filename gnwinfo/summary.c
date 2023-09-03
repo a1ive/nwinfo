@@ -9,13 +9,18 @@ LPCWSTR NWL_Utf8ToUcs2(LPCSTR src);
 LPCSTR
 gnwinfo_get_node_attr(PNODE node, LPCSTR key)
 {
-	LPCSTR str;
+	int i;
 	if (!node)
-		return "-\0";
-	str = NWL_NodeAttrGet(node, key);
-	if (!str)
-		return "-\0";
-	return str;
+		goto fail;
+	for (i = 0; node->Attributes[i].LinkedAttribute; i++)
+	{
+		if (strcmp(node->Attributes[i].LinkedAttribute->Key, key) == 0)
+		{
+			return node->Attributes[i].LinkedAttribute->Value;
+		}
+	}
+fail:
+	return "-\0";
 }
 
 struct nk_color
