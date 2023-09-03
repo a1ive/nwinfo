@@ -295,13 +295,13 @@ gnwinfo_draw_smart_window(struct nk_context* ctx, float width, float height)
 	char* str;
 	static int cur_disk = 0;
 
-	if (g_ctx.gui_smart == FALSE)
+	if (!(g_ctx.window_flag & GUI_WINDOW_SMART))
 		return;
 	if (!nk_begin(ctx, "S.M.A.R.T.",
 		nk_rect(0, height / 6.0f, width * 0.98f, height / 1.5f),
 		NK_WINDOW_BORDER | NK_WINDOW_MOVABLE | NK_WINDOW_SCALABLE | NK_WINDOW_CLOSABLE))
 	{
-		g_ctx.gui_smart = FALSE;
+		g_ctx.window_flag &= ~GUI_WINDOW_SMART;
 		goto out;
 	}
 	if (NWLC->NwSmartInit == FALSE)

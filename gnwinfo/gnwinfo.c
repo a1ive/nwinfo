@@ -435,7 +435,7 @@ wWinMain(_In_ HINSTANCE hInstance,
 		nk_input_end(ctx);
 
 		/* GUI */
-		if (g_ctx.gui_settings == TRUE)
+		if (g_ctx.window_flag & GUI_WINDOW_SETTINGS)
 			set_style(ctx);
 		gnwinfo_draw_main_window(ctx, g_ctx.gui_width, g_ctx.gui_height);
 		gnwinfo_draw_cpuid_window(ctx, g_ctx.gui_width, g_ctx.gui_height);

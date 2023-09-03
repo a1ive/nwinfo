@@ -30,7 +30,7 @@ static struct
 VOID
 gnwinfo_init_mm_window(struct nk_context* ctx)
 {
-	g_ctx.gui_mm = TRUE;
+	g_ctx.window_flag |= GUI_WINDOW_MM;
 	m_ctx.clean_size = 0;
 	m_ctx.clean_flag = CLEAN_SYS_WORKING_SET | CLEAN_WORKING_SET | CLEAN_STANDBY_LIST | CLEAN_PR0_STANDBY_LIST | CLEAN_MODIFIED_PAGE | CLEAN_COMBINED_MM_LIST;
 	m_ctx.page_drive_change = TRUE;
@@ -261,13 +261,13 @@ draw_page_file(struct nk_context* ctx)
 VOID
 gnwinfo_draw_mm_window(struct nk_context* ctx, float width, float height)
 {
-	if (g_ctx.gui_mm == FALSE)
+	if (!(g_ctx.window_flag & GUI_WINDOW_MM))
 		return;
 	if (!nk_begin(ctx, gnwinfo_get_text(L"Memory"),
 		nk_rect(width / 8.0f, height / 4.0f, width * 0.75f, height / 2.0f),
 		NK_WINDOW_BORDER | NK_WINDOW_MOVABLE | NK_WINDOW_SCALABLE | NK_WINDOW_CLOSABLE))
 	{
-		g_ctx.gui_mm = FALSE;
+		g_ctx.window_flag &= ~GUI_WINDOW_MM;
 		goto out;
 	}
 

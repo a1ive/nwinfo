@@ -38,7 +38,7 @@ VOID
 gnwinfo_init_hostname_window(struct nk_context* ctx)
 {
 	time_t t;
-	g_ctx.gui_hostname = TRUE;
+	g_ctx.window_flag |= GUI_WINDOW_HOSTNAME;
 	memcpy(m_ctx.hostname, g_ctx.sys_hostname, MAX_COMPUTERNAME_LENGTH + 1);
 	m_ctx.col_height = 1.5f * g_font_size + 2.0f * ctx->style.edit.padding.y;
 	strcpy_s(m_ctx.prefix, MAX_COMPUTERNAME_LENGTH + 1, gnwinfo_get_ini_value(L"Widgets", L"HostnamePrefix", L"DESKTOP-"));
@@ -112,13 +112,13 @@ set_hostname(const char* text)
 VOID
 gnwinfo_draw_hostname_window(struct nk_context* ctx, float width, float height)
 {
-	if (g_ctx.gui_hostname == FALSE)
+	if (!(g_ctx.window_flag & GUI_WINDOW_HOSTNAME))
 		return;
 	if (!nk_begin(ctx, gnwinfo_get_text(L"Hostname"),
 		nk_rect(width / 8.0f, height / 4.0f, width * 0.75f, NK_MIN(height / 2.0f, 6 * m_ctx.col_height)),
 		NK_WINDOW_BORDER | NK_WINDOW_MOVABLE | NK_WINDOW_SCALABLE | NK_WINDOW_CLOSABLE))
 	{
-		g_ctx.gui_hostname = FALSE;
+		g_ctx.window_flag &= ~GUI_WINDOW_HOSTNAME;
 		goto out;
 	}
 
@@ -141,7 +141,7 @@ gnwinfo_draw_hostname_window(struct nk_context* ctx, float width, float height)
 	if (nk_button_label(ctx, gnwinfo_get_text(L"OK")))
 	{
 		set_hostname(m_ctx.hostname);
-		g_ctx.gui_hostname = FALSE;
+		g_ctx.window_flag &= ~GUI_WINDOW_HOSTNAME;
 	}
 	nk_spacer(ctx);
 

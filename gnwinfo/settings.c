@@ -78,13 +78,13 @@ draw_color_picker(struct nk_context* ctx, struct nk_color* color)
 VOID
 gnwinfo_draw_settings_window(struct nk_context* ctx, float width, float height)
 {
-	if (g_ctx.gui_settings == FALSE)
+	if (!(g_ctx.window_flag & GUI_WINDOW_SETTINGS))
 		return;
 	if (!nk_begin(ctx, gnwinfo_get_text(L"Settings"),
 		nk_rect(width / 4.0f, height / 3.0f, width / 2.0f, height / 3.0f),
 		NK_WINDOW_BORDER | NK_WINDOW_MOVABLE | NK_WINDOW_SCALABLE | NK_WINDOW_CLOSABLE))
 	{
-		g_ctx.gui_settings = FALSE;
+		g_ctx.window_flag &= ~GUI_WINDOW_SETTINGS;
 		goto out;
 	}
 
@@ -259,7 +259,7 @@ gnwinfo_draw_settings_window(struct nk_context* ctx, float width, float height)
 		set_ini_color(L"StateWarn", g_color_warning);
 		set_ini_color(L"StateError", g_color_error);
 		set_ini_color(L"StateUnknown", g_color_unknown);
-		g_ctx.gui_settings = FALSE;
+		g_ctx.window_flag &= ~GUI_WINDOW_SETTINGS;
 	}
 out:
 	nk_end(ctx);

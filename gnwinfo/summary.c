@@ -636,19 +636,19 @@ gnwinfo_draw_main_window(struct nk_context* ctx, float width, float height)
 
 	nk_layout_row_push(ctx, g_ctx.gui_ratio);
 	if (nk_button_image(ctx, g_ctx.image_cpuid))
-		g_ctx.gui_cpuid = TRUE;
+		g_ctx.window_flag |= GUI_WINDOW_CPUID;
 	nk_layout_row_push(ctx, g_ctx.gui_ratio);
 	if (nk_button_image(ctx, g_ctx.image_smart))
-		g_ctx.gui_smart = TRUE;
+		g_ctx.window_flag |= GUI_WINDOW_SMART;
 	nk_layout_row_push(ctx, g_ctx.gui_ratio);
 	if (nk_button_image(ctx, g_ctx.image_pci))
-		g_ctx.gui_pci = TRUE;
+		g_ctx.window_flag |= GUI_WINDOW_PCI;
 	nk_layout_row_push(ctx, g_ctx.gui_ratio);
 	if (nk_button_image(ctx, g_ctx.image_dmi))
-		g_ctx.gui_dmi = TRUE;
+		g_ctx.window_flag |= GUI_WINDOW_DMI;
 	nk_layout_row_push(ctx, g_ctx.gui_ratio);
 	if (nk_button_image(ctx, g_ctx.image_set))
-		g_ctx.gui_settings = TRUE;
+		g_ctx.window_flag |= GUI_WINDOW_SETTINGS;
 	nk_layout_row_push(ctx, g_ctx.gui_ratio);
 	if (nk_button_image(ctx, g_ctx.image_refresh))
 	{
@@ -658,7 +658,7 @@ gnwinfo_draw_main_window(struct nk_context* ctx, float width, float height)
 	}
 	nk_layout_row_push(ctx, g_ctx.gui_ratio);
 	if (nk_button_image(ctx, g_ctx.image_info))
-		g_ctx.gui_about = TRUE;
+		g_ctx.window_flag |= GUI_WINDOW_ABOUT;
 	nk_layout_row_push(ctx, g_ctx.gui_ratio);
 	if (g_bginfo)
 	{

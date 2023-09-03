@@ -42,22 +42,6 @@ void
 nk_text_hover(struct nk_context* ctx, const char* str,
 	nk_flags alignment, struct nk_color color, nk_bool hover, nk_bool space);
 
-static inline void
-nk_space_label(struct nk_context* ctx, const char* str, nk_bool hover)
-{
-	nk_text_hover(ctx, str, NK_TEXT_LEFT, ctx->style.text.color, hover, nk_true);
-}
-
-static inline void
-nk_space_labelf(struct nk_context* ctx, nk_bool hover, const char* fmt, ...)
-{
-	va_list args;
-	va_start(args, fmt);
-	vsnprintf_s(NWLC->NwBuf, NWINFO_BUFSZ, _TRUNCATE, fmt, args);
-	va_end(args);
-	nk_text_hover(ctx, NWLC->NwBuf, NK_TEXT_LEFT, ctx->style.text.color, hover, nk_true);
-}
-
 nk_bool
 nk_combo_begin_color_dynamic(struct nk_context* ctx, struct nk_color color);
 
@@ -95,6 +79,15 @@ typedef struct _GNW_CPU_INFO
 	double cpu_msr_power;
 }GNW_CPU_INFO;
 
+#define GUI_WINDOW_CPUID    (1U << 0)
+#define GUI_WINDOW_SMART    (1U << 1)
+#define GUI_WINDOW_ABOUT    (1U << 2)
+#define GUI_WINDOW_SETTINGS (1U << 3)
+#define GUI_WINDOW_PCI      (1U << 4)
+#define GUI_WINDOW_DMI      (1U << 5)
+#define GUI_WINDOW_MM       (1U << 6)
+#define GUI_WINDOW_HOSTNAME (1U << 7)
+
 typedef struct _GNW_CONTEXT
 {
 	HINSTANCE inst;
@@ -109,14 +102,7 @@ typedef struct _GNW_CONTEXT
 	float gui_height;
 	float gui_ratio;
 	UINT32 main_flag;
-	BOOL gui_cpuid;
-	BOOL gui_smart;
-	BOOL gui_about;
-	BOOL gui_settings;
-	BOOL gui_pci;
-	BOOL gui_dmi;
-	BOOL gui_mm;
-	BOOL gui_hostname;
+	UINT32 window_flag;
 	nk_bool smart_hex;
 	UINT32 smart_flag;
 	nk_bool gui_bginfo;
@@ -212,6 +198,26 @@ extern struct nk_color g_color_unknown;
 extern struct nk_color g_color_text_l;
 extern struct nk_color g_color_text_d;
 extern struct nk_color g_color_back;
+
+static inline void
+nk_space_label(struct nk_context* ctx, const char* str, nk_bool hover)
+{
+	if (g_ctx.window_flag)
+		hover = nk_false;
+	nk_text_hover(ctx, str, NK_TEXT_LEFT, ctx->style.text.color, hover, nk_true);
+}
+
+static inline void
+nk_space_labelf(struct nk_context* ctx, nk_bool hover, const char* fmt, ...)
+{
+	va_list args;
+	va_start(args, fmt);
+	vsnprintf_s(g_ctx.lib.NwBuf, NWINFO_BUFSZ, _TRUNCATE, fmt, args);
+	va_end(args);
+	if (g_ctx.window_flag)
+		hover = nk_false;
+	nk_text_hover(ctx, g_ctx.lib.NwBuf, NK_TEXT_LEFT, ctx->style.text.color, hover, nk_true);
+}
 
 void gnwinfo_ctx_update(WPARAM wparam);
 void gnwinfo_ctx_init(HINSTANCE inst, HWND wnd, struct nk_context* ctx, float width, float height);

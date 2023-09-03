@@ -45,13 +45,13 @@ void draw_pci_class(struct nk_context* ctx, const char* title, struct nk_image i
 
 VOID gnwinfo_draw_pci_window(struct nk_context* ctx, float width, float height)
 {
-	if (g_ctx.gui_pci == FALSE)
+	if (!(g_ctx.window_flag & GUI_WINDOW_PCI))
 		return;
 	if (!nk_begin(ctx, "PCI",
 		nk_rect(0, height / 4.0f, width * 0.98f, height / 2.0f),
 		NK_WINDOW_BORDER | NK_WINDOW_MOVABLE | NK_WINDOW_SCALABLE | NK_WINDOW_CLOSABLE))
 	{
-		g_ctx.gui_pci = FALSE;
+		g_ctx.window_flag &= ~GUI_WINDOW_PCI;
 		goto out;
 	}
 	tree_id = 0;

@@ -31,13 +31,13 @@ static void draw_dmi_node(struct nk_context* ctx, PNODE node)
 VOID gnwinfo_draw_dmi_window(struct nk_context* ctx, float width, float height)
 {
 	PNODE_LINK dmi;
-	if (g_ctx.gui_dmi == FALSE)
+	if (!(g_ctx.window_flag & GUI_WINDOW_DMI))
 		return;
 	if (!nk_begin(ctx, "SMBIOS",
 		nk_rect(0, height / 4.0f, width * 0.98f, height / 2.0f),
 		NK_WINDOW_BORDER | NK_WINDOW_MOVABLE | NK_WINDOW_SCALABLE | NK_WINDOW_CLOSABLE))
 	{
-		g_ctx.gui_dmi = FALSE;
+		g_ctx.window_flag &= ~GUI_WINDOW_DMI;
 		goto out;
 	}
 	tree_id = 0;

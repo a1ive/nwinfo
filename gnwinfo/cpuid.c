@@ -85,13 +85,13 @@ gnwinfo_draw_cpuid_window(struct nk_context* ctx, float width, float height)
 	CHAR buf[MAX_PATH];
 	PNODE cpu = NULL;
 	static int cpu_index = 0;
-	if (g_ctx.gui_cpuid == FALSE)
+	if (!(g_ctx.window_flag & GUI_WINDOW_CPUID))
 		return;
 	if (!nk_begin(ctx, "CPUID",
 		nk_rect(0, height / 4.0f, width * 0.98f, height / 2.0f),
 		NK_WINDOW_BORDER | NK_WINDOW_MOVABLE | NK_WINDOW_SCALABLE | NK_WINDOW_CLOSABLE))
 	{
-		g_ctx.gui_cpuid = FALSE;
+		g_ctx.window_flag &= ~GUI_WINDOW_CPUID;
 		goto out;
 	}
 
