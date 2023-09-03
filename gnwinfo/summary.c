@@ -77,7 +77,7 @@ draw_os(struct nk_context* ctx)
 	if (g_ctx.main_flag & MAIN_OS_DETAIL)
 	{
 		nk_layout_row(ctx, NK_DYNAMIC, 0, 3, (float[3]) { 0.3f, 0.7f - g_ctx.gui_ratio, g_ctx.gui_ratio });
-		nk_space_label(ctx, gnwinfo_get_text(L"Login Status"), NK_TEXT_LEFT, nk_false);
+		nk_space_label(ctx, gnwinfo_get_text(L"Login Status"), nk_false);
 		nk_labelf_colored(ctx, NK_TEXT_LEFT,
 			g_color_text_l,
 			"%s@%s%s%s",
@@ -92,7 +92,7 @@ draw_os(struct nk_context* ctx)
 	if (g_ctx.main_flag & MAIN_OS_UPTIME)
 	{
 		nk_layout_row(ctx, NK_DYNAMIC, 0, 2, (float[2]) { 0.3f, 0.7f });
-		nk_space_label(ctx, gnwinfo_get_text(L"Uptime"), NK_TEXT_LEFT, nk_false);
+		nk_space_label(ctx, gnwinfo_get_text(L"Uptime"), nk_false);
 		nk_label_colored(ctx, g_ctx.sys_uptime, NK_TEXT_LEFT, g_color_text_l);
 	}
 }
@@ -125,12 +125,12 @@ draw_bios(struct nk_context* ctx)
 
 	if (g_ctx.main_flag & MAIN_B_VENDOR)
 	{
-		nk_space_label(ctx, gnwinfo_get_text(L"Vendor"), NK_TEXT_LEFT, nk_false);
+		nk_space_label(ctx, gnwinfo_get_text(L"Vendor"), nk_false);
 		nk_label_colored(ctx, get_smbios_attr("0", "Vendor", NULL), NK_TEXT_LEFT, g_color_text_l);
 	}
 	if (g_ctx.main_flag & MAIN_B_VERSION)
 	{
-		nk_space_label(ctx, gnwinfo_get_text(L"Version"), NK_TEXT_LEFT, nk_false);
+		nk_space_label(ctx, gnwinfo_get_text(L"Version"), nk_false);
 		nk_labelf_colored(ctx, NK_TEXT_LEFT, g_color_text_l,
 			"%s %s",
 			get_smbios_attr("0", "Version", NULL),
@@ -157,14 +157,14 @@ draw_computer(struct nk_context* ctx)
 	nk_image_label(ctx, g_ctx.image_board, gnwinfo_get_text(L"Computer"), NK_TEXT_LEFT, g_color_text_d);
 	nk_spacer(ctx);
 
-	nk_space_label(ctx, get_smbios_attr("1", "Manufacturer", NULL), NK_TEXT_LEFT, nk_true);
+	nk_space_label(ctx, get_smbios_attr("1", "Manufacturer", NULL), nk_true);
 	nk_labelf_colored(ctx, NK_TEXT_LEFT, g_color_text_l,
 		"%s %s %s",
 		get_smbios_attr("1", "Product Name", NULL),
 		get_smbios_attr("3", "Type", NULL),
 		get_smbios_attr("1", "Serial Number", NULL));
 
-	nk_space_label(ctx, get_smbios_attr("2", "Manufacturer", is_motherboard), NK_TEXT_LEFT, nk_true);
+	nk_space_label(ctx, get_smbios_attr("2", "Manufacturer", is_motherboard), nk_true);
 	nk_labelf_colored(ctx, NK_TEXT_LEFT, g_color_text_l,
 		"%s %s",
 		get_smbios_attr("2", "Product Name", is_motherboard),
@@ -189,7 +189,7 @@ draw_computer(struct nk_context* ctx)
 	if (strcmp(gnwinfo_get_node_attr(g_ctx.battery, "AC Power"), "Online") == 0)
 		ac = u8"\u26a1 ";
 
-	nk_space_label(ctx, gnwinfo_get_text(L"Battery"), NK_TEXT_LEFT, nk_false);
+	nk_space_label(ctx, gnwinfo_get_text(L"Battery"), nk_false);
 	nk_labelf_colored(ctx, NK_TEXT_LEFT, color,
 		"%s %s%s",
 		gnwinfo_get_node_attr(g_ctx.battery, "Battery Life Percentage"),
@@ -229,7 +229,7 @@ draw_processor(struct nk_context* ctx)
 		CHAR buf[MAX_PATH];
 
 		nk_layout_row(ctx, NK_DYNAMIC, 0, 2, (float[2]) { 0.3f, 0.7f });
-		nk_space_label(ctx, name, NK_TEXT_LEFT, nk_false);
+		nk_space_label(ctx, name, nk_false);
 		nk_label_colored(ctx, gnwinfo_get_node_attr(cpu, "Brand"), NK_TEXT_LEFT, g_color_text_l);
 
 		if (!(g_ctx.main_flag & MAIN_CPU_DETAIL))
@@ -257,7 +257,7 @@ draw_processor(struct nk_context* ctx)
 			cache_size[cache_level - 1] = get_smbios_attr("7", "Installed Cache Size", is_cache_level_equal);
 
 		nk_layout_row(ctx, NK_DYNAMIC, 0, 2, (float[2]) { 0.3f, 0.7f });
-		nk_space_label(ctx, gnwinfo_get_text(L"Cache"), NK_TEXT_LEFT, nk_false);
+		nk_space_label(ctx, gnwinfo_get_text(L"Cache"), nk_false);
 		if (cache_size[0][0] == '-')
 			nk_label_colored(ctx, cache_size[0], NK_TEXT_LEFT, g_color_text_l);
 		else if (cache_size[1][0] == '-')
@@ -303,7 +303,7 @@ draw_memory(struct nk_context* ctx)
 			LPCSTR ddr = gnwinfo_get_node_attr(tab, "Device Type");
 			if (ddr[0] == '-')
 				continue;
-			nk_space_label(ctx, gnwinfo_get_node_attr(tab, "Bank Locator"), NK_TEXT_LEFT, nk_true);
+			nk_space_label(ctx, gnwinfo_get_node_attr(tab, "Bank Locator"), nk_true);
 			nk_labelf_colored(ctx, NK_TEXT_LEFT, g_color_text_l,
 				"%s-%s %s %s %s",
 				ddr,
@@ -336,10 +336,8 @@ draw_display(struct nk_context* ctx)
 		LPCSTR vendor = gnwinfo_get_node_attr(pci, "Vendor");
 		if (strcmp(vendor, "-") == 0)
 			continue;
-		nk_space_label(ctx, vendor, NK_TEXT_LEFT, nk_true);
-		nk_labelf_colored(ctx, NK_TEXT_LEFT, g_color_text_l,
-			"%s",
-			gnwinfo_get_node_attr(pci, "Device"));
+		nk_space_label(ctx, vendor, nk_true);
+		nk_label_colored(ctx, gnwinfo_get_node_attr(pci, "Device"), NK_TEXT_LEFT, g_color_text_l);
 	}
 	for (i = 0; g_ctx.edid->Children[i].LinkedNode; i++)
 	{
@@ -351,7 +349,7 @@ draw_display(struct nk_context* ctx)
 		id = gnwinfo_get_node_attr(mon, "ID");
 		if (id[0] == '-')
 			continue;
-		nk_space_label(ctx, gnwinfo_get_node_attr(mon, "Manufacturer"), NK_TEXT_LEFT, nk_true);
+		nk_space_label(ctx, gnwinfo_get_node_attr(mon, "Manufacturer"), nk_true);
 		
 		for (j = 0; j < 4; j++)
 		{
@@ -481,6 +479,7 @@ draw_storage(struct nk_context* ctx)
 	for (i = 0; g_ctx.disk->Children[i].LinkedNode; i++)
 	{
 		BOOL cdrom;
+		LPCSTR prefix = "HD";
 		LPCSTR path, id;
 		LPCSTR ssd = "";
 		PNODE disk = g_ctx.disk->Children[i].LinkedNode;
@@ -490,6 +489,7 @@ draw_storage(struct nk_context* ctx)
 		if (strncmp(path, "\\\\.\\CdRom", 9) == 0)
 		{
 			cdrom = TRUE;
+			prefix = "CD";
 			id = &path[9];
 		}
 		else if (strncmp(path, "\\\\.\\PhysicalDrive", 17) == 0)
@@ -498,13 +498,15 @@ draw_storage(struct nk_context* ctx)
 			id = &path[17];
 			if (strcmp(gnwinfo_get_node_attr(disk, "SSD"), "Yes") == 0)
 				ssd = " SSD";
+			if (strcmp(gnwinfo_get_node_attr(disk, "Removable"), "Yes") == 0)
+				prefix = "RM";
 		}
 		else
 			continue;
 
 		nk_layout_row(ctx, NK_DYNAMIC, 0, 3, (float[3]) { 0.12f, 0.18f, 0.7f });
-		snprintf(name, 32, "%s%s", cdrom ? "CD" : "HD", id);
-		nk_space_label(ctx, name, NK_TEXT_LEFT, nk_false);
+		snprintf(name, 32, "%s%s", prefix, id);
+		nk_space_label(ctx, name, nk_false);
 		nk_labelf(ctx, NK_TEXT_LEFT,
 			"%s%s",
 			gnwinfo_get_node_attr(disk, "Type"),
@@ -596,7 +598,7 @@ draw_network(struct nk_context* ctx)
 		}
 		else if (!(g_ctx.main_flag & MAIN_NET_INACTIVE))
 			continue;
-		nk_space_label(ctx, gnwinfo_get_node_attr(nw, "Description"), NK_TEXT_LEFT, nk_true);
+		nk_space_label(ctx, gnwinfo_get_node_attr(nw, "Description"), nk_true);
 		nk_labelf_colored(ctx,
 			NK_TEXT_LEFT, color,
 			"%s%s",

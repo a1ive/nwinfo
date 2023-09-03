@@ -92,13 +92,14 @@ nk_image_label(struct nk_context* ctx, struct nk_image img,
 }
 
 void
-nk_space_label(struct nk_context* ctx, const char* str, nk_flags align, nk_bool hover)
+nk_text_hover(struct nk_context* ctx, const char* str,
+	nk_flags alignment, struct nk_color color, nk_bool hover, nk_bool space)
 {
 	struct nk_window* win;
 	const struct nk_style* style;
+
 	struct nk_rect bounds;
 	struct nk_text text;
-	int len;
 
 	NK_ASSERT(ctx);
 	NK_ASSERT(ctx->current);
@@ -107,18 +108,23 @@ nk_space_label(struct nk_context* ctx, const char* str, nk_flags align, nk_bool 
 
 	win = ctx->current;
 	style = &ctx->style;
-	len = nk_strlen(str);
-	if (!nk_widget(&bounds, ctx))
-		return;
-
-	bounds.x += bounds.h + style->window.padding.x + style->window.border;
-	bounds.w -= bounds.h + style->window.padding.x + style->window.border;
+	if (space)
+	{
+		if (!nk_widget(&bounds, ctx))
+			return;
+		bounds.x += bounds.h + style->window.padding.x + style->window.border;
+		bounds.w -= bounds.h + style->window.padding.x + style->window.border;
+	}
+	else
+	{
+		nk_panel_alloc_space(&bounds, ctx);
+	}
 
 	text.padding.x = style->text.padding.x;
 	text.padding.y = style->text.padding.y;
 	text.background = style->window.background;
-	text.text = style->text.color;
-	nk_widget_text(&win->buffer, bounds, str, len, &text, align, style->font);
+	text.text = color;
+	nk_widget_text(&win->buffer, bounds, str, nk_strlen(str), &text, alignment, style->font);
 
 	if (hover && nk_input_is_mouse_hovering_rect(&ctx->input, bounds))
 		nk_tooltip(ctx, str);
