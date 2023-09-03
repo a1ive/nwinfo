@@ -472,7 +472,6 @@ static VOID
 draw_storage(struct nk_context* ctx)
 {
 	INT i;
-	CHAR name[32];
 
 	nk_layout_row_dynamic(ctx, 0, 1);
 	nk_image_label(ctx, g_ctx.image_disk, gnwinfo_get_text(L"Storage"), NK_TEXT_LEFT, g_color_text_d);
@@ -505,8 +504,7 @@ draw_storage(struct nk_context* ctx)
 			continue;
 
 		nk_layout_row(ctx, NK_DYNAMIC, 0, 3, (float[3]) { 0.12f, 0.18f, 0.7f });
-		snprintf(name, 32, "%s%s", prefix, id);
-		nk_space_label(ctx, name, nk_false);
+		nk_space_labelf(ctx, nk_true, "%s%s", prefix, id);
 		nk_labelf(ctx, NK_TEXT_LEFT,
 			"%s%s",
 			gnwinfo_get_node_attr(disk, "Type"),
@@ -608,7 +606,7 @@ draw_network(struct nk_context* ctx)
 		if (g_ctx.main_flag & MAIN_NET_DETAIL)
 		{
 			if (is_active)
-				nk_labelf(ctx, NK_TEXT_LEFT, u8"      \u2191\u2193 %s / %s",
+				nk_space_labelf(ctx, nk_true, u8"  \u2191\u2193 %s / %s",
 					gnwinfo_get_node_attr(nw, "Transmit Link Speed"),
 					gnwinfo_get_node_attr(nw, "Receive Link Speed"));
 			else

@@ -48,6 +48,16 @@ nk_space_label(struct nk_context* ctx, const char* str, nk_bool hover)
 	nk_text_hover(ctx, str, NK_TEXT_LEFT, ctx->style.text.color, hover, nk_true);
 }
 
+static inline void
+nk_space_labelf(struct nk_context* ctx, nk_bool hover, const char* fmt, ...)
+{
+	va_list args;
+	va_start(args, fmt);
+	vsnprintf_s(NWLC->NwBuf, NWINFO_BUFSZ, _TRUNCATE, fmt, args);
+	va_end(args);
+	nk_text_hover(ctx, NWLC->NwBuf, NK_TEXT_LEFT, ctx->style.text.color, hover, nk_true);
+}
+
 nk_bool
 nk_combo_begin_color_dynamic(struct nk_context* ctx, struct nk_color color);
 
