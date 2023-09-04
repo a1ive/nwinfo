@@ -265,7 +265,7 @@ NWL_GetSpdManufacturer(PNODE nd, CHAR* Ids, DWORD IdsSize, UINT Bank, UINT Item)
 		bLine = IdsGetline(Ids, IdsSize, &Offset);
 	}
 fail:
-	NWL_NodeAttrSet(nd, "Manufacturer", "UNKNOWN", 0);
+	NWL_NodeAttrSetf(nd, "Manufacturer", 0, "%02X%02X", Bank, Item);
 }
 
 static HANDLE

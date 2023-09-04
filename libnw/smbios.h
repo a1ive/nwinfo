@@ -301,6 +301,24 @@ typedef struct _TYPE_17_
 	UINT8 AssetTag;
 	UINT8 PN;
 	UINT8 Attributes;
+	UINT32 ExtendedSize;
+	UINT16 ConfiguredMemSpeed;
+	UINT16 MinVoltage;
+	UINT16 MaxVoltage;
+	UINT16 ConfiguredVoltage;
+	UINT8 MemoryTechnology;
+	UINT16 MemoryOpModeCapability;
+	UINT8 FirmwareVersion;
+	UINT16 ModuleVID;
+	UINT16 ModulePID;
+	UINT16 MemorySubsysControllerVID;
+	UINT16 MemorySubsysControllerPID;
+	UINT64 NonVolatileSize;
+	UINT64 VolatileSize;
+	UINT64 CacheSize;
+	UINT64 LogicalSize;
+	UINT32 ExtendedSpeed;
+	UINT16 ExtendedConfiguredMemSpeed;
 } MemoryDevice, * PMemoryDevice;
 
 typedef struct _TYPE_18_

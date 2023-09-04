@@ -1180,22 +1180,35 @@ pMDFormFactorToStr(UCHAR Type)
 }
 
 static void
-JedecIdToVendor(PNODE node, LPCSTR vendor)
+JedecIdToVendor(PNODE node, PMemoryDevice md)
 {
 	UINT id;
 	DWORD sz = 0;
 	CHAR* db = NULL;
-	if (!isxdigit(vendor[0]) || !isxdigit(vendor[1]) || !isxdigit(vendor[2]) || !isxdigit(vendor[3])
-		|| vendor[4] != '\0')
-		goto fail;
+	LPCSTR vendor = NULL;
+
 	db = NWL_LoadIdsToMemory(L"jep106.ids", &sz);
 	if (!db)
 		goto fail;
-	id = strtoul(vendor, NULL, 16);
+
+	if (md->Header.Length >= 0x54) // 3.2
+		id = (md->ModuleVID & 0x7F) << 8 | (md->ModuleVID >> 8) & 0x7F;
+	else
+	{
+		vendor = LocateString((void*)md, md->Manufacturer);
+		if (!isxdigit(vendor[0]) || !isxdigit(vendor[1])
+			|| !isxdigit(vendor[2]) || !isxdigit(vendor[3])
+			|| vendor[4] != '\0')
+			goto fail;
+		id = strtoul(vendor, NULL, 16);
+	}
 	NWL_GetSpdManufacturer(node, db, sz, (id >> 8) & 0x7F, id & 0x7F);
 	free(db);
 	return;
 fail:
+	if (db)
+		free(db);
+	vendor = LocateString((void*)md, md->Manufacturer);
 	NWL_NodeAttrSet(node, "Manufacturer", vendor, 0);
 }
 
@@ -1225,7 +1238,7 @@ static void ProcMemoryDevice(PNODE tab, void* p)
 		return;
 	if (pMD->Speed)
 		NWL_NodeAttrSetf(tab, "Speed (MT/s)", NAFLG_FMT_NUMERIC, "%u", pMD->Speed);
-	JedecIdToVendor(tab, LocateString(p, pMD->Manufacturer));
+	JedecIdToVendor(tab, pMD);
 	NWL_NodeAttrSet(tab, "Serial Number", LocateString(p, pMD->SN), NAFLG_FMT_SENSITIVE);
 	NWL_NodeAttrSet(tab, "Asset Tag Number", LocateString(p, pMD->AssetTag), 0);
 	NWL_NodeAttrSet(tab, "Part Number", LocateString(p, pMD->PN), 0);
