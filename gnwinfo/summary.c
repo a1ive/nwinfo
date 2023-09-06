@@ -592,8 +592,6 @@ draw_network(struct nk_context* ctx)
 		struct nk_color color = g_color_error;
 		if (!nw)
 			continue;
-		if (strcmp(gnwinfo_get_node_attr(nw, "Type"), "Software Loopback") == 0)
-			continue;
 		if (strcmp(gnwinfo_get_node_attr(nw, "Status"), "Active") == 0)
 		{
 			color = g_color_good;
@@ -602,20 +600,18 @@ draw_network(struct nk_context* ctx)
 		else if (!(g_ctx.main_flag & MAIN_NET_INACTIVE))
 			continue;
 		nk_space_label(ctx, gnwinfo_get_node_attr(nw, "Description"), nk_true);
-		nk_labelf_colored(ctx,
-			NK_TEXT_LEFT, color,
-			"%s%s",
-			strcmp(gnwinfo_get_node_attr(nw, "DHCP Enabled"), "Yes") == 0 ? "DHCP " : "",
-			get_first_ipv4(nw));
+		nk_label_colored(ctx, get_first_ipv4(nw), NK_TEXT_LEFT, color);
 
 		if (g_ctx.main_flag & MAIN_NET_DETAIL)
 		{
+			LPCSTR dhcp = strcmp(gnwinfo_get_node_attr(nw, "DHCP Enabled"), "Yes") == 0 ? " DHCP" : "";
 			if (is_active)
-				nk_space_labelf(ctx, nk_true, u8"  \u2191\u2193 %s / %s",
+				nk_space_labelf(ctx, nk_true, u8"%s \u2191\u2193 %s / %s",
+					dhcp,
 					gnwinfo_get_node_attr(nw, "Transmit Link Speed"),
 					gnwinfo_get_node_attr(nw, "Receive Link Speed"));
 			else
-				nk_spacer(ctx);
+				nk_space_label(ctx, dhcp, nk_true);
 			nk_label_colored(ctx,
 				gnwinfo_get_node_attr(nw, "MAC Address"),
 				NK_TEXT_LEFT, g_color_text_l);

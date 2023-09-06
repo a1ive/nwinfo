@@ -144,8 +144,6 @@ get_network_traffic(void)
 		PNODE nw = g_ctx.network->Children[i].LinkedNode;
 		if (!nw)
 			continue;
-		if (strcmp(gnwinfo_get_node_attr(nw, "Type"), "Software Loopback") == 0)
-			continue;
 		recv += strtoull(gnwinfo_get_node_attr(nw, "Received (Octets)"), NULL, 10);
 		send += strtoull(gnwinfo_get_node_attr(nw, "Sent (Octets)"), NULL, 10);
 	}
@@ -280,6 +278,7 @@ gnwinfo_ctx_init(HINSTANCE inst, HWND wnd, struct nk_context* ctx, float width, 
 	g_ctx.lib.HumanSize = TRUE;
 	g_ctx.lib.ErrLogCallback = gnwinfo_ctx_error_callback;
 	g_ctx.lib.CodePage = CP_UTF8;
+	g_ctx.lib.SkipVirtualNet = TRUE;
 
 	g_ctx.lib.CpuInfo = TRUE;
 	g_ctx.lib.SysInfo = TRUE;

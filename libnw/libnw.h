@@ -43,6 +43,7 @@ typedef struct _NWLIB_CONTEXT
 
 	DWORD AcpiTable;
 	BOOL ActiveNet;
+	BOOL SkipVirtualNet;
 	UINT8 SmbiosType;
 	LPCSTR PciClass;
 	BOOL DisableSmart;

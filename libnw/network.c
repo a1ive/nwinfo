@@ -133,12 +133,22 @@ PNODE NW_Network(VOID)
 	while (pCurrAddresses && pCurrAddresses < (PIP_ADAPTER_ADDRESSES_XP)pMaxAddress)
 	{
 		PNODE nic = NULL;
+		LPCSTR desc = NULL;
 		if (NWLC->ActiveNet && pCurrAddresses->OperStatus != IfOperStatusUp)
 			goto next_addr;
+		desc = NWL_Ucs2ToUtf8(pCurrAddresses->Description);
+		if (NWLC->SkipVirtualNet)
+		{
+			if (pCurrAddresses->IfType == IF_TYPE_SOFTWARE_LOOPBACK ||
+				pCurrAddresses->IfType == IF_TYPE_TUNNEL)
+				goto next_addr;
+			if (strncmp(desc, "Microsoft Wi-Fi Direct Virtual Adapter", 38) == 0)
+				goto next_addr;
+		}
 		pCurrAddressesLH = (PIP_ADAPTER_ADDRESSES_LH)pCurrAddresses;
 		nic = NWL_NodeAppendNew(node, "Interface", NFLG_TABLE_ROW);
 		NWL_NodeAttrSet(nic, "Network Adapter", pCurrAddresses->AdapterName, NAFLG_FMT_GUID);
-		NWL_NodeAttrSet(nic, "Description", NWL_Ucs2ToUtf8(pCurrAddresses->Description), 0);
+		NWL_NodeAttrSet(nic, "Description", desc, 0);
 		NWL_NodeAttrSet(nic, "Type", IfTypeToStr(pCurrAddresses->IfType), 0);
 		if (pCurrAddresses->PhysicalAddressLength != 0)
 		{
