@@ -580,10 +580,12 @@ draw_network(struct nk_context* ctx)
 {
 	INT i;
 
-	nk_layout_row(ctx, NK_DYNAMIC, 0, 2, (float[2]) { 0.64f, 0.36f });
+	nk_layout_row(ctx, NK_DYNAMIC, 0, 3, (float[3]) { 0.64f, 0.36f - g_ctx.gui_ratio, g_ctx.gui_ratio });
 	nk_image_label(ctx, g_ctx.image_net, gnwinfo_get_text(L"Network"), NK_TEXT_LEFT, g_color_text_d);
 	nk_labelf_colored(ctx, NK_TEXT_LEFT, g_color_text_l,
 		u8"\u2191 %s \u2193 %s", g_ctx.net_send, g_ctx.net_recv);
+	if (nk_button_image(ctx, g_ctx.image_edit))
+		ShellExecuteW(NULL, NULL, L"::{7007ACC7-3202-11D1-AAD2-00805FC1270E}", NULL, NULL, SW_NORMAL);
 
 	for (i = 0; g_ctx.network->Children[i].LinkedNode; i++)
 	{
@@ -599,11 +601,19 @@ draw_network(struct nk_context* ctx)
 		}
 		else if (!(g_ctx.main_flag & MAIN_NET_INACTIVE))
 			continue;
+		nk_layout_row(ctx, NK_DYNAMIC, 0, 3, (float[3]) { 0.64f, 0.36f - g_ctx.gui_ratio, g_ctx.gui_ratio });
 		nk_space_label(ctx, gnwinfo_get_node_attr(nw, "Description"), nk_true);
 		nk_label_colored(ctx, get_first_ipv4(nw), NK_TEXT_LEFT, color);
+		if (nk_button_image(ctx, g_ctx.image_info))
+		{
+			swprintf((WCHAR*)g_ctx.lib.NwBuf, NWINFO_BUFSZ / sizeof(WCHAR),
+				L"::{7007ACC7-3202-11D1-AAD2-00805FC1270E}\\::%s", NWL_Utf8ToUcs2(gnwinfo_get_node_attr(nw, "Network Adapter")));
+			ShellExecuteW(NULL, NULL, (WCHAR*)g_ctx.lib.NwBuf, NULL, NULL, SW_NORMAL);
+		}
 
 		if (g_ctx.main_flag & MAIN_NET_DETAIL)
 		{
+			nk_layout_row(ctx, NK_DYNAMIC, 0, 2, (float[2]) { 0.64f, 0.36f });
 			LPCSTR dhcp = strcmp(gnwinfo_get_node_attr(nw, "DHCP Enabled"), "Yes") == 0 ? " DHCP" : "";
 			if (is_active)
 				nk_space_labelf(ctx, nk_true, u8"%s \u2191\u2193 %s / %s",
