@@ -231,6 +231,12 @@ GetDiskPartMap(HANDLE hDisk, BOOL bIsCdRom, PHY_DRIVE_INFO* pInfo)
 	switch (pInfo->PartMap)
 	{
 	case PARTITION_STYLE_MBR:
+		if (pLayout->PartitionCount >= 4)
+		{
+			int i;
+			for (i = 0; i < 4; i++)
+				pInfo->MbrLba[i] = (DWORD)(pLayout->PartitionEntry[i].StartingOffset.QuadPart >> 9);
+		}
 		memcpy(pInfo->MbrSignature, &pLayout->Mbr.Signature, sizeof(DWORD));
 		break;
 	case PARTITION_STYLE_GPT:
