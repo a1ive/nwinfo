@@ -154,12 +154,12 @@
     <Image Include="icons\close.png" />
     <Image Include="icons\cpu.png" />
     <Image Include="icons\cpuid.png" />
+    <Image Include="icons\dir.png" />
     <Image Include="icons\disk.png" />
     <Image Include="icons\display.png" />
     <Image Include="icons\dmi.png" />
     <Image Include="icons\edit.png" />
     <Image Include="icons\firmware.png" />
-    <Image Include="icons\hdd.png" />
     <Image Include="icons\info.png" />
     <Image Include="icons\memory.png" />
     <Image Include="icons\mm.png" />
@@ -171,7 +171,6 @@
     <Image Include="icons\rocket.png" />
     <Image Include="icons\settings.png" />
     <Image Include="icons\smart.png" />
-    <Image Include="icons\sysdisk.png" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

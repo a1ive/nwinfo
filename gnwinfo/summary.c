@@ -69,8 +69,7 @@ gnwinfo_draw_percent_prog(struct nk_context* ctx, double percent)
 static VOID
 draw_os(struct nk_context* ctx)
 {
-	nk_layout_row(ctx, NK_DYNAMIC, 0, 2, (float[2]) { 0.3f, 0.7f });
-
+	nk_layout_row(ctx, NK_DYNAMIC, 0, 3, (float[3]) { 0.3f, 0.7f - g_ctx.gui_ratio, g_ctx.gui_ratio });
 	nk_image_label(ctx, g_ctx.image_os, gnwinfo_get_text(L"Operating System"), NK_TEXT_LEFT, g_color_text_d);
 	nk_labelf_colored(ctx, NK_TEXT_LEFT,
 		g_color_text_l,
@@ -78,6 +77,10 @@ draw_os(struct nk_context* ctx)
 		gnwinfo_get_node_attr(g_ctx.system, "OS"),
 		gnwinfo_get_node_attr(g_ctx.system, "Processor Architecture"),
 		gnwinfo_get_node_attr(g_ctx.system, "Build Number"));
+	if (nk_button_image(ctx, g_ctx.image_info))
+		ShellExecuteW(GetDesktopWindow(), NULL,
+			L"::{26EE0668-A00A-44D7-9371-BEB064C98683}\\5\\::{BB06C0E4-D293-4F75-8A90-CB05B6477EEE}",
+			NULL, NULL, SW_NORMAL);
 
 	if (g_ctx.main_flag & MAIN_OS_DETAIL)
 	{
@@ -109,7 +112,7 @@ draw_bios(struct nk_context* ctx)
 	LPCSTR sb = gnwinfo_get_node_attr(g_ctx.uefi, "Secure Boot");
 	LPCWSTR wsb;
 
-	nk_layout_row(ctx, NK_DYNAMIC, 0, 2, (float[2]) { 0.3f, 0.7f });
+	nk_layout_row(ctx, NK_DYNAMIC, 0, 3, (float[3]) { 0.3f, 0.7f - g_ctx.gui_ratio, g_ctx.gui_ratio });
 	nk_image_label(ctx, g_ctx.image_bios, gnwinfo_get_text(L"BIOS"), NK_TEXT_LEFT, g_color_text_d);
 
 	if (sb[0] == 'E')
@@ -128,13 +131,18 @@ draw_bios(struct nk_context* ctx)
 		tpm[0] == 'v' ? " TPM" : "",
 		tpm[0] == 'v' ? tpm : "");
 
+	if (nk_button_image(ctx, g_ctx.image_dmi))
+		g_ctx.window_flag |= GUI_WINDOW_DMI;
+
 	if (g_ctx.main_flag & MAIN_B_VENDOR)
 	{
+		nk_layout_row(ctx, NK_DYNAMIC, 0, 2, (float[2]) { 0.3f, 0.7f });
 		nk_space_label(ctx, gnwinfo_get_text(L"Vendor"), nk_false);
 		nk_label_colored(ctx, get_smbios_attr("0", "Vendor", NULL), NK_TEXT_LEFT, g_color_text_l);
 	}
 	if (g_ctx.main_flag & MAIN_B_VERSION)
 	{
+		nk_layout_row(ctx, NK_DYNAMIC, 0, 2, (float[2]) { 0.3f, 0.7f });
 		nk_space_label(ctx, gnwinfo_get_text(L"Version"), nk_false);
 		nk_labelf_colored(ctx, NK_TEXT_LEFT, g_color_text_l,
 			"%s %s",
@@ -158,10 +166,12 @@ draw_computer(struct nk_context* ctx)
 	LPCSTR bat = gnwinfo_get_node_attr(g_ctx.battery, "Battery Status");
 	LPCSTR ac = "";
 
-	nk_layout_row(ctx, NK_DYNAMIC, 0, 2, (float[2]) { 0.3f, 0.7f });
+	nk_layout_row(ctx, NK_DYNAMIC, 0, 2, (float[2]) { 1.0f - g_ctx.gui_ratio, g_ctx.gui_ratio });
 	nk_image_label(ctx, g_ctx.image_board, gnwinfo_get_text(L"Computer"), NK_TEXT_LEFT, g_color_text_d);
-	nk_spacer(ctx);
+	if (nk_button_image(ctx, g_ctx.image_pci))
+		g_ctx.window_flag |= GUI_WINDOW_PCI;
 
+	nk_layout_row(ctx, NK_DYNAMIC, 0, 2, (float[2]) { 0.3f, 0.7f });
 	nk_space_label(ctx, get_smbios_attr("1", "Manufacturer", NULL), nk_true);
 	nk_labelf_colored(ctx, NK_TEXT_LEFT, g_color_text_l,
 		"%s %s %s",
@@ -218,14 +228,15 @@ draw_processor(struct nk_context* ctx)
 	INT i;
 	CHAR name[32];
 
-	nk_layout_row(ctx, NK_DYNAMIC, 0, 3, (float[3]) { 0.3f, 0.4f, 0.3f });
+	nk_layout_row(ctx, NK_DYNAMIC, 0, 4, (float[4]) { 0.3f, 0.4f, 0.3f - g_ctx.gui_ratio, g_ctx.gui_ratio });
 	nk_image_label(ctx, g_ctx.image_cpu, gnwinfo_get_text(L"Processor"), NK_TEXT_LEFT, g_color_text_d);
-
 	nk_labelf_colored(ctx, NK_TEXT_LEFT, gnwinfo_get_color(g_ctx.cpu_usage, 70.0, 90.0),
 		"%.2f%% %s MHz",
 		g_ctx.cpu_usage,
 		gnwinfo_get_node_attr(g_ctx.cpuid, "CPU Clock (MHz)"));
 	gnwinfo_draw_percent_prog(ctx, g_ctx.cpu_usage);
+	if (nk_button_image(ctx, g_ctx.image_cpuid))
+		g_ctx.window_flag |= GUI_WINDOW_CPUID;
 
 	for (i = 0; i < g_ctx.cpu_count; i++)
 	{
@@ -285,16 +296,15 @@ draw_memory(struct nk_context* ctx)
 {
 	INT i;
 
-	nk_layout_row(ctx, NK_DYNAMIC, 0, 4, (float[4]) { 0.3f, 0.4f - g_ctx.gui_ratio, g_ctx.gui_ratio, 0.3f });
-
+	nk_layout_row(ctx, NK_DYNAMIC, 0, 4, (float[4]) { 0.3f, 0.4f, 0.3f - g_ctx.gui_ratio, g_ctx.gui_ratio });
 	nk_image_label(ctx, g_ctx.image_ram, gnwinfo_get_text(L"Memory"), NK_TEXT_LEFT, g_color_text_d);
 	nk_labelf_colored(ctx, NK_TEXT_LEFT,
 		gnwinfo_get_color((double)g_ctx.mem_status.PhysUsage, 70.0, 90.0),
 		"%lu%% %s / %s",
 		g_ctx.mem_status.PhysUsage, g_ctx.mem_avail, g_ctx.mem_total);
+	gnwinfo_draw_percent_prog(ctx, (double)g_ctx.mem_status.PhysUsage);
 	if (nk_button_image(ctx, g_ctx.image_rocket))
 		gnwinfo_init_mm_window(ctx);
-	gnwinfo_draw_percent_prog(ctx, (double)g_ctx.mem_status.PhysUsage);
 
 	if (g_ctx.main_flag & MAIN_MEM_DETAIL)
 	{
@@ -396,14 +406,14 @@ get_drive_letter(PNODE volume)
 			return attr;
 	}
 fail:
-	return "Volume";
+	return NULL;
 }
 
 static VOID
 open_folder(LPCSTR drive_letter, LPCSTR volume_guid)
 {
 	LPCWSTR path = NULL;
-	if (drive_letter[1] == ':')
+	if (drive_letter)
 		path = NWL_Utf8ToUcs2(drive_letter);
 	else
 		path = NWL_Utf8ToUcs2(volume_guid);
@@ -417,20 +427,19 @@ draw_volume(struct nk_context* ctx, PNODE disk, BOOL cdrom)
 	PNODE vol = NWL_NodeGetChild(disk, "Volumes");
 	if (!vol)
 		return;
-	nk_layout_row(ctx, NK_DYNAMIC, 0, 4, (float[4]) { 0.12f, 0.18f, 0.4f, 0.3f });
+	nk_layout_row(ctx, NK_DYNAMIC, 0, 5, (float[5]) { 0.12f, 0.18f, 0.4f, 0.3f - g_ctx.gui_ratio, g_ctx.gui_ratio });
 	for (i = 0; vol->Children[i].LinkedNode; i++)
 	{
-		struct nk_image img = g_ctx.image_hdd;
+		struct nk_image img = g_ctx.image_dir;
 		PNODE tab = vol->Children[i].LinkedNode;
 		LPCSTR path = gnwinfo_get_node_attr(tab, "Path");
 		LPCSTR drive = get_drive_letter(tab);
 		if (strcmp(path, g_ctx.sys_disk) == 0)
-			img = g_ctx.image_sysdisk;
+			img = g_ctx.image_os;
 		if (cdrom)
 			img = g_ctx.image_cd;
 		nk_spacer(ctx);
-		if (nk_button_image_label(ctx, img, drive, NK_TEXT_CENTERED))
-			open_folder(drive, gnwinfo_get_node_attr(tab, "Volume GUID"));
+		nk_labelf(ctx, NK_TEXT_LEFT, "[%s]", drive ? drive : gnwinfo_get_node_attr(tab, "Partition Flag"));
 		nk_labelf_colored(ctx, NK_TEXT_LEFT,
 			g_color_text_l,
 			"%s %s %s",
@@ -438,6 +447,8 @@ draw_volume(struct nk_context* ctx, PNODE disk, BOOL cdrom)
 			gnwinfo_get_node_attr(tab, "Filesystem"),
 			gnwinfo_get_node_attr(tab, "Label"));
 		gnwinfo_draw_percent_prog(ctx, strtod(gnwinfo_get_node_attr(tab, "Usage"), NULL));
+		if (nk_button_image(ctx, img))
+			open_folder(drive, gnwinfo_get_node_attr(tab, "Volume GUID"));
 	}
 }
 
@@ -453,7 +464,7 @@ draw_volume_compact(struct nk_context* ctx, PNODE disk)
 	for (i = 0, count = 0; vol->Children[i].LinkedNode; i++)
 	{
 		LPCSTR drive = get_drive_letter(vol->Children[i].LinkedNode);
-		if (drive[1] == ':')
+		if (drive)
 			count++;
 	}
 	nk_layout_row_begin(ctx, NK_DYNAMIC, 0, count + 1);
@@ -463,12 +474,12 @@ draw_volume_compact(struct nk_context* ctx, PNODE disk)
 	{
 		PNODE tab = vol->Children[i].LinkedNode;
 		LPCSTR drive = get_drive_letter(tab);
-		if (drive[1] != ':')
+		if (!drive)
 			continue;
 		buf[0] = drive[0];
 		nk_layout_row_push(ctx, g_ctx.gui_ratio);
 		if (nk_button_label(ctx, buf))
-			open_folder(drive, gnwinfo_get_node_attr(tab, "Volume GUID"));
+			open_folder(drive, NULL);
 	}
 	nk_layout_row_end(ctx);
 }
@@ -478,8 +489,11 @@ draw_storage(struct nk_context* ctx)
 {
 	INT i;
 
-	nk_layout_row_dynamic(ctx, 0, 1);
+	nk_layout_row(ctx, NK_DYNAMIC, 0, 2, (float[2]) { 1.0f - g_ctx.gui_ratio, g_ctx.gui_ratio });
 	nk_image_label(ctx, g_ctx.image_disk, gnwinfo_get_text(L"Storage"), NK_TEXT_LEFT, g_color_text_d);
+	if (nk_button_image(ctx, g_ctx.image_smart))
+		g_ctx.window_flag |= GUI_WINDOW_SMART;
+
 	for (i = 0; g_ctx.disk->Children[i].LinkedNode; i++)
 	{
 		BOOL cdrom;
@@ -640,23 +654,11 @@ gnwinfo_draw_main_window(struct nk_context* ctx, float width, float height)
 		gnwinfo_ctx_exit();
 	}
 
-	nk_layout_row_begin(ctx, NK_DYNAMIC, 0, 8);
+	nk_layout_row_begin(ctx, NK_DYNAMIC, 0, 4);
 
 	struct nk_rect rect = nk_layout_widget_bounds(ctx);
 	g_ctx.gui_ratio = rect.h / rect.w;
 
-	nk_layout_row_push(ctx, g_ctx.gui_ratio);
-	if (nk_button_image(ctx, g_ctx.image_cpuid))
-		g_ctx.window_flag |= GUI_WINDOW_CPUID;
-	nk_layout_row_push(ctx, g_ctx.gui_ratio);
-	if (nk_button_image(ctx, g_ctx.image_smart))
-		g_ctx.window_flag |= GUI_WINDOW_SMART;
-	nk_layout_row_push(ctx, g_ctx.gui_ratio);
-	if (nk_button_image(ctx, g_ctx.image_pci))
-		g_ctx.window_flag |= GUI_WINDOW_PCI;
-	nk_layout_row_push(ctx, g_ctx.gui_ratio);
-	if (nk_button_image(ctx, g_ctx.image_dmi))
-		g_ctx.window_flag |= GUI_WINDOW_DMI;
 	nk_layout_row_push(ctx, g_ctx.gui_ratio);
 	if (nk_button_image(ctx, g_ctx.image_set))
 		g_ctx.window_flag |= GUI_WINDOW_SETTINGS;
@@ -671,13 +673,8 @@ gnwinfo_draw_main_window(struct nk_context* ctx, float width, float height)
 	if (nk_button_image(ctx, g_ctx.image_info))
 		g_ctx.window_flag |= GUI_WINDOW_ABOUT;
 	nk_layout_row_push(ctx, g_ctx.gui_ratio);
-	if (g_bginfo)
-	{
-		if (nk_button_image(ctx, g_ctx.image_close))
-			gnwinfo_ctx_exit();
-	}
-	else
-		nk_spacer(ctx);
+	if (nk_button_image(ctx, g_ctx.image_close))
+		gnwinfo_ctx_exit();
 	nk_layout_row_end(ctx);
 
 	if (g_ctx.main_flag & MAIN_INFO_OS)

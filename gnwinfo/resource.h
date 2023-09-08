@@ -9,7 +9,7 @@
 #define IDR_PNG_DISK                    114
 #define IDR_PNG_DISPLAY                 115
 #define IDR_PNG_FIRMWARE                116
-#define IDR_PNG_HDD                     117
+#define IDR_PNG_DIR                     117
 #define IDR_PNG_INFO                    118
 #define IDR_PNG_MEMORY                  119
 #define IDR_PNG_NETWORK                 120
@@ -18,7 +18,7 @@
 #define IDR_PNG_REFRESH                 123
 #define IDR_PNG_SETTINGS                124
 #define IDR_PNG_SMART                   125
-#define IDR_PNG_SYSDISK                 126
+
 #define IDR_PNG_PCI                     127
 #define IDR_PNG_MM                      128
 #define IDR_PNG_DMI                     129

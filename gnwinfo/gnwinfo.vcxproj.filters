@@ -97,9 +97,6 @@
     <Image Include="icons\firmware.png">
       <Filter>资源文件</Filter>
     </Image>
-    <Image Include="icons\hdd.png">
-      <Filter>资源文件</Filter>
-    </Image>
     <Image Include="icons\info.png">
       <Filter>资源文件</Filter>
     </Image>
@@ -121,9 +118,6 @@
     <Image Include="icons\settings.png">
       <Filter>资源文件</Filter>
     </Image>
-    <Image Include="icons\sysdisk.png">
-      <Filter>资源文件</Filter>
-    </Image>
     <Image Include="icons\close.png">
       <Filter>资源文件</Filter>
     </Image>
@@ -143,6 +137,9 @@
       <Filter>资源文件</Filter>
     </Image>
     <Image Include="icons\edit.png">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="icons\dir.png">
       <Filter>资源文件</Filter>
     </Image>
   </ItemGroup>

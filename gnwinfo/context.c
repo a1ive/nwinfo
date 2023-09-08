@@ -340,11 +340,10 @@ gnwinfo_ctx_init(HINSTANCE inst, HWND wnd, struct nk_context* ctx, float width, 
 	g_ctx.image_disk = load_png(IDR_PNG_DISK);
 	g_ctx.image_net = load_png(IDR_PNG_NETWORK);
 	g_ctx.image_close = load_png(IDR_PNG_CLOSE);
-	g_ctx.image_hdd = load_png(IDR_PNG_HDD);
+	g_ctx.image_dir = load_png(IDR_PNG_DIR);
 	g_ctx.image_info = load_png(IDR_PNG_INFO);
 	g_ctx.image_refresh = load_png(IDR_PNG_REFRESH);
 	g_ctx.image_set = load_png(IDR_PNG_SETTINGS);
-	g_ctx.image_sysdisk = load_png(IDR_PNG_SYSDISK);
 	g_ctx.image_smart = load_png(IDR_PNG_SMART);
 	g_ctx.image_cd = load_png(IDR_PNG_CD);
 	g_ctx.image_cpuid = load_png(IDR_PNG_CPUID);
@@ -388,11 +387,10 @@ gnwinfo_ctx_exit()
 	nk_gdip_image_free(g_ctx.image_disk);
 	nk_gdip_image_free(g_ctx.image_net);
 	nk_gdip_image_free(g_ctx.image_close);
-	nk_gdip_image_free(g_ctx.image_hdd);
+	nk_gdip_image_free(g_ctx.image_dir);
 	nk_gdip_image_free(g_ctx.image_info);
 	nk_gdip_image_free(g_ctx.image_refresh);
 	nk_gdip_image_free(g_ctx.image_set);
-	nk_gdip_image_free(g_ctx.image_sysdisk);
 	nk_gdip_image_free(g_ctx.image_smart);
 	nk_gdip_image_free(g_ctx.image_cd);
 	nk_gdip_image_free(g_ctx.image_cpuid);
