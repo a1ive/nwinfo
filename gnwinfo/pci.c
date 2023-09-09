@@ -10,7 +10,7 @@ static void draw_pci_node(struct nk_context* ctx, PNODE node)
 	if (!node || !node->Attributes)
 		return;
 	if (nk_tree_image_push_id(ctx, NK_TREE_TAB,
-		g_ctx.image_pci,
+		GET_PNG(IDR_PNG_PCI),
 		gnwinfo_get_node_attr(node, "HWID"),
 		NK_MINIMIZED, tree_id++))
 	{
@@ -55,24 +55,24 @@ VOID gnwinfo_draw_pci_window(struct nk_context* ctx, float width, float height)
 		goto out;
 	}
 	tree_id = 0;
-	draw_pci_class(ctx, "Unclassified device", g_ctx.image_info, "00");
-	draw_pci_class(ctx, "Mass storage controller", g_ctx.image_disk, "01");
-	draw_pci_class(ctx, "Network controller", g_ctx.image_net, "02");
-	draw_pci_class(ctx, "Display controller", g_ctx.image_edid, "03");
-	draw_pci_class(ctx, "Multimedia controller", g_ctx.image_mm, "04");
-	draw_pci_class(ctx, "Memory controller", g_ctx.image_ram, "05");
-	draw_pci_class(ctx, "Bridge", g_ctx.image_pci, "06");
-	draw_pci_class(ctx, "Communication controller", g_ctx.image_bios, "07");
-	draw_pci_class(ctx, "Generic system peripheral", g_ctx.image_board, "08");
-	draw_pci_class(ctx, "Input device controller", g_ctx.image_pci, "09");
-	draw_pci_class(ctx, "Docking station", g_ctx.image_pci, "0a");
-	draw_pci_class(ctx, "Processor", g_ctx.image_cpu, "0b");
-	draw_pci_class(ctx, "Serial bus controller", g_ctx.image_bios, "0c");
-	draw_pci_class(ctx, "Wireless controller", g_ctx.image_net, "0d");
-	draw_pci_class(ctx, "Intelligent controller", g_ctx.image_pci, "0e");
-	draw_pci_class(ctx, "Satellite communications controller", g_ctx.image_net, "0f");
-	draw_pci_class(ctx, "Encryption controller", g_ctx.image_bios, "10");
-	if (nk_tree_image_push_id(ctx, NK_TREE_TAB, g_ctx.image_pci, "Other", NK_MINIMIZED, tree_id++))
+	draw_pci_class(ctx, "Unclassified device", GET_PNG(IDR_PNG_INFO), "00");
+	draw_pci_class(ctx, "Mass storage controller", GET_PNG(IDR_PNG_DISK), "01");
+	draw_pci_class(ctx, "Network controller", GET_PNG(IDR_PNG_ETH), "02");
+	draw_pci_class(ctx, "Display controller", GET_PNG(IDR_PNG_DISPLAY), "03");
+	draw_pci_class(ctx, "Multimedia controller", GET_PNG(IDR_PNG_MM), "04");
+	draw_pci_class(ctx, "Memory controller", GET_PNG(IDR_PNG_MEMORY), "05");
+	draw_pci_class(ctx, "Bridge", GET_PNG(IDR_PNG_PCI), "06");
+	draw_pci_class(ctx, "Communication controller", GET_PNG(IDR_PNG_FIRMWARE), "07");
+	draw_pci_class(ctx, "Generic system peripheral", GET_PNG(IDR_PNG_PC), "08");
+	draw_pci_class(ctx, "Input device controller", GET_PNG(IDR_PNG_PCI), "09");
+	draw_pci_class(ctx, "Docking station", GET_PNG(IDR_PNG_PCI), "0a");
+	draw_pci_class(ctx, "Processor", GET_PNG(IDR_PNG_CPU), "0b");
+	draw_pci_class(ctx, "Serial bus controller", GET_PNG(IDR_PNG_FIRMWARE), "0c");
+	draw_pci_class(ctx, "Wireless controller", GET_PNG(IDR_PNG_WLAN), "0d");
+	draw_pci_class(ctx, "Intelligent controller", GET_PNG(IDR_PNG_PCI), "0e");
+	draw_pci_class(ctx, "Satellite communications controller", GET_PNG(IDR_PNG_WLAN), "0f");
+	draw_pci_class(ctx, "Encryption controller", GET_PNG(IDR_PNG_FIRMWARE), "10");
+	if (nk_tree_image_push_id(ctx, NK_TREE_TAB, GET_PNG(IDR_PNG_PCI), "Other", NK_MINIMIZED, tree_id++))
 	{
 		PNODE_LINK pci;
 		for (pci = &g_ctx.pci->Children[0]; pci->LinkedNode != NULL; pci++)

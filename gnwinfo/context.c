@@ -248,7 +248,10 @@ gnwinfo_ctx_init(HINSTANCE inst, HWND wnd, struct nk_context* ctx, float width, 
 	ZeroMemory(&g_ctx, sizeof(GNW_CONTEXT));
 	g_ctx.mutex = CreateMutexW(NULL, TRUE, L"NWinfo{e25f6e37-d51b-4950-8949-510dfc86d913}");
 	if (GetLastError() == ERROR_ALREADY_EXISTS || !g_ctx.mutex)
+	{
+		MessageBoxW(NULL, L"ALREADY RUNNING", L"ERROR", MB_ICONERROR | MB_OK);
 		exit(1);
+	}
 
 	swprintf(g_ctx.lang, 10, L"Lang%u", GetUserDefaultUILanguage());
 	g_ctx.main_flag = strtoul(gnwinfo_get_ini_value(L"Widgets", L"MainFlags", L"0xFFFFFFFF"), NULL, 16);
@@ -331,27 +334,8 @@ gnwinfo_ctx_init(HINSTANCE inst, HWND wnd, struct nk_context* ctx, float width, 
 	gnwinfo_ctx_update(IDT_TIMER_DISK);
 	gnwinfo_ctx_update(IDT_TIMER_DISPLAY);
 
-	g_ctx.image_os = load_png(IDR_PNG_OS);
-	g_ctx.image_bios = load_png(IDR_PNG_FIRMWARE);
-	g_ctx.image_board = load_png(IDR_PNG_PC);
-	g_ctx.image_cpu = load_png(IDR_PNG_CPU);
-	g_ctx.image_ram = load_png(IDR_PNG_MEMORY);
-	g_ctx.image_edid = load_png(IDR_PNG_DISPLAY);
-	g_ctx.image_disk = load_png(IDR_PNG_DISK);
-	g_ctx.image_net = load_png(IDR_PNG_NETWORK);
-	g_ctx.image_close = load_png(IDR_PNG_CLOSE);
-	g_ctx.image_dir = load_png(IDR_PNG_DIR);
-	g_ctx.image_info = load_png(IDR_PNG_INFO);
-	g_ctx.image_refresh = load_png(IDR_PNG_REFRESH);
-	g_ctx.image_set = load_png(IDR_PNG_SETTINGS);
-	g_ctx.image_smart = load_png(IDR_PNG_SMART);
-	g_ctx.image_cd = load_png(IDR_PNG_CD);
-	g_ctx.image_cpuid = load_png(IDR_PNG_CPUID);
-	g_ctx.image_pci = load_png(IDR_PNG_PCI);
-	g_ctx.image_mm = load_png(IDR_PNG_MM);
-	g_ctx.image_dmi = load_png(IDR_PNG_DMI);
-	g_ctx.image_rocket = load_png(IDR_PNG_ROCKET);
-	g_ctx.image_edit = load_png(IDR_PNG_EDIT);
+	for (WORD i = 0; i < sizeof(g_ctx.image) / sizeof(g_ctx.image[0]); i++)
+		g_ctx.image[i] = load_png(i + IDR_PNG_MIN);
 
 	SetTimer(g_ctx.wnd, IDT_TIMER_1S, 1000, (TIMERPROC)NULL);
 	SetTimer(g_ctx.wnd, IDT_TIMER_1M, 60 * 1000, (TIMERPROC)NULL);
@@ -378,26 +362,7 @@ gnwinfo_ctx_exit()
 	NWL_NodeFree(g_ctx.battery, 1);
 	NWL_NodeFree(g_ctx.edid, 1);
 	NW_Fini();
-	nk_gdip_image_free(g_ctx.image_os);
-	nk_gdip_image_free(g_ctx.image_bios);
-	nk_gdip_image_free(g_ctx.image_board);
-	nk_gdip_image_free(g_ctx.image_cpu);
-	nk_gdip_image_free(g_ctx.image_ram);
-	nk_gdip_image_free(g_ctx.image_edid);
-	nk_gdip_image_free(g_ctx.image_disk);
-	nk_gdip_image_free(g_ctx.image_net);
-	nk_gdip_image_free(g_ctx.image_close);
-	nk_gdip_image_free(g_ctx.image_dir);
-	nk_gdip_image_free(g_ctx.image_info);
-	nk_gdip_image_free(g_ctx.image_refresh);
-	nk_gdip_image_free(g_ctx.image_set);
-	nk_gdip_image_free(g_ctx.image_smart);
-	nk_gdip_image_free(g_ctx.image_cd);
-	nk_gdip_image_free(g_ctx.image_cpuid);
-	nk_gdip_image_free(g_ctx.image_pci);
-	nk_gdip_image_free(g_ctx.image_mm);
-	nk_gdip_image_free(g_ctx.image_dmi);
-	nk_gdip_image_free(g_ctx.image_rocket);
-	nk_gdip_image_free(g_ctx.image_edit);
+	for (WORD i = 0; i < sizeof(g_ctx.image) / sizeof(g_ctx.image[0]); i++)
+		nk_gdip_image_free(g_ctx.image[i]);
 	exit(0);
 }

@@ -142,5 +142,14 @@
     <Image Include="icons\dir.png">
       <Filter>资源文件</Filter>
     </Image>
+    <Image Include="icons\battery.png">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="icons\eth.png">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="icons\wlan.png">
+      <Filter>资源文件</Filter>
+    </Image>
   </ItemGroup>
 </Project>

@@ -326,7 +326,7 @@ gnwinfo_draw_smart_window(struct nk_context* ctx, float width, float height)
 		str,
 		NWL_GetHumanSize(cdi_get_dword(NWLC->NwSmart, cur_disk, CDI_DWORD_DISK_SIZE), disk_human_sizes, 1000));
 	cdi_free_string(str);
-	if (nk_button_image_label(ctx, g_ctx.image_refresh, gnwinfo_get_text(L"Refresh"), NK_TEXT_CENTERED))
+	if (nk_button_image_label(ctx, GET_PNG(IDR_PNG_REFRESH), gnwinfo_get_text(L"Refresh"), NK_TEXT_CENTERED))
 		cdi_update_smart(NWLC->NwSmart, cur_disk);
 	g_ctx.smart_hex = !nk_check_label(ctx, gnwinfo_get_text(L"HEX"), !g_ctx.smart_hex);
 	

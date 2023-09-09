@@ -108,27 +108,7 @@ typedef struct _GNW_CONTEXT
 	nk_bool gui_bginfo;
 	nk_bool gui_aa;
 
-	struct nk_image image_os;
-	struct nk_image image_bios;
-	struct nk_image image_board;
-	struct nk_image image_cpu;
-	struct nk_image image_ram;
-	struct nk_image image_edid;
-	struct nk_image image_disk;
-	struct nk_image image_net;
-	struct nk_image image_close;
-	struct nk_image image_dir;
-	struct nk_image image_info;
-	struct nk_image image_refresh;
-	struct nk_image image_set;
-	struct nk_image image_smart;
-	struct nk_image image_cpuid;
-	struct nk_image image_cd;
-	struct nk_image image_pci;
-	struct nk_image image_mm;
-	struct nk_image image_dmi;
-	struct nk_image image_rocket;
-	struct nk_image image_edit;
+	struct nk_image image[IDR_PNG_MAX - IDR_PNG_MIN];
 
 	PNODE system;
 	PNODE cpuid;
@@ -171,6 +151,8 @@ typedef struct _GNW_CONTEXT
 	UINT display_dpi;
 } GNW_CONTEXT;
 extern GNW_CONTEXT g_ctx;
+
+#define GET_PNG(x) g_ctx.image[x - IDR_PNG_MIN]
 
 extern WCHAR g_ini_path[MAX_PATH];
 extern unsigned int g_init_width;

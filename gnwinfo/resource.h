@@ -2,6 +2,8 @@
 //
 #define IDI_ICON1                       101
 
+#define IDR_PNG_MIN                     110
+
 #define IDR_PNG_CD                      110
 #define IDR_PNG_CLOSE                   111
 #define IDR_PNG_CPU                     112
@@ -18,12 +20,16 @@
 #define IDR_PNG_REFRESH                 123
 #define IDR_PNG_SETTINGS                124
 #define IDR_PNG_SMART                   125
-
+#define IDR_PNG_BATTERY                 126
 #define IDR_PNG_PCI                     127
 #define IDR_PNG_MM                      128
 #define IDR_PNG_DMI                     129
 #define IDR_PNG_ROCKET                  130
 #define IDR_PNG_EDIT                    131
+#define IDR_PNG_ETH                     132
+#define IDR_PNG_WLAN                    133
+
+#define IDR_PNG_MAX                     134
 
 #define IDT_TIMER_1S                    2001
 #define IDT_TIMER_1M                    2002
