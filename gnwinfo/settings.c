@@ -104,6 +104,9 @@ gnwinfo_draw_settings_window(struct nk_context* ctx, float width, float height)
 	nk_spacer(ctx);
 	nk_checkbox_flags_label(ctx, gnwinfo_get_text(L"Storage"), &g_ctx.main_flag, MAIN_INFO_STORAGE);
 	nk_checkbox_flags_label(ctx, gnwinfo_get_text(L"Network"), &g_ctx.main_flag, MAIN_INFO_NETWORK);
+	nk_spacer(ctx);
+	nk_checkbox_flags_label(ctx, gnwinfo_get_text(L"Audio Devices"), &g_ctx.main_flag, MAIN_INFO_AUDIO);
+	nk_spacer(ctx);
 
 	nk_layout_row_dynamic(ctx, 0, 1);
 	nk_label(ctx, gnwinfo_get_text(L"Operating System"), NK_TEXT_LEFT);

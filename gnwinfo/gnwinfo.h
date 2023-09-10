@@ -31,6 +31,8 @@
 
 #include "resource.h"
 
+#include "audio.h"
+
 GdipFont*
 nk_gdip_load_font(LPCWSTR name, int size);
 
@@ -53,6 +55,7 @@ nk_combo_begin_color_dynamic(struct nk_context* ctx, struct nk_color color);
 #define MAIN_INFO_MONITOR   (1U << 5)
 #define MAIN_INFO_STORAGE   (1U << 6)
 #define MAIN_INFO_NETWORK   (1U << 7)
+#define MAIN_INFO_AUDIO     (1U << 8)
 
 #define MAIN_NET_INACTIVE   (1U << 16)
 #define MAIN_NO_PDH         (1U << 17)
@@ -149,6 +152,9 @@ typedef struct _GNW_CONTEXT
 	LONG display_width;
 	LONG display_height;
 	UINT display_dpi;
+
+	UINT audio_count;
+	GNW_AUDIO_DEV* audio;
 } GNW_CONTEXT;
 extern GNW_CONTEXT g_ctx;
 

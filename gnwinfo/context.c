@@ -220,6 +220,10 @@ gnwinfo_ctx_update(WPARAM wparam)
 		}
 		get_cpu_msr();
 		get_display_info();
+		if (g_ctx.audio)
+			free(g_ctx.audio);
+		if (g_ctx.lib.NwOsInfo.dwMajorVersion >= 6)
+			g_ctx.audio = gnwinfo_get_audio(&g_ctx.audio_count);
 		break;
 	case IDT_TIMER_1M:
 	case IDT_TIMER_POWER:
@@ -354,6 +358,9 @@ gnwinfo_ctx_exit()
 
 	if (g_ctx.cpu_info)
 		free(g_ctx.cpu_info);
+
+	if (g_ctx.audio)
+		free(g_ctx.audio);
 
 	ReleaseMutex(g_ctx.mutex);
 	CloseHandle(g_ctx.mutex);
