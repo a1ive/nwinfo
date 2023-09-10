@@ -221,8 +221,11 @@ gnwinfo_ctx_update(WPARAM wparam)
 		get_cpu_msr();
 		get_display_info();
 		if (g_ctx.audio)
+		{
 			free(g_ctx.audio);
-		if (g_ctx.lib.NwOsInfo.dwMajorVersion >= 6)
+			g_ctx.audio = NULL;
+		}
+		if ((g_ctx.main_flag & MAIN_INFO_AUDIO) && g_ctx.lib.NwOsInfo.dwMajorVersion >= 6)
 			g_ctx.audio = gnwinfo_get_audio(&g_ctx.audio_count);
 		break;
 	case IDT_TIMER_1M:

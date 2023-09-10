@@ -257,7 +257,7 @@ draw_processor(struct nk_context* ctx)
 		nk_label_colored(ctx, buf, NK_TEXT_LEFT, g_color_text_l);
 		if (g_ctx.cpu_info[i].cpu_msr_temp > 0)
 			nk_labelf_colored(ctx, NK_TEXT_LEFT, gnwinfo_get_color((double)g_ctx.cpu_info[i].cpu_msr_temp, 65.0, 85.0),
-				u8"%d \u00B0C", g_ctx.cpu_info[i].cpu_msr_temp);
+				u8"%d \u2103", g_ctx.cpu_info[i].cpu_msr_temp);
 		else
 			nk_spacer(ctx);
 	}
