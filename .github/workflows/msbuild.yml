@@ -54,7 +54,7 @@ jobs:
         copy winring0\HwRwDrvx64.sys nwinfo\HwRwDrvx64.sys
 
     - name: Run UPX
-      uses: crazy-max/ghaction-upx@v2
+      uses: crazy-max/ghaction-upx@v3
       with:
         version: latest
         files: |
