@@ -64,7 +64,10 @@ int main(int argc, char* argv[])
 				nwContext.NwFormat = FORMAT_LUA;
 		}
 		else if (_strnicmp(argv[i], "--output=", 9) == 0 && argv[i][9])
+		{
+			nwContext.CodePage = CP_UTF8;
 			lpFileName = &argv[i][9];
+		}
 		else if (_stricmp(argv[i], "--human") == 0)
 			nwContext.HumanSize = TRUE;
 		else if (_stricmp(argv[i], "--sys") == 0)

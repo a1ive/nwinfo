@@ -492,49 +492,33 @@ NWL_Ucs2ToUtf8(LPCWSTR src)
 	return Utf8Buf;
 }
 
-static inline int
-IsUtf8TrailingOctet(uint8_t c)
-{
-	/* 10 00 00 00 - 10 11 11 11 */
-	return (c >= 0x80 && c <= 0xBF);
-}
-
 static WCHAR Ucs2Buf[NWINFO_BUFSZ + 1];
 
-LPCWSTR
-NWL_Utf8ToUcs2(LPCSTR src)
+LPCWSTR NWL_Utf8ToUcs2(LPCSTR src)
 {
 	size_t i;
-	WCHAR* p = Ucs2Buf;
+	size_t j = 0;
+	WCHAR *p = Ucs2Buf;
 	ZeroMemory(Ucs2Buf, sizeof(Ucs2Buf));
-	for (i = 0; src[0] && i < NWINFO_BUFSZ; i++)
+	for (i = 0; src[i] != '\0' && j < NWINFO_BUFSZ; )
 	{
-		if (src[0] <= 0x7F)
+		if ((src[i] & 0x80) == 0)
 		{
-			*p++ = 0x007F & src[0];
-			src += 1;
+			p[j++] = (WCHAR)src[i++];
 		}
-		else if (src[0] <= 0xDF
-			&& IsUtf8TrailingOctet(src[1]))
+		else if ((src[i] & 0xE0) == 0xC0)
 		{
-			*p++ = ((0x001F & src[0]) << 6)
-				| (0x003F & src[1]);
-			src += 2;
+			p[j++] = (WCHAR)((0x1FU & src[i]) << 6) | (0x3FU & src[i + 1]);
+			i += 2;
 		}
-		else if (src[0] <= 0xEF
-			&& IsUtf8TrailingOctet(src[1])
-			&& IsUtf8TrailingOctet(src[2]))
+		else if ((src[i] & 0xF0) == 0xE0)
 		{
-			*p++ = ((0x000F & src[0]) << 12)
-				| ((0x003F & src[1]) << 6)
-				| (0x003F & src[2]);
-			src += 3;
+			p[j++] = (WCHAR)((0x0FU & src[i]) << 12) | ((0x3FU & src[i + 1]) << 6) | (0x3FU & src[i + 2]);
+			i += 3;
 		}
 		else
-		{
-			*p++ = 0;
 			break;
-		}
 	}
+	p[j] = L'\0';
 	return Ucs2Buf;
 }
