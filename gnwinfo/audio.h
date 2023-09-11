@@ -13,11 +13,6 @@ extern "C" {
 	{
 		BOOL is_default;
 		float volume;
-#if 0
-		WCHAR id[MAX_PATH];
-		WCHAR if_name[MAX_PATH];
-		WCHAR desc[MAX_PATH];
-#endif
 		WCHAR name[MAX_PATH];
 	} GNW_AUDIO_DEV;
 

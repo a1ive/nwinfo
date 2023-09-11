@@ -5,7 +5,7 @@
 #include <endpointvolume.h>
 #include <functiondiscoverykeys_devpkey.h>
 
-LPWSTR get_default_id(IMMDeviceEnumerator* p)
+static LPWSTR get_default_id(IMMDeviceEnumerator* p)
 {
 	HRESULT hr = NULL;
 	IMMDevice* dev = NULL;
@@ -79,28 +79,13 @@ gnwinfo_get_audio(UINT* count)
 		{
 			if (default_id)
 				dev[i].is_default = wcscmp(id, default_id) == 0;
-#if 0
-			wcscpy_s(dev[i].id, id);
-#endif
 			CoTaskMemFree(id);
 		}
 
 		hr = end_point->OpenPropertyStore(STGM_READ, &props);
 		if (FAILED(hr))
 			goto clean;
-#if 0
-		PropVariantInit(&var);
-		hr = props->GetValue(PKEY_DeviceInterface_FriendlyName, &var);
-		if (SUCCEEDED(hr) && var.vt != VT_EMPTY)
-			wcscpy_s(dev[i].if_name, var.pwszVal);
-		PropVariantClear(&var);
 
-		PropVariantInit(&var);
-		hr = props->GetValue(PKEY_Device_DeviceDesc, &var);
-		if (SUCCEEDED(hr) && var.vt != VT_EMPTY)
-			wcscpy_s(dev[i].desc, var.pwszVal);
-		PropVariantClear(&var);
-#endif
 		PropVariantInit(&var);
 		hr = props->GetValue(PKEY_Device_FriendlyName, &var);
 		if (SUCCEEDED(hr) && var.vt != VT_EMPTY)
