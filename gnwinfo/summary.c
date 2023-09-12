@@ -559,10 +559,11 @@ draw_storage(struct nk_context* ctx)
 		else
 			continue;
 
-		nk_layout_row(ctx, NK_DYNAMIC, 0, 3, (float[3]) { 0.12f, 0.18f, 0.7f });
-		nk_space_labelf(ctx, nk_true, "%s%s", prefix, id);
-		nk_labelf(ctx, NK_TEXT_LEFT,
-			"%s%s",
+		nk_layout_row(ctx, NK_DYNAMIC, 0, 3, (float[3]) { 0.3f, 0.4f, 0.23f });
+		nk_space_labelf(ctx, nk_true,
+			"%s%s %s%s",
+			prefix,
+			id,
 			gnwinfo_get_node_attr(disk, "Type"),
 			ssd);
 		nk_labelf_colored(ctx, NK_TEXT_LEFT,
@@ -596,12 +597,13 @@ draw_storage(struct nk_context* ctx)
 			}
 			if (life == NULL)
 				life = "";
-			nk_spacer(ctx);
-			nk_label(ctx, "S.M.A.R.T.", NK_TEXT_LEFT);
+
 			nk_labelf_colored(ctx, NK_TEXT_LEFT,
 				color, u8"%s%s %s\u2103", gnwinfo_get_text(whealth), life,
 				temp[0] == '-' ? "-" : temp);
 		}
+		else
+			nk_spacer(ctx);
 		if (g_ctx.main_flag & MAIN_DISK_COMPACT)
 			draw_volume(ctx, disk, cdrom);
 		else
