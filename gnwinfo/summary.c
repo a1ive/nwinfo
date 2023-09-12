@@ -252,12 +252,12 @@ draw_processor(struct nk_context* ctx)
 		snprintf(buf, MAX_PATH, "%s %s", gnwinfo_get_node_attr(cpu, "Cores"), gnwinfo_get_text(L"cores"));
 		snprintf(buf, MAX_PATH, "%s %s %s", buf, gnwinfo_get_node_attr(cpu, "Logical CPUs"), gnwinfo_get_text(L"threads"));
 		if (g_ctx.cpu_info[i].cpu_msr_power > 0.0)
-			snprintf(buf, MAX_PATH, "%s %.2f W", buf, g_ctx.cpu_info[i].cpu_msr_power);
+			snprintf(buf, MAX_PATH, "%s %.2fW", buf, g_ctx.cpu_info[i].cpu_msr_power);
 
 		nk_label_colored(ctx, buf, NK_TEXT_LEFT, g_color_text_l);
 		if (g_ctx.cpu_info[i].cpu_msr_temp > 0)
 			nk_labelf_colored(ctx, NK_TEXT_LEFT, gnwinfo_get_color((double)g_ctx.cpu_info[i].cpu_msr_temp, 65.0, 85.0),
-				u8"%d \u2103", g_ctx.cpu_info[i].cpu_msr_temp);
+				u8"%d\u2103", g_ctx.cpu_info[i].cpu_msr_temp);
 		else
 			nk_spacer(ctx);
 	}
@@ -599,7 +599,7 @@ draw_storage(struct nk_context* ctx)
 			nk_spacer(ctx);
 			nk_label(ctx, "S.M.A.R.T.", NK_TEXT_LEFT);
 			nk_labelf_colored(ctx, NK_TEXT_LEFT,
-				color, u8"%s%s %s\u00B0C", gnwinfo_get_text(whealth), life,
+				color, u8"%s%s %s\u2103", gnwinfo_get_text(whealth), life,
 				temp[0] == '-' ? "-" : temp);
 		}
 		if (g_ctx.main_flag & MAIN_DISK_COMPACT)
