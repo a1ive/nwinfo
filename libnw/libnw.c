@@ -76,6 +76,8 @@ VOID NW_Print(LPCSTR lpFileName)
 		NW_Battery();
 	if (NWLC->UefiInfo)
 		NW_Uefi();
+	if (NWLC->ShareInfo)
+		NW_NetShare();
 	NW_Libinfo();
 	NW_Export(NWLC->NwRoot, NWLC->NwFile);
 }

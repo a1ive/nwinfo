@@ -29,7 +29,8 @@ static void nwinfo_help(void)
 		"  --usb            Print USB info.\n"
 		"  --spd            Print SPD info\n"
 		"  --battery        Print battery info.\n"
-		"  --uefi           Print UEFI info.\n");
+		"  --uefi           Print UEFI info.\n"
+		"  --shares         Print network mapped drives.\n");
 }
 
 int main(int argc, char* argv[])
@@ -111,6 +112,8 @@ int main(int argc, char* argv[])
 			nwContext.BatteryInfo = TRUE;
 		else if (_stricmp(argv[i], "--uefi") == 0)
 			nwContext.UefiInfo = TRUE;
+		else if (_stricmp(argv[i], "--shares") == 0)
+			nwContext.ShareInfo = TRUE;
 		else if (_stricmp(argv[i], "--debug") == 0)
 			nwContext.Debug = TRUE;
 		else if (_stricmp(argv[i], "--hide-sensitive") == 0)

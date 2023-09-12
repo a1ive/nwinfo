@@ -42,6 +42,7 @@ OPTIONS:
   --spd            Print SPD information of memory modules (Experimental).
   --battery        Print battery information.
   --uefi           Print UEFI boot information.
+  --shares         List network mapped drives.
 ```
 
 ## Credits

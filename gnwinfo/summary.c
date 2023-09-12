@@ -463,8 +463,8 @@ draw_volume_compact(struct nk_context* ctx, PNODE disk)
 		if (drive)
 			count++;
 	}
-	nk_layout_row_begin(ctx, NK_DYNAMIC, 0, count + 1);
-	nk_layout_row_push(ctx, 0.3f);
+	nk_layout_row_begin(ctx, NK_STATIC, 0, count + 1);
+	nk_layout_row_push(ctx, 0.3f * g_ctx.gui_width);
 	nk_spacer(ctx);
 	for (i = 0; vol->Children[i].LinkedNode; i++)
 	{
@@ -473,7 +473,48 @@ draw_volume_compact(struct nk_context* ctx, PNODE disk)
 		if (!drive)
 			continue;
 		buf[0] = drive[0];
-		nk_layout_row_push(ctx, g_ctx.gui_ratio);
+		nk_layout_row_push(ctx, g_ctx.gui_ratio * g_ctx.gui_width);
+		if (nk_button_label(ctx, buf))
+			open_folder(drive, NULL);
+	}
+	nk_layout_row_end(ctx);
+}
+
+static VOID
+draw_net_drive(struct nk_context* ctx)
+{
+	INT i;
+	for (i = 0; g_ctx.smb->Children[i].LinkedNode; i++)
+	{
+		PNODE nd = g_ctx.smb->Children[i].LinkedNode;
+		LPCSTR local = gnwinfo_get_node_attr(nd, "Local Name");
+		LPCSTR remote = gnwinfo_get_node_attr(nd, "Remote Name");
+		nk_layout_row(ctx, NK_DYNAMIC, 0, 3, (float[3]) { 0.3f, 0.7f - g_ctx.gui_ratio, g_ctx.gui_ratio });
+		nk_space_label(ctx, gnwinfo_get_text(L"Network Drives"), nk_false);
+		nk_labelf_colored(ctx, NK_TEXT_LEFT, g_color_text_l, "[%s] %s", local, remote);
+		if (nk_button_image(ctx, GET_PNG(IDR_PNG_DIR)))
+			open_folder(local, remote);
+	}
+}
+
+static VOID
+draw_net_drive_compact(struct nk_context* ctx)
+{
+	INT i;
+	INT count;
+	CHAR buf[] = "A";
+	count = NWL_NodeChildCount(g_ctx.smb);
+	if (count <= 0)
+		return;
+	nk_layout_row_begin(ctx, NK_STATIC, 0, count + 1);
+	nk_layout_row_push(ctx, 0.3f * g_ctx.gui_width);
+	nk_space_label(ctx, gnwinfo_get_text(L"Network Drives"), nk_false);
+	for (i = 0; g_ctx.smb->Children[i].LinkedNode; i++)
+	{
+		PNODE tab = g_ctx.smb->Children[i].LinkedNode;
+		LPCSTR drive = gnwinfo_get_node_attr(tab, "Local Name");
+		buf[0] = drive[0];
+		nk_layout_row_push(ctx, g_ctx.gui_ratio * g_ctx.gui_width);
 		if (nk_button_label(ctx, buf))
 			open_folder(drive, NULL);
 	}
@@ -566,6 +607,10 @@ draw_storage(struct nk_context* ctx)
 		else
 			draw_volume_compact(ctx, disk);
 	}
+	if (g_ctx.main_flag & MAIN_DISK_COMPACT)
+		draw_net_drive(ctx);
+	else
+		draw_net_drive_compact(ctx);
 }
 
 static LPCSTR
@@ -627,7 +672,7 @@ draw_network(struct nk_context* ctx)
 			nk_layout_row(ctx, NK_DYNAMIC, 0, 2, (float[2]) { 0.64f, 0.36f });
 			LPCSTR dhcp = strcmp(gnwinfo_get_node_attr(nw, "DHCP Enabled"), "Yes") == 0 ? " DHCP" : "";
 			if (is_active)
-				nk_space_labelf(ctx, nk_true, u8"%s \u2191\u2193 %s / %s",
+				nk_space_labelf(ctx, nk_true, u8"%s \u21c5 %s / %s",
 					dhcp,
 					gnwinfo_get_node_attr(nw, "Transmit Link Speed"),
 					gnwinfo_get_node_attr(nw, "Receive Link Speed"));
@@ -687,6 +732,7 @@ gnwinfo_draw_main_window(struct nk_context* ctx, float width, float height)
 		gnwinfo_ctx_update(IDT_TIMER_1M);
 		gnwinfo_ctx_update(IDT_TIMER_DISK);
 		gnwinfo_ctx_update(IDT_TIMER_DISPLAY);
+		gnwinfo_ctx_update(IDT_TIMER_SMB);
 	}
 	nk_layout_row_push(ctx, g_ctx.gui_ratio);
 	if (nk_button_image(ctx, GET_PNG(IDR_PNG_INFO)))

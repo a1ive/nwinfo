@@ -241,6 +241,11 @@ gnwinfo_ctx_update(WPARAM wparam)
 		g_ctx.lib.DisableSmart = (g_ctx.main_flag & MAIN_DISK_SMART) ? FALSE : TRUE;
 		g_ctx.disk = NW_Disk();
 		break;
+	case IDT_TIMER_SMB:
+		if (g_ctx.smb)
+			NWL_NodeFree(g_ctx.smb, 1);
+		g_ctx.smb = NW_NetShare();
+		break;
 	case IDT_TIMER_DISPLAY:
 		if (g_ctx.edid)
 			NWL_NodeFree(g_ctx.edid, 1);
@@ -340,6 +345,7 @@ gnwinfo_ctx_init(HINSTANCE inst, HWND wnd, struct nk_context* ctx, float width, 
 	gnwinfo_ctx_update(IDT_TIMER_1M);
 	gnwinfo_ctx_update(IDT_TIMER_DISK);
 	gnwinfo_ctx_update(IDT_TIMER_DISPLAY);
+	gnwinfo_ctx_update(IDT_TIMER_SMB);
 
 	for (WORD i = 0; i < sizeof(g_ctx.image) / sizeof(g_ctx.image[0]); i++)
 		g_ctx.image[i] = load_png(i + IDR_PNG_MIN);
@@ -369,6 +375,7 @@ gnwinfo_ctx_exit()
 	CloseHandle(g_ctx.mutex);
 	NWL_NodeFree(g_ctx.network, 1);
 	NWL_NodeFree(g_ctx.disk, 1);
+	NWL_NodeFree(g_ctx.smb, 1);
 	NWL_NodeFree(g_ctx.battery, 1);
 	NWL_NodeFree(g_ctx.edid, 1);
 	NW_Fini();
