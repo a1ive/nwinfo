@@ -237,11 +237,68 @@ PrintBatteryState(PNODE node)
 	SetupDiDestroyDeviceInfoList(hdev);
 }
 
+static VOID
+PrintPowerScheme(PNODE node)
+{
+	DWORD (WINAPI *Nt6PowerReadName)(HKEY, const GUID*, const GUID*, const GUID*, PUCHAR, LPDWORD) = NULL;
+	HMODULE hL = NULL;
+	LPWSTR lpSchemeName = NULL;
+	DWORD dwSize;
+	DWORD dwType;
+	GUID guid;
+
+	lpSchemeName = NWL_NtGetRegValue(HKEY_LOCAL_MACHINE,
+		L"SYSTEM\\CurrentControlSet\\Control\\Power\\User\\PowerSchemes", L"ActivePowerScheme", &dwSize, &dwType);
+	if (!lpSchemeName)
+		goto fail;
+	if (dwType != REG_SZ || wcslen(lpSchemeName) != 36)
+		goto fail;
+
+	NWL_NodeAttrSet(node, "Active Power Scheme", NWL_Ucs2ToUtf8(lpSchemeName), 0);
+
+	lpSchemeName[8] = 0;
+	guid.Data1 = (unsigned long)wcstoul(lpSchemeName, NULL, 16);
+	lpSchemeName[13] = 0;
+	guid.Data2 = (unsigned short)wcstoul(lpSchemeName + 9, NULL, 16);
+	lpSchemeName[18] = 0;
+	guid.Data3 = (unsigned short)wcstoul(lpSchemeName + 14, NULL, 16);
+	guid.Data4[7] = (unsigned char)wcstoul(lpSchemeName + 34, NULL, 16);
+	lpSchemeName[34] = 0;
+	guid.Data4[6] = (unsigned char)wcstoul(lpSchemeName + 32, NULL, 16);
+	lpSchemeName[32] = 0;
+	guid.Data4[5] = (unsigned char)wcstoul(lpSchemeName + 30, NULL, 16);
+	lpSchemeName[30] = 0;
+	guid.Data4[4] = (unsigned char)wcstoul(lpSchemeName + 28, NULL, 16);
+	lpSchemeName[28] = 0;
+	guid.Data4[3] = (unsigned char)wcstoul(lpSchemeName + 26, NULL, 16);
+	lpSchemeName[26] = 0;
+	guid.Data4[2] = (unsigned char)wcstoul(lpSchemeName + 24, NULL, 16);
+	lpSchemeName[23] = 0;
+	guid.Data4[1] = (unsigned char)wcstoul(lpSchemeName + 21, NULL, 16);
+	lpSchemeName[21] = 0;
+	guid.Data4[0] = (unsigned char)wcstoul(lpSchemeName + 19, NULL, 16);
+
+	hL = LoadLibraryW(L"powrprof.dll");
+	if (!hL)
+		goto fail;
+	*(FARPROC*)&Nt6PowerReadName = GetProcAddress(hL, "PowerReadFriendlyName");
+
+	dwSize = NWINFO_BUFSZ;
+	if (Nt6PowerReadName(NULL, &guid, NULL, NULL, NWLC->NwBuf, &dwSize) == ERROR_SUCCESS)
+		NWL_NodeAttrSet(node, "Active Power Scheme Name", NWL_Ucs2ToUtf8((WCHAR*)NWLC->NwBuf), 0);
+fail:
+	if (hL)
+		FreeLibrary(hL);
+	if (lpSchemeName)
+		free(lpSchemeName);
+}
+
 PNODE NW_Battery(VOID)
 {
 	PNODE node = NWL_NodeAlloc("Battery", 0);
 	if (NWLC->BatteryInfo)
 		NWL_NodeAppendChild(NWLC->NwRoot, node);
+	PrintPowerScheme(node);
 	if (!PrintPowerInfo(node))
 		goto fail;
 	PrintBatteryState(node);

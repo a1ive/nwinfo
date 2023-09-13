@@ -158,6 +158,7 @@ static VOID
 draw_computer(struct nk_context* ctx)
 {
 	struct nk_color color = g_color_unknown;
+	BOOL has_battery = TRUE;
 	LPCSTR time = "";
 	LPCSTR bat = gnwinfo_get_node_attr(g_ctx.battery, "Battery Status");
 	LPCSTR ac = "";
@@ -192,7 +193,7 @@ draw_computer(struct nk_context* ctx)
 		time = gnwinfo_get_node_attr(g_ctx.battery, "Battery Life Remaining");
 	}
 	else
-		return;
+		has_battery = FALSE;
 
 	if (strcmp(time, "UNKNOWN") == 0)
 		time = "";
@@ -200,12 +201,26 @@ draw_computer(struct nk_context* ctx)
 	if (strcmp(gnwinfo_get_node_attr(g_ctx.battery, "AC Power"), "Online") == 0)
 		ac = u8"\u26a1 ";
 
-	nk_space_label(ctx, gnwinfo_get_text(L"Battery"), nk_false);
-	nk_labelf_colored(ctx, NK_TEXT_LEFT, color,
-		"%s %s%s",
-		gnwinfo_get_node_attr(g_ctx.battery, "Battery Life Percentage"),
-		ac,
-		time);
+	nk_layout_row(ctx, NK_DYNAMIC, 0, 3, (float[3]) { 0.3f, 0.7f - g_ctx.gui_ratio, g_ctx.gui_ratio });
+	nk_space_label(ctx, gnwinfo_get_text(L"Power Status"), nk_false);
+	if (has_battery)
+	{
+		nk_labelf_colored(ctx, NK_TEXT_LEFT, color,
+			"%s%s %s %s", ac,
+			gnwinfo_get_node_attr(g_ctx.battery, "Active Power Scheme Name"),
+			gnwinfo_get_node_attr(g_ctx.battery, "Battery Life Percentage"),
+			time);
+	}
+	else
+	{
+		nk_labelf_colored(ctx, NK_TEXT_LEFT, g_color_text_l,
+			"%s%s", ac,
+			gnwinfo_get_node_attr(g_ctx.battery, "Active Power Scheme Name"));
+	}
+	if (nk_button_image(ctx, GET_PNG(IDR_PNG_BATTERY)))
+		ShellExecuteW(GetDesktopWindow(), NULL,
+			L"shell:::{025A5937-A6BE-4686-A844-36FE4BEC8B6D}",
+			NULL, NULL, SW_NORMAL);
 }
 
 static uint8_t cache_level = 0;
