@@ -14,6 +14,7 @@ static void nwinfo_help(void)
 		"OPTIONS:\n"
 		"  --format=XXX     Specify output format. [YAML|JSON|LUA]\n"
 		"  --output=FILE    Write to FILE instead of printing to screen.\n"
+		"  --cp=XXXX        Set the code page of output text. [ANSI|UTF8]\n"
 		"  --human          Display numbers in human readable format.\n"
 		"  --debug          Print debug info to stdout.\n"
 		"  --hide-sensitive Hide sensitive data (MAC & S/N).\n"
@@ -35,6 +36,7 @@ static void nwinfo_help(void)
 
 int main(int argc, char* argv[])
 {
+	BOOL bSetCodePage = FALSE;
 	LPCSTR lpFileName = NULL;
 	ZeroMemory(&nwContext, sizeof(NWLIB_CONTEXT));
 	nwContext.NwFormat = FORMAT_YAML;
@@ -64,11 +66,16 @@ int main(int argc, char* argv[])
 			else if (_stricmp(&argv[i][9], "LUA") == 0)
 				nwContext.NwFormat = FORMAT_LUA;
 		}
-		else if (_strnicmp(argv[i], "--output=", 9) == 0 && argv[i][9])
+		else if (_strnicmp(argv[i], "--cp=", 5) == 0 && argv[i][5])
 		{
-			nwContext.CodePage = CP_UTF8;
-			lpFileName = &argv[i][9];
+			bSetCodePage = TRUE;
+			if (_stricmp(&argv[i][5], "ANSI") == 0)
+				nwContext.CodePage = CP_ACP;
+			else if (_stricmp(&argv[i][5], "UTF8") == 0)
+				nwContext.CodePage = CP_UTF8;
 		}
+		else if (_strnicmp(argv[i], "--output=", 9) == 0 && argv[i][9])
+			lpFileName = &argv[i][9];
 		else if (_stricmp(argv[i], "--human") == 0)
 			nwContext.HumanSize = TRUE;
 		else if (_stricmp(argv[i], "--sys") == 0)
@@ -121,6 +128,13 @@ int main(int argc, char* argv[])
 		else
 		{
 		}
+	}
+	if (bSetCodePage == FALSE)
+	{
+		if (lpFileName)
+			nwContext.CodePage = CP_UTF8;
+		else
+			nwContext.CodePage = CP_ACP;
 	}
 	(void)CoInitializeEx(0, COINIT_APARTMENTTHREADED);
 	NW_Print(lpFileName);
