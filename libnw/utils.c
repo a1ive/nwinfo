@@ -458,6 +458,35 @@ NWL_WinGuidToStr(BOOL bBracket, GUID* pGuid)
 	return GuidStr;
 }
 
+struct NWL_MONITOR_CTX
+{
+	HMONITOR hMonitor;
+	LPCWSTR lpDevice;
+};
+
+static BOOL CALLBACK EnumMonIter(HMONITOR hMonitor, HDC hDC, LPRECT lpRect, LPARAM lParam)
+{
+	struct NWL_MONITOR_CTX* ctx = (struct NWL_MONITOR_CTX*)lParam;
+	MONITORINFOEXW mi = { .cbSize = sizeof(MONITORINFOEXW) };
+	if (GetMonitorInfoW(hMonitor, (LPMONITORINFO)&mi) && mi.szDevice[0] != '\0')
+	{
+		if (wcscmp(mi.szDevice, ctx->lpDevice) == 0)
+		{
+			ctx->hMonitor = hMonitor;
+			return FALSE;
+		}
+	}
+	return TRUE;
+}
+
+HMONITOR
+NWL_GetMonitorFromName(LPCWSTR lpDevice)
+{
+	struct NWL_MONITOR_CTX ctx = { 0 };
+	EnumDisplayMonitors(NULL, NULL, EnumMonIter, (LPARAM)&ctx);
+	return ctx.hMonitor;
+}
+
 static CHAR Utf8Buf[NWINFO_BUFSZ + 1];
 
 LPCSTR

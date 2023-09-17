@@ -332,6 +332,63 @@ GetEDID(PNODE nm, HDEVINFO devInfo, PSP_DEVINFO_DATA devInfoData, CHAR* Ids, DWO
 	RegCloseKey(hDevRegKey);
 }
 
+static LPCSTR
+GetOrientation(short dmOrientation)
+{
+	switch (dmOrientation)
+	{
+	case DMDO_DEFAULT: return "DEFAULT";
+	case DMDO_90: return "90";
+	case DMDO_180: return "180";
+	case DMDO_270: return "270";
+	}
+	return "UNKNOWN";
+}
+
+static VOID
+EnumRes(PNODE node, LPCWSTR dev)
+{
+	DWORD i;
+	DEVMODEW dm = { .dmSize = sizeof(DEVMODEW) };
+	PNODE nm = NWL_NodeAppendNew(node, "Modes", NFLG_ATTGROUP);
+	for (i = 0; EnumDisplaySettingsExW(dev, i, &dm, 0); i++)
+	{
+		char* p = NULL;
+		DWORD freq = 0;
+		if (!(dm.dmFields & DM_PELSWIDTH) || !(dm.dmFields & DM_PELSHEIGHT)
+			|| !(dm.dmFields & DM_DISPLAYFREQUENCY) || !(dm.dmFields & DM_BITSPERPEL))
+			continue;
+		snprintf(NWLC->NwBuf, NWINFO_BUFSZ, "%lux%lu", dm.dmPelsWidth, dm.dmPelsHeight);
+		p = NWL_NodeAttrGet(nm, NWLC->NwBuf);
+		if (p)
+			freq = strtoul(p, NULL, 10);
+		if (freq < dm.dmDisplayFrequency)
+			NWL_NodeAttrSetf(nm, NWLC->NwBuf, NAFLG_FMT_NUMERIC, "%u", dm.dmDisplayFrequency);
+	}
+	if (EnumDisplaySettingsExW(dev, ENUM_CURRENT_SETTINGS, &dm, 0))
+		NWL_NodeAttrSetf(node, "Current Mode", 0, "%lux%lu@%uHz",
+			dm.dmPelsWidth, dm.dmPelsHeight, dm.dmDisplayFrequency);
+}
+
+static VOID
+EnumDisp(PNODE node)
+{
+	DWORD i;
+	DISPLAY_DEVICEW dd = { .cb = sizeof(DISPLAY_DEVICEW) };
+	for (i = 0; EnumDisplayDevicesW(NULL, i, &dd, EDD_GET_DEVICE_INTERFACE_NAME); i++)
+	{
+		if (!(dd.StateFlags & DISPLAY_DEVICE_ACTIVE))
+			continue;
+		PNODE nm = NWL_NodeAppendNew(node, "Display", NFLG_TABLE_ROW);
+		NWL_NodeAttrSet(nm, "Device", NWL_Ucs2ToUtf8(dd.DeviceName), 0);
+		NWL_NodeAttrSet(nm, "Name", NWL_Ucs2ToUtf8(dd.DeviceString), 0);
+		NWL_NodeAttrSetBool(nm, "Primary", dd.StateFlags & DISPLAY_DEVICE_PRIMARY_DEVICE, 0);
+		NWL_NodeAttrSetBool(nm, "Removable", dd.StateFlags & DISPLAY_DEVICE_REMOVABLE, 0);
+		NWL_NodeAttrSetBool(nm, "Remote", dd.StateFlags & DISPLAY_DEVICE_REMOTE, 0);
+		EnumRes(nm, dd.DeviceName);
+	}
+}
+
 PNODE NW_Edid(VOID)
 {
 	PNODE node = NWL_NodeAlloc("Display", NFLG_TABLE);
@@ -343,11 +400,12 @@ PNODE NW_Edid(VOID)
 	DWORD IdsSize = 0;
 	if (NWLC->EdidInfo)
 		NWL_NodeAppendChild(NWLC->NwRoot, node);
+
 	Info = SetupDiGetClassDevsExW(NULL, L"DISPLAY", NULL, Flags, NULL, NULL, NULL);
 	if (Info == INVALID_HANDLE_VALUE)
 	{
 		NWL_NodeAppendMultiSz(&NWLC->ErrLog, "SetupDiGetClassDevs failed");
-		return node;
+		goto disp;
 	}
 	Ids = NWL_LoadIdsToMemory(L"pnp.ids", &IdsSize);
 	for (i = 0; SetupDiEnumDeviceInfo(Info, i, &DeviceInfoData); i++)
@@ -357,5 +415,7 @@ PNODE NW_Edid(VOID)
 	}
 	SetupDiDestroyDeviceInfoList(Info);
 	free(Ids);
+disp:
+	EnumDisp(node);
 	return node;
 }
