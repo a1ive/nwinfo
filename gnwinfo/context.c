@@ -103,6 +103,12 @@ get_cpu_info(int index)
 		value = cpu_msrinfo(g_ctx.lib.NwDrv, INFO_PKG_TEMPERATURE);
 		if (value != CPU_INVALID_VALUE && value > 0)
 			g_ctx.cpu_info[index].cpu_msr_temp = value;
+		else
+		{
+			value = cpu_msrinfo(g_ctx.lib.NwDrv, INFO_TEMPERATURE);
+			if (value != CPU_INVALID_VALUE && value > 0)
+				g_ctx.cpu_info[index].cpu_msr_temp = value;
+		}
 		value = cpu_msrinfo(g_ctx.lib.NwDrv, INFO_VOLTAGE);
 		if (value != CPU_INVALID_VALUE && value > 0)
 			g_ctx.cpu_info[index].cpu_msr_volt = value / 100.0;
