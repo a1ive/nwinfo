@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: Unlicense
 
-#include "gnwinfo.h"
+#include <windows.h>
+#include <winioctl.h>
 #include <shellapi.h>
-
-LPCSTR NWL_Ucs2ToUtf8(LPCWSTR src);
-LPCWSTR NWL_Utf8ToUcs2(LPCSTR src);
+#include "gnwinfo.h"
+#include "utils.h"
 
 LPCSTR
 gnwinfo_get_node_attr(PNODE node, LPCSTR key)

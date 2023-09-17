@@ -15,7 +15,7 @@
 #define FREE(x) HeapFree(GetProcessHeap(), 0, (x))
 
 static const char* bps_human_sizes[6] =
-{ "bps", "Kbps", "Mbps", "Gbps", "Tbps", "Pbps", };
+{ "bps", "kbps", "Mbps", "Gbps", "Tbps", "Pbps", };
 
 static void DisplayAddress(PNODE pNode, const PSOCKET_ADDRESS pAddress, LPCSTR key)
 {

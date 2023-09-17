@@ -142,6 +142,8 @@ gnwinfo_draw_settings_window(struct nk_context* ctx, float width, float height)
 	nk_label(ctx, gnwinfo_get_text(L"Network"), NK_TEXT_LEFT);
 	nk_layout_row(ctx, NK_DYNAMIC, 0, 2, (float[2]) { 0.1f, 0.9f });
 	nk_spacer(ctx);
+	nk_checkbox_flags_label(ctx, gnwinfo_get_text(L"Use bit units"), &g_ctx.main_flag, MAIN_NET_UNIT_B);
+	nk_spacer(ctx);
 	nk_checkbox_flags_label(ctx, gnwinfo_get_text(L"Hide inactive network"), &g_ctx.main_flag, MAIN_NET_INACTIVE);
 	nk_spacer(ctx);
 	nk_checkbox_flags_label(ctx, gnwinfo_get_text(L"Hide details"), &g_ctx.main_flag, MAIN_NET_DETAIL);

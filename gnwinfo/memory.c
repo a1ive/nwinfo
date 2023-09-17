@@ -13,9 +13,6 @@
 #define CLEAN_MODIFIED_PAGE     (1 << 4)
 #define CLEAN_COMBINED_MM_LIST  (1 << 5)
 
-static const char* human_sizes[6] =
-{ "B", "K", "M", "G", "T", "P", };
-
 static struct
 {
 	UINT64 clean_size;
@@ -299,7 +296,7 @@ gnwinfo_draw_mm_window(struct nk_context* ctx, float width, float height)
 	if (nk_button_label(ctx, gnwinfo_get_text(L"Clean Memory")))
 		m_ctx.clean_size = clean_memory(m_ctx.clean_flag);
 	if (m_ctx.clean_size)
-		nk_labelf_colored(ctx, NK_TEXT_LEFT, g_color_good,"+%s", NWL_GetHumanSize(m_ctx.clean_size, human_sizes, 1024));
+		nk_labelf_colored(ctx, NK_TEXT_LEFT, g_color_good,"+%s", NWL_GetHumanSize(m_ctx.clean_size, g_byte_units, 1024));
 	else
 		nk_spacer(ctx);
 

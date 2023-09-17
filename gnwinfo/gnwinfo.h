@@ -69,6 +69,7 @@ nk_combo_begin_color_dynamic(struct nk_context* ctx, struct nk_color color);
 #define MAIN_CPU_CACHE      (1U << 25)
 #define MAIN_DISK_COMPACT   (1U << 26)
 #define MAIN_MEM_DETAIL     (1U << 27)
+#define MAIN_NET_UNIT_B     (1U << 28)
 
 #define GNWC_STR_SIZE       64
 
@@ -167,6 +168,9 @@ extern unsigned int g_init_height;
 extern unsigned int g_init_alpha;
 extern unsigned int g_font_size;
 extern nk_bool g_bginfo;
+
+extern const char* g_byte_units[6];
+extern const char* g_bit_units[6];
 
 #define NK_COLOR_YELLOW     {0xFF, 0xEA, 0x00, 0xFF}
 #define NK_COLOR_RED        {0xFF, 0x17, 0x44, 0xFF}

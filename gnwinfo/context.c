@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: Unlicense
 
+#include <windows.h>
+#include <winioctl.h>
 #include "gnwinfo.h"
+#include "utils.h"
 
 #ifdef GNWINFO_ENABLE_PDH
 #pragma comment(lib, "pdh.lib")
@@ -37,11 +40,12 @@ gnwinfo_ctx_error_callback(LPCSTR lpszText)
 	MessageBoxA(g_ctx.wnd, lpszText, "Error", MB_ICONERROR);
 }
 
-LPCSTR NWL_GetHumanSize(UINT64 size, LPCSTR human_sizes[6], UINT64 base);
-static const char* human_sizes[6] =
-{ "B", "K", "M", "G", "T", "P", };
+const char* g_byte_units[6] =
+{ "B", "KB", "MB", "GB", "TB", "PB", };
+const char* g_bit_units[6] =
+{ "b", "kb", "Mb", "Gb", "Tb", "Pb", };
 
-__int64 compare_file_time(const FILETIME* time1, const FILETIME* time2)
+static __int64 compare_file_time(const FILETIME* time1, const FILETIME* time2)
 {
 	__int64 a = ((__int64)time1->dwHighDateTime) << 32 | time1->dwLowDateTime;
 	__int64 b = ((__int64)time2->dwHighDateTime) << 32 | time2->dwLowDateTime;
@@ -151,20 +155,28 @@ get_network_traffic(void)
 	diff_send = (send >= old_send) ? send - old_send : 0;
 	old_recv = recv;
 	old_send = send;
-	memcpy(g_ctx.net_recv, NWL_GetHumanSize(diff_recv, human_sizes, 1024), GNWC_STR_SIZE);
-	memcpy(g_ctx.net_send, NWL_GetHumanSize(diff_send, human_sizes, 1024), GNWC_STR_SIZE);
+	if (g_ctx.main_flag & MAIN_NET_UNIT_B)
+	{
+		memcpy(g_ctx.net_recv, NWL_GetHumanSize(diff_recv, g_byte_units, 1024), GNWC_STR_SIZE);
+		memcpy(g_ctx.net_send, NWL_GetHumanSize(diff_send, g_byte_units, 1024), GNWC_STR_SIZE);
+	}
+	else
+	{
+		memcpy(g_ctx.net_recv, NWL_GetHumanSize(diff_recv * 8, g_bit_units, 1000), GNWC_STR_SIZE);
+		memcpy(g_ctx.net_send, NWL_GetHumanSize(diff_send * 8, g_bit_units, 1000), GNWC_STR_SIZE);
+	}
 }
 
 static void
 get_memory_usage(void)
 {
 	NWL_GetMemInfo(&g_ctx.mem_status);
-	memcpy(g_ctx.mem_avail, NWL_GetHumanSize(g_ctx.mem_status.PhysAvail, human_sizes, 1024), GNWC_STR_SIZE);
-	memcpy(g_ctx.mem_total, NWL_GetHumanSize(g_ctx.mem_status.PhysTotal, human_sizes, 1024), GNWC_STR_SIZE);
-	memcpy(g_ctx.page_avail, NWL_GetHumanSize(g_ctx.mem_status.PageAvail, human_sizes, 1024), GNWC_STR_SIZE);
-	memcpy(g_ctx.page_total, NWL_GetHumanSize(g_ctx.mem_status.PageTotal, human_sizes, 1024), GNWC_STR_SIZE);
-	memcpy(g_ctx.sfci_avail, NWL_GetHumanSize(g_ctx.mem_status.SfciAvail, human_sizes, 1024), GNWC_STR_SIZE);
-	memcpy(g_ctx.sfci_total, NWL_GetHumanSize(g_ctx.mem_status.SfciTotal, human_sizes, 1024), GNWC_STR_SIZE);
+	memcpy(g_ctx.mem_avail, NWL_GetHumanSize(g_ctx.mem_status.PhysAvail, g_byte_units, 1024), GNWC_STR_SIZE);
+	memcpy(g_ctx.mem_total, NWL_GetHumanSize(g_ctx.mem_status.PhysTotal, g_byte_units, 1024), GNWC_STR_SIZE);
+	memcpy(g_ctx.page_avail, NWL_GetHumanSize(g_ctx.mem_status.PageAvail, g_byte_units, 1024), GNWC_STR_SIZE);
+	memcpy(g_ctx.page_total, NWL_GetHumanSize(g_ctx.mem_status.PageTotal, g_byte_units, 1024), GNWC_STR_SIZE);
+	memcpy(g_ctx.sfci_avail, NWL_GetHumanSize(g_ctx.mem_status.SfciAvail, g_byte_units, 1024), GNWC_STR_SIZE);
+	memcpy(g_ctx.sfci_total, NWL_GetHumanSize(g_ctx.mem_status.SfciTotal, g_byte_units, 1024), GNWC_STR_SIZE);
 }
 
 #ifdef GNWINFO_ENABLE_PDH
@@ -183,9 +195,9 @@ get_pdh_data(void)
 	if (g_ctx.pdh_cpu && PdhGetFormattedCounterValue(g_ctx.pdh_cpu, PDH_FMT_DOUBLE, NULL, &value) == ERROR_SUCCESS)
 		g_ctx.cpu_usage = value.doubleValue;
 	if (g_ctx.pdh_net_recv && PdhGetFormattedCounterValue(g_ctx.pdh_net_recv, PDH_FMT_LARGE, NULL, &value) == ERROR_SUCCESS)
-		memcpy(g_ctx.net_recv, NWL_GetHumanSize(value.largeValue, human_sizes, 1024), GNWC_STR_SIZE);
+		memcpy(g_ctx.net_recv, NWL_GetHumanSize(value.largeValue, g_byte_units, 1024), GNWC_STR_SIZE);
 	if (g_ctx.pdh_net_send && PdhGetFormattedCounterValue(g_ctx.pdh_net_send, PDH_FMT_LARGE, NULL, &value) == ERROR_SUCCESS)
-		memcpy(g_ctx.net_send, NWL_GetHumanSize(value.largeValue, human_sizes, 1024), GNWC_STR_SIZE);
+		memcpy(g_ctx.net_send, NWL_GetHumanSize(value.largeValue, g_byte_units, 1024), GNWC_STR_SIZE);
 }
 #endif
 
