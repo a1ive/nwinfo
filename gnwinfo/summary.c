@@ -135,7 +135,7 @@ draw_bios(struct nk_context* ctx)
 		"%s %s %s",
 		gnwinfo_get_node_attr(g_ctx.system, "Firmware"),
 		wsb,
-		tpm[0] == 'v' ? tpm : "");
+		tpm[0] == 'TPMv' ? tpm : "");
 
 	if (nk_button_image(ctx, GET_PNG(IDR_PNG_DMI)))
 		g_ctx.window_flag |= GUI_WINDOW_DMI;
