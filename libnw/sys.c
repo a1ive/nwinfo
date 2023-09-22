@@ -150,7 +150,9 @@ OsVersionToStr(OSVERSIONINFOEXW* p)
 
 static void PrintOsVer(PNODE node)
 {
+	DWORD dwType, dwSize;
 	CHAR szSP[] = " SP65535.65535";
+	LPWSTR lpEdition = NULL;
 	if (NWLC->NwOsInfo.wServicePackMinor)
 		snprintf(szSP, sizeof(szSP), " SP%u.%u", NWLC->NwOsInfo.wServicePackMajor, NWLC->NwOsInfo.wServicePackMinor);
 	else if (NWLC->NwOsInfo.wServicePackMajor)
@@ -160,6 +162,12 @@ static void PrintOsVer(PNODE node)
 	NWL_NodeAttrSetf(node, "OS", 0, "Windows %s%s", OsVersionToStr(&NWLC->NwOsInfo), szSP);
 	NWL_NodeAttrSetf(node, "Build Number", 0, "%lu.%lu.%lu",
 		NWLC->NwOsInfo.dwMajorVersion, NWLC->NwOsInfo.dwMinorVersion, NWLC->NwOsInfo.dwBuildNumber);
+	lpEdition = NWL_NtGetRegValue(HKEY_LOCAL_MACHINE, L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion", L"EditionID", &dwSize, &dwType);
+	if (lpEdition)
+	{
+		NWL_NodeAttrSet(node, "Edition", NWL_Ucs2ToUtf8(lpEdition), 0);
+		free(lpEdition);
+	}
 }
 
 VOID NWL_GetUptime(CHAR* szUptime, DWORD dwSize)
