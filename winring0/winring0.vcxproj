@@ -78,6 +78,10 @@
       <IgnoreAllDefaultLibraries>
       </IgnoreAllDefaultLibraries>
     </Lib>
+    <PostBuildEvent>
+      <Command>copy "$(ProjectDir)HwRwDrv.sys" "$(SolutionDir)$(Platform)\$(Configuration)\"
+copy "$(ProjectDir)HwRwDrvx64.sys" "$(SolutionDir)$(Platform)\$(Configuration)\"</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -107,6 +111,10 @@
       <IgnoreAllDefaultLibraries>
       </IgnoreAllDefaultLibraries>
     </Lib>
+    <PostBuildEvent>
+      <Command>copy "$(ProjectDir)HwRwDrv.sys" "$(SolutionDir)$(Platform)\$(Configuration)\"
+copy "$(ProjectDir)HwRwDrvx64.sys" "$(SolutionDir)$(Platform)\$(Configuration)\"</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <None Include="packages.config" />
