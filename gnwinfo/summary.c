@@ -313,6 +313,32 @@ draw_processor(struct nk_context* ctx)
 }
 
 static VOID
+draw_mem_capacity(struct nk_context* ctx)
+{
+	LPCSTR capacity = get_smbios_attr("16", "Max Capacity", NULL);
+	if (capacity[0] != '-')
+	{
+		nk_space_label(ctx, gnwinfo_get_text(L"Max Capacity"), nk_false);
+		nk_labelf_colored(ctx, NK_TEXT_LEFT, g_color_text_l,
+			"%s %s %s",
+			get_smbios_attr("16", "Number of Slots", NULL),
+			gnwinfo_get_text(L"slots"),
+			capacity);
+		return;
+	}
+	capacity = get_smbios_attr("5", "Max Memory Module Size (MB)", NULL);
+	if (capacity[0] != '-')
+	{
+		nk_space_label(ctx, gnwinfo_get_text(L"Max Capacity"), nk_false);
+		nk_labelf_colored(ctx, NK_TEXT_LEFT, g_color_text_l,
+			"%s %s %s MB",
+			get_smbios_attr("5", "Number of Slots", NULL),
+			gnwinfo_get_text(L"slots"),
+			capacity);
+	}
+}
+
+static VOID
 draw_memory(struct nk_context* ctx)
 {
 	INT i;
@@ -330,6 +356,7 @@ draw_memory(struct nk_context* ctx)
 	if (g_ctx.main_flag & MAIN_MEM_DETAIL)
 	{
 		nk_layout_row(ctx, NK_DYNAMIC, 0, 2, (float[2]) { 0.3f, 0.7f });
+		draw_mem_capacity(ctx);
 		for (i = 0; g_ctx.smbios->Children[i].LinkedNode; i++)
 		{
 			PNODE tab = g_ctx.smbios->Children[i].LinkedNode;
