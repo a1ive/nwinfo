@@ -98,9 +98,10 @@ PrintVolumeInfo(PNODE pNode, LPCWSTR lpszVolume, PHY_DRIVE_INFO* pParent)
 	swprintf(cchPath, MAX_PATH, L"%s\\", lpszVolume);
 	NWL_NodeAttrSet(pNode, "Path", GetRealVolumePath(lpszVolume), 0);
 	NWL_NodeAttrSet(pNode, "Volume GUID", NWL_Ucs2ToUtf8(lpszVolume), 0);
-	PrintPartitionInfo(pNode, lpszVolume, pParent);
+
 	if (GetVolumeInformationW(cchPath, cchLabel, MAX_PATH, NULL, NULL, NULL, cchFs, MAX_PATH))
 	{
+		PrintPartitionInfo(pNode, lpszVolume, pParent);
 		NWL_NodeAttrSet(pNode, "Label", NWL_Ucs2ToUtf8(cchLabel), 0);
 		NWL_NodeAttrSet(pNode, "Filesystem", NWL_Ucs2ToUtf8(cchFs), 0);
 	}
