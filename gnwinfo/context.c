@@ -5,10 +5,6 @@
 #include "gnwinfo.h"
 #include "utils.h"
 
-#ifdef GNWINFO_ENABLE_PDH
-#pragma comment(lib, "pdh.lib")
-#endif
-
 #include "../libcpuid/libcpuid.h"
 #include "../libcpuid/libcpuid_util.h"
 
@@ -186,23 +182,30 @@ get_memory_usage(void)
 }
 
 #ifdef GNWINFO_ENABLE_PDH
+static HMODULE hpdh = NULL;
+static PDH_STATUS(WINAPI* pdh_open_query)(LPCWSTR, DWORD_PTR, PDH_HQUERY*) = NULL;
+static PDH_STATUS(WINAPI* pdh_add_counter)(PDH_HQUERY, LPCWSTR, DWORD_PTR, PDH_HCOUNTER*) = NULL;
+static PDH_STATUS(WINAPI* pdh_collect_query_data)(PDH_HQUERY) = NULL;
+static PDH_STATUS(WINAPI* pdh_get_formatted_counter_value)(PDH_HCOUNTER, DWORD, LPDWORD, PPDH_FMT_COUNTERVALUE) = NULL;
+static PDH_STATUS(WINAPI* pdh_close_query)(PDH_HQUERY) = NULL;
+
 static void
 get_pdh_data(void)
 {
 	PDH_FMT_COUNTERVALUE value = { 0 };
 	if (!g_ctx.pdh)
 		return;
-	if (PdhCollectQueryData(g_ctx.pdh) != ERROR_SUCCESS)
+	if (pdh_collect_query_data(g_ctx.pdh) != ERROR_SUCCESS)
 	{
-		PdhCloseQuery(g_ctx.pdh);
+		pdh_close_query(g_ctx.pdh);
 		g_ctx.pdh = NULL;
 		return;
 	}
-	if (g_ctx.pdh_cpu && PdhGetFormattedCounterValue(g_ctx.pdh_cpu, PDH_FMT_DOUBLE, NULL, &value) == ERROR_SUCCESS)
+	if (g_ctx.pdh_cpu && pdh_get_formatted_counter_value(g_ctx.pdh_cpu, PDH_FMT_DOUBLE, NULL, &value) == ERROR_SUCCESS)
 		g_ctx.cpu_usage = value.doubleValue;
-	if (g_ctx.pdh_net_recv && PdhGetFormattedCounterValue(g_ctx.pdh_net_recv, PDH_FMT_LARGE, NULL, &value) == ERROR_SUCCESS)
+	if (g_ctx.pdh_net_recv && pdh_get_formatted_counter_value(g_ctx.pdh_net_recv, PDH_FMT_LARGE, NULL, &value) == ERROR_SUCCESS)
 		memcpy(g_ctx.net_recv, NWL_GetHumanSize(value.largeValue, g_byte_units, 1024), GNWC_STR_SIZE);
-	if (g_ctx.pdh_net_send && PdhGetFormattedCounterValue(g_ctx.pdh_net_send, PDH_FMT_LARGE, NULL, &value) == ERROR_SUCCESS)
+	if (g_ctx.pdh_net_send && pdh_get_formatted_counter_value(g_ctx.pdh_net_send, PDH_FMT_LARGE, NULL, &value) == ERROR_SUCCESS)
 		memcpy(g_ctx.net_send, NWL_GetHumanSize(value.largeValue, g_byte_units, 1024), GNWC_STR_SIZE);
 }
 #endif
@@ -333,19 +336,29 @@ gnwinfo_ctx_init(HINSTANCE inst, HWND wnd, struct nk_context* ctx, float width, 
 	g_ctx.sys_disk = gnwinfo_get_node_attr(g_ctx.system, "System Device");
 
 #ifdef GNWINFO_ENABLE_PDH
-	if (!(g_ctx.main_flag & MAIN_NO_PDH)
-		&& PdhOpenQueryW(NULL, 0, &g_ctx.pdh) == ERROR_SUCCESS)
+	hpdh = LoadLibraryW(L"pdh.dll");
+	if (hpdh)
+	{
+		*(FARPROC*)&pdh_open_query = GetProcAddress(hpdh, "PdhOpenQueryW");
+		*(FARPROC*)&pdh_add_counter = GetProcAddress(hpdh, "PdhAddCounterW");
+		*(FARPROC*)&pdh_collect_query_data = GetProcAddress(hpdh, "PdhCollectQueryData");
+		*(FARPROC*)&pdh_get_formatted_counter_value = GetProcAddress(hpdh, "PdhGetFormattedCounterValue");
+		*(FARPROC*)&pdh_close_query = GetProcAddress(hpdh, "PdhCloseQuery");
+	}
+	if (pdh_open_query && pdh_add_counter && pdh_collect_query_data && pdh_get_formatted_counter_value && pdh_close_query
+		&& !(g_ctx.main_flag & MAIN_NO_PDH)
+		&& pdh_open_query(NULL, 0, &g_ctx.pdh) == ERROR_SUCCESS)
 	{
 		LPCWSTR cpu_str = L"\\Processor Information(_Total)\\% Processor Time";
 		if (g_ctx.lib.NwOsInfo.dwMajorVersion >= 10)
 			cpu_str = L"\\Processor Information(_Total)\\% Processor Utility";
-		if (PdhAddCounterW(g_ctx.pdh, cpu_str, 0, &g_ctx.pdh_cpu) != ERROR_SUCCESS)
+		if (pdh_add_counter(g_ctx.pdh, cpu_str, 0, &g_ctx.pdh_cpu) != ERROR_SUCCESS)
 			g_ctx.pdh_cpu = NULL;
-		if (PdhAddCounterW(g_ctx.pdh, L"\\Network Interface(*)\\Bytes Sent/sec", 0, &g_ctx.pdh_net_send) != ERROR_SUCCESS)
+		if (pdh_add_counter(g_ctx.pdh, L"\\Network Interface(*)\\Bytes Sent/sec", 0, &g_ctx.pdh_net_send) != ERROR_SUCCESS)
 			g_ctx.pdh_net_send = NULL;
-		if (PdhAddCounterW(g_ctx.pdh, L"\\Network Interface(*)\\Bytes Received/sec", 0, &g_ctx.pdh_net_recv) != ERROR_SUCCESS)
+		if (pdh_add_counter(g_ctx.pdh, L"\\Network Interface(*)\\Bytes Received/sec", 0, &g_ctx.pdh_net_recv) != ERROR_SUCCESS)
 			g_ctx.pdh_net_recv = NULL;
-		PdhCollectQueryData(g_ctx.pdh);
+		pdh_collect_query_data(g_ctx.pdh);
 	}
 	else
 		g_ctx.pdh = NULL;
@@ -380,7 +393,9 @@ gnwinfo_ctx_exit()
 
 #ifdef GNWINFO_ENABLE_PDH
 	if (g_ctx.pdh)
-		PdhCloseQuery(g_ctx.pdh);
+		pdh_close_query(g_ctx.pdh);
+	if (hpdh)
+		FreeLibrary(hpdh);
 #endif
 
 	if (g_ctx.cpu_info)
