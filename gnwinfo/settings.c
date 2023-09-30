@@ -112,6 +112,10 @@ gnwinfo_draw_settings_window(struct nk_context* ctx, float width, float height)
 	nk_label(ctx, gnwinfo_get_text(L"Operating System"), NK_TEXT_LEFT);
 	nk_layout_row(ctx, NK_DYNAMIC, 0, 2, (float[2]) { 0.1f, 0.9f });
 	nk_spacer(ctx);
+	nk_checkbox_flags_label(ctx, gnwinfo_get_text(L"Hide edition id"), &g_ctx.main_flag, MAIN_OS_EDITIONID);
+	nk_spacer(ctx);
+	nk_checkbox_flags_label(ctx, gnwinfo_get_text(L"Hide build number"), &g_ctx.main_flag, MAIN_OS_BUILD);
+	nk_spacer(ctx);
 	nk_checkbox_flags_label(ctx, gnwinfo_get_text(L"Hide uptime"), &g_ctx.main_flag, MAIN_OS_UPTIME);
 	nk_spacer(ctx);
 	nk_checkbox_flags_label(ctx, gnwinfo_get_text(L"Hide login status"), &g_ctx.main_flag, MAIN_OS_DETAIL);

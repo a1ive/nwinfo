@@ -69,24 +69,21 @@ gnwinfo_draw_percent_prog(struct nk_context* ctx, double percent)
 static VOID
 draw_os(struct nk_context* ctx)
 {
-	LPCSTR edition = gnwinfo_get_node_attr(g_ctx.system, "Edition");
+	CHAR buf[MAX_PATH];
 	nk_layout_row(ctx, NK_DYNAMIC, 0, 3, (float[3]) { 0.3f, 0.7f - g_ctx.gui_ratio, g_ctx.gui_ratio });
 	nk_image_label(ctx, GET_PNG(IDR_PNG_OS), gnwinfo_get_text(L"Operating System"), NK_TEXT_LEFT, g_color_text_d);
-	if (edition[0] != '-')
-		nk_labelf_colored(ctx, NK_TEXT_LEFT,
-			g_color_text_l,
-			"%s %s %s (%s)",
-			gnwinfo_get_node_attr(g_ctx.system, "OS"),
-			edition,
-			gnwinfo_get_node_attr(g_ctx.system, "Processor Architecture"),
-			gnwinfo_get_node_attr(g_ctx.system, "Build Number"));
-	else
-		nk_labelf_colored(ctx, NK_TEXT_LEFT,
-			g_color_text_l,
-			"%s %s (%s)",
-			gnwinfo_get_node_attr(g_ctx.system, "OS"),
-			gnwinfo_get_node_attr(g_ctx.system, "Processor Architecture"),
-			gnwinfo_get_node_attr(g_ctx.system, "Build Number"));
+	snprintf(buf, MAX_PATH, "%s %s",
+		gnwinfo_get_node_attr(g_ctx.system, "OS"),
+		gnwinfo_get_node_attr(g_ctx.system, "Processor Architecture"));
+	if (g_ctx.main_flag & MAIN_OS_EDITIONID)
+	{
+		LPCSTR edition = gnwinfo_get_node_attr(g_ctx.system, "Edition");
+		if (edition[0] != '-')
+			snprintf(buf, MAX_PATH, "%s %s", buf, edition);
+	}
+	if (g_ctx.main_flag & MAIN_OS_BUILD)
+		snprintf(buf, MAX_PATH, "%s (%s)", buf, gnwinfo_get_node_attr(g_ctx.system, "Build Number"));
+	nk_label_colored(ctx, buf, NK_TEXT_LEFT, g_color_text_l);
 	if (nk_button_image(ctx, GET_PNG(IDR_PNG_INFO)))
 		ShellExecuteW(GetDesktopWindow(), NULL,
 			L"::{26EE0668-A00A-44D7-9371-BEB064C98683}\\5\\::{BB06C0E4-D293-4F75-8A90-CB05B6477EEE}",
