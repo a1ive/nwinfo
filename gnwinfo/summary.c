@@ -376,14 +376,32 @@ draw_memory(struct nk_context* ctx)
 }
 
 static VOID
+switch_screen_state(void)
+{
+	if (g_ctx.screen_on)
+	{
+		g_ctx.screen_on = FALSE;
+		SetThreadExecutionState(ES_CONTINUOUS);
+	}
+	else
+	{
+		g_ctx.screen_on = TRUE;
+		SetThreadExecutionState(ES_CONTINUOUS | ES_DISPLAY_REQUIRED | ES_SYSTEM_REQUIRED);
+	}
+}
+
+
+static VOID
 draw_display(struct nk_context* ctx)
 {
 	INT i, j;
 
-	nk_layout_row(ctx, NK_DYNAMIC, 0, 2, (float[2]) { 0.3f, 0.7f });
+	nk_layout_row(ctx, NK_DYNAMIC, 0, 3, (float[3]) { 0.3f, 0.7f - g_ctx.gui_ratio, g_ctx.gui_ratio });
 	nk_image_label(ctx, GET_PNG(IDR_PNG_DISPLAY), gnwinfo_get_text(L"Display Devices"), NK_TEXT_LEFT, g_color_text_d);
 	nk_labelf_colored(ctx, NK_TEXT_LEFT, g_color_text_l, "%ldx%ld %u DPI (%u%%)",
 		g_ctx.display_width, g_ctx.display_height, g_ctx.display_dpi, 100 * g_ctx.display_dpi / USER_DEFAULT_SCREEN_DPI);
+	if (nk_button_image(ctx, GET_PNG(IDR_PNG_DARK + g_ctx.screen_on)))
+		switch_screen_state();
 
 	nk_layout_row(ctx, NK_DYNAMIC, 0, 2, (float[2]) { 0.3f, 0.7f });
 

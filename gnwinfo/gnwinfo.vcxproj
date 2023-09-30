@@ -157,6 +157,7 @@
     <Image Include="icons\close.png" />
     <Image Include="icons\cpu.png" />
     <Image Include="icons\cpuid.png" />
+    <Image Include="icons\dark.png" />
     <Image Include="icons\dir.png" />
     <Image Include="icons\disk.png" />
     <Image Include="icons\display.png" />
@@ -165,6 +166,7 @@
     <Image Include="icons\eth.png" />
     <Image Include="icons\firmware.png" />
     <Image Include="icons\info.png" />
+    <Image Include="icons\light.png" />
     <Image Include="icons\memory.png" />
     <Image Include="icons\mm.png" />
     <Image Include="icons\network.png" />

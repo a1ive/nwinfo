@@ -156,6 +156,7 @@ typedef struct _GNW_CONTEXT
 	LONG display_width;
 	LONG display_height;
 	UINT display_dpi;
+	BOOL screen_on;
 
 	UINT audio_count;
 	GNW_AUDIO_DEV* audio;

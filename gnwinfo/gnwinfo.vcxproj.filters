@@ -157,5 +157,11 @@
     <Image Include="icons\wlan.png">
       <Filter>资源文件</Filter>
     </Image>
+    <Image Include="icons\dark.png">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="icons\light.png">
+      <Filter>资源文件</Filter>
+    </Image>
   </ItemGroup>
 </Project>

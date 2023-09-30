@@ -28,8 +28,10 @@
 #define IDR_PNG_EDIT                    131
 #define IDR_PNG_ETH                     132
 #define IDR_PNG_WLAN                    133
+#define IDR_PNG_DARK                    134
+#define IDR_PNG_LIGHT                   135
 
-#define IDR_PNG_MAX                     134
+#define IDR_PNG_MAX                     136
 
 #define IDT_TIMER_1S                    2001
 #define IDT_TIMER_1M                    2002
