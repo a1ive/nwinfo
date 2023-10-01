@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: Unlicense
 
-
 #include "libnw.h"
 #include "utils.h"
 #include "acpi.h"
@@ -8,7 +7,7 @@
 static void
 PrintU8Str(PNODE pNode, LPCSTR Key, UINT8 *Str, DWORD Len)
 {
-	if (Len > NWINFO_BUFSZ)
+	if (Len >= NWINFO_BUFSZ)
 		Len = NWINFO_BUFSZ - 1;
 	memcpy(NWLC->NwBuf, Str, Len);
 	NWLC->NwBuf[Len] = 0;
