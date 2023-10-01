@@ -275,19 +275,19 @@ static void PrintTpmInfo(PNODE node)
 	UINT32 (WINAPI *GetTpmInfo) (UINT32 Size, VOID *Info) = NULL;
 	HMODULE hL = NULL;
 	TPM_DEVICE_INFO tpmInfo = { 0 };
-	struct acpi_table_header* AcpiHdr = NULL;
-	AcpiHdr = NWL_GetAcpi('2MPT');
-	if (AcpiHdr)
+	struct acpi_table_header* acpiHdr = NULL;
+	acpiHdr = NWL_GetAcpi('2MPT');
+	if (acpiHdr)
 		NWL_NodeAttrSet(node, "TPM", "v2.0", 0);
 	else
 	{
-		AcpiHdr = NWL_GetAcpi('APCT');
-		if (AcpiHdr)
+		acpiHdr = NWL_GetAcpi('APCT');
+		if (acpiHdr)
 			NWL_NodeAttrSet(node, "TPM", "v1.2", 0);
 	}
-	if (AcpiHdr)
+	if (acpiHdr)
 	{
-		free(AcpiHdr);
+		free(acpiHdr);
 		return;
 	}
 	hL = LoadLibraryW(L"tbs.dll");
