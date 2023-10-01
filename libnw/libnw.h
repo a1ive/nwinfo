@@ -38,6 +38,7 @@ typedef struct _NWLIB_CONTEXT
 	BOOL BatteryInfo;
 	BOOL UefiInfo;
 	BOOL ShareInfo;
+	BOOL AudioInfo;
 
 	BOOL Debug;
 	BOOL HideSensitive;
@@ -104,6 +105,7 @@ PNODE NW_Battery(VOID);
 PNODE NW_Libinfo(VOID);
 PNODE NW_Uefi(VOID);
 PNODE NW_NetShare(VOID);
+PNODE NW_Audio(VOID);
 
 VOID NWL_GetUptime(CHAR* szUptime, DWORD dwSize);
 VOID NWL_GetHostname(CHAR* szHostname);

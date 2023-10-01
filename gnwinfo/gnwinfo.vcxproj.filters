@@ -31,9 +31,6 @@
     <ClInclude Include="resource.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="audio.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="gnwinfo.c">
@@ -70,9 +67,6 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="hostname.c">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="audio.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

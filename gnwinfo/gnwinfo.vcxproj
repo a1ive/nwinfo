@@ -123,14 +123,12 @@
   <ItemGroup>
     <ClInclude Include="..\nuklear\nuklear.h" />
     <ClInclude Include="..\nuklear\nuklear_gdip.h" />
-    <ClInclude Include="audio.h" />
     <ClInclude Include="gnwinfo.h" />
     <ClInclude Include="resource.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\nuklear\nuklear.c" />
     <ClCompile Include="about.c" />
-    <ClCompile Include="audio.cpp" />
     <ClCompile Include="context.c" />
     <ClCompile Include="cpuid.c" />
     <ClCompile Include="dmi.c" />

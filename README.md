@@ -44,6 +44,7 @@ OPTIONS:
   --battery        Print battery information.
   --uefi           Print UEFI boot information.
   --shares         List network mapped drives.
+  --audio          List audio devices.
 ```
 
 ## Credits

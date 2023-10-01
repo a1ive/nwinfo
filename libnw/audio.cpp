@@ -5,7 +5,7 @@
 #include <endpointvolume.h>
 #include <functiondiscoverykeys_devpkey.h>
 
-static LPWSTR get_default_id(IMMDeviceEnumerator* p)
+static LPWSTR AudioGetDefaultId(IMMDeviceEnumerator* p)
 {
 	HRESULT hr = NULL;
 	IMMDevice* dev = NULL;
@@ -19,7 +19,7 @@ static LPWSTR get_default_id(IMMDeviceEnumerator* p)
 }
 
 static float
-get_device_volume(IMMDevice* p)
+AudioGetDeviceVolume(IMMDevice* p)
 {
 	float ret = 0.0f;
 	HRESULT hr = NULL;
@@ -32,13 +32,13 @@ get_device_volume(IMMDevice* p)
 	return SUCCEEDED(hr) ? ret : 0.0f;
 }
 
-extern "C" GNW_AUDIO_DEV*
-gnwinfo_get_audio(UINT* count)
+extern "C" NWLIB_AUDIO_DEV*
+NWL_GetAudio(UINT* count)
 {
 	HRESULT hr = S_OK;
 	IMMDeviceEnumerator* p_enum = NULL;
 	IMMDeviceCollection* p_collection = NULL;
-	GNW_AUDIO_DEV* dev = NULL;
+	NWLIB_AUDIO_DEV* dev = NULL;
 	LPWSTR default_id = NULL;
 
 	*count = 0;
@@ -56,11 +56,11 @@ gnwinfo_get_audio(UINT* count)
 	if (FAILED(hr))
 		goto fail;
 
-	dev = (GNW_AUDIO_DEV*)calloc(*count, sizeof(GNW_AUDIO_DEV));
+	dev = (NWLIB_AUDIO_DEV*)calloc(*count, sizeof(NWLIB_AUDIO_DEV));
 	if (!dev)
 		goto fail;
 
-	default_id = get_default_id(p_enum);
+	default_id = AudioGetDefaultId(p_enum);
 
 	for (ULONG i = 0; i < *count; i++)
 	{
@@ -72,11 +72,12 @@ gnwinfo_get_audio(UINT* count)
 		if (FAILED(hr))
 			goto clean;
 
-		dev[i].volume = get_device_volume(end_point);
+		dev[i].volume = AudioGetDeviceVolume(end_point);
 
 		hr = end_point->GetId(&id);
 		if (SUCCEEDED(hr))
 		{
+			wcscpy_s(dev[i].id, id);
 			if (default_id)
 				dev[i].is_default = wcscmp(id, default_id) == 0;
 			CoTaskMemFree(id);

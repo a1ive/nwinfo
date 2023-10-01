@@ -31,7 +31,7 @@
 
 #include "resource.h"
 
-#include "audio.h"
+#include <audio.h>
 
 GdipFont*
 nk_gdip_load_font(LPCWSTR name, int size);
@@ -159,7 +159,7 @@ typedef struct _GNW_CONTEXT
 	BOOL screen_on;
 
 	UINT audio_count;
-	GNW_AUDIO_DEV* audio;
+	NWLIB_AUDIO_DEV* audio;
 } GNW_CONTEXT;
 extern GNW_CONTEXT g_ctx;
 

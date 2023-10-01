@@ -76,6 +76,8 @@ VOID NW_Print(LPCSTR lpFileName)
 		NW_Uefi();
 	if (NWLC->ShareInfo)
 		NW_NetShare();
+	if (NWLC->AudioInfo)
+		NW_Audio();
 	NW_Libinfo();
 	NW_Export(NWLC->NwRoot, NWLC->NwFile);
 }

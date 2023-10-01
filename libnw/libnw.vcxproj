@@ -127,6 +127,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="acpi.h" />
+    <ClInclude Include="audio.h" />
     <ClInclude Include="disk.h" />
     <ClInclude Include="efivars.h" />
     <ClInclude Include="format.h" />
@@ -139,6 +140,8 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="acpi.c" />
+    <ClCompile Include="audio.cpp" />
+    <ClCompile Include="audio_nw.c" />
     <ClCompile Include="battery.c" />
     <ClCompile Include="cpuid.c" />
     <ClCompile Include="disk.c" />

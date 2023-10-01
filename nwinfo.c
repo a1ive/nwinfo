@@ -31,7 +31,8 @@ static void nwinfo_help(void)
 		"  --spd            Print SPD info\n"
 		"  --battery        Print battery info.\n"
 		"  --uefi           Print UEFI info.\n"
-		"  --shares         Print network mapped drives.\n");
+		"  --shares         Print network mapped drives.\n"
+		"  --audio          Print audio devices.\n");
 }
 
 int main(int argc, char* argv[])
@@ -121,6 +122,8 @@ int main(int argc, char* argv[])
 			nwContext.UefiInfo = TRUE;
 		else if (_stricmp(argv[i], "--shares") == 0)
 			nwContext.ShareInfo = TRUE;
+		else if (_stricmp(argv[i], "--audio") == 0)
+			nwContext.AudioInfo = TRUE;
 		else if (_stricmp(argv[i], "--debug") == 0)
 			nwContext.Debug = TRUE;
 		else if (_stricmp(argv[i], "--hide-sensitive") == 0)

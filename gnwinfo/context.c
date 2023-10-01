@@ -247,7 +247,7 @@ gnwinfo_ctx_update(WPARAM wparam)
 			g_ctx.audio = NULL;
 		}
 		if ((g_ctx.main_flag & MAIN_INFO_AUDIO) && g_ctx.lib.NwOsInfo.dwMajorVersion >= 6)
-			g_ctx.audio = gnwinfo_get_audio(&g_ctx.audio_count);
+			g_ctx.audio = NWL_GetAudio(&g_ctx.audio_count);
 		break;
 	case IDT_TIMER_1M:
 	case IDT_TIMER_POWER:
