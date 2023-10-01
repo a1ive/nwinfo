@@ -170,6 +170,55 @@ static void PrintOsVer(PNODE node)
 	}
 }
 
+static void
+PrintProductKey(PNODE node)
+{
+	DWORD dwType, dwSize;
+	LPBYTE lpKey = NULL;
+	lpKey = NWL_NtGetRegValue(HKEY_LOCAL_MACHINE, L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion", L"ProductId", &dwSize, &dwType);
+	if (lpKey)
+	{
+		NWL_NodeAttrSet(node, "Product Id", NWL_Ucs2ToUtf8((LPWSTR)lpKey), NAFLG_FMT_NEED_QUOTE | NAFLG_FMT_SENSITIVE);
+		free(lpKey);
+	}
+	lpKey = NWL_NtGetRegValue(HKEY_LOCAL_MACHINE, L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\SoftwareProtectionPlatform", L"BackupProductKeyDefault", &dwSize, &dwType);
+	if (lpKey)
+	{
+		NWL_NodeAttrSet(node, "Product Key", NWL_Ucs2ToUtf8((LPWSTR)lpKey), NAFLG_FMT_NEED_QUOTE | NAFLG_FMT_SENSITIVE);
+		free(lpKey);
+		return;
+	}
+#if 1
+	INT i, j, k;
+	CHAR buf[] = "BCDFGHJKMPQRTVWXY2346789";
+	CHAR szProductKey[30] = { 0 };
+	BYTE bKey[15] = { 0 };
+	lpKey = NWL_NtGetRegValue(HKEY_LOCAL_MACHINE, L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion", L"DigitalProductId", &dwSize, &dwType);
+	if (!lpKey)
+		return;
+	if (dwSize < 72)
+	{
+		free(lpKey);
+		return;
+	}
+	memcpy(bKey, lpKey + 52, 15);
+	for (i = 28; i >= 0; i--)
+	{
+		for (k = 0, j = 14; j >= 0; j--)
+		{
+			k = (k << 8) ^ bKey[j];
+			bKey[j] = (BYTE)(k / 24);
+			k %= 24;
+		}
+		if (i % 6 == 5)
+			szProductKey[i--] = '-';
+		szProductKey[i] = buf[k];
+	}
+	NWL_NodeAttrSet(node, "Product Key", szProductKey, NAFLG_FMT_NEED_QUOTE | NAFLG_FMT_SENSITIVE);
+	free(lpKey);
+#endif
+}
+
 VOID NWL_GetUptime(CHAR* szUptime, DWORD dwSize)
 {
 	UINT64 ullUptime = GetTickCount64();
@@ -410,6 +459,7 @@ PNODE NW_System(VOID)
 		NWL_NodeAppendChild(NWLC->NwRoot, node);
 	PrintOsVer(node);
 	PrintOsInfo(node);
+	PrintProductKey(node);
 	PrintSysMetrics(node);
 	PrintBootInfo(node);
 	NWL_NodeAttrSet(node, "Firmware", NWL_IsEfi() ? "UEFI" : "Legacy BIOS", 0);
