@@ -77,6 +77,7 @@ typedef struct _NWLIB_CONTEXT
 		FORMAT_LUA,
 	} NwFormat;
 	FILE* NwFile;
+	LPCSTR* NwUnits;
 	CHAR* ErrLog;
 	VOID (*ErrLogCallback) (LPCSTR lpszText);
 	UCHAR NwBuf[NWINFO_BUFSZ];

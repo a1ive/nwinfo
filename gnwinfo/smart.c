@@ -6,8 +6,6 @@
 LPCSTR NWL_Ucs2ToUtf8(LPCWSTR src);
 LPCWSTR NWL_Utf8ToUcs2(LPCSTR src);
 LPCSTR NWL_GetHumanSize(UINT64 size, LPCSTR human_sizes[6], UINT64 base);
-static const char* disk_human_sizes[6] =
-{ "MB", "GB", "TB", "PB", "EB", "ZB", };
 
 static void
 draw_rect(struct nk_context* ctx, struct nk_color bg, const char* str)
@@ -324,7 +322,7 @@ gnwinfo_draw_smart_window(struct nk_context* ctx, float width, float height)
 	nk_labelf_colored(ctx, NK_TEXT_CENTERED, g_color_text_l,
 		"%s %s",
 		str,
-		NWL_GetHumanSize(cdi_get_dword(NWLC->NwSmart, cur_disk, CDI_DWORD_DISK_SIZE), disk_human_sizes, 1000));
+		NWL_GetHumanSize(cdi_get_dword(NWLC->NwSmart, cur_disk, CDI_DWORD_DISK_SIZE), &NWLC->NwUnits[2], 1000));
 	cdi_free_string(str);
 	if (nk_button_image_label(ctx, GET_PNG(IDR_PNG_REFRESH), gnwinfo_get_text(L"Refresh"), NK_TEXT_CENTERED))
 		cdi_update_smart(NWLC->NwSmart, cur_disk);

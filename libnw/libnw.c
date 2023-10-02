@@ -8,6 +8,9 @@
 
 PNWLIB_CONTEXT NWLC = NULL;
 
+static const char* NWL_HS_BYTE[] =
+{ "B", "KB", "MB", "GB", "TB", "PB", "EB", "ZB" };
+
 noreturn VOID NWL_ErrExit(INT nExitCode, LPCSTR lpszText)
 {
 	if (!NWLC->ErrLogCallback)
@@ -37,6 +40,7 @@ VOID NW_Init(PNWLIB_CONTEXT pContext)
 	if (!NWLC->NwCpuRaw || !NWLC->NwCpuid)
 		NWL_ErrExit(ERROR_OUTOFMEMORY, "Cannot allocate memory");
 	NWLC->NwSmartInit = FALSE;
+	NWLC->NwUnits = NWL_HS_BYTE;
 	NWLC->ErrLog = NULL;
 	if (NWL_IsAdmin() != TRUE)
 		NWL_NodeAppendMultiSz(&NWLC->ErrLog, "Administrator required");

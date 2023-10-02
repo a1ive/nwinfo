@@ -5,9 +5,6 @@
 #include "utils.h"
 #include "../libcdi/libcdi.h"
 
-static const char* d_human_sizes[6] =
-{ "B", "KB", "MB", "GB", "TB", "PB", };
-
 static LPCSTR GetRealVolumePath(LPCWSTR lpszVolume)
 {
 	LPCSTR lpszRealPath;
@@ -107,10 +104,10 @@ PrintVolumeInfo(PNODE pNode, LPCWSTR lpszVolume, PHY_DRIVE_INFO* pParent)
 	}
 	if (GetDiskFreeSpaceExW(cchPath, NULL, NULL, &ulFreeSpace))
 		NWL_NodeAttrSet(pNode, "Free Space",
-			NWL_GetHumanSize(ulFreeSpace.QuadPart, d_human_sizes, 1024), NAFLG_FMT_HUMAN_SIZE);
+			NWL_GetHumanSize(ulFreeSpace.QuadPart, NWLC->NwUnits, 1024), NAFLG_FMT_HUMAN_SIZE);
 	if (GetDiskFreeSpaceExW(cchPath, NULL, &ulTotalSpace, NULL))
 		NWL_NodeAttrSet(pNode, "Total Space",
-			NWL_GetHumanSize(ulTotalSpace.QuadPart, d_human_sizes, 1024), NAFLG_FMT_HUMAN_SIZE);
+			NWL_GetHumanSize(ulTotalSpace.QuadPart, NWLC->NwUnits, 1024), NAFLG_FMT_HUMAN_SIZE);
 	if (ulTotalSpace.QuadPart != 0)
 		NWL_NodeAttrSetf(pNode, "Usage", 0, "%.2f%%",
 			100.0 - (ulFreeSpace.QuadPart * 100.0) / ulTotalSpace.QuadPart);
@@ -563,7 +560,7 @@ PrintDiskInfo(BOOL cdrom, PNODE node, CDI_SMART* smart)
 		NWL_NodeAttrSet(nd, "Type", NWL_GetBusTypeString(PhyDriveList[i].BusType), 0);
 		NWL_NodeAttrSetBool(nd, "Removable", PhyDriveList[i].RemovableMedia, 0);
 		NWL_NodeAttrSet(nd, "Size",
-			NWL_GetHumanSize(PhyDriveList[i].SizeInBytes, d_human_sizes, 1024), NAFLG_FMT_HUMAN_SIZE);
+			NWL_GetHumanSize(PhyDriveList[i].SizeInBytes, NWLC->NwUnits, 1024), NAFLG_FMT_HUMAN_SIZE);
 		switch (PhyDriveList[i].PartMap)
 		{
 		case PARTITION_STYLE_MBR:

@@ -172,9 +172,6 @@ extern unsigned int g_init_alpha;
 extern unsigned int g_font_size;
 extern nk_bool g_bginfo;
 
-extern const char* g_byte_units[6];
-extern const char* g_bit_units[6];
-
 #define NK_COLOR_YELLOW     {0xFF, 0xEA, 0x00, 0xFF}
 #define NK_COLOR_RED        {0xFF, 0x17, 0x44, 0xFF}
 #define NK_COLOR_GREEN      {0x00, 0xE6, 0x76, 0xFF}

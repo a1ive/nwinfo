@@ -4,9 +4,6 @@
 #include "smbios.h"
 #include "utils.h"
 
-static const char* mem_human_sizes[6] =
-{ "B", "KB", "MB", "GB", "TB", "PB", };
-
 static const char* LocateString(UINT8* hdr, UINT8 offset)
 {
 	UINT8* ptr = hdr + hdr[1]; // PSMBIOSHEADER->Length
@@ -625,7 +622,7 @@ static void ProcCacheInfo(PNODE tab, void* p)
 		sz = ((UINT64)pCache->MaxSize - (1ULL << 15)) * 64 * 1024;
 	else
 		sz = ((UINT64) pCache->MaxSize) * 1024;
-	NWL_NodeAttrSet(tab, "Max Cache Size", NWL_GetHumanSize(sz, mem_human_sizes, 1024), NAFLG_FMT_HUMAN_SIZE);
+	NWL_NodeAttrSet(tab, "Max Cache Size", NWL_GetHumanSize(sz, NWLC->NwUnits, 1024), NAFLG_FMT_HUMAN_SIZE);
 	if (pCache->InstalledSize == 0xffff && pCache->Header.Length > 0x13)
 	{
 		if (pCache->InstalledSize2 & (1ULL << 31))
@@ -641,7 +638,7 @@ static void ProcCacheInfo(PNODE tab, void* p)
 	{
 		sz = ((UINT64)pCache->InstalledSize) * 1024;
 	}
-	NWL_NodeAttrSet(tab, "Installed Cache Size", NWL_GetHumanSize(sz, mem_human_sizes, 1024), NAFLG_FMT_HUMAN_SIZE);
+	NWL_NodeAttrSet(tab, "Installed Cache Size", NWL_GetHumanSize(sz, NWLC->NwUnits, 1024), NAFLG_FMT_HUMAN_SIZE);
 	pCacheSetSRAMType(tab, "Supported SRAM Type", pCache->SupportSRAMType);
 	pCacheSetSRAMType(tab, "Current SRAM Type", pCache->SupportSRAMType);
 	if (pCache->Header.Length < 0x13) // 2.1
@@ -1106,7 +1103,7 @@ static void ProcMemoryArray(PNODE tab, void* p)
 		sz = pMA->ExtMaxCapacity;
 	else
 		sz = ((UINT64)pMA->MaxCapacity) * 1024;
-	NWL_NodeAttrSet(tab, "Max Capacity", NWL_GetHumanSize(sz, mem_human_sizes, 1024), NAFLG_FMT_HUMAN_SIZE);
+	NWL_NodeAttrSet(tab, "Max Capacity", NWL_GetHumanSize(sz, NWLC->NwUnits, 1024), NAFLG_FMT_HUMAN_SIZE);
 	NWL_NodeAttrSetf(tab, "Number of Slots", NAFLG_FMT_NUMERIC, "%u", pMA->NumOfMDs);
 }
 
@@ -1232,7 +1229,7 @@ static void ProcMemoryDevice(PNODE tab, void* p)
 		sz = ((UINT64)pMD->Size) * 1024 * 1024;
 	if (!sz)
 		return;
-	NWL_NodeAttrSet(tab, "Device Size", NWL_GetHumanSize(sz, mem_human_sizes, 1024), NAFLG_FMT_HUMAN_SIZE);
+	NWL_NodeAttrSet(tab, "Device Size", NWL_GetHumanSize(sz, NWLC->NwUnits, 1024), NAFLG_FMT_HUMAN_SIZE);
 	NWL_NodeAttrSet(tab, "Device Type", pMDMemoryTypeToStr(pMD->MemoryType), 0);
 	if (pMD->Header.Length < 0x1b) // 2.3
 		return;
@@ -1676,7 +1673,7 @@ static void ProcFwInventory(PNODE tab, void* p)
 	NWL_NodeAttrSet(tab, "Manufacturer", LocateString(p, pFirmware->Manufacturer), 0);
 	NWL_NodeAttrSet(tab, "Lowest Supported Firmware Version",
 		LocateString(p, pFirmware->LowestSupportedVersion), 0);
-	NWL_NodeAttrSet(tab, "Image Size", NWL_GetHumanSize(pFirmware->ImageSize, mem_human_sizes, 1024), NAFLG_FMT_HUMAN_SIZE);
+	NWL_NodeAttrSet(tab, "Image Size", NWL_GetHumanSize(pFirmware->ImageSize, NWLC->NwUnits, 1024), NAFLG_FMT_HUMAN_SIZE);
 }
 
 static void ProcStringProperty(PNODE tab, void* p)

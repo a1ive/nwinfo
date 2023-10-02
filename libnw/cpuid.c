@@ -9,9 +9,6 @@
 #include <libcpuid_util.h>
 #include "utils.h"
 
-static const char* kb_human_sizes[6] =
-{ "KB", "MB", "GB", "TB", "PB", "EB", };
-
 static LPCSTR
 CpuVendorToStr(cpu_vendor_t vendor)
 {
@@ -66,11 +63,11 @@ PrintCacheSize(PNODE node, LPCSTR name, int32_t instances, int32_t size, int32_t
 	else if (instances <= 0)
 		NWL_NodeAttrSetf(node, name, 0,
 			"%s, %d-way",
-			NWL_GetHumanSize(size, kb_human_sizes, 1024), assoc);
+			NWL_GetHumanSize(size, &NWLC->NwUnits[1], 1024), assoc);
 	else
 		NWL_NodeAttrSetf(node, name, 0,
 			"%d * %s, %d-way",
-			instances, NWL_GetHumanSize(size, kb_human_sizes, 1024), assoc);
+			instances, NWL_GetHumanSize(size, &NWLC->NwUnits[1], 1024), assoc);
 }
 
 static void

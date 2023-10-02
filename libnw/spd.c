@@ -59,9 +59,6 @@ DDR2ModuleType(UINT8 Type)
 	return "UNKNOWN";
 }
 
-static const char* mem_human_sizes[6] =
-{ "MB", "GB", "TB", "PB", "EB", "ZB", };
-
 static const CHAR*
 DDR5Capacity(UINT8* rawSpd)
 {
@@ -110,7 +107,7 @@ DDR5Capacity(UINT8* rawSpd)
 		if ((rawSpd[234] >> 6) == 0)
 			break;
 	}
-	return NWL_GetHumanSize(Size, mem_human_sizes, 1024);
+	return NWL_GetHumanSize(Size, &NWLC->NwUnits[2], 1024);
 }
 
 static const CHAR*
@@ -127,7 +124,7 @@ DDR4Capacity(UINT8* rawSpd)
 		RanksPerDimm *= ((rawSpd[6] >> 4U) & 0x07U) + 1;
 
 	Size = SdrCapacity / 8 * BusWidth / SdrWidth * RanksPerDimm;
-	return NWL_GetHumanSize(Size, mem_human_sizes, 1024);
+	return NWL_GetHumanSize(Size, &NWLC->NwUnits[2], 1024);
 }
 
 static const CHAR*
@@ -139,7 +136,7 @@ DDR3Capacity(UINT8* rawSpd)
 	UINT32 busWidth = 8U << (rawSpd[8] & 0x07U);
 	UINT32 Ranks = 1 + ((rawSpd[7] >> 3) & 0x07U);
 	Size = sdrCapacity / 8 * busWidth / sdrWidth * Ranks;
-	return NWL_GetHumanSize(Size, mem_human_sizes, 1024);
+	return NWL_GetHumanSize(Size, &NWLC->NwUnits[2], 1024);
 }
 
 static const CHAR*
@@ -151,7 +148,7 @@ DDR2Capacity(UINT8* rawSpd)
 	k = ((rawSpd[5] & 0x07U) + 1) * rawSpd[17];
 	if (i > 0 && i <= 12 && k > 0)
 		Size = (1ULL << i) * k;
-	return NWL_GetHumanSize(Size, mem_human_sizes, 1024);
+	return NWL_GetHumanSize(Size, &NWLC->NwUnits[2], 1024);
 }
 
 static const CHAR*
@@ -163,7 +160,7 @@ DDRCapacity(UINT8* rawSpd)
 	k = (rawSpd[5] <= 8 && rawSpd[17] <= 8) ? rawSpd[5] * rawSpd[17] : 0;
 	if (i > 0 && i <= 12 && k > 0)
 		Size = (1ULL << i) * k;
-	return NWL_GetHumanSize(Size, mem_human_sizes, 1024);
+	return NWL_GetHumanSize(Size, &NWLC->NwUnits[2], 1024);
 }
 
 static void

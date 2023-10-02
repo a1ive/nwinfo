@@ -352,9 +352,6 @@ static void PrintTpmInfo(PNODE node)
 		FreeLibrary(hL);
 }
 
-static const char* mem_human_sizes[6] =
-{ "B", "K", "M", "G", "T", "P", };
-
 static BOOL WINAPI
 EnumPageFileCallback(LPVOID pContext, PENUM_PAGE_FILE_INFORMATION pPageFileInfo, LPCWSTR lpFilename)
 {
@@ -407,12 +404,12 @@ static void PrintMemInfo(PNODE node)
 	NWL_NodeAttrSetf(node, "Page Size", NAFLG_FMT_NUMERIC, "%Id", info.PageSize);
 	NWL_NodeAttrSetf(node, "Memory Usage", 0, "%lu%%", info.PhysUsage);
 	nphy = NWL_NodeAppendNew(node, "Physical Memory", NFLG_ATTGROUP);
-	NWL_NodeAttrSet(nphy, "Free", NWL_GetHumanSize(info.PhysAvail, mem_human_sizes, 1024), NAFLG_FMT_HUMAN_SIZE);
-	NWL_NodeAttrSet(nphy, "Total", NWL_GetHumanSize(info.PhysTotal, mem_human_sizes, 1024), NAFLG_FMT_HUMAN_SIZE);
+	NWL_NodeAttrSet(nphy, "Free", NWL_GetHumanSize(info.PhysAvail, NWLC->NwUnits, 1024), NAFLG_FMT_HUMAN_SIZE);
+	NWL_NodeAttrSet(nphy, "Total", NWL_GetHumanSize(info.PhysTotal, NWLC->NwUnits, 1024), NAFLG_FMT_HUMAN_SIZE);
 	NWL_NodeAttrSetf(node, "Paging File Usage", 0, "%lu%%", info.PageUsage);
 	npage = NWL_NodeAppendNew(node, "Paging File", NFLG_ATTGROUP);
-	NWL_NodeAttrSet(npage, "Free", NWL_GetHumanSize(info.PageAvail, mem_human_sizes, 1024), NAFLG_FMT_HUMAN_SIZE);
-	NWL_NodeAttrSet(npage, "Total", NWL_GetHumanSize(info.PageTotal, mem_human_sizes, 1024), NAFLG_FMT_HUMAN_SIZE);
+	NWL_NodeAttrSet(npage, "Free", NWL_GetHumanSize(info.PageAvail, NWLC->NwUnits, 1024), NAFLG_FMT_HUMAN_SIZE);
+	NWL_NodeAttrSet(npage, "Total", NWL_GetHumanSize(info.PageTotal, NWLC->NwUnits, 1024), NAFLG_FMT_HUMAN_SIZE);
 }
 
 static void PrintBootInfo(PNODE node)
