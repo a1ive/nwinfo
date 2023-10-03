@@ -245,7 +245,7 @@ pProcessorTypeToStr(UCHAR Type)
 }
 
 static const CHAR*
-pProcessorFamilyToStr(UCHAR Family)
+pProcessorFamilyToStr(UCHAR Family, LPCSTR lpManufacturer)
 {
 	switch (Family)
 	{
@@ -268,6 +268,7 @@ pProcessorFamilyToStr(UCHAR Family)
 	case 0x13: return "M2 Family";
 	case 0x14: return "Intel Celeron M processor";
 	case 0x15: return "Intel Pentium 4 HT processor";
+	case 0x16: return "Intel processor";
 
 	case 0x18: return "AMD Duron Processor Family";
 	case 0x19: return "K5 Family";
@@ -373,6 +374,11 @@ pProcessorFamilyToStr(UCHAR Family)
 	case 0xBB: return "Intel Pentium D processor";
 	case 0xBC: return "Intel Pentium Processor Extreme Edition";
 	case 0xBD: return "Intel Core Solo Processor";
+	case 0xBE:
+		// reserved.
+		if (lpManufacturer[0] == 'A')
+			return "AMD K7";
+		// fall through
 	case 0xBF: return "Intel Core 2 Duo Processor";
 	case 0xC0: return "Intel Core 2 Solo processor";
 	case 0xC1: return "Intel Core 2 Extreme processor";
@@ -429,10 +435,11 @@ static void ProcProcessorInfo(PNODE tab, void* p)
 	NWL_NodeAttrSet(tab, "Description", "Processor Information", 0);
 	if (pProcessor->Header.Length < 0x1a) // 2.0
 		return;
+	LPCSTR lpManufacturer = LocateString(p, pProcessor->Manufacturer);
 	NWL_NodeAttrSet(tab, "Socket Designation", LocateString(p, pProcessor->SocketDesignation), 0);
 	NWL_NodeAttrSet(tab, "Type", pProcessorTypeToStr(pProcessor->Type), 0);
-	NWL_NodeAttrSet(tab, "Processor Family", pProcessorFamilyToStr(pProcessor->Family), 0);
-	NWL_NodeAttrSet(tab, "Processor Manufacturer", LocateString(p, pProcessor->Manufacturer), 0);
+	NWL_NodeAttrSet(tab, "Processor Family", pProcessorFamilyToStr(pProcessor->Family, lpManufacturer), 0);
+	NWL_NodeAttrSet(tab, "Processor Manufacturer", lpManufacturer, 0);
 	NWL_NodeAttrSet(tab, "Processor Version", LocateString(p, pProcessor->Version), 0);
 	if (!pProcessor->Voltage)
 	{
@@ -1673,7 +1680,8 @@ static void ProcFwInventory(PNODE tab, void* p)
 	NWL_NodeAttrSet(tab, "Manufacturer", LocateString(p, pFirmware->Manufacturer), 0);
 	NWL_NodeAttrSet(tab, "Lowest Supported Firmware Version",
 		LocateString(p, pFirmware->LowestSupportedVersion), 0);
-	NWL_NodeAttrSet(tab, "Image Size", NWL_GetHumanSize(pFirmware->ImageSize, NWLC->NwUnits, 1024), NAFLG_FMT_HUMAN_SIZE);
+	if (pFirmware->ImageSize != ~0ULL)
+		NWL_NodeAttrSet(tab, "Image Size", NWL_GetHumanSize(pFirmware->ImageSize, NWLC->NwUnits, 1024), NAFLG_FMT_HUMAN_SIZE);
 }
 
 static void ProcStringProperty(PNODE tab, void* p)
