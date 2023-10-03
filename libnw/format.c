@@ -534,6 +534,18 @@ static SIZE_T yaml_escape_content(LPCSTR input, LPSTR buffer, DWORD bufferSize)
 			memcpy(cOut, "\'\'", 2);
 			cOut += 2;
 			break;
+		case '\n':
+			memcpy(cOut, "\\n", 2);
+			cOut += 2;
+			break;
+		case '\r':
+			memcpy(cOut, "\\r", 2);
+			cOut += 2;
+			break;
+		case '\t':
+			memcpy(cOut, "\\t", 2);
+			cOut += 2;
+			break;
 		default:
 			memcpy(cOut, cIn, 1);
 			cOut += 1;
