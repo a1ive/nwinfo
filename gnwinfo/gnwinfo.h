@@ -99,7 +99,6 @@ typedef struct _GNW_CONTEXT
 	HINSTANCE inst;
 	HWND wnd;
 	HANDLE mutex;
-	WCHAR lang[10];
 	BOOL mouse;
 	NWLIB_CONTEXT lib;
 	struct nk_context* nk;
@@ -165,6 +164,7 @@ extern GNW_CONTEXT g_ctx;
 
 #define GET_PNG(x) g_ctx.image[x - IDR_PNG_MIN]
 
+extern WCHAR g_lang_id[10];
 extern WCHAR g_ini_path[MAX_PATH];
 extern unsigned int g_init_width;
 extern unsigned int g_init_height;

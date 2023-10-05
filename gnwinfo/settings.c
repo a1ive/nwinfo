@@ -20,7 +20,7 @@ LPCSTR
 gnwinfo_get_text(LPCWSTR text)
 {
 	WCHAR wvalue[MAX_PATH];
-	GetPrivateProfileStringW(g_ctx.lang, text, text, wvalue, MAX_PATH, g_ini_path);
+	GetPrivateProfileStringW(g_lang_id, text, text, wvalue, MAX_PATH, g_ini_path);
 	return NWL_Ucs2ToUtf8(wvalue);
 }
 

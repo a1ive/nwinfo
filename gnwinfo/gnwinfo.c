@@ -18,6 +18,7 @@ struct nk_color g_color_unknown = NK_COLOR_BLUE;
 struct nk_color g_color_text_l = NK_COLOR_WHITE;
 struct nk_color g_color_text_d = NK_COLOR_LIGHT;
 struct nk_color g_color_back = NK_COLOR_GRAY;
+WCHAR g_lang_id[10];
 
 #define REGION_MASK_LEFT    (1 << 0)
 #define REGION_MASK_RIGHT   (1 << 1)
@@ -372,6 +373,8 @@ wWinMain(_In_ HINSTANCE hInstance,
 	get_ini_color(L"StateError", &g_color_error);
 	get_ini_color(L"StateUnknown", &g_color_unknown);
 
+	swprintf(g_lang_id, 10, L"Lang%u", GetUserDefaultUILanguage());
+
 	/* Win32 */
 	memset(&wc, 0, sizeof(wc));
 	wc.style = CS_DBLCLKS;
@@ -397,7 +400,13 @@ wWinMain(_In_ HINSTANCE hInstance,
 
 	/* GUI */
 	ctx = nk_gdip_init(wnd, g_init_width, g_init_height);
-	GetPrivateProfileStringW(L"Window", L"Font", L"Courier New", font_name, 64, g_ini_path);
+	{
+		GetPrivateProfileStringW(L"Window", L"Font", L"-", font_name, 64, g_ini_path);
+		if (wcscmp(font_name, L"-") == 0)
+			GetPrivateProfileStringW(g_lang_id, L"DefaultFont", L"-", font_name, 64, g_ini_path);
+		if (wcscmp(font_name, L"-") == 0)
+			wcscpy_s(font_name, 64, L"Courier New");
+	}
 	g_font_size = strtoul(gnwinfo_get_ini_value(L"Window", L"FontSize", L"12"), NULL, 10);
 	font = nk_gdip_load_font(font_name, g_font_size);
 	nk_gdip_set_font(font);

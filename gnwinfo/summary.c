@@ -206,7 +206,7 @@ draw_computer(struct nk_context* ctx)
 		time = "";
 
 	if (strcmp(gnwinfo_get_node_attr(g_ctx.battery, "AC Power"), "Online") == 0)
-		ac = u8"\u26a1 ";
+		ac = u8"AC ";
 
 	nk_layout_row(ctx, NK_DYNAMIC, 0, 3, (float[3]) { 0.3f, 0.7f - g_ctx.gui_ratio, g_ctx.gui_ratio });
 	nk_space_label(ctx, gnwinfo_get_text(L"Power Status"), nk_false);

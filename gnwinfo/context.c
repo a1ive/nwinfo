@@ -283,7 +283,6 @@ gnwinfo_ctx_init(HINSTANCE inst, HWND wnd, struct nk_context* ctx, float width, 
 		exit(1);
 	}
 
-	swprintf(g_ctx.lang, 10, L"Lang%u", GetUserDefaultUILanguage());
 	g_ctx.main_flag = strtoul(gnwinfo_get_ini_value(L"Widgets", L"MainFlags", L"0xFFFFFFFF"), NULL, 16);
 	g_ctx.smart_hex = strtoul(gnwinfo_get_ini_value(L"Widgets", L"SmartFormat", L"0"), NULL, 10);
 	// ~0x01FBFF81
