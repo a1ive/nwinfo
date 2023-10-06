@@ -119,24 +119,24 @@ gnwinfo_draw_cpuid_window(struct nk_context* ctx, float width, float height)
 	nk_label_colored(ctx, gnwinfo_get_node_attr(cpu, "Brand"), NK_TEXT_LEFT, g_color_text_l);
 	CPUID_ROW_END;
 
-	CPUID_ROW_BEGIN(4, 0.2f);
-	nk_label(ctx, gnwinfo_get_text(L"Hypervisor"), NK_TEXT_LEFT);
-	CPUID_ROW_PUSH(0.3f);
-	nk_label_colored(ctx, gnwinfo_get_node_attr(g_ctx.cpuid, "Hypervisor"), NK_TEXT_LEFT, g_color_text_l);
+	CPUID_ROW_BEGIN(6, 0.2f);
+	nk_label(ctx, gnwinfo_get_text(L"Cores"), NK_TEXT_LEFT);
+	CPUID_ROW_PUSH((1.0f / 3 - 0.2f));
+	nk_label_colored(ctx, gnwinfo_get_node_attr(cpu, "Cores"), NK_TEXT_LEFT, g_color_text_l);
 	CPUID_ROW_PUSH(0.2f);
 	nk_label(ctx, gnwinfo_get_text(L"Code Name"), NK_TEXT_LEFT);
 	CPUID_ROW_PUSH(0.3f);
 	nk_label_colored(ctx, gnwinfo_get_node_attr(cpu, "Code Name"), NK_TEXT_LEFT, g_color_text_l);
 	CPUID_ROW_END;
 
-	CPUID_ROW_BEGIN(4, 0.2f);
-	nk_label(ctx, gnwinfo_get_text(L"Cores"), NK_TEXT_LEFT);
-	CPUID_ROW_PUSH(0.3f);
-	nk_label_colored(ctx, gnwinfo_get_node_attr(cpu, "Cores"), NK_TEXT_LEFT, g_color_text_l);
-	CPUID_ROW_PUSH(0.2f);
+	CPUID_ROW_BEGIN(6, 0.2f);
 	nk_label(ctx, gnwinfo_get_text(L"Threads"), NK_TEXT_LEFT);
-	CPUID_ROW_PUSH(0.3f);
+	CPUID_ROW_PUSH((1.0f / 3 - 0.2f));
 	nk_label_colored(ctx, gnwinfo_get_node_attr(cpu, "Logical CPUs"), NK_TEXT_LEFT, g_color_text_l);
+	CPUID_ROW_PUSH(0.2f);
+	nk_label(ctx, gnwinfo_get_text(L"Hypervisor"), NK_TEXT_LEFT);
+	CPUID_ROW_PUSH(0.3f);
+	nk_label_colored(ctx, gnwinfo_get_node_attr(g_ctx.cpuid, "Hypervisor"), NK_TEXT_LEFT, g_color_text_l);
 	CPUID_ROW_END;
 
 	CPUID_ROW_BEGIN(6, 0.2f);

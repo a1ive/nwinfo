@@ -704,10 +704,12 @@ draw_network(struct nk_context* ctx)
 {
 	INT i;
 
-	nk_layout_row(ctx, NK_DYNAMIC, 0, 3, (float[3]) { 0.64f, 0.36f - g_ctx.gui_ratio, g_ctx.gui_ratio });
+	nk_layout_row(ctx, NK_DYNAMIC, 0, 4, (float[4]) { 0.64f, 0.18f - g_ctx.gui_ratio, 0.18f, g_ctx.gui_ratio });
 	nk_image_label(ctx, GET_PNG(IDR_PNG_NETWORK), gnwinfo_get_text(L"Network"), NK_TEXT_LEFT, g_color_text_d);
-	nk_labelf_colored(ctx, NK_TEXT_LEFT, g_color_text_l,
-		u8"\u2191 %s \u2193 %s", g_ctx.net_send, g_ctx.net_recv);
+	nk_labelf_colored(ctx, NK_TEXT_LEFT, g_color_warning,
+		u8"\u2191 %s", g_ctx.net_send);
+	nk_labelf_colored(ctx, NK_TEXT_LEFT, g_color_unknown,
+		u8"\u2193 %s", g_ctx.net_recv);
 	if (nk_button_image(ctx, GET_PNG(IDR_PNG_EDIT)))
 		ShellExecuteW(NULL, NULL, L"::{7007ACC7-3202-11D1-AAD2-00805FC1270E}", NULL, NULL, SW_NORMAL);
 
