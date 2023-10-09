@@ -29,7 +29,7 @@
  * \file     libcpuid.h
  * \author   Veselin Georgiev
  * \date     Oct 2008
- * \version  0.6.3
+ * \version  0.6.4
  *
  * Version history:
  *
@@ -74,6 +74,9 @@
  *                       restore previous thread CPU affinity before returning from cpuid_get_all_raw_data(),
  *                       query CPU info at least once even if set_cpu_affinity() fails,
  *                       rename set_error() to cpuid_set_error() and get_error() to cpuid_get_error().
+ * * 0.6.4 (2023-10-08): A lot of DB updates, add support for Centaur CPUs (VIA and Zhaoxin),
+ *                       fix floating point exception in cpu_identify_all(),
+ *                       fix build for NetBSD and DragonFly BSD.
  */
 
 /** @mainpage A simple libcpuid introduction

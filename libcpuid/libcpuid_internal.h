@@ -119,6 +119,10 @@ enum _common_bits_t {
 	_5                      = LBIT(  4 ),
 	_7                      = LBIT(  5 ),
 	_9                      = LBIT(  6 ),
+	_H                      = LBIT(  7 ),
+	_S                      = LBIT(  8 ),
+	_U                      = LBIT(  9 ),
+	_X                      = LBIT( 10 ),
 };
 
 // additional detection bits for Intel CPUs:
@@ -129,19 +133,16 @@ enum _intel_bits_t {
 	_I_                     = LBIT( 13 ),
 	XEON_                   = LBIT( 14 ),
 	ATOM_                   = LBIT( 15 ),
-	_H                      = LBIT( 16 ),
-	_K                      = LBIT( 17 ),
-	_X                      = LBIT( 18 ),
-	_P                      = LBIT( 19 ),
-	_N                      = LBIT( 20 ),
-	_W_                     = LBIT( 21 ),
-	_D_                     = LBIT( 22 ),
-	_BRONZE_                = LBIT( 23 ),
-	_SILVER_                = LBIT( 24 ),
-	_GOLD_                  = LBIT( 25 ),
-	_PLATINIUM_             = LBIT( 26 ),
-	_MAX_                   = LBIT( 27 ),
-	_U                      = LBIT( 28 ),
+	_K                      = LBIT( 16 ),
+	_P                      = LBIT( 17 ),
+	_N                      = LBIT( 18 ),
+	_W_                     = LBIT( 19 ),
+	_D_                     = LBIT( 20 ),
+	_BRONZE_                = LBIT( 21 ),
+	_SILVER_                = LBIT( 22 ),
+	_GOLD_                  = LBIT( 23 ),
+	_PLATINIUM_             = LBIT( 24 ),
+	_MAX_                   = LBIT( 25 ),
 };
 typedef enum _intel_bits_t intel_bits_t;
 
@@ -164,6 +165,7 @@ enum _amd_bits_t {
 	_FX          = LBIT( 25 ),
 	_APU_        = LBIT( 26 ),
 	C86_	     = LBIT( 27 ),
+	_Z           = LBIT( 28 ),
 };
 typedef enum _amd_bits_t amd_bits_t;
 

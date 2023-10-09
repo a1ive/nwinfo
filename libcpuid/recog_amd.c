@@ -353,14 +353,16 @@ const struct match_entry_t cpudb_amd[] = {
 	{ 15, -1,  2, 25,   97,  -1,    -1,    -1, NC, RYZEN_|_7           ,     0, "Ryzen 7 (Raphael)"             },
 	{ 15, -1,  2, 25,   97,  -1,    -1,    -1, NC, RYZEN_|_5           ,     0, "Ryzen 5 (Raphael)"             },
 	{ 15, -1,  2, 25,   97,  -1,    -1,    -1, NC, RYZEN_|_3           ,     0, "Ryzen 3 (Raphael)"             },
-	//{ 15, -1, -1, 25,   ??,  -1,    -1,    -1, NC, RYZEN_|_9           ,     0, "Ryzen 9 (Dragon Range)"        },
-	//{ 15, -1, -1, 25,   ??,  -1,    -1,    -1, NC, RYZEN_|_7           ,     0, "Ryzen 7 (Dragon Range)"        },
-	//{ 15, -1, -1, 25,   ??,  -1,    -1,    -1, NC, RYZEN_|_5           ,     0, "Ryzen 5 (Dragon Range)"        },
-	//{ 15, -1, -1, 25,   ??,  -1,    -1,    -1, NC, RYZEN_|_3           ,     0, "Ryzen 3 (Dragon Range)"        },
-	{ 15, -1, -1, 25,  116,  -1,    -1,    -1, NC, RYZEN_|_9           ,     0, "Ryzen 9 (Phoenix)"             },
-	{ 15, -1, -1, 25,  116,  -1,    -1,    -1, NC, RYZEN_|_7           ,     0, "Ryzen 7 (Phoenix)"             },
-	{ 15, -1, -1, 25,  116,  -1,    -1,    -1, NC, RYZEN_|_5           ,     0, "Ryzen 5 (Phoenix)"             },
-	{ 15, -1, -1, 25,  116,  -1,    -1,    -1, NC, RYZEN_|_3           ,     0, "Ryzen 3 (Phoenix)"             },
+	{ 15, -1, -1, 25,   97,  -1,    -1,    -1, NC, RYZEN_|_9|_H        ,     0, "Ryzen 9 (Dragon Range)"        },
+	{ 15, -1, -1, 25,   97,  -1,    -1,    -1, NC, RYZEN_|_7|_H        ,     0, "Ryzen 7 (Dragon Range)"        },
+	{ 15, -1, -1, 25,   97,  -1,    -1,    -1, NC, RYZEN_|_5|_H        ,     0, "Ryzen 5 (Dragon Range)"        },
+	{ 15, -1, -1, 25,  116,  -1,    -1,    -1, NC, RYZEN_|_9|_H        ,     0, "Ryzen 9 (Phoenix)"             },
+	{ 15, -1, -1, 25,  116,  -1,    -1,    -1, NC, RYZEN_|_7|_H        ,     0, "Ryzen 7 (Phoenix)"             },
+	{ 15, -1, -1, 25,  116,  -1,    -1,    -1, NC, RYZEN_|_7|_U        ,     0, "Ryzen 7 (Phoenix)"             },
+	{ 15, -1, -1, 25,  116,  -1,    -1,    -1, NC, RYZEN_|_5|_H        ,     0, "Ryzen 5 (Phoenix)"             },
+	{ 15, -1, -1, 25,  116,  -1,    -1,    -1, NC, RYZEN_|_5|_U        ,     0, "Ryzen 5 (Phoenix)"             },
+	{ 15, -1, -1, 25,  116,  -1,    -1,    -1, NC, RYZEN_|_3|_U        ,     0, "Ryzen 3 (Phoenix)"             },
+	{ 15, -1, -1, 25,  116,  -1,    -1,    -1, NC, RYZEN_|_Z           ,     0, "Ryzen Z1 (Phoenix)"            },
 	/* F   M   S  EF    EM  #cores  L2$   L3$  BC  ModelBits          ModelCode  Name                           */
 };
 
@@ -520,6 +522,7 @@ static struct amd_code_and_bits_t decode_amd_codename_part1(const char *bs)
 	struct amd_code_and_bits_t result;
 	uint64_t bits = 0;
 	int i = 0;
+	const size_t n = strlen(bs);
 
 	const struct { amd_code_t c; const char *search; } code_matchtable[] = {
 		{ PHENOM2, "Phenom(tm) II" },
@@ -565,7 +568,7 @@ static struct amd_code_and_bits_t decode_amd_codename_part1(const char *bs)
 	if (amd_has_turion_modelname(bs)) {
 		bits |= TURION_;
 	}
-	if ((i = match_pattern(bs, "Ryzen [3579]")) != 0) {
+	if ((i = match_pattern(bs, "Ryzen [3579Z]")) != 0) {
 		bits |= RYZEN_;
 		i--;
 		switch (bs[i + 6]) {
@@ -573,6 +576,15 @@ static struct amd_code_and_bits_t decode_amd_codename_part1(const char *bs)
 			case '5': bits |= _5; break;
 			case '7': bits |= _7; break;
 			case '9': bits |= _9; break;
+			case 'Z': bits |= _Z; break;
+		}
+		for(i = i + 7; i < (int) n; i++) {
+			switch (bs[i]) {
+				case 'H': bits |= _H; break;
+				case 'S': bits |= _S; break;
+				case 'U': bits |= _U; break;
+				case 'X': bits |= _X; break;
+			}
 		}
 	}
 
