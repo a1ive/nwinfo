@@ -104,9 +104,9 @@ gnwinfo_draw_cpuid_window(struct nk_context* ctx, float width, float height)
 	nk_property_int(ctx, "#CPU", 0, &cpu_index, g_ctx.cpu_count - 1, 1, 1);
 	CPUID_ROW_PUSH(0.84f);
 	snprintf(buf, MAX_PATH, "%s %d,", gnwinfo_get_text(L"Total"), g_ctx.cpu_count);
-	snprintf(buf, MAX_PATH, "%s %s %s, %s MHz", buf,
+	snprintf(buf, MAX_PATH, "%s %s %s, %lu MHz", buf,
 		gnwinfo_get_node_attr(g_ctx.cpuid, "Total CPUs"), gnwinfo_get_text(L"threads"),
-		gnwinfo_get_node_attr(g_ctx.cpuid, "CPU Clock (MHz)"));
+		g_ctx.cpu_freq);
 	nk_label(ctx, buf, NK_TEXT_CENTERED);
 	CPUID_ROW_END;
 

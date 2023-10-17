@@ -198,8 +198,12 @@ get_pdh_data(void)
 		g_ctx.pdh = NULL;
 		return;
 	}
-	if (g_ctx.pdh_cpu && pdh_get_formatted_counter_value(g_ctx.pdh_cpu, PDH_FMT_DOUBLE, NULL, &value) == ERROR_SUCCESS)
+	if (g_ctx.pdh_cpu_usage && pdh_get_formatted_counter_value(g_ctx.pdh_cpu_usage, PDH_FMT_DOUBLE, NULL, &value) == ERROR_SUCCESS)
 		g_ctx.cpu_usage = value.doubleValue;
+	if (g_ctx.pdh_cpu_base_freq && pdh_get_formatted_counter_value(g_ctx.pdh_cpu_base_freq, PDH_FMT_LONG, NULL, &value) == ERROR_SUCCESS)
+		g_ctx.cpu_base_freq = (DWORD)value.longValue;
+	if (g_ctx.pdh_cpu_freq && pdh_get_formatted_counter_value(g_ctx.pdh_cpu_freq, PDH_FMT_DOUBLE, NULL, &value) == ERROR_SUCCESS)
+		g_ctx.cpu_freq = (DWORD)(value.doubleValue * 0.01 * g_ctx.cpu_base_freq);
 	if (g_ctx.pdh_net_recv && pdh_get_formatted_counter_value(g_ctx.pdh_net_recv, PDH_FMT_LARGE, NULL, &value) == ERROR_SUCCESS)
 		memcpy(g_ctx.net_recv, NWL_GetHumanSize(value.largeValue, NWLC->NwUnits, 1024), GNWC_STR_SIZE);
 	if (g_ctx.pdh_net_send && pdh_get_formatted_counter_value(g_ctx.pdh_net_send, PDH_FMT_LARGE, NULL, &value) == ERROR_SUCCESS)
@@ -348,8 +352,12 @@ gnwinfo_ctx_init(HINSTANCE inst, HWND wnd, struct nk_context* ctx, float width, 
 		LPCWSTR cpu_str = L"\\Processor Information(_Total)\\% Processor Time";
 		if (g_ctx.lib.NwOsInfo.dwMajorVersion >= 10)
 			cpu_str = L"\\Processor Information(_Total)\\% Processor Utility";
-		if (pdh_add_counter(g_ctx.pdh, cpu_str, 0, &g_ctx.pdh_cpu) != ERROR_SUCCESS)
-			g_ctx.pdh_cpu = NULL;
+		if (pdh_add_counter(g_ctx.pdh, cpu_str, 0, &g_ctx.pdh_cpu_usage) != ERROR_SUCCESS)
+			g_ctx.pdh_cpu_usage = NULL;
+		if (pdh_add_counter(g_ctx.pdh, L"\\Processor Information(_Total)\\% Processor Frequency", 0, &g_ctx.pdh_cpu_base_freq) != ERROR_SUCCESS)
+			g_ctx.pdh_cpu_base_freq = NULL;
+		if (pdh_add_counter(g_ctx.pdh, L"\\Processor Information(_Total)\\% Processor Performance", 0, &g_ctx.pdh_cpu_freq) != ERROR_SUCCESS)
+			g_ctx.pdh_cpu_freq = NULL;
 		if (pdh_add_counter(g_ctx.pdh, L"\\Network Interface(*)\\Bytes Sent/sec", 0, &g_ctx.pdh_net_send) != ERROR_SUCCESS)
 			g_ctx.pdh_net_send = NULL;
 		if (pdh_add_counter(g_ctx.pdh, L"\\Network Interface(*)\\Bytes Received/sec", 0, &g_ctx.pdh_net_recv) != ERROR_SUCCESS)
@@ -365,6 +373,8 @@ gnwinfo_ctx_init(HINSTANCE inst, HWND wnd, struct nk_context* ctx, float width, 
 		g_ctx.cpu_info = calloc((size_t)g_ctx.cpu_count, sizeof(GNW_CPU_INFO));
 	else
 		g_ctx.cpu_info = NULL;
+	NWL_GetRegDwordValue(HKEY_LOCAL_MACHINE, L"HARDWARE\\DESCRIPTION\\System\\CentralProcessor\\0", L"~MHz", &g_ctx.cpu_base_freq);
+	g_ctx.cpu_freq = g_ctx.cpu_base_freq;
 
 	NWL_GetHostname(g_ctx.sys_hostname);
 

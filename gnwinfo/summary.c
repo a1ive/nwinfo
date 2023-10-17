@@ -249,9 +249,9 @@ draw_processor(struct nk_context* ctx)
 	nk_layout_row(ctx, NK_DYNAMIC, 0, 4, (float[4]) { 0.3f, 0.4f, 0.3f - g_ctx.gui_ratio, g_ctx.gui_ratio });
 	nk_image_label(ctx, GET_PNG(IDR_PNG_CPU), gnwinfo_get_text(L"Processor"), NK_TEXT_LEFT, g_color_text_d);
 	nk_labelf_colored(ctx, NK_TEXT_LEFT, gnwinfo_get_color(g_ctx.cpu_usage, 70.0, 90.0),
-		"%.2f%% %s MHz",
+		"%.2f%% %lu MHz",
 		g_ctx.cpu_usage,
-		gnwinfo_get_node_attr(g_ctx.cpuid, "CPU Clock (MHz)"));
+		g_ctx.cpu_freq);
 	gnwinfo_draw_percent_prog(ctx, g_ctx.cpu_usage);
 	if (nk_button_image(ctx, GET_PNG(IDR_PNG_CPUID)))
 		g_ctx.window_flag |= GUI_WINDOW_CPUID;

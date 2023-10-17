@@ -131,13 +131,17 @@ typedef struct _GNW_CONTEXT
 
 #ifdef GNWINFO_ENABLE_PDH
 	PDH_HQUERY pdh;
-	PDH_HCOUNTER pdh_cpu;
+	PDH_HCOUNTER pdh_cpu_usage;
+	PDH_HCOUNTER pdh_cpu_freq;
+	PDH_HCOUNTER pdh_cpu_base_freq;
 	PDH_HCOUNTER pdh_net_recv;
 	PDH_HCOUNTER pdh_net_send;
 #endif
 
 	CHAR net_recv[GNWC_STR_SIZE];
 	CHAR net_send[GNWC_STR_SIZE];
+	DWORD cpu_freq;
+	DWORD cpu_base_freq;
 	double cpu_usage;
 	int cpu_count;
 	GNW_CPU_INFO* cpu_info;
