@@ -475,7 +475,7 @@ int wr0_driver_close(struct wr0_drv_t* drv)
 		drv->hhDriver = NULL;
 		drv->scManager = OpenSCManagerW(NULL, NULL, SC_MANAGER_ALL_ACCESS);
 		if (drv->scManager)
-			drv->scDriver = OpenServiceW(drv->scManager, drv->driver_obj, SERVICE_ALL_ACCESS);
+			drv->scDriver = OpenServiceW(drv->scManager, drv->driver_id, SERVICE_ALL_ACCESS);
 	}
 	if (drv->scDriver)
 	{
