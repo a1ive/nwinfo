@@ -115,7 +115,6 @@ draw_os(struct nk_context* ctx)
 static VOID
 draw_bios(struct nk_context* ctx)
 {
-
 	LPCSTR tpm = gnwinfo_get_node_attr(g_ctx.system, "TPM");
 	LPCSTR sb = gnwinfo_get_node_attr(g_ctx.uefi, "Secure Boot");
 	LPCSTR wsb = "";
@@ -128,11 +127,17 @@ draw_bios(struct nk_context* ctx)
 	else if (sb[0] == 'D')
 		wsb = gnwinfo_get_text(L"SecureBootOff");
 
-	nk_labelf_colored(ctx, NK_TEXT_LEFT, g_color_text_l,
-		"%s %s %s",
-		gnwinfo_get_node_attr(g_ctx.system, "Firmware"),
-		wsb,
-		tpm[0] == 'TPMv' ? tpm : "");
+	if (tpm[0] == 'v')
+		nk_labelf_colored(ctx, NK_TEXT_LEFT, g_color_text_l,
+			"%s %s TPM%s",
+			gnwinfo_get_node_attr(g_ctx.system, "Firmware"),
+			wsb,
+			tpm);
+	else
+		nk_labelf_colored(ctx, NK_TEXT_LEFT, g_color_text_l,
+			"%s %s",
+			gnwinfo_get_node_attr(g_ctx.system, "Firmware"),
+			wsb);
 
 	if (nk_button_image(ctx, GET_PNG(IDR_PNG_DMI)))
 		g_ctx.window_flag |= GUI_WINDOW_DMI;
