@@ -140,14 +140,9 @@ PrintCpuMsr(PNODE node, struct cpu_id_t* data)
 		value = cpu_msrinfo(NWLC->NwDrv, INFO_BUS_CLOCK);
 		if (value != CPU_INVALID_VALUE && value > 0)
 			NWL_NodeAttrSetf(node, "Bus Clock (MHz)", NAFLG_FMT_NUMERIC, "%.2lf", value / 100.0);
-		value = cpu_msrinfo(NWLC->NwDrv, INFO_PKG_ENERGY);
-		if (value != CPU_INVALID_VALUE && value > 0)
-			NWL_NodeAttrSetf(node, "Energy (J)", NAFLG_FMT_NUMERIC, "%.2lf", value / 100.0);
-#if 0
 		value = cpu_msrinfo(NWLC->NwDrv, INFO_PKG_POWER);
 		if (value != CPU_INVALID_VALUE && value > 0)
 			NWL_NodeAttrSetf(node, "Power (W)", NAFLG_FMT_NUMERIC, "%.2lf", value / 100.0);
-#endif
 		break;
 	}
 	if (affinity_saved)

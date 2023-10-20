@@ -638,7 +638,7 @@ static double get_info_pkg_power(struct msr_info_t* info)
 	x = get_info_pkg_energy(info);
 	if (x == (double)CPU_INVALID_VALUE / 100)
 		goto fail;
-	Sleep(10);
+	busy_loop_delay(10);
 	y = get_info_pkg_energy(info);
 	if (y == (double)CPU_INVALID_VALUE / 100 || x >= y)
 		goto fail;
