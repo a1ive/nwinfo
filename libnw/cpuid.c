@@ -143,6 +143,12 @@ PrintCpuMsr(PNODE node, struct cpu_id_t* data)
 		value = cpu_msrinfo(NWLC->NwDrv, INFO_PKG_POWER);
 		if (value != CPU_INVALID_VALUE && value > 0)
 			NWL_NodeAttrSetf(node, "Power (W)", NAFLG_FMT_NUMERIC, "%.2lf", value / 100.0);
+		value = cpu_msrinfo(NWLC->NwDrv, INFO_PKG_PL1);
+		if (value != CPU_INVALID_VALUE && value > 0)
+			NWL_NodeAttrSetf(node, "PL1 (W)", NAFLG_FMT_NUMERIC, "%.2lf", value / 100.0);
+		value = cpu_msrinfo(NWLC->NwDrv, INFO_PKG_PL2);
+		if (value != CPU_INVALID_VALUE && value > 0)
+			NWL_NodeAttrSetf(node, "PL2 (W)", NAFLG_FMT_NUMERIC, "%.2lf", value / 100.0);
 		break;
 	}
 	if (affinity_saved)

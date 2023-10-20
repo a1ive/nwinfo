@@ -127,6 +127,7 @@ static const uint32_t amd_msr[] = {
 #define MSR_TEMPERATURE_TARGET 0x1A2
 #define MSR_PERF_STATUS        0x198
 #define MSR_RAPL_POWER_UNIT    0x606
+#define MSR_PKG_POWER_LIMIT    0x610
 #define MSR_PKG_ENERGY_STATUS  0x611
 #define MSR_PLATFORM_INFO      0xCE
 static const uint32_t intel_msr[] = {
@@ -140,6 +141,7 @@ static const uint32_t intel_msr[] = {
 	MSR_TEMPERATURE_TARGET,
 	MSR_PERF_STATUS,
 	MSR_RAPL_POWER_UNIT,
+	MSR_PKG_POWER_LIMIT,
 	MSR_PKG_ENERGY_STATUS,
 	MSR_PLATFORM_INFO,
 	CPU_INVALID_VALUE
@@ -632,6 +634,31 @@ static double get_info_pkg_energy(struct msr_info_t* info)
 	return (double)CPU_INVALID_VALUE / 100;
 }
 
+static double get_info_pkg_pl1(struct msr_info_t* info)
+{
+	int err;
+	uint64_t PowerLimit1, PowerUnits;
+
+	if (info->id->vendor == VENDOR_INTEL) {
+		err = cpu_rdmsr_range(info->handle, MSR_PKG_POWER_LIMIT, 14, 0, &PowerLimit1);
+		err += cpu_rdmsr_range(info->handle, MSR_RAPL_POWER_UNIT, 3, 0, &PowerUnits);
+		if (!err) return (double)PowerLimit1 / (1ULL << PowerUnits);
+	}
+	return (double)CPU_INVALID_VALUE / 100;
+}
+
+static double get_info_pkg_pl2(struct msr_info_t* info)
+{
+	int err;
+	uint64_t PowerLimit2, PowerUnits;
+	if (info->id->vendor == VENDOR_INTEL) {
+		err = cpu_rdmsr_range(info->handle, MSR_PKG_POWER_LIMIT, 46, 32, &PowerLimit2);
+		err += cpu_rdmsr_range(info->handle, MSR_RAPL_POWER_UNIT, 3, 0, &PowerUnits);
+		if (!err) return (double)PowerLimit2 / (1ULL << PowerUnits);
+	}
+	return (double)CPU_INVALID_VALUE / 100;
+}
+
 static double get_info_pkg_power(struct msr_info_t* info)
 {
 	double x, y;
@@ -783,6 +810,10 @@ int cpu_msrinfo(struct wr0_drv_t* handle, cpu_msrinfo_request_t which)
 			return (int) (get_info_pkg_energy(&info) * 100);
 		case INFO_PKG_POWER:
 			return (int)(get_info_pkg_power(&info) * 100);
+		case INFO_PKG_PL1:
+			return (int)(get_info_pkg_pl1(&info) * 100);
+		case INFO_PKG_PL2:
+			return (int)(get_info_pkg_pl2(&info) * 100);
 		case INFO_BCLK:
 		case INFO_BUS_CLOCK:
 			return (int) (get_info_bus_clock(&info) * 100);
