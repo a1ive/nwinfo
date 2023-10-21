@@ -55,8 +55,10 @@ draw:
 	}
 }
 
+BOOL is_cpu_name_match(PNODE node, const PVOID ctx);
+
 static void
-draw_msr(struct nk_context* ctx, int index, PNODE cpu)
+draw_msr(struct nk_context* ctx, int index, PNODE cpu, LPCSTR brand)
 {
 	if (nk_group_begin(ctx, gnwinfo_get_text(L"MSR"), NK_WINDOW_BORDER | NK_WINDOW_TITLE))
 	{
@@ -64,8 +66,12 @@ draw_msr(struct nk_context* ctx, int index, PNODE cpu)
 		const float ratio[] = { 0.5f, 0.5f };
 		nk_layout_row(ctx, NK_DYNAMIC, 0, 2, ratio);
 
+		nk_label(ctx, gnwinfo_get_text(L"Slot"), NK_TEXT_LEFT);
+		nk_label_colored(ctx, gnwinfo_get_smbios_attr("4", "Socket Designation", (const PVOID)brand, is_cpu_name_match), NK_TEXT_LEFT, g_color_text_l);
 		nk_label(ctx, gnwinfo_get_text(L"Multiplier"), NK_TEXT_LEFT);
 		nk_label_colored(ctx, g_ctx.cpu_info[index].cpu_msr_multi, NK_TEXT_LEFT, g_color_text_l);
+		nk_label(ctx, gnwinfo_get_text(L"Base Clock"), NK_TEXT_LEFT);
+		nk_labelf_colored(ctx, NK_TEXT_LEFT, g_color_text_l, "%s MHz", gnwinfo_get_smbios_attr("4", "Current Speed (MHz)", (const PVOID)brand, is_cpu_name_match));
 		nk_label(ctx, gnwinfo_get_text(L"Bus Clock"), NK_TEXT_LEFT);
 		nk_labelf_colored(ctx, NK_TEXT_LEFT, g_color_text_l, "%.2f MHz", g_ctx.cpu_info[index].cpu_msr_bus);
 		nk_label(ctx, gnwinfo_get_text(L"Temperature"), NK_TEXT_LEFT);
@@ -98,6 +104,7 @@ gnwinfo_draw_cpuid_window(struct nk_context* ctx, float width, float height)
 	CHAR name[32];
 	CHAR buf[MAX_PATH];
 	PNODE cpu = NULL;
+	LPCSTR brand = NULL;
 	static int cpu_index = 0;
 	if (!(g_ctx.window_flag & GUI_WINDOW_CPUID))
 		return;
@@ -126,9 +133,10 @@ gnwinfo_draw_cpuid_window(struct nk_context* ctx, float width, float height)
 
 	snprintf(name, sizeof(name), "CPU%d", cpu_index);
 	cpu = NWL_NodeGetChild(g_ctx.cpuid, name);
+	brand = gnwinfo_get_node_attr(cpu, "Brand");
 
 	CPUID_ROW_BEGIN(2, 0.2f);
-	nk_label(ctx, gnwinfo_get_text(L"Brand"), NK_TEXT_LEFT);
+	nk_label(ctx, brand, NK_TEXT_LEFT);
 	CPUID_ROW_PUSH(0.8f);
 	nk_label_colored(ctx, gnwinfo_get_node_attr(cpu, "Brand"), NK_TEXT_LEFT, g_color_text_l);
 	CPUID_ROW_END;
@@ -190,7 +198,7 @@ gnwinfo_draw_cpuid_window(struct nk_context* ctx, float width, float height)
 	CPUID_ROW_PUSH(0.4f);
 	draw_cache(ctx, cpu);
 	CPUID_ROW_PUSH(0.4f);
-	draw_msr(ctx, cpu_index, cpu);
+	draw_msr(ctx, cpu_index, cpu, brand);
 	CPUID_ROW_END;
 
 out:

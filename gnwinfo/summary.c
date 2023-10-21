@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: Unlicense
 
 #include <windows.h>
-#include <winioctl.h>
 #include <shellapi.h>
 #include "gnwinfo.h"
 #include "utils.h"
@@ -35,8 +34,8 @@ gnwinfo_get_color(double value, double warn, double err)
 	return g_color_good;
 }
 
-static LPCSTR
-get_smbios_attr(LPCSTR type, LPCSTR key, PVOID ctx, BOOL(*cond)(PNODE node, PVOID ctx))
+LPCSTR
+gnwinfo_get_smbios_attr(LPCSTR type, LPCSTR key, const PVOID ctx, BOOL(*cond)(PNODE node, const PVOID ctx))
 {
 	INT i;
 	for (i = 0; g_ctx.smbios->Children[i].LinkedNode; i++)
@@ -146,7 +145,7 @@ draw_bios(struct nk_context* ctx)
 	{
 		nk_layout_row(ctx, NK_DYNAMIC, 0, 2, (float[2]) { 0.3f, 0.7f });
 		nk_space_label(ctx, gnwinfo_get_text(L"Vendor"), nk_false);
-		nk_label_colored(ctx, get_smbios_attr("0", "Vendor", NULL, NULL), NK_TEXT_LEFT, g_color_text_l);
+		nk_label_colored(ctx, gnwinfo_get_smbios_attr("0", "Vendor", NULL, NULL), NK_TEXT_LEFT, g_color_text_l);
 	}
 	if (g_ctx.main_flag & MAIN_B_VERSION)
 	{
@@ -154,13 +153,13 @@ draw_bios(struct nk_context* ctx)
 		nk_space_label(ctx, gnwinfo_get_text(L"Version"), nk_false);
 		nk_labelf_colored(ctx, NK_TEXT_LEFT, g_color_text_l,
 			"%s %s",
-			get_smbios_attr("0", "Version", NULL, NULL),
-			get_smbios_attr("0", "Release Date", NULL, NULL));
+			gnwinfo_get_smbios_attr("0", "Version", NULL, NULL),
+			gnwinfo_get_smbios_attr("0", "Release Date", NULL, NULL));
 	}
 }
 
 static BOOL
-is_motherboard(PNODE node, PVOID ctx)
+is_motherboard(PNODE node, const PVOID ctx)
 {
 	LPCSTR str = gnwinfo_get_node_attr(node, "Board Type");
 	return (strcmp(str, "Motherboard") == 0);
@@ -181,18 +180,18 @@ draw_computer(struct nk_context* ctx)
 		g_ctx.window_flag |= GUI_WINDOW_PCI;
 
 	nk_layout_row(ctx, NK_DYNAMIC, 0, 2, (float[2]) { 0.3f, 0.7f });
-	nk_space_label(ctx, get_smbios_attr("1", "Manufacturer", NULL, NULL), nk_true);
+	nk_space_label(ctx, gnwinfo_get_smbios_attr("1", "Manufacturer", NULL, NULL), nk_true);
 	nk_labelf_colored(ctx, NK_TEXT_LEFT, g_color_text_l,
 		"%s %s %s",
-		get_smbios_attr("1", "Product Name", NULL, NULL),
-		get_smbios_attr("3", "Type", NULL, NULL),
-		get_smbios_attr("1", "Serial Number", NULL, NULL));
+		gnwinfo_get_smbios_attr("1", "Product Name", NULL, NULL),
+		gnwinfo_get_smbios_attr("3", "Type", NULL, NULL),
+		gnwinfo_get_smbios_attr("1", "Serial Number", NULL, NULL));
 
-	nk_space_label(ctx, get_smbios_attr("2", "Manufacturer", NULL, is_motherboard), nk_true);
+	nk_space_label(ctx, gnwinfo_get_smbios_attr("2", "Manufacturer", NULL, is_motherboard), nk_true);
 	nk_labelf_colored(ctx, NK_TEXT_LEFT, g_color_text_l,
 		"%s %s",
-		get_smbios_attr("2", "Product Name", NULL, is_motherboard),
-		get_smbios_attr("2", "Serial Number", NULL, is_motherboard));
+		gnwinfo_get_smbios_attr("2", "Product Name", NULL, is_motherboard),
+		gnwinfo_get_smbios_attr("2", "Serial Number", NULL, is_motherboard));
 
 	if (strcmp(bat, "Charging") == 0)
 	{
@@ -236,13 +235,20 @@ draw_computer(struct nk_context* ctx)
 }
 
 static BOOL
-is_cache_level_equal(PNODE node, PVOID ctx)
+is_cache_level_equal(PNODE node, const PVOID ctx)
 {
-	UINT8 cache_level = *(PUINT8)ctx;
+	UINT8 cache_level = *(const PUINT8)ctx;
 	LPCSTR str = gnwinfo_get_node_attr(node, "Cache Level");
 	CHAR buf[] = "L1";
 	buf[1] += cache_level;
 	return (strcmp(str, buf) == 0);
+}
+
+BOOL
+is_cpu_name_match(PNODE node, const PVOID ctx)
+{
+	LPCSTR name = gnwinfo_get_node_attr(node, "Processor Version");
+	return (strcmp(name, (LPCSTR)ctx) == 0);
 }
 
 static VOID
@@ -266,10 +272,11 @@ draw_processor(struct nk_context* ctx)
 		snprintf(name, sizeof(name), "CPU%d", i);
 		PNODE cpu = NWL_NodeGetChild(g_ctx.cpuid, name);
 		CHAR buf[MAX_PATH];
+		LPCSTR brand = gnwinfo_get_node_attr(cpu, "Brand");
 
 		nk_layout_row(ctx, NK_DYNAMIC, 0, 2, (float[2]) { 0.3f, 0.7f });
 		nk_space_label(ctx, name, nk_false);
-		nk_label_colored(ctx, gnwinfo_get_node_attr(cpu, "Brand"), NK_TEXT_LEFT, g_color_text_l);
+		nk_label_colored(ctx, brand, NK_TEXT_LEFT, g_color_text_l);
 
 		if (!(g_ctx.main_flag & MAIN_CPU_DETAIL))
 			continue;
@@ -277,7 +284,10 @@ draw_processor(struct nk_context* ctx)
 		nk_layout_row(ctx, NK_DYNAMIC, 0, 3, (float[3]) { 0.3f, 0.4f, 0.3f });
 		nk_spacer(ctx);
 		snprintf(buf, MAX_PATH, "%s %s", gnwinfo_get_node_attr(cpu, "Cores"), gnwinfo_get_text(L"cores"));
-		snprintf(buf, MAX_PATH, "%s %s %s", buf, gnwinfo_get_node_attr(cpu, "Logical CPUs"), gnwinfo_get_text(L"threads"));
+		snprintf(buf, MAX_PATH, "%s %s %s %s", buf,
+			gnwinfo_get_node_attr(cpu, "Logical CPUs"),
+			gnwinfo_get_text(L"threads"),
+			gnwinfo_get_smbios_attr("4", "Socket Designation", (const PVOID)brand, is_cpu_name_match));
 		if (g_ctx.cpu_info[i].cpu_msr_power > 0.0)
 			snprintf(buf, MAX_PATH, "%s %.2fW", buf, g_ctx.cpu_info[i].cpu_msr_power);
 
@@ -293,7 +303,7 @@ draw_processor(struct nk_context* ctx)
 	{
 		LPCSTR cache_size[4];
 		for (UINT8 cache_level = 0; cache_level < 4; cache_level++)
-			cache_size[cache_level] = get_smbios_attr("7", "Installed Cache Size", &cache_level, is_cache_level_equal);
+			cache_size[cache_level] = gnwinfo_get_smbios_attr("7", "Installed Cache Size", &cache_level, is_cache_level_equal);
 
 		nk_layout_row(ctx, NK_DYNAMIC, 0, 2, (float[2]) { 0.3f, 0.7f });
 		nk_space_label(ctx, gnwinfo_get_text(L"Cache"), nk_false);
@@ -317,24 +327,24 @@ draw_processor(struct nk_context* ctx)
 static VOID
 draw_mem_capacity(struct nk_context* ctx)
 {
-	LPCSTR capacity = get_smbios_attr("16", "Max Capacity", NULL, NULL);
+	LPCSTR capacity = gnwinfo_get_smbios_attr("16", "Max Capacity", NULL, NULL);
 	if (capacity[0] != '-')
 	{
 		nk_space_label(ctx, gnwinfo_get_text(L"Max Capacity"), nk_false);
 		nk_labelf_colored(ctx, NK_TEXT_LEFT, g_color_text_l,
 			"%s %s %s",
-			get_smbios_attr("16", "Number of Slots", NULL, NULL),
+			gnwinfo_get_smbios_attr("16", "Number of Slots", NULL, NULL),
 			gnwinfo_get_text(L"slots"),
 			capacity);
 		return;
 	}
-	capacity = get_smbios_attr("5", "Max Memory Module Size (MB)", NULL, NULL);
+	capacity = gnwinfo_get_smbios_attr("5", "Max Memory Module Size (MB)", NULL, NULL);
 	if (capacity[0] != '-')
 	{
 		nk_space_label(ctx, gnwinfo_get_text(L"Max Capacity"), nk_false);
 		nk_labelf_colored(ctx, NK_TEXT_LEFT, g_color_text_l,
 			"%s %s %s MB",
-			get_smbios_attr("5", "Number of Slots", NULL, NULL),
+			gnwinfo_get_smbios_attr("5", "Number of Slots", NULL, NULL),
 			gnwinfo_get_text(L"slots"),
 			capacity);
 	}
