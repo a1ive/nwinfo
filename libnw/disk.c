@@ -529,20 +529,20 @@ PrintIsSsd(PNODE node, PHY_DRIVE_INFO* info, DWORD index)
 {
 	if (NWLC->NwOsInfo.dwMajorVersion >= 6)
 	{
-		STORAGE_PROPERTY_QUERY propQuery = { 0 };
+		STORAGE_PROPERTY_QUERY propQuery = { .QueryType = PropertyStandardQuery, .PropertyId = StorageDeviceSeekPenaltyProperty };
 		DEVICE_SEEK_PENALTY_DESCRIPTOR dspd = { 0 };
 		HANDLE hDisk = NWL_GetDiskHandleById(FALSE, FALSE, index);
-		if (!hDisk || hDisk == INVALID_HANDLE_VALUE)
-			return;
-		propQuery.QueryType = PropertyStandardQuery;
-		propQuery.PropertyId = StorageDeviceSeekPenaltyProperty;
-		if (DeviceIoControl(hDisk, IOCTL_STORAGE_QUERY_PROPERTY, &propQuery, sizeof(propQuery),
-			&dspd, sizeof(dspd), NULL, NULL))
+		if (hDisk && hDisk == INVALID_HANDLE_VALUE)
 		{
-			NWL_NodeAttrSetBool(node, "SSD", (dspd.IncursSeekPenalty == FALSE), 0);
+			if (DeviceIoControl(hDisk, IOCTL_STORAGE_QUERY_PROPERTY, &propQuery, sizeof(propQuery),
+				&dspd, sizeof(dspd), NULL, NULL))
+			{
+				NWL_NodeAttrSetBool(node, "SSD", (dspd.IncursSeekPenalty == FALSE), 0);
+				CloseHandle(hDisk);
+				return;
+			}
+			CloseHandle(hDisk);
 		}
-		CloseHandle(hDisk);
-		return;
 	}
 	if (info->BusType == BusTypeNvme)
 		NWL_NodeAttrSetBool(node, "SSD", TRUE, 0);
