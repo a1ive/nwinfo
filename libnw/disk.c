@@ -525,6 +525,30 @@ PrintSmartInfo(PNODE node, CDI_SMART* ptr, INT index)
 }
 
 static VOID
+PrintIsSsd(PNODE node, PHY_DRIVE_INFO* info, DWORD index)
+{
+	if (NWLC->NwOsInfo.dwMajorVersion >= 6)
+	{
+		STORAGE_PROPERTY_QUERY propQuery = { 0 };
+		DEVICE_SEEK_PENALTY_DESCRIPTOR dspd = { 0 };
+		HANDLE hDisk = NWL_GetDiskHandleById(FALSE, FALSE, index);
+		if (!hDisk || hDisk == INVALID_HANDLE_VALUE)
+			return;
+		propQuery.QueryType = PropertyStandardQuery;
+		propQuery.PropertyId = StorageDeviceSeekPenaltyProperty;
+		if (DeviceIoControl(hDisk, IOCTL_STORAGE_QUERY_PROPERTY, &propQuery, sizeof(propQuery),
+			&dspd, sizeof(dspd), NULL, NULL))
+		{
+			NWL_NodeAttrSetBool(node, "SSD", (dspd.IncursSeekPenalty == FALSE), 0);
+		}
+		CloseHandle(hDisk);
+		return;
+	}
+	if (info->BusType == BusTypeNvme)
+		NWL_NodeAttrSetBool(node, "SSD", TRUE, 0);
+}
+
+static VOID
 PrintDiskInfo(BOOL cdrom, PNODE node, CDI_SMART* smart)
 {
 	PHY_DRIVE_INFO* PhyDriveList = NULL;
@@ -574,8 +598,12 @@ PrintDiskInfo(BOOL cdrom, PNODE node, CDI_SMART* smart)
 			NWL_NodeAttrSetf(nd, "GPT GUID", NAFLG_FMT_GUID, "{%s}", NWL_GuidToStr(PhyDriveList[i].GptGuid));
 			break;
 		}
-		if (!cdrom && NWLC->DisableSmart == FALSE && smart)
-			PrintSmartInfo(nd, smart, GetSmartIndex(smart, i));
+		if (!cdrom)
+		{
+			PrintIsSsd(nd, &PhyDriveList[i], i);
+			if (NWLC->DisableSmart == FALSE && smart)
+				PrintSmartInfo(nd, smart, GetSmartIndex(smart, i));
+		}
 		if (PhyDriveList[i].VolumeCount)
 		{
 			DWORD j;
