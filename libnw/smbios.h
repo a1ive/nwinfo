@@ -490,6 +490,12 @@ typedef struct _TYPE_35_
 	UINT16 ThresholdHandle;
 } ManagementDeviceComponent, * PManagementDeviceComponent;
 
+typedef struct _TYPE_40_
+{
+	SMBIOSHEADER Header;
+	UINT8 NumofEntries;
+} AdditionalInformation, * PAdditionalInformation;
+
 typedef struct _TYPE_41_
 {
 	SMBIOSHEADER Header;

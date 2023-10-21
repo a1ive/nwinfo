@@ -1585,6 +1585,15 @@ static void ProcMemoryErrInfo64(PNODE tab, void* p)
 	NWL_NodeAttrSetf(tab, "Error Resolution", 0, "0x%08lX", pMemErrInfo->ErrResolution);
 }
 
+static void ProcAdditionalInfo(PNODE tab, void* p)
+{
+	PAdditionalInformation pInfo = (PAdditionalInformation)p;
+	NWL_NodeAttrSet(tab, "Description", "Additional Information", 0);
+	if (pInfo->Header.Length < 0x0b)
+		return;
+	NWL_NodeAttrSetf(tab, "Number of Entries", NAFLG_FMT_NUMERIC, "%u", pInfo->NumofEntries);
+}
+
 static const CHAR*
 pOnBoardDevExtTypeToStr(UCHAR Type)
 {
@@ -1824,6 +1833,9 @@ static void DumpSMBIOS(PNODE node, void* Addr, UINT Len, UINT8 Type)
 			break;
 		case 33:
 			ProcMemoryErrInfo64(tab, pHeader);
+			break;
+		case 40:
+			ProcAdditionalInfo(tab, pHeader);
 			break;
 		case 41:
 			ProcOnBoardDevicesExtInfo(tab, pHeader);
