@@ -310,7 +310,6 @@ static double get_info_min_multiplier(struct msr_info_t *info)
 {
 	int err;
 	double mult;
-	uint32_t addr;
 	uint64_t reg;
 
 	if(info->id->vendor == VENDOR_INTEL) {
@@ -331,9 +330,9 @@ static double get_info_min_multiplier(struct msr_info_t *info)
 	else if(info->id->vendor == VENDOR_AMD || info->id->vendor == VENDOR_HYGON) {
 		/* N.B.: Find the last P-state
 		get_amd_last_pstate_addr() returns the last P-state, MSR_PSTATE_0 <= addr <= MSR_PSTATE_7 */
-		addr = get_amd_last_pstate_addr(info);
+		uint32_t addr = get_amd_last_pstate_addr(info);
 		err  = get_amd_multipliers(info, addr, &mult);
-		if (!err) return mult;
+		if (!err && mult > 0.0) return mult;
 	}
 
 	return (double) CPU_INVALID_VALUE / 100;
@@ -362,7 +361,7 @@ static double get_info_cur_multiplier(struct msr_info_t *info)
 		MSRC001_0063[2:0] is CurPstate */
 		err  = cpu_rdmsr_range(info->handle, MSR_PSTATE_S, 2, 0, &reg);
 		err += get_amd_multipliers(info, MSR_PSTATE_0 + (uint32_t) reg, &mult);
-		if (!err) return mult;
+		if (!err && mult > 0.0) return mult;
 	}
 
 	return (double) CPU_INVALID_VALUE / 100;
@@ -402,7 +401,7 @@ static double get_info_max_multiplier(struct msr_info_t *info)
 		MSRC001_0064 is Pb0
 		Pb0 is the highest-performance boosted P-state */
 		err = get_amd_multipliers(info, MSR_PSTATE_0, &mult);
-		if (!err) return mult;
+		if (!err && mult > 0.0) return mult;
 	}
 
 	return (double) CPU_INVALID_VALUE / 100;

@@ -163,25 +163,8 @@ INTERNAL_SCOPE GROUP_AFFINITY savedGroupAffinity;
 
 bool save_cpu_affinity(void)
 {
-	HMODULE hMod = GetModuleHandleW(L"kernel32");
-	BOOL (WINAPI *NTGetThreadGroupAffinity)(HANDLE hThread, PGROUP_AFFINITY GroupAffinity) = NULL;
 	HANDLE thread = GetCurrentThread();
-	if (hMod)
-		*(FARPROC*)&NTGetThreadGroupAffinity = GetProcAddress(hMod, "NTGetThreadGroupAffinity");
-	if (NTGetThreadGroupAffinity)
-		return NTGetThreadGroupAffinity(thread, &savedGroupAffinity);
-
-	/* Credits to https://stackoverflow.com/questions/6601862/query-thread-not-process-processor-affinity#6601917 */
-	DWORD_PTR threadAffinityMask = 1;
-	while (threadAffinityMask) {
-		savedGroupAffinity.Mask = SetThreadAffinityMask(thread, threadAffinityMask);
-		if(savedGroupAffinity.Mask)
-			return SetThreadAffinityMask(thread, savedGroupAffinity.Mask);
-		else if (GetLastError() != ERROR_INVALID_PARAMETER)
-			return false;
-		threadAffinityMask <<= 1; // try next CPU
-	}
-	return false;
+	return GetThreadGroupAffinity(thread, &savedGroupAffinity);
 }
 
 bool restore_cpu_affinity(void)
