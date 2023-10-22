@@ -94,11 +94,12 @@ draw_os(struct nk_context* ctx)
 		nk_space_label(ctx, gnwinfo_get_text(L"Login Status"), nk_false);
 		nk_labelf_colored(ctx, NK_TEXT_LEFT,
 			g_color_text_l,
-			"%s@%s%s%s",
+			"%s@%s%s%s%s",
 			gnwinfo_get_node_attr(g_ctx.system, "Username"),
 			g_ctx.sys_hostname,
 			strcmp(gnwinfo_get_node_attr(g_ctx.system, "Safe Mode"), "Yes") == 0 ? " SafeMode" : "",
-			strcmp(gnwinfo_get_node_attr(g_ctx.system, "BitLocker Boot"), "Yes") == 0 ? " BitLocker" : "");
+			strcmp(gnwinfo_get_node_attr(g_ctx.system, "BitLocker Boot"), "Yes") == 0 ? " BitLocker" : "",
+			strcmp(gnwinfo_get_node_attr(g_ctx.system, "VHD Boot"), "Yes") == 0 ? " VHD" : "");
 		if (nk_button_image(ctx, GET_PNG(IDR_PNG_EDIT)))
 			gnwinfo_init_hostname_window(ctx);
 	}

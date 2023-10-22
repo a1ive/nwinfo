@@ -414,6 +414,7 @@ static void PrintMemInfo(PNODE node)
 
 static void PrintBootInfo(PNODE node)
 {
+	BOOL bVhdBoot;
 	DWORD dwType;
 	DWORD dwBitLocker = 0;
 	HANDLE hFile;
@@ -447,6 +448,8 @@ static void PrintBootInfo(PNODE node)
 	}
 	NWL_GetRegDwordValue(HKEY_LOCAL_MACHINE, L"SYSTEM\\CurrentControlSet\\Control\\BitlockerStatus", L"BootStatus", &dwBitLocker);
 	NWL_NodeAttrSetBool(node, "BitLocker Boot", dwBitLocker, 0);
+	if (IsNativeVhdBoot(&bVhdBoot))
+		NWL_NodeAttrSetBool(node, "VHD Boot", bVhdBoot, 0);
 }
 
 PNODE NW_System(VOID)
