@@ -8,20 +8,14 @@
 extern "C" CDI_SMART* WINAPI
 cdi_create_smart(VOID)
 {
-	auto ata = new CDI_SMART;
 	//SetDebugMode(1);
-
-	return ata;
+	return new CDI_SMART;
 }
 
 extern "C" VOID WINAPI
 cdi_destroy_smart(CDI_SMART * ptr)
 {
-	if (ptr)
-	{
-		delete ptr;
-		ptr = nullptr;
-	}
+	delete ptr;
 }
 
 inline BOOL
@@ -87,16 +81,12 @@ cdi_update_smart(CDI_SMART * ptr, INT index)
 	return ptr->UpdateSmartInfo(index);
 }
 
-CHAR* cs_to_str(CString str)
+inline WCHAR* cs_to_wcs(const CString& str)
 {
-	auto len = str.GetLength() + 1;
-	auto buff = new TCHAR[len];
-	memcpy(buff, (LPCTSTR)str, sizeof(TCHAR) * (len));
-	auto charBuf = (CHAR*)CoTaskMemAlloc(len);
-	size_t converted;
-	wcstombs_s(&converted, charBuf, len, buff, len);
-	delete[] buff;
-	return charBuf;
+	size_t len = str.GetLength() + 1;
+	auto ptr = (WCHAR*)CoTaskMemAlloc(len * sizeof(WCHAR));
+	wcscpy_s(ptr, len, str.GetString());
+	return ptr;
 }
 
 extern "C" INT WINAPI
@@ -227,60 +217,61 @@ cdi_get_dword(CDI_SMART * ptr, INT index, enum CDI_ATA_DWORD attr)
 	return 0;
 }
 
-extern "C" CHAR* WINAPI
+extern "C" WCHAR* WINAPI
 cdi_get_string(CDI_SMART * ptr, INT index, enum CDI_ATA_STRING attr)
 {
 	switch (attr)
 	{
 	case CDI_STRING_SN:
-		return cs_to_str(ptr->vars[index].SerialNumber);
+		return cs_to_wcs(ptr->vars[index].SerialNumber);
 	case CDI_STRING_FIRMWARE:
-		return cs_to_str(ptr->vars[index].FirmwareRev);
+		return cs_to_wcs(ptr->vars[index].FirmwareRev);
 	case CDI_STRING_MODEL:
-		return cs_to_str(ptr->vars[index].Model);
+		return cs_to_wcs(ptr->vars[index].Model);
 	case CDI_STRING_DRIVE_MAP:
-		return cs_to_str(ptr->vars[index].DriveMap);
+		return cs_to_wcs(ptr->vars[index].DriveMap);
 	case CDI_STRING_TRANSFER_MODE_MAX:
-		return cs_to_str(ptr->vars[index].MaxTransferMode);
+		return cs_to_wcs(ptr->vars[index].MaxTransferMode);
 	case CDI_STRING_TRANSFER_MODE_CUR:
-		return cs_to_str(ptr->vars[index].CurrentTransferMode);
+		return cs_to_wcs(ptr->vars[index].CurrentTransferMode);
 	case CDI_STRING_INTERFACE:
-		return cs_to_str(ptr->vars[index].Interface);
+		return cs_to_wcs(ptr->vars[index].Interface);
 	case CDI_STRING_VERSION_MAJOR:
-		return cs_to_str(ptr->vars[index].MajorVersion);
+		return cs_to_wcs(ptr->vars[index].MajorVersion);
 	case CDI_STRING_VERSION_MINOR:
-		return cs_to_str(ptr->vars[index].MinorVersion);
+		return cs_to_wcs(ptr->vars[index].MinorVersion);
 	case CDI_STRING_PNP_ID:
-		return cs_to_str(ptr->vars[index].PnpDeviceId);
+		return cs_to_wcs(ptr->vars[index].PnpDeviceId);
 	case CDI_STRING_SMART_KEY:
-		return cs_to_str(ptr->vars[index].SmartKeyName);
+		return cs_to_wcs(ptr->vars[index].SmartKeyName);
 	}
-	return NULL;
+	return nullptr;
 }
 
 extern "C" VOID WINAPI
-cdi_free_string(CHAR* ptr)
+cdi_free_string(WCHAR* ptr)
 {
 	if (ptr)
 		CoTaskMemFree(ptr);
 }
 
-extern "C" CHAR* WINAPI
+extern "C" WCHAR* WINAPI
 cdi_get_smart_name(CDI_SMART * ptr, INT index, BYTE id)
 {
 	TCHAR ini[MAX_PATH];
-	GetModuleFileName(NULL, ini, MAX_PATH);
+	GetModuleFileNameW(nullptr, ini, MAX_PATH);
 	PathCchRemoveFileSpec(ini, MAX_PATH);
 	PathCchAppend(ini, MAX_PATH, L"smart.ids");
 
 	CString key, val;
 	key.Format(_T("%02X"), id);
-	GetPrivateProfileStringFx(ptr->vars[index].SmartKeyName, key, _T("Vendor Specific"), val.GetBuffer(256), 256, ini);
+	GetPrivateProfileStringFx(ptr->vars[index].SmartKeyName.GetString(),
+		key.GetString(), _T("Vendor Specific"), val.GetBuffer(256), 256, ini);
 	val.ReleaseBuffer();
-	return cs_to_str(val);
+	return cs_to_wcs(val);
 }
 
-extern "C" CHAR* WINAPI
+extern "C" WCHAR* WINAPI
 cdi_get_smart_format(CDI_SMART * ptr, INT index)
 {
 	CString fmt;
@@ -306,7 +297,7 @@ cdi_get_smart_format(CDI_SMART * ptr, INT index)
 			fmt = _T("Cur Wor --- RawValues(6)");
 	}
 		
-	return cs_to_str(fmt);
+	return cs_to_wcs(fmt);
 }
 
 extern "C" BYTE WINAPI
@@ -315,7 +306,7 @@ cdi_get_smart_id(CDI_SMART * ptr, INT index, INT attr)
 	return ptr->vars[index].Attribute[attr].Id;
 }
 
-extern "C" CHAR* WINAPI
+extern "C" WCHAR* WINAPI
 cdi_get_smart_value(CDI_SMART * ptr, INT index, INT attr, BOOL hex)
 {
 	CString cstr;
@@ -395,7 +386,7 @@ cdi_get_smart_value(CDI_SMART * ptr, INT index, INT attr, BOOL hex)
 		}
 	}
 
-	return cs_to_str(cstr);
+	return cs_to_wcs(cstr);
 }
 
 extern "C" INT WINAPI

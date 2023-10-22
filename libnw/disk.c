@@ -141,14 +141,14 @@ static DWORD GetDriveCount(BOOL Cdrom)
 		Value = 0;
 	return Value;
 }
-
+#if 0
 static HANDLE GetHandleByLetter(WCHAR Letter)
 {
 	WCHAR PhyPath[] = L"\\\\.\\A:";
 	PhyPath[4] = Letter;
 	return CreateFileW(PhyPath, GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE, 0, OPEN_EXISTING, 0, 0);
 }
-
+#endif
 static WCHAR *GetDriveHwId(BOOL Cdrom, DWORD Drive)
 {
 	DWORD dwType;
@@ -395,7 +395,7 @@ PrintSmartInfo(PNODE node, CDI_SMART* ptr, INT index)
 	INT n;
 	DWORD d;
 	DWORD i, count;
-	CHAR* str;
+	WCHAR* str;
 	BOOL ssd = FALSE;
 	BOOL nvme = FALSE;
 
@@ -412,15 +412,15 @@ PrintSmartInfo(PNODE node, CDI_SMART* ptr, INT index)
 		NWL_NodeAttrSet(node, "Health Status", cdi_get_health_status(cdi_get_int(ptr, index, CDI_INT_DISK_STATUS)), 0);
 
 	str = cdi_get_string(ptr, index, CDI_STRING_TRANSFER_MODE_CUR);
-	NWL_NodeAttrSet(node, "Current Transfer Mode", str, 0);
+	NWL_NodeAttrSet(node, "Current Transfer Mode", NWL_Ucs2ToUtf8(str), 0);
 	cdi_free_string(str);
 
 	str = cdi_get_string(ptr, index, CDI_STRING_TRANSFER_MODE_MAX);
-	NWL_NodeAttrSet(node, "Max Transfer Mode", str, 0);
+	NWL_NodeAttrSet(node, "Max Transfer Mode", NWL_Ucs2ToUtf8(str), 0);
 	cdi_free_string(str);
 
 	str = cdi_get_string(ptr, index, CDI_STRING_VERSION_MAJOR);
-	NWL_NodeAttrSet(node, "Standard", str, 0);
+	NWL_NodeAttrSet(node, "Standard", NWL_Ucs2ToUtf8(str), 0);
 	cdi_free_string(str);
 
 	{
@@ -505,20 +505,20 @@ PrintSmartInfo(PNODE node, CDI_SMART* ptr, INT index)
 	if (count)
 	{
 		str = cdi_get_smart_format(ptr, index);
-		NWL_NodeAttrSet(node, "SMART Format", str, 0);
+		NWL_NodeAttrSet(node, "SMART Format", NWL_Ucs2ToUtf8(str), 0);
 		cdi_free_string(str);
 	}
 	for (i = 0; i < count; i++)
 	{
 		char key[] = "SMART XX";
-		char* val;
-		int id = cdi_get_smart_id(ptr, index, i);
+		WCHAR* val;
+		BYTE id = cdi_get_smart_id(ptr, index, i);
 		if (id == 0)
 			continue;
 		str = cdi_get_smart_name(ptr, index, id);
 		val = cdi_get_smart_value(ptr, index, i, TRUE);
 		snprintf(key, sizeof(key), "SMART %02X", id);
-		NWL_NodeAttrSetf(node, key, 0, "%s %s", val, str);
+		NWL_NodeAttrSetf(node, key, 0, "%ls %s", val, NWL_Ucs2ToUtf8(str));
 		cdi_free_string(str);
 		cdi_free_string(val);
 	}

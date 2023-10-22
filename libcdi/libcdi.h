@@ -149,13 +149,13 @@ INT			WINAPI cdi_get_disk_count(CDI_SMART* ptr);
 BOOL		WINAPI cdi_get_bool(CDI_SMART* ptr, INT index, enum CDI_ATA_BOOL attr);
 INT			WINAPI cdi_get_int(CDI_SMART* ptr, INT index, enum CDI_ATA_INT attr);
 DWORD		WINAPI cdi_get_dword(CDI_SMART* ptr, INT index, enum CDI_ATA_DWORD attr);
-CHAR*		WINAPI cdi_get_string(CDI_SMART* ptr, INT index, enum CDI_ATA_STRING attr);
-VOID		WINAPI cdi_free_string(CHAR* ptr);
+WCHAR*		WINAPI cdi_get_string(CDI_SMART* ptr, INT index, enum CDI_ATA_STRING attr);
+VOID		WINAPI cdi_free_string(WCHAR* ptr);
 
-CHAR*		WINAPI cdi_get_smart_name(CDI_SMART* ptr, INT index, BYTE id);
-CHAR*		WINAPI cdi_get_smart_format(CDI_SMART* ptr, INT index);
+WCHAR*		WINAPI cdi_get_smart_name(CDI_SMART* ptr, INT index, BYTE id);
+WCHAR*		WINAPI cdi_get_smart_format(CDI_SMART* ptr, INT index);
 BYTE		WINAPI cdi_get_smart_id(CDI_SMART* ptr, INT index, INT attr);
-CHAR*		WINAPI cdi_get_smart_value(CDI_SMART* ptr, INT index, INT attr, BOOL hex);
+WCHAR*		WINAPI cdi_get_smart_value(CDI_SMART* ptr, INT index, INT attr, BOOL hex);
 INT			WINAPI cdi_get_smart_status(CDI_SMART* ptr, INT index, INT attr);
 
 static inline LPCSTR
