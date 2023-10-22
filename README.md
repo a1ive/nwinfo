@@ -20,7 +20,11 @@ For Windows 11, the "Memory Integrity" option should be disabled.
 
 ![win11](doc/win11.png)
 
-## Usage
+## GUI Preview
+
+![preview](doc/demo.png)
+
+## CLI Usage
 ```
 .\nwinfo.exe OPTIONS
 OPTIONS:
