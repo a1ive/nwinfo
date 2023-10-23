@@ -245,13 +245,6 @@ is_cache_level_equal(PNODE node, const PVOID ctx)
 	return (strcmp(str, buf) == 0);
 }
 
-BOOL
-is_cpu_name_match(PNODE node, const PVOID ctx)
-{
-	LPCSTR name = gnwinfo_get_node_attr(node, "Processor Version");
-	return (strcmp(name, (LPCSTR)ctx) == 0);
-}
-
 static VOID
 draw_processor(struct nk_context* ctx)
 {
@@ -285,10 +278,9 @@ draw_processor(struct nk_context* ctx)
 		nk_layout_row(ctx, NK_DYNAMIC, 0, 3, (float[3]) { 0.3f, 0.4f, 0.3f });
 		nk_spacer(ctx);
 		snprintf(buf, MAX_PATH, "%s %s", gnwinfo_get_node_attr(cpu, "Cores"), gnwinfo_get_text(L"cores"));
-		snprintf(buf, MAX_PATH, "%s %s %s %s", buf,
+		snprintf(buf, MAX_PATH, "%s %s %s", buf,
 			gnwinfo_get_node_attr(cpu, "Logical CPUs"),
-			gnwinfo_get_text(L"threads"),
-			gnwinfo_get_smbios_attr("4", "Socket Designation", (const PVOID)brand, is_cpu_name_match));
+			gnwinfo_get_text(L"threads"));
 		if (g_ctx.cpu_info[i].cpu_msr_power > 0.0)
 			snprintf(buf, MAX_PATH, "%s %.2fW", buf, g_ctx.cpu_info[i].cpu_msr_power);
 

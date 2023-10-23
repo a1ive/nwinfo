@@ -55,7 +55,12 @@ draw:
 	}
 }
 
-BOOL is_cpu_name_match(PNODE node, const PVOID ctx);
+static BOOL
+is_cpu_name_match(PNODE node, const PVOID ctx)
+{
+	LPCSTR name = gnwinfo_get_node_attr(node, "Processor Version");
+	return (strcmp(name, (LPCSTR)ctx) == 0);
+}
 
 static void
 draw_msr(struct nk_context* ctx, int index, PNODE cpu, LPCSTR brand)
