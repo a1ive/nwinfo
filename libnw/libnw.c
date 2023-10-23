@@ -27,6 +27,7 @@ VOID NW_Init(PNWLIB_CONTEXT pContext)
 	NWLC->AcpiTable = 0;
 	NWLC->SmbiosType = 127;
 	NWL_NtGetVersion(&NWLC->NwOsInfo);
+	GetNativeSystemInfo(&NWLC->NwSi);
 	NWLC->NwRoot = NWL_NodeAlloc("NWinfo", 0);
 	NWLC->NwDrv = wr0_driver_open();
 	NWLC->NwRsdp = NWL_GetRsdp();

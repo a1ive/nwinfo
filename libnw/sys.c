@@ -88,7 +88,7 @@ static const CHAR* WinServer2016BuildNumber(DWORD dwBuildNumber)
 }
 
 static const CHAR*
-OsVersionToStr(OSVERSIONINFOEXW* p)
+OsVersionToStr(OSVERSIONINFOEXW* p, SYSTEM_INFO* si)
 {
 	if (p->dwMajorVersion == 10 && p->dwMinorVersion == 0)
 	{
@@ -128,10 +128,12 @@ OsVersionToStr(OSVERSIONINFOEXW* p)
 	}
 	if (p->dwMajorVersion == 5 && p->dwMinorVersion == 2)
 	{
-		if (p->wSuiteMask & VER_SUITE_WH_SERVER)
+		if (GetSystemMetrics(SM_SERVERR2) != 0)
+			return "Server 2003 R2";
+		else if (p->wSuiteMask & VER_SUITE_WH_SERVER)
 			return "Home Server";
-		else if (p->wProductType == VER_NT_WORKSTATION)
-			return "XP x64";
+		else if (p->wProductType == VER_NT_WORKSTATION && si->wProcessorArchitecture == PROCESSOR_ARCHITECTURE_AMD64)
+			return "XP"; // Windows XP Professional x64 Edition
 		else
 			return "Server 2003";
 	}
@@ -159,9 +161,11 @@ static void PrintOsVer(PNODE node)
 		snprintf(szSP, sizeof(szSP), " SP%u", NWLC->NwOsInfo.wServicePackMajor);
 	else
 		szSP[0] = '\0';
-	NWL_NodeAttrSetf(node, "OS", 0, "Windows %s%s", OsVersionToStr(&NWLC->NwOsInfo), szSP);
+	NWL_NodeAttrSetf(node, "OS", 0, "Windows %s%s", OsVersionToStr(&NWLC->NwOsInfo, &NWLC->NwSi), szSP);
 	NWL_NodeAttrSetf(node, "Build Number", 0, "%lu.%lu.%lu",
 		NWLC->NwOsInfo.dwMajorVersion, NWLC->NwOsInfo.dwMinorVersion, NWLC->NwOsInfo.dwBuildNumber);
+	if (NWL_GetRegDwordValue(HKEY_LOCAL_MACHINE, L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion", L"UBR", &dwSize) == 0)
+		NWL_NodeAttrSetf(node, "UBR", NAFLG_FMT_NUMERIC, "%lu", dwSize);
 	lpEdition = NWL_NtGetRegValue(HKEY_LOCAL_MACHINE, L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion", L"EditionID", &dwSize, &dwType);
 	if (lpEdition)
 	{
@@ -250,7 +254,6 @@ static void PrintOsInfo(PNODE node)
 {
 	DWORD dwType;
 	DWORD bufCharCount = NWINFO_WCS_SIZE;
-	SYSTEM_INFO siInfo;
 	WCHAR* infoBuf = (WCHAR*)NWLC->NwBuf;
 	WCHAR* szHardwareId;
 	NWL_GetHostname((CHAR*)NWLC->NwBuf);
@@ -270,8 +273,7 @@ static void PrintOsInfo(PNODE node)
 		NWL_NodeAttrSet(node, "Windows Directory", NWL_Ucs2ToUtf8(infoBuf), 0);
 	NWL_GetUptime((CHAR*)NWLC->NwBuf, NWINFO_BUFSZ);
 	NWL_NodeAttrSet(node, "Uptime", (CHAR*)NWLC->NwBuf, 0);
-	GetNativeSystemInfo(&siInfo);
-	switch (siInfo.wProcessorArchitecture)
+	switch (NWLC->NwSi.wProcessorArchitecture)
 	{
 	case PROCESSOR_ARCHITECTURE_AMD64:
 		NWL_NodeAttrSet(node, "Processor Architecture", "x64", 0);

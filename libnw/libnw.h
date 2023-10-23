@@ -53,6 +53,7 @@ typedef struct _NWLIB_CONTEXT
 	VOID (*SpdProgress) (LPCSTR lpszText);
 
 	OSVERSIONINFOEXW NwOsInfo;
+	SYSTEM_INFO NwSi;
 
 	struct cpu_raw_data_array_t* NwCpuRaw;
 	struct system_id_t* NwCpuid;
