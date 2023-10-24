@@ -505,6 +505,7 @@ draw_volume(struct nk_context* ctx, PNODE disk, BOOL cdrom)
 		PNODE tab = vol->Children[i].LinkedNode;
 		LPCSTR path = gnwinfo_get_node_attr(tab, "Path");
 		LPCSTR drive = get_drive_letter(tab);
+		double percent = strtod(gnwinfo_get_node_attr(tab, "Usage"), NULL);
 		if (strcmp(path, g_ctx.sys_disk) == 0)
 			img = GET_PNG(IDR_PNG_OS);
 		if (cdrom)
@@ -517,7 +518,14 @@ draw_volume(struct nk_context* ctx, PNODE disk, BOOL cdrom)
 			gnwinfo_get_node_attr(tab, "Total Space"),
 			gnwinfo_get_node_attr(tab, "Filesystem"),
 			gnwinfo_get_node_attr(tab, "Label"));
-		gnwinfo_draw_percent_prog(ctx, strtod(gnwinfo_get_node_attr(tab, "Usage"), NULL));
+		if (g_ctx.main_flag & MAIN_VOLUME_PROG)
+			gnwinfo_draw_percent_prog(ctx, percent);
+		else
+			nk_labelf_colored(ctx, NK_TEXT_LEFT, gnwinfo_get_color(percent, 70.0, 90.0),
+				"%.0f%% %s: %s",
+				percent,
+				gnwinfo_get_text(L"Free"),
+				gnwinfo_get_node_attr(tab, "Free Space"));
 		if (nk_button_image(ctx, img))
 			open_folder(drive, gnwinfo_get_node_attr(tab, "Volume GUID"));
 	}

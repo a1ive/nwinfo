@@ -72,6 +72,7 @@ nk_combo_begin_color_dynamic(struct nk_context* ctx, struct nk_color color);
 #define MAIN_NET_UNIT_B     (1U << 28)
 #define MAIN_OS_EDITIONID   (1U << 29)
 #define MAIN_OS_BUILD       (1U << 30)
+#define MAIN_VOLUME_PROG    (1U << 31)
 
 #define GNWC_STR_SIZE       64
 
