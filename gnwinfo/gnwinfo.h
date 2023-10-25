@@ -238,6 +238,6 @@ LPCSTR gnwinfo_get_text(LPCWSTR text);
 void gnwinfo_set_ini_value(LPCWSTR section, LPCWSTR key, LPCWSTR _Printf_format_string_ format, ...);
 
 LPCSTR gnwinfo_get_node_attr(PNODE node, LPCSTR key);
-LPCSTR gnwinfo_get_smbios_attr(LPCSTR type, LPCSTR key, const PVOID ctx, BOOL(*cond)(PNODE node, const PVOID ctx));
+LPCSTR gnwinfo_get_smbios_attr(LPCSTR type, LPCSTR key, PVOID ctx, BOOL(*cond)(PNODE node, PVOID ctx));
 struct nk_color gnwinfo_get_color(double value, double warn, double err);
 void gnwinfo_draw_percent_prog(struct nk_context* ctx, double percent);

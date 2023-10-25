@@ -35,7 +35,7 @@ gnwinfo_get_color(double value, double warn, double err)
 }
 
 LPCSTR
-gnwinfo_get_smbios_attr(LPCSTR type, LPCSTR key, const PVOID ctx, BOOL(*cond)(PNODE node, const PVOID ctx))
+gnwinfo_get_smbios_attr(LPCSTR type, LPCSTR key, PVOID ctx, BOOL(*cond)(PNODE node, PVOID ctx))
 {
 	INT i;
 	for (i = 0; g_ctx.smbios->Children[i].LinkedNode; i++)

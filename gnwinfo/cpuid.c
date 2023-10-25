@@ -56,7 +56,7 @@ draw:
 }
 
 static BOOL
-is_cpu_name_match(PNODE node, const PVOID ctx)
+is_cpu_name_match(PNODE node, PVOID ctx)
 {
 	LPCSTR name = gnwinfo_get_node_attr(node, "Processor Version");
 	return (strcmp(name, (LPCSTR)ctx) == 0);
@@ -71,8 +71,8 @@ draw_msr(struct nk_context* ctx, int index, PNODE cpu, LPCSTR brand)
 		const float ratio[] = { 0.5f, 0.5f };
 		nk_layout_row(ctx, NK_DYNAMIC, 0, 2, ratio);
 
-		nk_label(ctx, gnwinfo_get_text(L"Slot"), NK_TEXT_LEFT);
-		nk_label_colored(ctx, gnwinfo_get_smbios_attr("4", "Socket Designation", (const PVOID)brand, is_cpu_name_match), NK_TEXT_LEFT, g_color_text_l);
+		nk_label(ctx, gnwinfo_get_text(L"Socket"), NK_TEXT_LEFT);
+		nk_label_colored(ctx, gnwinfo_get_smbios_attr("4", "Socket Designation", (PVOID)brand, is_cpu_name_match), NK_TEXT_LEFT, g_color_text_l);
 		nk_label(ctx, gnwinfo_get_text(L"Multiplier"), NK_TEXT_LEFT);
 		nk_label_colored(ctx, g_ctx.cpu_info[index].cpu_msr_multi, NK_TEXT_LEFT, g_color_text_l);
 		nk_label(ctx, gnwinfo_get_text(L"Base Clock"), NK_TEXT_LEFT);
@@ -80,7 +80,7 @@ draw_msr(struct nk_context* ctx, int index, PNODE cpu, LPCSTR brand)
 		nk_label(ctx, gnwinfo_get_text(L"Bus Clock"), NK_TEXT_LEFT);
 		nk_labelf_colored(ctx, NK_TEXT_LEFT, g_color_text_l, "%.2f MHz", g_ctx.cpu_info[index].cpu_msr_bus);
 		nk_label(ctx, gnwinfo_get_text(L"Temperature"), NK_TEXT_LEFT);
-		nk_labelf_colored(ctx, NK_TEXT_LEFT, g_color_text_l, u8"%d \u00B0C", g_ctx.cpu_info[index].cpu_msr_temp);
+		nk_labelf_colored(ctx, NK_TEXT_LEFT, g_color_text_l, u8"%d \u2103", g_ctx.cpu_info[index].cpu_msr_temp);
 		nk_label(ctx, gnwinfo_get_text(L"Voltage"), NK_TEXT_LEFT);
 		nk_labelf_colored(ctx, NK_TEXT_LEFT, g_color_text_l, "%.2f V", g_ctx.cpu_info[index].cpu_msr_volt);
 		nk_label(ctx, gnwinfo_get_text(L"Power"), NK_TEXT_LEFT);
