@@ -41,8 +41,12 @@ nk_image_label(struct nk_context* ctx, struct nk_image img,
 	const char* str, nk_flags align, struct nk_color color);
 
 void
-nk_text_hover(struct nk_context* ctx, const char* str,
+nk_label_hover(struct nk_context* ctx, const char* str,
 	nk_flags alignment, struct nk_color color, nk_bool hover, nk_bool space);
+
+void
+nk_labelf_hover(struct nk_context* ctx,
+	nk_flags alignment, struct nk_color color, nk_bool hover, nk_bool space, const char* fmt, ...);
 
 nk_bool
 nk_combo_begin_color_dynamic(struct nk_context* ctx, struct nk_color color);
@@ -195,26 +199,6 @@ extern struct nk_color g_color_unknown;
 extern struct nk_color g_color_text_l;
 extern struct nk_color g_color_text_d;
 extern struct nk_color g_color_back;
-
-static inline void
-nk_space_label(struct nk_context* ctx, const char* str, nk_bool hover)
-{
-	if (g_ctx.window_flag)
-		hover = nk_false;
-	nk_text_hover(ctx, str, NK_TEXT_LEFT, ctx->style.text.color, hover, nk_true);
-}
-
-static inline void
-nk_space_labelf(struct nk_context* ctx, nk_bool hover, const char* fmt, ...)
-{
-	va_list args;
-	va_start(args, fmt);
-	vsnprintf_s(g_ctx.lib.NwBuf, NWINFO_BUFSZ, _TRUNCATE, fmt, args);
-	va_end(args);
-	if (g_ctx.window_flag)
-		hover = nk_false;
-	nk_text_hover(ctx, g_ctx.lib.NwBuf, NK_TEXT_LEFT, ctx->style.text.color, hover, nk_true);
-}
 
 void gnwinfo_ctx_update(WPARAM wparam);
 void gnwinfo_ctx_init(HINSTANCE inst, HWND wnd, struct nk_context* ctx, float width, float height);

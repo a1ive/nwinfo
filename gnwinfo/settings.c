@@ -8,20 +8,20 @@ LPCWSTR NWL_Utf8ToUcs2(LPCSTR src);
 
 WCHAR g_ini_path[MAX_PATH] = { 0 };
 
+static WCHAR m_buf[MAX_PATH];
+
 LPCSTR
 gnwinfo_get_ini_value(LPCWSTR section, LPCWSTR key, LPCWSTR fallback)
 {
-	WCHAR wvalue[MAX_PATH];
-	GetPrivateProfileStringW(section, key, fallback, wvalue, MAX_PATH, g_ini_path);
-	return NWL_Ucs2ToUtf8(wvalue);
+	GetPrivateProfileStringW(section, key, fallback, m_buf, MAX_PATH, g_ini_path);
+	return NWL_Ucs2ToUtf8(m_buf);
 }
 
 LPCSTR
 gnwinfo_get_text(LPCWSTR text)
 {
-	WCHAR wvalue[MAX_PATH];
-	GetPrivateProfileStringW(g_lang_id, text, text, wvalue, MAX_PATH, g_ini_path);
-	return NWL_Ucs2ToUtf8(wvalue);
+	GetPrivateProfileStringW(g_lang_id, text, text, m_buf, MAX_PATH, g_ini_path);
+	return NWL_Ucs2ToUtf8(m_buf);
 }
 
 void
@@ -158,7 +158,7 @@ gnwinfo_draw_settings_window(struct nk_context* ctx, float width, float height)
 	nk_spacer(ctx);
 	nk_checkbox_flags_label(ctx, gnwinfo_get_text(L"Compact view"), &g_ctx.main_flag, MAIN_DISK_COMPACT);
 	nk_spacer(ctx);
-	nk_checkbox_flags_label(ctx, gnwinfo_get_text(L"Show disk space bar"), &g_ctx.main_flag, MAIN_VOLUME_PROG);
+	nk_checkbox_flags_label(ctx, gnwinfo_get_text(L"Hide disk space bar"), &g_ctx.main_flag, MAIN_VOLUME_PROG);
 	nk_spacer(ctx);
 	nk_checkbox_flags_label(ctx, gnwinfo_get_text(L"Hide SMART"), &g_ctx.main_flag, MAIN_DISK_SMART);
 	nk_spacer(ctx);

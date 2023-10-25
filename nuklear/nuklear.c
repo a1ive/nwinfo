@@ -92,7 +92,7 @@ nk_image_label(struct nk_context* ctx, struct nk_image img,
 }
 
 void
-nk_text_hover(struct nk_context* ctx, const char* str,
+nk_label_hover(struct nk_context* ctx, const char* str,
 	nk_flags alignment, struct nk_color color, nk_bool hover, nk_bool space)
 {
 	struct nk_window* win;
@@ -126,8 +126,28 @@ nk_text_hover(struct nk_context* ctx, const char* str,
 	text.text = color;
 	nk_widget_text(&win->buffer, bounds, str, nk_strlen(str), &text, alignment, style->font);
 
+	if (!nk_window_has_focus(ctx))
+		hover = nk_false;
+
 	if (hover && nk_input_is_mouse_hovering_rect(&ctx->input, bounds))
 		nk_tooltip(ctx, str);
+}
+
+static inline void
+nk_labelfv_hover(struct nk_context* ctx, nk_flags alignment, struct nk_color color, nk_bool hover, nk_bool space, const char* fmt, va_list args)
+{
+	char buf[256];
+	nk_strfmt(buf, NK_LEN(buf), fmt, args);
+	nk_label_hover(ctx, buf, alignment, color, hover, space);
+}
+
+void
+nk_labelf_hover(struct nk_context* ctx, nk_flags alignment, struct nk_color color, nk_bool hover, nk_bool space, const char* fmt, ...)
+{
+	va_list args;
+	va_start(args, fmt);
+	nk_labelfv_hover(ctx, alignment, color, hover, space, fmt, args);
+	va_end(args);
 }
 
 nk_bool
