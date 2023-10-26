@@ -11,6 +11,12 @@
 #include <assert.h>
 #define NK_ASSERT(expr) assert(expr)
 
+#define NK_MEMSET memset
+#define NK_MEMCPY memcpy
+#define NK_SIN sinf
+#define NK_COS cosf
+#define NK_STRTOD strtod
+
 #define NK_IMPLEMENTATION
 #include <nuklear.h>
 
@@ -91,13 +97,53 @@ nk_image_label(struct nk_context* ctx, struct nk_image img,
 	nk_widget_text(&win->buffer, bounds, str, len, &text, align, style->font);
 }
 
+static inline nk_bool
+nk_hover_begin(struct nk_context* ctx, float width)
+{
+	int x, y, w, h;
+	struct nk_window* win;
+	const struct nk_input* in;
+	struct nk_rect bounds;
+	int ret;
+
+	/* make sure that no nonblocking popup is currently active */
+	win = ctx->current;
+	in = &ctx->input;
+
+	w = nk_iceilf(width);
+	h = nk_iceilf(nk_null_rect.h);
+	x = nk_ifloorf(in->mouse.pos.x + 1) - (int)win->layout->clip.x;
+	if (w + x > (int)win->bounds.w) x = (int)win->bounds.w - w;
+	y = nk_ifloorf(in->mouse.pos.y + 1) - (int)win->layout->clip.y;
+
+	bounds.x = (float)x;
+	bounds.y = (float)y;
+	bounds.w = (float)w;
+	bounds.h = (float)h;
+
+	ret = nk_popup_begin(ctx, NK_POPUP_DYNAMIC,
+		"__##Tooltip##__", NK_WINDOW_NO_SCROLLBAR | NK_WINDOW_BORDER, bounds);
+	if (ret) win->layout->flags &= ~(nk_flags)NK_WINDOW_ROM;
+	win->popup.type = NK_PANEL_TOOLTIP;
+	ctx->current->layout->type = NK_PANEL_TOOLTIP;
+	return ret;
+}
+
+static inline void
+nk_hover_end(struct nk_context* ctx)
+{
+	ctx->current->seq--;
+	nk_popup_close(ctx);
+	nk_popup_end(ctx);
+}
+
 void
 nk_label_hover(struct nk_context* ctx, const char* str,
 	nk_flags alignment, struct nk_color color, nk_bool hover, nk_bool space)
 {
 	struct nk_window* win;
 	const struct nk_style* style;
-
+	int text_len;
 	struct nk_rect bounds;
 	struct nk_text text;
 
@@ -120,34 +166,31 @@ nk_label_hover(struct nk_context* ctx, const char* str,
 		nk_panel_alloc_space(&bounds, ctx);
 	}
 
+	text_len = nk_strlen(str);
 	text.padding.x = style->text.padding.x;
 	text.padding.y = style->text.padding.y;
 	text.background = style->window.background;
 	text.text = color;
-	nk_widget_text(&win->buffer, bounds, str, nk_strlen(str), &text, alignment, style->font);
+	nk_widget_text(&win->buffer, bounds, str, text_len, &text, alignment, style->font);
 
-	if (!nk_window_has_focus(ctx))
-		hover = nk_false;
+	if (hover
+		&& ctx->current == ctx->active // only show tooltip if the window is active
+		&& !(win->popup.win && (win->popup.type & NK_PANEL_SET_NONBLOCK)) // make sure that no nonblocking popup is currently active
+		&& nk_input_is_mouse_hovering_rect(&ctx->input, bounds))
+	{
+		/* calculate size of the text and tooltip */
+		float text_width = style->font->width(style->font->userdata, style->font->height, str, text_len)
+			+ (4 * style->window.padding.x);
+		float text_height = (style->font->height + 2 * style->window.padding.y);
 
-	if (hover && nk_input_is_mouse_hovering_rect(&ctx->input, bounds))
-		nk_tooltip(ctx, str);
-}
-
-static inline void
-nk_labelfv_hover(struct nk_context* ctx, nk_flags alignment, struct nk_color color, nk_bool hover, nk_bool space, const char* fmt, va_list args)
-{
-	char buf[256];
-	nk_strfmt(buf, NK_LEN(buf), fmt, args);
-	nk_label_hover(ctx, buf, alignment, color, hover, space);
-}
-
-void
-nk_labelf_hover(struct nk_context* ctx, nk_flags alignment, struct nk_color color, nk_bool hover, nk_bool space, const char* fmt, ...)
-{
-	va_list args;
-	va_start(args, fmt);
-	nk_labelfv_hover(ctx, alignment, color, hover, space, fmt, args);
-	va_end(args);
+		/* execute tooltip and fill with text */
+		if (nk_hover_begin(ctx, text_width))
+		{
+			nk_layout_row_dynamic(ctx, text_height, 1);
+			nk_text_colored(ctx, str, text_len, NK_TEXT_LEFT, color);
+			nk_hover_end(ctx);
+		}
+	}
 }
 
 nk_bool

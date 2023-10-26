@@ -29574,7 +29574,6 @@ nk_tooltip_begin(struct nk_context *ctx, float width)
     w = nk_iceilf(width);
     h = nk_iceilf(nk_null_rect.h);
     x = nk_ifloorf(in->mouse.pos.x + 1) - (int)win->layout->clip.x;
-    if (w + x > (int)win->bounds.w) x = (int)win->bounds.w - w;
     y = nk_ifloorf(in->mouse.pos.y + 1) - (int)win->layout->clip.y;
 
     bounds.x = (float)x;

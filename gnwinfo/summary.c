@@ -7,6 +7,16 @@
 
 static CHAR m_buf[MAX_PATH];
 
+static inline void
+nk_labelf_hover(struct nk_context* ctx, nk_flags alignment, struct nk_color color, nk_bool hover, nk_bool space, const char* fmt, ...)
+{
+	va_list args;
+	va_start(args, fmt);
+	vsnprintf(m_buf, MAX_PATH, fmt, args);
+	va_end(args);
+	nk_label_hover(ctx, m_buf, alignment, color, hover, space);
+}
+
 LPCSTR
 gnwinfo_get_node_attr(PNODE node, LPCSTR key)
 {
@@ -317,7 +327,7 @@ draw_mem_capacity(struct nk_context* ctx)
 		gnwinfo_get_text(L"slots"),
 		capacity,
 		id[0] == '5' ? " MB" : "");
-	nk_label_hover(ctx, m_buf, NK_TEXT_LEFT, g_color_text_l, nk_false, nk_false);
+	nk_label_hover(ctx, m_buf, NK_TEXT_LEFT, g_color_text_l, nk_true, nk_false);
 }
 
 static VOID
