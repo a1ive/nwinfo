@@ -141,9 +141,9 @@ gnwinfo_draw_cpuid_window(struct nk_context* ctx, float width, float height)
 	brand = gnwinfo_get_node_attr(cpu, "Brand");
 
 	CPUID_ROW_BEGIN(2, 0.2f);
-	nk_label(ctx, brand, NK_TEXT_LEFT);
+	nk_label(ctx, gnwinfo_get_node_attr(cpu, "Vendor Name"), NK_TEXT_LEFT);
 	CPUID_ROW_PUSH(0.8f);
-	nk_label_colored(ctx, gnwinfo_get_node_attr(cpu, "Brand"), NK_TEXT_LEFT, g_color_text_l);
+	nk_label_colored(ctx, brand, NK_TEXT_LEFT, g_color_text_l);
 	CPUID_ROW_END;
 
 	CPUID_ROW_BEGIN(6, 0.2f);
