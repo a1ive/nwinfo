@@ -45,6 +45,9 @@ nk_label_hover(struct nk_context* ctx, const char* str,
 	nk_flags alignment, struct nk_color color, nk_bool hover, nk_bool space);
 
 nk_bool
+nk_button_image_hover(struct nk_context* ctx, struct nk_image img, const char* str);
+
+nk_bool
 nk_combo_begin_color_dynamic(struct nk_context* ctx, struct nk_color color);
 
 #define MAIN_INFO_OS        (1U << 0)

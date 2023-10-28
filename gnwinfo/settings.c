@@ -52,10 +52,16 @@ fail:
 	MessageBoxW(NULL, L"Set ini value failed", L"Error", MB_ICONERROR);
 }
 
-static void
+static inline void
 set_ini_color(LPCWSTR key, struct nk_color color)
 {
 	gnwinfo_set_ini_value(L"Color", key, L"%02X%02X%02X", color.r, color.g, color.b);
+}
+
+static inline void
+set_label(struct nk_context* ctx, const char* text)
+{
+	nk_label_hover(ctx, text, NK_TEXT_LEFT, g_color_text_d, nk_false, nk_false);
 }
 
 static void
@@ -65,11 +71,11 @@ draw_color_picker(struct nk_context* ctx, struct nk_color* color)
 	{
 		float ratios[] = { 0.15f, 0.85f };
 		nk_layout_row(ctx, NK_DYNAMIC, 0, 2, ratios);
-		nk_label(ctx, "R:", NK_TEXT_LEFT);
+		set_label(ctx, "R:");
 		color->r = (nk_byte)nk_slide_int(ctx, 0, color->r, 255, 5);
-		nk_label(ctx, "G:", NK_TEXT_LEFT);
+		set_label(ctx, "G:");
 		color->g = (nk_byte)nk_slide_int(ctx, 0, color->g, 255, 5);
-		nk_label(ctx, "B:", NK_TEXT_LEFT);
+		set_label(ctx, "B:");
 		color->b = (nk_byte)nk_slide_int(ctx, 0, color->b, 255, 5);
 		nk_combo_end(ctx);
 	}
@@ -89,7 +95,7 @@ gnwinfo_draw_settings_window(struct nk_context* ctx, float width, float height)
 	}
 
 	nk_layout_row_dynamic(ctx, 0, 1);
-	nk_label(ctx, gnwinfo_get_text(L"Hide components"), NK_TEXT_LEFT);
+	set_label(ctx, gnwinfo_get_text(L"Hide components"));
 
 	nk_layout_row(ctx, NK_DYNAMIC, 0, 3, (float[3]) { 0.1f, 0.45f, 0.45f });
 	nk_spacer(ctx);
@@ -109,7 +115,7 @@ gnwinfo_draw_settings_window(struct nk_context* ctx, float width, float height)
 	nk_spacer(ctx);
 
 	nk_layout_row_dynamic(ctx, 0, 1);
-	nk_label(ctx, gnwinfo_get_text(L"Operating System"), NK_TEXT_LEFT);
+	set_label(ctx, gnwinfo_get_text(L"Operating System"));
 	nk_layout_row(ctx, NK_DYNAMIC, 0, 2, (float[2]) { 0.1f, 0.9f });
 	nk_spacer(ctx);
 	nk_checkbox_flags_label(ctx, gnwinfo_get_text(L"Hide edition id"), &g_ctx.main_flag, MAIN_OS_EDITIONID);
@@ -121,7 +127,7 @@ gnwinfo_draw_settings_window(struct nk_context* ctx, float width, float height)
 	nk_checkbox_flags_label(ctx, gnwinfo_get_text(L"Hide login status"), &g_ctx.main_flag, MAIN_OS_DETAIL);
 
 	nk_layout_row_dynamic(ctx, 0, 1);
-	nk_label(ctx, gnwinfo_get_text(L"BIOS"), NK_TEXT_LEFT);
+	set_label(ctx, gnwinfo_get_text(L"BIOS"));
 	nk_layout_row(ctx, NK_DYNAMIC, 0, 2, (float[2]) { 0.1f, 0.9f });
 	nk_spacer(ctx);
 	nk_checkbox_flags_label(ctx, gnwinfo_get_text(L"Hide vendor"), &g_ctx.main_flag, MAIN_B_VENDOR);
@@ -129,7 +135,7 @@ gnwinfo_draw_settings_window(struct nk_context* ctx, float width, float height)
 	nk_checkbox_flags_label(ctx, gnwinfo_get_text(L"Hide version"), &g_ctx.main_flag, MAIN_B_VERSION);
 
 	nk_layout_row_dynamic(ctx, 0, 1);
-	nk_label(ctx, gnwinfo_get_text(L"Processor"), NK_TEXT_LEFT);
+	set_label(ctx, gnwinfo_get_text(L"Processor"));
 	nk_layout_row(ctx, NK_DYNAMIC, 0, 2, (float[2]) { 0.1f, 0.9f });
 	nk_spacer(ctx);
 	nk_checkbox_flags_label(ctx, gnwinfo_get_text(L"Hide details"), &g_ctx.main_flag, MAIN_CPU_DETAIL);
@@ -137,13 +143,13 @@ gnwinfo_draw_settings_window(struct nk_context* ctx, float width, float height)
 	nk_checkbox_flags_label(ctx, gnwinfo_get_text(L"Hide cache"), &g_ctx.main_flag, MAIN_CPU_CACHE);
 
 	nk_layout_row_dynamic(ctx, 0, 1);
-	nk_label(ctx, gnwinfo_get_text(L"Memory"), NK_TEXT_LEFT);
+	set_label(ctx, gnwinfo_get_text(L"Memory"));
 	nk_layout_row(ctx, NK_DYNAMIC, 0, 2, (float[2]) { 0.1f, 0.9f });
 	nk_spacer(ctx);
 	nk_checkbox_flags_label(ctx, gnwinfo_get_text(L"Hide details"), &g_ctx.main_flag, MAIN_MEM_DETAIL);
 
 	nk_layout_row_dynamic(ctx, 0, 1);
-	nk_label(ctx, gnwinfo_get_text(L"Network"), NK_TEXT_LEFT);
+	set_label(ctx, gnwinfo_get_text(L"Network"));
 	nk_layout_row(ctx, NK_DYNAMIC, 0, 2, (float[2]) { 0.1f, 0.9f });
 	nk_spacer(ctx);
 	nk_checkbox_flags_label(ctx, gnwinfo_get_text(L"Use bit units"), &g_ctx.main_flag, MAIN_NET_UNIT_B);
@@ -153,7 +159,7 @@ gnwinfo_draw_settings_window(struct nk_context* ctx, float width, float height)
 	nk_checkbox_flags_label(ctx, gnwinfo_get_text(L"Hide details"), &g_ctx.main_flag, MAIN_NET_DETAIL);
 
 	nk_layout_row_dynamic(ctx, 0, 1);
-	nk_label(ctx, gnwinfo_get_text(L"Storage"), NK_TEXT_LEFT);
+	set_label(ctx, gnwinfo_get_text(L"Storage"));
 	nk_layout_row(ctx, NK_DYNAMIC, 0, 2, (float[2]) { 0.1f, 0.9f });
 	nk_spacer(ctx);
 	nk_checkbox_flags_label(ctx, gnwinfo_get_text(L"Compact view"), &g_ctx.main_flag, MAIN_DISK_COMPACT);
@@ -209,7 +215,7 @@ gnwinfo_draw_settings_window(struct nk_context* ctx, float width, float height)
 	nk_checkbox_flags_label(ctx, gnwinfo_get_text(L"Enable AMD RC2"), &g_ctx.smart_flag, CDI_FLAG_ENABLE_AMD_RC2);
 
 	nk_layout_row_dynamic(ctx, 0, 1);
-	nk_label(ctx, gnwinfo_get_text(L"Window (Restart required)"), NK_TEXT_LEFT);
+	set_label(ctx, gnwinfo_get_text(L"Window (Restart required)"));
 	nk_layout_row(ctx, NK_DYNAMIC, 0, 2, (float[2]) { 0.1f, 0.9f });
 	nk_spacer(ctx);
 	nk_checkbox_label(ctx, gnwinfo_get_text(L"Background Info"), &g_ctx.gui_bginfo);
@@ -229,28 +235,28 @@ gnwinfo_draw_settings_window(struct nk_context* ctx, float width, float height)
 	nk_property_int(ctx, gnwinfo_get_text(L"#Alpha"), 10, &g_init_alpha, 255, 5, 10);
 
 	nk_layout_row_dynamic(ctx, 0, 1);
-	nk_label(ctx, gnwinfo_get_text(L"Color"), NK_TEXT_LEFT);
+	set_label(ctx, gnwinfo_get_text(L"Color"));
 	nk_layout_row(ctx, NK_DYNAMIC, 25, 3, (float[3]) { 0.1f, 0.4f, 0.5f });
 	nk_spacer(ctx);
-	nk_label(ctx, "BACKGROUND", NK_TEXT_LEFT);
+	set_label(ctx, "BACKGROUND");
 	draw_color_picker(ctx, &g_color_back);
 	nk_spacer(ctx);
-	nk_label(ctx, "HIGHLIGHT", NK_TEXT_LEFT);
+	set_label(ctx, "HIGHLIGHT");
 	draw_color_picker(ctx, &g_color_text_l);
 	nk_spacer(ctx);
-	nk_label(ctx, "DEFAULT", NK_TEXT_LEFT);
+	set_label(ctx, "DEFAULT");
 	draw_color_picker(ctx, &g_color_text_d);
 	nk_spacer(ctx);
-	nk_label(ctx, "STATE GOOD", NK_TEXT_LEFT);
+	set_label(ctx, "STATE GOOD");
 	draw_color_picker(ctx, &g_color_good);
 	nk_spacer(ctx);
-	nk_label(ctx, "STATE WARN", NK_TEXT_LEFT);
+	set_label(ctx, "STATE WARN");
 	draw_color_picker(ctx, &g_color_warning);
 	nk_spacer(ctx);
-	nk_label(ctx, "STATE ERROR", NK_TEXT_LEFT);
+	set_label(ctx, "STATE ERROR");
 	draw_color_picker(ctx, &g_color_error);
 	nk_spacer(ctx);
-	nk_label(ctx, "STATE UNKNOWN", NK_TEXT_LEFT);
+	set_label(ctx, "STATE UNKNOWN");
 	draw_color_picker(ctx, &g_color_unknown);
 
 	nk_layout_row(ctx, NK_DYNAMIC, 0, 2, (float[2]) { 0.8f, 0.2f });

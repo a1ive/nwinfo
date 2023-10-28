@@ -137,6 +137,28 @@ nk_hover_end(struct nk_context* ctx)
 	nk_popup_end(ctx);
 }
 
+static void
+nk_hover_colored(struct nk_context* ctx, const char* text, int text_len, struct nk_color color)
+{
+	if (ctx->current == ctx->active // only show tooltip if the window is active
+		// make sure that no nonblocking popup is currently active
+		&& !(ctx->current->popup.win && (ctx->current->popup.type & NK_PANEL_SET_NONBLOCK)))
+	{
+		/* calculate size of the text and tooltip */
+		float text_width = ctx->style.font->width(ctx->style.font->userdata, ctx->style.font->height, text, text_len)
+			+ (4 * ctx->style.window.padding.x);
+		float text_height = (ctx->style.font->height + 2 * ctx->style.window.padding.y);
+
+		/* execute tooltip and fill with text */
+		if (nk_hover_begin(ctx, text_width))
+		{
+			nk_layout_row_dynamic(ctx, text_height, 1);
+			nk_text_colored(ctx, text, text_len, NK_TEXT_LEFT, color);
+			nk_hover_end(ctx);
+		}
+	}
+}
+
 void
 nk_label_hover(struct nk_context* ctx, const char* str,
 	nk_flags alignment, struct nk_color color, nk_bool hover, nk_bool space)
@@ -173,24 +195,38 @@ nk_label_hover(struct nk_context* ctx, const char* str,
 	text.text = color;
 	nk_widget_text(&win->buffer, bounds, str, text_len, &text, alignment, style->font);
 
-	if (hover
-		&& ctx->current == ctx->active // only show tooltip if the window is active
-		&& !(win->popup.win && (win->popup.type & NK_PANEL_SET_NONBLOCK)) // make sure that no nonblocking popup is currently active
-		&& nk_input_is_mouse_hovering_rect(&ctx->input, bounds))
-	{
-		/* calculate size of the text and tooltip */
-		float text_width = style->font->width(style->font->userdata, style->font->height, str, text_len)
-			+ (4 * style->window.padding.x);
-		float text_height = (style->font->height + 2 * style->window.padding.y);
+	if (hover && nk_input_is_mouse_hovering_rect(&ctx->input, bounds))
+		nk_hover_colored(ctx, str, text_len, color);
+}
 
-		/* execute tooltip and fill with text */
-		if (nk_hover_begin(ctx, text_width))
-		{
-			nk_layout_row_dynamic(ctx, text_height, 1);
-			nk_text_colored(ctx, str, text_len, NK_TEXT_LEFT, color);
-			nk_hover_end(ctx);
-		}
-	}
+nk_bool
+nk_button_image_hover(struct nk_context* ctx, struct nk_image img, const char* str)
+{
+	struct nk_window* win;
+	struct nk_panel* layout;
+	const struct nk_input* in;
+
+	struct nk_rect bounds;
+	enum nk_widget_layout_states state;
+
+	NK_ASSERT(ctx);
+	NK_ASSERT(ctx->current);
+	NK_ASSERT(ctx->current->layout);
+	if (!ctx || !ctx->current || !ctx->current->layout)
+		return 0;
+
+	win = ctx->current;
+	layout = win->layout;
+
+	state = nk_widget(&bounds, ctx);
+	if (!state) return 0;
+	in = (state == NK_WIDGET_ROM || layout->flags & NK_WINDOW_ROM) ? 0 : &ctx->input;
+
+	if (nk_input_is_mouse_hovering_rect(in, bounds) && str)
+		nk_hover_colored(ctx, str, nk_strlen(str), ctx->style.text.color);
+
+	return nk_do_button_image(&ctx->last_widget_state, &win->buffer, bounds,
+		img, ctx->button_behavior, &ctx->style.button, in);
 }
 
 nk_bool
