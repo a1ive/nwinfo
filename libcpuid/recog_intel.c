@@ -319,6 +319,13 @@ const struct match_entry_t cpudb_intel[] = {
 	{  6, 12, -1, -1, 60,   1,    -1,    -1, NC, CELERON_      ,     0, "Haswell (Celeron)"        },
 	{  6, 15, -1, -1, 63,  -1,    -1,    -1, NC, 0             ,     0, "Haswell-E"                },
 
+	/* Silvermont CPUs (2013, 22nm, low-power) */
+	{  6,  7, -1, -1, 55,  -1,    -1,    -1, NC, PENTIUM_|_J_  ,     0, "Bay Trail-D (Pentium)"    },
+	{  6,  7, -1, -1, 55,  -1,    -1,    -1, NC, CELERON_|_J_  ,     0, "Bay Trail-D (Celeron)"    },
+	{  6,  7, -1, -1, 55,  -1,    -1,    -1, NC, PENTIUM_|_N_  ,     0, "Bay Trail-M (Pentium)"    },
+	{  6,  7, -1, -1, 55,  -1,    -1,    -1, NC, CELERON_|_N_  ,     0, "Bay Trail-M (Celeron)"    },
+	{  6,  7, -1, -1, 55,  -1,    -1,    -1, NC, ATOM_         ,     0, "Bay Trail-T (Atom)"       },
+
 	/* Broadwell CPUs (5th gen, 14nm): */
 	{  6,  7, -1, -1, 71,   4,    -1,    -1, NC, CORE_|_I_|_7  ,     0, "Broadwell (Core i7)"      },
 	{  6,  7, -1, -1, 71,   4,    -1,    -1, NC, CORE_|_I_|_5  ,     0, "Broadwell (Core i5)"      },
@@ -808,6 +815,15 @@ static intel_code_and_bits_t get_brand_code_and_bits(struct cpu_id_t* data)
 			case 'W': bits |= _W_; break;
 		}
 	}
+
+	if (((bits & PENTIUM_) || (bits & CELERON_)) && ((i = match_pattern(bs, "[JN]")) != 0)) {
+		i--;
+		switch (bs[i]) {
+			case 'J': bits |= _J_; break;
+			case 'N': bits |= _N_; break;
+		}
+	}
+
 	for (i = 0; i < COUNT_OF(matchtable); i++)
 		if (match_pattern(bs, matchtable[i].search)) {
 			code = matchtable[i].c;
