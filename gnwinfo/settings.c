@@ -58,11 +58,7 @@ set_ini_color(LPCWSTR key, struct nk_color color)
 	gnwinfo_set_ini_value(L"Color", key, L"%02X%02X%02X", color.r, color.g, color.b);
 }
 
-static inline void
-set_label(struct nk_context* ctx, const char* text)
-{
-	nk_label_hover(ctx, text, NK_TEXT_LEFT, g_color_text_d, nk_false, nk_false);
-}
+#define set_label(ctx, text) nk_l(ctx, text, NK_TEXT_LEFT)
 
 static void
 draw_color_picker(struct nk_context* ctx, struct nk_color* color)

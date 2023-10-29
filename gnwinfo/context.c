@@ -298,7 +298,7 @@ gnwinfo_ctx_init(HINSTANCE inst, HWND wnd, struct nk_context* ctx, float width, 
 		NK_WINDOW_TITLE | NK_WINDOW_BORDER | NK_WINDOW_NO_INPUT);
 	nk_layout_row_dynamic(ctx, 0, 1);
 	nk_spacer(ctx);
-	nk_label_hover(ctx, gnwinfo_get_text(L"Please wait ..."), NK_TEXT_CENTERED, g_color_text_d, nk_false, nk_false);
+	nk_lhsc(ctx, gnwinfo_get_text(L"Please wait ..."), NK_TEXT_CENTERED, g_color_text_d, nk_false, nk_false);
 	nk_spacer(ctx);
 	nk_end(ctx);
 	nk_gdip_render(g_ctx.gui_aa, g_color_back);

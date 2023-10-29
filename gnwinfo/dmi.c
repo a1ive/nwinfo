@@ -21,8 +21,8 @@ static void draw_dmi_node(struct nk_context* ctx, PNODE node)
 		nk_layout_row(ctx, NK_DYNAMIC, 0, 2, ratio);
 		for (i = 0; node->Attributes[i].LinkedAttribute; i++)
 		{
-			nk_label(ctx, node->Attributes[i].LinkedAttribute->Key, NK_TEXT_LEFT);
-			nk_label_colored(ctx, node->Attributes[i].LinkedAttribute->Value, NK_TEXT_RIGHT, g_color_text_l);
+			nk_l(ctx, node->Attributes[i].LinkedAttribute->Key, NK_TEXT_LEFT);
+			nk_lhc(ctx, node->Attributes[i].LinkedAttribute->Value, NK_TEXT_RIGHT, g_color_text_l);
 		}
 		nk_tree_pop(ctx);
 	}

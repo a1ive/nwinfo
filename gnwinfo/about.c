@@ -19,10 +19,10 @@ gnwinfo_draw_about_window(struct nk_context* ctx, float width, float height)
 
 	nk_layout_row_dynamic(ctx, 0, 1);
 	nk_spacer(ctx);
-	nk_label(ctx, NWINFO_GUI, NK_TEXT_CENTERED);
-	nk_label(ctx, NWINFO_COPYRIGHT, NK_TEXT_CENTERED);
-	nk_label(ctx, "v" NWINFO_VERSION_STR, NK_TEXT_CENTERED);
-	nk_label(ctx, "Build. " __DATE__ " " __TIME__, NK_TEXT_CENTERED);
+	nk_l(ctx, NWINFO_GUI, NK_TEXT_CENTERED);
+	nk_l(ctx, NWINFO_COPYRIGHT, NK_TEXT_CENTERED);
+	nk_l(ctx, "v" NWINFO_VERSION_STR, NK_TEXT_CENTERED);
+	nk_l(ctx, "Build. " __DATE__ " " __TIME__, NK_TEXT_CENTERED);
 
 out:
 	nk_end(ctx);

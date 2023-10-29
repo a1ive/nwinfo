@@ -41,8 +41,18 @@ nk_image_label(struct nk_context* ctx, struct nk_image img,
 	const char* str, nk_flags align, struct nk_color color);
 
 void
-nk_label_hover(struct nk_context* ctx, const char* str,
+nk_lhsc(struct nk_context* ctx, const char* str,
 	nk_flags alignment, struct nk_color color, nk_bool hover, nk_bool space);
+
+void
+nk_lhscf(struct nk_context* ctx, nk_flags alignment,
+	struct nk_color color, nk_bool hover, nk_bool space,
+	NK_PRINTF_FORMAT_STRING const char* fmt, ...) NK_PRINTF_VARARG_FUNC(6);
+
+void nk_l(struct nk_context*, const char*, nk_flags align);
+void nk_lhc(struct nk_context*, const char*, nk_flags align, struct nk_color);
+void nk_lf(struct nk_context*, nk_flags, NK_PRINTF_FORMAT_STRING const char*, ...) NK_PRINTF_VARARG_FUNC(3);
+void nk_lhcf(struct nk_context*, nk_flags, struct nk_color, NK_PRINTF_FORMAT_STRING const char*,...) NK_PRINTF_VARARG_FUNC(4);
 
 nk_bool
 nk_button_image_hover(struct nk_context* ctx, struct nk_image img, const char* str);

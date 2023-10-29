@@ -20,8 +20,8 @@ static void draw_pci_node(struct nk_context* ctx, PNODE node)
 		{
 			if (strcmp(node->Attributes[i].LinkedAttribute->Key, "HWID") == 0)
 				continue;
-			nk_label(ctx, node->Attributes[i].LinkedAttribute->Key, NK_TEXT_LEFT);
-			nk_label_colored(ctx, node->Attributes[i].LinkedAttribute->Value, NK_TEXT_RIGHT, g_color_text_l);
+			nk_l(ctx, node->Attributes[i].LinkedAttribute->Key, NK_TEXT_LEFT);
+			nk_lhc(ctx, node->Attributes[i].LinkedAttribute->Value, NK_TEXT_RIGHT, g_color_text_l);
 		}
 		nk_tree_pop(ctx);
 	}

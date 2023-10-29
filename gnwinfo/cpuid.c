@@ -24,7 +24,7 @@ draw_features(struct nk_context* ctx, PNODE cpu)
 	{
 		nk_layout_row_dynamic(ctx, 0, 1);
 		for (c = feature; *c != '\0'; c += strlen(c) + 1)
-			nk_label_colored(ctx, c, NK_TEXT_CENTERED, g_color_text_l);
+			nk_lhc(ctx, c, NK_TEXT_CENTERED, g_color_text_l);
 		nk_group_end(ctx);
 	}
 }
@@ -41,16 +41,16 @@ draw:
 	{
 		const float ratio[] = { 0.2f, 0.8f };
 		nk_layout_row(ctx, NK_DYNAMIC, 0, 2, ratio);
-		nk_label(ctx, "L1 D", NK_TEXT_LEFT);
-		nk_label_colored(ctx, gnwinfo_get_node_attr(cache, "L1 D"), NK_TEXT_LEFT, g_color_text_l);
-		nk_label(ctx, "L1 I", NK_TEXT_LEFT);
-		nk_label_colored(ctx, gnwinfo_get_node_attr(cache, "L1 I"), NK_TEXT_LEFT, g_color_text_l);
-		nk_label(ctx, "L2", NK_TEXT_LEFT);
-		nk_label_colored(ctx, gnwinfo_get_node_attr(cache, "L2"), NK_TEXT_LEFT, g_color_text_l);
-		nk_label(ctx, "L3", NK_TEXT_LEFT);
-		nk_label_colored(ctx, gnwinfo_get_node_attr(cache, "L3"), NK_TEXT_LEFT, g_color_text_l);
-		nk_label(ctx, "L4", NK_TEXT_LEFT);
-		nk_label_colored(ctx, gnwinfo_get_node_attr(cache, "L4"), NK_TEXT_LEFT, g_color_text_l);
+		nk_l(ctx, "L1 D", NK_TEXT_LEFT);
+		nk_lhc(ctx, gnwinfo_get_node_attr(cache, "L1 D"), NK_TEXT_LEFT, g_color_text_l);
+		nk_l(ctx, "L1 I", NK_TEXT_LEFT);
+		nk_lhc(ctx, gnwinfo_get_node_attr(cache, "L1 I"), NK_TEXT_LEFT, g_color_text_l);
+		nk_l(ctx, "L2", NK_TEXT_LEFT);
+		nk_lhc(ctx, gnwinfo_get_node_attr(cache, "L2"), NK_TEXT_LEFT, g_color_text_l);
+		nk_l(ctx, "L3", NK_TEXT_LEFT);
+		nk_lhc(ctx, gnwinfo_get_node_attr(cache, "L3"), NK_TEXT_LEFT, g_color_text_l);
+		nk_l(ctx, "L4", NK_TEXT_LEFT);
+		nk_lhc(ctx, gnwinfo_get_node_attr(cache, "L4"), NK_TEXT_LEFT, g_color_text_l);
 		nk_group_end(ctx);
 	}
 }
@@ -71,32 +71,32 @@ draw_msr(struct nk_context* ctx, int index, PNODE cpu, LPCSTR brand)
 		const float ratio[] = { 0.5f, 0.5f };
 		nk_layout_row(ctx, NK_DYNAMIC, 0, 2, ratio);
 
-		nk_label(ctx, gnwinfo_get_text(L"Socket"), NK_TEXT_LEFT);
-		nk_label_colored(ctx, gnwinfo_get_smbios_attr("4", "Socket Designation", (PVOID)brand, is_cpu_name_match), NK_TEXT_LEFT, g_color_text_l);
-		nk_label(ctx, gnwinfo_get_text(L"Multiplier"), NK_TEXT_LEFT);
-		nk_label_colored(ctx, g_ctx.cpu_info[index].cpu_msr_multi, NK_TEXT_LEFT, g_color_text_l);
-		nk_label(ctx, gnwinfo_get_text(L"Base Clock"), NK_TEXT_LEFT);
-		nk_labelf_colored(ctx, NK_TEXT_LEFT, g_color_text_l, "%s MHz", gnwinfo_get_smbios_attr("4", "Current Speed (MHz)", (const PVOID)brand, is_cpu_name_match));
-		nk_label(ctx, gnwinfo_get_text(L"Bus Clock"), NK_TEXT_LEFT);
-		nk_labelf_colored(ctx, NK_TEXT_LEFT, g_color_text_l, "%.2f MHz", g_ctx.cpu_info[index].cpu_msr_bus);
-		nk_label(ctx, gnwinfo_get_text(L"Temperature"), NK_TEXT_LEFT);
-		nk_labelf_colored(ctx, NK_TEXT_LEFT, g_color_text_l, u8"%d \u2103", g_ctx.cpu_info[index].cpu_msr_temp);
-		nk_label(ctx, gnwinfo_get_text(L"Voltage"), NK_TEXT_LEFT);
-		nk_labelf_colored(ctx, NK_TEXT_LEFT, g_color_text_l, "%.2f V", g_ctx.cpu_info[index].cpu_msr_volt);
-		nk_label(ctx, gnwinfo_get_text(L"Power"), NK_TEXT_LEFT);
-		nk_labelf_colored(ctx, NK_TEXT_LEFT, g_color_text_l, "%.2f W", g_ctx.cpu_info[index].cpu_msr_power);
+		nk_l(ctx, gnwinfo_get_text(L"Socket"), NK_TEXT_LEFT);
+		nk_lhc(ctx, gnwinfo_get_smbios_attr("4", "Socket Designation", (PVOID)brand, is_cpu_name_match), NK_TEXT_LEFT, g_color_text_l);
+		nk_l(ctx, gnwinfo_get_text(L"Multiplier"), NK_TEXT_LEFT);
+		nk_lhc(ctx, g_ctx.cpu_info[index].cpu_msr_multi, NK_TEXT_LEFT, g_color_text_l);
+		nk_l(ctx, gnwinfo_get_text(L"Base Clock"), NK_TEXT_LEFT);
+		nk_lhcf(ctx, NK_TEXT_LEFT, g_color_text_l, "%s MHz", gnwinfo_get_smbios_attr("4", "Current Speed (MHz)", (const PVOID)brand, is_cpu_name_match));
+		nk_l(ctx, gnwinfo_get_text(L"Bus Clock"), NK_TEXT_LEFT);
+		nk_lhcf(ctx, NK_TEXT_LEFT, g_color_text_l, "%.2f MHz", g_ctx.cpu_info[index].cpu_msr_bus);
+		nk_l(ctx, gnwinfo_get_text(L"Temperature"), NK_TEXT_LEFT);
+		nk_lhcf(ctx, NK_TEXT_LEFT, g_color_text_l, u8"%d \u2103", g_ctx.cpu_info[index].cpu_msr_temp);
+		nk_l(ctx, gnwinfo_get_text(L"Voltage"), NK_TEXT_LEFT);
+		nk_lhcf(ctx, NK_TEXT_LEFT, g_color_text_l, "%.2f V", g_ctx.cpu_info[index].cpu_msr_volt);
+		nk_l(ctx, gnwinfo_get_text(L"Power"), NK_TEXT_LEFT);
+		nk_lhcf(ctx, NK_TEXT_LEFT, g_color_text_l, "%.2f W", g_ctx.cpu_info[index].cpu_msr_power);
 
 		pl = gnwinfo_get_node_attr(cpu, "PL1 (W)");
 		if (pl[0] != '-')
 		{
-			nk_label(ctx, gnwinfo_get_text(L"PL1"), NK_TEXT_LEFT);
-			nk_labelf_colored(ctx, NK_TEXT_LEFT, g_color_text_l, "%s W", pl);
+			nk_l(ctx, gnwinfo_get_text(L"PL1"), NK_TEXT_LEFT);
+			nk_lhcf(ctx, NK_TEXT_LEFT, g_color_text_l, "%s W", pl);
 		}
 		pl = gnwinfo_get_node_attr(cpu, "PL2 (W)");
 		if (pl[0] != '-')
 		{
-			nk_label(ctx, gnwinfo_get_text(L"PL2"), NK_TEXT_LEFT);
-			nk_labelf_colored(ctx, NK_TEXT_LEFT, g_color_text_l, "%s W", pl);
+			nk_l(ctx, gnwinfo_get_text(L"PL2"), NK_TEXT_LEFT);
+			nk_lhcf(ctx, NK_TEXT_LEFT, g_color_text_l, "%s W", pl);
 		}
 
 		nk_group_end(ctx);
@@ -133,7 +133,7 @@ gnwinfo_draw_cpuid_window(struct nk_context* ctx, float width, float height)
 	snprintf(buf, MAX_PATH, "%s %s %s, %lu MHz", buf,
 		gnwinfo_get_node_attr(g_ctx.cpuid, "Total CPUs"), gnwinfo_get_text(L"threads"),
 		g_ctx.cpu_freq);
-	nk_label(ctx, buf, NK_TEXT_CENTERED);
+	nk_l(ctx, buf, NK_TEXT_CENTERED);
 	CPUID_ROW_END;
 
 	snprintf(name, sizeof(name), "CPU%d", cpu_index);
@@ -141,57 +141,57 @@ gnwinfo_draw_cpuid_window(struct nk_context* ctx, float width, float height)
 	brand = gnwinfo_get_node_attr(cpu, "Brand");
 
 	CPUID_ROW_BEGIN(2, 0.2f);
-	nk_label(ctx, gnwinfo_get_text(L"Brand"), NK_TEXT_LEFT);
+	nk_l(ctx, gnwinfo_get_text(L"Brand"), NK_TEXT_LEFT);
 	CPUID_ROW_PUSH(0.8f);
-	nk_label_colored(ctx, brand, NK_TEXT_LEFT, g_color_text_l);
+	nk_lhc(ctx, brand, NK_TEXT_LEFT, g_color_text_l);
 	CPUID_ROW_END;
 
 	CPUID_ROW_BEGIN(6, 0.2f);
-	nk_label(ctx, gnwinfo_get_text(L"Cores"), NK_TEXT_LEFT);
+	nk_l(ctx, gnwinfo_get_text(L"Cores"), NK_TEXT_LEFT);
 	CPUID_ROW_PUSH((1.0f / 3 - 0.2f));
-	nk_label_colored(ctx, gnwinfo_get_node_attr(cpu, "Cores"), NK_TEXT_LEFT, g_color_text_l);
+	nk_lhc(ctx, gnwinfo_get_node_attr(cpu, "Cores"), NK_TEXT_LEFT, g_color_text_l);
 	CPUID_ROW_PUSH(0.2f);
-	nk_label(ctx, gnwinfo_get_text(L"Code Name"), NK_TEXT_LEFT);
+	nk_l(ctx, gnwinfo_get_text(L"Code Name"), NK_TEXT_LEFT);
 	CPUID_ROW_PUSH(0.3f);
-	nk_label_colored(ctx, gnwinfo_get_node_attr(cpu, "Code Name"), NK_TEXT_LEFT, g_color_text_l);
+	nk_lhc(ctx, gnwinfo_get_node_attr(cpu, "Code Name"), NK_TEXT_LEFT, g_color_text_l);
 	CPUID_ROW_END;
 
 	CPUID_ROW_BEGIN(6, 0.2f);
-	nk_label(ctx, gnwinfo_get_text(L"Threads"), NK_TEXT_LEFT);
+	nk_l(ctx, gnwinfo_get_text(L"Threads"), NK_TEXT_LEFT);
 	CPUID_ROW_PUSH((1.0f / 3 - 0.2f));
-	nk_label_colored(ctx, gnwinfo_get_node_attr(cpu, "Logical CPUs"), NK_TEXT_LEFT, g_color_text_l);
+	nk_lhc(ctx, gnwinfo_get_node_attr(cpu, "Logical CPUs"), NK_TEXT_LEFT, g_color_text_l);
 	CPUID_ROW_PUSH(0.2f);
-	nk_label(ctx, gnwinfo_get_text(L"Hypervisor"), NK_TEXT_LEFT);
+	nk_l(ctx, gnwinfo_get_text(L"Hypervisor"), NK_TEXT_LEFT);
 	CPUID_ROW_PUSH(0.3f);
-	nk_label_colored(ctx, gnwinfo_get_node_attr(g_ctx.cpuid, "Hypervisor"), NK_TEXT_LEFT, g_color_text_l);
+	nk_lhc(ctx, gnwinfo_get_node_attr(g_ctx.cpuid, "Hypervisor"), NK_TEXT_LEFT, g_color_text_l);
 	CPUID_ROW_END;
 
 	CPUID_ROW_BEGIN(6, 0.2f);
-	nk_label(ctx, gnwinfo_get_text(L"Family"), NK_TEXT_LEFT);
+	nk_l(ctx, gnwinfo_get_text(L"Family"), NK_TEXT_LEFT);
 	CPUID_ROW_PUSH((1.0f / 3 - 0.2f));
-	nk_label_colored(ctx, gnwinfo_get_node_attr(cpu, "Family"), NK_TEXT_LEFT, g_color_text_l);
+	nk_lhc(ctx, gnwinfo_get_node_attr(cpu, "Family"), NK_TEXT_LEFT, g_color_text_l);
 	CPUID_ROW_PUSH(0.2f);
-	nk_label(ctx, gnwinfo_get_text(L"Model"), NK_TEXT_LEFT);
+	nk_l(ctx, gnwinfo_get_text(L"Model"), NK_TEXT_LEFT);
 	CPUID_ROW_PUSH((1.0f / 3 - 0.2f));
-	nk_label_colored(ctx, gnwinfo_get_node_attr(cpu, "Model"), NK_TEXT_LEFT, g_color_text_l);
+	nk_lhc(ctx, gnwinfo_get_node_attr(cpu, "Model"), NK_TEXT_LEFT, g_color_text_l);
 	CPUID_ROW_PUSH(0.2f);
-	nk_label(ctx, gnwinfo_get_text(L"Stepping"), NK_TEXT_LEFT);
+	nk_l(ctx, gnwinfo_get_text(L"Stepping"), NK_TEXT_LEFT);
 	CPUID_ROW_PUSH((1.0f / 3 - 0.2f));
-	nk_label_colored(ctx, gnwinfo_get_node_attr(cpu, "Stepping"), NK_TEXT_LEFT, g_color_text_l);
+	nk_lhc(ctx, gnwinfo_get_node_attr(cpu, "Stepping"), NK_TEXT_LEFT, g_color_text_l);
 	CPUID_ROW_END;
 
 	CPUID_ROW_BEGIN(6, 0.2f);
-	nk_label(ctx, gnwinfo_get_text(L"Ext.Family"), NK_TEXT_LEFT);
+	nk_l(ctx, gnwinfo_get_text(L"Ext.Family"), NK_TEXT_LEFT);
 	CPUID_ROW_PUSH((1.0f / 3 - 0.2f));
-	nk_label_colored(ctx, gnwinfo_get_node_attr(cpu, "Ext.Family"), NK_TEXT_LEFT, g_color_text_l);
+	nk_lhc(ctx, gnwinfo_get_node_attr(cpu, "Ext.Family"), NK_TEXT_LEFT, g_color_text_l);
 	CPUID_ROW_PUSH(0.2f);
-	nk_label(ctx, gnwinfo_get_text(L"Ext.Model"), NK_TEXT_LEFT);
+	nk_l(ctx, gnwinfo_get_text(L"Ext.Model"), NK_TEXT_LEFT);
 	CPUID_ROW_PUSH((1.0f / 3 - 0.2f));
-	nk_label_colored(ctx, gnwinfo_get_node_attr(cpu, "Ext.Model"), NK_TEXT_LEFT, g_color_text_l);
+	nk_lhc(ctx, gnwinfo_get_node_attr(cpu, "Ext.Model"), NK_TEXT_LEFT, g_color_text_l);
 	CPUID_ROW_PUSH(0.2f);
-	nk_label(ctx, gnwinfo_get_text(L"Aff.Mask"), NK_TEXT_LEFT);
+	nk_l(ctx, gnwinfo_get_text(L"Aff.Mask"), NK_TEXT_LEFT);
 	CPUID_ROW_PUSH((1.0f / 3 - 0.2f));
-	nk_label_colored(ctx, gnwinfo_get_node_attr(cpu, "Affinity Mask"), NK_TEXT_LEFT, g_color_text_l);
+	nk_lhc(ctx, gnwinfo_get_node_attr(cpu, "Affinity Mask"), NK_TEXT_LEFT, g_color_text_l);
 	CPUID_ROW_END;
 
 	nk_layout_row_dynamic(ctx, 0, 1);

@@ -160,7 +160,7 @@ nk_hover_colored(struct nk_context* ctx, const char* text, int text_len, struct 
 }
 
 void
-nk_label_hover(struct nk_context* ctx, const char* str,
+nk_lhsc(struct nk_context* ctx, const char* str,
 	nk_flags alignment, struct nk_color color, nk_bool hover, nk_bool space)
 {
 	struct nk_window* win;
@@ -197,6 +197,59 @@ nk_label_hover(struct nk_context* ctx, const char* str,
 
 	if (hover && nk_input_is_mouse_hovering_rect(&ctx->input, bounds))
 		nk_hover_colored(ctx, str, text_len, color);
+}
+
+static CHAR m_lhscfv_buf[MAX_PATH];
+static void
+nk_lhscfv(struct nk_context* ctx, nk_flags alignment, struct nk_color color, nk_bool hover, nk_bool space, const char* fmt, va_list args)
+{
+	vsnprintf(m_lhscfv_buf, MAX_PATH, fmt, args);
+	nk_lhsc(ctx, m_lhscfv_buf, alignment, color, hover, space);
+}
+
+void
+nk_lhscf(struct nk_context* ctx, nk_flags alignment, struct nk_color color, nk_bool hover, nk_bool space, const char* fmt, ...)
+{
+	va_list args;
+	va_start(args, fmt);
+	nk_lhscfv(ctx, alignment, color, hover, space, fmt, args);
+	va_end(args);
+}
+
+void
+nk_l(struct nk_context* ctx, const char* str, nk_flags alignment)
+{
+	NK_ASSERT(ctx);
+	if (!ctx) return;
+	nk_lhsc(ctx, str, alignment, ctx->style.text.color, nk_false, nk_false);
+}
+
+void
+nk_lhc(struct nk_context* ctx, const char* str, nk_flags align,
+	struct nk_color color)
+{
+	nk_lhsc(ctx, str, align, color, nk_true, nk_false);
+}
+
+void
+nk_lf(struct nk_context* ctx, nk_flags flags, const char* fmt, ...)
+{
+	NK_ASSERT(ctx);
+	if (!ctx) return;
+	va_list args;
+	va_start(args, fmt);
+	nk_lhscfv(ctx, flags, ctx->style.text.color,nk_false, nk_false, fmt, args);
+	va_end(args);
+}
+
+void
+nk_lhcf(struct nk_context* ctx, nk_flags flags,
+	struct nk_color color, const char* fmt, ...)
+{
+	va_list args;
+	va_start(args, fmt);
+	nk_lhscfv(ctx, flags, color, nk_true, nk_false, fmt, args);
+	va_end(args);
 }
 
 nk_bool

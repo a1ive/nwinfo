@@ -220,7 +220,7 @@ draw_page_file(struct nk_context* ctx)
 	nk_layout_row(ctx, NK_DYNAMIC, m_ctx.col_height, 3, (float[3]) { 0.05f, 0.20f, 0.75f });
 	nk_spacer(ctx);
 	drive = draw_drive_list(ctx);
-	nk_labelf(ctx, NK_TEXT_LEFT, "%lC:\\pagefile.sys", drive);
+	nk_lf(ctx, NK_TEXT_LEFT, "%lC:\\pagefile.sys", drive);
 
 	nk_layout_row_dynamic(ctx, 10, 1);
 	nk_spacer(ctx);
@@ -228,7 +228,7 @@ draw_page_file(struct nk_context* ctx)
 	nk_layout_row(ctx, NK_DYNAMIC, m_ctx.col_height, 4, (float[4]) { 0.05f, 0.20f, 0.3f, 0.45f });
 	nk_spacer(ctx);
 	draw_size_editor(ctx, drive);
-	nk_labelf(ctx, NK_TEXT_LEFT, "MB / %" PRIuPTR " MB", m_ctx.page_drive_mb);
+	nk_lf(ctx, NK_TEXT_LEFT, "MB / %" PRIuPTR " MB", m_ctx.page_drive_mb);
 
 	nk_layout_row_dynamic(ctx, 10, 1);
 	nk_spacer(ctx);
@@ -246,9 +246,9 @@ draw_page_file(struct nk_context* ctx)
 			m_ctx.page_rc = -1;
 	}
 	if (m_ctx.page_rc > 0)
-		nk_label_colored(ctx, gnwinfo_get_text(L"SUCCESS"), NK_TEXT_CENTERED, g_color_good);
+		nk_lhc(ctx, gnwinfo_get_text(L"SUCCESS"), NK_TEXT_CENTERED, g_color_good);
 	else if (m_ctx.page_rc < 0)
-		nk_label_colored(ctx, gnwinfo_get_text(L"FAILED"), NK_TEXT_CENTERED, g_color_error);
+		nk_lhc(ctx, gnwinfo_get_text(L"FAILED"), NK_TEXT_CENTERED, g_color_error);
 	else
 		nk_spacer(ctx);
 
@@ -270,22 +270,22 @@ gnwinfo_draw_mm_window(struct nk_context* ctx, float width, float height)
 
 	nk_layout_row_dynamic(ctx, 0, 2);
 
-	nk_label(ctx, gnwinfo_get_text(L"Physical Memory"), NK_TEXT_LEFT);
+	nk_l(ctx, gnwinfo_get_text(L"Physical Memory"), NK_TEXT_LEFT);
 	gnwinfo_draw_percent_prog(ctx, (double)g_ctx.mem_status.PhysUsage);
 	nk_spacer(ctx);
-	nk_labelf(ctx, NK_TEXT_LEFT, "%3lu%% %s / %s",
+	nk_lf(ctx, NK_TEXT_LEFT, "%3lu%% %s / %s",
 		g_ctx.mem_status.PhysUsage, g_ctx.mem_avail, g_ctx.mem_total);
 
-	nk_label(ctx, gnwinfo_get_text(L"Page File"), NK_TEXT_LEFT);
+	nk_l(ctx, gnwinfo_get_text(L"Page File"), NK_TEXT_LEFT);
 	gnwinfo_draw_percent_prog(ctx, (double)g_ctx.mem_status.PageUsage);
 	nk_spacer(ctx);
-	nk_labelf(ctx, NK_TEXT_LEFT, "%3lu%% %s / %s",
+	nk_lf(ctx, NK_TEXT_LEFT, "%3lu%% %s / %s",
 		g_ctx.mem_status.PageUsage, g_ctx.page_avail, g_ctx.page_total);
 
-	nk_label(ctx, gnwinfo_get_text(L"System Working Set"), NK_TEXT_LEFT);
+	nk_l(ctx, gnwinfo_get_text(L"System Working Set"), NK_TEXT_LEFT);
 	gnwinfo_draw_percent_prog(ctx, (double)g_ctx.mem_status.SfciUsage);
 	nk_spacer(ctx);
-	nk_labelf(ctx, NK_TEXT_LEFT, "%3lu%% %s / %s",
+	nk_lf(ctx, NK_TEXT_LEFT, "%3lu%% %s / %s",
 		g_ctx.mem_status.SfciUsage, g_ctx.sfci_avail, g_ctx.sfci_total);
 
 	nk_layout_row_dynamic(ctx, 8, 1);
@@ -296,7 +296,7 @@ gnwinfo_draw_mm_window(struct nk_context* ctx, float width, float height)
 	if (nk_button_label(ctx, gnwinfo_get_text(L"Clean Memory")))
 		m_ctx.clean_size = clean_memory(m_ctx.clean_flag);
 	if (m_ctx.clean_size)
-		nk_labelf_colored(ctx, NK_TEXT_LEFT, g_color_good,"+%s", NWL_GetHumanSize(m_ctx.clean_size, NWLC->NwUnits, 1024));
+		nk_lhcf(ctx, NK_TEXT_LEFT, g_color_good,"+%s", NWL_GetHumanSize(m_ctx.clean_size, NWLC->NwUnits, 1024));
 	else
 		nk_spacer(ctx);
 
