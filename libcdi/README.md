@@ -2,10 +2,6 @@
 
 CrystalDiskInfo static lib
 
-## CrystalDiskInfo
+https://github.com/a1ive/libcdi
 
 https://github.com/hiyohiyo/CrystalDiskInfo
-
-## CrystalDiskInfoEmbedded
-
-https://github.com/iTXTech/CrystalDiskInfoEmbedded

@@ -89,7 +89,9 @@
       </IgnoreAllDefaultLibraries>
     </Lib>
     <PostBuildEvent>
-      <Command>copy "$(ProjectDir)jep106.ids" "$(SolutionDir)$(Platform)\$(Configuration)\"</Command>
+      <Command>copy "$(ProjectDir)jep106.ids" "$(SolutionDir)$(Platform)\$(Configuration)\"
+copy "$(SolutionDir)libcdi\libcdi.dll" "$(SolutionDir)$(Platform)\$(Configuration)\"
+copy "$(SolutionDir)libcdi\libcdix64.dll" "$(SolutionDir)$(Platform)\$(Configuration)\"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -117,13 +119,12 @@
       </IgnoreAllDefaultLibraries>
     </Lib>
     <PostBuildEvent>
-      <Command>copy "$(ProjectDir)jep106.ids" "$(SolutionDir)$(Platform)\$(Configuration)\"</Command>
+      <Command>copy "$(ProjectDir)jep106.ids" "$(SolutionDir)$(Platform)\$(Configuration)\"
+copy "$(SolutionDir)libcdi\libcdi.dll" "$(SolutionDir)$(Platform)\$(Configuration)\"
+copy "$(SolutionDir)libcdi\libcdix64.dll" "$(SolutionDir)$(Platform)\$(Configuration)\"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ProjectReference Include="..\libcdi\libcdi.vcxproj">
-      <Project>{4fdae82d-7b0e-4b71-80a9-f5a344a7b9d6}</Project>
-    </ProjectReference>
     <ProjectReference Include="..\libcpuid\libcpuid.vcxproj">
       <Project>{2da3ea59-bdf3-4fc0-8ac2-5605ce22b800}</Project>
     </ProjectReference>
@@ -132,6 +133,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\libcdi\libcdi.h" />
     <ClInclude Include="acpi.h" />
     <ClInclude Include="audio.h" />
     <ClInclude Include="disk.h" />
@@ -155,6 +157,7 @@
     <ClCompile Include="efivars.c" />
     <ClCompile Include="format.c" />
     <ClCompile Include="ids.c" />
+    <ClCompile Include="libcdi.c" />
     <ClCompile Include="libinfo.c" />
     <ClCompile Include="libnw.c" />
     <ClCompile Include="network.c" />
