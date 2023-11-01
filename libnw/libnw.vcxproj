@@ -90,8 +90,7 @@
     </Lib>
     <PostBuildEvent>
       <Command>copy "$(ProjectDir)jep106.ids" "$(SolutionDir)$(Platform)\$(Configuration)\"
-copy "$(SolutionDir)libcdi\libcdi.dll" "$(SolutionDir)$(Platform)\$(Configuration)\"
-copy "$(SolutionDir)libcdi\libcdix64.dll" "$(SolutionDir)$(Platform)\$(Configuration)\"</Command>
+copy "$(SolutionDir)libcdi\libcdi.$(Platform).dll" "$(SolutionDir)$(Platform)\$(Configuration)\"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -120,8 +119,7 @@ copy "$(SolutionDir)libcdi\libcdix64.dll" "$(SolutionDir)$(Platform)\$(Configura
     </Lib>
     <PostBuildEvent>
       <Command>copy "$(ProjectDir)jep106.ids" "$(SolutionDir)$(Platform)\$(Configuration)\"
-copy "$(SolutionDir)libcdi\libcdi.dll" "$(SolutionDir)$(Platform)\$(Configuration)\"
-copy "$(SolutionDir)libcdi\libcdix64.dll" "$(SolutionDir)$(Platform)\$(Configuration)\"</Command>
+copy "$(SolutionDir)libcdi\libcdi.$(Platform).dll" "$(SolutionDir)$(Platform)\$(Configuration)\"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
