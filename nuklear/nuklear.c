@@ -377,3 +377,24 @@ nk_combo_begin_color_dynamic(struct nk_context* ctx, struct nk_color color)
 	}
 	return nk_combo_begin(ctx, win, size, is_clicked, header);
 }
+
+void
+nk_block(struct nk_context* ctx, struct nk_color color, const char* str)
+{
+	static struct nk_style_button style;
+	static struct nk_color inv;
+	nk_zero_struct(style);
+	style.normal = nk_style_item_color(color);
+	style.hover = nk_style_item_color(color);
+	style.active = nk_style_item_color(color);
+	style.text_background = color;
+	if ((uint32_t)color.r + color.g + color.b >=  382)
+		inv = nk_rgb(0, 0, 0);
+	else
+		inv = nk_rgb(255, 255, 255);
+	style.text_normal = inv;
+	style.text_hover = inv;
+	style.text_active = inv;
+	style.text_alignment = NK_TEXT_CENTERED;
+	nk_button_label_styled(ctx, &style, str);
+}

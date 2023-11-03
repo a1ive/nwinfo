@@ -7,23 +7,6 @@ LPCSTR NWL_Ucs2ToUtf8(LPCWSTR src);
 LPCWSTR NWL_Utf8ToUcs2(LPCSTR src);
 LPCSTR NWL_GetHumanSize(UINT64 size, LPCSTR human_sizes[6], UINT64 base);
 
-static void
-draw_rect(struct nk_context* ctx, struct nk_color bg, const char* str)
-{
-	static struct nk_style_button style;
-	memcpy(&style, &ctx->style.button, sizeof(struct nk_style_button));
-	style.normal.type = NK_STYLE_ITEM_COLOR;
-	style.normal.data.color = bg;
-	style.hover.type = NK_STYLE_ITEM_COLOR;
-	style.hover.data.color = bg;
-	style.active.type = NK_STYLE_ITEM_COLOR;
-	style.active.data.color = bg;
-	style.text_normal = (struct nk_color)NK_COLOR_BLACK;
-	style.text_hover = (struct nk_color)NK_COLOR_BLACK;
-	style.text_active = (struct nk_color)NK_COLOR_BLACK;
-	nk_button_label_styled(ctx, &style, str);
-}
-
 static struct nk_color
 get_attr_color(int status)
 {
@@ -71,7 +54,7 @@ draw_health(struct nk_context* ctx, CDI_SMART* smart, int disk, float height)
 			snprintf(tmp, sizeof(tmp), "%s\n%d%%", get_health_status(health), n);
 		else
 			snprintf(tmp, sizeof(tmp), "%s", get_health_status(health));
-		draw_rect(ctx, get_attr_color(health), tmp);
+		nk_block(ctx, get_attr_color(health), tmp);
 
 		nk_l(ctx, gnwinfo_get_text(L"Temperature"), NK_TEXT_CENTERED);
 		int alarm = cdi_get_int(smart, disk, CDI_INT_TEMPERATURE_ALARM);
@@ -79,7 +62,7 @@ draw_health(struct nk_context* ctx, CDI_SMART* smart, int disk, float height)
 			alarm = 60;
 		n = cdi_get_int(smart, disk, CDI_INT_TEMPERATURE);
 		snprintf(tmp, sizeof(tmp), u8"%d \u2103", n);
-		draw_rect(ctx, gnwinfo_get_color((double)n, (double) alarm, 90.0), tmp);
+		nk_block(ctx, gnwinfo_get_color((double)n, (double) alarm, 90.0), tmp);
 		nk_group_end(ctx);
 	}
 }
@@ -246,7 +229,7 @@ draw_alert_icon(struct nk_context* ctx, BYTE id, int status, LPCWSTR format, WCH
 		value[12] = L'\0';
 	}
 
-	draw_rect(ctx, get_attr_color(status), "");
+	nk_block(ctx, get_attr_color(status), "");
 	return hex;
 }
 

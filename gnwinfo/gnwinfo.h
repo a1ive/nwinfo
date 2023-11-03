@@ -60,6 +60,9 @@ nk_button_image_hover(struct nk_context* ctx, struct nk_image img, const char* s
 nk_bool
 nk_combo_begin_color_dynamic(struct nk_context* ctx, struct nk_color color);
 
+void
+nk_block(struct nk_context* ctx, struct nk_color color, const char* str);
+
 #define MAIN_INFO_OS        (1U << 0)
 #define MAIN_INFO_BIOS      (1U << 1)
 #define MAIN_INFO_BOARD     (1U << 2)
