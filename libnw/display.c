@@ -92,6 +92,16 @@ struct EDID
 };
 #pragma pack()
 
+struct MonitorInfo
+{
+	UINT64 XRes;
+	UINT64 YRes;
+	double Freq;
+	UINT64 Width; //mm
+	UINT64 Height; //mm
+	CHAR Name[14];
+};
+
 static const char* hz_human_sizes[6] =
 { "Hz", "kHz", "MHz", "GHz", "THz", "PHz", };
 
@@ -136,11 +146,10 @@ GetYRes(PNODE node, UINT64 x, UINT64 AspectRatio, UINT16 ver)
 }
 
 static void
-DecodeStandardTiming(PNODE nm, struct EDID* pEDID)
+DecodeStandardTiming(PNODE nm, struct EDID* pEDID, struct MonitorInfo* mi)
 {
 	int i;
 	UINT16 ver = ((UINT16)pEDID->Version << 8) | pEDID->Revision;
-	UINT64 max_w = 0, max_h = 0, max_f = 0;
 	for (i = 0; i < 8; i++)
 	{
 		UINT64 x, y, a, f;
@@ -163,20 +172,18 @@ DecodeStandardTiming(PNODE nm, struct EDID* pEDID)
 		NWL_NodeAttrSetf(nstd, "Vertical Frequency", NAFLG_FMT_NUMERIC, "%llu", f);
 		NWL_NodeAttrSetf(nstd, "X Resolution", NAFLG_FMT_NUMERIC, "%llu", x);
 		NWL_NodeAttrSetf(nstd, "Y Resolution", NAFLG_FMT_NUMERIC, "%llu", y);
-		if (x * y > max_w * max_h)
+		if (x * y > mi->XRes * mi->YRes)
 		{
-			max_w = x;
-			max_h = y;
+			mi->XRes = x;
+			mi->YRes = y;
 		}
-		if (f > max_f)
-			max_f = f;
+		if (f > mi->Freq)
+			mi->Freq = (double)f;
 	}
-	NWL_NodeAttrSetf(nm, "Max Resolution", 0, "%llux%llu", max_w, max_h);
-	NWL_NodeAttrSetf(nm, "Max Refresh Rate (Hz)", NAFLG_FMT_NUMERIC, "%llu", max_f);
 }
 
 static void
-DecodeDetailedTiming(PNODE node, struct DetailedTimingDescriptor* desc)
+DecodeDetailedTiming(PNODE node, struct DetailedTimingDescriptor* desc, struct MonitorInfo* mi)
 {
 	UINT32 ha, va, hb, vb, w, h;
 	UINT64 pc;
@@ -193,16 +200,30 @@ DecodeDetailedTiming(PNODE node, struct DetailedTimingDescriptor* desc)
 	NWL_NodeAttrSetf(node, "Y Resolution", NAFLG_FMT_NUMERIC, "%u", va);
 	NWL_NodeAttrSetf(node, "Refresh Rate (Hz)", NAFLG_FMT_NUMERIC, "%.2f", hz);
 
+	if ((UINT64)ha * va > mi->XRes * mi->YRes)
+	{
+		mi->XRes = ha;
+		mi->YRes = va;
+	}
+	if (hz > mi->Freq)
+		mi->Freq = hz;
+
 	w = (UINT32)desc->WidthLSB + (UINT32)((desc->WHMSB & 0xf0) << 4);
 	h = (UINT32)desc->HeightLSB + (UINT32)((desc->WHMSB & 0x0f) << 8);
 	inch = sqrt((double)((UINT64)w) * w + ((UINT64)h) * h) * 0.0393701;
 	NWL_NodeAttrSetf(node, "Width (mm)", NAFLG_FMT_NUMERIC, "%u", w);
 	NWL_NodeAttrSetf(node, "Height (mm)", NAFLG_FMT_NUMERIC, "%u", h);
 	NWL_NodeAttrSetf(node, "Diagonal (in)", NAFLG_FMT_NUMERIC, "%.1f", inch);
+
+	if ((UINT64)w * h > mi->Width * mi->Height)
+	{
+		mi->Width = w;
+		mi->Height = h;
+	}
 }
 
 static void
-DecodeDisplayDescriptor(PNODE node, struct DisplayDescriptorBlock* desc)
+DecodeDisplayDescriptor(PNODE node, struct DisplayDescriptorBlock* desc, struct MonitorInfo* mi)
 {
 	int i;
 	CHAR text[14] = { 0 };
@@ -229,6 +250,8 @@ DecodeDisplayDescriptor(PNODE node, struct DisplayDescriptorBlock* desc)
 	case 0xFC:
 		NWL_NodeAttrSet(node, "Type", "Display Name", 0);
 		NWL_NodeAttrSet(node, "Text", text, 0);
+		if (text[0])
+			memcpy(mi->Name, text, sizeof (mi->Name));
 		break;
 	default:
 		NWL_NodeAttrSet(node, "Type", "Display Descriptor", 0);
@@ -237,7 +260,7 @@ DecodeDisplayDescriptor(PNODE node, struct DisplayDescriptorBlock* desc)
 }
 
 static void
-DecodeDescriptor(PNODE nm, struct EDID* pEDID)
+DecodeDescriptor(PNODE nm, struct EDID* pEDID, struct MonitorInfo* mi)
 {
 	int i;
 	for (i = 0; i < 4; i++)
@@ -248,9 +271,9 @@ DecodeDescriptor(PNODE nm, struct EDID* pEDID)
 		nd = NWL_NodeAppendNew(nm, name, NFLG_ATTGROUP);
 		if (pEDID->Desc[i].DD.Reserved1 == 0x0000 &&
 			pEDID->Desc[i].DD.Reserved2 == 0x00)
-			DecodeDisplayDescriptor(nd, &pEDID->Desc[i].DD);
+			DecodeDisplayDescriptor(nd, &pEDID->Desc[i].DD, mi);
 		else
-			DecodeDetailedTiming(nd, &pEDID->Desc[i].DT);
+			DecodeDetailedTiming(nd, &pEDID->Desc[i].DT, mi);
 	}
 }
 
@@ -261,6 +284,7 @@ DecodeEDID(PNODE nm, void* pData, DWORD dwSize, CHAR* Ids, DWORD IdsSize)
 	static UCHAR Magic[8] = { 0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00 };
 	char Manufacturer[4];
 	PNODE nflags;
+	struct MonitorInfo mi = { 0 };
 	if (dwSize < sizeof(struct EDID))
 		return;
 	if (memcmp(pEDID->Magic, Magic, 8) != 0)
@@ -291,14 +315,21 @@ DecodeEDID(PNODE nm, void* pData, DWORD dwSize, CHAR* Ids, DWORD IdsSize)
 	{
 		NWL_NodeAttrSet(nflags, "Type", "Analog", 0);
 	}
-	NWL_NodeAttrSetf(nm, "Width (cm)", NAFLG_FMT_NUMERIC, "%u", pEDID->Width);
-	NWL_NodeAttrSetf(nm, "Height (cm)", NAFLG_FMT_NUMERIC, "%u", pEDID->Height);
+
+	mi.Width = 10ULL * pEDID->Width;
+	mi.Height = 10ULL * pEDID->Height;
+
+	DecodeStandardTiming(nm, pEDID, &mi);
+
+	DecodeDescriptor(nm, pEDID, &mi);
+
+	NWL_NodeAttrSet(nm, "Display Name", mi.Name, 0);
+	NWL_NodeAttrSetf(nm, "Max Resolution", 0, "%llux%llu", mi.XRes, mi.YRes);
+	NWL_NodeAttrSetf(nm, "Max Refresh Rate (Hz)", NAFLG_FMT_NUMERIC, "%.1f", mi.Freq);
+	NWL_NodeAttrSetf(nm, "Width (cm)", NAFLG_FMT_NUMERIC, "%.1f", mi.Width / 10.0);
+	NWL_NodeAttrSetf(nm, "Height (cm)", NAFLG_FMT_NUMERIC, "%.1f", mi.Height / 10.0);
 	NWL_NodeAttrSetf(nm, "Diagonal (in)", NAFLG_FMT_NUMERIC, "%.1f",
-		sqrt((double)((UINT64)pEDID->Width * pEDID->Width + (UINT64)pEDID->Height * pEDID->Height)) * 0.393701);
-
-	DecodeStandardTiming(nm, pEDID);
-
-	DecodeDescriptor(nm, pEDID);
+		sqrt((double)(mi.Width * mi.Width + mi.Height * mi.Height)) * 0.0393701);
 }
 
 static void
@@ -332,6 +363,7 @@ GetEDID(PNODE nm, HDEVINFO devInfo, PSP_DEVINFO_DATA devInfoData, CHAR* Ids, DWO
 	RegCloseKey(hDevRegKey);
 }
 
+#if 0
 static LPCSTR
 GetOrientation(short dmOrientation)
 {
@@ -344,6 +376,7 @@ GetOrientation(short dmOrientation)
 	}
 	return "UNKNOWN";
 }
+#endif
 
 static VOID
 EnumRes(PNODE node, LPCWSTR dev)

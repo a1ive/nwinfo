@@ -379,7 +379,7 @@ switch_screen_state(void)
 static VOID
 draw_display(struct nk_context* ctx)
 {
-	INT i, j;
+	INT i;
 	LPCWSTR awake_text[2] = { L"Keep screen on", L"Do not keep screen on" };
 
 	nk_layout_row(ctx, NK_DYNAMIC, 0, 3, (float[3]) { 0.3f, 0.7f - g_ctx.gui_ratio, g_ctx.gui_ratio });
@@ -406,38 +406,19 @@ draw_display(struct nk_context* ctx)
 	}
 	for (i = 0; g_ctx.edid->Children[i].LinkedNode; i++)
 	{
-		CHAR name[32];
-		CHAR res[32] = { 0 };
-		LPCSTR product = NULL;
-		LPCSTR id = NULL;
 		PNODE mon = g_ctx.edid->Children[i].LinkedNode;
-		id = gnwinfo_get_node_attr(mon, "ID");
+		LPCSTR id = gnwinfo_get_node_attr(mon, "ID");
 		if (id[0] == '-')
 			continue;
 		nk_lhsc(ctx, gnwinfo_get_node_attr(mon, "Manufacturer"), NK_TEXT_LEFT, g_color_text_d, nk_true, nk_true);
 		
-		for (j = 0; j < 4; j++)
-		{
-			PNODE desc;
-			snprintf(name, 32, "Descriptor %d", j);
-			desc = NWL_NodeGetChild(mon, name);
-			if (res[0] == '\0' &&
-				strcmp(gnwinfo_get_node_attr(desc, "Type"), "Detailed Timing Descriptor") == 0)
-				snprintf(res, 32, "%sx%s@%sHz",
-					gnwinfo_get_node_attr(desc, "X Resolution"),
-					gnwinfo_get_node_attr(desc, "Y Resolution"),
-					gnwinfo_get_node_attr(desc, "Refresh Rate (Hz)"));
-			if (product == NULL
-				&& strcmp(gnwinfo_get_node_attr(desc, "Type"), "Display Name") == 0)
-				product = gnwinfo_get_node_attr(desc, "Text");
-		}
-		
 		nk_lhcf(ctx, NK_TEXT_LEFT, g_color_text_l,
-			"%s %s %s %s\"",
+			"%s %s@%sHz %s\" %s",
 			id,
-			product,
-			res,
-			gnwinfo_get_node_attr(mon, "Diagonal (in)"));
+			gnwinfo_get_node_attr(mon, "Max Resolution"),
+			gnwinfo_get_node_attr(mon, "Max Refresh Rate (Hz)"),
+			gnwinfo_get_node_attr(mon, "Diagonal (in)"),
+			gnwinfo_get_node_attr(mon, "Display Name"));
 	}
 }
 
