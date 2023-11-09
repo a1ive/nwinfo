@@ -411,6 +411,10 @@ PrintSmartInfo(PNODE node, CDI_SMART* ptr, INT index)
 	else
 		NWL_NodeAttrSet(node, "Health Status", cdi_get_health_status(cdi_get_int(ptr, index, CDI_INT_DISK_STATUS)), 0);
 
+	str = cdi_get_string(ptr, index, CDI_STRING_SN);
+	NWL_NodeAttrSet(node, "Serial Number", NWL_Ucs2ToUtf8(str), NAFLG_FMT_SENSITIVE);
+	cdi_free_string(str);
+
 	str = cdi_get_string(ptr, index, CDI_STRING_TRANSFER_MODE_CUR);
 	NWL_NodeAttrSet(node, "Current Transfer Mode", NWL_Ucs2ToUtf8(str), 0);
 	cdi_free_string(str);
@@ -580,7 +584,10 @@ PrintDiskInfo(BOOL cdrom, PNODE node, CDI_SMART* smart)
 		if (PhyDriveList[i].ProductRev[0])
 			NWL_NodeAttrSet(nd, "Product Rev", PhyDriveList[i].ProductRev, 0);
 		if (PhyDriveList[i].SerialNumber[0])
+		{
 			NWL_NodeAttrSet(nd, "Serial Number", PhyDriveList[i].SerialNumber, NAFLG_FMT_SENSITIVE);
+			NWL_NodeAttrSet(nd, "Serial Number (Raw)", PhyDriveList[i].SerialNumber, NAFLG_FMT_SENSITIVE);
+		}
 		NWL_NodeAttrSet(nd, "Type", NWL_GetBusTypeString(PhyDriveList[i].BusType), 0);
 		NWL_NodeAttrSetBool(nd, "Removable", PhyDriveList[i].RemovableMedia, 0);
 		NWL_NodeAttrSet(nd, "Size",
