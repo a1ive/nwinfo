@@ -97,6 +97,8 @@ set_hostname(const char* text)
 	NWL_NtSetRegValue(HKEY_LOCAL_MACHINE, L"SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters", L"Hostname", hostname, len, REG_SZ);
 	NWL_NtSetRegValue(HKEY_LOCAL_MACHINE, L"SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters", L"NV Hostname", hostname, len, REG_SZ);
 
+	NWL_NtSetRegValue(HKEY_LOCAL_MACHINE, L"SYSTEM\\CurrentControlSet\\Services\\EventLog\\State", L"LastComputerName", hostname, len, REG_SZ);
+
 	NWL_NtSetRegValue(HKEY_LOCAL_MACHINE, L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Winlogon", L"AltDefaultDomainName", hostname, len, REG_SZ);
 	NWL_NtSetRegValue(HKEY_LOCAL_MACHINE, L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Winlogon", L"DefaultDomainName", hostname, len, REG_SZ);
 

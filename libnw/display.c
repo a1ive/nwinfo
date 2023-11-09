@@ -363,21 +363,6 @@ GetEDID(PNODE nm, HDEVINFO devInfo, PSP_DEVINFO_DATA devInfoData, CHAR* Ids, DWO
 	RegCloseKey(hDevRegKey);
 }
 
-#if 0
-static LPCSTR
-GetOrientation(short dmOrientation)
-{
-	switch (dmOrientation)
-	{
-	case DMDO_DEFAULT: return "DEFAULT";
-	case DMDO_90: return "90";
-	case DMDO_180: return "180";
-	case DMDO_270: return "270";
-	}
-	return "UNKNOWN";
-}
-#endif
-
 static VOID
 EnumRes(PNODE node, LPCWSTR dev)
 {
