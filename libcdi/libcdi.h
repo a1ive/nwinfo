@@ -3,7 +3,7 @@
 #define VC_EXTRALEAN
 #include <windows.h>
 
-#define CDI_VERSION "9.1.1"
+#define CDI_VERSION "9.2.1"
 
 enum CDI_ATA_BOOL
 {
