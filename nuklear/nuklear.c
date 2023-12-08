@@ -7,6 +7,7 @@
 
 #pragma warning(disable:4996)
 #pragma warning(disable:4116)
+#pragma warning(disable:4244)
 
 #include <assert.h>
 #define NK_ASSERT(expr) assert(expr)
@@ -20,7 +21,6 @@
 #define NK_IMPLEMENTATION
 #include <nuklear.h>
 
-#pragma warning(disable:4244)
 #pragma comment(lib, "gdiplus.lib")
 
 #define NK_GDIP_IMPLEMENTATION
