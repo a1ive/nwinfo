@@ -533,13 +533,14 @@ PrintIsSsd(PNODE node, PHY_DRIVE_INFO* info, DWORD index)
 {
 	if (NWLC->NwOsInfo.dwMajorVersion >= 6)
 	{
+		DWORD dwBytes;
 		STORAGE_PROPERTY_QUERY propQuery = { .QueryType = PropertyStandardQuery, .PropertyId = StorageDeviceSeekPenaltyProperty };
 		DEVICE_SEEK_PENALTY_DESCRIPTOR dspd = { 0 };
 		HANDLE hDisk = NWL_GetDiskHandleById(FALSE, FALSE, index);
 		if (hDisk && hDisk != INVALID_HANDLE_VALUE)
 		{
 			if (DeviceIoControl(hDisk, IOCTL_STORAGE_QUERY_PROPERTY, &propQuery, sizeof(propQuery),
-				&dspd, sizeof(dspd), NULL, NULL))
+				&dspd, sizeof(dspd), &dwBytes, NULL))
 			{
 				NWL_NodeAttrSetBool(node, "SSD", (dspd.IncursSeekPenalty == FALSE), 0);
 				CloseHandle(hDisk);
