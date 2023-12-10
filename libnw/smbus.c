@@ -77,10 +77,10 @@ static uint16_t ichx_get_smbus_base(void)
 	val = pci_conf_read16(NWLC->NwDrv, smbus_addr, 0x04);
 	if (!(val & 1))
 		pci_conf_write16(NWLC->NwDrv, smbus_addr, 0x04, val | 1);
-	val = pci_conf_read16(NWLC->NwDrv, smbus_addr, 0x20);
-	if (val == 0xFFFF)
-		return 0;
-	val &= 0xFFFE;
+	val = pci_conf_read16(NWLC->NwDrv, smbus_addr, 0x20) & 0xFFF0;
+	//if (val == 0xFFFF)
+		//return 0;
+	//val &= 0xFFFE;
 	tmp = pci_conf_read8(NWLC->NwDrv, smbus_addr, 0x40);
 	if ((tmp & 4) == 0)
 		pci_conf_write8(NWLC->NwDrv, smbus_addr, 0x40, tmp | 0x04);
@@ -169,6 +169,7 @@ static void ichx_ddr4_set_page(uint8_t page)
 {
 	if (page > 1)
 		return;
+	NWL_Debugf("[DBG] ICHx DDR4 set page %u\n", page);
 	io_outb(NWLC->NwDrv, SMBHSTADD, 0x6C + (page << 1));
 	io_outb(NWLC->NwDrv, SMBHSTCNT, SMBHSTCNT_BYTE_DATA);
 	ichx_process();
@@ -178,6 +179,7 @@ static void ichx_ddr5_set_page(uint8_t index, uint8_t page)
 {
 	if (page >= 8) // offset = 1024 / 128
 		return;
+	NWL_Debugf("[DBG] ICHx DDR5 set page %u\n", page);
 	io_outb(NWLC->NwDrv, SMBHSTADD, index << 1);
 	io_outb(NWLC->NwDrv, SMBHSTCMD, SPD5_MR11 & 0x7F);
 	io_outb(NWLC->NwDrv, SMBHSTDAT0, page);
@@ -254,14 +256,17 @@ static uint8_t nv_spd_read_byte(uint8_t index, uint16_t offset)
 
 static uint8_t spd_read_byte(uint8_t type, uint8_t index, uint16_t offset)
 {
+	uint8_t ret = 0xFF;
 	switch (smbus_vid)
 	{
 	case 0x10de: /* nVIDIA */
-		return nv_spd_read_byte(index, offset);
+		ret = nv_spd_read_byte(index, offset);
+		break;
 	default:
-		return ichx_spd_read_byte(type, index, offset);
+		ret = ichx_spd_read_byte(type, index, offset);
 	}
-	return 0xFF;
+	NWL_Debugf("[DBG] Reading SPD%u offset %04X -> %02X\n", index, offset, ret);
+	return ret;
 }
 
 void
@@ -275,13 +280,14 @@ NWL_SpdInit(void)
 		NWL_NodeAppendMultiSz(&NWLC->ErrLog, "Memory allocation failed in "__FUNCTION__);
 		return;
 	}
-
+	NWL_Debugf("[DBG] SPD Init, find PCI 0c05 devices\n");
 	smbus_addr = pci_find_by_class(NWLC->NwDrv, 0x0c, 0x05, 0x00, 0);
 	if (smbus_addr == 0xFFFFFFFF)
 	{
 		NWL_NodeAppendMultiSz(&NWLC->ErrLog, "SMBus not found");
 		return;
 	}
+	NWL_Debugf("[DBG] SMBus address %08X\n", smbus_addr);
 	smbus_vid = pci_conf_read16(NWLC->NwDrv, smbus_addr, 0);
 	smbus_did = pci_conf_read16(NWLC->NwDrv, smbus_addr, 2);
 	if (smbus_vid == 0xFFFF || smbus_did == 0xFFFF)
@@ -289,6 +295,7 @@ NWL_SpdInit(void)
 		NWL_NodeAppendMultiSz(&NWLC->ErrLog, "SMBus id read error");
 		return;
 	}
+	NWL_Debugf("[DBG] SMBus VID %04X, DID %04X\n", smbus_vid, smbus_did);
 	switch (smbus_vid)
 	{
 	case 0x8086: /* Intel */
@@ -347,6 +354,7 @@ NWL_SpdInit(void)
 		smbus_base = nv_get_smbus_base();
 		break;
 	}
+	NWL_Debugf("[DBG] SMBus base %04X\n", smbus_base);
 }
 
 static BOOL bytes_need(uint16_t type, uint16_t offset)
@@ -385,8 +393,9 @@ NWL_SpdGet(uint8_t index)
 		|| smbus_did == 0xFFFF || smbus_vid == 0xFFFF
 		|| smbus_addr == 0xFFFFFFFF || smbus_base == 0)
 		return NULL;
-
+	NWL_Debugf("[DBG] Reading index %u\n", index);
 	spd_type = get_smbios_memory_type();
+	NWL_Debugf("[DBG] SMBIOS memory type %02X\n", spd_type);
 	spd_type = spd_read_byte(spd_type, index, 2);
 	if (spd_type == 0xFF)
 		return NULL;
