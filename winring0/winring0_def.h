@@ -23,6 +23,7 @@
 #define OLS_DRIVER_ID							L"HwRwDrv"
 #define OLS_DRIVER_NAME							L"HwRwDrv.sys"
 #define OLS_DRIVER_NAME_X64						L"HwRwDrvx64.sys"
+#define OLS_DRIVER_NAME_WIN7_X64				L"HwRwDrvWin7x64.sys"
 #define OLS_DRIVER_OBJ							L"\\\\.\\HwRwDrv"
 // WinRing0.sys
 #define OLS_ALT_DRIVER_ID						L"WinRing0_1_2_0"

@@ -72,14 +72,14 @@ static BOOL is_x64(void)
 #endif
 }
 
-static BOOL find_driver(struct wr0_drv_t* driver, LPCWSTR name, LPCWSTR name64, LPCWSTR id, LPCWSTR obj)
+static BOOL find_driver(struct wr0_drv_t* driver, LPCWSTR name, LPCWSTR id, LPCWSTR obj)
 {
 	HANDLE hFile = INVALID_HANDLE_VALUE;
 
 	GetModuleFileNameW(NULL, driver->driver_path, MAX_PATH);
 
 	PathCchRemoveFileSpec(driver->driver_path, MAX_PATH);
-	PathCchAppend(driver->driver_path, MAX_PATH, is_x64() ? name64 : name);
+	PathCchAppend(driver->driver_path, MAX_PATH, name);
 	hFile = CreateFileW(driver->driver_path, GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING, 0, NULL);
 	if (hFile != INVALID_HANDLE_VALUE)
 	{
@@ -94,7 +94,7 @@ static BOOL find_driver(struct wr0_drv_t* driver, LPCWSTR name, LPCWSTR name64, 
 	return FALSE;
 }
 
-struct wr0_drv_t* wr0_driver_open_real(LPCWSTR name, LPCWSTR name64, LPCWSTR id, LPCWSTR obj)
+struct wr0_drv_t* wr0_driver_open_real(LPCWSTR name, LPCWSTR id, LPCWSTR obj)
 {
 	struct wr0_drv_t* drv;
 	BOOL status = FALSE;
@@ -104,7 +104,7 @@ struct wr0_drv_t* wr0_driver_open_real(LPCWSTR name, LPCWSTR name64, LPCWSTR id,
 		return NULL;
 	ZeroMemory(drv, sizeof(struct wr0_drv_t));
 
-	if (!find_driver(drv, name, name64, id, obj))
+	if (!find_driver(drv, name, id, obj))
 		goto fail;
 	status = load_driver(drv);
 	if (status)
@@ -126,9 +126,24 @@ fail:
 
 struct wr0_drv_t* wr0_driver_open(void)
 {
-	struct wr0_drv_t* drv = wr0_driver_open_real(OLS_DRIVER_NAME, OLS_DRIVER_NAME_X64, OLS_DRIVER_ID, OLS_DRIVER_OBJ);
-	if (!drv)
-		drv = wr0_driver_open_real(OLS_ALT_DRIVER_NAME, OLS_ALT_DRIVER_NAME_X64, OLS_ALT_DRIVER_ID, OLS_ALT_DRIVER_OBJ);
+	struct wr0_drv_t* drv = NULL;
+	if (is_x64())
+	{
+		drv = wr0_driver_open_real(OLS_DRIVER_NAME_X64, OLS_DRIVER_ID, OLS_DRIVER_OBJ);
+		if (drv)
+			return drv;
+		drv = wr0_driver_open_real(OLS_DRIVER_NAME_WIN7_X64, OLS_DRIVER_ID, OLS_DRIVER_OBJ);
+		if (drv)
+			return drv;
+		drv = wr0_driver_open_real(OLS_ALT_DRIVER_NAME_X64, OLS_ALT_DRIVER_ID, OLS_ALT_DRIVER_OBJ);
+	}
+	else
+	{
+		drv = wr0_driver_open_real(OLS_DRIVER_NAME, OLS_DRIVER_ID, OLS_DRIVER_OBJ);
+		if (drv)
+			return drv;
+		drv = wr0_driver_open_real(OLS_ALT_DRIVER_NAME, OLS_ALT_DRIVER_ID, OLS_ALT_DRIVER_OBJ);
+	}
 	return drv;
 }
 

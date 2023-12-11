@@ -49,9 +49,10 @@ jobs:
         copy libcdi\libcdi.x64.dll nwinfo\libcdi.x64.dll
         copy libnw\jep106.ids nwinfo\jep106.ids
         # copy winring0\WinRing0.sys nwinfo\WinRing0.sys
-        copy winring0\WinRing0x64.sys nwinfo\WinRing0x64.sys
+        # copy winring0\WinRing0x64.sys nwinfo\WinRing0x64.sys
         copy winring0\HwRwDrv.sys nwinfo\HwRwDrv.sys
         copy winring0\HwRwDrvx64.sys nwinfo\HwRwDrvx64.sys
+        copy winring0\HwRwDrvWin7x64.sys nwinfo\HwRwDrvWin7x64.sys
 
     - name: Run UPX
       uses: crazy-max/ghaction-upx@v3

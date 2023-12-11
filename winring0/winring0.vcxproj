@@ -113,7 +113,8 @@ copy "$(ProjectDir)HwRwDrvx64.sys" "$(SolutionDir)$(Platform)\$(Configuration)\"
     </Lib>
     <PostBuildEvent>
       <Command>copy "$(ProjectDir)HwRwDrv.sys" "$(SolutionDir)$(Platform)\$(Configuration)\"
-copy "$(ProjectDir)HwRwDrvx64.sys" "$(SolutionDir)$(Platform)\$(Configuration)\"</Command>
+copy "$(ProjectDir)HwRwDrvx64.sys" "$(SolutionDir)$(Platform)\$(Configuration)\"
+copy "$(ProjectDir)HwRwDrvWin7x64.sys" "$(SolutionDir)$(Platform)\$(Configuration)\"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
