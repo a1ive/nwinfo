@@ -384,6 +384,8 @@ nk_block(struct nk_context* ctx, struct nk_color color, const char* str)
 	static struct nk_style_button style;
 	static struct nk_color inv;
 	nk_zero_struct(style);
+	style.color_factor_text = 1.0f;
+	style.color_factor_background = 1.0f;
 	style.normal = nk_style_item_color(color);
 	style.hover = nk_style_item_color(color);
 	style.active = nk_style_item_color(color);
