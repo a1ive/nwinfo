@@ -5,9 +5,9 @@
 
 struct wr0_drv_t
 {
-	LPWSTR driver_name;
-	LPWSTR driver_id;
-	LPWSTR driver_obj;
+	LPCWSTR driver_name;
+	LPCWSTR driver_id;
+	LPCWSTR driver_obj;
 	WCHAR driver_path[MAX_PATH];
 	SC_HANDLE scManager;
 	SC_HANDLE scDriver;
