@@ -117,6 +117,59 @@ NWL_FindId(PNODE nd, CHAR* Ids, DWORD IdsSize, CONST CHAR* v, CONST CHAR* d, CON
 	}
 }
 
+BOOL
+NWL_ParseHwid(PNODE nd, CHAR* Ids, DWORD IdsSize, LPCWSTR Hwid, INT usb)
+{
+	// PCI\VEN_XXXX&DEV_XXXX
+	// PCI\VEN_XXXX&DEV_XXXX&SUBSYS_XXXXXXXX
+	// USB\VID_XXXX&PID_XXXX
+	// USB\ROOT_HUBXX&VIDXXXX&PIDXXXX
+	size_t i;
+	CHAR vid[5] = { 0 };
+	CHAR did[5] = { 0 };
+	CHAR subsys[10] = { 0 };
+	LPCWSTR p = Hwid;
+	LPCWSTR vidNeedle = L"VEN";
+	LPCWSTR didNeedle = L"DEV";
+	if (usb)
+	{
+		vidNeedle = L"VID";
+		didNeedle = L"PID";
+	}
+
+	p = wcsstr(p, vidNeedle);
+	if (p == NULL)
+		return FALSE;
+	p += 3;
+	if (p[0] == '_')
+		p++;
+	for (i = 0; i < 4 && p[i]; i++)
+		vid[i] = (CHAR)p[i];
+	p = wcsstr(p, didNeedle);
+	if (p == NULL)
+		return FALSE;
+	p += 3;
+	if (p[0] == '_')
+		p++;
+	for (i = 0; i < 4 && p[i]; i++)
+		did[i] = (CHAR)p[i];
+	p = wcsstr(p, L"SUBSYS_");
+	if (p != NULL)
+	{
+		p += 7;
+		for (i = 0; i < 4 && p[i]; i++)
+			subsys[i] = (CHAR)p[i];
+		subsys[4] = ' ';
+		for (i = 4; i < 8 && p[i]; i++)
+			subsys[i + 1] = (CHAR)p[i];
+	}
+
+	NWL_NodeAttrSet(nd, "Vendor ID", vid, 0);
+	NWL_NodeAttrSet(nd, "Device ID", did, 0);
+	NWL_FindId(nd, Ids, IdsSize, vid, did, p ? subsys : NULL, usb);
+	return 1;
+}
+
 VOID
 NWL_FindClass(PNODE nd, CHAR* Ids, DWORD IdsSize, CONST CHAR* Class, INT usb)
 {
