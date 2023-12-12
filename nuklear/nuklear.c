@@ -199,10 +199,11 @@ nk_lhsc(struct nk_context* ctx, const char* str,
 		nk_hover_colored(ctx, str, text_len, color);
 }
 
-static CHAR m_lhscfv_buf[MAX_PATH];
+static CHAR m_lhscfv_buf[MAX_PATH + 1];
 static void
 nk_lhscfv(struct nk_context* ctx, nk_flags alignment, struct nk_color color, nk_bool hover, nk_bool space, const char* fmt, va_list args)
 {
+	memset(m_lhscfv_buf, 0, MAX_PATH);
 	vsnprintf(m_lhscfv_buf, MAX_PATH, fmt, args);
 	nk_lhsc(ctx, m_lhscfv_buf, alignment, color, hover, space);
 }
