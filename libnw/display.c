@@ -5,6 +5,7 @@
 #include <windows.h>
 #include <setupapi.h>
 #include <math.h>
+#include <devguid.h>
 
 #include "libnw.h"
 #include "utils.h"
@@ -333,17 +334,28 @@ DecodeEDID(PNODE nm, void* pData, DWORD dwSize, CHAR* Ids, DWORD IdsSize)
 }
 
 static void
-GetEDID(PNODE nm, HDEVINFO devInfo, PSP_DEVINFO_DATA devInfoData, CHAR* Ids, DWORD IdsSize)
+GetEDID(PNODE node, HDEVINFO devInfo, PSP_DEVINFO_DATA devInfoData, CHAR* Ids, DWORD IdsSize, DWORD index)
 {
 	HKEY hDevRegKey;
 	LSTATUS lRet;
-	BOOL bRet;
 	UCHAR* EDIDdata = NWLC->NwBuf;
 	DWORD EDIDsize;
 
-	bRet = SetupDiGetDeviceRegistryPropertyW(devInfo, devInfoData,
-		SPDRP_HARDWAREID, NULL, NWLC->NwBuf, NWINFO_BUFSZ, NULL);
-	NWL_NodeAttrSet(nm, "HWID", bRet ? NWL_Ucs2ToUtf8((LPCWSTR)NWLC->NwBuf) : "UNKNOWN", 0);
+	if (!SetupDiGetDeviceRegistryPropertyW(devInfo, devInfoData,
+		SPDRP_HARDWAREID, NULL, NWLC->NwBuf, NWINFO_BUFSZ, NULL))
+		return;
+
+	if (NWLC->NwOsInfo.dwMajorVersion <= 5)
+	{
+		// Windows XP: prevent duplicate entries
+		static WCHAR savedHwid[32];
+		if (index && wcscmp(savedHwid, (WCHAR*)NWLC->NwBuf) == 0)
+			return;
+		wcscpy_s(savedHwid, 32, (WCHAR*)NWLC->NwBuf);
+	}
+
+	PNODE nm = NWL_NodeAppendNew(node, "Monitor", NFLG_TABLE_ROW);
+	NWL_NodeAttrSet(nm, "HWID", NWL_Ucs2ToUtf8((LPCWSTR)NWLC->NwBuf), 0);
 
 	hDevRegKey = SetupDiOpenDevRegKey(devInfo, devInfoData,
 		DICS_FLAG_GLOBAL, 0, DIREG_DEV, KEY_ALL_ACCESS);
@@ -413,13 +425,13 @@ PNODE NW_Edid(VOID)
 	HDEVINFO Info = NULL;
 	DWORD i = 0;
 	SP_DEVINFO_DATA DeviceInfoData = { .cbSize = sizeof(SP_DEVINFO_DATA) };
-	DWORD Flags = DIGCF_PRESENT | DIGCF_ALLCLASSES;
+	DWORD Flags = DIGCF_PRESENT;
 	CHAR* Ids = NULL;
 	DWORD IdsSize = 0;
 	if (NWLC->EdidInfo)
 		NWL_NodeAppendChild(NWLC->NwRoot, node);
 
-	Info = SetupDiGetClassDevsExW(NULL, L"DISPLAY", NULL, Flags, NULL, NULL, NULL);
+	Info = SetupDiGetClassDevsExW(&GUID_DEVCLASS_MONITOR, NULL, NULL, Flags, NULL, NULL, NULL);
 	if (Info == INVALID_HANDLE_VALUE)
 	{
 		NWL_NodeAppendMultiSz(&NWLC->ErrLog, "SetupDiGetClassDevs failed");
@@ -428,8 +440,7 @@ PNODE NW_Edid(VOID)
 	Ids = NWL_LoadIdsToMemory(L"pnp.ids", &IdsSize);
 	for (i = 0; SetupDiEnumDeviceInfo(Info, i, &DeviceInfoData); i++)
 	{
-		PNODE nm = NWL_NodeAppendNew(node, "Monitor", NFLG_TABLE_ROW);
-		GetEDID(nm, Info, &DeviceInfoData, Ids, IdsSize);
+		GetEDID(node, Info, &DeviceInfoData, Ids, IdsSize, i);
 	}
 	SetupDiDestroyDeviceInfoList(Info);
 	free(Ids);
