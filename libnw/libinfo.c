@@ -38,6 +38,8 @@ PNODE NW_Libinfo(VOID)
 	NWL_NodeAttrSet(pNode, "Build Time", __DATE__ " " __TIME__, 0);
 	NWL_NodeAttrSet(pNode, "libnw", "v" NWINFO_VERSION_STR, 0);
 	NWL_NodeAttrSetf(pNode, "MSVC Version", 0, "%u", _MSC_FULL_VER);
+	NWL_NodeAttrSetf(pNode, "NT Version", 0, "%lu.%lu.%lu",
+		NWLC->NwOsInfo.dwMajorVersion, NWLC->NwOsInfo.dwMinorVersion, NWLC->NwOsInfo.dwBuildNumber);
 	if (NWLC->NwDrv)
 	{
 		NWL_NodeAttrSet(pNode, "Driver", NWL_Ucs2ToUtf8(NWLC->NwDrv->driver_id), 0);
