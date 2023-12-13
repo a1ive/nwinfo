@@ -341,20 +341,20 @@ GetEDID(PNODE node, HDEVINFO devInfo, PSP_DEVINFO_DATA devInfoData, CHAR* Ids, D
 	DWORD EDIDsize;
 
 	if (!SetupDiGetDeviceRegistryPropertyW(devInfo, devInfoData,
-		SPDRP_HARDWAREID, NULL, NWLC->NwBuf, NWINFO_BUFSZ, NULL))
+		SPDRP_HARDWAREID, NULL, (PBYTE)NWLC->NwBufW, NWINFO_BUFSZB, NULL))
 		return;
 
 	if (NWLC->NwOsInfo.dwMajorVersion <= 5)
 	{
 		// Windows XP: prevent duplicate entries
 		static WCHAR savedHwid[32] = { 0 };
-		if (index && wcscmp(savedHwid, (WCHAR*)NWLC->NwBuf) == 0)
+		if (index && wcscmp(savedHwid, NWLC->NwBufW) == 0)
 			return;
-		wcscpy_s(savedHwid, 32, (WCHAR*)NWLC->NwBuf);
+		wcscpy_s(savedHwid, 32, NWLC->NwBufW);
 	}
 
 	PNODE nm = NWL_NodeAppendNew(node, "Monitor", NFLG_TABLE_ROW);
-	NWL_NodeAttrSet(nm, "HWID", NWL_Ucs2ToUtf8((LPCWSTR)NWLC->NwBuf), 0);
+	NWL_NodeAttrSet(nm, "HWID", NWL_Ucs2ToUtf8(NWLC->NwBufW), 0);
 
 	hDevRegKey = SetupDiOpenDevRegKey(devInfo, devInfoData,
 		DICS_FLAG_GLOBAL, 0, DIREG_DEV, KEY_ALL_ACCESS);
@@ -430,7 +430,7 @@ PNODE NW_Edid(VOID)
 	if (NWLC->EdidInfo)
 		NWL_NodeAppendChild(NWLC->NwRoot, node);
 
-	Info = SetupDiGetClassDevsExW(NULL, L"DISPLAY", NULL, Flags, NULL, NULL, NULL);
+	Info = SetupDiGetClassDevsW(NULL, L"DISPLAY", NULL, Flags);
 	if (Info == INVALID_HANDLE_VALUE)
 	{
 		NWL_NodeAppendMultiSz(&NWLC->ErrLog, "SetupDiGetClassDevs failed");

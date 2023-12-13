@@ -47,7 +47,7 @@ PNODE NW_Usb(VOID)
 	if (NWLC->UsbInfo)
 		NWL_NodeAppendChild(NWLC->NwRoot, node);
 	Ids = NWL_LoadIdsToMemory(L"usb.ids", &IdsSize);
-	Info = SetupDiGetClassDevsExW(NULL, L"USB", NULL, Flags, NULL, NULL, NULL);
+	Info = SetupDiGetClassDevsW(NULL, L"USB", NULL, Flags);
 	if (Info == INVALID_HANDLE_VALUE)
 	{
 		NWL_NodeAppendMultiSz(&NWLC->ErrLog, "SetupDiGetClassDevs failed");
@@ -57,17 +57,17 @@ PNODE NW_Usb(VOID)
 	{
 		PNODE nusb = NULL;
 		if (!SetupDiGetDeviceRegistryPropertyW(Info, &DeviceInfoData,
-			SPDRP_HARDWAREID, NULL, NWLC->NwBuf, NWINFO_BUFSZ, NULL))
+			SPDRP_HARDWAREID, NULL, (PBYTE)NWLC->NwBufW, NWINFO_BUFSZB, NULL))
 			continue;
 		nusb = NWL_NodeAppendNew(node, "Device", NFLG_TABLE_ROW);
-		NWL_NodeAttrSet(nusb, "HWID", NWL_Ucs2ToUtf8((WCHAR*)NWLC->NwBuf), 0);
-		NWL_ParseHwid(nusb, Ids, IdsSize, (WCHAR*)NWLC->NwBuf, 1);
+		NWL_NodeAttrSet(nusb, "HWID", NWL_Ucs2ToUtf8(NWLC->NwBufW), 0);
+		NWL_ParseHwid(nusb, Ids, IdsSize, NWLC->NwBufW, 1);
 
 		if (SetupDiGetDeviceRegistryPropertyW(Info, &DeviceInfoData,
-			SPDRP_COMPATIBLEIDS, NULL, NWLC->NwBuf, NWINFO_BUFSZ, NULL)
-			&& NWLC->NwBuf[0])
+			SPDRP_COMPATIBLEIDS, NULL, (PBYTE)NWLC->NwBufW, NWINFO_BUFSZB, NULL)
+			&& NWLC->NwBufW[0])
 		{
-			LPCSTR BufferHw = NWL_Ucs2ToUtf8((WCHAR*)NWLC->NwBuf);
+			LPCSTR BufferHw = NWL_Ucs2ToUtf8(NWLC->NwBufW);
 			NWL_NodeAttrSet(nusb, "Compatiable ID", BufferHw, 0);
 			ParseHwClass(nusb, Ids, IdsSize, BufferHw);
 		}

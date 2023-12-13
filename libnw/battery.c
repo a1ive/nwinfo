@@ -283,9 +283,9 @@ PrintPowerScheme(PNODE node)
 		goto fail;
 	*(FARPROC*)&Nt6PowerReadName = GetProcAddress(hL, "PowerReadFriendlyName");
 
-	dwSize = NWINFO_BUFSZ;
-	if (Nt6PowerReadName(NULL, &guid, NULL, NULL, NWLC->NwBuf, &dwSize) == ERROR_SUCCESS)
-		NWL_NodeAttrSet(node, "Active Power Scheme Name", NWL_Ucs2ToUtf8((WCHAR*)NWLC->NwBuf), 0);
+	dwSize = NWINFO_BUFSZB;
+	if (Nt6PowerReadName(NULL, &guid, NULL, NULL, (PUCHAR)NWLC->NwBufW, &dwSize) == ERROR_SUCCESS)
+		NWL_NodeAttrSet(node, "Active Power Scheme Name", NWL_Ucs2ToUtf8(NWLC->NwBufW), 0);
 fail:
 	if (hL)
 		FreeLibrary(hL);

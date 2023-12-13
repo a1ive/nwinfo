@@ -240,8 +240,6 @@ VOID NWL_GetUptime(CHAR* szUptime, DWORD dwSize)
 	snprintf(szUptime, dwSize, "%s%s%llum %llus", szDays, szHours, ullMinutes, ullSeconds);
 }
 
-#define NWINFO_WCS_SIZE (NWINFO_BUFSZ / sizeof(WCHAR))
-
 VOID NWL_GetHostname(CHAR* szHostname)
 {
 	WCHAR szHostnameW[MAX_COMPUTERNAME_LENGTH + 1] = L"";
@@ -253,23 +251,23 @@ VOID NWL_GetHostname(CHAR* szHostname)
 static void PrintOsInfo(PNODE node)
 {
 	DWORD dwType;
-	DWORD bufCharCount = NWINFO_WCS_SIZE;
-	WCHAR* infoBuf = (WCHAR*)NWLC->NwBuf;
+	DWORD bufCharCount = NWINFO_BUFSZW;
+	WCHAR* infoBuf = NWLC->NwBufW;
 	WCHAR* szHardwareId;
 	NWL_GetHostname((CHAR*)NWLC->NwBuf);
 	NWL_NodeAttrSet(node, "Computer Name", NWLC->NwBuf, 0);
-	bufCharCount = NWINFO_WCS_SIZE;
+	bufCharCount = NWINFO_BUFSZW;
 	if (GetUserNameW(infoBuf, &bufCharCount))
 		NWL_NodeAttrSet(node, "Username", NWL_Ucs2ToUtf8(infoBuf), 0);
-	bufCharCount = NWINFO_WCS_SIZE;
+	bufCharCount = NWINFO_BUFSZW;
 	if (GetComputerNameExW(ComputerNameDnsDomain, infoBuf, &bufCharCount))
 		NWL_NodeAttrSet(node, "DNS Domain", NWL_Ucs2ToUtf8(infoBuf), 0);
-	bufCharCount = NWINFO_WCS_SIZE;
+	bufCharCount = NWINFO_BUFSZW;
 	if (GetComputerNameExW(ComputerNameDnsHostname, infoBuf, &bufCharCount))
 		NWL_NodeAttrSet(node, "DNS Hostname", NWL_Ucs2ToUtf8(infoBuf), 0);
-	if (GetSystemDirectoryW(infoBuf, NWINFO_WCS_SIZE))
+	if (GetSystemDirectoryW(infoBuf, NWINFO_BUFSZW))
 		NWL_NodeAttrSet(node, "System Directory", NWL_Ucs2ToUtf8(infoBuf), 0);
-	if (GetWindowsDirectoryW(infoBuf, NWINFO_WCS_SIZE))
+	if (GetWindowsDirectoryW(infoBuf, NWINFO_BUFSZW))
 		NWL_NodeAttrSet(node, "Windows Directory", NWL_Ucs2ToUtf8(infoBuf), 0);
 	NWL_GetUptime((CHAR*)NWLC->NwBuf, NWINFO_BUFSZ);
 	NWL_NodeAttrSet(node, "Uptime", (CHAR*)NWLC->NwBuf, 0);

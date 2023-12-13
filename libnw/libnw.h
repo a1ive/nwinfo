@@ -12,6 +12,8 @@ extern "C" {
 #include "format.h"
 
 #define NWINFO_BUFSZ 65535
+#define NWINFO_BUFSZW (NWINFO_BUFSZ / sizeof(WCHAR))
+#define NWINFO_BUFSZB (NWINFO_BUFSZW * sizeof(WCHAR))
 
 struct wr0_drv_t;
 struct acpi_rsdp_v2;
@@ -81,7 +83,11 @@ typedef struct _NWLIB_CONTEXT
 	LPCSTR* NwUnits;
 	CHAR* ErrLog;
 	VOID (*ErrLogCallback) (LPCSTR lpszText);
-	UCHAR NwBuf[NWINFO_BUFSZ];
+	union
+	{
+		WCHAR NwBufW[NWINFO_BUFSZW];
+		CHAR NwBuf[NWINFO_BUFSZ];
+	};
 } NWLIB_CONTEXT, *PNWLIB_CONTEXT;
 
 extern PNWLIB_CONTEXT NWLC;

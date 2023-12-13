@@ -43,10 +43,10 @@ PNODE NW_NetShare(VOID)
 		goto fail;
 	for (i = 0; i < dwIndex; i++)
 	{
-		DWORD dwSize = NWINFO_BUFSZ / sizeof(WCHAR);
-		if (RegEnumKeyExW(root, i, (LPWSTR)NWLC->NwBuf, &dwSize, NULL, NULL, NULL, NULL) != ERROR_SUCCESS)
+		DWORD dwSize = NWINFO_BUFSZW;
+		if (RegEnumKeyExW(root, i, NWLC->NwBufW, &dwSize, NULL, NULL, NULL, NULL) != ERROR_SUCCESS)
 			continue;
-		EnumShares(node, root, (LPCWSTR)NWLC->NwBuf);
+		EnumShares(node, root, NWLC->NwBufW);
 	}
 
 fail:

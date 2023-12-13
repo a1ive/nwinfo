@@ -334,7 +334,7 @@ GetIdsHandle(LPCWSTR lpFileName)
 		Fp = INVALID_HANDLE_VALUE;
 	if (Fp == INVALID_HANDLE_VALUE)
 	{
-		snprintf(NWLC->NwBuf, sizeof(NWLC->NwBuf), "Cannot open %s", NWL_Ucs2ToUtf8(FilePath));
+		snprintf(NWLC->NwBuf, NWINFO_BUFSZ, "Cannot open %s", NWL_Ucs2ToUtf8(FilePath));
 		NWL_NodeAppendMultiSz(&NWLC->ErrLog, NWLC->NwBuf);
 	}
 	return Fp;
@@ -352,7 +352,7 @@ CHAR* NWL_LoadIdsToMemory(LPCWSTR lpFileName, LPDWORD lpSize)
 	dwSize = GetFileSize(Fp, NULL);
 	if (dwSize == INVALID_FILE_SIZE || dwSize == 0)
 	{
-		snprintf(NWLC->NwBuf, sizeof(NWLC->NwBuf), "Bad %s file", NWL_Ucs2ToUtf8(lpFileName));
+		snprintf(NWLC->NwBuf, NWINFO_BUFSZ, "Bad %s file", NWL_Ucs2ToUtf8(lpFileName));
 		NWL_NodeAppendMultiSz(&NWLC->ErrLog, NWLC->NwBuf);
 		goto fail;
 	}
@@ -365,7 +365,7 @@ CHAR* NWL_LoadIdsToMemory(LPCWSTR lpFileName, LPDWORD lpSize)
 	bRet = ReadFile(Fp, Ids, dwSize, &dwSize, NULL);
 	if (bRet == FALSE)
 	{
-		snprintf(NWLC->NwBuf, sizeof(NWLC->NwBuf), "%s read error", NWL_Ucs2ToUtf8(lpFileName));
+		snprintf(NWLC->NwBuf, NWINFO_BUFSZ, "%s read error", NWL_Ucs2ToUtf8(lpFileName));
 		NWL_NodeAppendMultiSz(&NWLC->ErrLog, NWLC->NwBuf);
 		goto fail;
 	}
