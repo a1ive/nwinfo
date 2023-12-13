@@ -5,7 +5,6 @@
 #include <windows.h>
 #include <setupapi.h>
 #include <math.h>
-#include <devguid.h>
 
 #include "libnw.h"
 #include "utils.h"
@@ -348,7 +347,7 @@ GetEDID(PNODE node, HDEVINFO devInfo, PSP_DEVINFO_DATA devInfoData, CHAR* Ids, D
 	if (NWLC->NwOsInfo.dwMajorVersion <= 5)
 	{
 		// Windows XP: prevent duplicate entries
-		static WCHAR savedHwid[32];
+		static WCHAR savedHwid[32] = { 0 };
 		if (index && wcscmp(savedHwid, (WCHAR*)NWLC->NwBuf) == 0)
 			return;
 		wcscpy_s(savedHwid, 32, (WCHAR*)NWLC->NwBuf);
@@ -425,13 +424,13 @@ PNODE NW_Edid(VOID)
 	HDEVINFO Info = NULL;
 	DWORD i = 0;
 	SP_DEVINFO_DATA DeviceInfoData = { .cbSize = sizeof(SP_DEVINFO_DATA) };
-	DWORD Flags = DIGCF_PRESENT;
+	DWORD Flags = DIGCF_PRESENT | DIGCF_ALLCLASSES;
 	CHAR* Ids = NULL;
 	DWORD IdsSize = 0;
 	if (NWLC->EdidInfo)
 		NWL_NodeAppendChild(NWLC->NwRoot, node);
 
-	Info = SetupDiGetClassDevsExW(&GUID_DEVCLASS_MONITOR, NULL, NULL, Flags, NULL, NULL, NULL);
+	Info = SetupDiGetClassDevsExW(NULL, L"DISPLAY", NULL, Flags, NULL, NULL, NULL);
 	if (Info == INVALID_HANDLE_VALUE)
 	{
 		NWL_NodeAppendMultiSz(&NWLC->ErrLog, "SetupDiGetClassDevs failed");
