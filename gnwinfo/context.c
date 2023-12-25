@@ -219,6 +219,7 @@ get_display_info(void)
 	g_ctx.display_width = mni.rcMonitor.right - mni.rcMonitor.left;
 	g_ctx.display_height = mni.rcMonitor.bottom - mni.rcMonitor.top;
 	g_ctx.display_dpi = GetDpiForWindow(g_ctx.wnd);
+	g_ctx.display_scale = 100 * g_ctx.display_dpi / USER_DEFAULT_SCREEN_DPI;
 }
 
 void

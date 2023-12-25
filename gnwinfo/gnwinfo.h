@@ -176,6 +176,7 @@ typedef struct _GNW_CONTEXT
 	LONG display_width;
 	LONG display_height;
 	UINT display_dpi;
+	UINT display_scale;
 	BOOL screen_on;
 
 	UINT audio_count;
@@ -190,7 +191,9 @@ extern WCHAR g_ini_path[MAX_PATH];
 extern unsigned int g_init_width;
 extern unsigned int g_init_height;
 extern unsigned int g_init_alpha;
+extern GdipFont* g_font;
 extern int g_font_size;
+extern nk_bool g_font_auto_resize;
 extern nk_bool g_bginfo;
 
 #define NK_COLOR_YELLOW     {0xFF, 0xEA, 0x00, 0xFF}

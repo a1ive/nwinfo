@@ -9,7 +9,9 @@
 unsigned int g_init_width = 600;
 unsigned int g_init_height = 800;
 unsigned int g_init_alpha = 255;
+GdipFont* g_font = NULL;
 int g_font_size = 12;
+nk_bool g_font_auto_resize = 1;
 nk_bool g_bginfo = 0;
 struct nk_color g_color_warning = NK_COLOR_YELLOW;
 struct nk_color g_color_error = NK_COLOR_RED;
@@ -24,6 +26,28 @@ WCHAR g_lang_id[10];
 #define REGION_MASK_RIGHT   (1 << 1)
 #define REGION_MASK_TOP     (1 << 2)
 #define REGION_MASK_BOTTOM  (1 << 3)
+
+static void
+set_font(HWND wnd)
+{
+	WCHAR font_name[64];
+	GetPrivateProfileStringW(L"Window", L"Font", L"-", font_name, 64, g_ini_path);
+	if (wcscmp(font_name, L"-") == 0)
+		GetPrivateProfileStringW(g_lang_id, L"DefaultFont", L"-", font_name, 64, g_ini_path);
+	if (wcscmp(font_name, L"-") == 0)
+		wcscpy_s(font_name, 64, L"Courier New");
+	g_font_auto_resize = strtol(gnwinfo_get_ini_value(L"Window", L"FontAutoResize", L"1"), NULL, 10);
+	if (g_font)
+	{
+		nk_gdipfont_del(g_font);
+		g_font = NULL;
+	}
+	g_font_size = strtol(gnwinfo_get_ini_value(L"Window", L"FontSize", L"12"), NULL, 10);
+	if (g_font_auto_resize)
+		g_font_size = (int)((double)g_font_size * GetDpiForWindow(wnd) / USER_DEFAULT_SCREEN_DPI);
+	g_font = nk_gdip_load_font(font_name, g_font_size);
+	nk_gdip_set_font(g_font);
+}
 
 static LRESULT CALLBACK
 window_proc(HWND wnd, UINT msg, WPARAM wparam, LPARAM lparam)
@@ -51,6 +75,7 @@ window_proc(HWND wnd, UINT msg, WPARAM wparam, LPARAM lparam)
 	}
 		break;
 	case WM_DPICHANGED:
+		set_font(wnd);
 		break;
 	case WM_POWERBROADCAST:
 		gnwinfo_ctx_update(IDT_TIMER_POWER);
@@ -334,7 +359,6 @@ wWinMain(_In_ HINSTANCE hInstance,
 	_In_ LPWSTR lpCmdLine,
 	_In_ int nCmdShow)
 {
-	GdipFont* font;
 	struct nk_context* ctx;
 	const char* str;
 	int x_pos, y_pos;
@@ -344,7 +368,6 @@ wWinMain(_In_ HINSTANCE hInstance,
 	HWND wnd;
 	int running = 1;
 	int needs_refresh = 1;
-	WCHAR font_name[64];
 	DWORD layered_flag = LWA_ALPHA;
 
 	GetModuleFileNameW(NULL, g_ini_path, MAX_PATH);
@@ -400,16 +423,7 @@ wWinMain(_In_ HINSTANCE hInstance,
 
 	/* GUI */
 	ctx = nk_gdip_init(wnd, g_init_width, g_init_height);
-	{
-		GetPrivateProfileStringW(L"Window", L"Font", L"-", font_name, 64, g_ini_path);
-		if (wcscmp(font_name, L"-") == 0)
-			GetPrivateProfileStringW(g_lang_id, L"DefaultFont", L"-", font_name, 64, g_ini_path);
-		if (wcscmp(font_name, L"-") == 0)
-			wcscpy_s(font_name, 64, L"Courier New");
-	}
-	g_font_size = strtol(gnwinfo_get_ini_value(L"Window", L"FontSize", L"12"), NULL, 10);
-	font = nk_gdip_load_font(font_name, g_font_size);
-	nk_gdip_set_font(font);
+	set_font(wnd);
 
 	(void)CoInitializeEx(0, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE);
 	set_style(ctx);
@@ -461,7 +475,7 @@ wWinMain(_In_ HINSTANCE hInstance,
 	}
 
 	CoUninitialize();
-	nk_gdipfont_del(font);
+	nk_gdipfont_del(g_font);
 	nk_gdip_shutdown();
 	UnregisterClassW(wc.lpszClassName, wc.hInstance);
 	gnwinfo_ctx_exit();
