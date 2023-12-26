@@ -473,6 +473,9 @@ static int amd_k8_temperature(struct msr_info_t* info)
 #define FAMILY_16H_MODEL_00_MISC_CONTROL_DEVICE_ID 0x1533
 #define FAMILY_16H_MODEL_30_MISC_CONTROL_DEVICE_ID 0x1583
 
+#define NB_PCI_REG_ADDR_ADDR 0xB8
+#define NB_PCI_REG_DATA_ADDR 0xBC
+
 static int amd_k10_temperature(struct msr_info_t* info)
 {
 	uint32_t value = 0;
@@ -530,8 +533,8 @@ static int amd_k10_temperature(struct msr_info_t* info)
 
 	if (smu)
 	{
-		pci_conf_write32(info->handle, 0, 0xB8, SMU_REPORTED_TEMP_CTRL_OFFSET);
-		value = pci_conf_read32(info->handle, 0, 0xBC);
+		pci_conf_write32(info->handle, 0, NB_PCI_REG_ADDR_ADDR, SMU_REPORTED_TEMP_CTRL_OFFSET);
+		value = pci_conf_read32(info->handle, 0, NB_PCI_REG_DATA_ADDR);
 	}
 	else
 	{
