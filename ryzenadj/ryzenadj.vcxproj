@@ -13,15 +13,15 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <VCProjectVersion>16.0</VCProjectVersion>
+    <VCProjectVersion>17.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
-    <ProjectGuid>{d0954ecf-a37a-4de0-8d49-0d0505f56b29}</ProjectGuid>
-    <RootNamespace>libnw</RootNamespace>
+    <ProjectGuid>{d1560601-a052-4567-a196-df4fb90e34b4}</ProjectGuid>
+    <RootNamespace>ryzenadj</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
-    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>v143</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
@@ -33,7 +33,7 @@
     <YY_Thunks_File>YY_Thunks_for_WinXP.obj</YY_Thunks_File>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
-    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>v143</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
@@ -57,12 +57,11 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <LinkIncremental>false</LinkIncremental>
     <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
     <IntDir>$(Platform)\$(Configuration)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <LinkIncremental>false</LinkIncremental>
+    <TargetName>$(ProjectName)x64</TargetName>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -70,31 +69,19 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;_LIBRYZENADJ_INTERNAL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <LanguageStandard>stdcpp20</LanguageStandard>
-      <LanguageStandard_C>stdc17</LanguageStandard_C>
-      <AdditionalIncludeDirectories>$(SolutionDir)libcpuid;$(SolutionDir)winring0;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <LanguageStandard_C>stdc17</LanguageStandard_C>
     </ClCompile>
     <Link>
-      <SubSystem>Console</SubSystem>
+      <SubSystem>Windows</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <ModuleDefinitionFile>ryzenadj.def</ModuleDefinitionFile>
     </Link>
-    <Lib>
-      <IgnoreAllDefaultLibraries>
-      </IgnoreAllDefaultLibraries>
-    </Lib>
-    <PostBuildEvent>
-      <Command>copy "$(ProjectDir)jep106.ids" "$(SolutionDir)$(Platform)\$(Configuration)\"
-copy "$(SolutionDir)libcdi\libcdi.$(Platform).dll" "$(SolutionDir)$(Platform)\$(Configuration)\"
-copy "$(SolutionDir)winring0\HwRwDrv.sys" "$(SolutionDir)$(Platform)\$(Configuration)\"
-copy "$(SolutionDir)winring0\HwRwDrvx64.sys" "$(SolutionDir)$(Platform)\$(Configuration)\"
-copy "$(SolutionDir)winring0\HwRwDrvWin7x64.sys" "$(SolutionDir)$(Platform)\$(Configuration)\"</Command>
-    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -102,82 +89,40 @@ copy "$(SolutionDir)winring0\HwRwDrvWin7x64.sys" "$(SolutionDir)$(Platform)\$(Co
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NDEBUG;_WINDOWS;_USRDLL;_LIBRYZENADJ_INTERNAL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <LanguageStandard>stdcpp20</LanguageStandard>
-      <LanguageStandard_C>stdc17</LanguageStandard_C>
-      <AdditionalIncludeDirectories>$(SolutionDir)libcpuid;$(SolutionDir)winring0;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <LanguageStandard_C>stdc17</LanguageStandard_C>
     </ClCompile>
     <Link>
-      <SubSystem>Console</SubSystem>
+      <SubSystem>Windows</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <ModuleDefinitionFile>ryzenadj.def</ModuleDefinitionFile>
     </Link>
-    <Lib>
-      <IgnoreAllDefaultLibraries>
-      </IgnoreAllDefaultLibraries>
-    </Lib>
-    <PostBuildEvent>
-      <Command>copy "$(ProjectDir)jep106.ids" "$(SolutionDir)$(Platform)\$(Configuration)\"
-copy "$(SolutionDir)libcdi\libcdi.$(Platform).dll" "$(SolutionDir)$(Platform)\$(Configuration)\"
-copy "$(SolutionDir)winring0\HwRwDrv.sys" "$(SolutionDir)$(Platform)\$(Configuration)\"
-copy "$(SolutionDir)winring0\HwRwDrvx64.sys" "$(SolutionDir)$(Platform)\$(Configuration)\"
-copy "$(SolutionDir)winring0\HwRwDrvWin7x64.sys" "$(SolutionDir)$(Platform)\$(Configuration)\"</Command>
-    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ProjectReference Include="..\libcpuid\libcpuid.vcxproj">
-      <Project>{2da3ea59-bdf3-4fc0-8ac2-5605ce22b800}</Project>
-    </ProjectReference>
+    <ClCompile Include="api.c" />
+    <ClCompile Include="cpuid.c" />
+    <ClCompile Include="nb_smu_ops.c" />
+    <ClCompile Include="osdep_win32.c" />
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="..\winring0\winring0.vcxproj">
       <Project>{792baf89-d4da-4626-a147-52fc32bc77b2}</Project>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\libcdi\libcdi.h" />
-    <ClInclude Include="acpi.h" />
-    <ClInclude Include="audio.h" />
-    <ClInclude Include="disk.h" />
-    <ClInclude Include="efivars.h" />
-    <ClInclude Include="format.h" />
-    <ClInclude Include="libnw.h" />
-    <ClInclude Include="nt.h" />
-    <ClInclude Include="smbios.h" />
-    <ClInclude Include="spd.h" />
-    <ClInclude Include="utils.h" />
-    <ClInclude Include="version.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="acpi.c" />
-    <ClCompile Include="audio.cpp" />
-    <ClCompile Include="audio_nw.c" />
-    <ClCompile Include="battery.c" />
-    <ClCompile Include="cpuid.c" />
-    <ClCompile Include="disk.c" />
-    <ClCompile Include="display.c" />
-    <ClCompile Include="efivars.c" />
-    <ClCompile Include="format.c" />
-    <ClCompile Include="ids.c" />
-    <ClCompile Include="libcdi.c" />
-    <ClCompile Include="libinfo.c" />
-    <ClCompile Include="libnw.c" />
-    <ClCompile Include="network.c" />
-    <ClCompile Include="nt.c" />
-    <ClCompile Include="pci.c" />
-    <ClCompile Include="smb.c" />
-    <ClCompile Include="smbios.c" />
-    <ClCompile Include="smbus.c" />
-    <ClCompile Include="spd.c" />
-    <ClCompile Include="sys.c" />
-    <ClCompile Include="uefi.c" />
-    <ClCompile Include="usb.c" />
-    <ClCompile Include="utils.c" />
-  </ItemGroup>
-  <ItemGroup>
     <None Include="packages.config" />
+    <None Include="README.md" />
+    <None Include="ryzenadj.def" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="nb_smu_ops.h" />
+    <ClInclude Include="ryzenadj.h" />
+    <ClInclude Include="ryzenadj_priv.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

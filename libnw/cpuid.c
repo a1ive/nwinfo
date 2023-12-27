@@ -7,7 +7,87 @@
 #include "libnw.h"
 #include <libcpuid.h>
 #include <libcpuid_util.h>
+#include <pathcch.h>
+
 #include "utils.h"
+
+#include "../ryzenadj/ryzenadj.h"
+
+#ifdef _WIN64
+#define RY_DLL L"ryzenadjx64.dll"
+#else
+#define RY_DLL L"ryzenadj.dll"
+#endif
+
+static struct
+{
+	HMODULE dll;
+	ryzen_access ry;
+	ryzen_access (CALL *init_ryzenadj)(VOID);
+	void (CALL* cleanup_ryzenadj)(ryzen_access ry);
+	int (CALL* init_table)(ryzen_access ry);
+	uint32_t (CALL *get_table_ver)(ryzen_access ry);
+	size_t (CALL *get_table_size)(ryzen_access ry);
+	float* (CALL *get_table_values)(ryzen_access ry);
+	int (CALL *refresh_table)(ryzen_access ry);
+	float (CALL *get_stapm_limit)(ryzen_access ry);
+	float (CALL *get_fast_limit)(ryzen_access ry);
+	float (CALL *get_slow_limit)(ryzen_access ry);
+} m_ry;
+
+static void
+RyzenAdjCleanup(void)
+{
+	if (m_ry.ry)
+		m_ry.cleanup_ryzenadj(m_ry.ry);
+	if (m_ry.dll)
+		FreeLibrary(m_ry.dll);
+	ZeroMemory(&m_ry, sizeof(m_ry));
+}
+
+static bool
+RyzenAdjInit(void)
+{
+	WCHAR dll_path[MAX_PATH];
+	GetModuleFileNameW(NULL, dll_path, MAX_PATH);
+	PathCchRemoveFileSpec(dll_path, MAX_PATH);
+	PathCchAppend(dll_path, MAX_PATH, RY_DLL);
+	m_ry.dll = LoadLibraryW(dll_path);
+	if (!m_ry.dll)
+		goto fail;
+	*(FARPROC*)&m_ry.init_ryzenadj = GetProcAddress(m_ry.dll, "init_ryzenadj");
+	*(FARPROC*)&m_ry.cleanup_ryzenadj = GetProcAddress(m_ry.dll, "cleanup_ryzenadj");
+	*(FARPROC*)&m_ry.init_table = GetProcAddress(m_ry.dll, "init_table");
+	*(FARPROC*)&m_ry.get_table_ver = GetProcAddress(m_ry.dll, "get_table_ver");
+	*(FARPROC*)&m_ry.get_table_size = GetProcAddress(m_ry.dll, "get_table_size");
+	*(FARPROC*)&m_ry.get_table_values = GetProcAddress(m_ry.dll, "get_table_values");
+	*(FARPROC*)&m_ry.refresh_table = GetProcAddress(m_ry.dll, "refresh_table");
+	*(FARPROC*)&m_ry.get_stapm_limit = GetProcAddress(m_ry.dll, "get_stapm_limit");
+	*(FARPROC*)&m_ry.get_fast_limit = GetProcAddress(m_ry.dll, "get_fast_limit");
+	*(FARPROC*)&m_ry.get_slow_limit = GetProcAddress(m_ry.dll, "get_slow_limit");
+	if (m_ry.init_ryzenadj == NULL ||
+		m_ry.cleanup_ryzenadj == NULL ||
+		m_ry.init_table == NULL ||
+		m_ry.get_table_ver == NULL ||
+		m_ry.get_table_size == NULL ||
+		m_ry.get_table_values == NULL ||
+		m_ry.refresh_table == NULL ||
+		m_ry.get_stapm_limit == NULL ||
+		m_ry.get_fast_limit == NULL ||
+		m_ry.get_slow_limit == NULL)
+	{
+		goto fail;
+	}
+	m_ry.ry = m_ry.init_ryzenadj();
+	if (m_ry.ry == NULL)
+		goto fail;
+	if (m_ry.init_table(m_ry.ry))
+		goto fail;
+	return TRUE;
+fail:
+	RyzenAdjCleanup();
+	return FALSE;
+}
 
 static LPCSTR
 CpuVendorToStr(cpu_vendor_t vendor)
@@ -110,10 +190,13 @@ PrintCpuMsr(PNODE node, struct cpu_id_t* data)
 {
 	logical_cpu_t i;
 	bool affinity_saved = FALSE;
+	bool use_ryzenadj = FALSE;
 	int value = CPU_INVALID_VALUE;
 	if (!data->flags[CPU_FEATURE_MSR] || NWLC->NwDrv == NULL)
 		return;
 	affinity_saved = save_cpu_affinity();
+	if (data->vendor == VENDOR_AMD)
+		use_ryzenadj = RyzenAdjInit();
 	for (i = 0; i < data->num_logical_cpus; i++)
 	{
 		if (!get_affinity_mask_bit(i, &data->affinity_mask))
@@ -149,8 +232,16 @@ PrintCpuMsr(PNODE node, struct cpu_id_t* data)
 		value = cpu_msrinfo(NWLC->NwDrv, INFO_PKG_PL2);
 		if (value != CPU_INVALID_VALUE && value > 0)
 			NWL_NodeAttrSetf(node, "PL2 (W)", NAFLG_FMT_NUMERIC, "%.2lf", value / 100.0);
+		if (use_ryzenadj)
+		{
+			NWL_NodeAttrSetf(node, "STAPM Limit (W)", NAFLG_FMT_NUMERIC, "%.2lf", m_ry.get_stapm_limit(m_ry.ry));
+			NWL_NodeAttrSetf(node, "PL1 (W)", NAFLG_FMT_NUMERIC, "%.2lf", m_ry.get_slow_limit(m_ry.ry));
+			NWL_NodeAttrSetf(node, "PL2 (W)", NAFLG_FMT_NUMERIC, "%.2lf", m_ry.get_fast_limit(m_ry.ry));
+		}
 		break;
 	}
+	if (use_ryzenadj)
+		RyzenAdjCleanup();
 	if (affinity_saved)
 		restore_cpu_affinity();
 }

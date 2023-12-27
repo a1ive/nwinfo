@@ -64,5 +64,4 @@ OPTIONS:
 * [hwdata](https://github.com/vcrhonek/hwdata)
 * [Linux USB](http://www.linux-usb.org)
 * [The PCI ID Repository](https://pci-ids.ucw.cz)
-* [Ventoy](https://github.com/ventoy/Ventoy)
-
+* [RyzenAdj](https://github.com/FlyGoat/RyzenAdj)
