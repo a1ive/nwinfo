@@ -348,7 +348,7 @@ const struct match_entry_t cpudb_amd[] = {
 	{ 15, -1, -1, 25,   68,  -1,    -1,    -1, NC, RYZEN_|_3           ,     0, "Ryzen 3 (Rembrandt)"           },
 	/* Zen 4 (2022) => https://en.wikichip.org/wiki/amd/microarchitectures/zen_4 */
 	{ 15, -1, -1, 25,   17,  -1,    -1,    -1, NC, EPYC_               ,     0, "EPYC (Genoa)"                  },
-	//{ 15, -1, -1, 25,   ??,  -1,    -1,    -1, NC, RYZEN_TR_           ,     0, "Threadripper (Storm Peak)"     },
+	{ 15, -1, -1, 25,   24,  -1,    -1,    -1, NC, RYZEN_TR_           ,     0, "Threadripper (Storm Peak)"     },
 	{ 15, -1,  2, 25,   97,  -1,    -1,    -1, NC, RYZEN_|_9           ,     0, "Ryzen 9 (Raphael)"             },
 	{ 15, -1,  2, 25,   97,  -1,    -1,    -1, NC, RYZEN_|_7           ,     0, "Ryzen 7 (Raphael)"             },
 	{ 15, -1,  2, 25,   97,  -1,    -1,    -1, NC, RYZEN_|_5           ,     0, "Ryzen 5 (Raphael)"             },
