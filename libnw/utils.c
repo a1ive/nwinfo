@@ -487,6 +487,52 @@ NWL_GetMonitorFromName(LPCWSTR lpDevice)
 	return ctx.hMonitor;
 }
 
+#define SECPERMIN 60
+#define SECPERHOUR (60*SECPERMIN)
+#define SECPERDAY (24*SECPERHOUR)
+#define DAYSPERYEAR 365
+#define DAYSPER4YEARS (4*DAYSPERYEAR+1)
+
+LPCSTR
+NWL_UnixTimeToStr(INT nix)
+{
+	static CHAR buf[28];
+	UINT8 months[12] = { 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
+	INT daysEpoch;
+	UINT32 days;
+	UINT32 secsInDay;
+	UINT16 year;
+	UINT8 month;
+	UINT8 hour;
+
+	if (nix < 0)
+		daysEpoch = -(((INT64)(SECPERDAY) - nix - 1) / SECPERDAY);
+	else
+		daysEpoch = nix / SECPERDAY;
+
+	secsInDay = nix - daysEpoch * SECPERDAY;
+	days = daysEpoch + 69 * DAYSPERYEAR + 17;
+	year = 1901 + 4 * (days / DAYSPER4YEARS);
+	days %= DAYSPER4YEARS;
+	if (days / DAYSPERYEAR == 4)
+	{
+		year += 3;
+		days -= 3 * DAYSPERYEAR;
+	}
+	else
+	{
+		year += days / DAYSPERYEAR;
+		days %= DAYSPERYEAR;
+	}
+	for (month = 0; month < 12 && days >= (month == 1 && year % 4 == 0 ? 29U : months[month]); month++)
+		days -= (month == 1 && year % 4 == 0 ? 29U : months[month]);
+	hour = (secsInDay / SECPERHOUR);
+	secsInDay %= SECPERHOUR;
+	snprintf(buf, sizeof(buf), "%04u-%02u-%02u %02u:%02u:%02u (UTC)",
+		year, month + 1, days + 1, hour, secsInDay / SECPERMIN, secsInDay % SECPERMIN);
+	return buf;
+}
+
 static CHAR Utf8Buf[NWINFO_BUFSZ + 1];
 
 LPCSTR

@@ -155,6 +155,7 @@ static void PrintOsVer(PNODE node)
 	DWORD dwType, dwSize;
 	CHAR szSP[] = " SP65535.65535";
 	LPWSTR lpEdition = NULL;
+	DWORD dwInstallDate = 0;
 	if (NWLC->NwOsInfo.wServicePackMinor)
 		snprintf(szSP, sizeof(szSP), " SP%u.%u", NWLC->NwOsInfo.wServicePackMajor, NWLC->NwOsInfo.wServicePackMinor);
 	else if (NWLC->NwOsInfo.wServicePackMajor)
@@ -172,6 +173,8 @@ static void PrintOsVer(PNODE node)
 		NWL_NodeAttrSet(node, "Edition", NWL_Ucs2ToUtf8(lpEdition), 0);
 		free(lpEdition);
 	}
+	NWL_GetRegDwordValue(HKEY_LOCAL_MACHINE, L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion", L"InstallDate", &dwInstallDate);
+	NWL_NodeAttrSet(node, "Install Date", NWL_UnixTimeToStr(dwInstallDate), 0);
 }
 
 static void
