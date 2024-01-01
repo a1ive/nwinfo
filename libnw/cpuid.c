@@ -234,6 +234,7 @@ PrintCpuMsr(PNODE node, struct cpu_id_t* data)
 			NWL_NodeAttrSetf(node, "PL2 (W)", NAFLG_FMT_NUMERIC, "%.2lf", value / 100.0);
 		if (use_ryzenadj)
 		{
+			m_ry.refresh_table(m_ry.ry);
 			NWL_NodeAttrSetf(node, "STAPM Limit (W)", NAFLG_FMT_NUMERIC, "%.2lf", m_ry.get_stapm_limit(m_ry.ry));
 			NWL_NodeAttrSetf(node, "PL1 (W)", NAFLG_FMT_NUMERIC, "%.2lf", m_ry.get_slow_limit(m_ry.ry));
 			NWL_NodeAttrSetf(node, "PL2 (W)", NAFLG_FMT_NUMERIC, "%.2lf", m_ry.get_fast_limit(m_ry.ry));
