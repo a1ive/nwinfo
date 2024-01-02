@@ -193,7 +193,8 @@ extern unsigned int g_init_height;
 extern unsigned int g_init_alpha;
 extern GdipFont* g_font;
 extern int g_font_size;
-extern nk_bool g_font_auto_resize;
+extern double g_dpi_factor;
+extern nk_bool g_dpi_scaling;
 extern nk_bool g_bginfo;
 
 #define NK_COLOR_YELLOW     {0xFF, 0xEA, 0x00, 0xFF}

@@ -280,7 +280,6 @@ gnwinfo_ctx_update(WPARAM wparam)
 void
 gnwinfo_ctx_init(HINSTANCE inst, HWND wnd, struct nk_context* ctx, float width, float height)
 {
-	ZeroMemory(&g_ctx, sizeof(GNW_CONTEXT));
 	g_ctx.mutex = CreateMutexW(NULL, TRUE, L"NWinfo{e25f6e37-d51b-4950-8949-510dfc86d913}");
 	if (GetLastError() == ERROR_ALREADY_EXISTS || !g_ctx.mutex)
 	{

@@ -11,7 +11,8 @@ unsigned int g_init_height = 800;
 unsigned int g_init_alpha = 255;
 GdipFont* g_font = NULL;
 int g_font_size = 12;
-nk_bool g_font_auto_resize = 1;
+double g_dpi_factor = 1.0;
+nk_bool g_dpi_scaling = 1;
 nk_bool g_bginfo = 0;
 struct nk_color g_color_warning = NK_COLOR_YELLOW;
 struct nk_color g_color_error = NK_COLOR_RED;
@@ -22,13 +23,15 @@ struct nk_color g_color_text_d = NK_COLOR_LIGHT;
 struct nk_color g_color_back = NK_COLOR_GRAY;
 WCHAR g_lang_id[10];
 
+static UINT m_dpi = USER_DEFAULT_SCREEN_DPI;
+
 #define REGION_MASK_LEFT    (1 << 0)
 #define REGION_MASK_RIGHT   (1 << 1)
 #define REGION_MASK_TOP     (1 << 2)
 #define REGION_MASK_BOTTOM  (1 << 3)
 
 static void
-set_font(HWND wnd)
+set_dpi_scaling(HWND wnd)
 {
 	WCHAR font_name[64];
 	GetPrivateProfileStringW(L"Window", L"Font", L"-", font_name, 64, g_ini_path);
@@ -36,15 +39,28 @@ set_font(HWND wnd)
 		GetPrivateProfileStringW(g_lang_id, L"DefaultFont", L"-", font_name, 64, g_ini_path);
 	if (wcscmp(font_name, L"-") == 0)
 		wcscpy_s(font_name, 64, L"Courier New");
-	g_font_auto_resize = strtol(gnwinfo_get_ini_value(L"Window", L"FontAutoResize", L"1"), NULL, 10);
+	if (g_bginfo)
+		g_dpi_scaling = 0;
+	else
+		g_dpi_scaling = strtol(gnwinfo_get_ini_value(L"Window", L"FontAutoResize", L"1"), NULL, 10);
 	if (g_font)
 	{
 		nk_gdipfont_del(g_font);
 		g_font = NULL;
 	}
-	g_font_size = strtol(gnwinfo_get_ini_value(L"Window", L"FontSize", L"12"), NULL, 10);
-	if (g_font_auto_resize)
-		g_font_size = (int)((double)g_font_size * GetDpiForWindow(wnd) / USER_DEFAULT_SCREEN_DPI);
+	if (g_dpi_scaling)
+	{
+		RECT rect = { 0 };
+		UINT dpi = GetDpiForWindow(wnd);
+		g_dpi_factor = 1.0 * dpi / m_dpi;
+		m_dpi = dpi;
+		g_font_size = (int)(g_font_size * g_dpi_factor);
+		// resize window
+		GetWindowRect(wnd, &rect);
+		SetWindowPos(wnd, NULL, 0, 0,
+			(int)((rect.right - rect.left) * g_dpi_factor), (int)((rect.bottom - rect.top) * g_dpi_factor),
+			SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE);
+	}
 	g_font = nk_gdip_load_font(font_name, g_font_size);
 	nk_gdip_set_font(g_font);
 }
@@ -75,7 +91,7 @@ window_proc(HWND wnd, UINT msg, WPARAM wparam, LPARAM lparam)
 	}
 		break;
 	case WM_DPICHANGED:
-		set_font(wnd);
+		set_dpi_scaling(wnd);
 		break;
 	case WM_POWERBROADCAST:
 		gnwinfo_ctx_update(IDT_TIMER_POWER);
@@ -378,6 +394,7 @@ wWinMain(_In_ HINSTANCE hInstance,
 	g_init_width = strtoul(gnwinfo_get_ini_value(L"Window", L"Width", L"600"), NULL, 10);
 	g_init_height = strtoul(gnwinfo_get_ini_value(L"Window", L"Height", L"800"), NULL, 10);
 	g_init_alpha = strtoul(gnwinfo_get_ini_value(L"Window", L"Alpha", L"255"), NULL, 10);
+	g_font_size = strtol(gnwinfo_get_ini_value(L"Window", L"FontSize", L"12"), NULL, 10);
 	str = gnwinfo_get_ini_value(L"Window", L"BGInfo", L"0");
 	if (str[0] != '0')
 	{
@@ -423,11 +440,11 @@ wWinMain(_In_ HINSTANCE hInstance,
 
 	/* GUI */
 	ctx = nk_gdip_init(wnd, g_init_width, g_init_height);
-	set_font(wnd);
+	set_dpi_scaling(wnd);
 
 	(void)CoInitializeEx(0, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE);
 	set_style(ctx);
-	gnwinfo_ctx_init(hInstance, wnd, ctx, (float)g_init_width, (float)g_init_height);
+	gnwinfo_ctx_init(hInstance, wnd, ctx, (float)(g_init_width * g_dpi_factor), (float)(g_init_height * g_dpi_factor));
 
 	while (running)
 	{
