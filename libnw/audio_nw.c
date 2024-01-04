@@ -22,7 +22,7 @@ PNODE NW_Audio(VOID)
 		pChild = NWL_NodeAppendNew(pNode, buf, NFLG_ATTGROUP);
 		NWL_NodeAttrSet(pChild, "Name", NWL_Ucs2ToUtf8(dev[i].name), 0);
 		NWL_NodeAttrSet(pChild, "ID", NWL_Ucs2ToUtf8(dev[i].id), 0);
-		NWL_NodeAttrSetf(pChild, "Volume", 0, "%.0f%%", dev[i].volume);
+		NWL_NodeAttrSetf(pChild, "Volume", 0, "%.0f%%", 100.0f * dev[i].volume);
 		if (dev[i].is_default)
 			NWL_NodeAttrSetf(pNode, "Default", NAFLG_FMT_NUMERIC, "%u", i);
 	}
