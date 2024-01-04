@@ -16,7 +16,7 @@ NWinfo is a Win32 program that allows you to obtain system and hardware informat
 * Compatible with Windows XP.
 
 ## Note
-For Windows 11, the "Memory Integrity" option should be disabled.
+For Windows 11, the "Memory Integrity" and "Microsoft Vulnerable Driver Blocklist" options should be disabled.
 
 ![win11](doc/win11.png)
 
