@@ -42,7 +42,7 @@ set_dpi_scaling(HWND wnd)
 	if (g_bginfo)
 		g_dpi_scaling = 0;
 	else
-		g_dpi_scaling = strtol(gnwinfo_get_ini_value(L"Window", L"FontAutoResize", L"1"), NULL, 10);
+		g_dpi_scaling = strtol(gnwinfo_get_ini_value(L"Window", L"DpiScaling", L"1"), NULL, 10);
 	if (g_font)
 	{
 		nk_gdipfont_del(g_font);
