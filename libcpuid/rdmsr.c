@@ -39,6 +39,15 @@
 #include <windows.h>
 #include <winioctl.h>
 #include <winerror.h>
+#include <pathcch.h>
+
+#include "../ryzenadj/ryzenadj.h"
+
+#ifdef _WIN64
+#define RY_DLL L"ryzenadjx64.dll"
+#else
+#define RY_DLL L"ryzenadj.dll"
+#endif
 
 #ifndef RDMSR_UNSUPPORTED_OS
 
@@ -149,6 +158,7 @@ static const uint32_t intel_msr[] = {
 
 struct msr_info_t {
 	int cpu_clock;
+	bool ryzenadj;
 	struct wr0_drv_t *handle;
 	struct cpu_id_t *id;
 	struct internal_id_info_t *internal;
@@ -407,6 +417,76 @@ static double get_info_max_multiplier(struct msr_info_t *info)
 	return (double) CPU_INVALID_VALUE / 100;
 }
 
+static struct
+{
+	HMODULE dll;
+	ryzen_access ry;
+	ryzen_access(CALL* init_ryzenadj)(VOID);
+	void (CALL* cleanup_ryzenadj)(ryzen_access ry);
+	int (CALL* init_table)(ryzen_access ry);
+	uint32_t(CALL* get_table_ver)(ryzen_access ry);
+	size_t(CALL* get_table_size)(ryzen_access ry);
+	float* (CALL* get_table_values)(ryzen_access ry);
+	int (CALL* refresh_table)(ryzen_access ry);
+	float (CALL* get_stapm_limit)(ryzen_access ry);
+	float (CALL* get_fast_limit)(ryzen_access ry);
+	float (CALL* get_slow_limit)(ryzen_access ry);
+} m_ry;
+
+static void
+ry_fini(void)
+{
+	if (m_ry.ry)
+		m_ry.cleanup_ryzenadj(m_ry.ry);
+	if (m_ry.dll)
+		FreeLibrary(m_ry.dll);
+	ZeroMemory(&m_ry, sizeof(m_ry));
+}
+
+static bool
+ry_init(void)
+{
+	WCHAR dll_path[MAX_PATH];
+	GetModuleFileNameW(NULL, dll_path, MAX_PATH);
+	PathCchRemoveFileSpec(dll_path, MAX_PATH);
+	PathCchAppend(dll_path, MAX_PATH, RY_DLL);
+	m_ry.dll = LoadLibraryW(dll_path);
+	if (!m_ry.dll)
+		goto fail;
+	*(FARPROC*)&m_ry.init_ryzenadj = GetProcAddress(m_ry.dll, "init_ryzenadj");
+	*(FARPROC*)&m_ry.cleanup_ryzenadj = GetProcAddress(m_ry.dll, "cleanup_ryzenadj");
+	*(FARPROC*)&m_ry.init_table = GetProcAddress(m_ry.dll, "init_table");
+	*(FARPROC*)&m_ry.get_table_ver = GetProcAddress(m_ry.dll, "get_table_ver");
+	*(FARPROC*)&m_ry.get_table_size = GetProcAddress(m_ry.dll, "get_table_size");
+	*(FARPROC*)&m_ry.get_table_values = GetProcAddress(m_ry.dll, "get_table_values");
+	*(FARPROC*)&m_ry.refresh_table = GetProcAddress(m_ry.dll, "refresh_table");
+	*(FARPROC*)&m_ry.get_stapm_limit = GetProcAddress(m_ry.dll, "get_stapm_limit");
+	*(FARPROC*)&m_ry.get_fast_limit = GetProcAddress(m_ry.dll, "get_fast_limit");
+	*(FARPROC*)&m_ry.get_slow_limit = GetProcAddress(m_ry.dll, "get_slow_limit");
+	if (m_ry.init_ryzenadj == NULL ||
+		m_ry.cleanup_ryzenadj == NULL ||
+		m_ry.init_table == NULL ||
+		m_ry.get_table_ver == NULL ||
+		m_ry.get_table_size == NULL ||
+		m_ry.get_table_values == NULL ||
+		m_ry.refresh_table == NULL ||
+		m_ry.get_stapm_limit == NULL ||
+		m_ry.get_fast_limit == NULL ||
+		m_ry.get_slow_limit == NULL)
+	{
+		goto fail;
+	}
+	m_ry.ry = m_ry.init_ryzenadj();
+	if (m_ry.ry == NULL)
+		goto fail;
+	if (m_ry.init_table(m_ry.ry))
+		goto fail;
+	return TRUE;
+fail:
+	ry_fini();
+	return FALSE;
+}
+
 static int get_info_temperature(struct msr_info_t *info)
 {
 	int err;
@@ -646,6 +726,16 @@ static double get_info_pkg_pl1(struct msr_info_t* info)
 		err += cpu_rdmsr_range(info->handle, MSR_RAPL_POWER_UNIT, 3, 0, &PowerUnits);
 		if (!err) return (double)PowerLimit1 / (1ULL << PowerUnits);
 	}
+	else if (info->id->vendor == VENDOR_AMD)
+	{
+		if (!info->ryzenadj)
+			info->ryzenadj = ry_init();
+		if (info->ryzenadj)
+		{
+			m_ry.refresh_table(m_ry.ry);
+			return m_ry.get_slow_limit(m_ry.ry);
+		}
+	}
 	return (double)CPU_INVALID_VALUE / 100;
 }
 
@@ -657,6 +747,16 @@ static double get_info_pkg_pl2(struct msr_info_t* info)
 		err = cpu_rdmsr_range(info->handle, MSR_PKG_POWER_LIMIT, 46, 32, &PowerLimit2);
 		err += cpu_rdmsr_range(info->handle, MSR_RAPL_POWER_UNIT, 3, 0, &PowerUnits);
 		if (!err) return (double)PowerLimit2 / (1ULL << PowerUnits);
+	}
+	else if (info->id->vendor == VENDOR_AMD)
+	{
+		if (!info->ryzenadj)
+			info->ryzenadj = ry_init();
+		if (info->ryzenadj)
+		{
+			m_ry.refresh_table(m_ry.ry);
+			return m_ry.get_slow_limit(m_ry.ry);
+		}
 	}
 	return (double)CPU_INVALID_VALUE / 100;
 }

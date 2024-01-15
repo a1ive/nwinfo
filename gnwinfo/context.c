@@ -112,6 +112,13 @@ get_cpu_info(int index)
 		value = cpu_msrinfo(g_ctx.lib.NwDrv, INFO_BUS_CLOCK);
 		if (value != CPU_INVALID_VALUE && value > 0)
 			g_ctx.cpu_info[index].cpu_msr_bus = value / 100.0;
+		value = cpu_msrinfo(g_ctx.lib.NwDrv, INFO_PKG_PL1);
+		if (value != CPU_INVALID_VALUE && value > 0)
+			g_ctx.cpu_info[index].cpu_msr_pl1 = value / 100.0;
+		value = cpu_msrinfo(g_ctx.lib.NwDrv, INFO_PKG_PL2);
+		if (value != CPU_INVALID_VALUE && value > 0)
+			g_ctx.cpu_info[index].cpu_msr_pl2 = value / 100.0;
+
 		break;
 	}
 }

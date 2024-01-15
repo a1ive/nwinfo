@@ -67,7 +67,6 @@ draw_msr(struct nk_context* ctx, int index, PNODE cpu, LPCSTR brand)
 {
 	if (nk_group_begin(ctx, gnwinfo_get_text(L"MSR"), NK_WINDOW_BORDER | NK_WINDOW_TITLE))
 	{
-		const char* pl;
 		const float ratio[] = { 0.5f, 0.5f };
 		nk_layout_row(ctx, NK_DYNAMIC, 0, 2, ratio);
 
@@ -85,19 +84,10 @@ draw_msr(struct nk_context* ctx, int index, PNODE cpu, LPCSTR brand)
 		nk_lhcf(ctx, NK_TEXT_LEFT, g_color_text_l, "%.2f V", g_ctx.cpu_info[index].cpu_msr_volt);
 		nk_l(ctx, gnwinfo_get_text(L"Power"), NK_TEXT_LEFT);
 		nk_lhcf(ctx, NK_TEXT_LEFT, g_color_text_l, "%.2f W", g_ctx.cpu_info[index].cpu_msr_power);
-
-		pl = gnwinfo_get_node_attr(cpu, "PL1 (W)");
-		if (pl[0] != '-')
-		{
-			nk_l(ctx, gnwinfo_get_text(L"PL1"), NK_TEXT_LEFT);
-			nk_lhcf(ctx, NK_TEXT_LEFT, g_color_text_l, "%s W", pl);
-		}
-		pl = gnwinfo_get_node_attr(cpu, "PL2 (W)");
-		if (pl[0] != '-')
-		{
-			nk_l(ctx, gnwinfo_get_text(L"PL2"), NK_TEXT_LEFT);
-			nk_lhcf(ctx, NK_TEXT_LEFT, g_color_text_l, "%s W", pl);
-		}
+		nk_l(ctx, gnwinfo_get_text(L"PL1"), NK_TEXT_LEFT);
+		nk_lhcf(ctx, NK_TEXT_LEFT, g_color_text_l, "%.2f W", g_ctx.cpu_info[index].cpu_msr_pl1);
+		nk_l(ctx, gnwinfo_get_text(L"PL2"), NK_TEXT_LEFT);
+		nk_lhcf(ctx, NK_TEXT_LEFT, g_color_text_l, "%.2f W", g_ctx.cpu_info[index].cpu_msr_pl2);
 
 		nk_group_end(ctx);
 	}

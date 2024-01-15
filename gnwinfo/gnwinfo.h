@@ -100,6 +100,8 @@ typedef struct _GNW_CPU_INFO
 	double cpu_msr_bus;
 	int cpu_energy;
 	double cpu_msr_power;
+	double cpu_msr_pl1;
+	double cpu_msr_pl2;
 }GNW_CPU_INFO;
 
 #define GUI_WINDOW_CPUID    (1U << 0)
