@@ -45,8 +45,8 @@ jobs:
         copy pci.ids nwinfo\pci.ids
         copy usb.ids nwinfo\usb.ids
         copy pnp.ids nwinfo\pnp.ids
-        # copy Win32\Release\ryzenadj.dll nwinfo\ryzenadj.dll
-        # copy x64\Release\ryzenadjx64.dll nwinfo\ryzenadjx64.dll
+        copy Win32\Release\ryzenadj.dll nwinfo\ryzenadj.dll
+        copy x64\Release\ryzenadjx64.dll nwinfo\ryzenadjx64.dll
         copy libcdi\libcdi.Win32.dll nwinfo\libcdi.Win32.dll
         copy libcdi\libcdi.x64.dll nwinfo\libcdi.x64.dll
         copy libnw\jep106.ids nwinfo\jep106.ids
