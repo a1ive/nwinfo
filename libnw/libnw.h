@@ -50,6 +50,7 @@ typedef struct _NWLIB_CONTEXT
 	BOOL SkipVirtualNet;
 	UINT8 SmbiosType;
 	LPCSTR PciClass;
+	LPCSTR DiskPath;
 	BOOL DisableSmart;
 
 	VOID (*SpdProgress) (LPCSTR lpszText);

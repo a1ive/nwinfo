@@ -558,14 +558,17 @@ PrintDiskInfo(BOOL cdrom, PNODE node, CDI_SMART* smart)
 {
 	PHY_DRIVE_INFO* PhyDriveList = NULL;
 	DWORD PhyDriveCount = 0, i = 0;
+	CHAR DiskPath[64];
 	PhyDriveCount = GetDriveInfoList(cdrom, &PhyDriveList);
 	if (PhyDriveCount == 0)
 		goto out;
 	for (i = 0; i < PhyDriveCount; i++)
 	{
+		snprintf(DiskPath, sizeof(DiskPath), cdrom ? "\\\\.\\CdRom%u" : "\\\\.\\PhysicalDrive%u", i);
+		if (NWLC->DiskPath && _stricmp(NWLC->DiskPath, DiskPath) != 0)
+			continue;
 		PNODE nd = NWL_NodeAppendNew(node, "Disk", NFLG_TABLE_ROW);
-		NWL_NodeAttrSetf(nd, "Path", 0,
-			cdrom ? "\\\\.\\CdRom%u" : "\\\\.\\PhysicalDrive%u", i);
+		NWL_NodeAttrSet(nd, "Path",DiskPath, 0);
 		if (PhyDriveList[i].HwID)
 		{
 			WCHAR* hwName = NULL;

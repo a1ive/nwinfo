@@ -12,23 +12,34 @@ static void nwinfo_help(void)
 		NWINFO_COPYRIGHT "\n"
 		"Usage: nwinfo OPTIONS\n"
 		"OPTIONS:\n"
-		"  --format=XXX     Specify output format. [YAML|JSON|LUA]\n"
+		"  --format=FMT     Specify output format.\n"
+		"                   FMT can be 'YAML' (default), 'JSON' and 'LUA'.\n"
 		"  --output=FILE    Write to FILE instead of printing to screen.\n"
-		"  --cp=XXXX        Set the code page of output text. [ANSI|UTF8]\n"
+		"  --cp=CODEPAGE    Set the code page of output text.\n"
+		"                   CODEPAGE can be 'ANSI' and 'UTF8'.\n"
 		"  --human          Display numbers in human readable format.\n"
 		"  --debug          Print debug info to stdout.\n"
 		"  --hide-sensitive Hide sensitive data (MAC & S/N).\n"
 		"  --sys            Print system info.\n"
 		"  --cpu            Print CPUID info.\n"
-		"  --net[=active]   Print [active] network info\n"
-		"  --acpi[=XXXX]    Print ACPI [table=XXXX] info.\n"
-		"  --smbios[=XX]    Print SMBIOS [type=XX] info.\n"
-		"  --disk           Print disk info.\n"
+		"  --net[=FLAG]     Print network info\n"
+		"                   FLAG can be 'ACTIVE' (print only the active network).\n"
+		"  --acpi[=SGN]     Print ACPI info.\n"
+		"                   SGN specifies the signature of the ACPI table,\n"
+		"                   e.g. 'FACP' (Fixed ACPI Description Table).\n"
+		"  --smbios[=TYPE]  Print SMBIOS info.\n"
+		"                   TYPE specifies the type of the SMBIOS table,\n"
+		"                   e.g. '2' (Base Board Information).\n"
+		"  --disk[=PATH]    Print disk info.\n"
+		"                   PATH specifies the path of the disk,\n"
+		"                   e.g. '\\\\.\\PhysicalDrive0', '\\\\.\\CdRom0'.\n"
 		"  --no-smart       Don't print disk S.M.A.R.T. info.\n"
 		"  --display        Print EDID info.\n"
-		"  --pci[=XX]       Print PCI [class=XX] info.\n"
+		"  --pci[=CLASS]    Print PCI info.\n"
+		"                   CLASS specifies the class code of pci devices,\n"
+		"                   e.g. '0C05' (SMBus).\n"
 		"  --usb            Print USB info.\n"
-		"  --spd            Print SPD info\n"
+		"  --spd            Print SPD info.\n"
 		"  --battery        Print battery info.\n"
 		"  --uefi           Print UEFI info.\n"
 		"  --shares         Print network mapped drives.\n"
@@ -100,8 +111,12 @@ int main(int argc, char* argv[])
 				nwContext.SmbiosType = (UINT8)strtoul(&argv[i][9], NULL, 0);
 			nwContext.DmiInfo = TRUE;
 		}
-		else if (_stricmp(argv[i], "--disk") == 0)
+		else if (_strnicmp(argv[i], "--disk", 6) == 0)
+		{
+			if (argv[i][6] == '=' && argv[i][7])
+				nwContext.DiskPath = &argv[i][7];
 			nwContext.DiskInfo = TRUE;
+		}
 		else if (_stricmp(argv[i], "--no-smart") == 0)
 			nwContext.DisableSmart = TRUE;
 		else if (_stricmp(argv[i], "--display") == 0)

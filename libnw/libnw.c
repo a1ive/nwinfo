@@ -26,6 +26,7 @@ VOID NW_Init(PNWLIB_CONTEXT pContext)
 	NWLC->NwFile = stdout;
 	NWLC->AcpiTable = 0;
 	NWLC->SmbiosType = 127;
+	NWLC->DiskPath = NULL;
 	NWL_NtGetVersion(&NWLC->NwOsInfo);
 	GetNativeSystemInfo(&NWLC->NwSi);
 	NWLC->NwRoot = NWL_NodeAlloc("NWinfo", 0);
