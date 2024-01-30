@@ -34,6 +34,9 @@
       <Filter>源文件</Filter>
     </None>
     <None Include="README.md" />
+    <None Include="ryzenadjx64.def">
+      <Filter>源文件</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="nb_smu_ops.h">

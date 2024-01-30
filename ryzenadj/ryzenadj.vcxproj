@@ -100,7 +100,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <ModuleDefinitionFile>ryzenadj.def</ModuleDefinitionFile>
+      <ModuleDefinitionFile>ryzenadjx64.def</ModuleDefinitionFile>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -118,6 +118,7 @@
     <None Include="packages.config" />
     <None Include="README.md" />
     <None Include="ryzenadj.def" />
+    <None Include="ryzenadjx64.def" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="nb_smu_ops.h" />
