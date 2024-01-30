@@ -151,7 +151,7 @@
 	20 Smart Modular
 	21 Hughes Aircraft
 	22 Lanstar Semiconductor
-	23 Qlogic
+	23 Marvell (Qlogic)
 	24 Kingston
 	25 Music Semi
 	26 Ericsson Components
@@ -458,7 +458,7 @@
 	73 Ritek Corp
 	74 empowerTel Networks
 	75 Hypertec
-	76 Cavium Networks
+	76 Marvell (Cavium Networks)
 	77 PLX Technology
 	78 Massana Design
 	79 Intrinsity
@@ -487,7 +487,7 @@
 	102 Layer N Networks
 	103 MtekVision (Atsana)
 	104 Allegro Networks
-	105 Marvell Semiconductors
+	105 Marvell
 	106 Netergy Microelectronic
 	107 NVIDIA
 	108 Internet Machines
@@ -560,7 +560,7 @@
 	48 OCZ
 	49 Emuzed
 	50 LOGIC Devices
-	51 Inphi Corporation
+	51 Marvell (Inphi)
 	52 Quake Technologies
 	53 Vixel
 	54 SolusTek
@@ -750,7 +750,7 @@
 	111 MetaRAM
 	112 Axel Electronics Co Ltd
 	113 Tilera Corporation
-	114 Aquantia
+	114 Marvell (Aquantia)
 	115 Vivace Semiconductor
 	116 Redpine Signals
 	117 Octalica
@@ -1142,7 +1142,7 @@
 	122 AltoBeam
 	123 Wave Computing
 	124 Beijing TrustNet Technology Co Ltd
-	125 Innovium Inc
+	125 Marvell (Innovium)
 	126 Starsway Technology Limited
 10
 	1 Weltronics Co LTD
@@ -1623,7 +1623,7 @@
 	95 Sitrus Technology
 	96 AnHui Conner Storage Co Ltd
 	97 Rochester Electronics
-	98 Wuxi Petabyte Technologies Co Ltd
+	98 Wuxi Smart Memories Technologies Co Ltd
 	99 Star Memory
 	100 Agile Memory Technology Co Ltd
 	101 MEJEC
@@ -1868,7 +1868,7 @@
 	86 Exacta Technologies Ltd
 	87 Synology
 	88 Trium Elektronik Bilgi Islem San Ve Dis
-	89 Shenzhen Hippstor Technology Co Ltd
+	89 Wuxi HippStor Technology Co Ltd
 	90 SSCT
 	91 Sichuan Heentai Semiconductor Co Ltd
 	92 Zhejiang University
@@ -1877,7 +1877,7 @@
 	95 Feature Integration Technology Inc
 	96 d-Matrix
 	97 Golden Memory
-	98 Qingdao Thunderobot Technology Co Ltd
+	98 MACHENIKE
 	99 Shenzhen Tianxiang Chuangxin Technology
 	100 HYPHY USA
 	101 Valkyrie
@@ -1892,3 +1892,54 @@
 	110 Chemgdu EG Technology Co Ltd
 	111 AGI Technology
 	112 Syntiant
+	113 AOC
+	114 GamePP
+	115 Yibai Electronic Technologies
+	116 Hangzhou Rencheng Trading Co Ltd
+	117 HOGE Technology Co Ltd
+	118 United Micro Technology (Shenzhen) Co
+	119 Fabric of Truth Inc
+	120 Epitech
+	121 Elitestek
+	122 Cornelis Networks Inc
+	123 WingSemi Technologies Co Ltd
+	124 ForwardEdge ASIC
+	125 Beijing Future Imprint Technology Co Ltd
+	126 Fine Made Microelectronics Group Co Ltd
+16
+	1 Changxin Memory Technology (Shanghai)
+	2 Synconv
+	3 MULTIUNIT
+	4 Zero ASIC Corporation
+	5 NTT Innovative Devices Corporation
+	6 Xbstor
+	7 Shenzhen South Electron Co Ltd
+	8 Iontra Inc
+	9 SIEFFI Inc
+	10 HK Winston Electronics Co Limited
+	11 Anhui SunChip Semiconductor Technology
+	12 HaiLa Technologies Inc
+	13 AUTOTALKS
+	14 Shenzhen Ranshuo Technology Co Limited
+	15 ScaleFlux
+	16 XC Memory
+	17 Guangzhou Beimu Technology Co., Ltd
+	18 Rays Semiconductor Nanjing Co Ltd
+	19 Milli-Centi Intelligence Technology Jiangsu
+	20 Zilia Technologioes
+	21 Incore Semiconductors
+	22 Kinetic Technologies
+	23 Nanjing Houmo Technology Co Ltd
+	24 Suzhou Yige Technology Co Ltd
+	25 Shenzhen Techwinsemi Technology Co Ltd
+	26 Pure Array Technology (Shanghai) Co. Ltd
+	27 Shenzhen Techwinsemi Technology Udstore
+	28 RISE MODE
+	29 NEWREESTAR
+	30 Hangzhou Hualan Microeletronique Co Ltd
+	31 Senscomm Semiconductor Co Ltd
+	32 Holt Integrated Circuits
+	33 Tenstorrent Inc
+	34 SkyeChip
+	35 Guangzhou Kaishile Trading Co Ltd
+	36 Jing Pai Digital Technology (Shenzhen) Co
