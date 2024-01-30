@@ -61,6 +61,10 @@ static const CHAR* WinServer2016BuildNumber(DWORD dwBuildNumber)
 {
 	switch (dwBuildNumber)
 	{
+	//case 26040U:
+		//return "Server 2025";
+	case 25398U:
+		return "Server, Version 23H2"; // WTF?
 	case 20348U:
 		return "Server 2022";
 	case 19042U:
