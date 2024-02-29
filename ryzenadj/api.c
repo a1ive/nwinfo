@@ -139,6 +139,7 @@ static int request_table_ver_and_size(ryzen_access ry)
 	case FAM_CEZANNE:
 	case FAM_REMBRANDT:
 	case FAM_PHOENIX:
+	case FAM_HAWKPOINT:
 		get_table_ver_msg = 0x6;
 		break;
 	default:
@@ -1341,6 +1342,8 @@ EXP float CALL get_apu_slow_limit(ryzen_access ry) {
 	case 0x00450004:
 	case 0x00450005:
 	case 0x004C0006:
+	case 0x004C0007:
+	case 0x004C0008:
 		_read_float_value(0x18);
 	default:
 		break;
@@ -1396,6 +1399,8 @@ EXP float CALL get_vrm_current(ryzen_access ry) {
 	case 0x00450004:
 	case 0x00450005:
 	case 0x004C0006:
+	case 0x004C0007:
+	case 0x004C0008:
 		_read_float_value(0x20);
 	default:
 		break;
@@ -1427,6 +1432,8 @@ EXP float CALL get_vrm_current_value(ryzen_access ry) {
 	case 0x00450004:
 	case 0x00450005:
 	case 0x004C0006:
+	case 0x004C0007:
+	case 0x004C0008:
 		_read_float_value(0x24);
 	default:
 		break;
@@ -1458,6 +1465,8 @@ EXP float CALL get_vrmsoc_current(ryzen_access ry) {
 	case 0x00450004:
 	case 0x00450005:
 	case 0x004C0006:
+	case 0x004C0007:
+	case 0x004C0008:
 		_read_float_value(0x28);
 	default:
 		break;
@@ -1489,6 +1498,8 @@ EXP float CALL get_vrmsoc_current_value(ryzen_access ry) {
 	case 0x00450004:
 	case 0x00450005:
 	case 0x004C0006:
+	case 0x004C0007:
+	case 0x004C0008:
 		_read_float_value(0x2C);
 	default:
 		break;
@@ -1519,6 +1530,9 @@ EXP float CALL get_vrmmax_current(ryzen_access ry) {
 	case 0x00400005:
 	case 0x00450004:
 	case 0x00450005:
+	case 0x004C0006:
+	case 0x004C0007:
+	case 0x004C0008:
 		_read_float_value(0x30);
 	default:
 		break;
@@ -1549,6 +1563,9 @@ EXP float CALL get_vrmmax_current_value(ryzen_access ry) {
 	case 0x00400005:
 	case 0x00450004:
 	case 0x00450005:
+	case 0x004C0006:
+	case 0x004C0007:
+	case 0x004C0008:
 		_read_float_value(0x34);
 	default:
 		break;
@@ -1579,6 +1596,9 @@ EXP float CALL get_vrmsocmax_current(ryzen_access ry) {
 	case 0x00400005:
 	case 0x00450004:
 	case 0x00450005:
+	case 0x004C0006:
+	case 0x004C0007:
+	case 0x004C0008:
 		_read_float_value(0x38);
 	default:
 		break;
@@ -1609,6 +1629,9 @@ EXP float CALL get_vrmsocmax_current_value(ryzen_access ry) {
 	case 0x00400005:
 	case 0x00450004:
 	case 0x00450005:
+	case 0x004C0006:
+	case 0x004C0007:
+	case 0x004C0008:
 		_read_float_value(0x3C);
 	default:
 		break;
@@ -1641,6 +1664,8 @@ EXP float CALL get_tctl_temp(ryzen_access ry) {
 	case 0x00450004:
 	case 0x00450005:
 	case 0x004C0006:
+	case 0x004C0007:
+	case 0x004C0008:
 		_read_float_value(0x40);
 	default:
 		break;
@@ -1673,6 +1698,8 @@ EXP float CALL get_tctl_temp_value(ryzen_access ry) {
 	case 0x00450004:
 	case 0x00450005:
 	case 0x004C0006:
+	case 0x004C0007:
+	case 0x004C0008:
 		_read_float_value(0x44);
 	default:
 		break;
@@ -1697,6 +1724,8 @@ EXP float CALL get_apu_skin_temp_limit(ryzen_access ry) {
 	case 0x00450004:
 	case 0x00450005:
 	case 0x004C0006:
+	case 0x004C0007:
+	case 0x004C0008:
 		_read_float_value(0x58);
 	default:
 		break;
@@ -1721,6 +1750,8 @@ EXP float CALL get_apu_skin_temp_value(ryzen_access ry) {
 	case 0x00450004:
 	case 0x00450005:
 	case 0x004C0006:
+	case 0x004C0007:
+	case 0x004C0008:
 		_read_float_value(0x5C);
 	default:
 		break;
@@ -1744,6 +1775,8 @@ EXP float CALL get_dgpu_skin_temp_limit(ryzen_access ry) {
 	case 0x00450004:
 	case 0x00450005:
 	case 0x004C0006:
+	case 0x004C0007:
+	case 0x004C0008:
 		_read_float_value(0x60);
 	default:
 		break;
@@ -1767,6 +1800,8 @@ EXP float CALL get_dgpu_skin_temp_value(ryzen_access ry) {
 	case 0x00450004:
 	case 0x00450005:
 	case 0x004C0006:
+	case 0x004C0007:
+	case 0x004C0008:
 		_read_float_value(0x64);
 	default:
 		break;
@@ -1796,6 +1831,9 @@ EXP float CALL get_psi0_current(ryzen_access ry) {
 	case 0x00400003:
 	case 0x00400004:
 	case 0x00400005:
+	case 0x004C0006:
+	case 0x004C0007:
+	case 0x004C0008:
 		_read_float_value(0x78);
 	default:
 		break;
@@ -1825,6 +1863,9 @@ EXP float CALL get_psi0soc_current(ryzen_access ry) {
 	case 0x00400003:
 	case 0x00400004:
 	case 0x00400005:
+	case 0x004C0006:
+	case 0x004C0007:
+	case 0x004C0008:
 		_read_float_value(0x80);
 	default:
 		break;
@@ -1924,6 +1965,9 @@ EXP float CALL get_stapm_time(ryzen_access ry)
 		_read_float_value(0x920);
 	case 0x00400004:
 	case 0x00400005:
+	case 0x004C0006:
+	case 0x004C0007:
+	case 0x004C0008:
 		_read_float_value(0x918);
 	default:
 		break;
@@ -1962,6 +2006,9 @@ EXP float CALL get_slow_time(ryzen_access ry) {
 		_read_float_value(0x924);
 	case 0x00400004:
 	case 0x00400005:
+	case 0x004C0006:
+	case 0x004C0007:
+	case 0x004C0008:
 		_read_float_value(0x91C);
 	default:
 		break;
