@@ -35,7 +35,7 @@ jobs:
         Add-Content -Path "pnp.ids" -Value "# Version: $(Get-Date -Format 'yyyy.MM.dd')"
         msbuild /m /p:Configuration=Release /p:platform=x64 ${{env.SOLUTION_FILE_PATH}}
         msbuild /m /p:Configuration=Release /p:platform=x86 ${{env.SOLUTION_FILE_PATH}}
-        md nwinfo
+        # md nwinfo
         move x64\Release\nwinfo.exe nwinfo\nwinfo_x64.exe
         move x64\Release\gnwinfo.exe nwinfo\gnwinfo_x64.exe
         move Win32\Release\nwinfo.exe nwinfo\nwinfo_x86.exe
