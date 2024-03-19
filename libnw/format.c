@@ -781,7 +781,7 @@ static INT NWL_NodeToLua(PNODE node, FILE* file)
 	int indent = indent_depth;
 
 	if (!node->Parent)
-		fputs("#!lua"NODE_LUA_DELIM_NL"_NWINFO = ", file);
+		fputs("_NWINFO = ", file);
 
 	// Print header
 	fprintcx(file, NODE_LUA_DELIM_INDENT, indent);
