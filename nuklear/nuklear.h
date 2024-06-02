@@ -613,7 +613,7 @@ NK_API nk_bool nk_init_fixed(struct nk_context*, void *memory, nk_size size, con
 /// interface to nuklear. Can be useful for cases like monitoring memory consumption.
 ///
 /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~c
-/// nk_bool nk_init(struct nk_context *ctx, struct nk_allocator *alloc, const struct nk_user_font *font);
+/// nk_bool nk_init(struct nk_context *ctx, const struct nk_allocator *alloc, const struct nk_user_font *font);
 /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ///
 /// Parameter   | Description
@@ -624,7 +624,7 @@ NK_API nk_bool nk_init_fixed(struct nk_context*, void *memory, nk_size size, con
 ///
 /// Returns either `false(0)` on failure or `true(1)` on success.
 */
-NK_API nk_bool nk_init(struct nk_context*, struct nk_allocator*, const struct nk_user_font*);
+NK_API nk_bool nk_init(struct nk_context*, const struct nk_allocator*, const struct nk_user_font*);
 /*/// #### nk_init_custom
 /// Initializes a `nk_context` struct from two different either fixed or growing
 /// buffers. The first buffer is for allocating draw commands while the second buffer is
@@ -1463,7 +1463,7 @@ NK_API const struct nk_draw_command* nk__draw_next(const struct nk_draw_command*
 /// #### nk_collapse_states
 /// State           | Description
 /// ----------------|-----------------------------------------------------------
-/// __NK_MINIMIZED__| UI section is collased and not visible until maximized
+/// __NK_MINIMIZED__| UI section is collapsed and not visible until maximized
 /// __NK_MAXIMIZED__| UI section is extended and visible until minimized
 /// <br /><br />
 */
@@ -2001,11 +2001,11 @@ NK_API void nk_window_show(struct nk_context*, const char *name, enum nk_show_st
 /// __ctx__     | Must point to an previously initialized `nk_context` struct
 /// __name__    | Identifier of the window to either hide or show
 /// __state__   | state with either visible or hidden to modify the window with
-/// __cond__    | condition that has to be met to actually commit the visbility state change
+/// __cond__    | condition that has to be met to actually commit the visibility state change
 */
 NK_API void nk_window_show_if(struct nk_context*, const char *name, enum nk_show_states, int cond);
 /*/// #### nk_window_show_if
-/// Line for visual seperation. Draws a line with thickness determined by the current row height.
+/// Line for visual separation. Draws a line with thickness determined by the current row height.
 /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~c
 /// void nk_rule_horizontal(struct nk_context *ctx, struct nk_color color, NK_BOOL rounding)
 /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -2069,7 +2069,7 @@ NK_API void nk_rule_horizontal(struct nk_context *ctx, struct nk_color color, nk
 ///     the size of each widget dynamically by formula:
 ///
 ///     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~c
-///     widget_width = (window_width - padding - spacing) * (1/colum_count)
+///     widget_width = (window_width - padding - spacing) * (1/column_count)
 ///     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ///
 ///     Just like all other layouting APIs if you define more widget than columns this
@@ -4132,8 +4132,8 @@ NK_API const nk_rune *nk_font_korean_glyph_ranges(void);
 #ifdef NK_INCLUDE_DEFAULT_ALLOCATOR
 NK_API void nk_font_atlas_init_default(struct nk_font_atlas*);
 #endif
-NK_API void nk_font_atlas_init(struct nk_font_atlas*, struct nk_allocator*);
-NK_API void nk_font_atlas_init_custom(struct nk_font_atlas*, struct nk_allocator *persistent, struct nk_allocator *transient);
+NK_API void nk_font_atlas_init(struct nk_font_atlas*, const struct nk_allocator*);
+NK_API void nk_font_atlas_init_custom(struct nk_font_atlas*, const struct nk_allocator *persistent, const struct nk_allocator *transient);
 NK_API void nk_font_atlas_begin(struct nk_font_atlas*);
 NK_API struct nk_font_config nk_font_config(float pixel_height);
 NK_API struct nk_font *nk_font_atlas_add(struct nk_font_atlas*, const struct nk_font_config*);
@@ -4410,7 +4410,7 @@ NK_API nk_bool nk_filter_binary(const struct nk_text_edit*, nk_rune unicode);
 #ifdef NK_INCLUDE_DEFAULT_ALLOCATOR
 NK_API void nk_textedit_init_default(struct nk_text_edit*);
 #endif
-NK_API void nk_textedit_init(struct nk_text_edit*, struct nk_allocator*, nk_size size);
+NK_API void nk_textedit_init(struct nk_text_edit*, const struct nk_allocator*, nk_size size);
 NK_API void nk_textedit_init_fixed(struct nk_text_edit*, void *memory, nk_size size);
 NK_API void nk_textedit_free(struct nk_text_edit*);
 NK_API void nk_textedit_text(struct nk_text_edit*, const char*, int total_len);
@@ -5220,6 +5220,7 @@ struct nk_style_chart {
     struct nk_vec2 padding;
     float color_factor;
     float disabled_factor;
+    nk_bool show_markers;
 };
 
 struct nk_style_combo {
@@ -5410,6 +5411,7 @@ struct nk_chart_slot {
     int count;
     struct nk_vec2 last;
     int index;
+    nk_bool show_markers;
 };
 
 struct nk_chart {
@@ -5968,7 +5970,7 @@ NK_LIB struct nk_vec2 nk_text_calculate_text_bounds(const struct nk_user_font *f
 NK_LIB int nk_strfmt(char *buf, int buf_size, const char *fmt, va_list args);
 #endif
 #ifdef NK_INCLUDE_STANDARD_IO
-NK_LIB char *nk_file_load(const char* path, nk_size* siz, struct nk_allocator *alloc);
+NK_LIB char *nk_file_load(const char* path, nk_size* siz, const struct nk_allocator *alloc);
 #endif
 
 /* buffer */
@@ -6013,7 +6015,7 @@ NK_LIB struct nk_window *nk_find_window(struct nk_context *ctx, nk_hash hash, co
 NK_LIB void nk_insert_window(struct nk_context *ctx, struct nk_window *win, enum nk_window_insert_location loc);
 
 /* pool */
-NK_LIB void nk_pool_init(struct nk_pool *pool, struct nk_allocator *alloc, unsigned int capacity);
+NK_LIB void nk_pool_init(struct nk_pool *pool, const struct nk_allocator *alloc, unsigned int capacity);
 NK_LIB void nk_pool_free(struct nk_pool *pool);
 NK_LIB void nk_pool_init_fixed(struct nk_pool *pool, void *memory, nk_size size);
 NK_LIB struct nk_page_element *nk_pool_alloc(struct nk_pool *pool);
@@ -7490,7 +7492,7 @@ nk_murmur_hash(const void * key, int len, nk_hash seed)
 }
 #ifdef NK_INCLUDE_STANDARD_IO
 NK_LIB char*
-nk_file_load(const char* path, nk_size* siz, struct nk_allocator *alloc)
+nk_file_load(const char* path, nk_size* siz, const struct nk_allocator *alloc)
 {
     char *buf;
     FILE *fd;
@@ -11142,7 +11144,7 @@ static int stbrp__skyline_find_min_y(stbrp_context *c, stbrp_node *first, int x0
       if (node->y > min_y) {
          /*  raise min_y higher. */
          /*  we've accounted for all waste up to min_y, */
-         /*  but we'll now add more waste for everything we've visted */
+         /*  but we'll now add more waste for everything we've visited */
          waste_area += visited_width * (node->y - min_y);
          min_y = node->y;
          /*  the first time through, visited_width might be reduced */
@@ -11297,7 +11299,7 @@ static stbrp__findresult stbrp__skyline_pack_rectangle(stbrp_context *context, i
 
    /*  insert the new node into the right starting point, and */
    /*  let 'cur' point to the remaining nodes needing to be */
-   /*  stiched back in */
+   /*  stitched back in */
 
    cur = *res.prev_link;
    if (cur->x < res.x) {
@@ -16679,7 +16681,7 @@ nk_font_baker_memory(nk_size *temp, int *glyph_count,
     *temp += nk_build_align + nk_baker_align;
 }
 NK_INTERN struct nk_font_baker*
-nk_font_baker(void *memory, int glyph_count, int count, struct nk_allocator *alloc)
+nk_font_baker(void *memory, int glyph_count, int count, const struct nk_allocator *alloc)
 {
     struct nk_font_baker *baker;
     if (!memory) return 0;
@@ -16696,7 +16698,7 @@ NK_INTERN int
 nk_font_bake_pack(struct nk_font_baker *baker,
     nk_size *image_memory, int *width, int *height, struct nk_recti *custom,
     const struct nk_font_config *config_list, int count,
-    struct nk_allocator *alloc)
+    const struct nk_allocator *alloc)
 {
     NK_STORAGE const nk_size max_height = 1024 * 32;
     const struct nk_font_config *config_iter, *it;
@@ -17426,7 +17428,7 @@ nk_font_atlas_init_default(struct nk_font_atlas *atlas)
 }
 #endif
 NK_API void
-nk_font_atlas_init(struct nk_font_atlas *atlas, struct nk_allocator *alloc)
+nk_font_atlas_init(struct nk_font_atlas *atlas, const struct nk_allocator *alloc)
 {
     NK_ASSERT(atlas);
     NK_ASSERT(alloc);
@@ -17437,7 +17439,7 @@ nk_font_atlas_init(struct nk_font_atlas *atlas, struct nk_allocator *alloc)
 }
 NK_API void
 nk_font_atlas_init_custom(struct nk_font_atlas *atlas,
-    struct nk_allocator *permanent, struct nk_allocator *temporary)
+    const struct nk_allocator *permanent, const struct nk_allocator *temporary)
 {
     NK_ASSERT(atlas);
     NK_ASSERT(permanent);
@@ -18678,6 +18680,7 @@ nk_style_from_table(struct nk_context *ctx, const struct nk_color *table)
     chart->rounding         = 0;
     chart->color_factor     = 1.0f;
     chart->disabled_factor  = NK_WIDGET_DISABLED_FACTOR;
+    chart->show_markers     = nk_true;
 
     /* combo */
     combo = &style->combo;
@@ -19088,7 +19091,7 @@ nk_init_custom(struct nk_context *ctx, struct nk_buffer *cmds,
     return 1;
 }
 NK_API nk_bool
-nk_init(struct nk_context *ctx, struct nk_allocator *alloc,
+nk_init(struct nk_context *ctx, const struct nk_allocator *alloc,
     const struct nk_user_font *font)
 {
     NK_ASSERT(alloc);
@@ -19377,7 +19380,7 @@ nk__next(struct nk_context *ctx, const struct nk_command *cmd)
  *
  * ===============================================================*/
 NK_LIB void
-nk_pool_init(struct nk_pool *pool, struct nk_allocator *alloc,
+nk_pool_init(struct nk_pool *pool, const struct nk_allocator *alloc,
     unsigned int capacity)
 {
     NK_ASSERT(capacity >= 1);
@@ -19667,12 +19670,12 @@ nk_panel_get_border_color(const struct nk_style *style, enum nk_panel_type type)
 NK_LIB nk_bool
 nk_panel_is_sub(enum nk_panel_type type)
 {
-    return (type & NK_PANEL_SET_SUB)?1:0;
+    return ((int)type & (int)NK_PANEL_SET_SUB)?1:0;
 }
 NK_LIB nk_bool
 nk_panel_is_nonblock(enum nk_panel_type type)
 {
-    return (type & NK_PANEL_SET_NONBLOCK)?1:0;
+    return ((int)type & (int)NK_PANEL_SET_NONBLOCK)?1:0;
 }
 NK_LIB nk_bool
 nk_panel_begin(struct nk_context *ctx, const char *title, enum nk_panel_type panel_type)
@@ -20922,7 +20925,7 @@ nk_popup_begin(struct nk_context *ctx, enum nk_popup_type type,
 
     win = ctx->current;
     panel = win->layout;
-    NK_ASSERT(!(panel->type & NK_PANEL_SET_POPUP) && "popups are not allowed to have popups");
+    NK_ASSERT(!((int)panel->type & (int)NK_PANEL_SET_POPUP) && "popups are not allowed to have popups");
     (void)panel;
     title_len = (int)nk_strlen(title);
     title_hash = nk_murmur_hash(title, (int)title_len, NK_PANEL_POPUP);
@@ -21016,7 +21019,7 @@ nk_nonblock_begin(struct nk_context *ctx,
     /* popups cannot have popups */
     win = ctx->current;
     panel = win->layout;
-    NK_ASSERT(!(panel->type & NK_PANEL_SET_POPUP));
+    NK_ASSERT(!((int)panel->type & (int)NK_PANEL_SET_POPUP));
     (void)panel;
     popup = win->popup.win;
     if (!popup) {
@@ -21089,7 +21092,7 @@ nk_popup_close(struct nk_context *ctx)
 
     popup = ctx->current;
     NK_ASSERT(popup->parent);
-    NK_ASSERT(popup->layout->type & NK_PANEL_SET_POPUP);
+    NK_ASSERT((int)popup->layout->type & (int)NK_PANEL_SET_POPUP);
     popup->flags |= NK_WINDOW_HIDDEN;
 }
 NK_API void
@@ -21357,7 +21360,7 @@ nk_contextual_end(struct nk_context *ctx)
     popup = ctx->current;
     panel = popup->layout;
     NK_ASSERT(popup->parent);
-    NK_ASSERT(panel->type & NK_PANEL_SET_POPUP);
+    NK_ASSERT((int)panel->type & (int)NK_PANEL_SET_POPUP);
     if (panel->flags & NK_WINDOW_DYNAMIC) {
         /* Close behavior
         This is a bit of a hack solution since we do not know before we end our popup
@@ -27201,7 +27204,7 @@ nk_textedit_init_fixed(struct nk_text_edit *state, void *memory, nk_size size)
     nk_str_init_fixed(&state->string, memory, size);
 }
 NK_API void
-nk_textedit_init(struct nk_text_edit *state, struct nk_allocator *alloc, nk_size size)
+nk_textedit_init(struct nk_text_edit *state, const struct nk_allocator *alloc, nk_size size)
 {
     NK_ASSERT(state);
     NK_ASSERT(alloc);
@@ -28177,7 +28180,9 @@ nk_draw_property(struct nk_command_buffer *out, const struct nk_style_property *
 
     /* draw label */
     text.padding = nk_vec2(0,0);
-    nk_widget_text(out, *label, name, len, &text, NK_TEXT_CENTERED, font);
+    if (name && name[0] != '#') {
+        nk_widget_text(out, *label, name, len, &text, NK_TEXT_CENTERED, font);
+    }
 }
 NK_LIB void
 nk_do_property(nk_flags *ws,
@@ -28195,7 +28200,7 @@ nk_do_property(nk_flags *ws,
         nk_filter_float
     };
     nk_bool active, old;
-    int num_len = 0, name_len;
+    int num_len = 0, name_len = 0;
     char string[NK_MAX_NUMBER_BUFFER];
     float size;
 
@@ -28215,7 +28220,9 @@ nk_do_property(nk_flags *ws,
     left.y = property.y + style->border + property.h/2.0f - left.h/2;
 
     /* text label */
-    name_len = nk_strlen(name);
+    if (name && name[0] != '#') {
+        name_len = nk_strlen(name);
+    }
     size = font->width(font->userdata, font->height, name, name_len);
     label.x = left.x + left.w + style->padding.x;
     label.w = (float)size + 2 * style->padding.x;
@@ -28322,7 +28329,7 @@ nk_do_property(nk_flags *ws,
     text_edit->string.buffer.memory.ptr = dst;
     text_edit->string.buffer.size = NK_MAX_NUMBER_BUFFER;
     text_edit->mode = NK_TEXT_EDIT_MODE_INSERT;
-    nk_do_edit(ws, out, edit, NK_EDIT_FIELD|NK_EDIT_AUTO_SELECT,
+    nk_do_edit(ws, out, edit, (int)NK_EDIT_FIELD|(int)NK_EDIT_AUTO_SELECT,
         filters[filter], text_edit, &style->edit, (*state == NK_PROPERTY_EDIT) ? in: 0, font);
 
     *length = text_edit->string.len;
@@ -28629,7 +28636,8 @@ nk_chart_begin_colored(struct nk_context *ctx, enum nk_chart_type type,
     slot->highlight = highlight;
     slot->min = NK_MIN(min_value, max_value);
     slot->max = NK_MAX(min_value, max_value);
-    slot->range = slot->max - slot->min;}
+    slot->range = slot->max - slot->min;
+    slot->show_markers = style->show_markers;}
 
     /* draw chart background */
     background = &style->background;
@@ -28681,7 +28689,8 @@ nk_chart_add_slot_colored(struct nk_context *ctx, const enum nk_chart_type type,
     slot->highlight = highlight;
     slot->min = NK_MIN(min_value, max_value);
     slot->max = NK_MAX(min_value, max_value);
-    slot->range = slot->max - slot->min;}
+    slot->range = slot->max - slot->min;
+    slot->show_markers = style->show_markers;}
 }
 NK_API void
 nk_chart_add_slot(struct nk_context *ctx, const enum nk_chart_type type,
@@ -28728,7 +28737,9 @@ nk_chart_push_line(struct nk_context *ctx, struct nk_window *win,
                 i->mouse.buttons[NK_BUTTON_LEFT].clicked) ? NK_CHART_CLICKED: 0;
             color = g->slots[slot].highlight;
         }
-        nk_fill_rect(out, bounds, 0, color);
+        if (g->slots[slot].show_markers) {
+            nk_fill_rect(out, bounds, 0, color);
+        }
         g->slots[slot].index += 1;
         return ret;
     }
@@ -28752,7 +28763,9 @@ nk_chart_push_line(struct nk_context *ctx, struct nk_window *win,
             color = g->slots[slot].highlight;
         }
     }
-    nk_fill_rect(out, nk_rect(cur.x - 2, cur.y - 2, 4, 4), 0, color);
+    if (g->slots[slot].show_markers) {
+        nk_fill_rect(out, nk_rect(cur.x - 2, cur.y - 2, 4, 4), 0, color);
+    }
 
     /* save current data point position */
     g->slots[slot].last.x = cur.x;
@@ -29982,7 +29995,7 @@ nk_tooltip_begin(struct nk_context *ctx, float width)
     /* make sure that no nonblocking popup is currently active */
     win = ctx->current;
     in = &ctx->input;
-    if (win->popup.win && (win->popup.type & NK_PANEL_SET_NONBLOCK))
+    if (win->popup.win && ((int)win->popup.type & (int)NK_PANEL_SET_NONBLOCK))
         return 0;
 
     w = nk_iceilf(width);
@@ -30123,6 +30136,7 @@ nk_tooltipfv(struct nk_context *ctx, const char *fmt, va_list args)
 ///   - [y]: Minor version with non-breaking API and library changes
 ///   - [z]: Patch version with no direct changes to the API
 ///
+/// - 2024/03/07 (4.12.1) - Fix bitwise operations warnings in C++20
 /// - 2023/11/26 (4.12.0) - Added an alignment option to checkboxes and radio buttons.
 /// - 2023/10/11 (4.11.0) - Added nk_widget_disable_begin() and nk_widget_disable_end()
 /// - 2022/12/23 (4.10.6) - Fix incorrect glyph index in nk_font_bake()
@@ -30269,7 +30283,7 @@ nk_tooltipfv(struct nk_context *ctx, const char *fmt, va_list args)
 ///                        dynamic and static widgets.
 /// - 2016/12/31 (1.30.0) - Extended scrollbar offset from 16-bit to 32-bit.
 /// - 2016/12/31 (1.29.2) - Fixed closing window bug of minimized windows.
-/// - 2016/12/03 (1.29.1) - Fixed wrapped text with no seperator and C89 error.
+/// - 2016/12/03 (1.29.1) - Fixed wrapped text with no separator and C89 error.
 /// - 2016/12/03 (1.29.0) - Changed text wrapping to process words not characters.
 /// - 2016/11/22 (1.28.6) - Fixed window minimized closing bug.
 /// - 2016/11/19 (1.28.5) - Fixed abstract combo box closing behavior.
@@ -30407,7 +30421,7 @@ nk_tooltipfv(struct nk_context *ctx, const char *fmt, va_list args)
 ///                        precision.
 /// - 2016/08/08 (1.07.2) - Fixed compiling error without define `NK_INCLUDE_FIXED_TYPE`.
 /// - 2016/08/08 (1.07.1) - Fixed possible floating point error inside `nk_widget` leading
-///                        to wrong wiget width calculation which results in widgets falsely
+///                        to wrong widget width calculation which results in widgets falsely
 ///                        becoming tagged as not inside window and cannot be accessed.
 /// - 2016/08/08 (1.07.0) - Nuklear now differentiates between hiding a window (NK_WINDOW_HIDDEN) and
 ///                        closing a window (NK_WINDOW_CLOSED). A window can be hidden/shown
