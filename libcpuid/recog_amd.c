@@ -601,7 +601,7 @@ static struct amd_code_and_bits_t decode_amd_codename_part1(const char *bs)
 		   Example: bs="AMD Ryzen 7 8845HS w/ Radeon 780M Graphics"
 		   => loop i from 12 to 17, i.e. "8845HS" in such example
 		 */
-		for(i = i + 8; (i < n) && (bs[i] != ' '); i++) {
+		for(i = i + 8; (i < (int)n) && (bs[i] != ' '); i++) {
 			switch (bs[i]) {
 				case 'F': bits |= _F; break;
 				case 'G': bits |= _G; break;
