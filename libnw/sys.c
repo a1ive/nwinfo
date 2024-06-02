@@ -17,6 +17,8 @@ static const CHAR* Win10BuildNumber(DWORD dwBuildNumber)
 {
 	switch (dwBuildNumber)
 	{
+	//case 26100U:
+		//return "11 24H2";
 	case 22631U:
 		return "11 23H2"; // Sun Valley 3
 	case 22621U:
@@ -52,7 +54,7 @@ static const CHAR* Win10BuildNumber(DWORD dwBuildNumber)
 	case 10240U:
 		return "10 1507"; // Threshold
 	}
-	if (dwBuildNumber >= 22000U)
+	if (dwBuildNumber >= 21344U)
 		return "11";
 	return "10";
 }
@@ -61,7 +63,7 @@ static const CHAR* WinServer2016BuildNumber(DWORD dwBuildNumber)
 {
 	switch (dwBuildNumber)
 	{
-	//case 26040U:
+	//case 26100U:
 		//return "Server 2025";
 	case 25398U:
 		return "Server, Version 23H2"; // WTF?
@@ -84,9 +86,11 @@ static const CHAR* WinServer2016BuildNumber(DWORD dwBuildNumber)
 	case 14393U:
 		return "Server 2016";
 	}
-	if (dwBuildNumber >= 20348U)
+	if (dwBuildNumber >= 25871U)
+		return "Server 2025";
+	if (dwBuildNumber >= 19504U)
 		return "Server 2022";
-	else if (dwBuildNumber >= 17763U)
+	if (dwBuildNumber >= 17609U)
 		return "Server 2019";
 	return "Server 2016";
 }
