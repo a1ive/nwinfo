@@ -29,7 +29,7 @@
  * \file     libcpuid.h
  * \author   Veselin Georgiev
  * \date     Oct 2008
- * \version  0.6.4
+ * \version  0.6.5
  *
  * Version history:
  *
@@ -77,6 +77,8 @@
  * * 0.6.4 (2023-10-08): A lot of DB updates, add support for Centaur CPUs (VIA and Zhaoxin),
  *                       fix floating point exception in cpu_identify_all(),
  *                       fix build for NetBSD and DragonFly BSD.
+ * * 0.6.5 (2024-04-28): A lot of DB updates, support heterogeneous RAW dumps in cpu_identify_all(),
+ *                       detection of LP E-Cores for Intel CPUs.
  */
 
 /** @mainpage A simple libcpuid introduction
@@ -160,11 +162,12 @@ typedef enum {
  * @brief CPU purpose
  */
 typedef enum {
-	PURPOSE_GENERAL = 0,  /*!< general purpose CPU */
-	PURPOSE_PERFORMANCE,  /*!< performance CPU */
-	PURPOSE_EFFICIENCY,   /*!< efficiency CPU */
+	PURPOSE_GENERAL = 0,   /*!< general purpose CPU */
+	PURPOSE_PERFORMANCE,   /*!< performance CPU */
+	PURPOSE_EFFICIENCY,    /*!< efficiency CPU */
+	PURPOSE_LP_EFFICIENCY, /*!< low-power efficiency CPU */
 
-	NUM_CPU_PURPOSES,     /*!< Valid CPU purpose ids: 0..NUM_CPU_PURPOSES - 1 */
+	NUM_CPU_PURPOSES,      /*!< Valid CPU purpose ids: 0..NUM_CPU_PURPOSES - 1 */
 } cpu_purpose_t;
 #define NUM_CPU_PURPOSES NUM_CPU_PURPOSES
 

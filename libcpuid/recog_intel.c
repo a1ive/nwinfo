@@ -71,6 +71,8 @@ enum _intel_model_t {
 	_x2xx,  /* Xeon Bronze/Silver/Gold/Platinum x2xx */
 	_x3xx,  /* Xeon Bronze/Silver/Gold/Platinum x3xx */
 	_x4xx,  /* Xeon Bronze/Silver/Gold/Platinum/Max x4xx */
+	_x5xx,  /* Xeon Bronze/Silver/Gold/Platinum x5xx */
+	_1xx,   /* Core Ultra [579] 1xx */
 };
 typedef enum _intel_model_t intel_model_t;
 
@@ -531,11 +533,24 @@ const struct match_entry_t cpudb_intel[] = {
 	{  6, 15, -1, -1, 143, -1,    -1,    -1, NC, XEON_|_W_|_7     , _x4xx, "Sapphire Rapids-WS (Xeon w7)"       },
 	{  6, 15, -1, -1, 143, -1,    -1,    -1, NC, XEON_|_W_|_5     , _x4xx, "Sapphire Rapids-WS (Xeon w5)"       },
 	{  6, 15, -1, -1, 143, -1,    -1,    -1, NC, XEON_|_W_|_3     , _x4xx, "Sapphire Rapids-WS (Xeon w3)"       },
-	{  6, 15, -1, -1, 143, -1,    -1,    -1, NC, XEON_|_MAX_      , _x4xx, "Sapphire Rapids-SP (Xeon Max)"      },
+	{  6, 15, -1, -1, 143, -1,    -1,    -1, NC, XEON_|_MAX_      , _x4xx, "Sapphire Rapids-HBM (Xeon Max)"     },
 	{  6, 15, -1, -1, 143, -1,    -1,    -1, NC, XEON_|_PLATINIUM_, _x4xx, "Sapphire Rapids-SP (Xeon Platinum)" },
 	{  6, 15, -1, -1, 143, -1,    -1,    -1, NC, XEON_|_GOLD_     , _x4xx, "Sapphire Rapids-SP (Xeon Gold)"     },
 	{  6, 15, -1, -1, 143, -1,    -1,    -1, NC, XEON_|_SILVER_   , _x4xx, "Sapphire Rapids-SP (Xeon Silver)"   },
 	{  6, 15, -1, -1, 143, -1,    -1,    -1, NC, XEON_|_BRONZE_   , _x4xx, "Sapphire Rapids-SP (Xeon Bronze)"   },
+
+	/* Emerald Rapids CPUs (2023, 5th Xeon Scalable gen, Intel 7) => https://en.wikichip.org/wiki/intel/microarchitectures/emerald_rapids */
+	{  6, 15, -1, -1, 207, -1,    -1,    -1, NC, XEON_|_PLATINIUM_, _x5xx, "Emerald Rapids-SP (Xeon Platinum)" }, // Xeon Platinum (8500)
+	{  6, 15, -1, -1, 207, -1,    -1,    -1, NC, XEON_|_GOLD_     , _x5xx, "Emerald Rapids-SP (Xeon Gold)"     }, // Xeon Gold (5500 and 6500)
+	{  6, 15, -1, -1, 207, -1,    -1,    -1, NC, XEON_|_SILVER_   , _x5xx, "Emerald Rapids-SP (Xeon Silver)"   }, // Xeon Silver (4500)
+	{  6, 15, -1, -1, 207, -1,    -1,    -1, NC, XEON_|_BRONZE_   , _x5xx, "Emerald Rapids-SP (Xeon Bronze)"   }, // Xeon Bronze (3500)
+
+	/* Meteor Lake CPUs (2023, 1st Core Ultra gen, Intel 4) => https://en.wikichip.org/wiki/intel/microarchitectures/meteor_lake */
+	{  6, 10, -1, -1, 170, -1,    -1,    -1, NC, CORE_|_ULTRA_|_9|_H, _x1xx, "Meteor Lake-H (Core Ultra 9)" },
+	{  6, 10, -1, -1, 170, -1,    -1,    -1, NC, CORE_|_ULTRA_|_7|_H, _x1xx, "Meteor Lake-H (Core Ultra 7)" },
+	{  6, 10, -1, -1, 170, -1,    -1,    -1, NC, CORE_|_ULTRA_|_5|_H, _x1xx, "Meteor Lake-H (Core Ultra 5)" },
+	{  6, 10, -1, -1, 170, -1,    -1,    -1, NC, CORE_|_ULTRA_|_7|_U, _x1xx, "Meteor Lake-U (Core Ultra 7)" },
+	{  6, 10, -1, -1, 170, -1,    -1,    -1, NC, CORE_|_ULTRA_|_5|_U, _x1xx, "Meteor Lake-U (Core Ultra 5)" },
 	/* F   M   S  EF   EM #cores L2$    L3$  BC       ModelBits ModelCode                                  Name */
 
 
@@ -714,7 +729,7 @@ static int decode_intel_extended_topology(struct cpu_raw_data_t* raw, struct cpu
 {
 	int i, level_type, num_smt = -1, num_core = -1;
 
-	for (i = 0; (raw->intel_fn11[i][EAX] != 0x0) && (raw->intel_fn11[i][EBX] != 0x0) && (i < MAX_INTELFN11_LEVEL); i++) {
+	for (i = 0; (i < MAX_INTELFN11_LEVEL) && (raw->intel_fn11[i][EAX] != 0x0) && (raw->intel_fn11[i][EBX] != 0x0); i++) {
 		level_type = EXTRACTS_BITS(raw->intel_fn11[i][ECX], 15, 8);
 		switch (level_type) {
 			case 0x01:
@@ -791,7 +806,7 @@ static intel_code_and_bits_t get_brand_code_and_bits(struct cpu_id_t* data)
 			case '7': bits |= _7; break;
 			case '9': bits |= _9; break;
 		}
-		for(i = i + 11; i < (int) n; i++) {
+		for(i = i + 11; i < n; i++) {
 			switch (bs[i]) {
 				case 'H': bits |= _H; break;
 				case 'K': bits |= _K; break;
@@ -800,6 +815,27 @@ static intel_code_and_bits_t get_brand_code_and_bits(struct cpu_id_t* data)
 				case 'S': bits |= _S; break;
 				case 'U': bits |= _U; break;
 				case 'X': bits |= _X; break;
+			}
+		}
+	}
+	if ((i = match_pattern(bs, "Core(TM) Ultra [579]")) != 0) {
+		bits |= CORE_ | _ULTRA_;
+		i--;
+		switch (bs[i + 15]) {
+			//case '3': bits |= _3; break;
+			case '5': bits |= _5; break;
+			case '7': bits |= _7; break;
+			case '9': bits |= _9; break;
+		}
+		for(i = i + 16; i < n; i++) {
+			switch (bs[i]) {
+				case 'H': bits |= _H; break;
+				//case 'K': bits |= _K; break;
+				//case 'N': bits |= _N; break;
+				//case 'P': bits |= _P; break;
+				//case 'S': bits |= _S; break;
+				case 'U': bits |= _U; break;
+				//case 'X': bits |= _X; break;
 			}
 		}
 	}
@@ -924,6 +960,12 @@ static intel_model_t get_model_code(struct cpu_id_t* data)
 		if ((bs[i] == '1') && (bs[i+1] == '4')) return _14xxx;
 		return UNKNOWN;
 	}
+	else if ((i = match_pattern(bs, "Core(TM) Ultra [579]")) != 0) {
+		i += 16;
+		if (i + 3 >= l) return UNKNOWN;
+		if (bs[i] == '1') return _1xx;
+		return UNKNOWN;
+	}
 	else if ((i = match_pattern(bs, "Xeon(R) [WBSGP]")) != 0) {
 		i = 0;
 		if                   ((i = match_pattern(bs, "Xeon(R) W-"))       != 0)  i += 10;
@@ -938,6 +980,7 @@ static intel_model_t get_model_code(struct cpu_id_t* data)
 		if (bs[i] == '2') return _x2xx;
 		if (bs[i] == '3') return _x3xx;
 		if (bs[i] == '4') return _x4xx;
+		if (bs[i] == '5') return _x5xx;
 		return UNKNOWN;
 	}
 
@@ -1099,9 +1142,16 @@ cpu_purpose_t cpuid_identify_purpose_intel(struct cpu_raw_data_t* raw)
 	*/
 	if (EXTRACTS_BIT(raw->basic_cpuid[0x7][EDX], 15) == 0x1) {
 		switch (EXTRACTS_BITS(raw->basic_cpuid[0x1a][EAX], 31, 24)) {
-			case 0x20: /* Atom */ return PURPOSE_EFFICIENCY;
-			case 0x40: /* Core */ return PURPOSE_PERFORMANCE;
-			default:              return PURPOSE_GENERAL;
+			case 0x20: /* Atom */
+				/* Acccording to Ramyer M. from Intel, LP E-Cores do not have a L3 cache
+				   https://community.intel.com/t5/Processors/Detecting-LP-E-Cores-on-Meteor-Lake-in-software/m-p/1584555/highlight/true#M70732
+				   If sub-leaf 3 is set, it is an E-Cores.
+				*/
+				return (EXTRACTS_BITS(raw->intel_fn4[3][EAX], 31, 0)) ? PURPOSE_EFFICIENCY : PURPOSE_LP_EFFICIENCY;
+			case 0x40: /* Core */
+				return PURPOSE_PERFORMANCE;
+			default:
+				return PURPOSE_GENERAL;
 		}
 	}
 

@@ -318,7 +318,8 @@ const struct match_entry_t cpudb_amd[] = {
 	{ 15, -1, -1, 23,  104,  -1,    -1,    -1, NC, RYZEN_|_3           ,     0, "Ryzen 3 (Lucienne)"            },
 	{ 15, -1, -1, 23,   71,  -1,    -1,    -1, NC, 0                   ,     0, "Desktop Kit (Zen 2)"           }, /* 4700S Desktop Kit */
 	{ 15, -1, -1, 23,  132,  -1,    -1,    -1, NC, 0                   ,     0, "Desktop Kit (Zen 2)"           }, /* 4800S Desktop Kit */
-	{ 15, -1,  2, 23,  144,  -1,    -1,    -1, NC, 0                   ,     0, "Van Gogh"                      },
+	{ 15, -1,  2, 23,  144,  -1,    -1,    -1, NC, 0                   ,     0, "Van Gogh"                      }, /* Custom APU 0405 */
+	{ 15, -1,  0, 23,  145,  -1,    -1,    -1, NC, 0                   ,     0, "Van Gogh"                      }, /* Custom APU 0932 */
 	{ 15, -1, -1, 23,  160,  -1,    -1,    -1, NC, RYZEN_|_5           ,     0, "Ryzen 5 (Mendocino)"           },
 	{ 15, -1, -1, 23,  160,  -1,    -1,    -1, NC, RYZEN_|_3           ,     0, "Ryzen 3 (Mendocino)"           },
 	{ 15, -1, -1, 23,  160,  -1,    -1,    -1, NC, ATHLON_             ,     0, "Athlon (Mendocino)"            },
@@ -349,13 +350,16 @@ const struct match_entry_t cpudb_amd[] = {
 	/* Zen 4 (2022) => https://en.wikichip.org/wiki/amd/microarchitectures/zen_4 */
 	{ 15, -1, -1, 25,   17,  -1,    -1,    -1, NC, EPYC_               ,     0, "EPYC (Genoa)"                  },
 	{ 15, -1, -1, 25,   24,  -1,    -1,    -1, NC, RYZEN_TR_           ,     0, "Threadripper (Storm Peak)"     },
+	/*  => Raphael (7000 series, Zen 4/RDNA2 based) */
 	{ 15, -1,  2, 25,   97,  -1,    -1,    -1, NC, RYZEN_|_9           ,     0, "Ryzen 9 (Raphael)"             },
 	{ 15, -1,  2, 25,   97,  -1,    -1,    -1, NC, RYZEN_|_7           ,     0, "Ryzen 7 (Raphael)"             },
 	{ 15, -1,  2, 25,   97,  -1,    -1,    -1, NC, RYZEN_|_5           ,     0, "Ryzen 5 (Raphael)"             },
 	{ 15, -1,  2, 25,   97,  -1,    -1,    -1, NC, RYZEN_|_3           ,     0, "Ryzen 3 (Raphael)"             },
+	/*  => Dragon Range (7045 series, Zen 4/RDNA2 based) */
 	{ 15, -1, -1, 25,   97,  -1,    -1,    -1, NC, RYZEN_|_9|_H        ,     0, "Ryzen 9 (Dragon Range)"        },
 	{ 15, -1, -1, 25,   97,  -1,    -1,    -1, NC, RYZEN_|_7|_H        ,     0, "Ryzen 7 (Dragon Range)"        },
 	{ 15, -1, -1, 25,   97,  -1,    -1,    -1, NC, RYZEN_|_5|_H        ,     0, "Ryzen 5 (Dragon Range)"        },
+	/*  => Phoenix (7040 series, Zen 4/RDNA3/XDNA based) */
 	{ 15, -1, -1, 25,  116,  -1,    -1,    -1, NC, RYZEN_|_9|_H        ,     0, "Ryzen 9 (Phoenix)"             },
 	{ 15, -1, -1, 25,  116,  -1,    -1,    -1, NC, RYZEN_|_7|_H        ,     0, "Ryzen 7 (Phoenix)"             },
 	{ 15, -1, -1, 25,  116,  -1,    -1,    -1, NC, RYZEN_|_7|_U        ,     0, "Ryzen 7 (Phoenix)"             },
@@ -363,6 +367,21 @@ const struct match_entry_t cpudb_amd[] = {
 	{ 15, -1, -1, 25,  116,  -1,    -1,    -1, NC, RYZEN_|_5|_U        ,     0, "Ryzen 5 (Phoenix)"             },
 	{ 15, -1, -1, 25,  116,  -1,    -1,    -1, NC, RYZEN_|_3|_U        ,     0, "Ryzen 3 (Phoenix)"             },
 	{ 15, -1, -1, 25,  116,  -1,    -1,    -1, NC, RYZEN_|_Z           ,     0, "Ryzen Z1 (Phoenix)"            },
+	/*  => Phoenix (8000 series, Zen 4 based) */
+	{ 15, -1, -1, 25,  117,  -1,    -1,    -1, NC, RYZEN_|_7|_F        ,     0, "Ryzen 7 (Phoenix)"             },
+	{ 15, -1, -1, 25,  117,  -1,    -1,    -1, NC, RYZEN_|_5|_F        ,     0, "Ryzen 5 (Phoenix)"             },
+	/*  => Phoenix (8000 series with Radeon Graphics, Zen 4/RDNA3/XDNA based) */
+	{ 15, -1, -1, 25,  117,  -1,    -1,    -1, NC, RYZEN_|_9|_G        ,     0, "Ryzen 9 (Phoenix)"             },
+	{ 15, -1, -1, 25,  117,  -1,    -1,    -1, NC, RYZEN_|_7|_G        ,     0, "Ryzen 7 (Phoenix)"             },
+	{ 15, -1, -1, 25,  117,  -1,    -1,    -1, NC, RYZEN_|_5|_G        ,     0, "Ryzen 5 (Phoenix)"             },
+	{ 15, -1, -1, 25,  117,  -1,    -1,    -1, NC, RYZEN_|_3|_G        ,     0, "Ryzen 3 (Phoenix)"             },
+	/*  => Hawk Point (8040 series, Zen 4/RDNA3/XDNA based) */
+	{ 15, -1, -1, 25,  117,  -1,    -1,    -1, NC, RYZEN_|_9|_H        ,     0, "Ryzen 9 (Hawk Point)"          },
+	{ 15, -1, -1, 25,  117,  -1,    -1,    -1, NC, RYZEN_|_7|_H        ,     0, "Ryzen 7 (Hawk Point)"          },
+	{ 15, -1, -1, 25,  117,  -1,    -1,    -1, NC, RYZEN_|_7|_U        ,     0, "Ryzen 7 (Hawk Point)"          },
+	{ 15, -1, -1, 25,  117,  -1,    -1,    -1, NC, RYZEN_|_5|_H        ,     0, "Ryzen 5 (Hawk Point)"          },
+	{ 15, -1, -1, 25,  117,  -1,    -1,    -1, NC, RYZEN_|_5|_U        ,     0, "Ryzen 5 (Hawk Point)"          },
+	{ 15, -1, -1, 25,  117,  -1,    -1,    -1, NC, RYZEN_|_3|_U        ,     0, "Ryzen 3 (Hawk Point)"          },
 	/* F   M   S  EF    EM  #cores  L2$   L3$  BC  ModelBits          ModelCode  Name                           */
 };
 
@@ -578,8 +597,14 @@ static struct amd_code_and_bits_t decode_amd_codename_part1(const char *bs)
 			case '9': bits |= _9; break;
 			case 'Z': bits |= _Z; break;
 		}
-		for(i = i + 7; i < (int) n; i++) {
+		/* Stop the loop after a whitespace to avoid to read some words like "Graphics".
+		   Example: bs="AMD Ryzen 7 8845HS w/ Radeon 780M Graphics"
+		   => loop i from 12 to 17, i.e. "8845HS" in such example
+		 */
+		for(i = i + 8; (i < n) && (bs[i] != ' '); i++) {
 			switch (bs[i]) {
+				case 'F': bits |= _F; break;
+				case 'G': bits |= _G; break;
 				case 'H': bits |= _H; break;
 				case 'S': bits |= _S; break;
 				case 'U': bits |= _U; break;

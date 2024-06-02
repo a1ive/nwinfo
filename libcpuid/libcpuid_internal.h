@@ -109,6 +109,19 @@ struct internal_cache_instances_t {
 	struct internal_cache_id_t htable[NUM_CACHE_TYPES][CACHES_HTABLE_SIZE];
 };
 
+struct internal_type_info_t {
+	cpu_purpose_t purpose;
+	int32_t package_id;
+	struct internal_id_info_t id_info;
+	struct internal_core_instances_t core_instances;
+	struct internal_cache_instances_t cache_instances;
+};
+
+struct internal_type_info_array_t {
+	uint8_t num;
+	struct internal_type_info_t* data;
+};
+
 #define LBIT(x) (((long long) 1) << x)
 
 enum _common_bits_t {
@@ -119,10 +132,12 @@ enum _common_bits_t {
 	_5                      = LBIT(  4 ),
 	_7                      = LBIT(  5 ),
 	_9                      = LBIT(  6 ),
-	_H                      = LBIT(  7 ),
+	_H                      = LBIT(  7 ), // powerful mobile processors for laptop
 	_S                      = LBIT(  8 ),
-	_U                      = LBIT(  9 ),
-	_X                      = LBIT( 10 ),
+	_U                      = LBIT(  9 ), // ultra-low power
+	_X                      = LBIT( 10 ), // CPU with great amount of power
+	_F                      = LBIT( 11 ), // CPU that doesn’t have integrated graphics
+	_G                      = LBIT( 12 ), // CPU with additional built-in integrated graphics
 };
 
 // additional detection bits for Intel CPUs:
@@ -133,7 +148,7 @@ enum _intel_bits_t {
 	_I_                     = LBIT( 13 ),
 	XEON_                   = LBIT( 14 ),
 	ATOM_                   = LBIT( 15 ),
-	_K                      = LBIT( 16 ),
+	_K                      = LBIT( 16 ), // an unlocked desktop processor that allows for overclocking
 	_P                      = LBIT( 17 ),
 	_N                      = LBIT( 18 ),
 	_W_                     = LBIT( 19 ),
@@ -145,6 +160,7 @@ enum _intel_bits_t {
 	_MAX_                   = LBIT( 25 ),
 	_J_                     = LBIT( 26 ),
 	_N_                     = LBIT( 27 ),
+	_ULTRA_                 = LBIT( 28 ),
 };
 typedef enum _intel_bits_t intel_bits_t;
 

@@ -112,6 +112,31 @@ static void cache_instances_t_constructor(struct internal_cache_instances_t* dat
 	memset(data->htable,    0, sizeof(data->htable));
 }
 
+static void type_info_array_t_constructor(struct internal_type_info_array_t* data)
+{
+	data->num  = 0;
+	data->data = NULL;
+}
+
+static int16_t cpuid_find_index_system_id(struct system_id_t* system, cpu_purpose_t purpose,
+                                          struct internal_type_info_array_t* type_info, int32_t package_id, bool is_apic_supported)
+{
+	int16_t i = 0;
+
+	if (is_apic_supported) {
+		for (i = 0; i < system->num_cpu_types; i++)
+			if ((system->cpu_types[i].purpose == purpose) && (type_info->data[i].package_id == package_id))
+				return i;
+	}
+	else {
+		for (i = 0; i < system->num_cpu_types; i++)
+			if (system->cpu_types[i].purpose == purpose)
+				return i;
+	}
+
+	return -1;
+}
+
 static void cpuid_grow_raw_data_array(struct cpu_raw_data_array_t* raw_array, logical_cpu_t n)
 {
 	logical_cpu_t i;
@@ -149,6 +174,33 @@ static void cpuid_grow_system_id(struct system_id_t* system, uint8_t n)
 	}
 	system->num_cpu_types = n;
 	system->cpu_types     = tmp;
+}
+
+static void cpuid_grow_type_info(struct internal_type_info_array_t* type_info, uint8_t n)
+{
+	uint8_t i;
+	struct internal_type_info_t *tmp = NULL;
+
+	if ((n <= 0) || (n < type_info->num)) return;
+	tmp = realloc(type_info->data, sizeof(struct internal_type_info_t) * n);
+	if (tmp == NULL) { /* Memory allocation failure */
+		cpuid_set_error(ERR_NO_MEM);
+		return;
+	}
+
+	for (i = type_info->num; i < n; i++) {
+		core_instances_t_constructor(&tmp[i].core_instances);
+		cache_instances_t_constructor(&tmp[i].cache_instances);
+	}
+	type_info->num  = n;
+	type_info->data = tmp;
+}
+
+static void cpuid_free_type_info(struct internal_type_info_array_t* type_info)
+{
+	if (type_info->num <= 0) return;
+	free(type_info->data);
+	type_info->num = 0;
 }
 
 /* get_total_cpus() system specific code: uses OS routines to determine total number of CPUs */
@@ -722,46 +774,33 @@ int cpu_identify_all(struct cpu_raw_data_array_t* raw_array, struct system_id_t*
 	int cur_error = cpuid_set_error(ERR_OK);
 	int ret_error = cpuid_set_error(ERR_OK);
 	double smt_divisor;
-	bool is_new_cpu_type;
-	bool is_last_item;
 	bool is_smt_supported;
 	bool is_apic_supported = true;
-	uint8_t cpu_type_index = 0;
-	int32_t num_logical_cpus = 0;
+	int16_t cpu_type_index = -1;
 	int32_t cur_package_id = 0;
-	int32_t prev_package_id = 0;
 	logical_cpu_t logical_cpu = 0;
 	cpu_purpose_t purpose;
 	cpu_affinity_mask_t affinity_mask;
-	struct internal_id_info_t id_info;
 	struct internal_apic_info_t apic_info;
-	struct internal_core_instances_t* cores_type = malloc(sizeof(*cores_type));
-	struct internal_cache_instances_t* caches_type = malloc(sizeof(*caches_type));
+	struct internal_type_info_array_t type_info;
 	struct internal_cache_instances_t* caches_all = malloc(sizeof(*caches_all));
 
-	if (!system || !raw_array
-		|| !cores_type || !caches_type || !caches_all)
+	/* Init variables */
+	if (!system || !raw_array || !caches_all)
 	{
-		if (cores_type)
-			free(cores_type);
-		if (caches_type)
-			free(caches_type);
 		if (caches_all)
 			free(caches_all);
 		return cpuid_set_error(ERR_HANDLE);
 	}
 
 	system_id_t_constructor(system);
-	core_instances_t_constructor(cores_type);
-	cache_instances_t_constructor(caches_type);
+	type_info_array_t_constructor(&type_info);
 	cache_instances_t_constructor(caches_all);
 	if (raw_array->with_affinity)
 		init_affinity_mask(&affinity_mask);
 
 	/* Iterate over all raw */
 	for (logical_cpu = 0; logical_cpu < raw_array->num_raw; logical_cpu++) {
-		is_new_cpu_type = false;
-		is_last_item    = (logical_cpu + 1 >= raw_array->num_raw);
 		/* Get CPU purpose and APIC ID
 		   For hybrid CPUs, the purpose may be different than the previous iteration (e.g. from P-cores to E-cores)
 		   APIC ID are unique for each logical CPU cores.
@@ -773,82 +812,59 @@ int cpu_identify_all(struct cpu_raw_data_array_t* raw_array, struct system_id_t*
 				cur_package_id = apic_info.package_id;
 		}
 
-		/* Put data to system->cpu_types on the first iteration or when purpose is different than previous core */
-		if ((system->num_cpu_types == 0) || (purpose != system->cpu_types[system->num_cpu_types - 1].purpose) || (cur_package_id != prev_package_id)) {
-			is_new_cpu_type = true;
+		/* Put data to system->cpu_types on the first iteration or when purpose is new.
+		   For motherboards with multiple CPUs, we grow the array when package ID is different. */
+		cpu_type_index = cpuid_find_index_system_id(system, purpose, &type_info, cur_package_id, is_apic_supported);
+		if (cpu_type_index < 0) {
 			cpu_type_index  = system->num_cpu_types;
 			cpuid_grow_system_id(system, system->num_cpu_types + 1);
-			cur_error = cpu_ident_internal(&raw_array->raw[logical_cpu], &system->cpu_types[cpu_type_index], &id_info);
+			cpuid_grow_type_info(&type_info, type_info.num + 1);
+			cur_error = cpu_ident_internal(&raw_array->raw[logical_cpu], &system->cpu_types[cpu_type_index], &type_info.data[cpu_type_index].id_info);
+			type_info.data[cpu_type_index].purpose = purpose;
 			if (ret_error == ERR_OK)
 				ret_error = cur_error;
+			if (is_apic_supported)
+				type_info.data[cpu_type_index].package_id = cur_package_id;
+			if (raw_array->with_affinity)
+				system->cpu_types[cpu_type_index].num_logical_cpus = 0;
 		}
-		/* Increment counters only for current purpose */
-		if (raw_array->with_affinity && ((logical_cpu == 0) || !is_new_cpu_type)) {
-			set_affinity_mask_bit(logical_cpu, &affinity_mask);
-			num_logical_cpus++;
+
+		/* Increment counters */
+		if (raw_array->with_affinity) {
+			set_affinity_mask_bit(logical_cpu, &system->cpu_types[cpu_type_index].affinity_mask);
+			system->cpu_types[cpu_type_index].num_logical_cpus++;
 			if (is_apic_supported) {
-				update_core_instances(cores_type, &apic_info);
-				update_cache_instances(caches_type, &apic_info, &id_info);
-				update_cache_instances(caches_all, &apic_info, &id_info);
+				update_core_instances(&type_info.data[cpu_type_index].core_instances, &apic_info);
+				update_cache_instances(&type_info.data[cpu_type_index].cache_instances, &apic_info, &type_info.data[cpu_type_index].id_info);
+				update_cache_instances(caches_all,  &apic_info, &type_info.data[cpu_type_index].id_info);
+			}
+		}
+	}
+
+	/* Update counters for all CPU types */
+	for (cpu_type_index = 0; cpu_type_index < system->num_cpu_types; cpu_type_index++) {
+		/* Overwrite core and cache counters when information is available per core */
+		if (raw_array->with_affinity) {
+			if (is_apic_supported) {
+				system->cpu_types[cpu_type_index].num_cores                = type_info.data[cpu_type_index].core_instances.instances;
+				system->cpu_types[cpu_type_index].l1_instruction_instances = type_info.data[cpu_type_index].cache_instances.instances[L1I];
+				system->cpu_types[cpu_type_index].l1_data_instances        = type_info.data[cpu_type_index].cache_instances.instances[L1D];
+				system->cpu_types[cpu_type_index].l2_instances             = type_info.data[cpu_type_index].cache_instances.instances[L2];
+				system->cpu_types[cpu_type_index].l3_instances             = type_info.data[cpu_type_index].cache_instances.instances[L3];
+				system->cpu_types[cpu_type_index].l4_instances             = type_info.data[cpu_type_index].cache_instances.instances[L4];
+			}
+			else {
+				/* Note: if SMT is disabled by BIOS, smt_divisor will no reflect the current state properly */
+				is_smt_supported = system->cpu_types[cpu_type_index].num_cores > 0 ? (system->cpu_types[cpu_type_index].num_logical_cpus % system->cpu_types[cpu_type_index].num_cores) == 0 : false;
+				smt_divisor      = is_smt_supported ? system->cpu_types[cpu_type_index].num_logical_cpus / system->cpu_types[cpu_type_index].num_cores : 1.0;
+				system->cpu_types[cpu_type_index].num_cores = (int32_t) (system->cpu_types[cpu_type_index].num_logical_cpus / smt_divisor);
 			}
 		}
 
-		/* Update logical CPU counters, physical CPU counters and cache instance in system->cpu_types
-		   Note: we need to differenciate two events:
-		     - is_new_cpu_type (e.g. purpose was 'efficiency' during previous loop, and now purpose is 'performance')
-		     - is_last_item (i.e. this is the last iteration in raw_array->num_raw)
-		   In some cases, both events can occur during the same iteration, thus we have to update counters twice for the same logical_cpu.
-		   This occurs with single-core CPU type. For instance, Pentacore Lakefield CPU consists of:
-		     - 1 "big" Sunny Cove core
-		     - 4 "little" Tremont cores
-		   On the last iteration, there is no need to reset values for the next purpose.
-		*/
-		if (raw_array->with_affinity && (is_last_item || (is_new_cpu_type && (system->num_cpu_types > 1)))) {
-			enum event_t {
-				EVENT_NEW_CPU_TYPE = 0,
-				EVENT_LAST_ITEM    = 1
-			};
-			const enum event_t first_event = is_new_cpu_type && (system->num_cpu_types > 1) ? EVENT_NEW_CPU_TYPE : EVENT_LAST_ITEM;
-			const enum event_t last_event  = is_last_item                                   ? EVENT_LAST_ITEM    : EVENT_NEW_CPU_TYPE;
-			for (enum event_t event = first_event; event <= last_event; event++) {
-				switch (event) {
-					case EVENT_NEW_CPU_TYPE: cpu_type_index = system->num_cpu_types - 2; break;
-					case EVENT_LAST_ITEM:    cpu_type_index = system->num_cpu_types - 1; break;
-					default: ret_error = cpuid_set_error(ERR_NOT_IMP); goto out;
-				}
-				copy_affinity_mask(&system->cpu_types[cpu_type_index].affinity_mask, &affinity_mask);
-				if (event != EVENT_LAST_ITEM) {
-					init_affinity_mask(&affinity_mask);
-					set_affinity_mask_bit(logical_cpu, &affinity_mask);
-				}
-				if (is_apic_supported) {
-					system->cpu_types[cpu_type_index].num_cores                = cores_type->instances;
-					system->cpu_types[cpu_type_index].l1_instruction_instances = caches_type->instances[L1I];
-					system->cpu_types[cpu_type_index].l1_data_instances        = caches_type->instances[L1D];
-					system->cpu_types[cpu_type_index].l2_instances             = caches_type->instances[L2];
-					system->cpu_types[cpu_type_index].l3_instances             = caches_type->instances[L3];
-					system->cpu_types[cpu_type_index].l4_instances             = caches_type->instances[L4];
-					if (event != EVENT_LAST_ITEM) {
-						core_instances_t_constructor(cores_type);
-						cache_instances_t_constructor(caches_type);
-						update_core_instances(cores_type, &apic_info);
-						update_cache_instances(caches_type, &apic_info, &id_info);
-						update_cache_instances(caches_all, &apic_info, &id_info);
-					}
-				}
-				else {
-					/* Note: if SMT is disabled by BIOS, smt_divisor will no reflect the current state properly */
-					is_smt_supported = system->cpu_types[cpu_type_index].num_cores > 0 ? (system->cpu_types[cpu_type_index].num_logical_cpus % system->cpu_types[cpu_type_index].num_cores) == 0 : false;
-					smt_divisor      = is_smt_supported ? system->cpu_types[cpu_type_index].num_logical_cpus / system->cpu_types[cpu_type_index].num_cores : 1.0;
-					system->cpu_types[cpu_type_index].num_cores = (int32_t) (num_logical_cpus / smt_divisor);
-				}
-				/* Save current values in system->cpu_types[cpu_type_index] and reset values for the next purpose */
-				system->cpu_types[cpu_type_index].num_logical_cpus = num_logical_cpus;
-				num_logical_cpus = 1;
-			}
-		}
-		prev_package_id = cur_package_id;
+		/* Update the total_logical_cpus value for each purpose */
+		system->cpu_types[cpu_type_index].total_logical_cpus = logical_cpu;
 	}
+	cpuid_free_type_info(&type_info);
 
 	/* Update the grand total of cache instances */
 	if (is_apic_supported) {
@@ -859,13 +875,6 @@ int cpu_identify_all(struct cpu_raw_data_array_t* raw_array, struct system_id_t*
 		system->l4_total_instances             = caches_all->instances[L4];
 	}
 
-	/* Update the total_logical_cpus value for each purpose */
-	for (cpu_type_index = 0; cpu_type_index < system->num_cpu_types; cpu_type_index++)
-		system->cpu_types[cpu_type_index].total_logical_cpus = logical_cpu;
-
-out:
-	free(cores_type);
-	free(caches_type);
 	free(caches_all);
 	return ret_error;
 }
@@ -916,9 +925,10 @@ const char* cpu_purpose_str(cpu_purpose_t purpose)
 {
 	const struct { cpu_purpose_t purpose; const char* name; }
 	matchtable[] = {
-		{ PURPOSE_GENERAL,     "general"     },
-		{ PURPOSE_PERFORMANCE, "performance" },
-		{ PURPOSE_EFFICIENCY,  "efficiency"  },
+		{ PURPOSE_GENERAL,       "general"              },
+		{ PURPOSE_PERFORMANCE,   "performance"          },
+		{ PURPOSE_EFFICIENCY,    "efficiency"           },
+		{ PURPOSE_LP_EFFICIENCY, "low-power efficiency" },
 	};
 	unsigned i, n = COUNT_OF(matchtable);
 	if (n != NUM_CPU_PURPOSES) {
