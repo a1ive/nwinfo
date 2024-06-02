@@ -1,6 +1,6 @@
 
 # JEP106BH
-# Version: 2023.09.29
+# Version: 2024.05.02
 1
 	1 AMD
 	2 AMI
@@ -20,7 +20,7 @@
 	16 NEC
 	17 RCA
 	18 Raytheon
-	19 Conexant (Rockwell)
+	19 Synaptics
 	20 Seeq
 	21 NXP (Philips)
 	22 Synertek
@@ -1043,7 +1043,7 @@
 	23 Axell Corporation
 	24 Essencore Limited
 	25 Phytium
-	26 Xi’an UniIC Semiconductors Co Ltd
+	26 UniIC Semiconductors Co Ltd
 	27 Ambiq Micro
 	28 eveRAM Technology Inc
 	29 Infomax
@@ -1453,7 +1453,7 @@
 	52 Acacia Communications
 	53 Beijinjinshengyihe Technology Co Ltd
 	54 Zyzyx
-	55 T-HEAD Semiconductor Co Ltd
+	55 C-SKY Microsystems Co Ltd
 	56 Shenzhen Hystou Technology Co Ltd
 	57 Syzexion
 	58 Kembona
@@ -1943,3 +1943,30 @@
 	34 SkyeChip
 	35 Guangzhou Kaishile Trading Co Ltd
 	36 Jing Pai Digital Technology (Shenzhen) Co
+	37 Memoritek
+	38 Zhejiang Hikstor Technology Co Ltd
+	39 Memoritek PTE Ltd
+	40 Longsailing Semiconductor Co Ltd
+	41 LX Semicon
+	42 Shenzhen Techwinsemi Technology Co Ltd
+	43 AOC
+	44 GOEPEL Electronic GmbH
+	45 Shenzhen G-Bong Technology Co Ltd
+	46 Openedges Technology Inc
+	47 EA Semi Shangahi Limited
+	48 EMBCORF
+	49 Shenzhen MicroBT Electronics Technology
+	50 Shanghai Simor Chip Semiconductor Co
+	51 Xllbyte
+	52 Guangzhou Maidite Electronics Co Ltd.
+	53 Zhejiang Changchun Technology Co Ltd
+	54 Beijing Cloud Security Technology Co Ltd
+	55 SSTC Technology and Distribution Inc
+	56 Shenzhen Panmin Technology Co Ltd
+	57 ITE Tech Inc
+	58 Beijing Zettastone Technology Co Ltd
+	59 Powerchip Micro Device
+	60 Shenzhen Ysemi Computing Co Ltd
+	61 Shenzhen Titan Micro Electronics Co Ltd
+	62 Shenzhen Macroflash Technology Co Ltd
+	63 Advantech Group
