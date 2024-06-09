@@ -287,12 +287,12 @@ static DWORD GetDriveInfoList(BOOL bIsCdRom, PHY_DRIVE_INFO** pDriveList)
 		pInfo[i].Index = sdn.DeviceNumber;
 
 		if (SetupDiGetDeviceInstanceIdW(hDevInfo, &infoData, NWLC->NwBufW, NWINFO_BUFSZB, NULL))
-			pInfo[i].HwID = _wcsdup(NWLC->NwBufW);
+			wcsncpy_s(pInfo[i].HwID, MAX_PATH, NWLC->NwBufW, MAX_PATH);
 		if (SetupDiGetDeviceRegistryPropertyW(hDevInfo, &infoData, SPDRP_FRIENDLYNAME,
 			NULL, (PBYTE)NWLC->NwBufW, NWINFO_BUFSZB, NULL) ||
 			SetupDiGetDeviceRegistryPropertyW(hDevInfo, &infoData, SPDRP_DEVICEDESC,
 				NULL, (PBYTE)NWLC->NwBufW, NWINFO_BUFSZB, NULL))
-			pInfo[i].HwName = _wcsdup(NWLC->NwBufW);
+			wcsncpy_s(pInfo[i].HwName, MAX_PATH, NWLC->NwBufW, MAX_PATH);
 
 		hDrive = NWL_GetDiskHandleById(bIsCdRom, FALSE, pInfo[i].Index);
 
@@ -570,6 +570,12 @@ PrintIsSsd(PNODE node, PHY_DRIVE_INFO* info, DWORD index)
 		NWL_NodeAttrSetBool(node, "SSD", TRUE, 0);
 }
 
+static int __cdecl
+CompareDiskId(const void* a, const void* b)
+{
+	return ((int)((const PHY_DRIVE_INFO*)a)->Index) - ((int)((const PHY_DRIVE_INFO*)b)->Index);
+}
+
 static VOID
 PrintDiskInfo(BOOL cdrom, PNODE node, CDI_SMART* smart)
 {
@@ -579,6 +585,7 @@ PrintDiskInfo(BOOL cdrom, PNODE node, CDI_SMART* smart)
 	PhyDriveCount = GetDriveInfoList(cdrom, &PhyDriveList);
 	if (PhyDriveCount == 0)
 		goto out;
+	qsort(PhyDriveList, PhyDriveCount, sizeof(PHY_DRIVE_INFO), CompareDiskId);
 	for (i = 0; i < PhyDriveCount; i++)
 	{
 		snprintf(DiskPath, sizeof(DiskPath),
@@ -587,16 +594,10 @@ PrintDiskInfo(BOOL cdrom, PNODE node, CDI_SMART* smart)
 			continue;
 		PNODE nd = NWL_NodeAppendNew(node, "Disk", NFLG_TABLE_ROW);
 		NWL_NodeAttrSet(nd, "Path",DiskPath, 0);
-		if (PhyDriveList[i].HwID)
-		{
+		if (PhyDriveList[i].HwID[0])
 			NWL_NodeAttrSet(nd, "HWID", NWL_Ucs2ToUtf8(PhyDriveList[i].HwID), 0);
-			free(PhyDriveList[i].HwID);
-		}
-		if (PhyDriveList[i].HwName)
-		{
+		if (PhyDriveList[i].HwName[0])
 			NWL_NodeAttrSet(nd, "HW Name", NWL_Ucs2ToUtf8(PhyDriveList[i].HwName), 0);
-			free(PhyDriveList[i].HwName);
-		}
 		if (PhyDriveList[i].VendorId[0])
 			NWL_NodeAttrSet(nd, "Vendor ID", PhyDriveList[i].VendorId, 0);
 		if (PhyDriveList[i].ProductId[0])
