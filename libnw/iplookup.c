@@ -24,9 +24,14 @@ GetYamlField(LPCSTR lpszBuffer, LPCSTR lpszField)
 		{
 			for (p = p + len + 1; *p == ' '; p++)
 				;
+			if (*p == '\'')
+				p++;
 			q = strchr(p, '\n');
-			if (q)
-				*q = '\0';
+			if (!q)
+				break;
+			if (*(q - 1) == '\'')
+				q--;
+			*q = '\0';
 			memmove(str, p, q - p + 1);
 			return str;
 		}
