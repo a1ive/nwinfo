@@ -86,6 +86,8 @@ VOID NW_Print(LPCSTR lpFileName)
 		NW_Audio();
 	if (NWLC->PublicIpInfo)
 		NW_PublicIp();
+	if (NWLC->ProductPolicyInfo)
+		NW_ProductPolicy();
 	NW_Libinfo();
 	NW_Export(NWLC->NwRoot, NWLC->NwFile);
 }

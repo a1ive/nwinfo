@@ -49,6 +49,8 @@ OPTIONS:
   --uefi           Print UEFI boot information.
   --shares         List network mapped drives.
   --audio          List audio devices.
+  --public-ip      Print public IP address.
+  --product-policy Print ProductPolicy values.
 ```
 
 ## Credits
