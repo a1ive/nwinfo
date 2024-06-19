@@ -44,7 +44,7 @@ static void nwinfo_help(void)
 		"  --uefi           Print UEFI info.\n"
 		"  --shares         Print network mapped drives.\n"
 		"  --audio          Print audio devices.\n"
-		"  --publicip       Print public IP address.\n");
+		"  --public-ip      Print public IP address.\n"
 }
 
 int main(int argc, char* argv[])
@@ -140,7 +140,7 @@ int main(int argc, char* argv[])
 			nwContext.ShareInfo = TRUE;
 		else if (_stricmp(argv[i], "--audio") == 0)
 			nwContext.AudioInfo = TRUE;
-		else if (_stricmp(argv[i], "--publicip") == 0)
+		else if (_stricmp(argv[i], "--public-ip") == 0)
 			nwContext.PublicIpInfo = TRUE;
 		else if (_stricmp(argv[i], "--debug") == 0)
 			nwContext.Debug = TRUE;
