@@ -33,15 +33,59 @@ typedef struct _PRODUCT_POLICY_VALUE
 #define PRODUCT_POLICY_END_MARK 0x45ul // dword
 #pragma pack()
 
+static void
+PrintProductPolicyEntry(PNODE node, PPRODUCT_POLICY_VALUE ppValue)
+{
+	CHAR hex[] = "0123456789ABCDEF";
+	PNODE pp = NWL_NodeAppendNew(node, "Entry", NFLG_TABLE_ROW);
+	PUINT8 pValueData = (PUINT8)ppValue + sizeof(PRODUCT_POLICY_VALUE) + ppValue->wNameSize;
+
+	wcsncpy_s(NWLC->NwBufW, NWINFO_BUFSZW,
+		(WCHAR*)((PUINT8)ppValue + sizeof(PRODUCT_POLICY_VALUE)), ppValue->wNameSize / sizeof(WCHAR));
+	NWL_NodeAttrSet(pp, "Name", NWL_Ucs2ToUtf8(NWLC->NwBufW), 0);
+	//NWL_NodeAttrSetf(pp, "Flags", NAFLG_FMT_NUMERIC, "%lu", ppValue->dwFlags);
+
+	switch (ppValue->wType)
+	{
+		case REG_SZ:
+		case REG_EXPAND_SZ:
+			NWL_NodeAttrSet(pp, "Type", "String", 0);
+			NWL_NodeAttrSet(pp, "Data", NWL_Ucs2ToUtf8((LPCWSTR)pValueData), 0);
+			break;
+		case REG_DWORD:
+			NWL_NodeAttrSet(pp, "Type", "DWORD", 0);
+			NWL_NodeAttrSetf(pp, "Data", NAFLG_FMT_NUMERIC, "%lu", *(PDWORD)pValueData);
+			break;
+		case REG_QWORD:
+			NWL_NodeAttrSet(pp, "Type", "QWORD", 0);
+			NWL_NodeAttrSetf(pp, "Data", NAFLG_FMT_NUMERIC, "%llu", *(PUINT64)pValueData);
+			break;
+		default:
+		{
+			CHAR* tmp = calloc(ppValue->wDataSize, 3);
+			for (UINT i = 0; i < ppValue->wDataSize; i++)
+			{
+				tmp[i * 3] = hex[(pValueData[i] & 0xF0) >> 4];
+				tmp[i * 3 + 1] = hex[pValueData[i] & 0x0F];
+				if (i < ppValue->wDataSize - 1U)
+					tmp[i * 3 + 2] = ' ';
+			}
+			NWL_NodeAttrSet(pp, "Type", "Binary", 0);
+			NWL_NodeAttrSet(pp, "Data", tmp, 0);
+			free(tmp);
+		}
+	}
+}
+
 PNODE NW_ProductPolicy(VOID)
 {
 	CHAR hex[] = "0123456789ABCDEF";
-	PNODE pp = NWL_NodeAlloc("Product Policy", 0);
+	PNODE node = NWL_NodeAlloc("Product Policy", NFLG_TABLE);
 	if (NWLC->ProductPolicyInfo)
-		NWL_NodeAppendChild(NWLC->NwRoot, pp);
+		NWL_NodeAppendChild(NWLC->NwRoot, node);
 	DWORD dwType;
 	DWORD ppSize;
-	PPRODUCT_POLICY_HEADER ppHeader = NULL;
+	PPRODUCT_POLICY_HEADER ppHeader;
 	PPRODUCT_POLICY_VALUE ppValue;
 	PUINT8 ppData = NWL_NtGetRegValue(HKEY_LOCAL_MACHINE,
 		L"SYSTEM\\CurrentControlSet\\Control\\ProductOptions",
@@ -57,40 +101,9 @@ PNODE NW_ProductPolicy(VOID)
 		(PUINT8)ppValue < ppData + sizeof(PRODUCT_POLICY_HEADER) + ppHeader->dwArraySize;
 		ppValue = (PPRODUCT_POLICY_VALUE)((PUINT8)ppValue + ppValue->wSize))
 	{
-		CHAR* pName = _strdup(NWL_Ucs2ToUtf8((WCHAR*)((PUINT8)ppValue + sizeof(PRODUCT_POLICY_VALUE))));
-		PUINT8 pValueData = (PUINT8)ppValue + sizeof(PRODUCT_POLICY_VALUE) + ppValue->wNameSize;
-		pName[ppValue->wNameSize / sizeof(WCHAR)] = '\0';
-		switch (ppValue->wType)
-		{
-		case REG_SZ:
-		case REG_EXPAND_SZ:
-		case REG_MULTI_SZ: //FIXME
-			NWL_NodeAttrSet(pp, pName, NWL_Ucs2ToUtf8((LPCWSTR)pValueData), 0);
-			break;
-		case REG_DWORD:
-			NWL_NodeAttrSetf(pp, pName, NAFLG_FMT_NUMERIC, "%lu", *(PDWORD)pValueData);
-			break;
-		case REG_QWORD:
-			NWL_NodeAttrSetf(pp, pName, NAFLG_FMT_NUMERIC, "%llu", *(PUINT64)pValueData);
-			break;
-		default:
-		{
-			CHAR* tmp = calloc(ppValue->wDataSize, 3);
-			for (UINT i = 0; i < ppValue->wDataSize; i++)
-			{
-				tmp[i * 3] = hex[(pValueData[i] & 0xF0) >> 4];
-				tmp[i * 3 + 1] = hex[pValueData[i] & 0x0F];
-				if (i < ppValue->wDataSize - 1U)
-					tmp[i * 3 + 2] = ' ';
-			}
-			NWL_NodeAttrSet(pp, pName, tmp, 0);
-			free(tmp);
-		}
-		break;
-		}
-		free(pName);
+		PrintProductPolicyEntry(node, ppValue);
 	}
 end:
 	free(ppData);
-	return pp;
+	return node;
 }
