@@ -60,6 +60,7 @@ SetDevicePropertyString(PNODE pGpu, LPCSTR lpszKey, DEVINST devHandle, const DEV
 	switch (propertyType)
 	{
 	case DEVPROP_TYPE_STRING:
+	case DEVPROP_TYPE_STRING_LIST: // TODO: add multi sz support
 		NWL_NodeAttrSet(pGpu, lpszKey, NWL_Ucs2ToUtf8(NWLC->NwBufW), 0);
 		break;
 	case DEVPROP_TYPE_FILETIME:
@@ -97,6 +98,8 @@ PrintGpuInfo(PNODE pGpu, PWSTR devIf)
 
 	DEVPROPKEY devpkeyInstanceId = { {0x78c34fc8, 0x104a, 0x4aca,
 		{0x9e, 0xa4, 0x52, 0x4d, 0x52, 0x99, 0x6e, 0x57} }, 256 };
+	DEVPROPKEY devpKeyHardwareIds = { {0xa45c254e, 0xdf1c, 0x4efd,
+		{0x80, 0x20, 0x67, 0xd1, 0x46, 0xa8, 0x50, 0xe0} }, 3 };
 	DEVPROPKEY devpkeyDesc = { {0xa45c254e, 0xdf1c, 0x4efd,
 		{0x80, 0x20, 0x67, 0xd1, 0x46, 0xa8, 0x50, 0xe0} },2 };
 	DEVPROPKEY devpkeyManufacturer = { {0xa45c254e, 0xdf1c, 0x4efd,
@@ -116,6 +119,7 @@ PrintGpuInfo(PNODE pGpu, PWSTR devIf)
 	if (CM_Locate_DevNodeW(&deviceInstanceHandle, deviceInstanceId, CM_LOCATE_DEVNODE_NORMAL) != CR_SUCCESS)
 		return;
 
+	SetDevicePropertyString(pGpu, "HWID", deviceInstanceHandle, &devpKeyHardwareIds);
 	SetDevicePropertyString(pGpu, "Description", deviceInstanceHandle, &devpkeyDesc);
 	SetDevicePropertyString(pGpu, "Manufacturer", deviceInstanceHandle, &devpkeyManufacturer);
 	SetDevicePropertyString(pGpu, "Driver Date", deviceInstanceHandle, &devpkeyDriverDate);
