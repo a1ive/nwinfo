@@ -131,6 +131,9 @@
     <ClCompile Include="productpolicy.c">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="gpu.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

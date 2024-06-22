@@ -88,6 +88,8 @@ VOID NW_Print(LPCSTR lpFileName)
 		NW_PublicIp();
 	if (NWLC->ProductPolicyInfo)
 		NW_ProductPolicy();
+	if (NWLC->GpuInfo)
+		NW_Gpu();
 	NW_Libinfo();
 	NW_Export(NWLC->NwRoot, NWLC->NwFile);
 }
