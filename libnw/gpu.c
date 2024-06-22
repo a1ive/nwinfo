@@ -14,7 +14,7 @@
 static UINT64
 GetRegValue(HKEY hKey, LPCWSTR lpszName)
 {
-	UINT64 ullValue = ULLONG_MAX;
+	UINT64 ullValue = 0;
 	BYTE rawData[sizeof(UINT64)];
 	DWORD dwType = REG_BINARY;
 	DWORD dwSize = sizeof(rawData);
@@ -30,24 +30,61 @@ GetRegValue(HKEY hKey, LPCWSTR lpszName)
 static UINT64
 GetGpuInstalledMemory(DEVINST devHandle)
 {
-	UINT64 installedMemory = ULLONG_MAX;
+	UINT64 installedMemory = 0;
 	HKEY keyHandle;
 
 	if (CM_Open_DevInst_Key(devHandle, KEY_READ, 0,
 		RegDisposition_OpenExisting, &keyHandle, CM_REGISTRY_SOFTWARE) == CR_SUCCESS)
 	{
 		installedMemory = GetRegValue(keyHandle, L"HardwareInformation.qwMemorySize");
-
-		if (installedMemory == ULLONG_MAX)
+		if (installedMemory == 0)
 			installedMemory = GetRegValue(keyHandle, L"HardwareInformation.MemorySize");
-
-		if (installedMemory == ULONG_MAX) // HACK
-			installedMemory = ULLONG_MAX;
-
 		RegCloseKey(keyHandle);
 	}
 
 	return installedMemory;
+}
+
+static void
+SetDevicePropertyString(PNODE pGpu, LPCSTR lpszKey, DEVINST devHandle, const DEVPROPKEY* devProperty)
+{
+	ULONG bufferSize = NWINFO_BUFSZ;
+	DEVPROPTYPE propertyType;
+
+	propertyType = DEVPROP_TYPE_EMPTY;
+
+	if (CM_Get_DevNode_PropertyW(devHandle, devProperty, &propertyType,
+		(PBYTE)NWLC->NwBuf, &bufferSize, 0) != CR_SUCCESS)
+		return;
+
+	switch (propertyType)
+	{
+	case DEVPROP_TYPE_STRING:
+		NWL_NodeAttrSet(pGpu, lpszKey, NWL_Ucs2ToUtf8(NWLC->NwBufW), 0);
+		break;
+	case DEVPROP_TYPE_FILETIME:
+	{
+		SYSTEMTIME sysTime = { 0 };
+		FileTimeToSystemTime((PFILETIME)NWLC->NwBuf, &sysTime);
+		NWL_NodeAttrSetf(pGpu, lpszKey, 0, "%5u-%02u-%02u %02u:%02u%02u",
+			sysTime.wYear, sysTime.wMonth, sysTime.wDay, sysTime.wHour, sysTime.wMinute, sysTime.wSecond);
+	}
+		break;
+	case DEVPROP_TYPE_UINT32:
+	{
+		UINT32 u;
+		memcpy(&u, NWLC->NwBuf, sizeof(UINT32));
+		NWL_NodeAttrSetf(pGpu, lpszKey, NAFLG_FMT_NUMERIC, "%u", u);
+	}
+		break;
+	case DEVPROP_TYPE_UINT64:
+	{
+		UINT64 u;
+		memcpy(&u, NWLC->NwBuf, sizeof(UINT64));
+		NWL_NodeAttrSetf(pGpu, lpszKey, NAFLG_FMT_NUMERIC, "%llu", u);
+	}
+		break;
+	}
 }
 
 static void
@@ -57,13 +94,19 @@ PrintGpuInfo(PNODE pGpu, PWSTR devIf)
 	DEVINST deviceInstanceHandle;
 	ULONG deviceInstanceIdLength = MAX_DEVICE_ID_LEN;
 	WCHAR deviceInstanceId[MAX_DEVICE_ID_LEN];
-	DEVPROPTYPE propertyType;
-	ULONG bufferSize = NWINFO_BUFSZ;
 
 	DEVPROPKEY devpkeyInstanceId = { {0x78c34fc8, 0x104a, 0x4aca,
 		{0x9e, 0xa4, 0x52, 0x4d, 0x52, 0x99, 0x6e, 0x57} }, 256 };
 	DEVPROPKEY devpkeyDesc = { {0xa45c254e, 0xdf1c, 0x4efd,
 		{0x80, 0x20, 0x67, 0xd1, 0x46, 0xa8, 0x50, 0xe0} },2 };
+	DEVPROPKEY devpkeyManufacturer = { {0xa45c254e, 0xdf1c, 0x4efd,
+		{0x80, 0x20, 0x67, 0xd1, 0x46, 0xa8, 0x50, 0xe0} }, 13 };
+	DEVPROPKEY devpkeyDriverDate = { { 0xa8b865dd, 0x2e3d, 0x4094,
+		{0xad, 0x97, 0xe5, 0x93, 0xa7, 0x0c, 0x75, 0xd6} }, 2 };
+	DEVPROPKEY devpkeyDriverVersion = { { 0xa8b865dd, 0x2e3d, 0x4094,
+		{0xad, 0x97, 0xe5, 0x93, 0xa7, 0x0c, 0x75, 0xd6} }, 3 };
+	DEVPROPKEY devpkeyLocationInfo = { { 0xa45c254e, 0xdf1c, 0x4efd,
+		{0x80, 0x20, 0x67, 0xd1, 0x46, 0xa8, 0x50, 0xe0} }, 15 };
 
 	NWL_NodeAttrSet(pGpu, "Interface", NWL_Ucs2ToUtf8(devIf), 0);
 
@@ -72,10 +115,13 @@ PrintGpuInfo(PNODE pGpu, PWSTR devIf)
 		return;
 	if (CM_Locate_DevNodeW(&deviceInstanceHandle, deviceInstanceId, CM_LOCATE_DEVNODE_NORMAL) != CR_SUCCESS)
 		return;
-	if (CM_Get_DevNode_PropertyW(deviceInstanceHandle, &devpkeyDesc, &propertyType,
-		(PBYTE)NWLC->NwBuf, &bufferSize, 0) != CR_SUCCESS)
-		return;
-	NWL_NodeAttrSet(pGpu, "Description", NWL_Ucs2ToUtf8(NWLC->NwBufW), 0);
+
+	SetDevicePropertyString(pGpu, "Description", deviceInstanceHandle, &devpkeyDesc);
+	SetDevicePropertyString(pGpu, "Manufacturer", deviceInstanceHandle, &devpkeyManufacturer);
+	SetDevicePropertyString(pGpu, "Driver Date", deviceInstanceHandle, &devpkeyDriverDate);
+	SetDevicePropertyString(pGpu, "Driver Version", deviceInstanceHandle, &devpkeyDriverVersion);
+	SetDevicePropertyString(pGpu, "Location Info", deviceInstanceHandle, &devpkeyLocationInfo);
+
 	NWL_NodeAttrSet(pGpu, "Memory Size",
 		NWL_GetHumanSize(GetGpuInstalledMemory(deviceInstanceHandle), NWLC->NwUnits, 1024),
 		NAFLG_FMT_HUMAN_SIZE);
