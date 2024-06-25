@@ -3,7 +3,7 @@
 #define VC_EXTRALEAN
 #include <windows.h>
 
-#define CDI_VERSION "9.3.1"
+#define CDI_VERSION "9.3.2"
 
 enum CDI_ATA_BOOL
 {
@@ -163,12 +163,12 @@ cdi_get_health_status(enum CDI_DISK_STATUS status)
 {
 	switch (status)
 	{
-	case CDI_DISK_STATUS_GOOD:
-		return "Good";
-	case CDI_DISK_STATUS_CAUTION:
-		return "Caution";
-	case CDI_DISK_STATUS_BAD:
-		return "Bad";
+		case CDI_DISK_STATUS_GOOD:
+			return "Good";
+		case CDI_DISK_STATUS_CAUTION:
+			return "Caution";
+		case CDI_DISK_STATUS_BAD:
+			return "Bad";
 	}
 	return "Unknown";
 }
