@@ -7,6 +7,7 @@
 static struct
 {
 	HMODULE dll;
+	CONST CHAR* (WINAPI* cdi_get_version)(VOID);
 	CDI_SMART* (WINAPI* cdi_create_smart)(VOID);
 	VOID (WINAPI* cdi_destroy_smart)(CDI_SMART* ptr);
 	VOID (WINAPI* cdi_init_smart)(CDI_SMART* ptr, UINT64 flags);
@@ -40,6 +41,7 @@ CDI_SMART* WINAPI cdi_create_smart(VOID)
 	m_cdi.dll = LoadLibraryW(dll_path);
 	if (!m_cdi.dll)
 		goto fail;
+	*(FARPROC*)&m_cdi.cdi_get_version = GetProcAddress(m_cdi.dll, "cdi_get_version");
 	*(FARPROC*)&m_cdi.cdi_create_smart = GetProcAddress(m_cdi.dll, "cdi_create_smart");
 	*(FARPROC*)&m_cdi.cdi_destroy_smart = GetProcAddress(m_cdi.dll, "cdi_destroy_smart");
 	*(FARPROC*)&m_cdi.cdi_init_smart = GetProcAddress(m_cdi.dll, "cdi_init_smart");
@@ -55,7 +57,8 @@ CDI_SMART* WINAPI cdi_create_smart(VOID)
 	*(FARPROC*)&m_cdi.cdi_get_smart_value = GetProcAddress(m_cdi.dll, "cdi_get_smart_value");
 	*(FARPROC*)&m_cdi.cdi_get_smart_status = GetProcAddress(m_cdi.dll, "cdi_get_smart_status");
 	*(FARPROC*)&m_cdi.cdi_get_smart_name = GetProcAddress(m_cdi.dll, "cdi_get_smart_name");
-	if (m_cdi.cdi_create_smart == NULL ||
+	if (m_cdi.cdi_get_version == NULL ||
+		m_cdi.cdi_create_smart == NULL ||
 		m_cdi.cdi_destroy_smart == NULL ||
 		m_cdi.cdi_init_smart == NULL ||
 		m_cdi.cdi_update_smart == NULL ||
@@ -77,6 +80,11 @@ CDI_SMART* WINAPI cdi_create_smart(VOID)
 fail:
 	ZeroMemory(&m_cdi, sizeof(m_cdi));
 	return NULL;
+}
+
+CONST CHAR* WINAPI cdi_get_version(VOID)
+{
+	return m_cdi.cdi_get_version();
 }
 
 VOID WINAPI cdi_destroy_smart(CDI_SMART* ptr)

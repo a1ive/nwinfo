@@ -140,6 +140,8 @@ typedef CAtaSmart CDI_SMART;
 
 typedef struct _CDI_SMART CDI_SMART;
 
+CONST CHAR*	WINAPI cdi_get_version(VOID);
+
 CDI_SMART*	WINAPI cdi_create_smart(VOID);
 VOID		WINAPI cdi_destroy_smart(CDI_SMART* ptr);
 VOID		WINAPI cdi_init_smart(CDI_SMART* ptr, UINT64 flags);

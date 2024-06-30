@@ -50,7 +50,7 @@ PNODE NW_Libinfo(VOID)
 		NWL_NodeAttrSet(pNode, "Driver", "NOT FOUND", 0);
 	NWL_NodeAttrSetf(pNode, "Language ID", 0, "%u", GetUserDefaultUILanguage());
 	NWL_NodeAttrSet(pNode, "libcpuid", cpuid_lib_version(), 0);
-	NWL_NodeAttrSet(pNode, "CrystalDiskInfo", CDI_VERSION, 0);
+	NWL_NodeAttrSet(pNode, "CrystalDiskInfo", cdi_get_version(), 0);
 	NWL_NodeAttrSet(pNode, "PCI ID", NWL_GetIdsDate(L"pci.ids"), 0);
 	NWL_NodeAttrSet(pNode, "USB ID", NWL_GetIdsDate(L"usb.ids"), 0);
 	NWL_NodeAttrSet(pNode, "PNP ID", NWL_GetIdsDate(L"pnp.ids"), 0);
