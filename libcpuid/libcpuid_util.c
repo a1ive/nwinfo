@@ -60,26 +60,28 @@ static int score(const struct match_entry_t* entry, const struct cpu_id_t* data,
                  int brand_code, uint64_t bits, int model_code)
 {
 	int i, tmp, res = 0;
-	const struct { const char* field; int entry; int data; int score; } array[] = {
-		{ "family",     entry->family,     data->family,     2 },
-		{ "model",      entry->model,      data->model,      2 },
-		{ "stepping",   entry->stepping,   data->stepping,   2 },
-		{ "ext_family", entry->ext_family, data->ext_family, 2 },
-		{ "ext_model",  entry->ext_model,  data->ext_model,  2 },
-		{ "ncores",     entry->ncores,     data->num_cores,  2 },
-		{ "l2cache",    entry->l2cache,    data->l2_cache,   1 },
-		{ "l3cache",    entry->l3cache,    data->l3_cache,   1 },
-		{ "brand_code", entry->brand_code, brand_code,       2 },
-		{ "model_code", entry->model_code, model_code,       2 },
+	const struct { const char *field; int entry; int data; int score; } array[] = {
+		{ "family",     entry->family,     data->x86.family,     2 },
+		{ "model",      entry->model,      data->x86.model,      2 },
+		{ "stepping",   entry->stepping,   data->x86.stepping,   2 },
+		{ "ext_family", entry->ext_family, data->x86.ext_family, 2 },
+		{ "ext_model",  entry->ext_model,  data->x86.ext_model,  2 },
+		{ "ncores",     entry->ncores,     data->num_cores,      2 },
+		{ "l2cache",    entry->l2cache,    data->l2_cache,       1 },
+		{ "l3cache",    entry->l3cache,    data->l3_cache,       1 },
+		{ "brand_code", entry->brand_code, brand_code,           2 },
+		{ "model_code", entry->model_code, model_code,           2 },
 	};
 	for (i = 0; i < sizeof(array) / sizeof(array[0]); i++) {
 		if (array[i].entry == array[i].data) {
 			res += array[i].score;
+			debugf(4, "Score: %-12s matches, adding %2i (current score for this entry: %2i)\n", array[i].field, array[i].score, res);
 		}
 	}
 
 	tmp = popcount64(entry->model_bits & bits) * 2;
 	res += tmp;
+	debugf(4, "Score: %-12s matches, adding %2i (current score for this entry: %2i)\n", "model_bits", tmp, res);
 	return res;
 }
 
@@ -91,9 +93,15 @@ int match_cpu_codename(const struct match_entry_t* matchtable, int count,
 	int bestindex = 0;
 	int i, t;
 
+	debugf(3, "Matching cpu f:%d, m:%d, s:%d, xf:%d, xm:%d, ncore:%d, l2:%d, bcode:%d, bits:%llu, code:%d\n",
+		data->x86.family, data->x86.model, data->x86.stepping, data->x86.ext_family,
+		data->x86.ext_model, data->num_cores, data->l2_cache, brand_code, (unsigned long long) bits, model_code);
+
 	for (i = 0; i < count; i++) {
 		t = score(&matchtable[i], data, brand_code, bits, model_code);
+		debugf(3, "Entry %d, `%s', score %d\n", i, matchtable[i].name, t);
 		if (t > bestscore) {
+			debugf(2, "Entry `%s' selected - best score so far (%d)\n", matchtable[i].name, t);
 			bestscore = t;
 			bestindex = i;
 		}
@@ -303,8 +311,8 @@ void decode_deterministic_cache_info_x86(uint32_t cache_regs[][NUM_REGS],
 		else if (cache_level == 4 && cache_type == 3)
 			type = L4;
 		else {
-			// Warning: deterministic_cache: unknown level/typenumber combo
-			// recognize cache type
+			warnf("deterministic_cache: unknown level/typenumber combo (%d/%d), cannot\n", cache_level, cache_type);
+			warnf("deterministic_cache: recognize cache type\n");
 			continue;
 		}
 		num_sharing_cache       = EXTRACTS_BITS(cache_regs[i][EAX], 25, 14) + 1;
@@ -317,4 +325,106 @@ void decode_deterministic_cache_info_x86(uint32_t cache_regs[][NUM_REGS],
 		internal->cache_mask[i] = ~((1 << index_msb) - 1);
 		assign_cache_data(1, type, size, ways, linesize, data);
 	}
+}
+
+void decode_architecture_version_x86(struct cpu_id_t* data)
+{
+	bool is_compliant, has_all_features;
+	int i, j;
+	cpu_feature_level_t feature_level = FEATURE_LEVEL_UNKNOWN;
+
+	const struct { const int family; const cpu_feature_level_t feature_level; }
+	architecture_matchtable_ia_32[] = {
+		{  3, CPU_FEATURE_LEVEL_I386 },
+		{  4, CPU_FEATURE_LEVEL_I486 },
+		{  5, CPU_FEATURE_LEVEL_I586 },
+		{  6, CPU_FEATURE_LEVEL_I686 },
+		{ 15, CPU_FEATURE_LEVEL_I686 }, // Intel Pentium 4, AMD K8
+	};
+
+	const cpu_feature_t architecture_x86_64_v1[] = {
+		CPU_FEATURE_CMOV,
+		CPU_FEATURE_CX8,
+		CPU_FEATURE_FPU,
+		CPU_FEATURE_FXSR,
+		CPU_FEATURE_MMX,
+		CPU_FEATURE_SSE,
+		CPU_FEATURE_SSE2,
+		-1
+	};
+
+	const cpu_feature_t architecture_x86_64_v2[] = {
+		CPU_FEATURE_CX16,
+		CPU_FEATURE_LAHF_LM,
+		CPU_FEATURE_POPCNT,
+		CPU_FEATURE_PNI,
+		CPU_FEATURE_SSE4_1,
+		CPU_FEATURE_SSE4_2,
+		CPU_FEATURE_SSSE3,
+		-1
+	};
+
+	const cpu_feature_t architecture_x86_64_v3[] = {
+		CPU_FEATURE_AVX,
+		CPU_FEATURE_AVX2,
+		CPU_FEATURE_BMI1,
+		CPU_FEATURE_BMI2,
+		CPU_FEATURE_F16C,
+		CPU_FEATURE_FMA3,
+		CPU_FEATURE_ABM,
+		CPU_FEATURE_MOVBE,
+		CPU_FEATURE_OSXSAVE,
+		-1
+	};
+
+	const cpu_feature_t architecture_x86_64_v4[] = {
+		CPU_FEATURE_AVX512F,
+		CPU_FEATURE_AVX512BW,
+		CPU_FEATURE_AVX512CD,
+		CPU_FEATURE_AVX512DQ,
+		CPU_FEATURE_AVX512VL,
+		-1
+	};
+
+	const struct { const cpu_feature_t* features_array; const cpu_feature_level_t feature_level; }
+	architecture_matchtable_x86_64[] = {
+		{ architecture_x86_64_v1, CPU_FEATURE_LEVEL_X86_64_V1 },
+		{ architecture_x86_64_v2, CPU_FEATURE_LEVEL_X86_64_V2 },
+		{ architecture_x86_64_v3, CPU_FEATURE_LEVEL_X86_64_V3 },
+		{ architecture_x86_64_v4, CPU_FEATURE_LEVEL_X86_64_V4 },
+	};
+
+	if (!data->flags[CPU_FEATURE_LM]) {
+		/* Check Intel Architecture, 32-bit */
+		for (i = 0; i < COUNT_OF(architecture_matchtable_ia_32); i++) {
+			is_compliant = (data->x86.family == architecture_matchtable_ia_32[i].family);
+			debugf(3, "Check if CPU is %s compliant: %s for family %i\n", cpu_feature_level_str(architecture_matchtable_ia_32[i].feature_level), is_compliant ? "yes" : "no", architecture_matchtable_ia_32[i].family);
+			if (is_compliant) {
+				feature_level = architecture_matchtable_ia_32[i].feature_level;
+				break;
+			}
+		}
+	}
+	else {
+		/* Check Intel Architecture, 64-bit */
+		for (i = 0; i < COUNT_OF(architecture_matchtable_x86_64); i++) {
+			debugf(3, "Check if CPU is %s compliant:\n", cpu_feature_level_str(architecture_matchtable_x86_64[i].feature_level));
+			has_all_features = true;
+			for (j = 0; architecture_matchtable_x86_64[i].features_array[j] != -1; j++) {
+				is_compliant     = data->flags[ architecture_matchtable_x86_64[i].features_array[j] ];
+				has_all_features = has_all_features && is_compliant;
+				debugf(3, " - feature %s is %s\n", cpu_feature_str(architecture_matchtable_x86_64[i].features_array[j]), is_compliant ? "present" : "absent");
+			}
+			if (is_compliant)
+				feature_level = architecture_matchtable_x86_64[i].feature_level;
+			else
+				break;
+		}
+	}
+
+	data->feature_level = feature_level;
+	if (feature_level == FEATURE_LEVEL_UNKNOWN)
+		warnf("Warning: CPU with CPUID signature %02X_%02XH has an unkown architecture version (LM=%i).\n", data->x86.ext_family, data->x86.ext_model, data->flags[CPU_FEATURE_LM]);
+	else
+		debugf(2, "x86 architecture version is %s\n", cpu_feature_level_str(feature_level));
 }

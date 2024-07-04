@@ -57,6 +57,9 @@
     <ClInclude Include="recog_centaur.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="recog_arm.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="asm-bits.c">
@@ -81,6 +84,9 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="recog_centaur.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="recog_arm.c">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

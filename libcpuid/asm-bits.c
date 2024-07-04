@@ -25,6 +25,7 @@
  */
 
 #include "libcpuid.h"
+#include "libcpuid_util.h"
 #include "asm-bits.h"
 
 int cpuid_exists_by_eflags(void)
@@ -135,6 +136,8 @@ void exec_cpuid(uint32_t *regs)
 		:"m"(regs)
 		:"memory", "eax", "edi"
 	);
+#	else
+	UNUSED(regs);
 #	endif /* COMPILER_GCC */
 #else
 #  ifdef COMPILER_MICROSOFT
@@ -167,7 +170,7 @@ void exec_cpuid(uint32_t *regs)
 #  endif /* COMPILER_MICROSOFT */
 #endif
 }
-#endif /* INLINE_ASSEMBLY_SUPPORTED */
+#endif /* INLINE_ASM_SUPPORTED */
 
 #ifdef INLINE_ASM_SUPPORTED
 void cpu_rdtsc(uint64_t* result)
@@ -516,6 +519,8 @@ void busy_sse_loop(int cycles)
 		"	jnz	1b\n"
 		::"a"(cycles)
 	);
+#else
+	UNUSED(cycles);
 #endif
 #else
 #  ifdef COMPILER_MICROSOFT
@@ -829,4 +834,4 @@ bsLoop:
 #  endif /* COMPILER_MICROSOFT */
 #endif /* COMPILER_GCC */
 }
-#endif /* INLINE_ASSEMBLY_SUPPORTED */
+#endif /* INLINE_ASM_SUPPORTED */

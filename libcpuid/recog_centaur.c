@@ -207,6 +207,7 @@ int cpuid_identify_centaur(struct cpu_raw_data_t* raw, struct cpu_id_t* data, st
 	if (raw->basic_cpuid[0][EAX] >= 4)
 		decode_deterministic_cache_info_x86(raw->intel_fn4, MAX_INTELFN4_LEVEL, data, internal);
 	decode_number_of_cores_x86(raw, data);
+	decode_architecture_version_x86(data);
 
 	brand = get_brand_code_and_bits(data);
 	model_code = get_model_code(data, brand);
@@ -216,6 +217,15 @@ int cpuid_identify_centaur(struct cpu_raw_data_t* raw, struct cpu_id_t* data, st
 			break;
 		}
 	}
+	if (brand_code_str)
+		debugf(2, "Detected Centaur brand code: %d (%s)\n", brand.code, brand_code_str);
+	else
+		debugf(2, "Detected Centaur brand code: %d\n", brand.code);
+	if (brand.bits) {
+		debugf(2, "Detected Centaur bits: ");
+		debug_print_lbits(2, brand.bits);
+	}
+	debugf(2, "Detected Centaur model code: %d\n", model_code);
 
 	internal->code.centaur = brand.code;
 	internal->bits = brand.bits;

@@ -176,7 +176,7 @@ const struct match_entry_t cpudb_amd[] = {
 	{ 15, -1, -1, 15, 0x5f,   1,   256,    -1, NC, SEMPRON_            ,     0, "Sempron 64 (Manila/256K)"      },
 	{ 15, -1, -1, 15, 0x6b,   2,   256,    -1, NC, SEMPRON_            ,     0, "Sempron 64 Dual (Sherman/256K)"},
 	{ 15, -1, -1, 15, 0x6b,   2,   512,    -1, NC, SEMPRON_            ,     0, "Sempron 64 Dual (Sherman/512K)"},
-	{ 15, -1, -1, 15, 0x7c,   1,   512,    -1, NC, ATHLON_             ,     0, "Athlon 64 (Sherman/515K)"      },
+	{ 15, -1, -1, 15, 0x7c,   1,   512,    -1, NC, ATHLON_             ,     0, "Athlon 64 (Sherman/512K)"      },
 	{ 15, -1, -1, 15, 0x7f,   1,   256,    -1, NC, SEMPRON_            ,     0, "Sempron 64 (Sparta/256K)"      },
 	{ 15, -1, -1, 15, 0x7f,   1,   512,    -1, NC, SEMPRON_            ,     0, "Sempron 64 (Sparta/512K)"      },
 	{ 15, -1, -1, 15, 0x4c,   1,   256,    -1, NC, MOBILE_| SEMPRON_   ,     0, "Mobile Sempron 64 (Keene/256K)"},
@@ -439,11 +439,11 @@ static void load_amd_features(struct cpu_raw_data_t* raw, struct cpu_id_t* data)
 		- bit 0: FP128 */
 		data->detection_hints[CPU_HINT_SSE_SIZE_AUTH] = 1;
 		if ((raw->ext_cpuid[0x1a][EAX] >> 2) & 1)
-			data->sse_size = 256;
+			data->x86.sse_size = 256;
 		else if ((raw->ext_cpuid[0x1a][EAX]) & 1)
-			data->sse_size = 128;
+			data->x86.sse_size = 128;
 		else
-			data->sse_size = 64;
+			data->x86.sse_size = 64;
 	}
 }
 
@@ -496,7 +496,7 @@ static void decode_amd_number_of_cores(struct cpu_raw_data_t* raw, struct cpu_id
 	}
 	if (data->flags[CPU_FEATURE_HT]) {
 		if (num_cores > 1) {
-			if ((data->ext_family >= 23) && (raw->ext_cpuid[0][EAX] >= 30))
+			if ((data->x86.ext_family >= 23) && (raw->ext_cpuid[0][EAX] >= 30))
 				/* Ryzen 3 has SMT flag, but in fact cores count is equal to threads count.
 				Ryzen 5/7 reports twice as many "real" cores (e.g. 16 cores instead of 8) because of SMT. */
 				/* On PPR 17h, page 82:
@@ -651,6 +651,15 @@ static void decode_amd_codename(struct cpu_id_t* data, struct internal_id_info_t
 		code_and_bits.bits &= ~(ATHLON_ | _64_);
 		code_and_bits.bits |= SEMPRON_;
 	}
+	if (code_str)
+		debugf(2, "Detected AMD brand code: %d (%s)\n", code_and_bits.code, code_str);
+	else
+		debugf(2, "Detected AMD brand code: %d\n", code_and_bits.code);
+
+	if (code_and_bits.bits) {
+		debugf(2, "Detected AMD bits: ");
+		debug_print_lbits(2, code_and_bits.bits);
+	}
 
 	internal->code.amd = code_and_bits.code;
 	internal->bits = code_and_bits.bits;
@@ -667,18 +676,25 @@ int cpuid_identify_amd(struct cpu_raw_data_t* raw, struct cpu_id_t* data, struct
 		decode_amd_cache_info(raw, data);
 	decode_amd_number_of_cores(raw, data);
 	decode_amd_codename(data, internal);
+	decode_architecture_version_x86(data);
+	data->purpose = cpuid_identify_purpose_amd(raw);
 	return 0;
 }
 
 cpu_purpose_t cpuid_identify_purpose_amd(struct cpu_raw_data_t* raw)
 {
-	//FIXME: ext_cpuid[0x26] => index 38 is past the end of the array (which contains 32 elements)
-	//TODO: leaf CPUID_Fn80000026 needs to be added in cpu_raw_data_t
-	(void)(raw);
-#if 0
-	/* Check for hybrid architecture
-	From Processor Programming Reference (PPR) for AMD Family 19h Model 70h, Revision A0 Processors
-	Available at https://www.amd.com/system/files/TechDocs/57019-A0-PUB_3.00.zip
+	int i;
+
+	/* Check if Extended CPU Topology is supported */
+	if (raw->amd_fn80000026h[0][EAX] == 0x0)
+		return PURPOSE_GENERAL;
+
+	/* Check for heterogeneous cores
+	From AMD64 Architecture Programmer’s Manual - Volume 3: General-Purpose and System Instructions
+	Available at https://www.amd.com/content/dam/amd/en/documents/processor-tech-docs/programmer-references/24594.pdf
+
+	- CPUID_Fn80000026_EAX [Extended CPU Topology][30] is HeterogeneousCores.
+	  Set to 1 if all components at the current hierarchy level do not consist of the cores that report the same core type (CoreType).
 
 	- CPUID_Fn80000026_ECX [Extended CPU Topology][15:8] is LevelType.
 	  LevelType 01h is Core.
@@ -686,14 +702,16 @@ cpu_purpose_t cpuid_identify_purpose_amd(struct cpu_raw_data_t* raw)
 	- CPUID_Fn80000026_EBX [Extended CPU Topology][31:28] is CoreType.
 	  Only valid while LevelType=Core.
 	*/
-	if (EXTRACTS_BITS(raw->ext_cpuid[0x26][ECX], 15, 8) == 0x1) {
-		debugf(3, "Detected AMD CPU hybrid architecture\n");
-		switch (EXTRACTS_BITS(raw->ext_cpuid[0x26][EBX], 31, 28)) {
-			case 0x0: return PURPOSE_PERFORMANCE;
-			case 0x1: return PURPOSE_EFFICIENCY;
-			default:  return PURPOSE_GENERAL;
+	for (i = 0; (raw->amd_fn80000026h[i][EBX] != 0x0) && (raw->amd_fn80000026h[i][ECX] != 0x0) && (i < MAX_AMDFN80000026H_LEVEL); i++) {
+		if ((EXTRACTS_BIT(raw->amd_fn80000026h[i][EAX], 30) == 0x1) && (EXTRACTS_BITS(raw->amd_fn80000026h[i][ECX], 15, 8) == 0x1)) {
+			debugf(3, "Detected AMD CPU with heterogeneous cores\n");
+			switch (EXTRACTS_BITS(raw->amd_fn80000026h[i][EBX], 31, 28)) {
+				case 0x0: return PURPOSE_PERFORMANCE;
+				case 0x1: return PURPOSE_EFFICIENCY;
+				default:  return PURPOSE_GENERAL;
+			}
 		}
 	}
-#endif
+
 	return PURPOSE_GENERAL;
 }

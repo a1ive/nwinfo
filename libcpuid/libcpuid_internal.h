@@ -78,7 +78,7 @@ struct internal_id_info_t {
 	int32_t cache_mask[NUM_CACHE_TYPES];
 };
 
-struct internal_apic_info_t {
+struct internal_topology_t {
 	int32_t apic_id;
 	int32_t package_id;
 	int32_t core_id;

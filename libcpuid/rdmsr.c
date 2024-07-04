@@ -53,7 +53,7 @@
 
 /* Useful links for hackers:
 - AMD MSRs:
-  AMD BIOS and Kernel Developer’s Guide (BKDG)
+  AMD BIOS and Kernel Developer's Guide (BKDG)
   * AMD Family 10h Processors
   http://support.amd.com/TechDocs/31116.pdf
   * AMD Family 11h Processors
@@ -91,7 +91,7 @@
   Model 70h, Revision A0: https://www.amd.com/system/files/TechDocs/57019-A0-PUB_3.00.zip
 
 - Intel MSRs:
-  Intel 64 and IA-32 Architectures Software Developer’s Manual
+  Intel 64 and IA-32 Architectures Software Developer's Manual
   * Volume 3 (3A, 3B, 3C & 3D): System Programming Guide
   http://www.intel.com/content/dam/www/public/us/en/documents/manuals/64-ia-32-architectures-software-developer-system-programming-manual-325384.pdf
 */
@@ -179,6 +179,197 @@ static int perfmsr_measure(struct wr0_drv_t* handle, int msr)
 	return (int) ((y - x) / (b - a));
 }
 
+static int msr_platform_info_supported(struct msr_info_t *info)
+{
+	int i;
+	static int supported = -1;
+
+	/* Return cached result */
+	if(supported >= 0)
+		return supported;
+
+	/* List of microarchitectures that provide both "Maximum Non-Turbo Ratio" and "Maximum Efficiency Ratio" values
+	Please note Silvermont does not report "Maximum Efficiency Ratio" */
+	const struct { int32_t ext_family; int32_t ext_model; } msr_platform_info[] = {
+		/* Table 2-12. MSRs in Intel Atom Processors Based on Goldmont Microarchitecture */
+		{ 6, 92 },
+		{ 6, 122 },
+		/* Table 2-15. MSRs in Processors Based on Nehalem Microarchitecture */
+		{ 6, 26 },
+		{ 6, 30 },
+		{ 6, 37 },
+		{ 6, 44 },
+		/* Table 2-20. MSRs Supported by Intel Processors Based on Sandy Bridge Microarchitecture */
+		{ 6, 42 },
+		{ 6, 45 },
+		/* Table 2-25. Additional MSRs Supported by 3rd Generation Intel CoreTM Processors Based on Ivy Bridge Microarchitecture */
+		{ 6, 58 },
+		/* Table 2-26. MSRs Supported by the Intel Xeon Processor E5 v2 Product Family (Ivy Bridge-E Microarchitecture) */
+		{ 6, 62 },
+		/* Table 2-29. Additional MSRs Supported by Processors Based on the Haswell and Haswell-E Microarchitectures */
+		{ 6, 60 },
+		{ 6, 63 },
+		{ 6, 69 },
+		{ 6, 70 },
+		/* Table 2-36. Additional MSRs Common to the Intel Xeon Processor D and the Intel Xeon Processor E5 v4 Family Based on Broadwell Microarchitecture */
+		{ 6, 61 },
+		{ 6, 71 },
+		{ 6, 79 },
+		/* Table 2-39. Additional MSRs Supported by the 6th-13th Generation Intel CoreTM Processors, 1st-5th Generation Intel Xeon Scalable Processor Families, Intel CoreTM Ultra 7 Processors, 8th Generation Intel CoreTM i3 Processors, and Intel Xeon E Processors */
+		/* ==> Skylake */
+		{ 6, 78 },
+		{ 6, 85 },
+		{ 6, 94 },
+		/* ==> Kaby Lake */
+		{ 6, 142 },
+		{ 6, 158 },
+		/* ==> Coffee Lake */
+		{ 6, 102 },
+		{ 6, 142 },
+		{ 6, 158 },
+		/* ==> Cascade Lake */
+		{ 6, 85 },
+		/* ==> Comet Lake */
+		{ 6, 142 },
+		{ 6, 165 },
+		/* ==> Ice Lake */
+		{ 6, 106 },
+		{ 6, 108 },
+		{ 6, 126 },
+		/* ==> Rocket Lake */
+		{ 6, 167 },
+		/* ==> Tremont */
+		{ 6, 138 },
+		{ 6, 150 },
+		{ 6, 156 },
+		/* ==> Tiger Lake */
+		{ 6, 140 },
+		/* ==> Alder Lake */
+		{ 6, 151 },
+		{ 6, 154 },
+		{ 6, 190 },
+		/* ==> Raptor Lake */
+		{ 6, 183 },
+		{ 6, 186 },
+		{ 6, 191 },
+		/* ==> Sapphire Rapids */
+		{ 6, 143 },
+		/* ==> Emerald Rapids */
+		{ 6, 207 },
+		/* ==> Meteor Lake */
+		{ 6, 170 },
+		/* Table 2-50. MSRs Supported by the Intel Xeon Scalable Processor Family with a CPUID Signature DisplayFamily_DisplayModel Value of 06_55H */
+		{ 0x6, 0x55 },
+		/* Table 2-56. Selected MSRs Supported by Intel Xeon PhiTM Processors with a CPUID Signature DisplayFamily_DisplayModel Value of 06_57H or 06_85H */
+		{ 0x6, 0x57 },
+		{ 0x6, 0x85 },
+	};
+
+	if(info->id->vendor == VENDOR_INTEL) {
+		for(i = 0; i < COUNT_OF(msr_platform_info); i++) {
+			if((info->id->x86.ext_family == msr_platform_info[i].ext_family) && (info->id->x86.ext_model == msr_platform_info[i].ext_model)) {
+				debugf(2, "Intel CPU with CPUID signature %02X_%02XH supports MSR_PLATFORM_INFO.\n", info->id->x86.ext_family, info->id->x86.ext_model);
+				supported = 1;
+				return supported;
+			}
+		}
+		debugf(2, "Intel CPU with CPUID signature %02X_%02XH does not support MSR_PLATFORM_INFO.\n", info->id->x86.ext_family, info->id->x86.ext_model);
+	}
+
+	supported = 0;
+	return supported;
+}
+
+static int msr_perf_status_supported(struct msr_info_t *info)
+{
+	int i;
+	static int supported = -1;
+
+	/* Return cached result */
+	if(supported >= 0)
+		return supported;
+
+	/* List of microarchitectures that provide "Core Voltage" values */
+	const struct { int32_t ext_family; int32_t ext_model; } msr_perf_status[] = {
+		/* Table 2-20. MSRs Supported by Intel Processors Based on Sandy Bridge Microarchitecture */
+		{ 6, 42 },
+		{ 6, 45 },
+		/* ==> Ivy Bridge */
+		{ 6, 58 },
+		{ 6, 62 },
+		/* ==> Haswell */
+		{ 6, 60 },
+		{ 6, 63 },
+		{ 6, 69 },
+		{ 6, 70 },
+		/* ==> Broadwell */
+		{ 6, 61 },
+		{ 6, 71 },
+		{ 6, 79 },
+		/* ==> Skylake */
+		{ 6, 78 },
+		{ 6, 85 },
+		{ 6, 94 },
+		/* ==> Kaby Lake */
+		{ 6, 142 },
+		{ 6, 158 },
+		/* ==> Coffee Lake */
+		{ 6, 102 },
+		{ 6, 142 },
+		{ 6, 158 },
+		/* ==> Cascade Lake */
+		{ 6, 85 },
+		/* ==> Comet Lake */
+		{ 6, 142 },
+		{ 6, 165 },
+		/* ==> Ice Lake */
+		{ 6, 106 },
+		{ 6, 108 },
+		{ 6, 126 },
+		/* ==> Rocket Lake */
+		{ 6, 167 },
+		/* ==> Tremont */
+		{ 6, 138 },
+		{ 6, 150 },
+		{ 6, 156 },
+		/* ==> Tiger Lake */
+		{ 6, 140 },
+		/* ==> Alder Lake */
+		{ 6, 151 },
+		{ 6, 154 },
+		{ 6, 190 },
+		/* ==> Raptor Lake */
+		{ 6, 183 },
+		{ 6, 186 },
+		{ 6, 191 },
+		/* ==> Sapphire Rapids */
+		{ 6, 143 },
+		/* ==> Emerald Rapids */
+		{ 6, 207 },
+		/* ==> Meteor Lake */
+		{ 6, 170 },
+		/* Table 2-50. MSRs Supported by the Intel Xeon Scalable Processor Family with a CPUID Signature DisplayFamily_DisplayModel Value of 06_55H */
+		{ 0x6, 0x55 },
+		/* Table 2-56. Selected MSRs Supported by Intel Xeon PhiTM Processors with a CPUID Signature DisplayFamily_DisplayModel Value of 06_57H or 06_85H */
+		{ 0x6, 0x57 },
+		{ 0x6, 0x85 },
+	};
+
+	if(info->id->vendor == VENDOR_INTEL) {
+		for(i = 0; i < COUNT_OF(msr_perf_status); i++) {
+			if((info->id->x86.ext_family == msr_perf_status[i].ext_family) && (info->id->x86.ext_model == msr_perf_status[i].ext_model)) {
+				debugf(2, "Intel CPU with CPUID signature %02X_%02XH supports MSR_PERF_STATUS.\n", info->id->x86.ext_family, info->id->x86.ext_model);
+				supported = 1;
+				return supported;
+			}
+		}
+		debugf(2, "Intel CPU with CPUID signature %02X_%02XH does not support MSR_PERF_STATUS.\n", info->id->x86.ext_family, info->id->x86.ext_model);
+	}
+
+	supported = 0;
+	return supported;
+}
+
 static int get_amd_multipliers(struct msr_info_t *info, uint32_t pstate, double *multiplier)
 {
 	int i, err;
@@ -199,7 +390,7 @@ static int get_amd_multipliers(struct msr_info_t *info, uint32_t pstate, double 
 	const int num_dids = (int) COUNT_OF(divisor_t);
 
 	/* Constant values for common families */
-	const int magic_constant = (info->id->ext_family == 0x11) ? 0x8 : 0x10;
+	const int magic_constant = (info->id->x86.ext_family == 0x11) ? 0x8 : 0x10;
 	const int is_apu = ((FUSION_C <= info->internal->code.amd) && (info->internal->code.amd <= FUSION_A)) || (info->internal->bits & _APU_);
 	const double divisor = is_apu ? 1.0 : 2.0;
 
@@ -208,7 +399,7 @@ static int get_amd_multipliers(struct msr_info_t *info, uint32_t pstate, double 
 		return 1;
 
 	/* Overview of AMD CPU microarchitectures: https://en.wikipedia.org/wiki/List_of_AMD_CPU_microarchitectures#Nomenclature */
-	switch (info->id->ext_family) {
+	switch (info->id->x86.ext_family) {
 		case 0x12: /* K10 (Llano) / K12 */
 			/* BKDG 12h, page 469
 			MSRC001_00[6B:64][8:4] is CpuFid
@@ -288,7 +479,7 @@ static int get_amd_multipliers(struct msr_info_t *info, uint32_t pstate, double 
 			*multiplier = ((double) CpuFid / CpuDid) * 2;
 			break;
 		default:
-			// unsupported CPU extended family
+			warnf("get_amd_multipliers(): unsupported CPU extended family: %xh\n", info->id->x86.ext_family);
 			err = 1;
 			break;
 	}
@@ -320,9 +511,10 @@ static double get_info_min_multiplier(struct msr_info_t *info)
 {
 	int err;
 	double mult;
+	uint32_t addr;
 	uint64_t reg;
 
-	if(info->id->vendor == VENDOR_INTEL) {
+	if(msr_platform_info_supported(info)) {
 		/* Refer links above
 		Table 35-12.  MSRs in Next Generation Intel Atom Processors Based on the Goldmont Microarchitecture
 		Table 35-13.  MSRs in Processors Based on Intel Microarchitecture Code Name Nehalem
@@ -340,9 +532,9 @@ static double get_info_min_multiplier(struct msr_info_t *info)
 	else if(info->id->vendor == VENDOR_AMD || info->id->vendor == VENDOR_HYGON) {
 		/* N.B.: Find the last P-state
 		get_amd_last_pstate_addr() returns the last P-state, MSR_PSTATE_0 <= addr <= MSR_PSTATE_7 */
-		uint32_t addr = get_amd_last_pstate_addr(info);
+		addr = get_amd_last_pstate_addr(info);
 		err  = get_amd_multipliers(info, addr, &mult);
-		if (!err && mult > 0.0) return mult;
+		if (!err) return mult;
 	}
 
 	return (double) CPU_INVALID_VALUE / 100;
@@ -371,7 +563,7 @@ static double get_info_cur_multiplier(struct msr_info_t *info)
 		MSRC001_0063[2:0] is CurPstate */
 		err  = cpu_rdmsr_range(info->handle, MSR_PSTATE_S, 2, 0, &reg);
 		err += get_amd_multipliers(info, MSR_PSTATE_0 + (uint32_t) reg, &mult);
-		if (!err && mult > 0.0) return mult;
+		if (!err) return mult;
 	}
 
 	return (double) CPU_INVALID_VALUE / 100;
@@ -411,7 +603,7 @@ static double get_info_max_multiplier(struct msr_info_t *info)
 		MSRC001_0064 is Pb0
 		Pb0 is the highest-performance boosted P-state */
 		err = get_amd_multipliers(info, MSR_PSTATE_0, &mult);
-		if (!err && mult > 0.0) return mult;
+		if (!err) return mult;
 	}
 
 	return (double) CPU_INVALID_VALUE / 100;
@@ -523,10 +715,10 @@ static int amd_k8_temperature(struct msr_info_t* info)
 	uint32_t value;
 	uint32_t addr;
 	int offset = -49;
-	if (info->id->ext_model >= 0x69 &&
-		info->id->ext_model != 0xc1 &&
-		info->id->ext_model != 0x6c &&
-		info->id->ext_model != 0x7c)
+	if (info->id->x86.ext_model >= 0x69 &&
+		info->id->x86.ext_model != 0xc1 &&
+		info->id->x86.ext_model != 0x6c &&
+		info->id->x86.ext_model != 0x7c)
 		offset += 21;
 	addr = pci_find_by_id(info->handle, AMD_PCI_VENDOR_ID, AMD_PCI_CONTROL_DEVICE_ID, info->id->index);
 
@@ -562,7 +754,7 @@ static int amd_k10_temperature(struct msr_info_t* info)
 	uint32_t addr;
 	uint16_t did = 0;
 	bool smu = false;
-	switch (info->id->ext_family)
+	switch (info->id->x86.ext_family)
 	{
 	case 0x10:
 		did = FAMILY_10H_MISCELLANEOUS_CONTROL_DEVICE_ID;
@@ -577,7 +769,7 @@ static int amd_k10_temperature(struct msr_info_t* info)
 		did = FAMILY_14H_MISCELLANEOUS_CONTROL_DEVICE_ID;
 		break;
 	case 0x15:
-		switch (info->id->ext_model & 0xF0)
+		switch (info->id->x86.ext_model & 0xF0)
 		{
 		case 0x00:
 			did = FAMILY_15H_MODEL_00_MISC_CONTROL_DEVICE_ID;
@@ -599,7 +791,7 @@ static int amd_k10_temperature(struct msr_info_t* info)
 		}
 		break;
 	case 0x16:
-		switch (info->id->ext_model & 0xF0)
+		switch (info->id->x86.ext_model & 0xF0)
 		{
 		case 0x00:
 			did = FAMILY_16H_MODEL_00_MISC_CONTROL_DEVICE_ID;
@@ -623,11 +815,11 @@ static int amd_k10_temperature(struct msr_info_t* info)
 			return CPU_INVALID_VALUE;
 		value = pci_conf_read32(info->handle, addr, 0xA4);
 	}
-	if ((info->id->ext_family == 0x15 ||
-		info->id->ext_family == 0x16)
+	if ((info->id->x86.ext_family == 0x15 ||
+		info->id->x86.ext_family == 0x16)
 		&& (value & 0x30000) == 0x3000)
 	{
-		if (info->id->ext_family == 0x15 && (info->id->ext_model & 0xF0) == 0x00)
+		if (info->id->x86.ext_family == 0x15 && (info->id->x86.ext_model & 0xF0) == 0x00)
 			return (int) (((value >> 21) & 0x7FC) / 8.0f) - 49;
 		return (int) (((value >> 21) & 0x7FF) / 8.0f) - 49;
 	}
@@ -674,15 +866,15 @@ static int get_info_pkg_temperature(struct msr_info_t* info)
 	}
 	else if (info->id->vendor == VENDOR_AMD || info->id->vendor == VENDOR_HYGON)
 	{
-		if (info->id->ext_family >= 0x17)
+		if (info->id->x86.ext_family >= 0x17)
 		{
 			return (int)amd_17h_temperature(info);
 		}
-		else if (info->id->ext_family > 0x0F)
+		else if (info->id->x86.ext_family > 0x0F)
 		{
 			return amd_k10_temperature(info);
 		}
-		else if (info->id->ext_family == 0x0F)
+		else if (info->id->x86.ext_family == 0x0F)
 		{
 			return amd_k8_temperature(info);
 		}
@@ -706,7 +898,7 @@ static double get_info_pkg_energy(struct msr_info_t* info)
 		// 17h: Zen / Zen+ / Zen 2
 		// 18h: Hygon Dhyana
 		// 19h: Zen 3 / Zen 3+ / Zen 4
-		if (info->id->ext_family >= 0x17)
+		if (info->id->x86.ext_family >= 0x17)
 		{
 			err = cpu_rdmsr_range(info->handle, MSR_PKG_ENERGY_STAT, 31, 0, &TotalEnergyConsumed);
 			err += cpu_rdmsr_range(info->handle, MSR_PWR_UNIT, 12, 8, &EnergyStatusUnits);
@@ -782,7 +974,7 @@ static double get_info_voltage(struct msr_info_t *info)
 	double VIDStep;
 	uint64_t reg, CpuVid;
 
-	if(info->id->vendor == VENDOR_INTEL) {
+	if(msr_perf_status_supported(info)) {
 		/* Refer links above
 		Table 35-18.  MSRs Supported by Intel Processors based on Intel microarchitecture code name Sandy Bridge (Contd.)
 		MSR_PERF_STATUS[47:32] is Core Voltage
@@ -798,9 +990,9 @@ static double get_info_voltage(struct msr_info_t *info)
 		BKDG 10h, page 49: voltage = 1.550V - 0.0125V * SviVid (SVI1)
 		BKDG 15h, page 50: Voltage = 1.5500 - 0.00625 * Vid[7:0] (SVI2)
 		SVI2 since Piledriver (Family 15h, 2nd-gen): Models 10h-1Fh Processors */
-		VIDStep = ((info->id->ext_family < 0x15) || ((info->id->ext_family == 0x15) && (info->id->ext_model < 0x10))) ? 0.0125 : 0.00625;
+		VIDStep = ((info->id->x86.ext_family < 0x15) || ((info->id->x86.ext_family == 0x15) && (info->id->x86.ext_model < 0x10))) ? 0.0125 : 0.00625;
 		err = cpu_rdmsr_range(info->handle, MSR_PSTATE_S, 2, 0, &reg);
-		if(info->id->ext_family < 0x17)
+		if(info->id->x86.ext_family < 0x17)
 			err += cpu_rdmsr_range(info->handle, MSR_PSTATE_0 + (uint32_t) reg, 15, 9, &CpuVid);
 		else
 			err += cpu_rdmsr_range(info->handle, MSR_PSTATE_0 + (uint32_t) reg, 21, 14, &CpuVid);
@@ -817,7 +1009,7 @@ static double get_info_bus_clock(struct msr_info_t *info)
 	uint32_t addr;
 	uint64_t reg;
 
-	if(info->id->vendor == VENDOR_INTEL) {
+	if(msr_platform_info_supported(info)) {
 		/* Refer links above
 		Table 35-12.  MSRs in Next Generation Intel Atom Processors Based on the Goldmont Microarchitecture
 		Table 35-13.  MSRs in Processors Based on Intel Microarchitecture Code Name Nehalem
@@ -844,7 +1036,7 @@ static double get_info_bus_clock(struct msr_info_t *info)
 }
 
 int cpu_rdmsr_range(struct wr0_drv_t* handle, uint32_t msr_index, uint8_t highbit,
-					uint8_t lowbit, uint64_t* result)
+                    uint8_t lowbit, uint64_t* result)
 {
 	int err;
 	const uint8_t bits = highbit - lowbit + 1;

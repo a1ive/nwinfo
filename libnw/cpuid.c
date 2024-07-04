@@ -164,11 +164,11 @@ PrintCpuInfo(PNODE node, struct cpu_id_t* data)
 	NWL_NodeAttrSet(node, "Vendor Name", CpuVendorToStr(data->vendor), 0);
 	NWL_NodeAttrSet(node, "Brand", data->brand_str, 0);
 	NWL_NodeAttrSet(node, "Code Name", data->cpu_codename, 0);
-	NWL_NodeAttrSetf(node, "Family", 0, "%02Xh", data->family);
-	NWL_NodeAttrSetf(node, "Model", 0, "%02Xh", data->model);
-	NWL_NodeAttrSetf(node, "Stepping", 0, "%02Xh", data->stepping);
-	NWL_NodeAttrSetf(node, "Ext.Family", 0, "%02Xh", data->ext_family);
-	NWL_NodeAttrSetf(node, "Ext.Model", 0, "%02Xh", data->ext_model);
+	NWL_NodeAttrSetf(node, "Family", 0, "%02Xh", data->x86.family);
+	NWL_NodeAttrSetf(node, "Model", 0, "%02Xh", data->x86.model);
+	NWL_NodeAttrSetf(node, "Stepping", 0, "%02Xh", data->x86.stepping);
+	NWL_NodeAttrSetf(node, "Ext.Family", 0, "%02Xh", data->x86.ext_family);
+	NWL_NodeAttrSetf(node, "Ext.Model", 0, "%02Xh", data->x86.ext_model);
 
 	NWL_NodeAttrSetf(node, "Cores", NAFLG_FMT_NUMERIC, "%d", data->num_cores);
 	NWL_NodeAttrSetf(node, "Logical CPUs", NAFLG_FMT_NUMERIC, "%d", data->num_logical_cpus);
