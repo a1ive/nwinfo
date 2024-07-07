@@ -45,7 +45,8 @@ static void nwinfo_help(void)
 		"  --shares         Print network mapped drives.\n"
 		"  --audio          Print audio devices.\n"
 		"  --public-ip      Print public IP address.\n"
-		"  --product-policy Print ProductPolicy.\n");
+		"  --product-policy Print ProductPolicy.\n"
+		"  --gpu            Print GPU usage.\n");
 }
 
 int main(int argc, char* argv[])
@@ -145,6 +146,8 @@ int main(int argc, char* argv[])
 			nwContext.PublicIpInfo = TRUE;
 		else if (_stricmp(argv[i], "--product-policy") == 0)
 			nwContext.ProductPolicyInfo = TRUE;
+		else if (_stricmp(argv[i], "--gpu") == 0)
+			nwContext.GpuInfo = TRUE;
 		else if (_stricmp(argv[i], "--debug") == 0)
 			nwContext.Debug = TRUE;
 		else if (_stricmp(argv[i], "--hide-sensitive") == 0)
