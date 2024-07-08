@@ -157,6 +157,7 @@ copy "$(SolutionDir)winring0\HwRwDrvx64.sys" "$(SolutionDir)$(Platform)\$(Config
     <ClCompile Include="disk.c" />
     <ClCompile Include="display.c" />
     <ClCompile Include="efivars.c" />
+    <ClCompile Include="font.c" />
     <ClCompile Include="format.c" />
     <ClCompile Include="gpu.c" />
     <ClCompile Include="ids.c" />

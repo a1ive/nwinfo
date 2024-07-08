@@ -44,6 +44,7 @@ typedef struct _NWLIB_CONTEXT
 	BOOL PublicIpInfo;
 	BOOL ProductPolicyInfo;
 	BOOL GpuInfo;
+	BOOL FontInfo;
 
 	BOOL Debug;
 	BOOL HideSensitive;
@@ -121,6 +122,7 @@ PNODE NW_Audio(VOID);
 PNODE NW_PublicIp(VOID);
 PNODE NW_ProductPolicy(VOID);
 PNODE NW_Gpu(VOID);
+PNODE NW_Font(VOID);
 
 VOID NWL_GetUptime(CHAR* szUptime, DWORD dwSize);
 VOID NWL_GetHostname(CHAR* szHostname);

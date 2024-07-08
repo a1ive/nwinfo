@@ -46,7 +46,8 @@ static void nwinfo_help(void)
 		"  --audio          Print audio devices.\n"
 		"  --public-ip      Print public IP address.\n"
 		"  --product-policy Print ProductPolicy.\n"
-		"  --gpu            Print GPU usage.\n");
+		"  --gpu            Print GPU usage.\n"
+		"  --font           Print installed fonts.\n");
 }
 
 int main(int argc, char* argv[])
@@ -148,6 +149,8 @@ int main(int argc, char* argv[])
 			nwContext.ProductPolicyInfo = TRUE;
 		else if (_stricmp(argv[i], "--gpu") == 0)
 			nwContext.GpuInfo = TRUE;
+		else if (_stricmp(argv[i], "--font") == 0)
+			nwContext.FontInfo = TRUE;
 		else if (_stricmp(argv[i], "--debug") == 0)
 			nwContext.Debug = TRUE;
 		else if (_stricmp(argv[i], "--hide-sensitive") == 0)
