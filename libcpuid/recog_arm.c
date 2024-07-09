@@ -34,11 +34,18 @@
 #include "libcpuid_internal.h"
 #include "recog_arm.h"
 
-struct arm_feature_map_t {
+
+struct arm_feature_field_t {
+	uint32_t *aarch32_reg;
+	uint64_t *aarch64_reg;
 	uint8_t highbit, lowbit;
 	uint8_t value;
-	cpu_feature_t feature;
+};
+
+#define MAX_IDENTIFY_FIELDS 6
+struct arm_feature_map_t {
 	cpu_feature_level_t ver_optional, ver_mandatory;
+	struct arm_feature_field_t fields[MAX_IDENTIFY_FIELDS];
 };
 
 struct arm_arch_feature_t {
@@ -392,6 +399,172 @@ static const struct arm_id_part* get_cpu_implementer_parts(const struct arm_hw_i
 	return &hw_impl->parts[i];
 }
 
+static inline bool is_aarch64_mode(struct cpu_raw_data_t* raw)
+{
+	return (raw->arm_id_aa64afr[0] != 0) || (raw->arm_id_aa64dfr[0] != 0) || (raw->arm_id_aa64isar[0] != 0) || (raw->arm_id_aa64mmfr[0] != 0) || (raw->arm_id_aa64pfr[0] != 0);
+}
+
+static bool decode_arm_architecture_version_by_midr(struct cpu_raw_data_t* raw, struct cpu_id_t* data)
+{
+	int i;
+	const uint8_t architecture = EXTRACTS_BITS(raw->arm_midr, 19, 16);
+
+	const struct { uint8_t raw_value; cpu_feature_level_t enum_value; }
+	architecture_matchtable[] = {
+		{ 0b0000, FEATURE_LEVEL_UNKNOWN },
+		{ 0b0001, FEATURE_LEVEL_ARM_V4 },
+		{ 0b0010, FEATURE_LEVEL_ARM_V4T },
+		{ 0b0011, FEATURE_LEVEL_ARM_V5 },
+		{ 0b0100, FEATURE_LEVEL_ARM_V5T },
+		{ 0b0101, FEATURE_LEVEL_ARM_V5TE },
+		{ 0b0110, FEATURE_LEVEL_ARM_V5TEJ },
+		{ 0b0111, FEATURE_LEVEL_ARM_V6 },
+		{ 0b1000, FEATURE_LEVEL_UNKNOWN },
+		{ 0b1001, FEATURE_LEVEL_UNKNOWN },
+		{ 0b1010, FEATURE_LEVEL_UNKNOWN },
+		{ 0b1011, FEATURE_LEVEL_UNKNOWN },
+		{ 0b1100, FEATURE_LEVEL_ARM_V6_M },
+		{ 0b1101, FEATURE_LEVEL_UNKNOWN },
+		{ 0b1110, FEATURE_LEVEL_UNKNOWN }
+		// 0b1111: defined by CPUID scheme
+	};
+
+	/* Check if architecture level is explicit */
+	for (i = 0; i < COUNT_OF(architecture_matchtable); i++) {
+		if (architecture == architecture_matchtable[i].raw_value) {
+			data->feature_level = architecture_matchtable[i].enum_value;
+			debugf(2, "ARM architecture version is %s\n", cpu_feature_level_str(data->feature_level));
+			return true;
+		}
+	}
+
+	/* Return false if not found */
+	return false;
+}
+
+static void decode_arm_architecture_version_by_cpuid(struct cpu_raw_data_t* raw, struct cpu_id_t* data, struct arm_arch_extension_t* ext_status)
+{
+	int i;
+	cpu_feature_level_t feature_level = FEATURE_LEVEL_UNKNOWN;
+	const cpu_feature_level_t *architecture_arm = NULL;
+
+	/**
+	 * Check if CPU is ARMv6 or ARMv7
+	 * On ID_DFR0, Coprocessor debug model, bits[3:0]
+	*  - 0b0010 Support for v6 Debug architecture, with CP14 access.
+	*  - 0b0011 Support for v6.1 Debug architecture, with CP14 access.
+	*  - 0b0100 Support for v7 Debug architecture, with CP14 access.
+	*  - 0b0101 Support for v7.1 Debug architecture, with CP14 access.
+	 * The ARMv7-A architecture profile defines a Virtual Memory System Architecture (VMSA). In Armv8-A, the only permitted value is 0b0101 for VMSA bits.
+	 * The ARMv7-R architecture profile defines a Protected Memory System Architecture (PMSA). In Armv8-A, the only permitted value is 0b0000 for PMSA bits.
+	 *
+	 * If a possible value for a field is shown as Armv7-M reserved it means Armv7-M implementations cannot use that field value.
+	*/
+	const uint8_t copdbg   = EXTRACTS_BITS(raw->arm_id_dfr[0],   3,  0);
+	const uint8_t simd     = EXTRACTS_BITS(raw->arm_id_isar[3],  7,  4);
+	const uint8_t psr_m    = EXTRACTS_BITS(raw->arm_id_isar[4], 27, 24);
+	const uint8_t vmsa     = EXTRACTS_BITS(raw->arm_id_mmfr[0],  3,  0);
+	const uint8_t pmsa     = EXTRACTS_BITS(raw->arm_id_mmfr[0],  7,  4);
+	const uint8_t ras      = EXTRACTS_BITS(raw->arm_id_pfr[0],  31, 28);
+	const uint8_t mprogmod = EXTRACTS_BITS(raw->arm_id_pfr[1],  11,  8);
+	if ((copdbg == 0b0010) || (copdbg == 0b0011)) {
+		/* ARMv6 */
+		if (psr_m == 0b0001)
+			feature_level = FEATURE_LEVEL_ARM_V6_M;
+		else
+			feature_level = FEATURE_LEVEL_ARM_V6;
+	}
+	else if ((copdbg == 0b0100) || (copdbg == 0b0101)) {
+		/* ARMv7 */
+		if (psr_m == 0b0001)
+			/* An Armv7-M implementation that includes the DSP extension is called an Armv7E-M implementation */
+			feature_level = (simd == 0b0011) ? FEATURE_LEVEL_ARM_V7E_M : FEATURE_LEVEL_ARM_V7_M;
+		else if (vmsa != 0b0000)
+			feature_level = FEATURE_LEVEL_ARM_V7_A;
+		else if (pmsa != 0b0000)
+			feature_level = FEATURE_LEVEL_ARM_V7_R;
+	}
+	else if ((psr_m == 0b0001) && (mprogmod == 0b0010))
+		feature_level = (ras == 0b0010) ? FEATURE_LEVEL_ARM_V8_1_M : FEATURE_LEVEL_ARM_V8_0_M;
+	else if (pmsa != 0b0000)
+		feature_level = FEATURE_LEVEL_ARM_V8_0_R;
+
+	if (feature_level != FEATURE_LEVEL_UNKNOWN)
+		goto found;
+
+	/**
+	 * The Armv8.0 architecture extension
+	 *
+	 * The original Armv8-A architecture is called Armv8.0. It contains mandatory and optional architectural features.
+	 * Some features must be implemented together. An implementation is Armv8.0 compliant if it includes all of the
+	 * Armv8.0 architectural features that are mandatory.
+	 *
+	 * An Armv8.0 compliant implementation can additionally include:
+	 * - Armv8.0 features that are optional.
+	 * - Any arbitrary subset of the architectural features of Armv8.1, subject only to those constraints that require that certain features be implemented together.
+	 */
+	const cpu_feature_level_t architecture_arm_v8a[] = {
+		FEATURE_LEVEL_ARM_V8_0_A, /*!< ARMv8.0-A */
+		FEATURE_LEVEL_ARM_V8_1_A, /*!< ARMv8.1-A */
+		FEATURE_LEVEL_ARM_V8_2_A, /*!< ARMv8.2-A */
+		FEATURE_LEVEL_ARM_V8_3_A, /*!< ARMv8.3-A */
+		FEATURE_LEVEL_ARM_V8_4_A, /*!< ARMv8.4-A */
+		FEATURE_LEVEL_ARM_V8_5_A, /*!< ARMv8.5-A */
+		FEATURE_LEVEL_ARM_V8_6_A, /*!< ARMv8.6-A */
+		FEATURE_LEVEL_ARM_V8_7_A, /*!< ARMv8.7-A */
+		FEATURE_LEVEL_ARM_V8_8_A, /*!< ARMv8.8-A */
+		FEATURE_LEVEL_ARM_V8_9_A, /*!< ARMv8.9-A */
+		FEATURE_LEVEL_UNKNOWN,
+	};
+
+	/**
+	 * The Armv9.0 architecture extension
+	 *
+	 * The Armv9.0 architecture extension adds mandatory and optional architectural features. Some features must be
+	 * implemented together. An implementation is Armv9.0 compliant if all of the following apply:
+	 * - It is Armv8.5 compliant.
+	 * - It includes all of the Armv9.0 architectural features that are mandatory.
+	 *
+	 * An Armv9.0 compliant implementation can additionally include:
+	 * - Armv9.0 features that are optional.
+	 * - Any arbitrary subset of the architectural features of Armv9.1, subject only to those constraints that require that certain features be implemented together.
+	 */
+	const cpu_feature_level_t architecture_arm_v9a[] = {
+		FEATURE_LEVEL_ARM_V9_0_A, /*!< ARMv9.0-A */
+		FEATURE_LEVEL_ARM_V9_1_A, /*!< ARMv9.1-A */
+		FEATURE_LEVEL_ARM_V9_2_A, /*!< ARMv9.2-A */
+		FEATURE_LEVEL_ARM_V9_3_A, /*!< ARMv9.3-A */
+		FEATURE_LEVEL_ARM_V9_4_A, /*!< ARMv9.4-A */
+		FEATURE_LEVEL_UNKNOWN,
+	};
+
+	if ((ext_status->present[FEATURE_LEVEL_ARM_V9_0_A].optional > 0) || (ext_status->present[FEATURE_LEVEL_ARM_V9_0_A].mandatory > 0))
+		architecture_arm = architecture_arm_v9a;
+	else if ((ext_status->present[FEATURE_LEVEL_ARM_V8_0_A].optional > 0) || (ext_status->present[FEATURE_LEVEL_ARM_V8_0_A].mandatory > 0))
+		architecture_arm = architecture_arm_v8a;
+	else
+		goto found;
+
+	for (i = 0; architecture_arm[i] != FEATURE_LEVEL_UNKNOWN; i++) {
+		debugf(3, "Check if CPU is %s compliant: %2u/%2u optional features detected, %2u/%2u mandatory features required\n",
+			cpu_feature_level_str(architecture_arm[i]),
+			ext_status->present[ architecture_arm[i] ].optional, ext_status->total[ architecture_arm[i] ].optional,
+			ext_status->present[ architecture_arm[i] ].mandatory, ext_status->total[ architecture_arm[i] ].mandatory);
+		/* CPU is compliant when it includes all of the architectural features that are mandatory */
+		if (ext_status->present[ architecture_arm[i] ].mandatory < ext_status->total[ architecture_arm[i] ].mandatory)
+			break;
+		/* If there are no mandatory features (like ARMv9.3-A), check that at least one optional feature is implemented */
+		else if ((ext_status->total[ architecture_arm[i] ].mandatory == 0) && (ext_status->present[ architecture_arm[i] ].optional == 0))
+			break;
+		else
+			feature_level = architecture_arm[i];
+	}
+
+found:
+	data->feature_level = feature_level;
+	debugf(2, "ARM architecture version is %s\n", cpu_feature_level_str(feature_level));
+}
+
 static void set_feature_status(struct cpu_id_t* data, struct arm_arch_extension_t* ext_status, bool is_present, cpu_feature_t feature, cpu_feature_level_t optional_from, cpu_feature_level_t mandatory_from)
 {
 	if (optional_from >= 0)
@@ -415,17 +588,30 @@ static void set_feature_status(struct cpu_id_t* data, struct arm_arch_extension_
 	}
 }
 
-static void match_arm_features(const struct arm_feature_map_t* matchtable, const char* reg_name, const int reg_number, uint64_t reg_value, struct cpu_id_t* data, struct arm_arch_extension_t* ext_status)
+static void match_arm_features(bool is_aarch64, cpu_feature_t feature, const struct arm_feature_map_t* feature_map, struct cpu_id_t* data, struct arm_arch_extension_t* ext_status)
 {
-	int i;
-	bool feature_is_present;
+	bool field_is_present, feature_is_present = false;
+	unsigned i;
+	uint64_t reg_value;
+	const struct arm_feature_field_t* field;
 
-	for (i = 0; matchtable[i].feature != -1; i++) {
-		feature_is_present = (EXTRACTS_BITS(reg_value, matchtable[i].highbit, matchtable[i].lowbit) == matchtable[i].value);
-		if (feature_is_present)
-			debugf(3, "Register %8s%i (0x%016" PRIX64 "): match value %u for bits [%2u:%2u], ", reg_name, reg_number, reg_value, matchtable[i].value, matchtable[i].highbit, matchtable[i].lowbit);
-		set_feature_status(data, ext_status, feature_is_present, matchtable[i].feature, matchtable[i].ver_optional, matchtable[i].ver_mandatory);
+	for (i = 0; i < MAX_IDENTIFY_FIELDS; i++) {
+		field = &feature_map->fields[i];
+
+		if (!is_aarch64 && field->aarch32_reg != NULL)
+			reg_value = *field->aarch32_reg;
+		else if (is_aarch64 && field->aarch64_reg != NULL)
+			reg_value = *field->aarch64_reg;
+		else
+			break; // quit on sentinel values
+
+		field_is_present = (EXTRACTS_BITS(reg_value, field->highbit, field->lowbit) == field->value);
+		if (field_is_present)
+			debugf(3, "match value %u for bits [%2u:%2u] in register 0x%016" PRIX64 ", ", field->value, field->highbit, field->lowbit, reg_value);
+		feature_is_present = feature_is_present || field_is_present;
 	}
+
+	set_feature_status(data, ext_status, feature_is_present, feature, feature_map->ver_optional, feature_map->ver_mandatory);
 }
 
 static void load_arm_feature_pauth(struct cpu_id_t* data, struct arm_arch_extension_t* ext_status)
@@ -486,435 +672,1863 @@ static void load_arm_feature_mte4(struct cpu_raw_data_t* raw, struct cpu_id_t* d
 		CPU_FEATURE_MTE4, FEATURE_LEVEL_ARM_V8_7_A, -1);
 }
 
-static void decode_arm_architecture_version(struct cpu_raw_data_t* raw, struct cpu_id_t* data, struct arm_arch_extension_t* ext_status)
-{
-	int i;
-	cpu_feature_level_t feature_level = FEATURE_LEVEL_UNKNOWN;
-	const cpu_feature_level_t *architecture_arm = NULL;
-	const uint8_t architecture = EXTRACTS_BITS(raw->arm_midr, 19, 16);
-
-	const struct { uint8_t raw_value; cpu_feature_level_t enum_value; }
-	architecture_matchtable[] = {
-		{ 0b0000, FEATURE_LEVEL_UNKNOWN },
-		{ 0b0001, FEATURE_LEVEL_ARM_V4 },
-		{ 0b0010, FEATURE_LEVEL_ARM_V4T },
-		{ 0b0011, FEATURE_LEVEL_ARM_V5 },
-		{ 0b0100, FEATURE_LEVEL_ARM_V5T },
-		{ 0b0101, FEATURE_LEVEL_ARM_V5TE },
-		{ 0b0110, FEATURE_LEVEL_ARM_V5TEJ },
-		{ 0b0111, FEATURE_LEVEL_ARM_V6 },
-		{ 0b1000, FEATURE_LEVEL_UNKNOWN },
-		{ 0b1001, FEATURE_LEVEL_UNKNOWN },
-		{ 0b1010, FEATURE_LEVEL_UNKNOWN },
-		{ 0b1011, FEATURE_LEVEL_UNKNOWN },
-		{ 0b1100, FEATURE_LEVEL_ARM_V6_M },
-		{ 0b1101, FEATURE_LEVEL_UNKNOWN },
-		{ 0b1110, FEATURE_LEVEL_UNKNOWN }
-	};
-
-	/**
-	 * The Armv8.0 architecture extension
-	 *
-	 * The original Armv8-A architecture is called Armv8.0. It contains mandatory and optional architectural features.
-	 * Some features must be implemented together. An implementation is Armv8.0 compliant if it includes all of the
-	 * Armv8.0 architectural features that are mandatory.
-	 *
-	 * An Armv8.0 compliant implementation can additionally include:
-	 * - Armv8.0 features that are optional.
-	 * - Any arbitrary subset of the architectural features of Armv8.1, subject only to those constraints that require that certain features be implemented together.
-	 */
-	const cpu_feature_level_t architecture_arm_v8a[] = {
-		FEATURE_LEVEL_ARM_V8_0_A, /*!< ARMv8.0-A */
-		FEATURE_LEVEL_ARM_V8_1_A, /*!< ARMv8.1-A */
-		FEATURE_LEVEL_ARM_V8_2_A, /*!< ARMv8.2-A */
-		FEATURE_LEVEL_ARM_V8_3_A, /*!< ARMv8.3-A */
-		FEATURE_LEVEL_ARM_V8_4_A, /*!< ARMv8.4-A */
-		FEATURE_LEVEL_ARM_V8_5_A, /*!< ARMv8.5-A */
-		FEATURE_LEVEL_ARM_V8_6_A, /*!< ARMv8.6-A */
-		FEATURE_LEVEL_ARM_V8_7_A, /*!< ARMv8.7-A */
-		FEATURE_LEVEL_ARM_V8_8_A, /*!< ARMv8.8-A */
-		FEATURE_LEVEL_ARM_V8_9_A, /*!< ARMv8.9-A */
-		FEATURE_LEVEL_UNKNOWN,
-	};
-
-	/**
-	 * The Armv9.0 architecture extension
-	 *
-	 * The Armv9.0 architecture extension adds mandatory and optional architectural features. Some features must be
-	 * implemented together. An implementation is Armv9.0 compliant if all of the following apply:
-	 * - It is Armv8.5 compliant.
-	 * - It includes all of the Armv9.0 architectural features that are mandatory.
-	 *
-	 * An Armv9.0 compliant implementation can additionally include:
-	 * - Armv9.0 features that are optional.
-	 * - Any arbitrary subset of the architectural features of Armv9.1, subject only to those constraints that require that certain features be implemented together.
-	 */
-	const cpu_feature_level_t architecture_arm_v9a[] = {
-		FEATURE_LEVEL_ARM_V9_0_A, /*!< ARMv9.0-A */
-		FEATURE_LEVEL_ARM_V9_1_A, /*!< ARMv9.1-A */
-		FEATURE_LEVEL_ARM_V9_2_A, /*!< ARMv9.2-A */
-		FEATURE_LEVEL_ARM_V9_3_A, /*!< ARMv9.3-A */
-		FEATURE_LEVEL_ARM_V9_4_A, /*!< ARMv9.4-A */
-		FEATURE_LEVEL_UNKNOWN,
-	};
-
-	/* Check if architecture level is explicit */
-	for (i = 0; i < COUNT_OF(architecture_matchtable); i++) {
-		if (architecture == architecture_matchtable[i].raw_value) {
-			feature_level = architecture_matchtable[i].enum_value;
-			goto found;
-		}
-	}
-
-	/* When architecture is 0b1111, architectural features are individually identified in the ID_* registers */
-	//FIXME: it works only for A-profile architecture, M-profile and R-profile are not supported yet
-	if ((ext_status->present[FEATURE_LEVEL_ARM_V9_0_A].optional > 0) || (ext_status->present[FEATURE_LEVEL_ARM_V9_0_A].mandatory > 0))
-		architecture_arm = architecture_arm_v9a;
-	else if ((ext_status->present[FEATURE_LEVEL_ARM_V8_0_A].optional > 0) || (ext_status->present[FEATURE_LEVEL_ARM_V8_0_A].mandatory > 0))
-		architecture_arm = architecture_arm_v8a;
-	else
-		goto found;
-
-	for (i = 0; architecture_arm[i] != FEATURE_LEVEL_UNKNOWN; i++) {
-		debugf(3, "Check if CPU is %s compliant: %2u/%2u optional features detected, %2u/%2u mandatory features required\n",
-			cpu_feature_level_str(architecture_arm[i]),
-			ext_status->present[ architecture_arm[i] ].optional, ext_status->total[ architecture_arm[i] ].optional,
-			ext_status->present[ architecture_arm[i] ].mandatory, ext_status->total[ architecture_arm[i] ].mandatory);
-		/* CPU is compliant when it includes all of the architectural features that are mandatory */
-		if (ext_status->present[ architecture_arm[i] ].mandatory < ext_status->total[ architecture_arm[i] ].mandatory)
-			break;
-		/* If there are no mandatory features (like ARMv9.3-A), check that at least one optional feature is implemented */
-		else if ((ext_status->total[ architecture_arm[i] ].mandatory == 0) && (ext_status->present[ architecture_arm[i] ].optional == 0))
-			break;
-		else
-			feature_level = architecture_arm[i];
-	}
-
-found:
-	data->feature_level = feature_level;
-	debugf(2, "ARM architecture version is %s\n", cpu_feature_level_str(feature_level));
-}
-
-#define MAX_MATCHTABLE_ITEMS 32
-#define MATCH_FEATURES_TABLE_WITH_RAW(reg) match_arm_features(matchtable_id_##reg[i], #reg, i, raw->arm_id_##reg[i], data, ext_status)
 static void load_arm_features(struct cpu_raw_data_t* raw, struct cpu_id_t* data, struct arm_arch_extension_t* ext_status)
 {
-	int i;
+	cpu_feature_t feature;
+	const bool is_aarch64 = is_aarch64_mode(raw);
 
-	const struct arm_feature_map_t matchtable_id_aa64dfr[MAX_ARM_ID_AA64DFR_REGS][MAX_MATCHTABLE_ITEMS] = {
-		[0] /* ID_AA64DFR0 */ = {
-			{ 59, 56, 0b0001, CPU_FEATURE_TRBE_EXT,   FEATURE_LEVEL_ARM_V9_3_A, -1 },
-			{ 55, 52, 0b0001, CPU_FEATURE_BRBE,       FEATURE_LEVEL_ARM_V9_1_A, -1 },
-			{ 55, 52, 0b0010, CPU_FEATURE_BRBEV1P1,   FEATURE_LEVEL_ARM_V9_2_A, -1 },
-			{ 51, 48, 0b0001, CPU_FEATURE_MTPMU,      FEATURE_LEVEL_ARM_V8_5_A, -1 },
-			{ 47, 47, 0b0001, CPU_FEATURE_TRBE,       FEATURE_LEVEL_ARM_V9_0_A, -1 },
-			{ 43, 40, 0b0001, CPU_FEATURE_TRF,        FEATURE_LEVEL_ARM_V8_3_A, -1 },
-			{ 39, 36, 0b0000, CPU_FEATURE_DOUBLELOCK, FEATURE_LEVEL_ARM_V8_0_A, -1 },
-			{ 35, 32, 0b0001, CPU_FEATURE_SPE,        FEATURE_LEVEL_ARM_V8_1_A, -1 },
-			{ 35, 32, 0b0010, CPU_FEATURE_SPEV1P1,    FEATURE_LEVEL_ARM_V8_2_A, -1 },
-			{ 35, 32, 0b0011, CPU_FEATURE_SPEV1P2,    FEATURE_LEVEL_ARM_V8_6_A, -1 },
-			{ 35, 32, 0b0100, CPU_FEATURE_SPEV1P3,    FEATURE_LEVEL_ARM_V8_7_A, -1 },
-			{ 35, 32, 0b0101, CPU_FEATURE_SPEV1P4,    FEATURE_LEVEL_ARM_V8_8_A, -1 },
-			{ 27, 24, 0b0001, CPU_FEATURE_SEBEP,      FEATURE_LEVEL_ARM_V9_3_A, -1 },
-			{ 19, 16, 0b0001, CPU_FEATURE_PMUV3_SS,   FEATURE_LEVEL_ARM_V8_8_A, -1 },
-			{ 11,  8, 0b0001, CPU_FEATURE_PMUV3,      FEATURE_LEVEL_ARM_V8_0_A, -1 }, /* Performance Monitors Extension, PMUv3 implemented. */
-			{ 11,  8, 0b0100, CPU_FEATURE_PMUV3P1,    FEATURE_LEVEL_ARM_V8_1_A, -1 }, /* PMUv3 for Armv8.1 */
-			{ 11,  8, 0b0101, CPU_FEATURE_PMUV3P4,    FEATURE_LEVEL_ARM_V8_3_A, -1 }, /* PMUv3 for Armv8.4 */
-			{ 11,  8, 0b0110, CPU_FEATURE_PMUV3P5,    FEATURE_LEVEL_ARM_V8_4_A, -1 }, /* PMUv3 for Armv8.5 */
-			{ 11,  8, 0b0111, CPU_FEATURE_PMUV3P7,    FEATURE_LEVEL_ARM_V8_6_A, -1 }, /* PMUv3 for Armv8.7 */
-			{ 11,  8, 0b1000, CPU_FEATURE_PMUV3P8,    FEATURE_LEVEL_ARM_V8_7_A, -1 }, /* PMUv3 for Armv8.8 */
-			{ 11,  8, 0b1001, CPU_FEATURE_PMUV3P9,    FEATURE_LEVEL_ARM_V8_8_A, -1 }, /* PMUv3 for Armv8.9 */
-			{  3,  0, 0b1000, CPU_FEATURE_DEBUGV8P2,  FEATURE_LEVEL_ARM_V8_1_A, FEATURE_LEVEL_ARM_V8_2_A }, /* Armv8.2 debug architecture */
-			{  3,  0, 0b1001, CPU_FEATURE_DEBUGV8P4,  FEATURE_LEVEL_ARM_V8_3_A, FEATURE_LEVEL_ARM_V8_4_A }, /* Armv8.4 debug architecture */
-			{  3,  0, 0b1010, CPU_FEATURE_DEBUGV8P8,  FEATURE_LEVEL_ARM_V8_7_A, FEATURE_LEVEL_ARM_V8_8_A }, /* Armv8.8 debug architecture */
-			{  3,  0, 0b1011, CPU_FEATURE_DEBUGV8P9,  FEATURE_LEVEL_ARM_V8_8_A, FEATURE_LEVEL_ARM_V8_9_A }, /* Armv8.9 debug architecture */
-			{ -1, -1,     -1, -1,                     -1,                       -1 }
+	/* Thumb */
+	set_feature_status(data, ext_status,
+		((data->feature_level == FEATURE_LEVEL_ARM_V4T) ||
+		 (data->feature_level == FEATURE_LEVEL_ARM_V5T) ||
+		 (data->feature_level == FEATURE_LEVEL_ARM_V5TE) ||
+		 (data->feature_level == FEATURE_LEVEL_ARM_V5TEJ)
+		), CPU_FEATURE_THUMB, -1, -1);
+
+	/* Jazelle */
+	set_feature_status(data, ext_status, (data->feature_level == FEATURE_LEVEL_ARM_V5TEJ), CPU_FEATURE_JAZELLE, -1, -1);
+
+	const struct arm_feature_map_t features_map[NUM_CPU_FEATURES] = {
+		[CPU_FEATURE_SWAP] = {
+			.ver_optional  = -1,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = &raw->arm_id_isar[0], .aarch64_reg = NULL                    , .highbit =  3, .lowbit =  0, .value = 0b0001 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
 		},
-		[1] /* ID_AA64DFR1 */ = {
-			{ 55, 52, 0b0001, CPU_FEATURE_SPE_DPFZS,   FEATURE_LEVEL_ARM_V8_6_A, -1 },
-			{ 51, 48, 0b0001, CPU_FEATURE_EBEP,        FEATURE_LEVEL_ARM_V9_3_A, -1 },
-			{ 47, 44, 0b0001, CPU_FEATURE_ITE,         FEATURE_LEVEL_ARM_V9_3_A, -1 },
-			{ 43, 40, 0b0001, CPU_FEATURE_ABLE,        FEATURE_LEVEL_ARM_V9_3_A, -1 },
-			{ 43, 40, 0b0001, CPU_FEATURE_BWE,         FEATURE_LEVEL_ARM_V9_3_A, -1 },
-			{ 39, 36, 0b0001, CPU_FEATURE_PMUV3_ICNTR, FEATURE_LEVEL_ARM_V8_8_A, -1 },
-			{ 35, 32, 0b0001, CPU_FEATURE_SPMU,        FEATURE_LEVEL_ARM_V8_8_A, -1 },
-			{ -1, -1,     -1, -1,                      -1,                       -1 }
-		}
+		[CPU_FEATURE_THUMB] = {
+			.ver_optional  = -1,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = &raw->arm_id_pfr[0],  .aarch64_reg = NULL,                     .highbit =  7, .lowbit =  4, .value = 0b0001 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_ADVMULTU] = {
+			.ver_optional  = -1,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = &raw->arm_id_isar[2], .aarch64_reg = NULL,                     .highbit = 23, .lowbit = 20, .value = 0b0001 }, /* Adds the UMULL and UMLAL instructions */
+				{ .aarch32_reg = &raw->arm_id_isar[2], .aarch64_reg = NULL,                     .highbit = 23, .lowbit = 20, .value = 0b0010 }, /* As for 0b0001, and adds the UMAAL instruction */
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_ADVMULTS] = {
+			.ver_optional  = -1,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = &raw->arm_id_isar[2], .aarch64_reg = NULL,                     .highbit = 19, .lowbit = 16, .value = 0b0001 }, /* Adds the SMULL and SMLAL instructions */
+				{ .aarch32_reg = &raw->arm_id_isar[2], .aarch64_reg = NULL,                     .highbit = 19, .lowbit = 16, .value = 0b0010 }, /* As for 0b0001, and adds the SMLABB, SMLABT, SMLALBB, SMLALBT, SMLALTB, SMLALTT, SMLATB, SMLATT, SMLAWB, SMLAWT, SMULBB, SMULBT, SMULTB, SMULTT, SMULWB, and SMULWT instructions */
+				{ .aarch32_reg = &raw->arm_id_isar[2], .aarch64_reg = NULL,                     .highbit = 19, .lowbit = 16, .value = 0b0011 }, /* As for 0b0010, and adds the SMLAD, SMLADX, SMLALD, SMLALDX, SMLSD, SMLSDX, SMLSLD, SMLSLDX, SMMLA, SMMLAR, SMMLS, SMMLSR, SMMUL, SMMULR, SMUAD, SMUADX, SMUSD, and SMUSDX instructions */
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_JAZELLE] = {
+			.ver_optional  = -1,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = &raw->arm_id_pfr[0],  .aarch64_reg = NULL,                     .highbit = 11, .lowbit =  8, .value = 0b0001 }, /* Jazelle extension implemented, without clearing of JOSCR.CV on exception entry */
+				{ .aarch32_reg = &raw->arm_id_pfr[0],  .aarch64_reg = NULL,                     .highbit = 11, .lowbit =  8, .value = 0b0010 }, /* Jazelle extension implemented, with clearing of JOSCR.CV on exception entry */
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+
+		/* Armv6.0 */
+		[CPU_FEATURE_DEBUGV6] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V6,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = &raw->arm_id_dfr[0],  .aarch64_reg = NULL,                     .highbit =  3, .lowbit =  0, .value = 0b0010 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_DEBUGV6P1] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V6,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = &raw->arm_id_dfr[0],  .aarch64_reg = NULL,                     .highbit =  3, .lowbit =  0, .value = 0b0011 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_THUMB2] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V6,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = &raw->arm_id_pfr[0],  .aarch64_reg = NULL,                     .highbit =  7, .lowbit =  4, .value = 0b0011 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+
+		/* Armv7.0 */
+		[CPU_FEATURE_DEBUGV7] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V7_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = &raw->arm_id_dfr[0],  .aarch64_reg = NULL,                     .highbit =  3, .lowbit =  0, .value = 0b0100 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_DEBUGV7P1] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V7_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = &raw->arm_id_dfr[0],  .aarch64_reg = NULL,                     .highbit =  3, .lowbit =  0, .value = 0b0101 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_THUMBEE] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V7_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = &raw->arm_id_pfr[0],  .aarch64_reg = NULL,                     .highbit = 15, .lowbit = 12, .value = 0b0001 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_DIVIDE] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V7_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = &raw->arm_id_isar[0], .aarch64_reg = NULL,                     .highbit = 27, .lowbit = 24, .value = 0b0001 }, /* Thumb instruction set */
+				{ .aarch32_reg = &raw->arm_id_isar[0], .aarch64_reg = NULL,                     .highbit = 27, .lowbit = 24, .value = 0b0010 }, /* ARM instruction set */
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_LPAE] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V7_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = &raw->arm_id_mmfr[0], .aarch64_reg = NULL,                     .highbit =  3, .lowbit =  0, .value = 0b0101 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_PMUV1] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V7_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = &raw->arm_id_dfr[0],  .aarch64_reg = NULL                    , .highbit = 31, .lowbit = 28, .value = 0b0001 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_PMUV2] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V7_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = &raw->arm_id_dfr[0],  .aarch64_reg = NULL                    , .highbit = 31, .lowbit = 28, .value = 0b0010 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+
+		/* Armv8.0 */
+		[CPU_FEATURE_AES] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V8_0_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64isar[0], .highbit =  7, .lowbit =  4, .value = 0b0001 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_ASID16] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V8_0_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64mmfr[0], .highbit =  7, .lowbit =  4, .value = 0b0010 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_ADVSIMD] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V8_0_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64pfr[0],  .highbit = 23, .lowbit = 20, .value = 0b0000 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64pfr[0],  .highbit = 23, .lowbit = 20, .value = 0b0001 }, /* as for 0b0000, and also includes support for half-precision floating-point arithmetic */
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_CRC32] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V8_0_A,
+			.ver_mandatory = FEATURE_LEVEL_ARM_V8_1_A,
+			.fields        = {
+				{ .aarch32_reg = &raw->arm_id_isar[5], .aarch64_reg = &raw->arm_id_aa64isar[0], .highbit = 19, .lowbit = 16, .value = 0b0001 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_CSV2_1P1] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V8_0_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64pfr[1],  .highbit = 35, .lowbit = 32, .value = 0b0001 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_CSV2_1P2] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V8_0_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64pfr[1],  .highbit = 35, .lowbit = 32, .value = 0b0010 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_CSV2_2] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V8_0_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64pfr[0],  .highbit = 59, .lowbit = 56, .value = 0b0010 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_CSV2_3] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V8_0_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64pfr[0],  .highbit = 59, .lowbit = 56, .value = 0b0011 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_DOUBLELOCK] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V8_0_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64dfr[0],  .highbit = 39, .lowbit = 36, .value = 0b0000 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_ETS2] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V8_0_A,
+			.ver_mandatory = FEATURE_LEVEL_ARM_V8_8_A,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64mmfr[1], .highbit = 39, .lowbit = 36, .value = 0b0010 },
+				{ .aarch32_reg = &raw->arm_id_mmfr[5], .aarch64_reg = NULL,                     .highbit =  3, .lowbit =  0, .value = 0b0010 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_FP] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V8_0_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64pfr[0],  .highbit = 19, .lowbit = 16, .value = 0b0000 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_MIXEDEND] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V8_0_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64mmfr[0], .highbit = 11, .lowbit =  8, .value = 0b0001 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_MIXEDENDEL0] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V8_0_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64mmfr[0], .highbit = 19, .lowbit = 16, .value = 0b0001 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_PMULL] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V8_0_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64isar[0], .highbit =  7, .lowbit =  4, .value = 0b0010 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_PMUV3] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V8_0_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64dfr[0],  .highbit = 11, .lowbit =  8, .value = 0b0001 },
+				{ .aarch32_reg = &raw->arm_id_dfr[0],  .aarch64_reg = NULL,                     .highbit = 27, .lowbit = 24, .value = 0b0011 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_SHA1] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V8_0_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64isar[0], .highbit = 11, .lowbit =  8, .value = 0b0001 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_SHA256] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V8_0_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64isar[0], .highbit = 15, .lowbit = 12, .value = 0b0001 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_NTLBPA] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V8_0_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64mmfr[1], .highbit = 51, .lowbit = 48, .value = 0b0001 },
+				{ .aarch32_reg = &raw->arm_id_mmfr[5], .aarch64_reg = NULL,                     .highbit =  7, .lowbit =  4, .value = 0b0001 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+
+		/* Armv8.1 */
+		[CPU_FEATURE_HAFDBS] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V8_0_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64mmfr[1], .highbit =  3, .lowbit =  0, .value = 0b0001 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64mmfr[1], .highbit =  3, .lowbit =  0, .value = 0b0010 }, /* As 0b0001, and adds support for hardware update of the Access flag for Block and Page descriptors. Hardware update of dirty state is supported */
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_HPDS] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V8_0_A,
+			.ver_mandatory = FEATURE_LEVEL_ARM_V8_1_A,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64mmfr[1], .highbit = 15, .lowbit = 12, .value = 0b0001 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_LOR] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V8_0_A,
+			.ver_mandatory = FEATURE_LEVEL_ARM_V8_1_A,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64mmfr[1], .highbit = 19, .lowbit = 16, .value = 0b0001 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_LSE] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V8_0_A,
+			.ver_mandatory = FEATURE_LEVEL_ARM_V8_1_A,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64isar[0], .highbit = 23, .lowbit = 20, .value = 0b0010 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_PAN] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V8_0_A,
+			.ver_mandatory = FEATURE_LEVEL_ARM_V8_1_A,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64mmfr[1], .highbit = 23, .lowbit = 20, .value = 0b0001 },
+				{ .aarch32_reg = &raw->arm_id_mmfr[3], .aarch64_reg = NULL,                     .highbit = 19, .lowbit = 16, .value = 0b0001 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_PMUV3P1] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V8_1_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64dfr[0],  .highbit = 11, .lowbit =  8, .value = 0b0100 },
+				{ .aarch32_reg = &raw->arm_id_dfr[0],  .aarch64_reg = NULL,                     .highbit = 27, .lowbit = 24, .value = 0b0100 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_RDM] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V8_0_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64isar[0], .highbit = 31, .lowbit = 28, .value = 0b0001 },
+				{ .aarch32_reg = &raw->arm_id_isar[5], .aarch64_reg = NULL,                     .highbit = 27, .lowbit = 24, .value = 0b0001 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_VHE] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V8_0_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64mmfr[1], .highbit = 11, .lowbit =  8, .value = 0b0001 },
+				{ .aarch32_reg = &raw->arm_id_dfr[0],  .aarch64_reg = &raw->arm_id_aa64dfr[0],  .highbit =  3, .lowbit =  0, .value = 0b0111 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_VMID16] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V8_0_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64mmfr[1], .highbit =  7, .lowbit =  4, .value = 0b0010 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+
+		/* Armv8.2 */
+		[CPU_FEATURE_AA32HPD] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V8_1_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = &raw->arm_id_mmfr[4], .aarch64_reg = NULL,                     .highbit = 19, .lowbit = 16, .value = 0b0001 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_AA32I8MM] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V8_1_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = &raw->arm_id_isar[6], .aarch64_reg = NULL,                     .highbit = 27, .lowbit = 24, .value = 0b0001 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_DPB] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V8_1_A,
+			.ver_mandatory = FEATURE_LEVEL_ARM_V8_2_A,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64isar[1], .highbit =  3, .lowbit =  0, .value = 0b0001 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_DEBUGV8P2] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V8_1_A,
+			.ver_mandatory = FEATURE_LEVEL_ARM_V8_2_A,
+			.fields        = {
+				{ .aarch32_reg = &raw->arm_id_dfr[0],  .aarch64_reg = &raw->arm_id_aa64dfr[0],  .highbit =  3, .lowbit =  0, .value = 0b1000 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_F32MM] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V8_2_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64zfr[0],  .highbit = 55, .lowbit = 52, .value = 0b0001 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_F64MM] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V8_2_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64zfr[0],  .highbit = 59, .lowbit = 56, .value = 0b0001 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_FP16] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V8_2_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64pfr[0],  .highbit = 23, .lowbit = 20, .value = 0b0001 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64pfr[0],  .highbit = 19, .lowbit = 16, .value = 0b0001 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_HPDS2] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V8_1_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64mmfr[1], .highbit = 15, .lowbit = 12, .value = 0b0010 },
+				{ .aarch32_reg = &raw->arm_id_mmfr[4], .aarch64_reg = NULL,                     .highbit = 19, .lowbit = 16, .value = 0b0010 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_I8MM] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V8_1_A,
+			.ver_mandatory = FEATURE_LEVEL_ARM_V8_6_A,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64isar[1], .highbit = 55, .lowbit = 52, .value = 0b0001 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64zfr[0],  .highbit = 47, .lowbit = 44, .value = 0b0001 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_IESB] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V8_1_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64mmfr[2], .highbit = 15, .lowbit = 12, .value = 0b0001 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_LPA] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V8_1_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64mmfr[0], .highbit =  3, .lowbit =  0, .value = 0b0110 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_LSMAOC] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V8_1_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64mmfr[2], .highbit = 11, .lowbit =  8, .value = 0b0001 },
+				{ .aarch32_reg = &raw->arm_id_mmfr[4], .aarch64_reg = NULL,                     .highbit = 23, .lowbit = 20, .value = 0b0001 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_LVA] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V8_1_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64mmfr[2], .highbit = 19, .lowbit = 16, .value = 0b0001 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_PAN2] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V8_1_A,
+			.ver_mandatory = FEATURE_LEVEL_ARM_V8_2_A,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64mmfr[1], .highbit = 23, .lowbit = 20, .value = 0b0010 },
+				{ .aarch32_reg = &raw->arm_id_mmfr[3], .aarch64_reg = NULL,                     .highbit = 19, .lowbit = 16, .value = 0b0010 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_RAS] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V8_0_A,
+			.ver_mandatory = FEATURE_LEVEL_ARM_V8_2_A,
+			.fields        = {
+				{ .aarch32_reg = &raw->arm_id_pfr[0],  .aarch64_reg = &raw->arm_id_aa64pfr[0],  .highbit = 31, .lowbit = 28, .value = 0b0001 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_SHA3] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V8_1_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64isar[0], .highbit = 35, .lowbit = 32, .value = 0b0001 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_SHA512] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V8_1_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64isar[0], .highbit = 15, .lowbit = 12, .value = 0b0010 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_SM3] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V8_1_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64isar[0], .highbit = 39, .lowbit = 36, .value = 0b0001 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_SM4] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V8_1_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64isar[0], .highbit = 43, .lowbit = 40, .value = 0b0001 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_SPE] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V8_1_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64dfr[0],  .highbit = 35, .lowbit = 32, .value = 0b0001 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_SVE] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V8_2_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64pfr[0],  .highbit = 35, .lowbit = 32, .value = 0b0001 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_TTCNP] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V8_1_A,
+			.ver_mandatory = FEATURE_LEVEL_ARM_V8_2_A,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64mmfr[2], .highbit =  3, .lowbit =  0, .value = 0b0001 },
+				{ .aarch32_reg = &raw->arm_id_mmfr[4], .aarch64_reg = NULL,                     .highbit = 15, .lowbit = 12, .value = 0b0001 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_UAO] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V8_1_A,
+			.ver_mandatory = FEATURE_LEVEL_ARM_V8_2_A,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64mmfr[2], .highbit =  7, .lowbit =  4, .value = 0b0001 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_XNX] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V8_1_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64mmfr[1], .highbit = 31, .lowbit = 28, .value = 0b0001 },
+				{ .aarch32_reg = &raw->arm_id_mmfr[4], .aarch64_reg = NULL,                     .highbit = 11, .lowbit =  8, .value = 0b0001 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+
+		/* Armv8.3 */
+		[CPU_FEATURE_CCIDX] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V8_2_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64mmfr[2], .highbit = 23, .lowbit = 20, .value = 0b0001 },
+				{ .aarch32_reg = &raw->arm_id_mmfr[4], .aarch64_reg = NULL,                     .highbit = 27, .lowbit = 24, .value = 0b0001 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_CONSTPACFIELD] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V8_2_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64isar[2], .highbit = 27, .lowbit = 24, .value = 0b0001 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_EPAC] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V8_2_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64isar[1], .highbit = 11, .lowbit =  8, .value = 0b0010 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64isar[1], .highbit =  7, .lowbit =  4, .value = 0b0010 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64isar[2], .highbit = 15, .lowbit = 12, .value = 0b0010 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_FCMA] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V8_2_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64isar[1], .highbit = 19, .lowbit = 16, .value = 0b0001 },
+				{ .aarch32_reg = &raw->arm_id_isar[5], .aarch64_reg = NULL,                     .highbit = 31, .lowbit = 28, .value = 0b0001 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_FPAC] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V8_2_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64isar[1], .highbit = 11, .lowbit =  8, .value = 0b0100 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64isar[1], .highbit =  7, .lowbit =  4, .value = 0b0100 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64isar[2], .highbit = 15, .lowbit = 12, .value = 0b0100 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_FPACCOMBINE] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V8_2_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64isar[1], .highbit = 11, .lowbit =  8, .value = 0b0101 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64isar[1], .highbit =  7, .lowbit =  4, .value = 0b0101 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64isar[2], .highbit = 15, .lowbit = 12, .value = 0b0101 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_JSCVT] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V8_2_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64isar[1], .highbit = 15, .lowbit = 12, .value = 0b0001 },
+				{ .aarch32_reg = &raw->arm_id_isar[6], .aarch64_reg = NULL,                     .highbit =  3, .lowbit =  0, .value = 0b0001 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_LRCPC] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V8_2_A,
+			.ver_mandatory = FEATURE_LEVEL_ARM_V8_3_A,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64isar[1], .highbit = 23, .lowbit = 20, .value = 0b0001 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_PACIMP] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V8_2_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64isar[1], .highbit = 31, .lowbit = 28, .value = 0b0001 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_PACQARMA3] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V8_2_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64isar[2], .highbit = 11, .lowbit =  8, .value = 0b0001 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_PACQARMA5] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V8_2_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64isar[1], .highbit = 27, .lowbit = 24, .value = 0b0001 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_PAUTH] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V8_2_A,
+			.ver_mandatory = FEATURE_LEVEL_ARM_V8_3_A,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64isar[1], .highbit = 11, .lowbit =  8, .value = 0b0001 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64isar[1], .highbit =  7, .lowbit =  4, .value = 0b0001 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64isar[2], .highbit = 15, .lowbit = 12, .value = 0b0001 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_SPEV1P1] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V8_2_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64dfr[0],  .highbit = 35, .lowbit = 32, .value = 0b0010 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+
+		/* Armv8.4 */
+		[CPU_FEATURE_AMUV1] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V8_3_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64pfr[0],  .highbit = 47, .lowbit = 44, .value = 0b0001 },
+				{ .aarch32_reg = &raw->arm_id_pfr[0],  .aarch64_reg = NULL,                     .highbit = 23, .lowbit = 20, .value = 0b0001 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_BBM] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V8_3_A,
+			.ver_mandatory = FEATURE_LEVEL_ARM_V8_4_A,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64mmfr[2], .highbit = 55, .lowbit = 52, .value = 0b0000 }, /* Level 0 support for changing block size is supported */
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64mmfr[2], .highbit = 55, .lowbit = 52, .value = 0b0001 }, /* Level 1 support for changing block size is supported */
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64mmfr[2], .highbit = 55, .lowbit = 52, .value = 0b0010 }, /* Level 2 support for changing block size is supported */
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_DIT] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V8_3_A,
+			.ver_mandatory = FEATURE_LEVEL_ARM_V8_4_A,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64pfr[0],  .highbit = 51, .lowbit = 48, .value = 0b0001 },
+				{ .aarch32_reg = &raw->arm_id_pfr[0],  .aarch64_reg = NULL,                     .highbit = 27, .lowbit = 24, .value = 0b0001 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_DEBUGV8P4] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V8_3_A,
+			.ver_mandatory = FEATURE_LEVEL_ARM_V8_4_A,
+			.fields        = {
+				{ .aarch32_reg = &raw->arm_id_dfr[0],  .aarch64_reg = &raw->arm_id_aa64dfr[0],  .highbit =  3, .lowbit =  0, .value = 0b1001 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_DOTPROD] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V8_1_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64isar[0], .highbit = 47, .lowbit = 44, .value = 0b0001 },
+				{ .aarch32_reg = &raw->arm_id_isar[6], .aarch64_reg = NULL,                     .highbit =  7, .lowbit =  4, .value = 0b0001 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_DOUBLEFAULT] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V8_4_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64pfr[0],  .highbit = 31, .lowbit = 28, .value = 0b0010 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_FHM] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V8_1_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64isar[0], .highbit = 51, .lowbit = 48, .value = 0b0001 },
+				{ .aarch32_reg = &raw->arm_id_isar[6], .aarch64_reg = NULL,                     .highbit = 11, .lowbit =  8, .value = 0b0001 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_FLAGM] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V8_1_A,
+			.ver_mandatory = FEATURE_LEVEL_ARM_V8_4_A,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64isar[0], .highbit = 55, .lowbit = 52, .value = 0b0001 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_IDST] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V8_3_A,
+			.ver_mandatory = FEATURE_LEVEL_ARM_V8_4_A,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64mmfr[2], .highbit = 39, .lowbit = 36, .value = 0b0001 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_LRCPC2] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V8_2_A,
+			.ver_mandatory = FEATURE_LEVEL_ARM_V8_4_A,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64isar[1], .highbit = 23, .lowbit = 20, .value = 0b0010 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_LSE2] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V8_2_A,
+			.ver_mandatory = FEATURE_LEVEL_ARM_V8_4_A,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64mmfr[2], .highbit = 35, .lowbit = 32, .value = 0b0001 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_PMUV3P4] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V8_3_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64dfr[0],  .highbit = 11, .lowbit =  8, .value = 0b0101 },
+				{ .aarch32_reg = &raw->arm_id_dfr[0],  .aarch64_reg = NULL,                     .highbit = 27, .lowbit = 24, .value = 0b0101 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_RASV1P1] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V8_2_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = &raw->arm_id_pfr[0],  .aarch64_reg = &raw->arm_id_aa64pfr[0],  .highbit = 31, .lowbit = 28, .value = 0b0010 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_S2FWB] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V8_3_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64mmfr[2], .highbit = 43, .lowbit = 40, .value = 0b0001 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_SEL2] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V8_3_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64pfr[0],  .highbit = 39, .lowbit = 36, .value = 0b0001 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_TLBIOS] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V8_3_A,
+			.ver_mandatory = FEATURE_LEVEL_ARM_V8_4_A,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64isar[0], .highbit = 59, .lowbit = 56, .value = 0b0001 }, /* Outer Shareable and TLB range maintenance instructions are not implemented */
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64isar[0], .highbit = 59, .lowbit = 56, .value = 0b0010 }, /* Outer Shareable TLB maintenance instructions are implemented */
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_TLBIRANGE] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V8_3_A,
+			.ver_mandatory = FEATURE_LEVEL_ARM_V8_4_A,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64isar[0], .highbit = 59, .lowbit = 56, .value = 0b0010 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_TRF] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V8_3_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64dfr[0],  .highbit = 43, .lowbit = 40, .value = 0b0001 },
+				{ .aarch32_reg = &raw->arm_id_dfr[0],  .aarch64_reg = NULL,                     .highbit = 31, .lowbit = 28, .value = 0b0001 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_TTL] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V8_3_A,
+			.ver_mandatory = FEATURE_LEVEL_ARM_V8_4_A,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64mmfr[2], .highbit = 51, .lowbit = 48, .value = 0b0001 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_TTST] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V8_3_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64mmfr[2], .highbit = 31, .lowbit = 28, .value = 0b0001 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+
+		/* Armv8.5 */
+		[CPU_FEATURE_BTI] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V8_4_A,
+			.ver_mandatory = FEATURE_LEVEL_ARM_V8_5_A,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64pfr[1],  .highbit =  3, .lowbit =  0, .value = 0b0001 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_CSV2] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V8_0_A,
+			.ver_mandatory = FEATURE_LEVEL_ARM_V8_5_A,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64pfr[0],  .highbit = 59, .lowbit = 56, .value = 0b0001 },
+				{ .aarch32_reg = &raw->arm_id_pfr[0],  .aarch64_reg = NULL,                     .highbit = 19, .lowbit = 16, .value = 0b0001 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_CSV3] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V8_0_A,
+			.ver_mandatory = FEATURE_LEVEL_ARM_V8_5_A,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64pfr[0],  .highbit = 63, .lowbit = 60, .value = 0b0001 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_DPB2] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V8_1_A,
+			.ver_mandatory = FEATURE_LEVEL_ARM_V8_5_A,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64isar[1], .highbit =  3, .lowbit =  0, .value = 0b0010 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_E0PD] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V8_4_A,
+			.ver_mandatory = FEATURE_LEVEL_ARM_V8_5_A,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64mmfr[2], .highbit = 63, .lowbit = 60, .value = 0b0001 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_EVT] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V8_2_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64mmfr[2], .highbit = 59, .lowbit = 56, .value = 0b0001 }, /* HCR_EL2.{TOCU, TICAB, TID4} traps are supported. HCR_EL2.{TTLBOS,TTLBIS} traps are not supported */
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64mmfr[2], .highbit = 59, .lowbit = 56, .value = 0b0010 }, /* HCR_EL2.{TTLBOS, TTLBIS, TOCU, TICAB, TID4} traps are supported */
+				{ .aarch32_reg = &raw->arm_id_mmfr[4], .aarch64_reg = NULL,                     .highbit = 31, .lowbit = 28, .value = 0b0001 }, /* HCR2.{TOCU, TICAB, TID4} traps are supported. HCR2.TTLBIS trap is not supported */
+				{ .aarch32_reg = &raw->arm_id_mmfr[4], .aarch64_reg = NULL,                     .highbit = 31, .lowbit = 28, .value = 0b0010 }, /* HCR2.{TTLBIS, TOCU, TICAB, TID4} traps are supported */
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_EXS] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V8_4_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64mmfr[0], .highbit = 47, .lowbit = 44, .value = 0b0001 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_FRINTTS] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V8_4_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64isar[1], .highbit = 35, .lowbit = 32, .value = 0b0001 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_FLAGM2] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V8_4_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64isar[0], .highbit = 55, .lowbit = 52, .value = 0b0010 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_MTE] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V8_4_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64pfr[1],  .highbit = 11, .lowbit =  8, .value = 0b0001 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_MTE2] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V8_4_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64pfr[1],  .highbit = 11, .lowbit =  8, .value = 0b0010 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_PMUV3P5] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V8_4_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64dfr[0],  .highbit = 11, .lowbit =  8, .value = 0b0110 },
+				{ .aarch32_reg = &raw->arm_id_dfr[0],  .aarch64_reg = NULL,                     .highbit = 27, .lowbit = 24, .value = 0b0110 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_RNG] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V8_4_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64isar[0], .highbit = 63, .lowbit = 60, .value = 0b0001 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_RNG_TRAP] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V8_4_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64pfr[1], .highbit = 31, .lowbit = 28, .value = 0b0001 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_SB] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V8_0_A,
+			.ver_mandatory = FEATURE_LEVEL_ARM_V8_5_A,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64isar[1], .highbit = 39, .lowbit = 36, .value = 0b0001 },
+				{ .aarch32_reg = &raw->arm_id_isar[6], .aarch64_reg = NULL,                     .highbit = 15, .lowbit = 12, .value = 0b0001 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_SPECRES] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V8_0_A,
+			.ver_mandatory = FEATURE_LEVEL_ARM_V8_5_A,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64isar[1], .highbit = 43, .lowbit = 40, .value = 0b0001 },
+				{ .aarch32_reg = &raw->arm_id_isar[6], .aarch64_reg = NULL,                     .highbit = 19, .lowbit = 16, .value = 0b0001 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_SSBS] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V8_0_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg =  &raw->arm_id_pfr[2], .aarch64_reg = &raw->arm_id_aa64pfr[1],  .highbit =  7, .lowbit =  4, .value = 0b0001 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_SSBS2] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V8_0_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64pfr[1],  .highbit =  7, .lowbit =  4, .value = 0b0010 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+
+		/* Armv8.6 */
+		[CPU_FEATURE_AA32BF16] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V8_2_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = &raw->arm_id_isar[6], .aarch64_reg = NULL,                     .highbit = 23, .lowbit = 20, .value = 0b0001 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_AMUV1P1] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V8_5_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64pfr[0],  .highbit = 47, .lowbit = 44, .value = 0b0010 },
+				{ .aarch32_reg = &raw->arm_id_pfr[0],  .aarch64_reg = NULL,                     .highbit = 23, .lowbit = 20, .value = 0b0010 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_BF16] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V8_2_A,
+			.ver_mandatory = FEATURE_LEVEL_ARM_V8_6_A,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64isar[1], .highbit = 47, .lowbit = 44, .value = 0b0001 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64zfr[0],  .highbit = 23, .lowbit = 20, .value = 0b0001 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_DGH] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V8_0_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64isar[1], .highbit = 51, .lowbit = 48, .value = 0b0001 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_ECV] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V8_5_A,
+			.ver_mandatory = FEATURE_LEVEL_ARM_V8_6_A,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64mmfr[0], .highbit = 63, .lowbit = 60, .value = 0b0001 }, /* Enhanced Counter Virtualization is implemented. Supports CNTHCTL_EL2.{EL1TVT, EL1TVCT, EL1NVPCT, EL1NVVCT, EVNTIS}, CNTKCTL_EL1.EVNTIS, CNTPCTSS_EL0 counter views, and CNTVCTSS_EL0 counter views. Extends the PMSCR_EL1.PCT, PMSCR_EL2.PCT, TRFCR_EL1.TS, and TRFCR_EL2.TS fields */
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64mmfr[0], .highbit = 63, .lowbit = 60, .value = 0b0010 }, /* As 0b0001, and also includes support for CNTHCTL_EL2.ECV and CNTPOFF_EL2 */
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_FGT] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V8_5_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64mmfr[0], .highbit = 59, .lowbit = 56, .value = 0b0001 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_HPMN0] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V8_5_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64dfr[0],  .highbit = 63, .lowbit = 60, .value = 0b0001 },
+				{ .aarch32_reg = &raw->arm_id_dfr[0],  .aarch64_reg = NULL,                     .highbit =  7, .lowbit =  4, .value = 0b0001 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_MTPMU] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V8_5_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64dfr[0],  .highbit = 51, .lowbit = 48, .value = 0b0001 },
+				{ .aarch32_reg = &raw->arm_id_dfr[1],  .aarch64_reg = NULL,                     .highbit =  3, .lowbit =  0, .value = 0b0001 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_PAUTH2] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V8_2_A,
+			.ver_mandatory = FEATURE_LEVEL_ARM_V8_6_A,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64isar[1], .highbit = 11, .lowbit =  8, .value = 0b0011 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64isar[1], .highbit =  7, .lowbit =  4, .value = 0b0011 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64isar[2], .highbit = 15, .lowbit = 12, .value = 0b0011 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_TWED] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V8_5_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64mmfr[1], .highbit = 35, .lowbit = 32, .value = 0b0001 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+
+		/* Armv8.7 */
+		[CPU_FEATURE_AFP] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V8_6_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64mmfr[1], .highbit = 47, .lowbit = 44, .value = 0b0001 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_EBF16] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V8_2_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64isar[1], .highbit = 47, .lowbit = 44, .value = 0b0010 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64zfr[0],  .highbit = 23, .lowbit = 20, .value = 0b0010 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_HCX] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V8_6_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64mmfr[1], .highbit = 43, .lowbit = 40, .value = 0b0001 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_LPA2] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V8_6_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64mmfr[0], .highbit = 31, .lowbit = 28, .value = 0b0001 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64mmfr[0], .highbit = 23, .lowbit = 20, .value = 0b0001 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_LS64] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V8_6_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64isar[1], .highbit = 63, .lowbit = 60, .value = 0b0001 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_LS64_ACCDATA] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V8_6_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64isar[1], .highbit = 63, .lowbit = 60, .value = 0b0011 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_LS64_V] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V8_6_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64isar[1], .highbit = 63, .lowbit = 60, .value = 0b0010 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_MTE3] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V8_5_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64pfr[1],  .highbit = 11, .lowbit =  8, .value = 0b0011 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_MTE_ASYM_FAULT] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V8_7_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64pfr[1],  .highbit = 11, .lowbit =  8, .value = 0b0011 }, /* As 0b0010, except that support for FEAT_MTE_ASYNC is mandatory, and adds support for Asymmetric Tag Check Fault handling, identified as FEAT_MTE_ASYM_FAULT */
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_PAN3] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V8_0_A,
+			.ver_mandatory = FEATURE_LEVEL_ARM_V8_7_A,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64mmfr[1], .highbit = 23, .lowbit = 20, .value = 0b0011 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_PMUV3P7] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V8_6_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64dfr[0],  .highbit = 11, .lowbit =  8, .value = 0b0111 },
+				{ .aarch32_reg = &raw->arm_id_dfr[0],  .aarch64_reg = NULL,                     .highbit = 27, .lowbit = 24, .value = 0b0111 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_RPRES] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V8_6_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64isar[2], .highbit =  7, .lowbit =  4, .value = 0b0001 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_SPEV1P2] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V8_6_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64dfr[0],  .highbit = 35, .lowbit = 32, .value = 0b0011 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_WFXT] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V8_6_A,
+			.ver_mandatory = FEATURE_LEVEL_ARM_V8_7_A,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64isar[2], .highbit =  3, .lowbit =  0, .value = 0b0010 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_XS] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V8_6_A,
+			.ver_mandatory = FEATURE_LEVEL_ARM_V8_7_A,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64isar[1], .highbit = 59, .lowbit = 56, .value = 0b0001 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+
+		/* Armv8.8 */
+		[CPU_FEATURE_CMOW] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V8_7_A,
+			.ver_mandatory = FEATURE_LEVEL_ARM_V8_8_A,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64mmfr[1], .highbit = 59, .lowbit = 56, .value = 0b0001 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_DEBUGV8P8] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V8_7_A,
+			.ver_mandatory = FEATURE_LEVEL_ARM_V8_8_A,
+			.fields        = {
+				{ .aarch32_reg = &raw->arm_id_dfr[0],  .aarch64_reg = &raw->arm_id_aa64dfr[0],  .highbit =  3, .lowbit =  0, .value = 0b1010 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_HBC] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V8_7_A,
+			.ver_mandatory = FEATURE_LEVEL_ARM_V8_8_A,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64isar[2], .highbit = 23, .lowbit = 20, .value = 0b0001 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_MOPS] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V8_7_A,
+			.ver_mandatory = FEATURE_LEVEL_ARM_V8_8_A,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64isar[2], .highbit = 19, .lowbit = 16, .value = 0b0001 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_NMI] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V8_7_A,
+			.ver_mandatory = FEATURE_LEVEL_ARM_V8_8_A,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64pfr[1],  .highbit = 39, .lowbit = 36, .value = 0b0001 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_PMUV3P8] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V8_7_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64dfr[0],  .highbit = 11, .lowbit =  8, .value = 0b1000 },
+				{ .aarch32_reg = &raw->arm_id_dfr[0],  .aarch64_reg = NULL,                     .highbit = 27, .lowbit = 24, .value = 0b1000 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_SCTLR2] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V8_0_A,
+			.ver_mandatory = FEATURE_LEVEL_ARM_V8_9_A,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64mmfr[3], .highbit =  7, .lowbit =  4, .value = 0b0001 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_SPEV1P3] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V8_7_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64dfr[0],  .highbit = 35, .lowbit = 32, .value = 0b0100 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_TCR2] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V8_0_A,
+			.ver_mandatory = FEATURE_LEVEL_ARM_V8_9_A,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64mmfr[3], .highbit =  3, .lowbit =  0, .value = 0b0001 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_TIDCP1] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V8_7_A,
+			.ver_mandatory = FEATURE_LEVEL_ARM_V8_8_A,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64mmfr[1], .highbit = 55, .lowbit = 52, .value = 0b0001 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+
+		/* Armv8.9 */
+		[CPU_FEATURE_ADERR] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V8_8_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64mmfr[3], .highbit = 59, .lowbit = 56, .value = 0b0010 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64mmfr[3], .highbit = 55, .lowbit = 52, .value = 0b0010 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_AIE] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V8_8_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64mmfr[3], .highbit = 27, .lowbit = 24, .value = 0b0001 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_ANERR] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V8_8_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64mmfr[3], .highbit = 47, .lowbit = 44, .value = 0b0010 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64mmfr[3], .highbit = 43, .lowbit = 40, .value = 0b0010 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_ATS1A] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V8_8_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64isar[2], .highbit = 63, .lowbit = 60, .value = 0b0001 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_CLRBHB] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V8_0_A,
+			.ver_mandatory = FEATURE_LEVEL_ARM_V8_9_A,
+			.fields        = {
+				{ .aarch32_reg = &raw->arm_id_isar[6], .aarch64_reg = &raw->arm_id_aa64isar[2], .highbit = 31, .lowbit = 28, .value = 0b0001 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_CSSC] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V8_7_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64isar[2], .highbit = 55, .lowbit = 52, .value = 0b0001 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_DEBUGV8P9] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V8_8_A,
+			.ver_mandatory = FEATURE_LEVEL_ARM_V8_9_A,
+			.fields        = {
+				{ .aarch32_reg = &raw->arm_id_dfr[0],  .aarch64_reg = &raw->arm_id_aa64dfr[0],  .highbit =  3, .lowbit =  0, .value = 0b1011 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_DOUBLEFAULT2] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V8_8_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64pfr[1],  .highbit = 59, .lowbit = 56, .value = 0b0001 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_ECBHB] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V8_0_A,
+			.ver_mandatory = FEATURE_LEVEL_ARM_V8_9_A,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64mmfr[1], .highbit = 63, .lowbit = 60, .value = 0b0001 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_FGT2] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V8_8_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64mmfr[0], .highbit = 59, .lowbit = 56, .value = 0b0010 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_HAFT] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V8_7_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64mmfr[1], .highbit =  3, .lowbit =  0, .value = 0b0011 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_LRCPC3] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V8_2_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64isar[1], .highbit = 23, .lowbit = 20, .value = 0b0011 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_MTE_PERM] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V8_7_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64pfr[2],  .highbit =  3, .lowbit =  0, .value = 0b0001 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_MTE_STORE_ONLY] = { /* sub-feature of FEAT_MTE4 */
+			.ver_optional  = FEATURE_LEVEL_ARM_V8_7_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64pfr[2],  .highbit =  7, .lowbit =  4, .value = 0b0001 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_MTE_TAGGED_FAR] = { /* sub-feature of FEAT_MTE4 */
+			.ver_optional  = FEATURE_LEVEL_ARM_V8_7_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64pfr[2],  .highbit = 11, .lowbit =  8, .value = 0b0001 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_PFAR] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V8_8_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64pfr[1],  .highbit = 63, .lowbit = 60, .value = 0b0001 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_PMUV3_ICNTR] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V8_8_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64dfr[1],  .highbit = 39, .lowbit = 36, .value = 0b0001 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_PMUV3_SS] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V8_8_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64dfr[0],  .highbit = 19, .lowbit = 16, .value = 0b0001 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_PMUV3P9] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V8_8_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64dfr[0],  .highbit = 11, .lowbit =  8, .value = 0b1001 },
+				{ .aarch32_reg = &raw->arm_id_dfr[0],  .aarch64_reg = NULL,                     .highbit = 27, .lowbit = 24, .value = 0b1001 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_PRFMSLC] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V8_0_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64isar[2], .highbit = 43, .lowbit = 40, .value = 0b0001 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_RASV2] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V8_8_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = &raw->arm_id_pfr[0],  .aarch64_reg = &raw->arm_id_aa64pfr[0],  .highbit = 31, .lowbit = 28, .value = 0b0011 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_RPRFM] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V8_0_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64isar[2], .highbit = 51, .lowbit = 48, .value = 0b0001 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_S1PIE] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V8_8_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64mmfr[3], .highbit = 11, .lowbit =  8, .value = 0b0001 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_S1POE] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V8_8_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64mmfr[3], .highbit = 19, .lowbit = 16, .value = 0b0001 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_S2PIE] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V8_8_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64mmfr[3], .highbit = 15, .lowbit = 12, .value = 0b0001 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_S2POE] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V8_8_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64mmfr[3], .highbit = 23, .lowbit = 20, .value = 0b0001 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_SPECRES2] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V8_0_A,
+			.ver_mandatory = FEATURE_LEVEL_ARM_V8_9_A,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64isar[1], .highbit = 43, .lowbit = 40, .value = 0b0010 },
+				{ .aarch32_reg = &raw->arm_id_isar[6], .aarch64_reg = NULL,                     .highbit = 19, .lowbit = 16, .value = 0b0010 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_SPE_DPFZS] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V8_6_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64dfr[1],  .highbit = 55, .lowbit = 52, .value = 0b0001 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_SPEV1P4] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V8_8_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64dfr[0],  .highbit = 35, .lowbit = 32, .value = 0b0101 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_SPMU] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V8_8_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64dfr[1],  .highbit = 35, .lowbit = 32, .value = 0b0001 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_THE] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V8_8_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64dfr[1],  .highbit = 51, .lowbit = 48, .value = 0b0001 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+
+		/* Armv9.0 */
+		[CPU_FEATURE_SVE2] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V9_0_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64zfr[0],  .highbit =  3, .lowbit =  0, .value = 0b0001 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_SVE_AES] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V9_0_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64zfr[0],  .highbit =  7, .lowbit =  4, .value = 0b0001 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_SVE_BITPERM] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V9_0_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64zfr[0],  .highbit = 19, .lowbit = 16, .value = 0b0001 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_SVE_PMULL128] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V9_0_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64zfr[0],  .highbit =  7, .lowbit =  4, .value = 0b0010 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_SVE_SHA3] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V9_0_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64zfr[0],  .highbit = 35, .lowbit = 32, .value = 0b0001 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_SVE_SM4] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V9_0_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64zfr[0],  .highbit = 43, .lowbit = 40, .value = 0b0001 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_TME] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V9_0_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64isar[0], .highbit = 27, .lowbit = 24, .value = 0b0001 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_TRBE] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V9_0_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64dfr[0],  .highbit = 47, .lowbit = 44, .value = 0b0001 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+
+		/* Armv9.2 */
+		[CPU_FEATURE_BRBE] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V9_1_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64dfr[0],  .highbit = 55, .lowbit = 52, .value = 0b0001 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_RME] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V9_1_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64pfr[0],  .highbit = 55, .lowbit = 52, .value = 0b0001 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_SME] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V9_2_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64pfr[1],  .highbit = 27, .lowbit = 24, .value = 0b0001 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_SME_F64F64] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V9_2_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64smfr[0], .highbit = 48, .lowbit = 48, .value = 0b1    },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_SME_FA64] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V9_2_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64smfr[0], .highbit = 63, .lowbit = 63, .value = 0b1    },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_SME_I16I64] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V9_2_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64smfr[0], .highbit = 55, .lowbit = 52, .value = 0b1111 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+
+		/* Armv9.3 */
+		[CPU_FEATURE_BRBEV1P1] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V9_2_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64dfr[0],  .highbit = 55, .lowbit = 52, .value = 0b0010 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_MEC] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V9_2_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64mmfr[3], .highbit = 31, .lowbit = 28, .value = 0b0001 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_SME2] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V9_2_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64smfr[0], .highbit = 59, .lowbit = 56, .value = 0b0001 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64pfr[1],  .highbit = 27, .lowbit = 24, .value = 0b0010 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+
+		/* Armv9.4 */
+		[CPU_FEATURE_ABLE] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V9_3_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64dfr[1],  .highbit = 43, .lowbit = 40, .value = 0b0001 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_BWE] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V9_3_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64dfr[1],  .highbit = 43, .lowbit = 40, .value = 0b0001 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_D128] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V9_3_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64mmfr[3], .highbit = 35, .lowbit = 32, .value = 0b0001 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_EBEP] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V9_3_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64dfr[1],  .highbit = 51, .lowbit = 48, .value = 0b0001 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_GCS] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V9_3_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64pfr[1],  .highbit = 47, .lowbit = 44, .value = 0b0001 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_ITE] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V9_3_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64dfr[1],  .highbit = 47, .lowbit = 44, .value = 0b0001 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_LSE128] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V9_3_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64dfr[1],  .highbit = 23, .lowbit = 20, .value = 0b0011 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_LVA3] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V9_3_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64mmfr[2], .highbit = 19, .lowbit = 16, .value = 0b0010 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_SEBEP] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V9_3_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64dfr[0],  .highbit = 27, .lowbit = 24, .value = 0b0001 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_SME2P1] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V9_2_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64smfr[0], .highbit = 59, .lowbit = 56, .value = 0b0010 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_SME_F16F16] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V9_2_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64smfr[0], .highbit = 42, .lowbit = 42, .value = 0b1    },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_SVE2P1] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V9_2_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64zfr[0],  .highbit =  3, .lowbit =  0, .value = 0b0010 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_SVE_B16B16] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V9_2_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64smfr[0], .highbit = 43, .lowbit = 43, .value = 0b1    },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64zfr[0],  .highbit = 27, .lowbit = 24, .value = 0b0001 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_SYSINSTR128] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V9_3_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64isar[2], .highbit = 39, .lowbit = 36, .value = 0b0001 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_SYSREG128] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V9_3_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64isar[2], .highbit = 35, .lowbit = 32, .value = 0b0001 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_TRBE_EXT] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V9_3_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64dfr[0],  .highbit = 59, .lowbit = 56, .value = 0b0001 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
 	};
 
-	const struct arm_feature_map_t matchtable_id_aa64isar[MAX_ARM_ID_AA64ISAR_REGS][MAX_MATCHTABLE_ITEMS] = {
-		[0] /* ID_AA64ISAR0 */ = {
-			{ 63, 60, 0b0001, CPU_FEATURE_RNG,       FEATURE_LEVEL_ARM_V8_4_A, -1 },
-			{ 59, 56, 0b0001, CPU_FEATURE_TLBIOS,    FEATURE_LEVEL_ARM_V8_3_A, FEATURE_LEVEL_ARM_V8_4_A }, /* Outer Shareable and TLB range maintenance instructions are not implemented */
-			{ 59, 56, 0b0010, CPU_FEATURE_TLBIOS,    FEATURE_LEVEL_ARM_V8_3_A, FEATURE_LEVEL_ARM_V8_4_A }, /* Outer Shareable TLB maintenance instructions are implemented */
-			{ 59, 56, 0b0010, CPU_FEATURE_TLBIRANGE, FEATURE_LEVEL_ARM_V8_3_A, FEATURE_LEVEL_ARM_V8_4_A }, /* Outer Shareable TLB maintenance instructions are implemented */
-			{ 55, 52, 0b0001, CPU_FEATURE_FLAGM,     FEATURE_LEVEL_ARM_V8_1_A, FEATURE_LEVEL_ARM_V8_4_A },
-			{ 55, 52, 0b0010, CPU_FEATURE_FLAGM2,    FEATURE_LEVEL_ARM_V8_4_A, -1 },
-			{ 51, 48, 0b0001, CPU_FEATURE_FHM,       FEATURE_LEVEL_ARM_V8_1_A, -1 },
-			{ 47, 44, 0b0001, CPU_FEATURE_DOTPROD,   FEATURE_LEVEL_ARM_V8_1_A, -1 },
-			{ 43, 40, 0b0001, CPU_FEATURE_SM4,       FEATURE_LEVEL_ARM_V8_1_A, -1 },
-			{ 39, 36, 0b0001, CPU_FEATURE_SM3,       FEATURE_LEVEL_ARM_V8_1_A, -1 },
-			{ 35, 32, 0b0001, CPU_FEATURE_SHA3,      FEATURE_LEVEL_ARM_V8_1_A, -1 },
-			{ 31, 28, 0b0001, CPU_FEATURE_RDM,       FEATURE_LEVEL_ARM_V8_0_A, -1 },
-			{ 27, 24, 0b0001, CPU_FEATURE_TME,       FEATURE_LEVEL_ARM_V9_0_A, -1 },
-			{ 23, 20, 0b0010, CPU_FEATURE_LSE,       FEATURE_LEVEL_ARM_V8_0_A, FEATURE_LEVEL_ARM_V8_1_A },
-			{ 23, 20, 0b0011, CPU_FEATURE_LSE128,    FEATURE_LEVEL_ARM_V9_3_A, -1 },
-			{ 19, 16, 0b0001, CPU_FEATURE_CRC32,     FEATURE_LEVEL_ARM_V8_0_A, FEATURE_LEVEL_ARM_V8_1_A },
-			{ 15, 12, 0b0001, CPU_FEATURE_SHA256,    FEATURE_LEVEL_ARM_V8_0_A, -1 },
-			{ 15, 12, 0b0010, CPU_FEATURE_SHA512,    FEATURE_LEVEL_ARM_V8_1_A, -1 },
-			{ 11,  8, 0b0001, CPU_FEATURE_SHA1,      FEATURE_LEVEL_ARM_V8_0_A, -1 },
-			{  7,  4, 0b0001, CPU_FEATURE_AES,       FEATURE_LEVEL_ARM_V8_0_A, -1 },
-			{  7,  4, 0b0010, CPU_FEATURE_PMULL,     FEATURE_LEVEL_ARM_V8_0_A, -1 },
-			{ -1, -1,     -1, -1,                    -1,                       -1 }
-		},
-		[1] /* ID_AA64ISAR1 */ = {
-			{ 63, 60, 0b0001, CPU_FEATURE_LS64,         FEATURE_LEVEL_ARM_V8_6_A, -1 },
-			{ 63, 60, 0b0010, CPU_FEATURE_LS64_V,       FEATURE_LEVEL_ARM_V8_6_A, -1 },
-			{ 63, 60, 0b0011, CPU_FEATURE_LS64_ACCDATA, FEATURE_LEVEL_ARM_V8_6_A, -1 },
-			{ 59, 56, 0b0001, CPU_FEATURE_XS,           FEATURE_LEVEL_ARM_V8_6_A, FEATURE_LEVEL_ARM_V8_7_A },
-			{ 55, 52, 0b0001, CPU_FEATURE_I8MM,         FEATURE_LEVEL_ARM_V8_1_A, FEATURE_LEVEL_ARM_V8_6_A },
-			{ 51, 48, 0b0001, CPU_FEATURE_DGH,          FEATURE_LEVEL_ARM_V8_0_A, -1 },
-			{ 47, 44, 0b0001, CPU_FEATURE_BF16,         FEATURE_LEVEL_ARM_V8_2_A, FEATURE_LEVEL_ARM_V8_6_A },
-			{ 47, 44, 0b0010, CPU_FEATURE_EBF16,        FEATURE_LEVEL_ARM_V8_2_A, -1 },
-			{ 43, 40, 0b0001, CPU_FEATURE_SPECRES,      FEATURE_LEVEL_ARM_V8_0_A, FEATURE_LEVEL_ARM_V8_5_A },
-			{ 43, 40, 0b0010, CPU_FEATURE_SPECRES2,     FEATURE_LEVEL_ARM_V8_0_A, FEATURE_LEVEL_ARM_V8_9_A },
-			{ 39, 36, 0b0001, CPU_FEATURE_SB,           FEATURE_LEVEL_ARM_V8_0_A, FEATURE_LEVEL_ARM_V8_5_A },
-			{ 35, 32, 0b0001, CPU_FEATURE_FRINTTS,      FEATURE_LEVEL_ARM_V8_4_A, -1 },
-			{ 31, 28, 0b0001, CPU_FEATURE_PACIMP,       FEATURE_LEVEL_ARM_V8_2_A, -1 },
-			{ 27, 24, 0b0001, CPU_FEATURE_PACQARMA5,    FEATURE_LEVEL_ARM_V8_2_A, -1 },
-			{ 23, 20, 0b0001, CPU_FEATURE_LRCPC,        FEATURE_LEVEL_ARM_V8_2_A, FEATURE_LEVEL_ARM_V8_3_A },
-			{ 23, 20, 0b0010, CPU_FEATURE_LRCPC2,       FEATURE_LEVEL_ARM_V8_2_A, FEATURE_LEVEL_ARM_V8_4_A },
-			{ 23, 20, 0b0011, CPU_FEATURE_LRCPC3,       FEATURE_LEVEL_ARM_V8_2_A, -1 },
-			{ 19, 16, 0b0001, CPU_FEATURE_FCMA,         FEATURE_LEVEL_ARM_V8_2_A, -1 },
-			{ 15, 12, 0b0001, CPU_FEATURE_JSCVT,        FEATURE_LEVEL_ARM_V8_2_A, -1 },
-			{ 11,  8, 0b0001, CPU_FEATURE_PAUTH,        FEATURE_LEVEL_ARM_V8_2_A, FEATURE_LEVEL_ARM_V8_3_A },
-			{ 11,  8, 0b0010, CPU_FEATURE_EPAC,         FEATURE_LEVEL_ARM_V8_2_A, -1 },
-			{ 11,  8, 0b0011, CPU_FEATURE_PAUTH2,       FEATURE_LEVEL_ARM_V8_2_A, FEATURE_LEVEL_ARM_V8_6_A },
-			{ 11,  8, 0b0100, CPU_FEATURE_FPAC,         FEATURE_LEVEL_ARM_V8_2_A, -1 },
-			{ 11,  8, 0b0101, CPU_FEATURE_FPACCOMBINE,  FEATURE_LEVEL_ARM_V8_2_A, -1 },
-			{  7,  4, 0b0001, CPU_FEATURE_PAUTH,        FEATURE_LEVEL_ARM_V8_2_A, FEATURE_LEVEL_ARM_V8_3_A },
-			{  7,  4, 0b0010, CPU_FEATURE_EPAC,         FEATURE_LEVEL_ARM_V8_2_A, -1 },
-			{  7,  4, 0b0011, CPU_FEATURE_PAUTH2,       FEATURE_LEVEL_ARM_V8_2_A, FEATURE_LEVEL_ARM_V8_6_A },
-			{  7,  4, 0b0100, CPU_FEATURE_FPAC,         FEATURE_LEVEL_ARM_V8_2_A, -1 },
-			{  7,  4, 0b0101, CPU_FEATURE_FPACCOMBINE,  FEATURE_LEVEL_ARM_V8_2_A, -1 },
-			{  3,  0, 0b0001, CPU_FEATURE_DPB,          FEATURE_LEVEL_ARM_V8_1_A, FEATURE_LEVEL_ARM_V8_2_A },
-			{  3,  0, 0b0010, CPU_FEATURE_DPB2,         FEATURE_LEVEL_ARM_V8_1_A, FEATURE_LEVEL_ARM_V8_5_A },
-			{ -1, -1,     -1, -1,                       -1,                       -1 }
-		},
-		[2] /* ID_AA64ISAR2 */ = {
-			{ 63, 60, 0b0001, CPU_FEATURE_ATS1A,         FEATURE_LEVEL_ARM_V8_8_A, -1 },
-			{ 55, 52, 0b0001, CPU_FEATURE_CSSC,          FEATURE_LEVEL_ARM_V8_7_A, -1 },
-			{ 51, 48, 0b0001, CPU_FEATURE_RPRFM,         FEATURE_LEVEL_ARM_V8_0_A, -1 },
-			{ 43, 40, 0b0001, CPU_FEATURE_PRFMSLC,       FEATURE_LEVEL_ARM_V8_0_A, -1 },
-			{ 39, 36, 0b0001, CPU_FEATURE_SYSINSTR128,   FEATURE_LEVEL_ARM_V9_3_A, -1 },
-			{ 35, 32, 0b0001, CPU_FEATURE_SYSREG128,     FEATURE_LEVEL_ARM_V9_3_A, -1 },
-			{ 31, 28, 0b0001, CPU_FEATURE_CLRBHB,        FEATURE_LEVEL_ARM_V8_0_A, FEATURE_LEVEL_ARM_V8_9_A },
-			{ 27, 24, 0b0001, CPU_FEATURE_CONSTPACFIELD, FEATURE_LEVEL_ARM_V8_2_A, -1 },
-			{ 23, 20, 0b0001, CPU_FEATURE_HBC,           FEATURE_LEVEL_ARM_V8_7_A, FEATURE_LEVEL_ARM_V8_8_A },
-			{ 19, 16, 0b0001, CPU_FEATURE_MOPS,          FEATURE_LEVEL_ARM_V8_7_A, FEATURE_LEVEL_ARM_V8_8_A },
-			{ 15, 12, 0b0001, CPU_FEATURE_PAUTH,         FEATURE_LEVEL_ARM_V8_2_A, -1 },
-			{ 15, 12, 0b0010, CPU_FEATURE_EPAC,          FEATURE_LEVEL_ARM_V8_2_A, -1 },
-			{ 15, 12, 0b0011, CPU_FEATURE_PAUTH2,        FEATURE_LEVEL_ARM_V8_2_A, FEATURE_LEVEL_ARM_V8_6_A },
-			{ 15, 12, 0b0100, CPU_FEATURE_FPAC,          FEATURE_LEVEL_ARM_V8_2_A, -1 },
-			{ 15, 12, 0b0101, CPU_FEATURE_FPACCOMBINE,   FEATURE_LEVEL_ARM_V8_2_A, -1 },
-			{ 11,  8, 0b0001, CPU_FEATURE_PACQARMA3,     FEATURE_LEVEL_ARM_V8_2_A, -1 },
-			{  7,  4, 0b0001, CPU_FEATURE_RPRES,         FEATURE_LEVEL_ARM_V8_6_A, -1 },
-			{  3,  0, 0b0010, CPU_FEATURE_WFXT,          FEATURE_LEVEL_ARM_V8_6_A, FEATURE_LEVEL_ARM_V8_7_A },
-			{ -1, -1,     -1, -1,                        -1,                       -1 }
-		}
-	};
-
-	const struct arm_feature_map_t matchtable_id_aa64mmfr[MAX_ARM_ID_AA64MMFR_REGS][MAX_MATCHTABLE_ITEMS] = {
-		[0] /* ID_AA64MMFR0 */ = {
-			{ 63, 60, 0b0001, CPU_FEATURE_ECV,         FEATURE_LEVEL_ARM_V8_5_A, FEATURE_LEVEL_ARM_V8_6_A },
-			{ 63, 60, 0b0010, CPU_FEATURE_ECV,         FEATURE_LEVEL_ARM_V8_5_A, FEATURE_LEVEL_ARM_V8_6_A },
-			{ 59, 56, 0b0001, CPU_FEATURE_FGT,         FEATURE_LEVEL_ARM_V8_5_A, -1 },
-			{ 59, 56, 0b0010, CPU_FEATURE_FGT2,        FEATURE_LEVEL_ARM_V8_8_A, -1 },
-			{ 47, 44, 0b0001, CPU_FEATURE_EXS,         FEATURE_LEVEL_ARM_V8_4_A, -1 },
-			{ 31, 28, 0b0001, CPU_FEATURE_LPA2,        FEATURE_LEVEL_ARM_V8_6_A, -1 },
-			{ 23, 20, 0b0001, CPU_FEATURE_LPA2,        FEATURE_LEVEL_ARM_V8_6_A, -1 },
-			{ 19, 16, 0b0001, CPU_FEATURE_MIXEDENDEL0, FEATURE_LEVEL_ARM_V8_0_A, -1 },
-			{ 11,  8, 0b0001, CPU_FEATURE_MIXEDEND,    FEATURE_LEVEL_ARM_V8_0_A, -1 },
-			{  7,  4, 0b0010, CPU_FEATURE_ASID16,      FEATURE_LEVEL_ARM_V8_0_A, -1 },
-			{  3,  0, 0b0110, CPU_FEATURE_LPA,         FEATURE_LEVEL_ARM_V8_1_A, -1 },
-			{ -1, -1,     -1, -1,                      -1,                       -1 }
-		},
-		[1] /* ID_AA64MMFR1 */ = {
-			{ 63, 60, 0b0001, CPU_FEATURE_ECBHB,  FEATURE_LEVEL_ARM_V8_0_A, FEATURE_LEVEL_ARM_V8_9_A },
-			{ 59, 56, 0b0001, CPU_FEATURE_CMOW,   FEATURE_LEVEL_ARM_V8_7_A, FEATURE_LEVEL_ARM_V8_8_A },
-			{ 55, 52, 0b0001, CPU_FEATURE_TIDCP1, FEATURE_LEVEL_ARM_V8_7_A, FEATURE_LEVEL_ARM_V8_8_A },
-			{ 47, 44, 0b0001, CPU_FEATURE_AFP,    FEATURE_LEVEL_ARM_V8_6_A, -1 },
-			{ 43, 40, 0b0001, CPU_FEATURE_HCX,    FEATURE_LEVEL_ARM_V8_6_A, -1 },
-			{ 39, 36, 0b0010, CPU_FEATURE_ETS2,   FEATURE_LEVEL_ARM_V8_0_A, FEATURE_LEVEL_ARM_V8_8_A },
-			{ 35, 32, 0b0001, CPU_FEATURE_TWED,   FEATURE_LEVEL_ARM_V8_5_A, -1 },
-			{ 31, 28, 0b0001, CPU_FEATURE_XNX,    FEATURE_LEVEL_ARM_V8_1_A, -1 },
-			{ 23, 20, 0b0001, CPU_FEATURE_PAN,    FEATURE_LEVEL_ARM_V8_0_A, FEATURE_LEVEL_ARM_V8_1_A },
-			{ 23, 20, 0b0010, CPU_FEATURE_PAN2,   FEATURE_LEVEL_ARM_V8_1_A, FEATURE_LEVEL_ARM_V8_2_A },
-			{ 23, 20, 0b0011, CPU_FEATURE_PAN3,   FEATURE_LEVEL_ARM_V8_0_A, FEATURE_LEVEL_ARM_V8_7_A },
-			{ 19, 16, 0b0001, CPU_FEATURE_LOR,    FEATURE_LEVEL_ARM_V8_0_A, FEATURE_LEVEL_ARM_V8_1_A },
-			{ 15, 12, 0b0001, CPU_FEATURE_HPDS,   FEATURE_LEVEL_ARM_V8_0_A, FEATURE_LEVEL_ARM_V8_1_A },
-			{ 15, 12, 0b0010, CPU_FEATURE_HPDS2,  FEATURE_LEVEL_ARM_V8_1_A, -1 },
-			{ 11,  8, 0b0001, CPU_FEATURE_VHE,    FEATURE_LEVEL_ARM_V8_0_A, -1 },
-			{  7,  4, 0b0010, CPU_FEATURE_VMID16, FEATURE_LEVEL_ARM_V8_0_A, -1 },
-			{  3,  0, 0b0001, CPU_FEATURE_HAFDBS, FEATURE_LEVEL_ARM_V8_1_A, -1 },
-			{  3,  0, 0b0010, CPU_FEATURE_HAFDBS, FEATURE_LEVEL_ARM_V8_1_A, -1 }, /* as 0b0001, and adds support for hardware update of the Access flag for Block and Page descriptors */
-			{  3,  0, 0b0011, CPU_FEATURE_HAFT,   FEATURE_LEVEL_ARM_V8_7_A, -1 },
-			{ -1, -1,     -1, -1,                 -1,                       -1 }
-		},
-		[2] /* ID_AA64MMFR2 */ = {
-			{ 63, 60, 0b0001, CPU_FEATURE_E0PD,   FEATURE_LEVEL_ARM_V8_4_A, FEATURE_LEVEL_ARM_V8_5_A },
-			{ 59, 56, 0b0001, CPU_FEATURE_EVT,    FEATURE_LEVEL_ARM_V8_2_A, -1 }, /* HCR_EL2.{TOCU, TICAB, TID4} traps are supported. HCR_EL2.{TTLBOS,TTLBIS} traps are not supported */
-			{ 59, 56, 0b0010, CPU_FEATURE_EVT,    FEATURE_LEVEL_ARM_V8_2_A, -1 }, /* HCR_EL2.{TTLBOS, TTLBIS, TOCU, TICAB, TID4} traps are supported */
-			{ 55, 52, 0b0000, CPU_FEATURE_BBM,    FEATURE_LEVEL_ARM_V8_3_A, FEATURE_LEVEL_ARM_V8_4_A }, /* Level 0 support for changing block size is supported */
-			{ 55, 52, 0b0001, CPU_FEATURE_BBM,    FEATURE_LEVEL_ARM_V8_3_A, FEATURE_LEVEL_ARM_V8_4_A }, /* Level 1 support for changing block size is supported */
-			{ 55, 52, 0b0010, CPU_FEATURE_BBM,    FEATURE_LEVEL_ARM_V8_3_A, FEATURE_LEVEL_ARM_V8_4_A }, /* Level 2 support for changing block size is supported */
-			{ 51, 48, 0b0001, CPU_FEATURE_TTL,    FEATURE_LEVEL_ARM_V8_3_A, FEATURE_LEVEL_ARM_V8_4_A },
-			{ 43, 40, 0b0001, CPU_FEATURE_S2FWB,  FEATURE_LEVEL_ARM_V8_3_A, -1 },
-			{ 39, 36, 0b0001, CPU_FEATURE_IDST,   FEATURE_LEVEL_ARM_V8_3_A, FEATURE_LEVEL_ARM_V8_4_A },
-			{ 35, 32, 0b0001, CPU_FEATURE_LSE2,   FEATURE_LEVEL_ARM_V8_2_A, FEATURE_LEVEL_ARM_V8_4_A },
-			{ 31, 28, 0b0001, CPU_FEATURE_TTST,   FEATURE_LEVEL_ARM_V8_3_A, -1 },
-			{ 23, 20, 0b0001, CPU_FEATURE_CCIDX,  FEATURE_LEVEL_ARM_V8_2_A, -1 },
-			{ 19, 16, 0b0001, CPU_FEATURE_LVA,    FEATURE_LEVEL_ARM_V8_1_A, -1 },
-			{ 19, 16, 0b0010, CPU_FEATURE_LVA3,   FEATURE_LEVEL_ARM_V9_3_A, -1 },
-			{ 15, 12, 0b0001, CPU_FEATURE_IESB,   FEATURE_LEVEL_ARM_V8_1_A, -1 },
-			{ 11,  8, 0b0001, CPU_FEATURE_LSMAOC, FEATURE_LEVEL_ARM_V8_1_A, -1 },
-			{  7,  4, 0b0001, CPU_FEATURE_UAO,    FEATURE_LEVEL_ARM_V8_1_A, FEATURE_LEVEL_ARM_V8_2_A },
-			{  3,  0, 0b0001, CPU_FEATURE_TTCNP,  FEATURE_LEVEL_ARM_V8_1_A, FEATURE_LEVEL_ARM_V8_2_A },
-			{ -1, -1,     -1, -1,                  -1,                       -1 }
-		},
-		[3] /* ID_AA64MMFR3 */ = {
-			{ 59, 56, 0b0010, CPU_FEATURE_ADERR,  FEATURE_LEVEL_ARM_V8_8_A, -1 },
-			{ 55, 52, 0b0010, CPU_FEATURE_ADERR,  FEATURE_LEVEL_ARM_V8_8_A, -1 },
-			{ 47, 44, 0b0010, CPU_FEATURE_ANERR,  FEATURE_LEVEL_ARM_V8_8_A, -1 },
-			{ 43, 40, 0b0010, CPU_FEATURE_ANERR,  FEATURE_LEVEL_ARM_V8_8_A, -1 },
-			{ 35, 32, 0b0001, CPU_FEATURE_D128,   FEATURE_LEVEL_ARM_V9_3_A, -1 },
-			{ 31, 28, 0b0001, CPU_FEATURE_MEC,    FEATURE_LEVEL_ARM_V9_2_A, -1 },
-			{ 27, 24, 0b0001, CPU_FEATURE_AIE,    FEATURE_LEVEL_ARM_V8_8_A, -1 },
-			{ 23, 20, 0b0001, CPU_FEATURE_S2POE,  FEATURE_LEVEL_ARM_V8_8_A, -1 },
-			{ 19, 16, 0b0001, CPU_FEATURE_S1POE,  FEATURE_LEVEL_ARM_V8_8_A, -1 },
-			{ 15, 12, 0b0001, CPU_FEATURE_S2PIE,  FEATURE_LEVEL_ARM_V8_8_A, -1 },
-			{ 11,  8, 0b0001, CPU_FEATURE_S1PIE,  FEATURE_LEVEL_ARM_V8_8_A, -1 },
-			{  7,  4, 0b0001, CPU_FEATURE_SCTLR2, FEATURE_LEVEL_ARM_V8_0_A, FEATURE_LEVEL_ARM_V8_9_A },
-			{  3,  0, 0b0001, CPU_FEATURE_TCR2,   FEATURE_LEVEL_ARM_V8_0_A, FEATURE_LEVEL_ARM_V8_9_A },
-			{ -1, -1,     -1, -1,                 -1,                       -1 }
-		},
-		[4] /* ID_AA64MMFR4 */ = {
-			{ -1, -1,     -1, -1,                 -1,                       -1 }
-		}
-	};
-
-	const struct arm_feature_map_t matchtable_id_aa64pfr[MAX_ARM_ID_AA64PFR_REGS][MAX_MATCHTABLE_ITEMS] = {
-		[0] /* ID_AA64PFR0 */ = {
-			{ 63, 60, 0b0001, CPU_FEATURE_CSV3,        FEATURE_LEVEL_ARM_V8_0_A, FEATURE_LEVEL_ARM_V8_5_A },
-			{ 59, 56, 0b0001, CPU_FEATURE_CSV2,        FEATURE_LEVEL_ARM_V8_0_A, FEATURE_LEVEL_ARM_V8_5_A },
-			{ 59, 56, 0b0010, CPU_FEATURE_CSV2_2,      FEATURE_LEVEL_ARM_V8_0_A, -1 },
-			{ 59, 56, 0b0011, CPU_FEATURE_CSV2_3,      FEATURE_LEVEL_ARM_V8_0_A, -1 },
-			{ 55, 52, 0b0001, CPU_FEATURE_RME,         FEATURE_LEVEL_ARM_V9_1_A, -1 },
-			{ 51, 48, 0b0001, CPU_FEATURE_DIT,         FEATURE_LEVEL_ARM_V8_3_A, FEATURE_LEVEL_ARM_V8_4_A },
-			{ 47, 44, 0b0001, CPU_FEATURE_AMUV1,       FEATURE_LEVEL_ARM_V8_3_A, -1 },
-			{ 47, 44, 0b0010, CPU_FEATURE_AMUV1P1,     FEATURE_LEVEL_ARM_V8_5_A, -1 },
-			{ 39, 36, 0b0001, CPU_FEATURE_SEL2,        FEATURE_LEVEL_ARM_V8_3_A, -1 },
-			{ 35, 32, 0b0001, CPU_FEATURE_SVE,         FEATURE_LEVEL_ARM_V8_2_A, -1 },
-			{ 31, 28, 0b0001, CPU_FEATURE_RAS,         FEATURE_LEVEL_ARM_V8_0_A, FEATURE_LEVEL_ARM_V8_2_A },
-			{ 31, 28, 0b0010, CPU_FEATURE_DOUBLEFAULT, FEATURE_LEVEL_ARM_V8_4_A, -1 },
-			{ 31, 28, 0b0010, CPU_FEATURE_RASV1P1,     FEATURE_LEVEL_ARM_V8_2_A, -1 },
-			{ 31, 28, 0b0011, CPU_FEATURE_RASV2,       FEATURE_LEVEL_ARM_V8_8_A, -1 },
-			{ 23, 20, 0b0000, CPU_FEATURE_ADVSIMD,     FEATURE_LEVEL_ARM_V8_0_A, -1 },
-			{ 23, 20, 0b0001, CPU_FEATURE_ADVSIMD,     FEATURE_LEVEL_ARM_V8_0_A, -1 }, /* as for 0b0000, and also includes support for half-precision floating-point arithmetic */
-			{ 19, 16, 0b0000, CPU_FEATURE_FP,          FEATURE_LEVEL_ARM_V8_0_A, -1 },
-			{ 19, 16, 0b0001, CPU_FEATURE_FP16,        FEATURE_LEVEL_ARM_V8_2_A, -1 },
-			{ -1, -1,     -1, -1,                      -1,                       -1 }
-		},
-		[1] /* ID_AA64PFR1 */ = {
-			{ 63, 60, 0b0001, CPU_FEATURE_PFAR,           FEATURE_LEVEL_ARM_V8_8_A, -1 },
-			{ 59, 56, 0b0001, CPU_FEATURE_DOUBLEFAULT2,   FEATURE_LEVEL_ARM_V8_8_A, -1 },
-			{ 51, 48, 0b0001, CPU_FEATURE_THE,            FEATURE_LEVEL_ARM_V8_8_A, -1 },
-			{ 47, 44, 0b0001, CPU_FEATURE_GCS,            FEATURE_LEVEL_ARM_V9_3_A, -1 },
-			{ 39, 36, 0b0001, CPU_FEATURE_NMI,            FEATURE_LEVEL_ARM_V8_7_A, FEATURE_LEVEL_ARM_V8_8_A },
-			{ 35, 32, 0b0001, CPU_FEATURE_CSV2_1P1,       FEATURE_LEVEL_ARM_V8_0_A, -1 },
-			{ 35, 32, 0b0010, CPU_FEATURE_CSV2_1P2,       FEATURE_LEVEL_ARM_V8_0_A, -1 },
-			{ 31, 28, 0b0001, CPU_FEATURE_RNG_TRAP,       FEATURE_LEVEL_ARM_V8_4_A, -1 },
-			{ 27, 24, 0b0001, CPU_FEATURE_SME,            FEATURE_LEVEL_ARM_V9_2_A, -1 },
-			{ 27, 24, 0b0010, CPU_FEATURE_SME2,           FEATURE_LEVEL_ARM_V9_2_A, -1 },
-			{ 11,  8, 0b0001, CPU_FEATURE_MTE,            FEATURE_LEVEL_ARM_V8_4_A, -1 },
-			{ 11,  8, 0b0010, CPU_FEATURE_MTE2,           FEATURE_LEVEL_ARM_V8_4_A, -1 },
-			{ 11,  8, 0b0011, CPU_FEATURE_MTE3,           FEATURE_LEVEL_ARM_V8_5_A, -1 },
-			{ 11,  8, 0b0011, CPU_FEATURE_MTE_ASYM_FAULT, FEATURE_LEVEL_ARM_V8_7_A, -1 }, /* FEAT_MTE3 is implemented if and only if FEAT_MTE_ASYM_FAULT is implemented */
-			{  7,  4, 0b0001, CPU_FEATURE_SSBS,           FEATURE_LEVEL_ARM_V8_0_A, -1 },
-			{  7,  4, 0b0010, CPU_FEATURE_SSBS2,          FEATURE_LEVEL_ARM_V8_0_A, -1 },
-			{  3,  0, 0b0001, CPU_FEATURE_BTI,            FEATURE_LEVEL_ARM_V8_4_A, FEATURE_LEVEL_ARM_V8_5_A },
-			{ -1, -1,     -1, -1,                         -1,                       -1 }
-		},
-		[2] /* ID_AA64PFR2 */ = {
-			{ 11,  8, 0b0001, CPU_FEATURE_MTE_TAGGED_FAR, FEATURE_LEVEL_ARM_V8_7_A, -1 },
-			{  7,  4, 0b0001, CPU_FEATURE_MTE_STORE_ONLY, FEATURE_LEVEL_ARM_V8_7_A, -1 },
-			{  3,  0, 0b0001, CPU_FEATURE_MTE_PERM,       FEATURE_LEVEL_ARM_V8_7_A, -1 },
-			{ -1, -1,     -1, -1,                         -1,                       -1 }
-		}
-	};
-
-	const struct arm_feature_map_t matchtable_id_aa64smfr[MAX_ARM_ID_AA64SMFR_REGS][MAX_MATCHTABLE_ITEMS] = {
-		[0] /* ID_AA64SMFR0 */ = {
-			{ 63, 63,    0b1, CPU_FEATURE_SME_FA64,   FEATURE_LEVEL_ARM_V9_2_A, -1 },
-			{ 59, 56, 0b0001, CPU_FEATURE_SME2,       FEATURE_LEVEL_ARM_V9_2_A, -1 },
-			{ 59, 56, 0b0010, CPU_FEATURE_SME2P1,     FEATURE_LEVEL_ARM_V9_2_A, -1 },
-			{ 55, 52, 0b1111, CPU_FEATURE_SME_I16I64, FEATURE_LEVEL_ARM_V9_2_A, -1 },
-			{ 48, 48,    0b1, CPU_FEATURE_SME_F64F64, FEATURE_LEVEL_ARM_V9_2_A, -1 },
-			{ 43, 43,    0b1, CPU_FEATURE_SVE_B16B16, FEATURE_LEVEL_ARM_V9_2_A, -1 },
-			{ 42, 42,    0b1, CPU_FEATURE_SME_F16F16, FEATURE_LEVEL_ARM_V9_2_A, -1 },
-			{ -1, -1,     -1, -1,                     -1,                       -1 }
-		},
-	};
-
-	const struct arm_feature_map_t matchtable_id_aa64zfr[MAX_ARM_ID_AA64ZFR_REGS][MAX_MATCHTABLE_ITEMS] = {
-		[0] /* ID_AA64ZFR0 */ = {
-			{ 59, 56, 0b0001, CPU_FEATURE_F64MM,        FEATURE_LEVEL_ARM_V8_2_A, -1 },
-			{ 55, 52, 0b0001, CPU_FEATURE_F32MM,        FEATURE_LEVEL_ARM_V8_2_A, -1 },
-			{ 47, 44, 0b0001, CPU_FEATURE_I8MM,         FEATURE_LEVEL_ARM_V8_1_A, FEATURE_LEVEL_ARM_V8_6_A },
-			{ 43, 40, 0b0001, CPU_FEATURE_SVE_SM4,      FEATURE_LEVEL_ARM_V9_0_A, -1 },
-			{ 35, 32, 0b0001, CPU_FEATURE_SVE_SHA3,     FEATURE_LEVEL_ARM_V9_0_A, -1 },
-			{ 27, 24, 0b0001, CPU_FEATURE_SVE_B16B16,   FEATURE_LEVEL_ARM_V9_2_A, -1 },
-			{ 23, 20, 0b0001, CPU_FEATURE_BF16,         FEATURE_LEVEL_ARM_V8_2_A, FEATURE_LEVEL_ARM_V8_6_A },
-			{ 23, 20, 0b0010, CPU_FEATURE_EBF16,        FEATURE_LEVEL_ARM_V8_2_A, -1 },
-			{ 19, 16, 0b0001, CPU_FEATURE_SVE_BITPERM,  FEATURE_LEVEL_ARM_V9_0_A, -1 },
-			{  7,  4, 0b0001, CPU_FEATURE_SVE_AES,      FEATURE_LEVEL_ARM_V9_0_A, -1 },
-			{  7,  4, 0b0010, CPU_FEATURE_SVE_PMULL128, FEATURE_LEVEL_ARM_V9_0_A, -1 },
-			{  3,  0, 0b0001, CPU_FEATURE_SVE2,         FEATURE_LEVEL_ARM_V9_0_A, -1 },
-			{  3,  0, 0b0001, CPU_FEATURE_SME,          FEATURE_LEVEL_ARM_V9_2_A, -1 },
-			{  3,  0, 0b0010, CPU_FEATURE_SME2P1,       FEATURE_LEVEL_ARM_V9_2_A, -1 },
-			{  3,  0, 0b0010, CPU_FEATURE_SVE2P1,       FEATURE_LEVEL_ARM_V9_2_A, -1 },
-			{ -1, -1,     -1, -1,                       -1,                       -1 }
-		},
-	};
-
-	for (i = 0; i < MAX_ARM_ID_AA64DFR_REGS; i++)
-		MATCH_FEATURES_TABLE_WITH_RAW(aa64dfr);
-
-	for (i = 0; i < MAX_ARM_ID_AA64ISAR_REGS; i++)
-		MATCH_FEATURES_TABLE_WITH_RAW(aa64isar);
-
-	for (i = 0; i < MAX_ARM_ID_AA64MMFR_REGS; i++)
-		MATCH_FEATURES_TABLE_WITH_RAW(aa64mmfr);
-
-	for (i = 0; i < MAX_ARM_ID_AA64PFR_REGS; i++)
-		MATCH_FEATURES_TABLE_WITH_RAW(aa64pfr);
-
-	for (i = 0; i < MAX_ARM_ID_AA64SMFR_REGS; i++)
-		MATCH_FEATURES_TABLE_WITH_RAW(aa64smfr);
-
-	for (i = 0; i < MAX_ARM_ID_AA64ZFR_REGS; i++)
-		MATCH_FEATURES_TABLE_WITH_RAW(aa64zfr);
+	for (feature = 0; feature < NUM_CPU_FEATURES; feature++)
+		if (features_map[feature].ver_optional)
+			match_arm_features(is_aarch64, feature, &features_map[feature], data, ext_status);
 
 	/* Some fields do not follow the standard ID scheme */
 	load_arm_feature_pauth(data, ext_status);
 	load_arm_feature_mpam(raw, data, ext_status);
 	load_arm_feature_mte4(raw, data, ext_status);
 }
-#undef MAX_MATCHTABLE_ITEMS
-#undef MATCH_FEATURES_TABLE_WITH_RAW
 
 int cpuid_identify_arm(struct cpu_raw_data_t* raw, struct cpu_id_t* data)
 {
+	bool use_cpuid_scheme;
 	struct arm_arch_extension_t ext_status;
 	memset(&ext_status, 0, sizeof(struct arm_arch_extension_t));
 
@@ -934,8 +2548,10 @@ int cpuid_identify_arm(struct cpu_raw_data_t* raw, struct cpu_id_t* data)
 	strncpy_s(data->vendor_str, VENDOR_STR_MAX, hw_impl->name, VENDOR_STR_MAX);
 	strncpy_s(data->brand_str, BRAND_STR_MAX, id_part->name, BRAND_STR_MAX);
 	strncpy_s(data->cpu_codename, CODENAME_STR_MAX, id_part->codename, CODENAME_STR_MAX);
+	use_cpuid_scheme = (decode_arm_architecture_version_by_midr(raw, data) == false);
 	load_arm_features(raw, data, &ext_status);
-	decode_arm_architecture_version(raw, data, &ext_status);
+	if (use_cpuid_scheme)
+		decode_arm_architecture_version_by_cpuid(raw, data, &ext_status);
 
 	return 0;
 }

@@ -60,6 +60,12 @@
     <ClInclude Include="recog_arm.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="libcpuid_arm_driver.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="rdcpuid.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="asm-bits.c">
@@ -87,6 +93,9 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="recog_arm.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="rdcpuid.c">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

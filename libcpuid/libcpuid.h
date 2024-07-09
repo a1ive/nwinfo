@@ -340,6 +340,30 @@ struct cpu_raw_data_t {
 	 * (Revision ID Register) */
 	uint64_t arm_revidr;
 
+	/** when then CPU is ARM-based and supports ID_AFR*
+	 * (AArch32 Auxiliary Feature Register) */
+	uint32_t arm_id_afr[MAX_ARM_ID_AFR_REGS];
+
+	/** when then CPU is ARM-based and supports ID_DFR*
+	 * (AArch32 Debug Feature Register) */
+	uint32_t arm_id_dfr[MAX_ARM_ID_DFR_REGS];
+
+	/** when then CPU is ARM-based and supports D_ISAR*
+	 * (AArch32 Instruction Set Attribute Register) */
+	uint32_t arm_id_isar[MAX_ARM_ID_ISAR_REGS];
+
+	/** when then CPU is ARM-based and supports ID_MMFR*
+	 * (AArch32 Memory Model Feature Register) */
+	uint32_t arm_id_mmfr[MAX_ARM_ID_MMFR_REGS];
+
+	/** when then CPU is ARM-based and supports ID_PFR*
+	 * (AArch32 Processor Feature Register) */
+	uint32_t arm_id_pfr[MAX_ARM_ID_PFR_REGS];
+
+	/** when then CPU is ARM-based and supports ID_AA64AFR*
+	 * (AArch64 Auxiliary Feature Register) */
+	uint64_t arm_id_aa64afr[MAX_ARM_ID_AA64AFR_REGS];
+
 	/** when then CPU is ARM-based and supports ID_AA64DFR*
 	 * (AArch64 Debug Feature Register) */
 	uint64_t arm_id_aa64dfr[MAX_ARM_ID_AA64DFR_REGS];
@@ -907,6 +931,21 @@ typedef enum {
 	CPU_FEATURE_HYPERVISOR, /*!< Hypervisor present (always zero on physical CPUs) */
 	CPU_FEATURE_INTEL_DTS, /*!< Intel Digital Thermal Sensor */
 	CPU_FEATURE_INTEL_PTM, /*!< Intel Package Thermal Management */
+	CPU_FEATURE_SWAP, /*!< ARM: Swap instructions in the ARM instruction set */
+	CPU_FEATURE_THUMB, /*!< ARM: Thumb instruction set support */
+	CPU_FEATURE_ADVMULTU, /*!< ARM: Advanced unsigned Multiply instructions */
+	CPU_FEATURE_ADVMULTS, /*!< ARM: Advanced signed Multiply instructions */
+	CPU_FEATURE_JAZELLE, /*!< ARM: Jazelle extension support */
+	CPU_FEATURE_DEBUGV6, /*!< ARM: Support for v6 Debug architecture */
+	CPU_FEATURE_DEBUGV6P1, /*!< ARM: Support for v6.1 Debug architecture */
+	CPU_FEATURE_THUMB2, /*!< ARM: Thumb-2, instruction set support */
+	CPU_FEATURE_DEBUGV7, /*!< ARM: Support for v7 Debug architecture */
+	CPU_FEATURE_DEBUGV7P1, /*!< ARM: Support for v7.1 Debug architecture */
+	CPU_FEATURE_THUMBEE, /*!< ARM: ThumbEE instruction set support */
+	CPU_FEATURE_DIVIDE, /*!< ARM: Divide instructions */
+	CPU_FEATURE_LPAE, /*!< ARM: Large Physical Address Extension */
+	CPU_FEATURE_PMUV1, /*!< ARM: PMU extension version 1 */
+	CPU_FEATURE_PMUV2, /*!< ARM: PMU extension version 2 */
 	CPU_FEATURE_ASID16, /*!< ARM: 16 bit ASID */
 	CPU_FEATURE_ADVSIMD, /*!< ARM: Advanced SIMD Extension */
 	CPU_FEATURE_CRC32, /*!< ARM: CRC32 instructions */
@@ -923,6 +962,7 @@ typedef enum {
 	CPU_FEATURE_PMUV3, /*!< ARM: PMU extension version 3 */
 	CPU_FEATURE_SHA1, /*!< ARM: Advanced SIMD SHA1 instructions */
 	CPU_FEATURE_SHA256, /*!< ARM: Advanced SIMD SHA256 instructions */
+	CPU_FEATURE_NTLBPA, /*!< ARM: Intermediate caching of translation table walks */
 	CPU_FEATURE_HAFDBS, /*!< ARM: Hardware management of the Access flag and dirty state */
 	CPU_FEATURE_HPDS, /*!< ARM: Hierarchical permission disables in translations tables */
 	CPU_FEATURE_LOR, /*!< ARM: Limited ordering regions */
@@ -932,8 +972,8 @@ typedef enum {
 	CPU_FEATURE_RDM, /*!< ARM: Advanced SIMD rounding double multiply accumulate instructions */
 	CPU_FEATURE_VHE, /*!< ARM: Virtualization Host Extensions */
 	CPU_FEATURE_VMID16, /*!< ARM: 16-bit VMID */
-	//CPU_FEATURE_AA32HPD, /*!< ARM: AArch32 Hierarchical permission disables */
-	//CPU_FEATURE_AA32I8MM, /*!< ARM: AArch32 Int8 matrix multiplication instructions */
+	CPU_FEATURE_AA32HPD, /*!< ARM: AArch32 Hierarchical permission disables */
+	CPU_FEATURE_AA32I8MM, /*!< ARM: AArch32 Int8 matrix multiplication instructions */
 	CPU_FEATURE_DPB, /*!< ARM: DC CVAP instruction */
 	CPU_FEATURE_DEBUGV8P2, /*!< ARM: Debug v8.2 */
 	CPU_FEATURE_F32MM, /*!< ARM: Single-precision Matrix Multiplication */
@@ -1008,11 +1048,13 @@ typedef enum {
 	CPU_FEATURE_SPECRES, /*!< ARM: Speculation restriction instructions */
 	CPU_FEATURE_SSBS, /*!< ARM: Speculative Store Bypass Safe */
 	CPU_FEATURE_SSBS2, /*!< ARM: MRS and MSR instructions for SSBS version 2 */
+	CPU_FEATURE_AA32BF16, /*!< ARM: AArch32 BFloat16 instructions */
 	CPU_FEATURE_AMUV1P1, /*!< ARM: Activity Monitors Extension version 1.1 */
 	CPU_FEATURE_BF16, /*!< ARM: AArch64 BFloat16 instructions */
 	CPU_FEATURE_DGH, /*!< ARM: Data Gathering Hint */
 	CPU_FEATURE_ECV, /*!< ARM: Enhanced Counter Virtualization */
 	CPU_FEATURE_FGT, /*!< ARM: Fine Grain Traps */
+	CPU_FEATURE_HPMN0, /*!< ARM: Setting of MDCR_EL2.HPMN to zero */
 	CPU_FEATURE_MPAMV0P1, /*!< ARM: Memory Partitioning and Monitoring version 0.1 */
 	CPU_FEATURE_MPAMV1P1, /*!< ARM: Memory Partitioning and Monitoring version 1.1 */
 	CPU_FEATURE_MTPMU, /*!< ARM: Multi-threaded PMU extensions */
@@ -1178,6 +1220,8 @@ typedef enum {
 	ERR_HANDLE_R = -15,	/*!< Error on handle read */
 	ERR_INVRANGE = -16,	/*!< Invalid given range */
 	ERR_NOT_FOUND= -17,	/*!< Requested type not found */
+	ERR_IOCTL    = -18,	/*!< Error on ioctl */
+	ERR_REQUEST  = -19,	/*!< Invalid request */
 } cpu_error_t;
 
 /**
@@ -1235,6 +1279,18 @@ void cpu_exec_cpuid_ext(uint32_t* regs);
  *          @see cpu_error_t
  */
 int cpuid_get_raw_data(struct cpu_raw_data_t* data);
+
+/**
+ * @brief Obtains the raw CPUID data from the specified CPU
+ * @param data - a pointer to cpu_raw_data_t structure
+ * @param logical_cpu specify the core number.
+ *          The first core number is 0.
+ *          The last core number is \ref cpuid_get_total_cpus - 1.
+ * @returns zero if successful, and some negative number on error.
+ *          The error message can be obtained by calling \ref cpuid_error.
+ *          @see cpu_error_t
+ */
+int cpuid_get_raw_data_core(struct cpu_raw_data_t* data, logical_cpu_t logical_cpu);
 
 /**
  * @brief Obtains the raw CPUID data from all CPUs

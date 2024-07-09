@@ -124,10 +124,12 @@
     <ClInclude Include="centaur_code_t.h" />
     <ClInclude Include="intel_code_t.h" />
     <ClInclude Include="libcpuid.h" />
+    <ClInclude Include="libcpuid_arm_driver.h" />
     <ClInclude Include="libcpuid_constants.h" />
     <ClInclude Include="libcpuid_internal.h" />
     <ClInclude Include="libcpuid_types.h" />
     <ClInclude Include="libcpuid_util.h" />
+    <ClInclude Include="rdcpuid.h" />
     <ClInclude Include="rdtsc.h" />
     <ClInclude Include="recog_amd.h" />
     <ClInclude Include="recog_arm.h" />
@@ -138,6 +140,7 @@
     <ClCompile Include="asm-bits.c" />
     <ClCompile Include="cpuid_main.c" />
     <ClCompile Include="libcpuid_util.c" />
+    <ClCompile Include="rdcpuid.c" />
     <ClCompile Include="rdmsr.c" />
     <ClCompile Include="rdtsc.c" />
     <ClCompile Include="recog_amd.c" />

@@ -31,6 +31,11 @@
 #include "recog_intel.h"
 #include "asm-bits.h"
 #include "libcpuid_util.h"
+#if defined(PLATFORM_ARM) || defined(PLATFORM_AARCH64)
+# include "libcpuid_arm_driver.h"
+# include "rdcpuid.h"
+#endif /* ARM */
+
 
 #include <windows.h>
 #include <stdio.h>
@@ -578,18 +583,44 @@ static bool cpu_ident_id_arm(struct cpu_raw_data_t* raw, struct internal_topolog
 {
 	/* Documentation: Multiprocessor Affinity Register
 	   https://developer.arm.com/documentation/ddi0601/2020-12/AArch64-Registers/MPIDR-EL1--Multiprocessor-Affinity-Register
+
+	   This function is inspired by the store_cpu_topology() function from Linux:
+	   https://github.com/torvalds/linux/blob/c6653f49e4fd3b0d52c12a1fc814d6c5b234ea15/arch/arm/kernel/topology.c#L185-L233
 	*/
-	const bool aff0_is_threads = EXTRACTS_BIT(raw->arm_mpidr, 24);
-	if (aff0_is_threads) {
-		/* Aff0: the level identifies individual threads within a multithreaded core
-		   On single-threaded CPUs this field has the value 0x00 */
-		topology->smt_id     = EXTRACTS_BITS(raw->arm_mpidr,  7,  0); // Aff0
-		topology->core_id    = EXTRACTS_BITS(raw->arm_mpidr, 15,  8); // Aff1
-		topology->package_id = EXTRACTS_BITS(raw->arm_mpidr, 23, 16); // Aff2
+	if (!raw->arm_mpidr)
+		return false;
+
+	const bool is_uniprocessor = (EXTRACTS_BIT(raw->arm_mpidr, 30) == 0b1);
+	const bool is_mt           = (EXTRACTS_BIT(raw->arm_mpidr, 24) == 0b1);
+
+	/* create cpu topology mapping */
+	if (!is_uniprocessor) {
+		/*
+		 * This is a multiprocessor system
+		 * multiprocessor format & multiprocessor mode field are set
+		 */
+		if (is_mt) {
+			/* core performance interdependency */
+			topology->smt_id     = EXTRACTS_BITS(raw->arm_mpidr,  7,  0); // Aff0
+			topology->core_id    = EXTRACTS_BITS(raw->arm_mpidr, 15,  8); // Aff1
+			topology->package_id = EXTRACTS_BITS(raw->arm_mpidr, 23, 16); // Aff2
+		}
+		else {
+			/* largely independent cores */
+			topology->smt_id     = -1;
+			topology->core_id    = EXTRACTS_BITS(raw->arm_mpidr,  7,  0); // Aff0
+			topology->package_id = EXTRACTS_BITS(raw->arm_mpidr, 15,  8); // Aff1
+		}
 	}
 	else {
-		topology->core_id    = EXTRACTS_BITS(raw->arm_mpidr,  7,  0); // Aff0
-		topology->package_id = EXTRACTS_BITS(raw->arm_mpidr, 15,  8); // Aff1
+		/*
+		 * This is an uniprocessor system
+		 * we are in multiprocessor format but uniprocessor system
+		 * or in the old uniprocessor format
+		 */
+		topology->smt_id     = -1;
+		topology->core_id    = 0;
+		topology->package_id = -1;
 	}
 
 	/* Always implemented since ARMv7
@@ -648,10 +679,26 @@ void cpu_exec_cpuid_ext(uint32_t* regs)
 
 int cpuid_get_raw_data(struct cpu_raw_data_t* data)
 {
-	if (!cpuid_present())
-		return cpuid_set_error(ERR_NO_CPUID);
+	return(cpuid_get_raw_data_core(data, -1));
+}
+
+int cpuid_get_raw_data_core(struct cpu_raw_data_t* data, logical_cpu_t logical_cpu)
+{
+	bool affinity_saved = false;
+
+	if (logical_cpu != (logical_cpu_t) -1) {
+		debugf(2, "Getting raw dump for logical CPU %u\n", logical_cpu);
+		if (!set_cpu_affinity(logical_cpu))
+			return ERR_INVCNB;
+		affinity_saved = save_cpu_affinity();
+	}
+
 #if defined(PLATFORM_X86) || defined(PLATFORM_X64)
 	unsigned i;
+
+	if (!cpuid_present())
+		return cpuid_set_error(ERR_NO_CPUID);
+
 	for (i = 0; i < 32; i++)
 		cpu_exec_cpuid(i, data->basic_cpuid[i]);
 	for (i = 0; i < 32; i++)
@@ -692,37 +739,78 @@ int cpuid_get_raw_data(struct cpu_raw_data_t* data)
 		data->amd_fn80000026h[i][ECX] = i;
 		cpu_exec_cpuid_ext(data->amd_fn80000026h[i]);
 	}
-#elif defined(PLATFORM_ARM)
-	/* We cannot support ARM CPUs running in 32-bit mode, because the Main ID Register is accessible only in privileged modes
-	   Some related links:
-	   - https://github.com/anrieff/libcpuid/issues/96
-	   - https://developer.arm.com/documentation/ddi0406/b/System-Level-Architecture/Protected-Memory-System-Architecture--PMSA-/CP15-registers-for-a-PMSA-implementation/c0--Main-ID-Register--MIDR-
-	*/
-# warning The 32-bit ARM platform is not supported (Main ID Register is accessible only in privileged modes)
-	UNUSED(data);
-#elif defined(PLATFORM_AARCH64)
-	cpu_exec_mrs("MIDR_EL1", data->arm_midr);
-	cpu_exec_mrs("MPIDR_EL1", data->arm_mpidr);
-	cpu_exec_mrs("REVIDR_EL1", data->arm_revidr);
-	cpu_exec_mrs(SYS_ID_AA64DFR0_EL1, data->arm_id_aa64dfr[0]);
-	cpu_exec_mrs(SYS_ID_AA64DFR1_EL1, data->arm_id_aa64dfr[1]);
-	cpu_exec_mrs(SYS_ID_AA64ISAR0_EL1, data->arm_id_aa64isar[0]);
-	cpu_exec_mrs(SYS_ID_AA64ISAR1_EL1, data->arm_id_aa64isar[1]);
-	cpu_exec_mrs(SYS_ID_AA64ISAR2_EL1, data->arm_id_aa64isar[2]);
-	cpu_exec_mrs(SYS_ID_AA64MMFR0_EL1, data->arm_id_aa64mmfr[0]);
-	cpu_exec_mrs(SYS_ID_AA64MMFR1_EL1, data->arm_id_aa64mmfr[1]);
-	cpu_exec_mrs(SYS_ID_AA64MMFR2_EL1, data->arm_id_aa64mmfr[2]);
-	cpu_exec_mrs(SYS_ID_AA64MMFR3_EL1, data->arm_id_aa64mmfr[3]);
-	cpu_exec_mrs(SYS_ID_AA64MMFR4_EL1, data->arm_id_aa64mmfr[4]);
-	cpu_exec_mrs(SYS_ID_AA64PFR0_EL1, data->arm_id_aa64pfr[0]);
-	cpu_exec_mrs(SYS_ID_AA64PFR1_EL1, data->arm_id_aa64pfr[1]);
-	cpu_exec_mrs(SYS_ID_AA64PFR2_EL1, data->arm_id_aa64pfr[2]);
-	cpu_exec_mrs(SYS_ID_AA64SMFR0_EL1, data->arm_id_aa64smfr[0]);
-	cpu_exec_mrs(SYS_ID_AA64ZFR0_EL1, data->arm_id_aa64zfr[0]);
+#elif defined(PLATFORM_ARM) || defined(PLATFORM_AARCH64)
+	unsigned i;
+	struct cpuid_driver_t *handle;
+
+	if ((handle = cpu_cpuid_driver_open_core(logical_cpu)) != NULL) {
+		debugf(2, "Using kernel driver to read register on logical CPU %u\n", logical_cpu);
+		cpu_read_arm_register_64b(handle, REQ_MIDR, &data->arm_midr);
+		cpu_read_arm_register_64b(handle, REQ_MPIDR, &data->arm_mpidr);
+		cpu_read_arm_register_64b(handle, REQ_REVIDR, &data->arm_revidr);
+		for (i = 0; i < MAX_ARM_ID_AFR_REGS; i++)
+			cpu_read_arm_register_32b(handle, REQ_ID_AFR0 + i, &data->arm_id_afr[i]);
+		for (i = 0; i < MAX_ARM_ID_DFR_REGS; i++)
+			cpu_read_arm_register_32b(handle, REQ_ID_DFR0 + i, &data->arm_id_dfr[i]);
+		for (i = 0; i < MAX_ARM_ID_ISAR_REGS; i++)
+			cpu_read_arm_register_32b(handle, REQ_ID_ISAR0 + i, &data->arm_id_isar[i]);
+		for (i = 0; i < MAX_ARM_ID_MMFR_REGS; i++)
+			cpu_read_arm_register_32b(handle, REQ_ID_MMFR0 + i, &data->arm_id_mmfr[i]);
+		for (i = 0; i < MAX_ARM_ID_PFR_REGS; i++)
+			cpu_read_arm_register_32b(handle, REQ_ID_PFR0 + i, &data->arm_id_pfr[i]);
+# if defined(PLATFORM_AARCH64)
+		for (i = 0; i < MAX_ARM_ID_AA64AFR_REGS; i++)
+			cpu_read_arm_register_64b(handle, REQ_ID_AA64AFR0 + i, &data->arm_id_aa64afr[i]);
+		for (i = 0; i < MAX_ARM_ID_AA64DFR_REGS; i++)
+			cpu_read_arm_register_64b(handle, REQ_ID_AA64DFR0 + i, &data->arm_id_aa64dfr[i]);
+		for (i = 0; i < MAX_ARM_ID_AA64ISAR_REGS; i++)
+			cpu_read_arm_register_64b(handle, REQ_ID_AA64ISAR0 + i, &data->arm_id_aa64isar[i]);
+		for (i = 0; i < MAX_ARM_ID_AA64MMFR_REGS; i++)
+			cpu_read_arm_register_64b(handle, REQ_ID_AA64MMFR0 + i, &data->arm_id_aa64mmfr[i]);
+		for (i = 0; i < MAX_ARM_ID_AA64PFR_REGS; i++)
+			cpu_read_arm_register_64b(handle, REQ_ID_AA64PFR0 + i, &data->arm_id_aa64pfr[i]);
+		for (i = 0; i < MAX_ARM_ID_AA64SMFR_REGS; i++)
+			cpu_read_arm_register_64b(handle, REQ_ID_AA64SMFR0 + i, &data->arm_id_aa64smfr[i]);
+		for (i = 0; i < MAX_ARM_ID_AA64ZFR_REGS; i++)
+			cpu_read_arm_register_64b(handle, REQ_ID_AA64ZFR0 + i, &data->arm_id_aa64zfr[i]);
+# endif /* PLATFORM_AARCH64 */
+		cpu_cpuid_driver_close(handle);
+	}
+# if defined(PLATFORM_AARCH64)
+	else {
+		if (!cpuid_present())
+			return cpuid_set_error(ERR_NO_CPUID);
+		debugf(2, "Using MRS instruction to read register on logical CPU %u\n", logical_cpu);
+		cpu_exec_mrs(AARCH64_REG_MIDR_EL1, data->arm_midr);
+		cpu_exec_mrs(AARCH64_REG_MPIDR_EL1, data->arm_mpidr);
+		cpu_exec_mrs(AARCH64_REG_REVIDR_EL1, data->arm_revidr);
+		cpu_exec_mrs(AARCH64_REG_ID_AA64AFR0_EL1, data->arm_id_aa64afr[0]);
+		cpu_exec_mrs(AARCH64_REG_ID_AA64AFR1_EL1, data->arm_id_aa64afr[1]);
+		cpu_exec_mrs(AARCH64_REG_ID_AA64DFR0_EL1, data->arm_id_aa64dfr[0]);
+		cpu_exec_mrs(AARCH64_REG_ID_AA64DFR1_EL1, data->arm_id_aa64dfr[1]);
+		cpu_exec_mrs(AARCH64_REG_ID_AA64ISAR0_EL1, data->arm_id_aa64isar[0]);
+		cpu_exec_mrs(AARCH64_REG_ID_AA64ISAR1_EL1, data->arm_id_aa64isar[1]);
+		cpu_exec_mrs(AARCH64_REG_ID_AA64ISAR2_EL1, data->arm_id_aa64isar[2]);
+		cpu_exec_mrs(AARCH64_REG_ID_AA64MMFR0_EL1, data->arm_id_aa64mmfr[0]);
+		cpu_exec_mrs(AARCH64_REG_ID_AA64MMFR1_EL1, data->arm_id_aa64mmfr[1]);
+		cpu_exec_mrs(AARCH64_REG_ID_AA64MMFR2_EL1, data->arm_id_aa64mmfr[2]);
+		cpu_exec_mrs(AARCH64_REG_ID_AA64MMFR3_EL1, data->arm_id_aa64mmfr[3]);
+		cpu_exec_mrs(AARCH64_REG_ID_AA64MMFR4_EL1, data->arm_id_aa64mmfr[4]);
+		cpu_exec_mrs(AARCH64_REG_ID_AA64PFR0_EL1, data->arm_id_aa64pfr[0]);
+		cpu_exec_mrs(AARCH64_REG_ID_AA64PFR1_EL1, data->arm_id_aa64pfr[1]);
+		cpu_exec_mrs(AARCH64_REG_ID_AA64PFR2_EL1, data->arm_id_aa64pfr[2]);
+		cpu_exec_mrs(AARCH64_REG_ID_AA64SMFR0_EL1, data->arm_id_aa64smfr[0]);
+		cpu_exec_mrs(AARCH64_REG_ID_AA64ZFR0_EL1, data->arm_id_aa64zfr[0]);
+	}
+# endif /* PLATFORM_AARCH64 */
 #else
 # warning This CPU architecture is not supported by libcpuid
 	UNUSED(data);
 #endif
+
+	if (affinity_saved)
+		restore_cpu_affinity();
+
 	return cpuid_set_error(ERR_OK);
 }
 
@@ -731,26 +819,23 @@ int cpuid_get_all_raw_data(struct cpu_raw_data_array_t* data)
 	int cur_error = cpuid_set_error(ERR_OK);
 	int ret_error = cpuid_set_error(ERR_OK);
 	logical_cpu_t logical_cpu = 0;
-	struct cpu_raw_data_t* raw_ptr = NULL;
+	struct cpu_raw_data_t raw_tmp;
 
 	if (data == NULL)
 		return cpuid_set_error(ERR_HANDLE);
 
-	bool affinity_saved = save_cpu_affinity();
-
 	cpu_raw_data_array_t_constructor(data, true);
-	while (set_cpu_affinity(logical_cpu) || logical_cpu == 0) {
-		debugf(2, "Getting raw dump for logical CPU %i\n", logical_cpu);
+	do {
+		memset(&raw_tmp, 0, sizeof(struct cpu_raw_data_t));
+		cur_error = cpuid_get_raw_data_core(&raw_tmp, logical_cpu);
+		if (cur_error == ERR_INVCNB)
+			break;
 		cpuid_grow_raw_data_array(data, logical_cpu + 1);
-		raw_ptr = &data->raw[logical_cpu];
-		cur_error = cpuid_get_raw_data(raw_ptr);
+		memcpy(&data->raw[logical_cpu], &raw_tmp, sizeof(struct cpu_raw_data_t));
 		if (ret_error == ERR_OK)
 			ret_error = cur_error;
 		logical_cpu++;
-	}
-
-	if (affinity_saved)
-		restore_cpu_affinity();
+	} while (cur_error == ERR_OK);
 
 	return ret_error;
 }
@@ -1287,6 +1372,21 @@ const char* cpu_feature_str(cpu_feature_t feature)
 		{ CPU_FEATURE_HYPERVISOR, "hypervisor" },
 		{ CPU_FEATURE_INTEL_DTS, "intel_dts" },
 		{ CPU_FEATURE_INTEL_PTM, "intel_ptm" },
+		{ CPU_FEATURE_SWAP, "swap" },
+		{ CPU_FEATURE_THUMB, "thumb" },
+		{ CPU_FEATURE_ADVMULTU, "advmultu" },
+		{ CPU_FEATURE_ADVMULTS, "advmults" },
+		{ CPU_FEATURE_JAZELLE, "jazelle" },
+		{ CPU_FEATURE_DEBUGV6, "debugv6" },
+		{ CPU_FEATURE_DEBUGV6P1, "debugv6p1" },
+		{ CPU_FEATURE_THUMB2, "thumb2" },
+		{ CPU_FEATURE_DEBUGV7, "debugv7" },
+		{ CPU_FEATURE_DEBUGV7P1, "debugv7p1" },
+		{ CPU_FEATURE_THUMBEE, "thumbee" },
+		{ CPU_FEATURE_DIVIDE, "divide" },
+		{ CPU_FEATURE_LPAE, "lpae" },
+		{ CPU_FEATURE_PMUV1, "pmuv1" },
+		{ CPU_FEATURE_PMUV2, "pmuv2" },
 		{ CPU_FEATURE_ASID16, "asid16" },
 		{ CPU_FEATURE_ADVSIMD, "advsimd" },
 		{ CPU_FEATURE_CRC32, "crc32" },
@@ -1303,6 +1403,7 @@ const char* cpu_feature_str(cpu_feature_t feature)
 		{ CPU_FEATURE_PMUV3, "pmuv3" },
 		{ CPU_FEATURE_SHA1, "sha1" },
 		{ CPU_FEATURE_SHA256, "sha256" },
+		{ CPU_FEATURE_NTLBPA, "ntlbpa" },
 		{ CPU_FEATURE_HAFDBS, "hafdbs" },
 		{ CPU_FEATURE_HPDS, "hpds" },
 		{ CPU_FEATURE_LOR, "lor" },
@@ -1312,8 +1413,8 @@ const char* cpu_feature_str(cpu_feature_t feature)
 		{ CPU_FEATURE_RDM, "rdm" },
 		{ CPU_FEATURE_VHE, "vhe" },
 		{ CPU_FEATURE_VMID16, "vmid16" },
-		//{ CPU_FEATURE_AA32HPD, "aa32hpd" },
-		//{ CPU_FEATURE_AA32I8MM, "aa32i8mm" },
+		{ CPU_FEATURE_AA32HPD, "aa32hpd" },
+		{ CPU_FEATURE_AA32I8MM, "aa32i8mm" },
 		{ CPU_FEATURE_DPB, "dpb" },
 		{ CPU_FEATURE_DEBUGV8P2, "debugv8p2" },
 		{ CPU_FEATURE_F32MM, "f32mm" },
@@ -1388,11 +1489,13 @@ const char* cpu_feature_str(cpu_feature_t feature)
 		{ CPU_FEATURE_SPECRES, "specres" },
 		{ CPU_FEATURE_SSBS, "ssbs" },
 		{ CPU_FEATURE_SSBS2, "ssbs2" },
+		{ CPU_FEATURE_AA32BF16, "aa32bf16" },
 		{ CPU_FEATURE_AMUV1P1, "amuv1p1" },
 		{ CPU_FEATURE_BF16, "bf16" },
 		{ CPU_FEATURE_DGH, "dgh" },
 		{ CPU_FEATURE_ECV, "ecv" },
 		{ CPU_FEATURE_FGT, "fgt" },
+		{ CPU_FEATURE_HPMN0, "hpmn0" },
 		{ CPU_FEATURE_MPAMV0P1, "mpamv0p1" },
 		{ CPU_FEATURE_MPAMV1P1, "mpamv1p1" },
 		{ CPU_FEATURE_MTPMU, "mtpmu" },
@@ -1524,6 +1627,8 @@ const char* cpuid_error(void)
 		{ ERR_HANDLE_R , "Error on handle read"},
 		{ ERR_INVRANGE , "Invalid given range"},
 		{ ERR_NOT_FOUND, "Requested type not found"},
+		{ ERR_IOCTL,     "Error on ioctl"},
+		{ ERR_REQUEST,   "Invalid request"},
 	};
 	unsigned i;
 	for (i = 0; i < COUNT_OF(matchtable); i++)
