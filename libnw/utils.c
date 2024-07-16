@@ -458,6 +458,46 @@ NWL_WinGuidToStr(BOOL bBracket, GUID* pGuid)
 	return GuidStr;
 }
 
+BOOL
+NWL_StrToGuid(const CHAR* cchText, GUID* pGuid)
+{
+	CHAR p[37];
+	size_t len = strlen(cchText);
+	memset(pGuid, 0, sizeof(GUID));
+
+	if (len == 38 && cchText[0] == '{' && cchText[37] == '}')
+		memcpy(p, cchText + 1, 36);
+	else if (len == 36)
+		memcpy(p, cchText, 36);
+	else
+		return FALSE;
+	p[36] = '\0';
+	if (p[8] != '-' || p[13] != '-' || p[18] != '-' || p[23] != '-')
+		return FALSE;
+	p[8] = 0;
+	pGuid->Data1 = strtoul(p, NULL, 16);
+	p[13] = 0;
+	pGuid->Data2 = (unsigned short)strtoul(p + 9, NULL, 16);
+	p[18] = 0;
+	pGuid->Data3 = (unsigned short)strtoul(p + 14, NULL, 16);
+	pGuid->Data4[7] = (unsigned char)strtoul(p + 34, NULL, 16);
+	p[34] = 0;
+	pGuid->Data4[6] = (unsigned char)strtoul(p + 32, NULL, 16);
+	p[32] = 0;
+	pGuid->Data4[5] = (unsigned char)strtoul(p + 30, NULL, 16);
+	p[30] = 0;
+	pGuid->Data4[4] = (unsigned char)strtoul(p + 28, NULL, 16);
+	p[28] = 0;
+	pGuid->Data4[3] = (unsigned char)strtoul(p + 26, NULL, 16);
+	p[26] = 0;
+	pGuid->Data4[2] = (unsigned char)strtoul(p + 24, NULL, 16);
+	p[23] = 0;
+	pGuid->Data4[1] = (unsigned char)strtoul(p + 21, NULL, 16);
+	p[21] = 0;
+	pGuid->Data4[0] = (unsigned char)strtoul(p + 19, NULL, 16);
+	return TRUE;
+}
+
 struct NWL_MONITOR_CTX
 {
 	HMONITOR hMonitor;

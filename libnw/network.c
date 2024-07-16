@@ -4,6 +4,7 @@
 #include <iphlpapi.h>
 #include <ws2tcpip.h>
 #include <netioapi.h>
+#include <wlanapi.h>
 
 #include "libnw.h"
 #include "utils.h"
@@ -63,6 +64,110 @@ IfTypeToStr(IFTYPE Type)
 	case IF_TYPE_WWANPP2: return "CDMA";
 	}
 	return "Other";
+}
+
+static const CHAR*
+WlanStateToStr(WLAN_INTERFACE_STATE state)
+{
+	switch (state)
+	{
+	case wlan_interface_state_not_ready: return "Not Ready";
+	case wlan_interface_state_connected: return "Connected";
+	case wlan_interface_state_ad_hoc_network_formed: return "AS Hoc Network Formed";
+	case wlan_interface_state_disconnecting: return "Disconnecting";
+	case wlan_interface_state_disconnected: return "Disconnected";
+	case wlan_interface_state_associating: return "Associating";
+	case wlan_interface_state_discovering: return "Discovering";
+	case wlan_interface_state_authenticating: return "Authenticating";
+	}
+	return "Unknown";
+}
+
+static const CHAR*
+WlanAuthToStr(DOT11_AUTH_ALGORITHM auth)
+{
+	switch (auth)
+	{
+	case DOT11_AUTH_ALGO_80211_OPEN: return "Open System";
+	case DOT11_AUTH_ALGO_80211_SHARED_KEY: return "Shared Key";
+	case DOT11_AUTH_ALGO_WPA: return "WPA";
+	case DOT11_AUTH_ALGO_WPA_PSK: return "WPA PSK";
+	case DOT11_AUTH_ALGO_WPA_NONE: return "WPA NONE";
+	case DOT11_AUTH_ALGO_RSNA: return "RSNA";
+	case DOT11_AUTH_ALGO_RSNA_PSK: return "RSNA PSK";
+	case DOT11_AUTH_ALGO_WPA3_ENT_192: return "WPA3 ENT 192"; // DOT11_AUTH_ALGO_WPA3
+	case DOT11_AUTH_ALGO_WPA3_SAE: return "WPA3 SAE";
+	case DOT11_AUTH_ALGO_OWE: return "OWE";
+	case DOT11_AUTH_ALGO_WPA3_ENT: return "WPA3 ENT";
+	}
+	return "Unknown";
+}
+
+static const CHAR*
+WlanCipherToStr(DOT11_CIPHER_ALGORITHM cipher)
+{
+	switch (cipher)
+	{
+	case DOT11_CIPHER_ALGO_NONE: return "None";
+	case DOT11_CIPHER_ALGO_WEP40: return "WEP 40";
+	case DOT11_CIPHER_ALGO_TKIP: return "TKIP";
+	case DOT11_CIPHER_ALGO_CCMP: return "CCMP";
+	case DOT11_CIPHER_ALGO_WEP104: return "WEP 104";
+	}
+	return "Unknown";
+}
+
+static void
+GetWlanInfo(PNODE node, PIP_ADAPTER_ADDRESSES_XP ipAdapter)
+{
+	DWORD dwBuf;
+	HANDLE hClient = NULL;
+	GUID guidIf;
+	WLAN_CONNECTION_ATTRIBUTES* wlanAttr = NULL;
+
+	DWORD (WINAPI *OsWlanOpenHandle)(DWORD, PVOID, PDWORD, PHANDLE);
+	DWORD (WINAPI *OsWlanQueryInterface)(HANDLE, const GUID*, WLAN_INTF_OPCODE, PVOID, PDWORD, PVOID*, PWLAN_OPCODE_VALUE_TYPE);
+	void (WINAPI *OsWlanFreeMemory)(PVOID);
+	DWORD (WINAPI *OsWlanCloseHandle)(HANDLE, PVOID);
+	HMODULE hL = LoadLibraryW(L"wlanapi.dll");
+	if (!hL)
+		return;
+	*(FARPROC*)&OsWlanOpenHandle = GetProcAddress(hL, "WlanOpenHandle");
+	if (!OsWlanOpenHandle)
+		return;
+	*(FARPROC*)&OsWlanQueryInterface = GetProcAddress(hL, "WlanQueryInterface");
+	if (!OsWlanQueryInterface)
+		return;
+	*(FARPROC*)&OsWlanFreeMemory = GetProcAddress(hL, "WlanFreeMemory");
+	if (!OsWlanFreeMemory)
+		return;
+	*(FARPROC*)&OsWlanCloseHandle = GetProcAddress(hL, "WlanCloseHandle");
+	if (!OsWlanCloseHandle)
+		return;
+
+	if (NWL_StrToGuid(ipAdapter->AdapterName, &guidIf) != TRUE)
+		return;
+
+	if (OsWlanOpenHandle(2, NULL, &dwBuf, &hClient) != ERROR_SUCCESS)
+		return;
+
+	if (OsWlanQueryInterface(hClient, &guidIf,
+		wlan_intf_opcode_current_connection, NULL, &dwBuf, (PVOID*)&wlanAttr, NULL) != ERROR_SUCCESS)
+		goto end;
+
+	NWL_NodeAttrSet(node, "WLAN State", WlanStateToStr(wlanAttr->isState), 0);
+	if (wlanAttr->isState != wlan_interface_state_connected)
+		goto end;
+	NWL_NodeAttrSet(node, "WLAN Profile", NWL_Ucs2ToUtf8(wlanAttr->strProfileName), 0);
+	NWL_NodeAttrSetf(node, "WLAN Signal Quality", NAFLG_FMT_NUMERIC,
+		"%lu", wlanAttr->wlanAssociationAttributes.wlanSignalQuality);
+	NWL_NodeAttrSet(node, "WLAN Auth", WlanAuthToStr(wlanAttr->wlanSecurityAttributes.dot11AuthAlgorithm), 0);
+	NWL_NodeAttrSet(node, "WLAN Cipher", WlanCipherToStr(wlanAttr->wlanSecurityAttributes.dot11CipherAlgorithm), 0);
+
+end:
+	if (wlanAttr)
+		OsWlanFreeMemory(wlanAttr);
+	OsWlanCloseHandle(hClient, NULL);
 }
 
 static PIP_ADAPTER_ADDRESSES_XP
@@ -150,6 +255,8 @@ PNODE NW_Network(VOID)
 		NWL_NodeAttrSet(nic, "Network Adapter", pCurrAddresses->AdapterName, NAFLG_FMT_GUID);
 		NWL_NodeAttrSet(nic, "Description", desc, 0);
 		NWL_NodeAttrSet(nic, "Type", IfTypeToStr(pCurrAddresses->IfType), 0);
+		if (pCurrAddresses->IfType == IF_TYPE_IEEE80211)
+			GetWlanInfo(nic, pCurrAddresses);
 		if (pCurrAddresses->PhysicalAddressLength != 0)
 		{
 			NWLC->NwBuf[0] = '\0';
