@@ -61,7 +61,7 @@ jobs:
         copy libcdi_dll\libcdi\x64\libcdi.dll nwinfo\libcdi.x64.dll
 
     - name: Create PDF
-      uses: BaileyJM02/markdown-to-pdf@v1.2
+      uses: BaileyJM02/markdown-to-pdf@v1
       with:
           input_path: README.md
           output_dir: nwinfo
