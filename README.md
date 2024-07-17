@@ -16,7 +16,7 @@ NWinfo is a Win32 program that allows you to obtain system and hardware informat
 
 ## Note
 For Windows 11, the "Memory Integrity" and "Microsoft Vulnerable Driver Blocklist" options should be disabled.
-```ini
+```txt
 Windows Registry Editor Version 5.00
 
 [HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\DeviceGuard\Scenarios\HypervisorEnforcedCodeIntegrity]
