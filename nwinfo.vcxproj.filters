@@ -39,5 +39,6 @@
     <None Include="README.md" />
     <None Include=".github\workflows\msbuild.yml" />
     <None Include="_config.yml" />
+    <None Include="_layouts\default.html" />
   </ItemGroup>
 </Project>

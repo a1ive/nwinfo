@@ -29,6 +29,7 @@
     <None Include="packages.config" />
     <None Include="README.md" />
     <None Include="_config.yml" />
+    <None Include="_layouts\default.html" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="libnw\libnw.vcxproj">
