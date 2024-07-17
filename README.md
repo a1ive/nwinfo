@@ -20,16 +20,16 @@ For Windows 11, the "Memory Integrity" and "Microsoft Vulnerable Driver Blocklis
 Windows Registry Editor Version 5.00
 
 [HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\DeviceGuard\Scenarios\HypervisorEnforcedCodeIntegrity]
-¡°Enabled¡±=dword:0000000
+"Enabled"=dword:0000000
 
 [HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\DeviceGuard]
-¡°EnableVirtualizationBasedSecurity¡±=dword:00000000
+"EnableVirtualizationBasedSecurity"=dword:00000000
 
 [HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\DeviceGuard\Scenarios\SystemGuard]
-¡°Enabled¡±=dword:00000000
+"Enabled"=dword:00000000
 
 [HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\CI\Config]
-¡°VulnerableDriverBlocklistEnable¡±=dword:00000000
+"VulnerableDriverBlocklistEnable"=dword:00000000
 ```
 ![win11](doc/win11.png)
 
