@@ -15,7 +15,8 @@ jobs:
     runs-on: windows-latest
 
     steps:
-    - uses: actions/checkout@v4
+    - name: Run git checkout
+      uses: actions/checkout@v4
 
     - name: Add MSBuild to PATH
       uses: microsoft/setup-msbuild@v2
@@ -31,6 +32,10 @@ jobs:
       run: |
         msbuild /m /p:Configuration=Release /p:platform=x64 ${{env.SOLUTION_FILE_PATH}}
         msbuild /m /p:Configuration=Release /p:platform=x86 ${{env.SOLUTION_FILE_PATH}}
+
+    - name: Copy files
+      working-directory: ${{env.GITHUB_WORKSPACE}}
+      run: |
         md nwinfo
         move x64\Release\nwinfo.exe nwinfo\nwinfo_x64.exe
         move x64\Release\gnwinfo.exe nwinfo\gnwinfo_x64.exe
@@ -54,6 +59,14 @@ jobs:
         Expand-Archive -Path libcdi.zip -DestinationPath libcdi_dll
         copy libcdi_dll\libcdi\x86\libcdi.dll nwinfo\libcdi.Win32.dll
         copy libcdi_dll\libcdi\x64\libcdi.dll nwinfo\libcdi.x64.dll
+
+    - name: Create PDF
+      uses: BaileyJM02/markdown-to-pdf@v1.2
+      with:
+          input_path: README.md
+          output_dir: nwinfo
+          images_dir: doc
+          build_html: false
 
     - name: Run UPX
       uses: crazy-max/ghaction-upx@v3

@@ -2,9 +2,8 @@
 <div align="center">
   <img src="icon.ico">
   <h3 align="center">NWinfo</h3>
-  <img src="https://img.shields.io/github/license/a1ive/nwinfo">
-  <img src="https://img.shields.io/github/downloads/a1ive/nwinfo/total">
-  <img src="https://img.shields.io/github/v/release/a1ive/nwinfo">
+  <img src="https://img.shields.io/github/license/a1ive/nwinfo?logo=unlicense">
+  <img src="https://img.shields.io/github/downloads/a1ive/nwinfo/total?logo=github">
 </div>
 <br />
 
@@ -17,7 +16,21 @@ NWinfo is a Win32 program that allows you to obtain system and hardware informat
 
 ## Note
 For Windows 11, the "Memory Integrity" and "Microsoft Vulnerable Driver Blocklist" options should be disabled.
+```
+Windows Registry Editor Version 5.00
 
+[HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\DeviceGuard\Scenarios\HypervisorEnforcedCodeIntegrity]
+¡°Enabled¡±=dword:0000000
+
+[HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\DeviceGuard]
+¡°EnableVirtualizationBasedSecurity¡±=dword:00000000
+
+[HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\DeviceGuard\Scenarios\SystemGuard]
+¡°Enabled¡±=dword:00000000
+
+[HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\CI\Config]
+¡°VulnerableDriverBlocklistEnable¡±=dword:00000000
+```
 ![win11](doc/win11.png)
 
 ## GUI Preview
@@ -28,29 +41,42 @@ For Windows 11, the "Memory Integrity" and "Microsoft Vulnerable Driver Blocklis
 ```
 .\nwinfo.exe OPTIONS
 OPTIONS:
-  --format=XXX     Specify output format. [YAML|JSON|LUA]
+  --format=FMT     Specify output format.
+                   FMT can be 'YAML' (default), 'JSON' and 'LUA'.
   --output=FILE    Write to FILE instead of printing to screen.
-  --cp=XXXX        Set the code page of output text. [ANSI|UTF8]
+  --cp=CODEPAGE    Set the code page of output text.
+                   CODEPAGE can be 'ANSI' and 'UTF8'.
   --human          Display numbers in human readable format.
   --debug          Print debug info to stdout.
   --hide-sensitive Hide sensitive data (MAC & S/N).
   --sys            Print system info.
-  --cpu            Print processor details.
-  --net[=active]   Print network information for each adapter interface.
-  --acpi[=XXXX]    Print ACPI tables.
-  --smbios[=XX]    Print SMBIOS tables.
-  --disk           Print disk S.M.A.R.T and partitions.
+  --cpu            Print CPUID info.
+  --net[=FLAG]     Print network info
+                   FLAG can be 'ACTIVE' (print only the active network).
+  --acpi[=SGN]     Print ACPI info.
+                   SGN specifies the signature of the ACPI table,
+                   e.g. 'FACP' (Fixed ACPI Description Table).
+  --smbios[=TYPE]  Print SMBIOS info.
+                   TYPE specifies the type of the SMBIOS table,
+                   e.g. '2' (Base Board Information).
+  --disk[=PATH]    Print disk info.
+                   PATH specifies the path of the disk,
+                   e.g. '\\\\.\\PhysicalDrive0', '\\\\.\\CdRom0'.
   --no-smart       Don't print disk S.M.A.R.T. info.
-  --display        Print display monitors information (EDID).
-  --pci[=XX]       List PCI devices.
-  --usb            List USB devices.
-  --spd            Print SPD information of memory modules (Experimental).
-  --battery        Print battery information.
-  --uefi           Print UEFI boot information.
-  --shares         List network mapped drives.
-  --audio          List audio devices.
+  --display        Print EDID info.
+  --pci[=CLASS]    Print PCI info.
+                   CLASS specifies the class code of pci devices,
+                   e.g. '0C05' (SMBus).
+  --usb            Print USB info.
+  --spd            Print SPD info.
+  --battery        Print battery info.
+  --uefi           Print UEFI info.
+  --shares         Print network mapped drives.
+  --audio          Print audio devices.
   --public-ip      Print public IP address.
-  --product-policy Print ProductPolicy values.
+  --product-policy Print ProductPolicy.
+  --gpu            Print GPU usage.
+  --font           Print installed fonts.
 ```
 
 ## Credits
