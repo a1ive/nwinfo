@@ -38,5 +38,6 @@
     <None Include="packages.config" />
     <None Include="README.md" />
     <None Include=".github\workflows\msbuild.yml" />
+    <None Include="_config.yml" />
   </ItemGroup>
 </Project>

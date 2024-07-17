@@ -28,6 +28,7 @@
     <None Include=".github\workflows\msbuild.yml" />
     <None Include="packages.config" />
     <None Include="README.md" />
+    <None Include="_config.yml" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="libnw\libnw.vcxproj">
