@@ -60,13 +60,13 @@ jobs:
         copy libcdi_dll\libcdi\x86\libcdi.dll nwinfo\libcdi.Win32.dll
         copy libcdi_dll\libcdi\x64\libcdi.dll nwinfo\libcdi.x64.dll
 
-    - name: Create PDF
-      uses: BaileyJM02/markdown-to-pdf@v1
-      with:
-          input_path: README.md
-          output_dir: nwinfo
-          images_dir: doc
-          build_html: false
+    # - name: Create PDF
+    #  uses: BaileyJM02/markdown-to-pdf@v1
+    #  with:
+    #    input_path: README.md
+    #    output_dir: nwinfo
+    #    images_dir: doc
+    #    build_html: false
 
     - name: Run UPX
       uses: crazy-max/ghaction-upx@v3
