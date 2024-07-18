@@ -727,6 +727,17 @@ draw_network(struct nk_context* ctx)
 			nk_lhsc(ctx, m_buf, NK_TEXT_LEFT, g_color_text_d, nk_true, nk_true);
 			nk_lhc(ctx,
 				gnwinfo_get_node_attr(nw, "MAC Address"), NK_TEXT_LEFT, g_color_text_l);
+
+			if (strcmp(gnwinfo_get_node_attr(nw, "WLAN State"), "Connected") == 0)
+			{
+				nk_layout_row(ctx, NK_DYNAMIC, 0, 2, (float[2]) { 0.64f, 0.36f });
+				nk_lhscf(ctx, NK_TEXT_LEFT, g_color_text_d, nk_true, nk_true, " %s%% %s",
+					gnwinfo_get_node_attr(nw, "WLAN Signal Quality"),
+					gnwinfo_get_node_attr(nw, "WLAN Profile"));
+				nk_lhscf(ctx, NK_TEXT_LEFT, g_color_text_d, nk_true, nk_false, "%s %s",
+					gnwinfo_get_node_attr(nw, "WLAN Auth"),
+					gnwinfo_get_node_attr(nw, "WLAN Cipher"));
+			}
 		}
 	}
 }
