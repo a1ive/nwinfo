@@ -17,8 +17,8 @@ static const CHAR* Win10BuildNumber(DWORD dwBuildNumber)
 {
 	switch (dwBuildNumber)
 	{
-	//case 26100U:
-		//return "11 24H2";
+	case 26100U:
+		return "11 24H2";
 	case 22631U:
 		return "11 23H2"; // Sun Valley 3
 	case 22621U:

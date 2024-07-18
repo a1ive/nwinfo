@@ -22,7 +22,7 @@ static void nwinfo_help(void)
 		"  --hide-sensitive Hide sensitive data (MAC & S/N).\n"
 		"  --sys            Print system info.\n"
 		"  --cpu            Print CPUID info.\n"
-		"  --net[=FLAG]     Print network info\n"
+		"  --net[=FLAG]     Print network info.\n"
 		"                   FLAG can be 'ACTIVE' (print only the active network).\n"
 		"  --acpi[=SGN]     Print ACPI info.\n"
 		"                   SGN specifies the signature of the ACPI table,\n"

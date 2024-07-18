@@ -31,11 +31,12 @@ Windows Registry Editor Version 5.00
 [HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\CI\Config]
 "VulnerableDriverBlocklistEnable"=dword:00000000
 ```
-![win11](doc/win11.png)
 
 ## GUI Preview
 
-![preview](doc/demo.png)
+<div align="center">
+  <img src="assets/images/demo.png">
+</div>
 
 ## CLI Usage
 ```txt
@@ -51,7 +52,7 @@ OPTIONS:
   --hide-sensitive Hide sensitive data (MAC & S/N).
   --sys            Print system info.
   --cpu            Print CPUID info.
-  --net[=FLAG]     Print network info
+  --net[=FLAG]     Print network info.
                    FLAG can be 'ACTIVE' (print only the active network).
   --acpi[=SGN]     Print ACPI info.
                    SGN specifies the signature of the ACPI table,
