@@ -249,6 +249,12 @@ PNODE NW_Network(VOID)
 				goto next_addr;
 			if (strncmp(desc, "Microsoft Wi-Fi Direct Virtual Adapter", 38) == 0)
 				goto next_addr;
+			if (strncmp(desc, "Bluetooth Device", 16) == 0)
+				goto next_addr;
+			if (strncmp(desc, "VMware Virtual Ethernet Adapter", 31) == 0)
+				goto next_addr;
+			if (strncmp(desc, "VirtualBox Host-Only Ethernet Adapter", 37) == 0)
+				goto next_addr;
 		}
 		pCurrAddressesLH = (PIP_ADAPTER_ADDRESSES_LH)pCurrAddresses;
 		nic = NWL_NodeAppendNew(node, "Interface", NFLG_TABLE_ROW);
