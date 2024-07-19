@@ -90,7 +90,6 @@
     </Lib>
     <PostBuildEvent>
       <Command>copy "$(ProjectDir)jep106.ids" "$(SolutionDir)$(Platform)\$(Configuration)\"
-copy "$(SolutionDir)libcdi\libcdi.$(Platform).dll" "$(SolutionDir)$(Platform)\$(Configuration)\"
 copy "$(SolutionDir)winring0\HwRwDrv.sys" "$(SolutionDir)$(Platform)\$(Configuration)\"
 copy "$(SolutionDir)winring0\HwRwDrvx64.sys" "$(SolutionDir)$(Platform)\$(Configuration)\"</Command>
     </PostBuildEvent>
@@ -121,7 +120,6 @@ copy "$(SolutionDir)winring0\HwRwDrvx64.sys" "$(SolutionDir)$(Platform)\$(Config
     </Lib>
     <PostBuildEvent>
       <Command>copy "$(ProjectDir)jep106.ids" "$(SolutionDir)$(Platform)\$(Configuration)\"
-copy "$(SolutionDir)libcdi\libcdi.$(Platform).dll" "$(SolutionDir)$(Platform)\$(Configuration)\"
 copy "$(SolutionDir)winring0\HwRwDrv.sys" "$(SolutionDir)$(Platform)\$(Configuration)\"
 copy "$(SolutionDir)winring0\HwRwDrvx64.sys" "$(SolutionDir)$(Platform)\$(Configuration)\"</Command>
     </PostBuildEvent>
