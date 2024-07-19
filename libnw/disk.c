@@ -629,7 +629,7 @@ PrintDiskInfo(BOOL cdrom, PNODE node, CDI_SMART* smart)
 		if (!cdrom)
 		{
 			PrintIsSsd(nd, &PhyDriveList[i], PhyDriveList[i].Index);
-			if (NWLC->DisableSmart == FALSE && smart)
+			if (!(NWLC->DiskFlags & NW_DISK_NO_SMART) && smart)
 				PrintSmartInfo(nd, smart, GetSmartIndex(smart, PhyDriveList[i].Index));
 		}
 		if (PhyDriveList[i].VolumeCount)
@@ -654,7 +654,7 @@ PNODE NW_Disk(VOID)
 	PNODE node = NWL_NodeAlloc("Disks", NFLG_TABLE);
 	if (NWLC->DiskInfo)
 		NWL_NodeAppendChild(NWLC->NwRoot, node);
-	if (NWLC->DisableSmart == FALSE && NWLC->NwSmart && NWLC->NwSmartInit == FALSE)
+	if (!(NWLC->DiskFlags & NW_DISK_NO_SMART) && NWLC->NwSmart && NWLC->NwSmartInit == FALSE)
 	{
 		cdi_init_smart(NWLC->NwSmart, NWLC->NwSmartFlags);
 		NWLC->NwSmartInit = TRUE;

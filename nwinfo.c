@@ -100,7 +100,8 @@ int main(int argc, char* argv[])
 			nwContext.CpuInfo = TRUE;
 		else if (_strnicmp(argv[i], "--net", 5) == 0)
 		{
-			nwContext.ActiveNet = _stricmp(&argv[i][5], "=active") == 0 ? TRUE : FALSE;
+			if (_stricmp(&argv[i][5], "=active") == 0)
+				nwContext.NetFlags |= NW_NET_ACTIVE;
 			nwContext.NetInfo = TRUE;
 		}
 		else if (_strnicmp(argv[i], "--acpi", 6) == 0)
@@ -122,7 +123,7 @@ int main(int argc, char* argv[])
 			nwContext.DiskInfo = TRUE;
 		}
 		else if (_stricmp(argv[i], "--no-smart") == 0)
-			nwContext.DisableSmart = TRUE;
+			nwContext.DiskFlags |= NW_DISK_NO_SMART;
 		else if (_stricmp(argv[i], "--display") == 0)
 			nwContext.EdidInfo = TRUE;
 		else if (_strnicmp(argv[i], "--pci", 5) == 0)

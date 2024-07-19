@@ -237,6 +237,7 @@ gnwinfo_ctx_update(WPARAM wparam)
 	case IDT_TIMER_1S:
 		if (g_ctx.network)
 			NWL_NodeFree(g_ctx.network, 1);
+		g_ctx.lib.NetFlags = NW_NET_PHYS | ((g_ctx.main_flag & MAIN_NET_INACTIVE) ? 0 : NW_NET_ACTIVE);
 		g_ctx.network = NW_Network();
 		NWL_GetUptime(g_ctx.sys_uptime, GNWC_STR_SIZE);
 		get_memory_usage();
@@ -268,7 +269,7 @@ gnwinfo_ctx_update(WPARAM wparam)
 		if (g_ctx.disk)
 			NWL_NodeFree(g_ctx.disk, 1);
 		g_ctx.lib.NwSmartInit = FALSE;
-		g_ctx.lib.DisableSmart = (g_ctx.main_flag & MAIN_DISK_SMART) ? FALSE : TRUE;
+		g_ctx.lib.DiskFlags = (g_ctx.main_flag & MAIN_DISK_SMART) ? 0 : NW_DISK_NO_SMART;
 		g_ctx.disk = NW_Disk();
 		break;
 	case IDT_TIMER_SMB:
@@ -321,7 +322,7 @@ gnwinfo_ctx_init(HINSTANCE inst, HWND wnd, struct nk_context* ctx, float width, 
 	g_ctx.lib.HumanSize = TRUE;
 	g_ctx.lib.ErrLogCallback = gnwinfo_ctx_error_callback;
 	g_ctx.lib.CodePage = CP_UTF8;
-	g_ctx.lib.SkipVirtualNet = TRUE;
+	g_ctx.lib.NetFlags = NW_NET_PHYS | ((g_ctx.main_flag & MAIN_NET_INACTIVE) ? 0 : NW_NET_ACTIVE);
 
 	g_ctx.lib.CpuInfo = TRUE;
 	g_ctx.lib.SysInfo = TRUE;

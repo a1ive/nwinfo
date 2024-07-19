@@ -239,10 +239,10 @@ PNODE NW_Network(VOID)
 	{
 		PNODE nic = NULL;
 		LPCSTR desc = NULL;
-		if (NWLC->ActiveNet && pCurrAddresses->OperStatus != IfOperStatusUp)
+		if ((NWLC->NetFlags & NW_NET_ACTIVE) && pCurrAddresses->OperStatus != IfOperStatusUp)
 			goto next_addr;
 		desc = NWL_Ucs2ToUtf8(pCurrAddresses->Description);
-		if (NWLC->SkipVirtualNet)
+		if (NWLC->NetFlags & NW_NET_PHYS)
 		{
 			if (pCurrAddresses->IfType == IF_TYPE_SOFTWARE_LOOPBACK ||
 				pCurrAddresses->IfType == IF_TYPE_TUNNEL)

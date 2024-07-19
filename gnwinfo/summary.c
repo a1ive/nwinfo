@@ -702,8 +702,7 @@ draw_network(struct nk_context* ctx)
 			color = g_color_good;
 			is_active = TRUE;
 		}
-		else if (!(g_ctx.main_flag & MAIN_NET_INACTIVE))
-			continue;
+
 		nk_layout_row(ctx, NK_DYNAMIC, 0, 3, (float[3]) { 0.64f, 0.36f - g_ctx.gui_ratio, g_ctx.gui_ratio });
 		nk_lhsc(ctx, gnwinfo_get_node_attr(nw, "Description"), NK_TEXT_LEFT, g_color_text_d, nk_true, nk_true);
 		nk_lhc(ctx, get_first_ipv4(nw), NK_TEXT_LEFT, color);

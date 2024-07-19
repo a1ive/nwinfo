@@ -50,12 +50,15 @@ typedef struct _NWLIB_CONTEXT
 	BOOL HideSensitive;
 
 	DWORD AcpiTable;
-	BOOL ActiveNet;
-	BOOL SkipVirtualNet;
 	UINT8 SmbiosType;
 	LPCSTR PciClass;
 	LPCSTR DiskPath;
-	BOOL DisableSmart;
+
+#define NW_NET_ACTIVE (1 << 0)
+#define NW_NET_PHYS   (1 << 1)
+	UINT64 NetFlags;
+#define NW_DISK_NO_SMART (1 << 0)
+	UINT64 DiskFlags;
 
 	VOID (*SpdProgress) (LPCSTR lpszText);
 
