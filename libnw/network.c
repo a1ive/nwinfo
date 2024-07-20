@@ -249,13 +249,16 @@ PNODE NW_Network(VOID)
 	{
 		PNODE nic = NULL;
 		LPCSTR desc = NULL;
+		BOOL bMatch = FALSE;
 		if ((NWLC->NetFlags & NW_NET_ACTIVE) && pCurrAddresses->OperStatus != IfOperStatusUp)
 			goto next_addr;
-		if ((NWLC->NetFlags & NW_NET_ETH)
-			&& !(NWLC->NetFlags & NW_NET_WLAN) && pCurrAddresses->IfType != IF_TYPE_ETHERNET_CSMACD)
-			goto next_addr;
-		if ((NWLC->NetFlags & NW_NET_WLAN)
-			&& !(NWLC->NetFlags & NW_NET_ETH) && pCurrAddresses->IfType != IF_TYPE_IEEE80211)
+		if (!(NWLC->NetFlags & (NW_NET_ETH | NW_NET_WLAN)))
+			bMatch = TRUE;
+		if ((NWLC->NetFlags & NW_NET_ETH) && pCurrAddresses->IfType == IF_TYPE_ETHERNET_CSMACD)
+			bMatch = TRUE;
+		if ((NWLC->NetFlags & NW_NET_WLAN) && pCurrAddresses->IfType == IF_TYPE_IEEE80211)
+			bMatch = TRUE;
+		if (bMatch == FALSE)
 			goto next_addr;
 		desc = NWL_Ucs2ToUtf8(pCurrAddresses->Description);
 		if (NWLC->NetFlags & NW_NET_PHYS)
