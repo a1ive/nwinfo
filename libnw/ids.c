@@ -275,7 +275,7 @@ NWL_GetPnpManufacturer(PNODE nd, CHAR* Ids, DWORD IdsSize, CONST CHAR* Code)
 		free(Line);
 		Line = IdsGetline(Ids, IdsSize, &Offset);
 	}
-	NWL_NodeAttrSet(nd, "Manufacturer", "UNKNOWN", 0);
+	NWL_NodeAttrSet(nd, "Manufacturer", Code, 0);
 }
 
 VOID
