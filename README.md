@@ -81,7 +81,15 @@ OPTIONS:
       SCSI         Filter out SCSI devices.
       SAS          Filter out SAS devices.
       USB          Filter out USB devices.
-  --no-smart       Don't print disk S.M.A.R.T. info.
+  --smart=FLAG,... Specify S.M.A.R.T. features.
+                   Features enabled by default: 'WMI', 'ATA',
+                   'NVIDIA', 'MARVELL', 'SAT', 'SUNPLUS',
+                   'IODATA', 'LOGITEC', 'PROLIFIC', 'USBJMICRON',
+                   'CYPRESS', 'MEMORY', 'JMICRON', 'ASMEDIA',
+                   'REALTEK', 'MEGARAID', 'VROC' and 'ASM1352R'.
+                   Use 'DEFAULT' to specify the above features.
+                   Other features are 'ADVANCED', 'HD204UI',
+                   'ADATA', 'NOWAKEUP' and 'JMICRON3'.
   --display        Print EDID info.
   --pci[=CLASS]    Print PCI info.
                    CLASS specifies the class code of pci devices,

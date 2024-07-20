@@ -2,6 +2,7 @@
 
 #include <libnw.h>
 #include <version.h>
+#include "libcdi/libcdi.h"
 
 static NWLIB_CONTEXT nwContext;
 
@@ -49,7 +50,15 @@ static void nwinfo_help(void)
 		"      SCSI         Filter out SCSI devices.\n"
 		"      SAS          Filter out SAS devices.\n"
 		"      USB          Filter out USB devices.\n"
-		"  --no-smart       Don't print disk S.M.A.R.T. info.\n"
+		"  --smart=FLAG,... Specify S.M.A.R.T. features.\n"
+		"                   Features enabled by default: 'WMI', 'ATA',\n"
+		"                   'NVIDIA', 'MARVELL', 'SAT', 'SUNPLUS',\n"
+		"                   'IODATA', 'LOGITEC', 'PROLIFIC', 'USBJMICRON',\n"
+		"                   'CYPRESS', 'MEMORY', 'JMICRON', 'ASMEDIA',\n"
+		"                   'REALTEK', 'MEGARAID', 'VROC' and 'ASM1352R'.\n"
+		"                   Use 'DEFAULT' to specify the above features.\n"
+		"                   Other features are 'ADVANCED', 'HD204UI',\n"
+		"                   'ADATA', 'NOWAKEUP' and 'JMICRON3'.\n"
 		"  --display        Print EDID info.\n"
 		"  --pci[=CLASS]    Print PCI info.\n"
 		"                   CLASS specifies the class code of pci devices,\n"
@@ -208,8 +217,39 @@ int main(int argc, char* argv[])
 				ARRAYSIZE(filter), filter, "\\\\.\\");
 			nwContext.DiskInfo = TRUE;
 		}
-		else if (_stricmp(argv[i], "--no-smart") == 0)
-			nwContext.DiskFlags |= NW_DISK_NO_SMART;
+		else if (_strnicmp(argv[i], "--smart", 7) == 0)
+		{
+			NW_ARG_FILTER filter[] =
+			{
+				{"WMI", CDI_FLAG_USE_WMI},
+				{"ADVANCED", CDI_FLAG_ADVANCED_SEARCH},
+				{"HD204UI", CDI_FLAG_WORKAROUND_HD204UI},
+				{"ADATA", CDI_FLAG_WORKAROUND_ADATA},
+				{"NOWAKEUP", CDI_FLAG_NO_WAKEUP},
+				{"ATA", CDI_FLAG_ATA_PASS_THROUGH},
+				{"NVIDIA", CDI_FLAG_ENABLE_NVIDIA	},
+				{"MARVELL", CDI_FLAG_ENABLE_MARVELL},
+				{"SAT", CDI_FLAG_ENABLE_USB_SAT},
+				{"SUNPLUS", CDI_FLAG_ENABLE_USB_SUNPLUS},
+				{"IODATA", CDI_FLAG_ENABLE_USB_IODATA},
+				{"LOGITEC", CDI_FLAG_ENABLE_USB_LOGITEC},
+				{"PROLIFIC", CDI_FLAG_ENABLE_USB_PROLIFIC},
+				{"USBJMICRON", CDI_FLAG_ENABLE_USB_JMICRON},
+				{"CYPRESS", CDI_FLAG_ENABLE_USB_CYPRESS},
+				{"MEMORY", CDI_FLAG_ENABLE_USB_MEMORY},
+				{"JMICRON3", CDI_FLAG_ENABLE_NVME_JMICRON3},
+				{"JMICRON", CDI_FLAG_ENABLE_NVME_JMICRON},
+				{"ASMEDIA", CDI_FLAG_ENABLE_NVME_ASMEDIA},
+				{"REALTEK", CDI_FLAG_ENABLE_NVME_REALTEK},
+				{"MEGARAID", CDI_FLAG_ENABLE_MEGA_RAID},
+				{"VROC", CDI_FLAG_ENABLE_INTEL_VROC},
+				{"ASM1352R", CDI_FLAG_ENABLE_ASM1352R},
+				{"DEFAULT", CDI_FLAG_DEFAULT},
+			};
+			nwContext.NwSmartFlags = 0;
+			nwinfo_get_opts(&argv[i][7], &nwContext.NwSmartFlags,
+				ARRAYSIZE(filter), filter, NULL);
+		}
 		else if (_stricmp(argv[i], "--display") == 0)
 			nwContext.EdidInfo = TRUE;
 		else if (_strnicmp(argv[i], "--pci", 5) == 0)
