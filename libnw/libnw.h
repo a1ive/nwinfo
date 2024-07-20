@@ -56,6 +56,8 @@ typedef struct _NWLIB_CONTEXT
 
 #define NW_NET_ACTIVE (1 << 0)
 #define NW_NET_PHYS   (1 << 1)
+#define NW_NET_IPV4   (1 << 2)
+#define NW_NET_IPV6   (1 << 3)
 	UINT64 NetFlags;
 #define NW_DISK_NO_SMART (1 << 0)
 	UINT64 DiskFlags;

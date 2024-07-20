@@ -58,6 +58,8 @@ OPTIONS:
     FLAGS:
       ACTIVE       Filter out active network interfaces.
       PHYS         Filter out physical network interfaces.
+      IPV4         Filter out IPv4 addresses.
+      IPV6         Filter out IPv6 addresses.
   --acpi[=SGN]     Print ACPI info.
                    SGN specifies the signature of the ACPI table,
                    e.g. 'FACP' (Fixed ACPI Description Table).

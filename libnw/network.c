@@ -18,32 +18,40 @@
 static const char* bps_human_sizes[6] =
 { "bps", "kbps", "Mbps", "Gbps", "Tbps", "Pbps", };
 
-static void DisplayAddress(PNODE pNode, const PSOCKET_ADDRESS pAddress, LPCSTR key)
+static const CHAR*
+IpAddrToStr(const PSOCKET_ADDRESS pAddress, PBOOL pbIpv6)
 {
+	static CHAR buf[INET6_ADDRSTRLEN] = { 0 };
 	if (!pAddress || !pAddress->lpSockaddr
 		|| pAddress->iSockaddrLength < sizeof(SOCKADDR_IN)
 		|| pAddress->iSockaddrLength > sizeof(SOCKADDR_IN6))
-	{
-		//printf("INVALID\n");
-	}
-	else if (pAddress->lpSockaddr->sa_family == AF_INET)
+		return NULL;
+	if (pAddress->lpSockaddr->sa_family == AF_INET && (NWLC->NetFlags & NW_NET_IPV4))
 	{
 		SOCKADDR_IN* si = (SOCKADDR_IN*)(pAddress->lpSockaddr);
-		char a[INET_ADDRSTRLEN] = { 0 };
-		if (inet_ntop(AF_INET, &(si->sin_addr), a, sizeof(a)))
-			NWL_NodeAttrSet(pNode, key ? key : "IPv4", a, NAFLG_FMT_IPADDR);
-		else
-			NWL_NodeAttrSet(pNode, key ? key : "IPv4", "", NAFLG_FMT_IPADDR);
+		*pbIpv6 = FALSE;
+		if (inet_ntop(AF_INET, &(si->sin_addr), buf, sizeof(buf)))
+			return buf;
 	}
-	else if (pAddress->lpSockaddr->sa_family == AF_INET6)
+	else if (pAddress->lpSockaddr->sa_family == AF_INET6 && (NWLC->NetFlags & NW_NET_IPV6))
 	{
 		SOCKADDR_IN6* si = (SOCKADDR_IN6*)(pAddress->lpSockaddr);
-		char a[INET6_ADDRSTRLEN] = { 0 };
-		if (inet_ntop(AF_INET6, &(si->sin6_addr), a, sizeof(a)))
-			NWL_NodeAttrSet(pNode, key ? key : "IPv6", a, NAFLG_FMT_IPADDR);
-		else
-			NWL_NodeAttrSet(pNode, key ? key : "IPv6", "", NAFLG_FMT_IPADDR);
+		*pbIpv6 = TRUE;
+		if (inet_ntop(AF_INET6, &(si->sin6_addr), buf, sizeof(buf)))
+			return buf;
 	}
+	return NULL;
+}
+
+static PNODE DisplayAddress(PNODE pParent, LPCSTR name, const PSOCKET_ADDRESS pAddress)
+{
+	BOOL bIpv6 = FALSE;
+	const CHAR* buf = IpAddrToStr(pAddress, &bIpv6);
+	if (buf == NULL)
+		return NULL;
+	PNODE pNode = NWL_NodeAppendNew(pParent, name, NFLG_TABLE_ROW);
+	NWL_NodeAttrSet(pNode, bIpv6 ? "IPv6" : "IPv4", buf, NAFLG_FMT_IPADDR);
+	return pNode;
 }
 
 static const CHAR*
@@ -227,6 +235,8 @@ PNODE NW_Network(VOID)
 	PNODE node = NWL_NodeAlloc("Network", NFLG_TABLE);
 	if (NWLC->NetInfo)
 		NWL_NodeAppendChild(NWLC->NwRoot, node);
+	if (!(NWLC->NetFlags & (NW_NET_IPV4 | NW_NET_IPV6)))
+		NWLC->NetFlags |= NW_NET_IPV4 | NW_NET_IPV6;
 
 	bLonghornOrLater = (NWLC->NwOsInfo.dwMajorVersion >= 6);
 
@@ -283,9 +293,8 @@ PNODE NW_Network(VOID)
 			PNODE n_unicast = NWL_NodeAppendNew(nic, "Unicasts", NFLG_TABLE);
 			for (i = 0; pUnicast != NULL && pUnicast < (PIP_ADAPTER_UNICAST_ADDRESS_XP)pMaxAddress; i++)
 			{
-				PNODE unicast = NWL_NodeAppendNew(n_unicast, "Unicast Address", NFLG_TABLE_ROW);
-				DisplayAddress(unicast, &pUnicast->Address, NULL);
-				if (bLonghornOrLater && pUnicast->Address.lpSockaddr->sa_family == AF_INET)
+				PNODE unicast = DisplayAddress(n_unicast, "Unicast Address", &pUnicast->Address);
+				if (unicast && bLonghornOrLater && pUnicast->Address.lpSockaddr->sa_family == AF_INET)
 				{
 					ULONG SubnetMask = 0;
 					PIP_ADAPTER_UNICAST_ADDRESS_LH pUnicastLH = (PIP_ADAPTER_UNICAST_ADDRESS_LH)pUnicast;
@@ -303,8 +312,7 @@ PNODE NW_Network(VOID)
 			PNODE n_anycast = NWL_NodeAppendNew(nic, "Anycasts", NFLG_TABLE);
 			for (i = 0; pAnycast != NULL && pAnycast < (PIP_ADAPTER_ANYCAST_ADDRESS_XP)pMaxAddress; i++)
 			{
-				PNODE anycast = NWL_NodeAppendNew(n_anycast, "Anycast Address", NFLG_TABLE_ROW);
-				DisplayAddress(anycast, &pAnycast->Address, NULL);
+				DisplayAddress(n_anycast, "Anycast Address", &pAnycast->Address);
 				pAnycast = pAnycast->Next;
 			}
 		}
@@ -315,8 +323,7 @@ PNODE NW_Network(VOID)
 			PNODE n_multicast = NWL_NodeAppendNew(nic, "Multicasts", NFLG_TABLE);
 			for (i = 0; pMulticast != NULL && pMulticast < (PIP_ADAPTER_MULTICAST_ADDRESS_XP)pMaxAddress; i++)
 			{
-				PNODE multicast = NWL_NodeAppendNew(n_multicast, "Multicast Address", NFLG_TABLE_ROW);
-				DisplayAddress(multicast, &pMulticast->Address, NULL);
+				DisplayAddress(n_multicast, "Multicast Address", &pMulticast->Address);
 				pMulticast = pMulticast->Next;
 			}
 		}
@@ -329,8 +336,7 @@ PNODE NW_Network(VOID)
 				PNODE n_gateway = NWL_NodeAppendNew(nic, "Gateways", NFLG_TABLE);
 				for (i = 0; pGateway != NULL && pGateway < (PIP_ADAPTER_GATEWAY_ADDRESS_LH)pMaxAddress; i++)
 				{
-					PNODE gateway = NWL_NodeAppendNew(n_gateway, "Gateway", NFLG_TABLE_ROW);
-					DisplayAddress(gateway, &pGateway->Address, NULL);
+					DisplayAddress(n_gateway, "Gateway", &pGateway->Address);
 					pGateway = pGateway->Next;
 				}
 			}
@@ -342,18 +348,28 @@ PNODE NW_Network(VOID)
 			PNODE n_dns = NWL_NodeAppendNew(nic, "DNS Servers", NFLG_TABLE);
 			for (i = 0; pDnServer != NULL && pDnServer < (IP_ADAPTER_DNS_SERVER_ADDRESS*)pMaxAddress; i++)
 			{
-				PNODE dns = NWL_NodeAppendNew(n_dns, "DNS Server", NFLG_TABLE_ROW);
-				DisplayAddress(dns, &pDnServer->Address, NULL);
+				DisplayAddress(n_dns, "DNS Server", &pDnServer->Address);
 				pDnServer = pDnServer->Next;
 			}
 		}
 
-		if (bLonghornOrLater &&
-			pCurrAddressesLH->Dhcpv4Enabled && pCurrAddressesLH->Dhcpv4Server.iSockaddrLength >= sizeof(SOCKADDR_IN))
+		if (bLonghornOrLater && pCurrAddressesLH->Dhcpv4Enabled)
 		{
-			DisplayAddress(nic, &pCurrAddressesLH->Dhcpv4Server, "DHCP Server");
+			BOOL bIpv6; // unused
+			const CHAR* buf = IpAddrToStr(&pCurrAddressesLH->Dhcpv4Server, &bIpv6);
+			if (buf)
+				NWL_NodeAttrSet(nic, "DHCP Server", buf, NAFLG_FMT_IPADDR);
 		}
-
+#if 0
+		if (bLonghornOrLater && pCurrAddressesLH->Ipv6Enabled)
+		{
+			// This structure member is not currently supported and is reserved for future use.
+			BOOL bIpv6; // unused
+			const CHAR* buf = IpAddrToStr(&pCurrAddressesLH->Dhcpv6Server, &bIpv6);
+			if (buf)
+				NWL_NodeAttrSet(nic, "DHCPv6 Server", buf, NAFLG_FMT_IPADDR);
+		}
+#endif
 		if (bLonghornOrLater)
 		{
 			NWL_NodeAttrSet(nic, "Transmit Link Speed",

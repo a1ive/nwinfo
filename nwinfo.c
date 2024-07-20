@@ -26,6 +26,8 @@ static void nwinfo_help(void)
 		"    FLAGS:\n"
 		"      ACTIVE       Filter out active network interfaces.\n"
 		"      PHYS         Filter out physical network interfaces.\n"
+		"      IPV4         Filter out IPv4 addresses.\n"
+		"      IPV6         Filter out IPv6 addresses.\n"
 		"  --acpi[=SGN]     Print ACPI info.\n"
 		"                   SGN specifies the signature of the ACPI table,\n"
 		"                   e.g. 'FACP' (Fixed ACPI Description Table).\n"
@@ -141,8 +143,14 @@ int main(int argc, char* argv[])
 			nwContext.CpuInfo = TRUE;
 		else if (_strnicmp(argv[i], "--net", 5) == 0)
 		{
-			NW_ARG_FILTER filter[] = { {"active", NW_NET_ACTIVE}, {"phys", NW_NET_PHYS} };
-			nwinfo_get_opts(&argv[i][5], &nwContext.NetFlags, 2, filter);
+			NW_ARG_FILTER filter[] =
+			{
+				{"active", NW_NET_ACTIVE},
+				{"phys", NW_NET_PHYS},
+				{"ipv4", NW_NET_IPV4},
+				{"ipv6", NW_NET_IPV6},
+			};
+			nwinfo_get_opts(&argv[i][5], &nwContext.NetFlags, 4, filter);
 			nwContext.NetInfo = TRUE;
 		}
 		else if (_strnicmp(argv[i], "--acpi", 6) == 0)
