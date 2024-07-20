@@ -26,6 +26,8 @@ static void nwinfo_help(void)
 		"    FLAGS:\n"
 		"      ACTIVE       Filter out active network interfaces.\n"
 		"      PHYS         Filter out physical network interfaces.\n"
+		"      ETH          Filter out Ethernet network interfaces.\n"
+		"      WLAN         Filter out IEEE 802.11 wireless addresses.\n"
 		"      IPV4         Filter out IPv4 addresses.\n"
 		"      IPV6         Filter out IPv6 addresses.\n"
 		"  --acpi[=SGN]     Print ACPI info.\n"
@@ -149,8 +151,10 @@ int main(int argc, char* argv[])
 				{"phys", NW_NET_PHYS},
 				{"ipv4", NW_NET_IPV4},
 				{"ipv6", NW_NET_IPV6},
+				{"eth", NW_NET_ETH},
+				{"wlan", NW_NET_WLAN},
 			};
-			nwinfo_get_opts(&argv[i][5], &nwContext.NetFlags, 4, filter);
+			nwinfo_get_opts(&argv[i][5], &nwContext.NetFlags, ARRAYSIZE(filter), filter);
 			nwContext.NetInfo = TRUE;
 		}
 		else if (_strnicmp(argv[i], "--acpi", 6) == 0)

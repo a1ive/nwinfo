@@ -251,6 +251,12 @@ PNODE NW_Network(VOID)
 		LPCSTR desc = NULL;
 		if ((NWLC->NetFlags & NW_NET_ACTIVE) && pCurrAddresses->OperStatus != IfOperStatusUp)
 			goto next_addr;
+		if ((NWLC->NetFlags & NW_NET_ETH)
+			&& !(NWLC->NetFlags & NW_NET_WLAN) && pCurrAddresses->IfType != IF_TYPE_ETHERNET_CSMACD)
+			goto next_addr;
+		if ((NWLC->NetFlags & NW_NET_WLAN)
+			&& !(NWLC->NetFlags & NW_NET_ETH) && pCurrAddresses->IfType != IF_TYPE_IEEE80211)
+			goto next_addr;
 		desc = NWL_Ucs2ToUtf8(pCurrAddresses->Description);
 		if (NWLC->NetFlags & NW_NET_PHYS)
 		{
