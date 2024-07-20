@@ -22,8 +22,10 @@ static void nwinfo_help(void)
 		"  --hide-sensitive Hide sensitive data (MAC & S/N).\n"
 		"  --sys            Print system info.\n"
 		"  --cpu            Print CPUID info.\n"
-		"  --net[=FLAG]     Print network info.\n"
-		"                   FLAG can be 'ACTIVE' (print only the active network).\n"
+		"  --net[=FLAG,...] Print network info.\n"
+		"    FLAGS:\n"
+		"      ACTIVE       Filter out active network interfaces.\n"
+		"      PHYS         Filter out physical network interfaces.\n"
 		"  --acpi[=SGN]     Print ACPI info.\n"
 		"                   SGN specifies the signature of the ACPI table,\n"
 		"                   e.g. 'FACP' (Fixed ACPI Description Table).\n"
@@ -48,6 +50,45 @@ static void nwinfo_help(void)
 		"  --product-policy Print ProductPolicy.\n"
 		"  --gpu            Print GPU usage.\n"
 		"  --font           Print installed fonts.\n");
+}
+
+typedef struct _NW_ARG_FILTER
+{
+	const char* arg;
+	UINT64 flag;
+} NW_ARG_FILTER;
+
+static inline int nwinfo_compare_opts(const char* str, const char* arg)
+{
+	char c1;
+	char c2;
+	do
+	{
+		c1 = *(str++);
+		c2 = *(arg++);
+	} while ((c1 != '\0') && (c1 == c2));
+	if (c1 == ',')
+		c1 = '\0';
+	return (c1 - c2);
+}
+
+static void nwinfo_get_opts(const char* arg, UINT64* flag, int count, NW_ARG_FILTER* filter)
+{
+	*flag = 0;
+	if (arg[0] != '=')
+		return;
+	for (int i = 0; i < count; i++)
+	{
+		for (const char* p = arg; p; p = strchr(p, ','))
+		{
+			p++;
+			if (nwinfo_compare_opts(p, filter[i].arg) == 0)
+			{
+				*flag |= filter[i].flag;
+				break;
+			}
+		}
+	}
 }
 
 int main(int argc, char* argv[])
@@ -100,8 +141,8 @@ int main(int argc, char* argv[])
 			nwContext.CpuInfo = TRUE;
 		else if (_strnicmp(argv[i], "--net", 5) == 0)
 		{
-			if (_stricmp(&argv[i][5], "=active") == 0)
-				nwContext.NetFlags |= NW_NET_ACTIVE;
+			NW_ARG_FILTER filter[] = { {"active", NW_NET_ACTIVE}, {"phys", NW_NET_PHYS} };
+			nwinfo_get_opts(&argv[i][5], &nwContext.NetFlags, 2, filter);
 			nwContext.NetInfo = TRUE;
 		}
 		else if (_strnicmp(argv[i], "--acpi", 6) == 0)

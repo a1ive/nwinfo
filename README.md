@@ -54,8 +54,10 @@ OPTIONS:
   --hide-sensitive Hide sensitive data (MAC & S/N).
   --sys            Print system info.
   --cpu            Print CPUID info.
-  --net[=FLAG]     Print network info.
-                   FLAG can be 'ACTIVE' (print only the active network).
+  --net[=FLAG,...] Print network info.
+    FLAGS:
+      ACTIVE       Filter out active network interfaces.
+      PHYS         Filter out physical network interfaces.
   --acpi[=SGN]     Print ACPI info.
                    SGN specifies the signature of the ACPI table,
                    e.g. 'FACP' (Fixed ACPI Description Table).
