@@ -62,6 +62,14 @@ typedef struct _NWLIB_CONTEXT
 #define NW_NET_WLAN   (1 << 5)
 	UINT64 NetFlags;
 #define NW_DISK_NO_SMART (1 << 0)
+#define NW_DISK_PHYS     (1 << 1)
+#define NW_DISK_HD       (1 << 2)
+#define NW_DISK_CD       (1 << 3)
+#define NW_DISK_NVME     (1 << 11)
+#define NW_DISK_SATA     (1 << 12)
+#define NW_DISK_SCSI     (1 << 13)
+#define NW_DISK_SAS      (1 << 14)
+#define NW_DISK_USB      (1 << 15)
 	UINT64 DiskFlags;
 
 	VOID (*SpdProgress) (LPCSTR lpszText);

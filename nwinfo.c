@@ -36,9 +36,19 @@ static void nwinfo_help(void)
 		"  --smbios[=TYPE]  Print SMBIOS info.\n"
 		"                   TYPE specifies the type of the SMBIOS table,\n"
 		"                   e.g. '2' (Base Board Information).\n"
-		"  --disk[=PATH]    Print disk info.\n"
-		"                   PATH specifies the path of the disk,\n"
+		"  --disk[=...]     Print disk info.\n"
+		"    PATH           Specifie the path of the disk,\n"
 		"                   e.g. '\\\\.\\PhysicalDrive0', '\\\\.\\CdRom0'.\n"
+		"    FLAGS:\n"
+		"      NO-SMART     Don't print disk S.M.A.R.T. info.\n"
+		"      PHYS         Exclude virtual drives.\n"
+		"      CD           Filter out CD-ROM devices.\n"
+		"      HD           Filter out hard drives.\n"
+		"      NVME         Filter out NVMe devices.\n"
+		"      SATA         Filter out SATA devices.\n"
+		"      SCSI         Filter out SCSI devices.\n"
+		"      SAS          Filter out SAS devices.\n"
+		"      USB          Filter out USB devices.\n"
 		"  --no-smart       Don't print disk S.M.A.R.T. info.\n"
 		"  --display        Print EDID info.\n"
 		"  --pci[=CLASS]    Print PCI info.\n"
@@ -76,11 +86,16 @@ static inline int nwinfo_compare_opts(const char* str, const char* arg)
 	return (c1 - c2);
 }
 
-static void nwinfo_get_opts(const char* arg, UINT64* flag, int count, NW_ARG_FILTER* filter)
+static const char*
+nwinfo_get_opts(const char* arg, UINT64* flag, int count, NW_ARG_FILTER* filter, const char* extra)
 {
+	size_t len = 0;
+	const char* ret = NULL;
 	*flag = 0;
 	if (arg[0] != '=')
-		return;
+		return NULL;
+	if (extra)
+		len = strlen(extra);
 	for (int i = 0; i < count; i++)
 	{
 		for (const char* p = arg; p; p = strchr(p, ','))
@@ -91,8 +106,14 @@ static void nwinfo_get_opts(const char* arg, UINT64* flag, int count, NW_ARG_FIL
 				*flag |= filter[i].flag;
 				break;
 			}
+			if (len && _strnicmp(p, extra, len) == 0)
+			{
+				ret = p;
+				break;
+			}
 		}
 	}
+	return ret;
 }
 
 int main(int argc, char* argv[])
@@ -154,7 +175,7 @@ int main(int argc, char* argv[])
 				{"eth", NW_NET_ETH},
 				{"wlan", NW_NET_WLAN},
 			};
-			nwinfo_get_opts(&argv[i][5], &nwContext.NetFlags, ARRAYSIZE(filter), filter);
+			nwinfo_get_opts(&argv[i][5], &nwContext.NetFlags, ARRAYSIZE(filter), filter, NULL);
 			nwContext.NetInfo = TRUE;
 		}
 		else if (_strnicmp(argv[i], "--acpi", 6) == 0)
@@ -171,8 +192,20 @@ int main(int argc, char* argv[])
 		}
 		else if (_strnicmp(argv[i], "--disk", 6) == 0)
 		{
-			if (argv[i][6] == '=' && argv[i][7])
-				nwContext.DiskPath = &argv[i][7];
+			NW_ARG_FILTER filter[] =
+			{
+				{"no-smart", NW_DISK_NO_SMART},
+				{"phys", NW_DISK_PHYS},
+				{"cd", NW_DISK_CD},
+				{"hd", NW_DISK_HD},
+				{"nvme", NW_DISK_NVME},
+				{"sata", NW_DISK_SATA},
+				{"scsi", NW_DISK_SCSI},
+				{"sas", NW_DISK_SAS},
+				{"usb", NW_DISK_USB},
+			};
+			nwContext.DiskPath = nwinfo_get_opts(&argv[i][6], &nwContext.DiskFlags,
+				ARRAYSIZE(filter), filter, "\\\\.\\");
 			nwContext.DiskInfo = TRUE;
 		}
 		else if (_stricmp(argv[i], "--no-smart") == 0)

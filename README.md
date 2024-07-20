@@ -58,6 +58,8 @@ OPTIONS:
     FLAGS:
       ACTIVE       Filter out active network interfaces.
       PHYS         Filter out physical network interfaces.
+      ETH          Filter out Ethernet network interfaces.
+      WLAN         Filter out IEEE 802.11 wireless addresses.
       IPV4         Filter out IPv4 addresses.
       IPV6         Filter out IPv6 addresses.
   --acpi[=SGN]     Print ACPI info.
@@ -66,9 +68,19 @@ OPTIONS:
   --smbios[=TYPE]  Print SMBIOS info.
                    TYPE specifies the type of the SMBIOS table,
                    e.g. '2' (Base Board Information).
-  --disk[=PATH]    Print disk info.
-                   PATH specifies the path of the disk,
-                   e.g. '\\\\.\\PhysicalDrive0', '\\\\.\\CdRom0'.
+  --disk[=...]     Print disk info.
+    PATH           Specifie the path of the disk,
+                   e.g. '\\.\PhysicalDrive0', '\\.\CdRom0'.
+    FLAGS:
+      NO-SMART     Don't print disk S.M.A.R.T. info.
+      PHYS         Exclude virtual drives.
+      CD           Filter out CD-ROM devices.
+      HD           Filter out hard drives.
+      NVME         Filter out NVMe devices.
+      SATA         Filter out SATA devices.
+      SCSI         Filter out SCSI devices.
+      SAS          Filter out SAS devices.
+      USB          Filter out USB devices.
   --no-smart       Don't print disk S.M.A.R.T. info.
   --display        Print EDID info.
   --pci[=CLASS]    Print PCI info.

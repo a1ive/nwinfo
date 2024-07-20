@@ -592,6 +592,24 @@ PrintDiskInfo(BOOL cdrom, PNODE node, CDI_SMART* smart)
 			cdrom ? "\\\\.\\CdRom%lu" : "\\\\.\\PhysicalDrive%lu", PhyDriveList[i].Index);
 		if (NWLC->DiskPath && _stricmp(NWLC->DiskPath, DiskPath) != 0)
 			continue;
+		if ((NWLC->DiskFlags & NW_DISK_PHYS) &&
+			(PhyDriveList[i].BusType == BusTypeVirtual || PhyDriveList[i].BusType == BusTypeFileBackedVirtual))
+			continue;
+		BOOL bMatchBus = FALSE;
+		if (!(NWLC->DiskFlags & (NW_DISK_NVME | NW_DISK_SATA | NW_DISK_SCSI | NW_DISK_SAS | NW_DISK_USB)))
+			bMatchBus = TRUE;
+		if ((NWLC->DiskFlags & NW_DISK_NVME) && PhyDriveList[i].BusType == BusTypeNvme)
+			bMatchBus = TRUE;
+		if ((NWLC->DiskFlags & NW_DISK_SATA) && PhyDriveList[i].BusType == BusTypeSata)
+			bMatchBus = TRUE;
+		if ((NWLC->DiskFlags & NW_DISK_SCSI) && PhyDriveList[i].BusType == BusTypeScsi)
+			bMatchBus = TRUE;
+		if ((NWLC->DiskFlags & NW_DISK_SAS) && PhyDriveList[i].BusType == BusTypeSas)
+			bMatchBus = TRUE;
+		if ((NWLC->DiskFlags & NW_DISK_USB) && PhyDriveList[i].BusType == BusTypeUsb)
+			bMatchBus = TRUE;
+		if (bMatchBus == FALSE)
+			continue;
 		PNODE nd = NWL_NodeAppendNew(node, "Disk", NFLG_TABLE_ROW);
 		NWL_NodeAttrSet(nd, "Path",DiskPath, 0);
 		if (PhyDriveList[i].HwID[0])
@@ -659,7 +677,11 @@ PNODE NW_Disk(VOID)
 		cdi_init_smart(NWLC->NwSmart, NWLC->NwSmartFlags);
 		NWLC->NwSmartInit = TRUE;
 	}
-	PrintDiskInfo(FALSE, node, NWLC->NwSmart);
-	PrintDiskInfo(TRUE, node, NWLC->NwSmart);
+	if (!(NWLC->DiskFlags & (NW_DISK_CD | NW_DISK_HD)))
+		NWLC->DiskFlags |= NW_DISK_CD | NW_DISK_HD;
+	if (NWLC->DiskFlags & NW_DISK_HD)
+		PrintDiskInfo(FALSE, node, NWLC->NwSmart);
+	if (NWLC->DiskFlags & NW_DISK_CD)
+		PrintDiskInfo(TRUE, node, NWLC->NwSmart);
 	return node;
 }
