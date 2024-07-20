@@ -51,6 +51,7 @@ jobs:
         copy winring0\HwRwDrv.sys nwinfo\HwRwDrv.sys
         copy winring0\HwRwDrvx64.sys nwinfo\HwRwDrvx64.sys
         Invoke-WebRequest -OutFile nwinfo\pci.ids https://raw.githubusercontent.com/pciutils/pciids/master/pci.ids
+        (Get-Content nwinfo\pci.ids) | ForEach-Object { $_ -replace "NVIDIA Corporation", "NVIDIA" -replace "Intel Corporation", "Intel" -replace "Advanced Micro Devices, Inc. \[(.*?)\]", '$1' } | Set-Content nwinfo\pci.ids
         Invoke-WebRequest -OutFile nwinfo\usb.ids http://www.linux-usb.org/usb.ids
         Invoke-WebRequest -OutFile nwinfo\pnp.ids https://raw.githubusercontent.com/vcrhonek/hwdata/master/pnp.ids
         # Add version info to pnp.ids
