@@ -98,11 +98,11 @@ static inline int nwinfo_compare_opts(const char* str, const char* arg)
 	return (c1 - c2);
 }
 
-static const char*
-nwinfo_get_opts(const char* arg, UINT64* flag, int count, NW_ARG_FILTER* filter, const char* extra)
+static char*
+nwinfo_get_opts(char* arg, UINT64* flag, int count, NW_ARG_FILTER* filter, const char* extra)
 {
 	size_t len = 0;
-	const char* ret = NULL;
+	char* ret = NULL;
 	*flag = 0;
 	if (arg[0] != '=')
 		return NULL;
@@ -110,7 +110,7 @@ nwinfo_get_opts(const char* arg, UINT64* flag, int count, NW_ARG_FILTER* filter,
 		len = strlen(extra);
 	for (int i = 0; i < count; i++)
 	{
-		for (const char* p = arg; p; p = strchr(p, ','))
+		for (char* p = arg; p; p = strchr(p, ','))
 		{
 			p++;
 			if (nwinfo_compare_opts(p, filter[i].arg) == 0)
@@ -119,11 +119,15 @@ nwinfo_get_opts(const char* arg, UINT64* flag, int count, NW_ARG_FILTER* filter,
 				break;
 			}
 			if (len && _strnicmp(p, extra, len) == 0)
-			{
 				ret = p;
-				break;
-			}
 		}
+	}
+
+	if (ret)
+	{
+		char* p = strchr(ret, ',');
+		if (p)
+			*p = '\0';
 	}
 	return ret;
 }
