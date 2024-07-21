@@ -46,8 +46,8 @@ Windows Registry Editor Version 5.00
 ```txt
 .\nwinfo.exe OPTIONS
 OPTIONS:
-  --format=FMT     Specify output format.
-                   FMT can be 'YAML' (default), 'JSON' and 'LUA'.
+  --format=FORMAT  Specify output format.
+                   FORMAT can be 'YAML' (default), 'JSON' and 'LUA'.
   --output=FILE    Write to FILE instead of printing to screen.
   --cp=CODEPAGE    Set the code page of output text.
                    CODEPAGE can be 'ANSI' and 'UTF8'.
@@ -99,7 +99,10 @@ OPTIONS:
   --usb            Print USB info.
   --spd            Print SPD info.
   --battery        Print battery info.
-  --uefi           Print UEFI info.
+  --uefi[=FLAG,..] Print UEFI info.
+    FLAGS:\n"
+      MENU         Print UEFI boot menus.
+      VARS         List all UEFI variables.
   --shares         Print network mapped drives.
   --audio          Print audio devices.
   --public-ip      Print public IP address.

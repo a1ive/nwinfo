@@ -223,7 +223,9 @@ PNODE NW_Uefi(VOID)
 	PrintOsIndicationsSupported(node);
 	PrintBootOptionSupport(node);
 	PrintBootInfo(node);
-	//PrintEfiVars(node);
-	PrintBootXXXX(node);
+	if (NWLC->UefiFlags & NW_UEFI_VARS)
+		PrintEfiVars(node);
+	if (NWLC->UefiFlags & NW_UEFI_MENU)
+		PrintBootXXXX(node);
 	return node;
 }

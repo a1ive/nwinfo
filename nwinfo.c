@@ -66,7 +66,10 @@ static void nwinfo_help(void)
 		"  --usb            Print USB info.\n"
 		"  --spd            Print SPD info.\n"
 		"  --battery        Print battery info.\n"
-		"  --uefi           Print UEFI info.\n"
+		"  --uefi[=FLAG,..] Print UEFI info.\n"
+		"    FLAGS:\n"
+		"      MENU         Print UEFI boot menus.\n"
+		"      VARS         List all UEFI variables.\n"
 		"  --shares         Print network mapped drives.\n"
 		"  --audio          Print audio devices.\n"
 		"  --public-ip      Print public IP address.\n"
@@ -264,8 +267,16 @@ int main(int argc, char* argv[])
 			nwContext.SpdInfo = TRUE;
 		else if (_stricmp(argv[i], "--battery") == 0)
 			nwContext.BatteryInfo = TRUE;
-		else if (_stricmp(argv[i], "--uefi") == 0)
+		else if (_strnicmp(argv[i], "--uefi", 6) == 0)
+		{
+			NW_ARG_FILTER filter[] =
+			{
+				{"vars", NW_UEFI_VARS},
+				{"menu", NW_UEFI_MENU},
+			};
+			nwinfo_get_opts(&argv[i][6], &nwContext.UefiFlags, ARRAYSIZE(filter), filter, NULL);
 			nwContext.UefiInfo = TRUE;
+		}
 		else if (_stricmp(argv[i], "--shares") == 0)
 			nwContext.ShareInfo = TRUE;
 		else if (_stricmp(argv[i], "--audio") == 0)
