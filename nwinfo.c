@@ -84,51 +84,49 @@ typedef struct _NW_ARG_FILTER
 	UINT64 flag;
 } NW_ARG_FILTER;
 
-static inline int nwinfo_compare_opts(const char* str, const char* arg)
-{
-	char c1;
-	char c2;
-	do
-	{
-		c1 = *(str++);
-		c2 = *(arg++);
-	} while ((c1 != '\0') && (c1 == c2));
-	if (c1 == ',')
-		c1 = '\0';
-	return (c1 - c2);
-}
-
 static char*
 nwinfo_get_opts(char* arg, UINT64* flag, int count, NW_ARG_FILTER* filter, const char* extra)
 {
-	size_t len = 0;
+	int i;
+	int argc;
+	char* p;
 	char* ret = NULL;
-	*flag = 0;
+	char** argv;
+	size_t len = 0;
+
 	if (arg[0] != '=')
 		return NULL;
+	for (p = arg, argc = 0; p; p = strchr(p, ','), argc++)
+		p++;
+	argv = calloc(argc, sizeof(char*));
+	if (!argv)
+		return NULL;
+	for (p = arg, i = 0; p; p = strchr(p, ','), i++)
+	{
+		*p = '\0';
+		p++;
+		argv[i] = p;
+	}
 	if (extra)
 		len = strlen(extra);
-	for (int i = 0; i < count; i++)
+
+	for (i = 0; i < argc; i++)
 	{
-		for (char* p = arg; p; p = strchr(p, ','))
+		if (extra && _strnicmp(argv[i], extra, len) == 0)
 		{
-			p++;
-			if (nwinfo_compare_opts(p, filter[i].arg) == 0)
+			ret = argv[i];
+			continue;
+		}
+		for (int j = 0; j < count; j++)
+		{
+			if (_stricmp(argv[i], filter[j].arg) == 0)
 			{
-				*flag |= filter[i].flag;
+				*flag |= filter[j].flag;
 				break;
 			}
-			if (len && _strnicmp(p, extra, len) == 0)
-				ret = p;
 		}
 	}
-
-	if (ret)
-	{
-		char* p = strchr(ret, ',');
-		if (p)
-			*p = '\0';
-	}
+	free(argv);
 	return ret;
 }
 
