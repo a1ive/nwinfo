@@ -57,6 +57,8 @@ OPTIONS:
   --sys            Print system info.
   --cpu            Print CPUID info.
   --net[=FLAG,...] Print network info.
+    GUID           Specify the GUID of the network interface,
+                   e.g. '{B16B00B5-CAFE-BEEF-DEAD-001453AD0529}'
     FLAGS:
       ACTIVE       Filter out active network interfaces.
       PHYS         Filter out physical network interfaces.
@@ -70,8 +72,8 @@ OPTIONS:
   --smbios[=TYPE]  Print SMBIOS info.
                    TYPE specifies the type of the SMBIOS table,
                    e.g. '2' (Base Board Information).
-  --disk[=...]     Print disk info.
-    PATH           Specifie the path of the disk,
+  --disk[=FLAG,..] Print disk info.
+    PATH           Specify the path of the disk,
                    e.g. '\\.\PhysicalDrive0', '\\.\CdRom0'.
     FLAGS:
       NO-SMART     Don't print disk S.M.A.R.T. info.

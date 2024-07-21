@@ -250,6 +250,8 @@ PNODE NW_Network(VOID)
 		PNODE nic = NULL;
 		LPCSTR desc = NULL;
 		BOOL bMatch = FALSE;
+		if (NWLC->NetGuid && _stricmp(NWLC->NetGuid, pCurrAddresses->AdapterName) != 0)
+			goto next_addr;
 		if ((NWLC->NetFlags & NW_NET_ACTIVE) && pCurrAddresses->OperStatus != IfOperStatusUp)
 			goto next_addr;
 		if (!(NWLC->NetFlags & (NW_NET_ETH | NW_NET_WLAN)))

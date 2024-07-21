@@ -53,6 +53,7 @@ typedef struct _NWLIB_CONTEXT
 	UINT8 SmbiosType;
 	LPCSTR PciClass;
 	LPCSTR DiskPath;
+	LPCSTR NetGuid;
 
 #define NW_NET_ACTIVE (1 << 0)
 #define NW_NET_PHYS   (1 << 1)

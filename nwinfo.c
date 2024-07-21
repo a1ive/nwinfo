@@ -24,6 +24,8 @@ static void nwinfo_help(void)
 		"  --sys            Print system info.\n"
 		"  --cpu            Print CPUID info.\n"
 		"  --net[=FLAG,...] Print network info.\n"
+		"    GUID           Specify the GUID of the network interface,\n"
+		"                   e.g. '{B16B00B5-CAFE-BEEF-DEAD-001453AD0529}'\n"
 		"    FLAGS:\n"
 		"      ACTIVE       Filter out active network interfaces.\n"
 		"      PHYS         Filter out physical network interfaces.\n"
@@ -37,8 +39,8 @@ static void nwinfo_help(void)
 		"  --smbios[=TYPE]  Print SMBIOS info.\n"
 		"                   TYPE specifies the type of the SMBIOS table,\n"
 		"                   e.g. '2' (Base Board Information).\n"
-		"  --disk[=...]     Print disk info.\n"
-		"    PATH           Specifie the path of the disk,\n"
+		"  --disk[=FLAG,..] Print disk info.\n"
+		"    PATH           Specify the path of the disk,\n"
 		"                   e.g. '\\\\.\\PhysicalDrive0', '\\\\.\\CdRom0'.\n"
 		"    FLAGS:\n"
 		"      NO-SMART     Don't print disk S.M.A.R.T. info.\n"
@@ -189,7 +191,7 @@ int main(int argc, char* argv[])
 				{"eth", NW_NET_ETH},
 				{"wlan", NW_NET_WLAN},
 			};
-			nwinfo_get_opts(&argv[i][5], &nwContext.NetFlags, ARRAYSIZE(filter), filter, NULL);
+			nwContext.NetGuid = nwinfo_get_opts(&argv[i][5], &nwContext.NetFlags, ARRAYSIZE(filter), filter, "{");
 			nwContext.NetInfo = TRUE;
 		}
 		else if (_strnicmp(argv[i], "--acpi", 6) == 0)
