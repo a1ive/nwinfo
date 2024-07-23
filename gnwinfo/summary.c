@@ -361,22 +361,6 @@ draw_memory(struct nk_context* ctx)
 }
 
 static VOID
-switch_screen_state(void)
-{
-	if (g_ctx.screen_on)
-	{
-		g_ctx.screen_on = FALSE;
-		SetThreadExecutionState(ES_CONTINUOUS);
-	}
-	else
-	{
-		g_ctx.screen_on = TRUE;
-		SetThreadExecutionState(ES_CONTINUOUS | ES_DISPLAY_REQUIRED | ES_SYSTEM_REQUIRED);
-	}
-}
-
-
-static VOID
 draw_display(struct nk_context* ctx)
 {
 	INT i;
@@ -387,8 +371,8 @@ draw_display(struct nk_context* ctx)
 	nk_lhcf(ctx, NK_TEXT_LEFT, g_color_text_l,
 		"%ldx%ld %u DPI (%u%%)",
 		g_ctx.display_width, g_ctx.display_height, g_ctx.display_dpi, g_ctx.display_scale);
-	if (nk_button_image_hover(ctx, GET_PNG(IDR_PNG_DARK + g_ctx.screen_on), gnwinfo_get_text(awake_text[g_ctx.screen_on])))
-		switch_screen_state();
+	if (nk_button_image_hover(ctx, GET_PNG(IDR_PNG_MONITOR), gnwinfo_get_text(L"Display Devices")))
+		g_ctx.window_flag |= GUI_WINDOW_DISPLAY;
 
 	nk_layout_row(ctx, NK_DYNAMIC, 0, 2, (float[2]) { 0.3f, 0.7f });
 

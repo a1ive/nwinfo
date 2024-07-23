@@ -329,6 +329,7 @@ gnwinfo_ctx_init(HINSTANCE inst, HWND wnd, struct nk_context* ctx, float width, 
 	g_ctx.lib.DmiInfo = TRUE;
 	g_ctx.lib.UefiInfo = TRUE;
 	g_ctx.lib.PciInfo = TRUE;
+	g_ctx.lib.GpuInfo = TRUE;
 
 	NW_Init(&g_ctx.lib);
 	g_ctx.lib.NwSmartFlags = ~g_ctx.smart_flag;
@@ -339,6 +340,7 @@ gnwinfo_ctx_init(HINSTANCE inst, HWND wnd, struct nk_context* ctx, float width, 
 	g_ctx.smbios = NW_Smbios();
 	g_ctx.uefi = NW_Uefi();
 	g_ctx.pci = NW_Pci();
+	g_ctx.gpu = NW_Gpu();
 
 	g_ctx.sys_boot = gnwinfo_get_node_attr(g_ctx.system, "Boot Device");
 	g_ctx.sys_disk = gnwinfo_get_node_attr(g_ctx.system, "System Device");

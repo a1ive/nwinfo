@@ -131,6 +131,7 @@
     <ClCompile Include="about.c" />
     <ClCompile Include="context.c" />
     <ClCompile Include="cpuid.c" />
+    <ClCompile Include="display.c" />
     <ClCompile Include="dmi.c" />
     <ClCompile Include="gnwinfo.c" />
     <ClCompile Include="hostname.c" />
@@ -155,7 +156,6 @@
     <Image Include="icons\close.png" />
     <Image Include="icons\cpu.png" />
     <Image Include="icons\cpuid.png" />
-    <Image Include="icons\dark.png" />
     <Image Include="icons\dir.png" />
     <Image Include="icons\disk.png" />
     <Image Include="icons\display.png" />
@@ -163,10 +163,11 @@
     <Image Include="icons\edit.png" />
     <Image Include="icons\eth.png" />
     <Image Include="icons\firmware.png" />
+    <Image Include="icons\gpu.png" />
     <Image Include="icons\info.png" />
-    <Image Include="icons\light.png" />
     <Image Include="icons\memory.png" />
     <Image Include="icons\mm.png" />
+    <Image Include="icons\monitor.png" />
     <Image Include="icons\network.png" />
     <Image Include="icons\os.png" />
     <Image Include="icons\pc.png" />

@@ -69,6 +69,9 @@
     <ClCompile Include="hostname.c">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="display.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="gnwinfo.rc">
@@ -151,10 +154,10 @@
     <Image Include="icons\wlan.png">
       <Filter>资源文件</Filter>
     </Image>
-    <Image Include="icons\dark.png">
+    <Image Include="icons\monitor.png">
       <Filter>资源文件</Filter>
     </Image>
-    <Image Include="icons\light.png">
+    <Image Include="icons\gpu.png">
       <Filter>资源文件</Filter>
     </Image>
   </ItemGroup>

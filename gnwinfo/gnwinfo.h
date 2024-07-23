@@ -112,6 +112,7 @@ typedef struct _GNW_CPU_INFO
 #define GUI_WINDOW_DMI      (1U << 5)
 #define GUI_WINDOW_MM       (1U << 6)
 #define GUI_WINDOW_HOSTNAME (1U << 7)
+#define GUI_WINDOW_DISPLAY  (1U << 8)
 
 typedef struct _GNW_CONTEXT
 {
@@ -144,6 +145,7 @@ typedef struct _GNW_CONTEXT
 	PNODE uefi;
 	PNODE battery;
 	PNODE smb;
+	PNODE gpu;
 
 	LPCSTR sys_boot;
 	LPCSTR sys_disk;
@@ -179,7 +181,6 @@ typedef struct _GNW_CONTEXT
 	LONG display_height;
 	UINT display_dpi;
 	UINT display_scale;
-	BOOL screen_on;
 
 	UINT audio_count;
 	NWLIB_AUDIO_DEV* audio;
@@ -228,6 +229,7 @@ VOID gnwinfo_draw_smart_window(struct nk_context* ctx, float width, float height
 VOID gnwinfo_draw_settings_window(struct nk_context* ctx, float width, float height);
 VOID gnwinfo_draw_pci_window(struct nk_context* ctx, float width, float height);
 VOID gnwinfo_draw_dmi_window(struct nk_context* ctx, float width, float height);
+VOID gnwinfo_draw_display_window(struct nk_context* ctx, float width, float height);
 
 VOID gnwinfo_init_mm_window(struct nk_context* ctx);
 VOID gnwinfo_draw_mm_window(struct nk_context* ctx, float width, float height);
