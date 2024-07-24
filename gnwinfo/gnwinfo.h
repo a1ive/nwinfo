@@ -104,6 +104,19 @@ typedef struct _GNW_CPU_INFO
 	double cpu_msr_pl2;
 }GNW_CPU_INFO;
 
+typedef struct _GNW_GPU_INFO
+{
+	BOOL driver;
+	CHAR gpu_hwid[GNWC_STR_SIZE];
+	CHAR gpu_device[GNWC_STR_SIZE];
+	CHAR gpu_vendor[GNWC_STR_SIZE];
+	CHAR gpu_driver_date[GNWC_STR_SIZE];
+	CHAR gpu_driver_ver[GNWC_STR_SIZE];
+	CHAR gpu_location[GNWC_STR_SIZE];
+	CHAR gpu_mem[GNWC_STR_SIZE];
+}GNW_GPU_INFO;
+#define GNWC_GPU_MAX_COUNT 8
+
 #define GUI_WINDOW_CPUID    (1U << 0)
 #define GUI_WINDOW_SMART    (1U << 1)
 #define GUI_WINDOW_ABOUT    (1U << 2)
@@ -181,6 +194,8 @@ typedef struct _GNW_CONTEXT
 	LONG display_height;
 	UINT display_dpi;
 	UINT display_scale;
+	size_t gpu_count;
+	GNW_GPU_INFO gpu_info[GNWC_GPU_MAX_COUNT];
 
 	UINT audio_count;
 	NWLIB_AUDIO_DEV* audio;

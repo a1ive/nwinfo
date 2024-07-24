@@ -375,18 +375,10 @@ draw_display(struct nk_context* ctx)
 		g_ctx.window_flag |= GUI_WINDOW_DISPLAY;
 
 	nk_layout_row(ctx, NK_DYNAMIC, 0, 2, (float[2]) { 0.3f, 0.7f });
-
-	for (i = 0; g_ctx.pci->Children[i].LinkedNode; i++)
+	for (i = 0; (size_t)i < g_ctx.gpu_count; i++)
 	{
-		PNODE pci = g_ctx.pci->Children[i].LinkedNode;
-		LPCSTR attr = gnwinfo_get_node_attr(pci, "Class Code");
-		if (strncmp("03", attr, 2) != 0)
-			continue;
-		LPCSTR vendor = gnwinfo_get_node_attr(pci, "Vendor");
-		if (strcmp(vendor, "-") == 0)
-			continue;
-		nk_lhsc(ctx, vendor, NK_TEXT_LEFT, g_color_text_d, nk_true, nk_true);
-		nk_lhc(ctx, gnwinfo_get_node_attr(pci, "Device"), NK_TEXT_LEFT, g_color_text_l);
+		nk_lhsc(ctx, g_ctx.gpu_info[i].gpu_vendor, NK_TEXT_LEFT, g_color_text_d, nk_true, nk_true);
+		nk_lhc(ctx, g_ctx.gpu_info[i].gpu_device, NK_TEXT_LEFT, g_color_text_l);
 	}
 	for (i = 0; g_ctx.edid->Children[i].LinkedNode; i++)
 	{

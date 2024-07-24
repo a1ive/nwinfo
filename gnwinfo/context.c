@@ -227,6 +227,55 @@ get_display_info(void)
 	g_ctx.display_height = mni.rcMonitor.bottom - mni.rcMonitor.top;
 	g_ctx.display_dpi = GetDpiForWindow(g_ctx.wnd);
 	g_ctx.display_scale = 100 * g_ctx.display_dpi / USER_DEFAULT_SCREEN_DPI;
+
+	if (g_ctx.gpu)
+		NWL_NodeFree(g_ctx.gpu, 1);
+	g_ctx.gpu = NW_Gpu();
+
+	g_ctx.lib.PciClass = "03";
+	g_ctx.lib.PciInfo = FALSE;
+	PNODE gpu_list = NW_Pci();
+	g_ctx.lib.PciClass = NULL;
+	g_ctx.lib.PciInfo = TRUE;
+	ZeroMemory(g_ctx.gpu_info, sizeof(g_ctx.gpu_info));
+	for (g_ctx.gpu_count = 0; gpu_list->Children[g_ctx.gpu_count].LinkedNode; g_ctx.gpu_count++)
+		;
+	if (g_ctx.gpu_count > GNWC_GPU_MAX_COUNT)
+		g_ctx.gpu_count = GNWC_GPU_MAX_COUNT;
+	for (size_t i = 0; i < g_ctx.gpu_count; i++)
+	{
+		PNODE pci = gpu_list->Children[i].LinkedNode;
+		LPCSTR hwid = gnwinfo_get_node_attr(pci, "HWID");
+		strcpy_s(g_ctx.gpu_info[i].gpu_hwid, GNWC_STR_SIZE, hwid);
+		LPCSTR vendor = gnwinfo_get_node_attr(pci, "Vendor");
+		if (strcmp(vendor, "-") == 0)
+			vendor = gnwinfo_get_node_attr(pci, "Vendor ID");
+		strcpy_s(g_ctx.gpu_info[i].gpu_vendor, GNWC_STR_SIZE, vendor);
+		LPCSTR device = gnwinfo_get_node_attr(pci, "Device");
+		if (strcmp(device, "-") == 0)
+			device = gnwinfo_get_node_attr(pci, "Device ID");
+		strcpy_s(g_ctx.gpu_info[i].gpu_device, GNWC_STR_SIZE, device);
+		for (size_t j = 0; g_ctx.gpu->Children[j].LinkedNode; j++)
+		{
+			PNODE gpu = g_ctx.gpu->Children[j].LinkedNode;
+			if (_stricmp(hwid, gnwinfo_get_node_attr(gpu, "HWID")) != 0)
+				continue;
+			g_ctx.gpu_info[i].driver = TRUE;
+			strcpy_s(g_ctx.gpu_info[i].gpu_vendor, GNWC_STR_SIZE,
+				gnwinfo_get_node_attr(gpu, "Manufacturer"));
+			strcpy_s(g_ctx.gpu_info[i].gpu_device, GNWC_STR_SIZE,
+				gnwinfo_get_node_attr(gpu, "Description"));
+			strcpy_s(g_ctx.gpu_info[i].gpu_driver_date, GNWC_STR_SIZE,
+				gnwinfo_get_node_attr(gpu, "Driver Date"));
+			strcpy_s(g_ctx.gpu_info[i].gpu_driver_ver, GNWC_STR_SIZE,
+				gnwinfo_get_node_attr(gpu, "Driver Version"));
+			strcpy_s(g_ctx.gpu_info[i].gpu_location, GNWC_STR_SIZE,
+				gnwinfo_get_node_attr(gpu, "Location Info"));
+			strcpy_s(g_ctx.gpu_info[i].gpu_mem, GNWC_STR_SIZE,
+				gnwinfo_get_node_attr(gpu, "Memory Size"));
+		}
+	}
+	NWL_NodeFree(gpu_list, 1);
 }
 
 void
@@ -329,7 +378,6 @@ gnwinfo_ctx_init(HINSTANCE inst, HWND wnd, struct nk_context* ctx, float width, 
 	g_ctx.lib.DmiInfo = TRUE;
 	g_ctx.lib.UefiInfo = TRUE;
 	g_ctx.lib.PciInfo = TRUE;
-	g_ctx.lib.GpuInfo = TRUE;
 
 	NW_Init(&g_ctx.lib);
 	g_ctx.lib.NwSmartFlags = ~g_ctx.smart_flag;
@@ -340,7 +388,6 @@ gnwinfo_ctx_init(HINSTANCE inst, HWND wnd, struct nk_context* ctx, float width, 
 	g_ctx.smbios = NW_Smbios();
 	g_ctx.uefi = NW_Uefi();
 	g_ctx.pci = NW_Pci();
-	g_ctx.gpu = NW_Gpu();
 
 	g_ctx.sys_boot = gnwinfo_get_node_attr(g_ctx.system, "Boot Device");
 	g_ctx.sys_disk = gnwinfo_get_node_attr(g_ctx.system, "System Device");

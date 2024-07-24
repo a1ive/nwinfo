@@ -38,39 +38,32 @@ draw_monitors(struct nk_context* ctx)
 	}
 }
 
+static inline VOID
+draw_gpu_attr(struct nk_context* ctx, LPCSTR str, LPCSTR attr)
+{
+	nk_lhsc(ctx, str, NK_TEXT_LEFT, g_color_text_d, nk_false, nk_true);
+	nk_lhc(ctx, attr, NK_TEXT_RIGHT, g_color_text_l);
+}
+
 static VOID
 draw_gpu(struct nk_context* ctx)
 {
-	INT i, j;
-	for (i = 0; g_ctx.pci->Children[i].LinkedNode; i++)
+	size_t i;
+	for (i = 0; i < g_ctx.gpu_count; i++)
 	{
-		PNODE pci = g_ctx.pci->Children[i].LinkedNode;
-		LPCSTR attr = gnwinfo_get_node_attr(pci, "Class Code");
-		if (strncmp("03", attr, 2) != 0)
-			continue;
-		LPCSTR vendor = gnwinfo_get_node_attr(pci, "Vendor");
-		if (strcmp(vendor, "-") == 0)
-			continue;
-		LPCSTR hwid = gnwinfo_get_node_attr(pci, "HWID");
-
 		nk_layout_row_dynamic(ctx, 0, 1);
-		nk_image_label(ctx, GET_PNG(IDR_PNG_GPU), hwid, NK_TEXT_LEFT, g_color_text_l);
+		nk_image_label(ctx, GET_PNG(IDR_PNG_GPU), g_ctx.gpu_info[i].gpu_hwid, NK_TEXT_LEFT, g_color_text_l);
 
 		nk_layout_row(ctx, NK_DYNAMIC, 0, 2, (float[2]) { 0.3f, 0.7f });
 
-		draw_key_value(ctx, pci, "Vendor");
-		draw_key_value(ctx, pci, "Device");
-
-		for (j = 0; g_ctx.gpu->Children[j].LinkedNode; j++)
+		draw_gpu_attr(ctx, "Vendor", g_ctx.gpu_info[i].gpu_vendor);
+		draw_gpu_attr(ctx, "Device", g_ctx.gpu_info[i].gpu_device);
+		if (g_ctx.gpu_info[i].driver)
 		{
-			PNODE gpu = g_ctx.gpu->Children[j].LinkedNode;
-			if (_stricmp(hwid, gnwinfo_get_node_attr(gpu, "HWID")) != 0)
-				continue;
-			draw_key_value(ctx, gpu, "Description");
-			draw_key_value(ctx, gpu, "Driver Date");
-			draw_key_value(ctx, gpu, "Driver Version");
-			draw_key_value(ctx, gpu, "Location Info");
-			draw_key_value(ctx, gpu, "Memory Size");
+			draw_gpu_attr(ctx, "Driver Date", g_ctx.gpu_info[i].gpu_driver_date);
+			draw_gpu_attr(ctx, "Driver Version", g_ctx.gpu_info[i].gpu_driver_ver);
+			draw_gpu_attr(ctx, "Location Info", g_ctx.gpu_info[i].gpu_location);
+			draw_gpu_attr(ctx, "Memory Size", g_ctx.gpu_info[i].gpu_mem);
 		}
 	}
 }
