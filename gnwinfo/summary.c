@@ -331,15 +331,14 @@ draw_display(struct nk_context* ctx)
 			nk_lhc(ctx, g_ctx.gpu_info[i].gpu_device, NK_TEXT_LEFT, g_color_text_l);
 		}
 	}
-	nk_layout_row(ctx, NK_DYNAMIC, 0, 2, (float[2]) { 0.3f, 0.7f });
 	for (i = 0; g_ctx.edid->Children[i].LinkedNode; i++)
 	{
 		PNODE mon = g_ctx.edid->Children[i].LinkedNode;
 		LPCSTR id = gnwinfo_get_node_attr(mon, "ID");
 		if (id[0] == '-')
 			continue;
+		nk_layout_row(ctx, NK_DYNAMIC, 0, 2, (float[2]) { 0.3f, 0.7f });
 		nk_lhsc(ctx, gnwinfo_get_node_attr(mon, "Manufacturer"), NK_TEXT_LEFT, g_color_text_d, nk_true, nk_true);
-		
 		nk_lhcf(ctx, NK_TEXT_LEFT, g_color_text_l,
 			"%s %s@%sHz %s\" %s",
 			id,
