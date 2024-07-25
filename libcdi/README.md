@@ -1,6 +1,6 @@
 # libcdi
 
-CrystalDiskInfo static lib
+CrystalDiskInfo shared lib
 
 https://github.com/a1ive/libcdi
 
