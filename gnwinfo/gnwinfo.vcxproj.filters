@@ -1,17 +1,20 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="源文件">
+    <Filter Include="Source Files">
       <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
       <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
     </Filter>
-    <Filter Include="头文件">
+    <Filter Include="Header Files">
       <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
       <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
     </Filter>
-    <Filter Include="资源文件">
+    <Filter Include="Resource Files">
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Nuklear">
+      <UniqueIdentifier>{65d3c7fa-2522-41b2-af3b-e9a1db1500bc}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -20,145 +23,148 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="gnwinfo.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="..\nuklear\nuklear.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="..\nuklear\nuklear_gdip.h">
-      <Filter>头文件</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="resource.h">
-      <Filter>头文件</Filter>
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\nuklear\nuklear.h">
+      <Filter>Nuklear</Filter>
+    </ClInclude>
+    <ClInclude Include="..\nuklear\nuklear_gdip.h">
+      <Filter>Nuklear</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="gnwinfo.c">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="..\nuklear\nuklear.c">
-      <Filter>源文件</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="context.c">
-      <Filter>源文件</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="summary.c">
-      <Filter>源文件</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="cpuid.c">
-      <Filter>源文件</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="about.c">
-      <Filter>源文件</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="smart.c">
-      <Filter>源文件</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="settings.c">
-      <Filter>源文件</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="pci.c">
-      <Filter>源文件</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="dmi.c">
-      <Filter>源文件</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="memory.c">
-      <Filter>源文件</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="hostname.c">
-      <Filter>源文件</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="display.c">
-      <Filter>源文件</Filter>
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="utils.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\nuklear\nuklear.c">
+      <Filter>Nuklear</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="gnwinfo.rc">
-      <Filter>资源文件</Filter>
+      <Filter>Resource Files</Filter>
     </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
     <Image Include="..\icon.ico">
-      <Filter>资源文件</Filter>
+      <Filter>Resource Files</Filter>
     </Image>
     <Image Include="icons\cd.png">
-      <Filter>资源文件</Filter>
+      <Filter>Resource Files</Filter>
     </Image>
     <Image Include="icons\cpu.png">
-      <Filter>资源文件</Filter>
+      <Filter>Resource Files</Filter>
     </Image>
     <Image Include="icons\cpuid.png">
-      <Filter>资源文件</Filter>
+      <Filter>Resource Files</Filter>
     </Image>
     <Image Include="icons\disk.png">
-      <Filter>资源文件</Filter>
+      <Filter>Resource Files</Filter>
     </Image>
     <Image Include="icons\display.png">
-      <Filter>资源文件</Filter>
+      <Filter>Resource Files</Filter>
     </Image>
     <Image Include="icons\firmware.png">
-      <Filter>资源文件</Filter>
+      <Filter>Resource Files</Filter>
     </Image>
     <Image Include="icons\info.png">
-      <Filter>资源文件</Filter>
+      <Filter>Resource Files</Filter>
     </Image>
     <Image Include="icons\memory.png">
-      <Filter>资源文件</Filter>
+      <Filter>Resource Files</Filter>
     </Image>
     <Image Include="icons\network.png">
-      <Filter>资源文件</Filter>
+      <Filter>Resource Files</Filter>
     </Image>
     <Image Include="icons\os.png">
-      <Filter>资源文件</Filter>
+      <Filter>Resource Files</Filter>
     </Image>
     <Image Include="icons\pc.png">
-      <Filter>资源文件</Filter>
+      <Filter>Resource Files</Filter>
     </Image>
     <Image Include="icons\refresh.png">
-      <Filter>资源文件</Filter>
+      <Filter>Resource Files</Filter>
     </Image>
     <Image Include="icons\settings.png">
-      <Filter>资源文件</Filter>
+      <Filter>Resource Files</Filter>
     </Image>
     <Image Include="icons\close.png">
-      <Filter>资源文件</Filter>
+      <Filter>Resource Files</Filter>
     </Image>
     <Image Include="icons\smart.png">
-      <Filter>资源文件</Filter>
+      <Filter>Resource Files</Filter>
     </Image>
     <Image Include="icons\pci.png">
-      <Filter>资源文件</Filter>
+      <Filter>Resource Files</Filter>
     </Image>
     <Image Include="icons\mm.png">
-      <Filter>资源文件</Filter>
+      <Filter>Resource Files</Filter>
     </Image>
     <Image Include="icons\dmi.png">
-      <Filter>资源文件</Filter>
+      <Filter>Resource Files</Filter>
     </Image>
     <Image Include="icons\rocket.png">
-      <Filter>资源文件</Filter>
+      <Filter>Resource Files</Filter>
     </Image>
     <Image Include="icons\edit.png">
-      <Filter>资源文件</Filter>
+      <Filter>Resource Files</Filter>
     </Image>
     <Image Include="icons\dir.png">
-      <Filter>资源文件</Filter>
+      <Filter>Resource Files</Filter>
     </Image>
     <Image Include="icons\battery.png">
-      <Filter>资源文件</Filter>
+      <Filter>Resource Files</Filter>
     </Image>
     <Image Include="icons\eth.png">
-      <Filter>资源文件</Filter>
+      <Filter>Resource Files</Filter>
     </Image>
     <Image Include="icons\wlan.png">
-      <Filter>资源文件</Filter>
+      <Filter>Resource Files</Filter>
     </Image>
     <Image Include="icons\monitor.png">
-      <Filter>资源文件</Filter>
+      <Filter>Resource Files</Filter>
     </Image>
     <Image Include="icons\gpu.png">
-      <Filter>资源文件</Filter>
+      <Filter>Resource Files</Filter>
     </Image>
   </ItemGroup>
 </Project>

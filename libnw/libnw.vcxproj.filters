@@ -1,141 +1,144 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="源文件">
+    <Filter Include="Source Files">
       <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
       <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
     </Filter>
-    <Filter Include="头文件">
+    <Filter Include="Header Files">
       <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
       <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
     </Filter>
-    <Filter Include="资源文件">
+    <Filter Include="Resource Files">
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="libcdi">
+      <UniqueIdentifier>{ca9692a5-7f79-45b7-aae0-0ae4142f2cf1}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="format.h">
-      <Filter>头文件</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="spd.h">
-      <Filter>头文件</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="libnw.h">
-      <Filter>头文件</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="acpi.h">
-      <Filter>头文件</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="smbios.h">
-      <Filter>头文件</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="disk.h">
-      <Filter>头文件</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="utils.h">
-      <Filter>头文件</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="nt.h">
-      <Filter>头文件</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="efivars.h">
-      <Filter>头文件</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="version.h">
-      <Filter>头文件</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="audio.h">
-      <Filter>头文件</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\libcdi\libcdi.h">
-      <Filter>头文件</Filter>
+      <Filter>libcdi</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="acpi.c">
-      <Filter>源文件</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="cpuid.c">
-      <Filter>源文件</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="disk.c">
-      <Filter>源文件</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="display.c">
-      <Filter>源文件</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="format.c">
-      <Filter>源文件</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="network.c">
-      <Filter>源文件</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="pci.c">
-      <Filter>源文件</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="smbios.c">
-      <Filter>源文件</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="smbus.c">
-      <Filter>源文件</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="spd.c">
-      <Filter>源文件</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="sys.c">
-      <Filter>源文件</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="usb.c">
-      <Filter>源文件</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="utils.c">
-      <Filter>源文件</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="libnw.c">
-      <Filter>源文件</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="nt.c">
-      <Filter>源文件</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="battery.c">
-      <Filter>源文件</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="libinfo.c">
-      <Filter>源文件</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="ids.c">
-      <Filter>源文件</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="efivars.c">
-      <Filter>源文件</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="uefi.c">
-      <Filter>源文件</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="smb.c">
-      <Filter>源文件</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="audio.cpp">
-      <Filter>源文件</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="audio_nw.c">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="libcdi.c">
-      <Filter>源文件</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="iplookup.c">
-      <Filter>源文件</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="productpolicy.c">
-      <Filter>源文件</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="gpu.c">
-      <Filter>源文件</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="font.c">
-      <Filter>源文件</Filter>
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="libcdi.c">
+      <Filter>libcdi</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
