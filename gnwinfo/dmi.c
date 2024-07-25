@@ -7,7 +7,7 @@ static int tree_id = 0;
 static void draw_dmi_node(struct nk_context* ctx, PNODE node)
 {
 	int i;
-	char name[32];
+	char name[48];
 	if (!node || !node->Attributes || node->Name[0] != 'T')
 		return;
 
