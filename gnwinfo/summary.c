@@ -304,7 +304,6 @@ static VOID
 draw_display(struct nk_context* ctx)
 {
 	INT i;
-	LPCWSTR awake_text[2] = { L"Keep screen on", L"Do not keep screen on" };
 
 	nk_layout_row(ctx, NK_DYNAMIC, 0, 3, (float[3]) { 0.3f, 0.7f - g_ctx.gui_ratio, g_ctx.gui_ratio });
 	nk_image_label(ctx, GET_PNG(IDR_PNG_DISPLAY), gnwinfo_get_text(L"Display Devices"), NK_TEXT_LEFT, g_color_text_d);
@@ -314,12 +313,25 @@ draw_display(struct nk_context* ctx)
 	if (nk_button_image_hover(ctx, GET_PNG(IDR_PNG_MONITOR), gnwinfo_get_text(L"Display Devices")))
 		g_ctx.window_flag |= GUI_WINDOW_DISPLAY;
 
-	nk_layout_row(ctx, NK_DYNAMIC, 0, 2, (float[2]) { 0.3f, 0.7f });
 	for (i = 0; (size_t)i < g_ctx.gpu_count; i++)
 	{
-		nk_lhsc(ctx, g_ctx.gpu_info[i].gpu_vendor, NK_TEXT_LEFT, g_color_text_d, nk_true, nk_true);
-		nk_lhc(ctx, g_ctx.gpu_info[i].gpu_device, NK_TEXT_LEFT, g_color_text_l);
+		if (g_ctx.gpu_info[i].driver)
+		{
+			CHAR name[32];
+			snprintf(name, sizeof(name), "GPU%d", i);
+			nk_layout_row(ctx, NK_DYNAMIC, 0, 3, (float[3]) { 0.3f, 0.4f, 0.3f });
+			nk_lhsc(ctx, name, NK_TEXT_LEFT, g_color_text_d, nk_false, nk_true);
+			nk_lhc(ctx, g_ctx.gpu_info[i].gpu_device, NK_TEXT_LEFT, g_color_text_l);
+			nk_lhc(ctx, g_ctx.gpu_info[i].gpu_mem, NK_TEXT_LEFT, g_color_text_l);
+		}
+		else
+		{
+			nk_layout_row(ctx, NK_DYNAMIC, 0, 2, (float[2]) { 0.3f, 0.7f });
+			nk_lhsc(ctx, g_ctx.gpu_info[i].gpu_vendor, NK_TEXT_LEFT, g_color_text_d, nk_true, nk_true);
+			nk_lhc(ctx, g_ctx.gpu_info[i].gpu_device, NK_TEXT_LEFT, g_color_text_l);
+		}
 	}
+	nk_layout_row(ctx, NK_DYNAMIC, 0, 2, (float[2]) { 0.3f, 0.7f });
 	for (i = 0; g_ctx.edid->Children[i].LinkedNode; i++)
 	{
 		PNODE mon = g_ctx.edid->Children[i].LinkedNode;
