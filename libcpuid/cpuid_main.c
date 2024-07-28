@@ -56,6 +56,60 @@
 
 INTERNAL_SCOPE int _libcpuid_errno = ERR_OK;
 
+/* get_total_cpus() system specific code: uses OS routines to determine total number of CPUs */
+static int get_total_cpus(void)
+{
+	SYSTEM_INFO system_info;
+	GetSystemInfo(&system_info);
+	return system_info.dwNumberOfProcessors;
+}
+
+INTERNAL_SCOPE GROUP_AFFINITY savedGroupAffinity;
+
+bool save_cpu_affinity(void)
+{
+	HANDLE thread = GetCurrentThread();
+	return GetThreadGroupAffinity(thread, &savedGroupAffinity);
+}
+
+bool restore_cpu_affinity(void)
+{
+	if (!savedGroupAffinity.Mask)
+		return false;
+
+	HANDLE thread = GetCurrentThread();
+	return SetThreadGroupAffinity(thread, &savedGroupAffinity, NULL);
+}
+
+bool set_cpu_affinity(logical_cpu_t logical_cpu)
+{
+/* Credits to https://github.com/PolygonTek/BlueshiftEngine/blob/fbc374cbc391e1147c744649f405a66a27c35d89/Source/Runtime/Private/Platform/Windows/PlatformWinThread.cpp#L27 */
+	int groups = GetActiveProcessorGroupCount();
+	int total_processors = 0;
+	int group = 0;
+	int number = 0;
+	int found = 0;
+	HANDLE thread = GetCurrentThread();
+	GROUP_AFFINITY groupAffinity;
+
+	for (int i = 0; i < groups; i++) {
+		int processors = GetActiveProcessorCount(i);
+		if (total_processors + processors > logical_cpu) {
+			group = i;
+			number = logical_cpu - total_processors;
+			found = 1;
+			break;
+		}
+		total_processors += processors;
+	}
+	if (!found) return 0; // logical CPU # too large, does not exist
+
+	memset(&groupAffinity, 0, sizeof(groupAffinity));
+	groupAffinity.Group = (WORD) group;
+	groupAffinity.Mask = (KAFFINITY) (1ULL << number);
+	return SetThreadGroupAffinity(thread, &groupAffinity, NULL);
+}
+
 int cpuid_set_error(cpu_error_t err)
 {
 	_libcpuid_errno = (int) err;
@@ -224,60 +278,6 @@ static cpu_architecture_t cpuid_architecture_identify(struct cpu_raw_data_t* raw
 		return ARCHITECTURE_ARM;
 
 	return ARCHITECTURE_UNKNOWN;
-}
-
-/* get_total_cpus() system specific code: uses OS routines to determine total number of CPUs */
-static int get_total_cpus(void)
-{
-	SYSTEM_INFO system_info;
-	GetSystemInfo(&system_info);
-	return system_info.dwNumberOfProcessors;
-}
-
-INTERNAL_SCOPE GROUP_AFFINITY savedGroupAffinity;
-
-bool save_cpu_affinity(void)
-{
-	HANDLE thread = GetCurrentThread();
-	return GetThreadGroupAffinity(thread, &savedGroupAffinity);
-}
-
-bool restore_cpu_affinity(void)
-{
-	if (!savedGroupAffinity.Mask)
-		return false;
-
-	HANDLE thread = GetCurrentThread();
-	return SetThreadGroupAffinity(thread, &savedGroupAffinity, NULL);
-}
-
-bool set_cpu_affinity(logical_cpu_t logical_cpu)
-{
-/* Credits to https://github.com/PolygonTek/BlueshiftEngine/blob/fbc374cbc391e1147c744649f405a66a27c35d89/Source/Runtime/Private/Platform/Windows/PlatformWinThread.cpp#L27 */
-	int groups = GetActiveProcessorGroupCount();
-	int total_processors = 0;
-	int group = 0;
-	int number = 0;
-	int found = 0;
-	HANDLE thread = GetCurrentThread();
-	GROUP_AFFINITY groupAffinity;
-
-	for (int i = 0; i < groups; i++) {
-		int processors = GetActiveProcessorCount(i);
-		if (total_processors + processors > logical_cpu) {
-			group = i;
-			number = logical_cpu - total_processors;
-			found = 1;
-			break;
-		}
-		total_processors += processors;
-	}
-	if (!found) return 0; // logical CPU # too large, does not exist
-
-	memset(&groupAffinity, 0, sizeof(groupAffinity));
-	groupAffinity.Group = (WORD) group;
-	groupAffinity.Mask = (KAFFINITY) (1ULL << number);
-	return SetThreadGroupAffinity(thread, &groupAffinity, NULL);
 }
 
 static void load_features_common(struct cpu_raw_data_t* raw, struct cpu_id_t* data)
@@ -688,9 +688,12 @@ int cpuid_get_raw_data_core(struct cpu_raw_data_t* data, logical_cpu_t logical_c
 
 	if (logical_cpu != (logical_cpu_t) -1) {
 		debugf(2, "Getting raw dump for logical CPU %u\n", logical_cpu);
-		if (!set_cpu_affinity(logical_cpu))
-			return ERR_INVCNB;
-		affinity_saved = save_cpu_affinity();
+		if (set_cpu_affinity(logical_cpu))
+			affinity_saved = save_cpu_affinity();
+		else
+			/* Never return ERR_INVCNB for logical CPU 0 (in case set_cpu_affinity() is not supported) */
+			if (logical_cpu > 0)
+				return cpuid_set_error(ERR_INVCNB);
 	}
 
 #if defined(PLATFORM_X86) || defined(PLATFORM_X64)
@@ -816,8 +819,7 @@ int cpuid_get_raw_data_core(struct cpu_raw_data_t* data, logical_cpu_t logical_c
 
 int cpuid_get_all_raw_data(struct cpu_raw_data_array_t* data)
 {
-	int cur_error = cpuid_set_error(ERR_OK);
-	int ret_error = cpuid_set_error(ERR_OK);
+	int r = ERR_OK;
 	logical_cpu_t logical_cpu = 0;
 	struct cpu_raw_data_t raw_tmp;
 
@@ -827,17 +829,17 @@ int cpuid_get_all_raw_data(struct cpu_raw_data_array_t* data)
 	cpu_raw_data_array_t_constructor(data, true);
 	do {
 		memset(&raw_tmp, 0, sizeof(struct cpu_raw_data_t));
-		cur_error = cpuid_get_raw_data_core(&raw_tmp, logical_cpu);
-		if (cur_error == ERR_INVCNB)
+		if ((r = cpuid_get_raw_data_core(&raw_tmp, logical_cpu)) != ERR_OK)
 			break;
 		cpuid_grow_raw_data_array(data, logical_cpu + 1);
 		memcpy(&data->raw[logical_cpu], &raw_tmp, sizeof(struct cpu_raw_data_t));
-		if (ret_error == ERR_OK)
-			ret_error = cur_error;
 		logical_cpu++;
-	} while (cur_error == ERR_OK);
+	} while (r == ERR_OK);
 
-	return ret_error;
+	/* On ERR_INVCNB, it means that logical_cpu value is out of bounds and we must break the loop, but it is a normal behavior. */
+	if (r == ERR_INVCNB)
+		r = ERR_OK;
+	return cpuid_set_error(r);
 }
 
 int cpu_ident_internal(struct cpu_raw_data_t* raw, struct cpu_id_t* data, struct internal_id_info_t* internal)

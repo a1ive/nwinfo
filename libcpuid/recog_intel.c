@@ -24,8 +24,8 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 #include <string.h>
-#include <ctype.h>
 #include "libcpuid.h"
+#include "libcpuid_ctype.h"
 #include "libcpuid_util.h"
 #include "libcpuid_internal.h"
 #include "recog_intel.h"

@@ -126,6 +126,7 @@
     <ClInclude Include="libcpuid.h" />
     <ClInclude Include="libcpuid_arm_driver.h" />
     <ClInclude Include="libcpuid_constants.h" />
+    <ClInclude Include="libcpuid_ctype.h" />
     <ClInclude Include="libcpuid_internal.h" />
     <ClInclude Include="libcpuid_types.h" />
     <ClInclude Include="libcpuid_util.h" />

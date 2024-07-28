@@ -27,9 +27,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <ctype.h>
 #include <inttypes.h>
 #include "libcpuid.h"
+#include "libcpuid_ctype.h"
 #include "libcpuid_util.h"
 #include "libcpuid_internal.h"
 #include "recog_arm.h"
