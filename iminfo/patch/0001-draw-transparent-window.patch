@@ -1,0 +1,115 @@
+From 257b70850cc773d55fe198e97884e98ac0f1ae5f Mon Sep 17 00:00:00 2001
+From: A1ive <10670106+a1ive@users.noreply.github.com>
+Date: Mon, 29 Jul 2024 21:56:45 +0900
+Subject: [PATCH] draw transparent window
+
+---
+ imgui/imgui.cpp            | 36 +++++++++++++++---------------------
+ imgui/imgui_impl_dx9.cpp   |  2 +-
+ imgui/imgui_impl_win32.cpp |  1 +
+ 3 files changed, 17 insertions(+), 22 deletions(-)
+
+diff --git a/imgui/imgui.cpp b/imgui/imgui.cpp
+index 7ccf74f..d1b9c14 100644
+--- a/imgui/imgui.cpp
++++ b/imgui/imgui.cpp
+@@ -6641,8 +6641,6 @@ void ImGui::RenderWindowDecorations(ImGuiWindow* window, const ImRect& title_bar
+         const float backup_border_size = style.FrameBorderSize;
+         g.Style.FrameBorderSize = window->WindowBorderSize;
+         ImU32 title_bar_col = GetColorU32((title_bar_is_highlight && !g.NavDisableHighlight) ? ImGuiCol_TitleBgActive : ImGuiCol_TitleBgCollapsed);
+-        if (window->ViewportOwned)
+-            title_bar_col |= IM_COL32_A_MASK; // No alpha (we don't support is_docking_transparent_payload here because simpler and less meaningful, but could with a bit of code shuffle/reuse)
+         RenderFrame(title_bar_rect.Min, title_bar_rect.Max, title_bar_col, true, window_rounding);
+         g.Style.FrameBorderSize = backup_border_size;
+     }
+@@ -6657,30 +6655,26 @@ void ImGui::RenderWindowDecorations(ImGuiWindow* window, const ImRect& title_bar
+                     is_docking_transparent_payload = true;
+ 
+             ImU32 bg_col = GetColorU32(GetWindowBgColorIdx(window));
+-            if (window->ViewportOwned)
++
++            bool override_alpha = false;
++            float alpha = 1.0f;
++            if (g.NextWindowData.Flags & ImGuiNextWindowDataFlags_HasBgAlpha)
+             {
+-                bg_col |= IM_COL32_A_MASK; // No alpha
+-                if (is_docking_transparent_payload)
+-                    window->Viewport->Alpha *= DOCKING_TRANSPARENT_PAYLOAD_ALPHA;
++                alpha = g.NextWindowData.BgAlphaVal;
++                override_alpha = true;
+             }
+-            else
++            if (is_docking_transparent_payload)
+             {
+-                // Adjust alpha. For docking
+-                bool override_alpha = false;
+-                float alpha = 1.0f;
+-                if (g.NextWindowData.Flags & ImGuiNextWindowDataFlags_HasBgAlpha)
+-                {
+-                    alpha = g.NextWindowData.BgAlphaVal;
+-                    override_alpha = true;
+-                }
+-                if (is_docking_transparent_payload)
++                if (window->ViewportOwned)
++                    window->Viewport->Alpha *= DOCKING_TRANSPARENT_PAYLOAD_ALPHA;
++                else
+                 {
+                     alpha *= DOCKING_TRANSPARENT_PAYLOAD_ALPHA; // FIXME-DOCK: Should that be an override?
+                     override_alpha = true;
+                 }
+-                if (override_alpha)
+-                    bg_col = (bg_col & ~IM_COL32_A_MASK) | (IM_F32_TO_INT8_SAT(alpha) << IM_COL32_A_SHIFT);
+             }
++            if (override_alpha)
++                bg_col = (bg_col & ~IM_COL32_A_MASK) | (IM_F32_TO_INT8_SAT(alpha) << IM_COL32_A_SHIFT);
+ 
+             // Render, for docked windows and host windows we ensure bg goes before decorations
+             if (window->DockIsActive)
+@@ -7419,7 +7413,7 @@ bool ImGui::Begin(const char* name, bool* p_open, ImGuiWindowFlags flags)
+ 
+         // Lock window rounding for the frame (so that altering them doesn't cause inconsistencies)
+         // Large values tend to lead to variety of artifacts and are not recommended.
+-        if (window->ViewportOwned || window->DockIsActive)
++        if (window->DockIsActive)
+             window->WindowRounding = 0.0f;
+         else
+             window->WindowRounding = (flags & ImGuiWindowFlags_ChildWindow) ? style.ChildRounding : ((flags & ImGuiWindowFlags_Popup) && !(flags & ImGuiWindowFlags_Modal)) ? style.PopupRounding : style.WindowRounding;
+@@ -15657,8 +15651,8 @@ void ImGui::WindowSyncOwnedViewport(ImGuiWindow* window, ImGuiWindow* parent_win
+     // We can also tell the backend that clearing the platform window won't be necessary,
+     // as our window background is filling the viewport and we have disabled BgAlpha.
+     // FIXME: Work on support for per-viewport transparency (#2766)
+-    if (!(window_flags & ImGuiWindowFlags_NoBackground))
+-        viewport_flags |= ImGuiViewportFlags_NoRendererClear;
++    // if (!(window_flags & ImGuiWindowFlags_NoBackground) && window->WindowRounding == 0.0f)
++    //     viewport_flags |= ImGuiViewportFlags_NoRendererClear;
+ 
+     window->Viewport->Flags = viewport_flags;
+ 
+diff --git a/imgui/imgui_impl_dx9.cpp b/imgui/imgui_impl_dx9.cpp
+index 59475d2..76a0039 100644
+--- a/imgui/imgui_impl_dx9.cpp
++++ b/imgui/imgui_impl_dx9.cpp
+@@ -502,7 +502,7 @@ static void ImGui_ImplDX9_RenderWindow(ImGuiViewport* viewport, void*)
+ {
+     ImGui_ImplDX9_Data* bd = ImGui_ImplDX9_GetBackendData();
+     ImGui_ImplDX9_ViewportData* vd = (ImGui_ImplDX9_ViewportData*)viewport->RendererUserData;
+-    ImVec4 clear_color = ImVec4(0.0f, 0.0f, 0.0f, 1.0f);
++    ImVec4 clear_color = ImVec4(0.0f, 0.0f, 0.0f, 0.0f);
+ 
+     LPDIRECT3DSURFACE9 render_target = nullptr;
+     LPDIRECT3DSURFACE9 last_render_target = nullptr;
+diff --git a/imgui/imgui_impl_win32.cpp b/imgui/imgui_impl_win32.cpp
+index 7470e5e..9075902 100644
+--- a/imgui/imgui_impl_win32.cpp
++++ b/imgui/imgui_impl_win32.cpp
+@@ -1056,6 +1056,7 @@ static void ImGui_ImplWin32_CreateWindow(ImGuiViewport* viewport)
+     vd->HwndOwned = true;
+     viewport->PlatformRequestResize = false;
+     viewport->PlatformHandle = viewport->PlatformHandleRaw = vd->Hwnd;
++    ImGui_ImplWin32_EnableAlphaCompositing(vd->Hwnd);
+ 
+     // Secondary viewports store their imgui context
+     ::SetPropA(vd->Hwnd, "IMGUI_CONTEXT", ImGui::GetCurrentContext());
+-- 
+2.42.0.windows.2
+
