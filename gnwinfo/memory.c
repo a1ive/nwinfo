@@ -274,19 +274,19 @@ gnwinfo_draw_mm_window(struct nk_context* ctx, float width, float height)
 	gnwinfo_draw_percent_prog(ctx, (double)g_ctx.mem_status.PhysUsage);
 	nk_spacer(ctx);
 	nk_lf(ctx, NK_TEXT_LEFT, "%3lu%% %s / %s",
-		g_ctx.mem_status.PhysUsage, g_ctx.mem_avail, g_ctx.mem_total);
+		g_ctx.mem_status.PhysUsage, g_ctx.mem_status.StrPhysAvail, g_ctx.mem_status.StrPhysTotal);
 
 	nk_l(ctx, gnwinfo_get_text(L"Page File"), NK_TEXT_LEFT);
 	gnwinfo_draw_percent_prog(ctx, (double)g_ctx.mem_status.PageUsage);
 	nk_spacer(ctx);
 	nk_lf(ctx, NK_TEXT_LEFT, "%3lu%% %s / %s",
-		g_ctx.mem_status.PageUsage, g_ctx.page_avail, g_ctx.page_total);
+		g_ctx.mem_status.PageUsage, g_ctx.mem_status.StrPageAvail, g_ctx.mem_status.StrPageTotal);
 
 	nk_l(ctx, gnwinfo_get_text(L"System Working Set"), NK_TEXT_LEFT);
 	gnwinfo_draw_percent_prog(ctx, (double)g_ctx.mem_status.SfciUsage);
 	nk_spacer(ctx);
 	nk_lf(ctx, NK_TEXT_LEFT, "%3lu%% %s / %s",
-		g_ctx.mem_status.SfciUsage, g_ctx.sfci_avail, g_ctx.sfci_total);
+		g_ctx.mem_status.SfciUsage, g_ctx.mem_status.StrSfciAvail, g_ctx.mem_status.StrSfciTotal);
 
 	nk_layout_row_dynamic(ctx, 8, 1);
 	nk_spacer(ctx);

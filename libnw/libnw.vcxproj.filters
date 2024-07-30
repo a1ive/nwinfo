@@ -140,6 +140,9 @@
     <ClCompile Include="libcdi.c">
       <Filter>libcdi</Filter>
     </ClCompile>
+    <ClCompile Include="pdh.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

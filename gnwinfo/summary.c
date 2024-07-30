@@ -210,14 +210,14 @@ draw_processor(struct nk_context* ctx)
 		snprintf(m_buf, MAX_PATH, "%s %s %s", m_buf,
 			gnwinfo_get_node_attr(cpu, "Logical CPUs"),
 			gnwinfo_get_text(L"threads"));
-		if (g_ctx.cpu_info[i].cpu_msr_power > 0.0)
-			snprintf(m_buf, MAX_PATH, "%s %.2fW", m_buf, g_ctx.cpu_info[i].cpu_msr_power);
+		if (g_ctx.cpu_info[i].MsrPower > 0.0)
+			snprintf(m_buf, MAX_PATH, "%s %.2fW", m_buf, g_ctx.cpu_info[i].MsrPower);
 
 		nk_lhc(ctx, m_buf, NK_TEXT_LEFT, g_color_text_l);
-		if (g_ctx.cpu_info[i].cpu_msr_temp > 0)
+		if (g_ctx.cpu_info[i].MsrTemp > 0)
 			nk_lhcf(ctx, NK_TEXT_LEFT,
-				gnwinfo_get_color((double)g_ctx.cpu_info[i].cpu_msr_temp, 65.0, 85.0),
-				u8"%d\u2103", g_ctx.cpu_info[i].cpu_msr_temp);
+				gnwinfo_get_color((double)g_ctx.cpu_info[i].MsrTemp, 65.0, 85.0),
+				u8"%d\u2103", g_ctx.cpu_info[i].MsrTemp);
 		else
 			nk_spacer(ctx);
 	}
@@ -270,7 +270,7 @@ draw_memory(struct nk_context* ctx)
 	nk_lhcf(ctx, NK_TEXT_LEFT,
 		gnwinfo_get_color((double)g_ctx.mem_status.PhysUsage, 70.0, 90.0),
 		"%lu%% %s / %s",
-		g_ctx.mem_status.PhysUsage, g_ctx.mem_avail, g_ctx.mem_total);
+		g_ctx.mem_status.PhysUsage, g_ctx.mem_status.StrPhysAvail, g_ctx.mem_status.StrPhysTotal);
 	gnwinfo_draw_percent_prog(ctx, (double)g_ctx.mem_status.PhysUsage);
 	if (nk_button_image_hover(ctx, GET_PNG(IDR_PNG_ROCKET), gnwinfo_get_text(L"Clean Memory")))
 		gnwinfo_init_mm_window(ctx);
@@ -612,8 +612,8 @@ draw_network(struct nk_context* ctx)
 
 	nk_layout_row(ctx, NK_DYNAMIC, 0, 4, (float[4]) { 0.64f, 0.18f - g_ctx.gui_ratio, 0.18f, g_ctx.gui_ratio });
 	nk_image_label(ctx, GET_PNG(IDR_PNG_NETWORK), gnwinfo_get_text(L"Network"), NK_TEXT_LEFT, g_color_text_d);
-	nk_lhcf(ctx, NK_TEXT_LEFT, g_color_warning, u8"\u2191 %s", g_ctx.net_send);
-	nk_lhcf(ctx, NK_TEXT_LEFT, g_color_unknown, u8"\u2193 %s", g_ctx.net_recv);
+	nk_lhcf(ctx, NK_TEXT_LEFT, g_color_warning, u8"\u2191 %s", g_ctx.net_traffic.StrSend);
+	nk_lhcf(ctx, NK_TEXT_LEFT, g_color_unknown, u8"\u2193 %s", g_ctx.net_traffic.StrRecv);
 	if (nk_button_image_hover(ctx, GET_PNG(IDR_PNG_EDIT), NULL))
 		ShellExecuteW(NULL, NULL, L"::{7007ACC7-3202-11D1-AAD2-00805FC1270E}", NULL, NULL, SW_NORMAL);
 

@@ -164,6 +164,7 @@
     <ClCompile Include="network.c" />
     <ClCompile Include="nt.c" />
     <ClCompile Include="pci.c" />
+    <ClCompile Include="pdh.c" />
     <ClCompile Include="productpolicy.c" />
     <ClCompile Include="smb.c" />
     <ClCompile Include="smbios.c" />
