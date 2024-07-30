@@ -89,9 +89,8 @@
       </IgnoreAllDefaultLibraries>
     </Lib>
     <PostBuildEvent>
-      <Command>copy "$(ProjectDir)jep106.ids" "$(SolutionDir)$(Platform)\$(Configuration)\"
-copy "$(SolutionDir)winring0\HwRwDrv.sys" "$(SolutionDir)$(Platform)\$(Configuration)\"
-copy "$(SolutionDir)winring0\HwRwDrvx64.sys" "$(SolutionDir)$(Platform)\$(Configuration)\"</Command>
+      <Command>
+      </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -119,9 +118,8 @@ copy "$(SolutionDir)winring0\HwRwDrvx64.sys" "$(SolutionDir)$(Platform)\$(Config
       </IgnoreAllDefaultLibraries>
     </Lib>
     <PostBuildEvent>
-      <Command>copy "$(ProjectDir)jep106.ids" "$(SolutionDir)$(Platform)\$(Configuration)\"
-copy "$(SolutionDir)winring0\HwRwDrv.sys" "$(SolutionDir)$(Platform)\$(Configuration)\"
-copy "$(SolutionDir)winring0\HwRwDrvx64.sys" "$(SolutionDir)$(Platform)\$(Configuration)\"</Command>
+      <Command>
+      </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
