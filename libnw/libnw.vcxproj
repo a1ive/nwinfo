@@ -89,9 +89,8 @@
       </IgnoreAllDefaultLibraries>
     </Lib>
     <PostBuildEvent>
-      <Command>copy "$(ProjectDir)jep106.ids" "$(SolutionDir)$(Platform)\$(Configuration)\"
-copy "$(SolutionDir)winring0\HwRwDrv.sys" "$(SolutionDir)$(Platform)\$(Configuration)\"
-copy "$(SolutionDir)winring0\HwRwDrvx64.sys" "$(SolutionDir)$(Platform)\$(Configuration)\"</Command>
+      <Command>
+      </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -119,9 +118,8 @@ copy "$(SolutionDir)winring0\HwRwDrvx64.sys" "$(SolutionDir)$(Platform)\$(Config
       </IgnoreAllDefaultLibraries>
     </Lib>
     <PostBuildEvent>
-      <Command>copy "$(ProjectDir)jep106.ids" "$(SolutionDir)$(Platform)\$(Configuration)\"
-copy "$(SolutionDir)winring0\HwRwDrv.sys" "$(SolutionDir)$(Platform)\$(Configuration)\"
-copy "$(SolutionDir)winring0\HwRwDrvx64.sys" "$(SolutionDir)$(Platform)\$(Configuration)\"</Command>
+      <Command>
+      </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -166,6 +164,7 @@ copy "$(SolutionDir)winring0\HwRwDrvx64.sys" "$(SolutionDir)$(Platform)\$(Config
     <ClCompile Include="network.c" />
     <ClCompile Include="nt.c" />
     <ClCompile Include="pci.c" />
+    <ClCompile Include="pdh.c" />
     <ClCompile Include="productpolicy.c" />
     <ClCompile Include="smb.c" />
     <ClCompile Include="smbios.c" />

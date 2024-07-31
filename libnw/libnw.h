@@ -5,6 +5,8 @@
 #include <windows.h>
 #include <stdnoreturn.h>
 
+#include <pdh.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -94,6 +96,21 @@ typedef struct _NWLIB_CONTEXT
 	struct _CDI_SMART* NwSmart;
 	UINT64 NwSmartFlags;
 
+	BOOL EnablePdh;
+	HMODULE PdhDll;
+	PDH_STATUS(WINAPI* PdhOpenQueryW)(LPCWSTR, DWORD_PTR, PDH_HQUERY*);
+	PDH_STATUS(WINAPI* PdhAddCounterW)(PDH_HQUERY, LPCWSTR, DWORD_PTR, PDH_HCOUNTER*);
+	PDH_STATUS(WINAPI* PdhCollectQueryData)(PDH_HQUERY);
+	PDH_STATUS(WINAPI* PdhGetFormattedCounterValue)(PDH_HCOUNTER, DWORD, LPDWORD, PPDH_FMT_COUNTERVALUE);
+	PDH_STATUS(WINAPI* PdhGetFormattedCounterArrayW)(PDH_HCOUNTER, DWORD, LPDWORD, LPDWORD, PPDH_FMT_COUNTERVALUE_ITEM_W);
+	PDH_STATUS(WINAPI* PdhCloseQuery)(PDH_HQUERY);
+	PDH_HQUERY Pdh;
+	PDH_HCOUNTER PdhCpuUsage;
+	PDH_HCOUNTER PdhCpuFreq;
+	PDH_HCOUNTER PdhCpuBaseFreq;
+	PDH_HCOUNTER PdhNetRecv;
+	PDH_HCOUNTER PdhNetSend;
+
 	struct wr0_drv_t* NwDrv;
 	UINT CodePage;
 	struct _NODE* NwRoot;
@@ -121,6 +138,11 @@ VOID NW_Export(PNODE node, FILE* file);
 VOID NW_Print(LPCSTR lpFileName);
 VOID NW_Fini(VOID);
 
+VOID NWL_PdhInit(VOID);
+VOID NWL_PdhUpdate(VOID);
+VOID NWL_PdhFini(VOID);
+UINT64 NWL_PdhGetSum(PDH_HCOUNTER counter);
+
 noreturn VOID NWL_ErrExit(INT nExitCode, LPCSTR lpszText);
 
 PNODE NW_Acpi(VOID);
@@ -146,6 +168,8 @@ PNODE NW_Font(VOID);
 VOID NWL_GetUptime(CHAR* szUptime, DWORD dwSize);
 VOID NWL_GetHostname(CHAR* szHostname);
 
+#define NWL_STR_SIZE 64
+
 typedef struct _NWLIB_MEM_INFO
 {
 	DWORD PhysUsage;
@@ -162,9 +186,40 @@ typedef struct _NWLIB_MEM_INFO
 	DWORDLONG SfciAvail;
 	SIZE_T SystemCache;
 	SIZE_T PageSize;
+	CHAR StrPhysTotal[NWL_STR_SIZE];
+	CHAR StrPhysAvail[NWL_STR_SIZE];
+	CHAR StrPageTotal[NWL_STR_SIZE];
+	CHAR StrPageAvail[NWL_STR_SIZE];
+	CHAR StrSfciTotal[NWL_STR_SIZE];
+	CHAR StrSfciAvail[NWL_STR_SIZE];
 } NWLIB_MEM_INFO, *PNWLIB_MEM_INFO;
 
 VOID NWL_GetMemInfo(PNWLIB_MEM_INFO pMemInfo);
+
+double NWL_GetCpuUsage(VOID);
+DWORD NWL_GetCpuFreq(VOID);
+
+typedef struct _NWLIB_CPU_INFO
+{
+	CHAR MsrMulti[NWL_STR_SIZE];
+	int MsrTemp;
+	double MsrVolt;
+	double MsrBus;
+	int MsrEnergy;
+	double MsrPower;
+	double MsrPl1;
+	double MsrPl2;
+}NWLIB_CPU_INFO;
+VOID NWL_GetCpuMsr(int count, NWLIB_CPU_INFO* info);
+
+typedef struct _NWLIB_NET_TRAFFIC
+{
+	UINT64 Recv;
+	UINT64 Send;
+	CHAR StrRecv[NWL_STR_SIZE];
+	CHAR StrSend[NWL_STR_SIZE];
+} NWLIB_NET_TRAFFIC;
+VOID NWL_GetNetTraffic(NWLIB_NET_TRAFFIC* info, BOOL bit);
 
 #define NWL_Debugf(...) \
 	do \

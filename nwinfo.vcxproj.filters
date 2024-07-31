@@ -40,5 +40,6 @@
     <None Include=".github\workflows\msbuild.yml" />
     <None Include="_config.yml" />
     <None Include="_layouts\default.html" />
+    <None Include="copy_res.ps1" />
   </ItemGroup>
 </Project>

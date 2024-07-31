@@ -73,21 +73,21 @@ draw_msr(struct nk_context* ctx, int index, PNODE cpu, LPCSTR brand)
 		nk_l(ctx, gnwinfo_get_text(L"Socket"), NK_TEXT_LEFT);
 		nk_lhc(ctx, gnwinfo_get_smbios_attr("4", "Socket Designation", (PVOID)brand, is_cpu_name_match), NK_TEXT_LEFT, g_color_text_l);
 		nk_l(ctx, gnwinfo_get_text(L"Multiplier"), NK_TEXT_LEFT);
-		nk_lhc(ctx, g_ctx.cpu_info[index].cpu_msr_multi, NK_TEXT_LEFT, g_color_text_l);
+		nk_lhc(ctx, g_ctx.cpu_info[index].MsrMulti, NK_TEXT_LEFT, g_color_text_l);
 		nk_l(ctx, gnwinfo_get_text(L"Base Clock"), NK_TEXT_LEFT);
 		nk_lhcf(ctx, NK_TEXT_LEFT, g_color_text_l, "%s MHz", gnwinfo_get_smbios_attr("4", "Current Speed (MHz)", (const PVOID)brand, is_cpu_name_match));
 		nk_l(ctx, gnwinfo_get_text(L"Bus Clock"), NK_TEXT_LEFT);
-		nk_lhcf(ctx, NK_TEXT_LEFT, g_color_text_l, "%.2f MHz", g_ctx.cpu_info[index].cpu_msr_bus);
+		nk_lhcf(ctx, NK_TEXT_LEFT, g_color_text_l, "%.2f MHz", g_ctx.cpu_info[index].MsrBus);
 		nk_l(ctx, gnwinfo_get_text(L"Temperature"), NK_TEXT_LEFT);
-		nk_lhcf(ctx, NK_TEXT_LEFT, g_color_text_l, u8"%d \u2103", g_ctx.cpu_info[index].cpu_msr_temp);
+		nk_lhcf(ctx, NK_TEXT_LEFT, g_color_text_l, u8"%d \u2103", g_ctx.cpu_info[index].MsrTemp);
 		nk_l(ctx, gnwinfo_get_text(L"Voltage"), NK_TEXT_LEFT);
-		nk_lhcf(ctx, NK_TEXT_LEFT, g_color_text_l, "%.2f V", g_ctx.cpu_info[index].cpu_msr_volt);
+		nk_lhcf(ctx, NK_TEXT_LEFT, g_color_text_l, "%.2f V", g_ctx.cpu_info[index].MsrVolt);
 		nk_l(ctx, gnwinfo_get_text(L"Power"), NK_TEXT_LEFT);
-		nk_lhcf(ctx, NK_TEXT_LEFT, g_color_text_l, "%.2f W", g_ctx.cpu_info[index].cpu_msr_power);
+		nk_lhcf(ctx, NK_TEXT_LEFT, g_color_text_l, "%.2f W", g_ctx.cpu_info[index].MsrPower);
 		nk_l(ctx, gnwinfo_get_text(L"PL1"), NK_TEXT_LEFT);
-		nk_lhcf(ctx, NK_TEXT_LEFT, g_color_text_l, "%.2f W", g_ctx.cpu_info[index].cpu_msr_pl1);
+		nk_lhcf(ctx, NK_TEXT_LEFT, g_color_text_l, "%.2f W", g_ctx.cpu_info[index].MsrPl1);
 		nk_l(ctx, gnwinfo_get_text(L"PL2"), NK_TEXT_LEFT);
-		nk_lhcf(ctx, NK_TEXT_LEFT, g_color_text_l, "%.2f W", g_ctx.cpu_info[index].cpu_msr_pl2);
+		nk_lhcf(ctx, NK_TEXT_LEFT, g_color_text_l, "%.2f W", g_ctx.cpu_info[index].MsrPl2);
 
 		nk_group_end(ctx);
 	}

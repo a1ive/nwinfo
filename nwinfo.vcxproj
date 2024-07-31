@@ -26,6 +26,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include=".github\workflows\msbuild.yml" />
+    <None Include="copy_res.ps1" />
     <None Include="packages.config" />
     <None Include="README.md" />
     <None Include="_config.yml" />
@@ -114,6 +115,9 @@
       <AdditionalDependencies>advapi32.lib;comctl32.lib;iphlpapi.lib;setupapi.lib;userenv.lib;ws2_32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <UACExecutionLevel>RequireAdministrator</UACExecutionLevel>
     </Link>
+    <PostBuildEvent>
+      <Command>powershell -ExecutionPolicy Bypass -File $(SolutionDir)copy_res.ps1 -TargetFolder $(OutputPath)</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -137,6 +141,9 @@
       <AdditionalDependencies>advapi32.lib;comctl32.lib;iphlpapi.lib;setupapi.lib;userenv.lib;ws2_32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <UACExecutionLevel>RequireAdministrator</UACExecutionLevel>
     </Link>
+    <PostBuildEvent>
+      <Command>powershell -ExecutionPolicy Bypass -File $(SolutionDir)copy_res.ps1 -TargetFolder $(OutputPath)</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

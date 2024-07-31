@@ -42,26 +42,9 @@ jobs:
         move Win32\Release\nwinfo.exe nwinfo\nwinfo_x86.exe
         move Win32\Release\gnwinfo.exe nwinfo\gnwinfo_x86.exe
         copy gnwinfo\gnwinfo.ini nwinfo\gnwinfo.ini
-        copy LICENSE nwinfo\LICENSE
         copy Win32\Release\ryzenadj.dll nwinfo\ryzenadj.dll
         copy x64\Release\ryzenadjx64.dll nwinfo\ryzenadjx64.dll
-        copy libnw\jep106.ids nwinfo\jep106.ids
-        # copy winring0\WinRing0.sys nwinfo\WinRing0.sys
-        # copy winring0\WinRing0x64.sys nwinfo\WinRing0x64.sys
-        copy winring0\HwRwDrv.sys nwinfo\HwRwDrv.sys
-        copy winring0\HwRwDrvx64.sys nwinfo\HwRwDrvx64.sys
-        Invoke-WebRequest -OutFile nwinfo\pci.ids https://raw.githubusercontent.com/pciutils/pciids/master/pci.ids
-        (Get-Content nwinfo\pci.ids) | ForEach-Object { $_ -replace "NVIDIA Corporation", "NVIDIA" -replace "Intel Corporation", "Intel" -replace "Advanced Micro Devices, Inc. \[(.*?)\]", '$1' } | Set-Content nwinfo\pci.ids
-        Invoke-WebRequest -OutFile nwinfo\usb.ids http://www.linux-usb.org/usb.ids
-        Invoke-WebRequest -OutFile nwinfo\pnp.ids https://raw.githubusercontent.com/vcrhonek/hwdata/master/pnp.ids
-        # Add version info to pnp.ids
-        Add-Content -Path "nwinfo\pnp.ids" -Value "# Version: $(Get-Date -Format 'yyyy.MM.dd')"
-        # Remove all "Invalid Vendor Codename - " from pnp.ids
-        (Get-Content nwinfo\pnp.ids) | ForEach-Object { $_ -replace "Invalid Vendor Codename - ", "" } | Set-Content nwinfo\pnp.ids
-        Invoke-WebRequest -OutFile libcdi.zip https://github.com/a1ive/libcdi/releases/download/latest/libcdi.zip
-        Expand-Archive -Path libcdi.zip -DestinationPath libcdi_dll
-        copy libcdi_dll\libcdi\x86\libcdi.dll nwinfo\libcdi.Win32.dll
-        copy libcdi_dll\libcdi\x64\libcdi.dll nwinfo\libcdi.x64.dll
+        powershell -ExecutionPolicy Bypass -File .\copy_res.ps1 -TargetFolder nwinfo
 
     # - name: Create PDF
     #  uses: BaileyJM02/markdown-to-pdf@v1

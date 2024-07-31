@@ -18,6 +18,39 @@
 static const char* bps_human_sizes[6] =
 { "bps", "kbps", "Mbps", "Gbps", "Tbps", "Pbps", };
 
+static UINT64 total_recv = 0, total_send = 0;
+
+VOID
+NWL_GetNetTraffic(NWLIB_NET_TRAFFIC* info, BOOL bit)
+{
+	const char* bit_units[6] = { "b", "kb", "Mb", "Gb", "Tb", "Pb", };
+	static UINT64 old_recv = 0;
+	static UINT64 old_send = 0;
+	UINT64 diff_recv = 0;
+	UINT64 diff_send = 0;
+	if (total_recv >= old_recv)
+		diff_recv = total_recv - old_recv;
+	if (total_send >= old_send)
+		diff_send = total_send - old_send;
+	old_recv = total_recv;
+	old_send = total_send;
+
+	if (NWLC->PdhNetRecv)
+		diff_recv = NWL_PdhGetSum(NWLC->PdhNetRecv);
+	if (NWLC->PdhNetSend)
+		diff_send = NWL_PdhGetSum(NWLC->PdhNetSend);
+	if (bit)
+	{
+		memcpy(info->StrRecv, NWL_GetHumanSize(diff_recv * 8, bit_units, 1000), NWL_STR_SIZE);
+		memcpy(info->StrSend, NWL_GetHumanSize(diff_send * 8, bit_units, 1000), NWL_STR_SIZE);
+	}
+	else
+	{
+		memcpy(info->StrRecv, NWL_GetHumanSize(diff_recv, NWLC->NwUnits, 1024), NWL_STR_SIZE);
+		memcpy(info->StrSend, NWL_GetHumanSize(diff_send, NWLC->NwUnits, 1024), NWL_STR_SIZE);
+	}
+}
+
 static const CHAR*
 IpAddrToStr(const PSOCKET_ADDRESS pAddress, PBOOL pbIpv6)
 {
@@ -233,6 +266,10 @@ PNODE NW_Network(VOID)
 	PVOID pMaxAddress = NULL;
 	BOOL bLonghornOrLater;
 	PNODE node = NWL_NodeAlloc("Network", NFLG_TABLE);
+
+	total_recv = 0;
+	total_send = 0;
+
 	if (NWLC->NetInfo)
 		NWL_NodeAppendChild(NWLC->NwRoot, node);
 	if (!(NWLC->NetFlags & (NW_NET_IPV4 | NW_NET_IPV6)))
@@ -395,7 +432,9 @@ PNODE NW_Network(VOID)
 		if (GetIfEntry(&ifRow) == NO_ERROR)
 		{
 			NWL_NodeAttrSetf(nic, "Received (Octets)", NAFLG_FMT_NUMERIC, "%lu", ifRow.dwInOctets);
+			total_recv += ifRow.dwInOctets;
 			NWL_NodeAttrSetf(nic, "Sent (Octets)", NAFLG_FMT_NUMERIC, "%lu", ifRow.dwOutOctets);
+			total_send += ifRow.dwOutOctets;
 		}
 next_addr:
 		pCurrAddresses = pCurrAddresses->Next;
