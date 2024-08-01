@@ -37,15 +37,8 @@ gnwinfo_ctx_error_callback(LPCSTR lpszText)
 }
 
 static void
-get_display_info(void)
+get_gpu_info(void)
 {
-	MONITORINFO mni = { .cbSize = sizeof(MONITORINFO) };
-	GetMonitorInfoW(MonitorFromWindow(g_ctx.wnd, MONITOR_DEFAULTTONEAREST), &mni);
-	g_ctx.display_width = mni.rcMonitor.right - mni.rcMonitor.left;
-	g_ctx.display_height = mni.rcMonitor.bottom - mni.rcMonitor.top;
-	g_ctx.display_dpi = GetDpiForWindow(g_ctx.wnd);
-	g_ctx.display_scale = 100 * g_ctx.display_dpi / USER_DEFAULT_SCREEN_DPI;
-
 	if (g_ctx.gpu)
 		NWL_NodeFree(g_ctx.gpu, 1);
 	g_ctx.gpu = NW_Gpu();
@@ -113,7 +106,8 @@ gnwinfo_ctx_update(WPARAM wparam)
 		g_ctx.cpu_usage = NWL_GetCpuUsage();
 		g_ctx.cpu_freq = NWL_GetCpuFreq();
 		NWL_GetCpuMsr(g_ctx.cpu_count, g_ctx.cpu_info);
-		get_display_info();
+		NWL_GetCurDisplay(g_ctx.wnd, &g_ctx.cur_display);
+		get_gpu_info();
 		if (g_ctx.audio)
 		{
 			free(g_ctx.audio);

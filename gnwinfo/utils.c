@@ -5,7 +5,7 @@
 #include "utils.h"
 
 struct nk_color
-	gnwinfo_get_color(double value, double warn, double err)
+gnwinfo_get_color(double value, double warn, double err)
 {
 	if (value > err)
 		return g_color_error;

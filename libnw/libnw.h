@@ -223,6 +223,15 @@ VOID NWL_GetNetTraffic(NWLIB_NET_TRAFFIC* info, BOOL bit);
 
 PNODE NWL_EnumPci(PNODE pNode, LPCSTR pciClass);
 
+typedef struct _NWLIB_CUR_DISPLAY
+{
+	LONG Width;
+	LONG Height;
+	UINT Dpi;
+	UINT Scale;
+} NWLIB_CUR_DISPLAY;
+VOID NWL_GetCurDisplay(HWND wnd, NWLIB_CUR_DISPLAY* info);
+
 #define NWL_Debugf(...) \
 	do \
 	{ \

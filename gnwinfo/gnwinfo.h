@@ -155,10 +155,7 @@ typedef struct _GNW_CONTEXT
 	CHAR sys_uptime[NWL_STR_SIZE];
 	NWLIB_MEM_INFO mem_status;
 
-	LONG display_width;
-	LONG display_height;
-	UINT display_dpi;
-	UINT display_scale;
+	NWLIB_CUR_DISPLAY cur_display;
 	size_t gpu_count;
 	GNW_GPU_INFO gpu_info[GNWC_GPU_MAX_COUNT];
 

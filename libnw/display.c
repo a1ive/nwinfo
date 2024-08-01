@@ -417,6 +417,17 @@ EnumDisp(PNODE node)
 	}
 }
 
+VOID
+NWL_GetCurDisplay(HWND wnd, NWLIB_CUR_DISPLAY* info)
+{
+	MONITORINFO mni = { .cbSize = sizeof(MONITORINFO) };
+	GetMonitorInfoW(MonitorFromWindow(wnd, MONITOR_DEFAULTTONEAREST), &mni);
+	info->Width = mni.rcMonitor.right - mni.rcMonitor.left;
+	info->Height = mni.rcMonitor.bottom - mni.rcMonitor.top;
+	info->Dpi = GetDpiForWindow(wnd);
+	info->Scale = 100 * info->Dpi / USER_DEFAULT_SCREEN_DPI;
+}
+
 PNODE NW_Edid(VOID)
 {
 	PNODE node = NWL_NodeAlloc("Display", NFLG_TABLE);

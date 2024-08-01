@@ -309,7 +309,7 @@ draw_display(struct nk_context* ctx)
 	nk_image_label(ctx, GET_PNG(IDR_PNG_DISPLAY), gnwinfo_get_text(L"Display Devices"), NK_TEXT_LEFT, g_color_text_d);
 	nk_lhcf(ctx, NK_TEXT_LEFT, g_color_text_l,
 		"%ldx%ld %u DPI (%u%%)",
-		g_ctx.display_width, g_ctx.display_height, g_ctx.display_dpi, g_ctx.display_scale);
+		g_ctx.cur_display.Width, g_ctx.cur_display.Height, g_ctx.cur_display.Dpi, g_ctx.cur_display.Scale);
 	if (nk_button_image_hover(ctx, GET_PNG(IDR_PNG_MONITOR), gnwinfo_get_text(L"Display Devices")))
 		g_ctx.window_flag |= GUI_WINDOW_DISPLAY;
 
