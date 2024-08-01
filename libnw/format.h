@@ -60,7 +60,7 @@ PNODE NWL_NodeAppendNew(PNODE parent, LPCSTR name, INT flags);
 PNODE NWL_NodeGetChild(PNODE parent, LPCSTR name);
 
 INT NWL_NodeAttrCount(PNODE node);
-LPSTR NWL_NodeAttrGet(PNODE node, LPCSTR key);
+LPCSTR NWL_NodeAttrGet(PNODE node, LPCSTR key);
 PNODE_ATT NWL_NodeAttrSet(PNODE node, LPCSTR key, LPCSTR value, INT flags);
 PNODE_ATT
 NWL_NodeAttrSetf(PNODE node, LPCSTR key, INT flags, LPCSTR _Printf_format_string_ format, ...);

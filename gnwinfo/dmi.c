@@ -11,9 +11,9 @@ static void draw_dmi_node(struct nk_context* ctx, PNODE node)
 	if (!node || !node->Attributes || node->Name[0] != 'T')
 		return;
 
-	snprintf(name, sizeof(name), "%s", gnwinfo_get_node_attr(node, "Description"));
+	snprintf(name, sizeof(name), "%s", NWL_NodeAttrGet(node, "Description"));
 	if (name[0] == '-' && name[1] == '\0')
-		snprintf(name, sizeof(name), "Type %s", gnwinfo_get_node_attr(node, "Table Type"));
+		snprintf(name, sizeof(name), "Type %s", NWL_NodeAttrGet(node, "Table Type"));
 
 	if (nk_tree_push_id(ctx, NK_TREE_TAB, name, NK_MINIMIZED, tree_id++))
 	{

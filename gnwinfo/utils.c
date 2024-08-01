@@ -4,23 +4,6 @@
 #include "gnwinfo.h"
 #include "utils.h"
 
-LPCSTR
-gnwinfo_get_node_attr(PNODE node, LPCSTR key)
-{
-	int i;
-	if (!node)
-		goto fail;
-	for (i = 0; node->Attributes[i].LinkedAttribute; i++)
-	{
-		if (strcmp(node->Attributes[i].LinkedAttribute->Key, key) == 0)
-		{
-			return node->Attributes[i].LinkedAttribute->Value;
-		}
-	}
-fail:
-	return "-\0";
-}
-
 struct nk_color
 	gnwinfo_get_color(double value, double warn, double err)
 {
@@ -40,11 +23,11 @@ gnwinfo_get_smbios_attr(LPCSTR type, LPCSTR key, PVOID ctx, BOOL(*cond)(PNODE no
 	for (i = 0; g_ctx.smbios->Children[i].LinkedNode; i++)
 	{
 		PNODE tab = g_ctx.smbios->Children[i].LinkedNode;
-		LPCSTR attr = gnwinfo_get_node_attr(tab, "Table Type");
+		LPCSTR attr = NWL_NodeAttrGet(tab, "Table Type");
 		if (strcmp(attr, type) != 0)
 			continue;
 		if (!cond || cond(tab, ctx) == TRUE)
-			return gnwinfo_get_node_attr(tab, key);
+			return NWL_NodeAttrGet(tab, key);
 	}
 	return "-";
 }

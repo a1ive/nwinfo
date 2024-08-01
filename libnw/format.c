@@ -266,10 +266,12 @@ static INT NWL_NodeAttrGetIndex(PNODE node, LPCSTR key)
 	return -1;
 }
 
-LPSTR NWL_NodeAttrGet(PNODE node, LPCSTR key)
+LPCSTR NWL_NodeAttrGet(PNODE node, LPCSTR key)
 {
-	int i = NWL_NodeAttrGetIndex(node, key);
-	return (i < 0) ? NULL : node->Attributes[i].LinkedAttribute->Value;
+	int i = -1;
+	if (node)
+		i = NWL_NodeAttrGetIndex(node, key);
+	return (i < 0) ? "-\0" : node->Attributes[i].LinkedAttribute->Value;
 }
 
 PNODE_ATT NWL_NodeAttrSet(PNODE node, LPCSTR key, LPCSTR value, INT flags)

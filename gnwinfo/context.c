@@ -63,34 +63,34 @@ get_display_info(void)
 	for (size_t i = 0; i < g_ctx.gpu_count; i++)
 	{
 		PNODE pci = gpu_list->Children[i].LinkedNode;
-		LPCSTR hwid = gnwinfo_get_node_attr(pci, "HWID");
+		LPCSTR hwid = NWL_NodeAttrGet(pci, "HWID");
 		strcpy_s(g_ctx.gpu_info[i].gpu_hwid, NWL_STR_SIZE, hwid);
-		LPCSTR vendor = gnwinfo_get_node_attr(pci, "Vendor");
+		LPCSTR vendor = NWL_NodeAttrGet(pci, "Vendor");
 		if (strcmp(vendor, "-") == 0)
-			vendor = gnwinfo_get_node_attr(pci, "Vendor ID");
+			vendor = NWL_NodeAttrGet(pci, "Vendor ID");
 		strcpy_s(g_ctx.gpu_info[i].gpu_vendor, NWL_STR_SIZE, vendor);
-		LPCSTR device = gnwinfo_get_node_attr(pci, "Device");
+		LPCSTR device = NWL_NodeAttrGet(pci, "Device");
 		if (strcmp(device, "-") == 0)
-			device = gnwinfo_get_node_attr(pci, "Device ID");
+			device = NWL_NodeAttrGet(pci, "Device ID");
 		strcpy_s(g_ctx.gpu_info[i].gpu_device, NWL_STR_SIZE, device);
 		for (size_t j = 0; g_ctx.gpu->Children[j].LinkedNode; j++)
 		{
 			PNODE gpu = g_ctx.gpu->Children[j].LinkedNode;
-			if (_stricmp(hwid, gnwinfo_get_node_attr(gpu, "HWID")) != 0)
+			if (_stricmp(hwid, NWL_NodeAttrGet(gpu, "HWID")) != 0)
 				continue;
 			g_ctx.gpu_info[i].driver = TRUE;
 			strcpy_s(g_ctx.gpu_info[i].gpu_vendor, NWL_STR_SIZE,
-				gnwinfo_get_node_attr(gpu, "Manufacturer"));
+				NWL_NodeAttrGet(gpu, "Manufacturer"));
 			strcpy_s(g_ctx.gpu_info[i].gpu_device, NWL_STR_SIZE,
-				gnwinfo_get_node_attr(gpu, "Description"));
+				NWL_NodeAttrGet(gpu, "Description"));
 			strcpy_s(g_ctx.gpu_info[i].gpu_driver_date, NWL_STR_SIZE,
-				gnwinfo_get_node_attr(gpu, "Driver Date"));
+				NWL_NodeAttrGet(gpu, "Driver Date"));
 			strcpy_s(g_ctx.gpu_info[i].gpu_driver_ver, NWL_STR_SIZE,
-				gnwinfo_get_node_attr(gpu, "Driver Version"));
+				NWL_NodeAttrGet(gpu, "Driver Version"));
 			strcpy_s(g_ctx.gpu_info[i].gpu_location, NWL_STR_SIZE,
-				gnwinfo_get_node_attr(gpu, "Location Info"));
+				NWL_NodeAttrGet(gpu, "Location Info"));
 			strcpy_s(g_ctx.gpu_info[i].gpu_mem, NWL_STR_SIZE,
-				gnwinfo_get_node_attr(gpu, "Memory Size"));
+				NWL_NodeAttrGet(gpu, "Memory Size"));
 		}
 	}
 	NWL_NodeFree(gpu_list, 1);
@@ -204,8 +204,8 @@ gnwinfo_ctx_init(HINSTANCE inst, HWND wnd, struct nk_context* ctx, float width, 
 	g_ctx.uefi = NW_Uefi();
 	g_ctx.pci = NW_Pci();
 
-	g_ctx.sys_boot = gnwinfo_get_node_attr(g_ctx.system, "Boot Device");
-	g_ctx.sys_disk = gnwinfo_get_node_attr(g_ctx.system, "System Device");
+	g_ctx.sys_boot = NWL_NodeAttrGet(g_ctx.system, "Boot Device");
+	g_ctx.sys_disk = NWL_NodeAttrGet(g_ctx.system, "System Device");
 
 	g_ctx.cpu_count = (int)g_ctx.lib.NwCpuid->num_cpu_types;
 	if (g_ctx.cpu_count > 0)

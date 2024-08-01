@@ -6,7 +6,7 @@ static inline VOID
 draw_key_value(struct nk_context* ctx, PNODE node, LPCSTR key)
 {
 	nk_lhsc(ctx, key, NK_TEXT_LEFT, g_color_text_d, nk_false, nk_true);
-	nk_lhc(ctx, gnwinfo_get_node_attr(node, key), NK_TEXT_RIGHT, g_color_text_l);
+	nk_lhc(ctx, NWL_NodeAttrGet(node, key), NK_TEXT_RIGHT, g_color_text_l);
 }
 
 static VOID
@@ -16,13 +16,13 @@ draw_monitors(struct nk_context* ctx)
 	for (i = 0; g_ctx.edid->Children[i].LinkedNode; i++)
 	{
 		PNODE mon = g_ctx.edid->Children[i].LinkedNode;
-		LPCSTR id = gnwinfo_get_node_attr(mon, "ID");
+		LPCSTR id = NWL_NodeAttrGet(mon, "ID");
 		if (id[0] == '-')
 			continue;
 
 		nk_layout_row_dynamic(ctx, 0, 1);
 		nk_image_label(ctx, GET_PNG(IDR_PNG_MONITOR),
-			gnwinfo_get_node_attr(mon, "HWID"), NK_TEXT_LEFT, g_color_text_l);
+			NWL_NodeAttrGet(mon, "HWID"), NK_TEXT_LEFT, g_color_text_l);
 
 		nk_layout_row(ctx, NK_DYNAMIC, 0, 2, (float[2]) { 0.3f, 0.7f });
 

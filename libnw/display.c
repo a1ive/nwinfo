@@ -382,14 +382,13 @@ EnumRes(PNODE node, LPCWSTR dev)
 	PNODE nm = NWL_NodeAppendNew(node, "Modes", NFLG_ATTGROUP);
 	for (i = 0; EnumDisplaySettingsExW(dev, i, &dm, 0); i++)
 	{
-		char* p = NULL;
 		DWORD freq = 0;
 		if (!(dm.dmFields & DM_PELSWIDTH) || !(dm.dmFields & DM_PELSHEIGHT)
 			|| !(dm.dmFields & DM_DISPLAYFREQUENCY) || !(dm.dmFields & DM_BITSPERPEL))
 			continue;
 		snprintf(NWLC->NwBuf, NWINFO_BUFSZ, "%lux%lu", dm.dmPelsWidth, dm.dmPelsHeight);
-		p = NWL_NodeAttrGet(nm, NWLC->NwBuf);
-		if (p)
+		LPCSTR p = NWL_NodeAttrGet(nm, NWLC->NwBuf);
+		if (p[0] != '-')
 			freq = strtoul(p, NULL, 10);
 		if (freq < dm.dmDisplayFrequency)
 			NWL_NodeAttrSetf(nm, NWLC->NwBuf, NAFLG_FMT_NUMERIC, "%u", dm.dmDisplayFrequency);

@@ -19,7 +19,7 @@ static void
 draw_features(struct nk_context* ctx, PNODE cpu)
 {
 	LPCSTR c;
-	LPCSTR feature = gnwinfo_get_node_attr(cpu, "Features");
+	LPCSTR feature = NWL_NodeAttrGet(cpu, "Features");
 	if (nk_group_begin(ctx, gnwinfo_get_text(L"Features"), NK_WINDOW_BORDER | NK_WINDOW_TITLE))
 	{
 		nk_layout_row_dynamic(ctx, 0, 1);
@@ -42,15 +42,15 @@ draw:
 		const float ratio[] = { 0.2f, 0.8f };
 		nk_layout_row(ctx, NK_DYNAMIC, 0, 2, ratio);
 		nk_l(ctx, "L1 D", NK_TEXT_LEFT);
-		nk_lhc(ctx, gnwinfo_get_node_attr(cache, "L1 D"), NK_TEXT_LEFT, g_color_text_l);
+		nk_lhc(ctx, NWL_NodeAttrGet(cache, "L1 D"), NK_TEXT_LEFT, g_color_text_l);
 		nk_l(ctx, "L1 I", NK_TEXT_LEFT);
-		nk_lhc(ctx, gnwinfo_get_node_attr(cache, "L1 I"), NK_TEXT_LEFT, g_color_text_l);
+		nk_lhc(ctx, NWL_NodeAttrGet(cache, "L1 I"), NK_TEXT_LEFT, g_color_text_l);
 		nk_l(ctx, "L2", NK_TEXT_LEFT);
-		nk_lhc(ctx, gnwinfo_get_node_attr(cache, "L2"), NK_TEXT_LEFT, g_color_text_l);
+		nk_lhc(ctx, NWL_NodeAttrGet(cache, "L2"), NK_TEXT_LEFT, g_color_text_l);
 		nk_l(ctx, "L3", NK_TEXT_LEFT);
-		nk_lhc(ctx, gnwinfo_get_node_attr(cache, "L3"), NK_TEXT_LEFT, g_color_text_l);
+		nk_lhc(ctx, NWL_NodeAttrGet(cache, "L3"), NK_TEXT_LEFT, g_color_text_l);
 		nk_l(ctx, "L4", NK_TEXT_LEFT);
-		nk_lhc(ctx, gnwinfo_get_node_attr(cache, "L4"), NK_TEXT_LEFT, g_color_text_l);
+		nk_lhc(ctx, NWL_NodeAttrGet(cache, "L4"), NK_TEXT_LEFT, g_color_text_l);
 		nk_group_end(ctx);
 	}
 }
@@ -58,7 +58,7 @@ draw:
 static BOOL
 is_cpu_name_match(PNODE node, PVOID ctx)
 {
-	LPCSTR name = gnwinfo_get_node_attr(node, "Processor Version");
+	LPCSTR name = NWL_NodeAttrGet(node, "Processor Version");
 	return (strcmp(name, (LPCSTR)ctx) == 0);
 }
 
@@ -121,14 +121,14 @@ gnwinfo_draw_cpuid_window(struct nk_context* ctx, float width, float height)
 	CPUID_ROW_PUSH(0.84f);
 	snprintf(buf, MAX_PATH, "%s %d,", gnwinfo_get_text(L"Total"), g_ctx.cpu_count);
 	snprintf(buf, MAX_PATH, "%s %s %s, %lu MHz", buf,
-		gnwinfo_get_node_attr(g_ctx.cpuid, "Total CPUs"), gnwinfo_get_text(L"threads"),
+		NWL_NodeAttrGet(g_ctx.cpuid, "Total CPUs"), gnwinfo_get_text(L"threads"),
 		g_ctx.cpu_freq);
 	nk_l(ctx, buf, NK_TEXT_CENTERED);
 	CPUID_ROW_END;
 
 	snprintf(name, sizeof(name), "CPU%d", cpu_index);
 	cpu = NWL_NodeGetChild(g_ctx.cpuid, name);
-	brand = gnwinfo_get_node_attr(cpu, "Brand");
+	brand = NWL_NodeAttrGet(cpu, "Brand");
 
 	CPUID_ROW_BEGIN(2, 0.2f);
 	nk_l(ctx, gnwinfo_get_text(L"Brand"), NK_TEXT_LEFT);
@@ -139,49 +139,49 @@ gnwinfo_draw_cpuid_window(struct nk_context* ctx, float width, float height)
 	CPUID_ROW_BEGIN(6, 0.2f);
 	nk_l(ctx, gnwinfo_get_text(L"Cores"), NK_TEXT_LEFT);
 	CPUID_ROW_PUSH((1.0f / 3 - 0.2f));
-	nk_lhc(ctx, gnwinfo_get_node_attr(cpu, "Cores"), NK_TEXT_LEFT, g_color_text_l);
+	nk_lhc(ctx, NWL_NodeAttrGet(cpu, "Cores"), NK_TEXT_LEFT, g_color_text_l);
 	CPUID_ROW_PUSH(0.2f);
 	nk_l(ctx, gnwinfo_get_text(L"Code Name"), NK_TEXT_LEFT);
 	CPUID_ROW_PUSH(0.3f);
-	nk_lhc(ctx, gnwinfo_get_node_attr(cpu, "Code Name"), NK_TEXT_LEFT, g_color_text_l);
+	nk_lhc(ctx, NWL_NodeAttrGet(cpu, "Code Name"), NK_TEXT_LEFT, g_color_text_l);
 	CPUID_ROW_END;
 
 	CPUID_ROW_BEGIN(6, 0.2f);
 	nk_l(ctx, gnwinfo_get_text(L"Threads"), NK_TEXT_LEFT);
 	CPUID_ROW_PUSH((1.0f / 3 - 0.2f));
-	nk_lhc(ctx, gnwinfo_get_node_attr(cpu, "Logical CPUs"), NK_TEXT_LEFT, g_color_text_l);
+	nk_lhc(ctx, NWL_NodeAttrGet(cpu, "Logical CPUs"), NK_TEXT_LEFT, g_color_text_l);
 	CPUID_ROW_PUSH(0.2f);
 	nk_l(ctx, gnwinfo_get_text(L"Hypervisor"), NK_TEXT_LEFT);
 	CPUID_ROW_PUSH(0.3f);
-	nk_lhc(ctx, gnwinfo_get_node_attr(g_ctx.cpuid, "Hypervisor"), NK_TEXT_LEFT, g_color_text_l);
+	nk_lhc(ctx, NWL_NodeAttrGet(g_ctx.cpuid, "Hypervisor"), NK_TEXT_LEFT, g_color_text_l);
 	CPUID_ROW_END;
 
 	CPUID_ROW_BEGIN(6, 0.2f);
 	nk_l(ctx, gnwinfo_get_text(L"Family"), NK_TEXT_LEFT);
 	CPUID_ROW_PUSH((1.0f / 3 - 0.2f));
-	nk_lhc(ctx, gnwinfo_get_node_attr(cpu, "Family"), NK_TEXT_LEFT, g_color_text_l);
+	nk_lhc(ctx, NWL_NodeAttrGet(cpu, "Family"), NK_TEXT_LEFT, g_color_text_l);
 	CPUID_ROW_PUSH(0.2f);
 	nk_l(ctx, gnwinfo_get_text(L"Model"), NK_TEXT_LEFT);
 	CPUID_ROW_PUSH((1.0f / 3 - 0.2f));
-	nk_lhc(ctx, gnwinfo_get_node_attr(cpu, "Model"), NK_TEXT_LEFT, g_color_text_l);
+	nk_lhc(ctx, NWL_NodeAttrGet(cpu, "Model"), NK_TEXT_LEFT, g_color_text_l);
 	CPUID_ROW_PUSH(0.2f);
 	nk_l(ctx, gnwinfo_get_text(L"Stepping"), NK_TEXT_LEFT);
 	CPUID_ROW_PUSH((1.0f / 3 - 0.2f));
-	nk_lhc(ctx, gnwinfo_get_node_attr(cpu, "Stepping"), NK_TEXT_LEFT, g_color_text_l);
+	nk_lhc(ctx, NWL_NodeAttrGet(cpu, "Stepping"), NK_TEXT_LEFT, g_color_text_l);
 	CPUID_ROW_END;
 
 	CPUID_ROW_BEGIN(6, 0.2f);
 	nk_l(ctx, gnwinfo_get_text(L"Ext.Family"), NK_TEXT_LEFT);
 	CPUID_ROW_PUSH((1.0f / 3 - 0.2f));
-	nk_lhc(ctx, gnwinfo_get_node_attr(cpu, "Ext.Family"), NK_TEXT_LEFT, g_color_text_l);
+	nk_lhc(ctx, NWL_NodeAttrGet(cpu, "Ext.Family"), NK_TEXT_LEFT, g_color_text_l);
 	CPUID_ROW_PUSH(0.2f);
 	nk_l(ctx, gnwinfo_get_text(L"Ext.Model"), NK_TEXT_LEFT);
 	CPUID_ROW_PUSH((1.0f / 3 - 0.2f));
-	nk_lhc(ctx, gnwinfo_get_node_attr(cpu, "Ext.Model"), NK_TEXT_LEFT, g_color_text_l);
+	nk_lhc(ctx, NWL_NodeAttrGet(cpu, "Ext.Model"), NK_TEXT_LEFT, g_color_text_l);
 	CPUID_ROW_PUSH(0.2f);
 	nk_l(ctx, gnwinfo_get_text(L"Aff.Mask"), NK_TEXT_LEFT);
 	CPUID_ROW_PUSH((1.0f / 3 - 0.2f));
-	nk_lhc(ctx, gnwinfo_get_node_attr(cpu, "Affinity Mask"), NK_TEXT_LEFT, g_color_text_l);
+	nk_lhc(ctx, NWL_NodeAttrGet(cpu, "Affinity Mask"), NK_TEXT_LEFT, g_color_text_l);
 	CPUID_ROW_END;
 
 	nk_layout_row_dynamic(ctx, 0, 1);

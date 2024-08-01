@@ -221,6 +221,8 @@ typedef struct _NWLIB_NET_TRAFFIC
 } NWLIB_NET_TRAFFIC;
 VOID NWL_GetNetTraffic(NWLIB_NET_TRAFFIC* info, BOOL bit);
 
+PNODE NWL_EnumPci(PNODE pNode, LPCSTR pciClass);
+
 #define NWL_Debugf(...) \
 	do \
 	{ \

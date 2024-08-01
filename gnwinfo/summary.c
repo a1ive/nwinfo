@@ -13,16 +13,16 @@ draw_os(struct nk_context* ctx)
 	nk_layout_row(ctx, NK_DYNAMIC, 0, 3, (float[3]) { 0.3f, 0.7f - g_ctx.gui_ratio, g_ctx.gui_ratio });
 	nk_image_label(ctx, GET_PNG(IDR_PNG_OS), gnwinfo_get_text(L"Operating System"), NK_TEXT_LEFT, g_color_text_d);
 	snprintf(m_buf, MAX_PATH, "%s %s",
-		gnwinfo_get_node_attr(g_ctx.system, "OS"),
-		gnwinfo_get_node_attr(g_ctx.system, "Processor Architecture"));
+		NWL_NodeAttrGet(g_ctx.system, "OS"),
+		NWL_NodeAttrGet(g_ctx.system, "Processor Architecture"));
 	if (g_ctx.main_flag & MAIN_OS_EDITIONID)
 	{
-		LPCSTR edition = gnwinfo_get_node_attr(g_ctx.system, "Edition");
+		LPCSTR edition = NWL_NodeAttrGet(g_ctx.system, "Edition");
 		if (edition[0] != '-')
 			snprintf(m_buf, MAX_PATH, "%s %s", m_buf, edition);
 	}
 	if (g_ctx.main_flag & MAIN_OS_BUILD)
-		snprintf(m_buf, MAX_PATH, "%s (%s)", m_buf, gnwinfo_get_node_attr(g_ctx.system, "Build Number"));
+		snprintf(m_buf, MAX_PATH, "%s (%s)", m_buf, NWL_NodeAttrGet(g_ctx.system, "Build Number"));
 	nk_lhc(ctx, m_buf, NK_TEXT_LEFT, g_color_text_l);
 	if (nk_button_image_hover(ctx, GET_PNG(IDR_PNG_INFO), NULL))
 		ShellExecuteW(GetDesktopWindow(), NULL,
@@ -36,11 +36,11 @@ draw_os(struct nk_context* ctx)
 		nk_lhcf(ctx, NK_TEXT_LEFT,
 			g_color_text_l,
 			"%s@%s%s%s%s",
-			gnwinfo_get_node_attr(g_ctx.system, "Username"),
+			NWL_NodeAttrGet(g_ctx.system, "Username"),
 			g_ctx.sys_hostname,
-			strcmp(gnwinfo_get_node_attr(g_ctx.system, "Safe Mode"), "Yes") == 0 ? " SafeMode" : "",
-			strcmp(gnwinfo_get_node_attr(g_ctx.system, "BitLocker Boot"), "Yes") == 0 ? " BitLocker" : "",
-			strcmp(gnwinfo_get_node_attr(g_ctx.system, "VHD Boot"), "Yes") == 0 ? " VHD" : "");
+			strcmp(NWL_NodeAttrGet(g_ctx.system, "Safe Mode"), "Yes") == 0 ? " SafeMode" : "",
+			strcmp(NWL_NodeAttrGet(g_ctx.system, "BitLocker Boot"), "Yes") == 0 ? " BitLocker" : "",
+			strcmp(NWL_NodeAttrGet(g_ctx.system, "VHD Boot"), "Yes") == 0 ? " VHD" : "");
 		if (nk_button_image_hover(ctx, GET_PNG(IDR_PNG_EDIT), gnwinfo_get_text(L"Hostname")))
 			gnwinfo_init_hostname_window(ctx);
 	}
@@ -56,13 +56,13 @@ draw_os(struct nk_context* ctx)
 static VOID
 draw_bios(struct nk_context* ctx)
 {
-	LPCSTR tpm = gnwinfo_get_node_attr(g_ctx.system, "TPM");
-	LPCSTR sb = gnwinfo_get_node_attr(g_ctx.uefi, "Secure Boot");
+	LPCSTR tpm = NWL_NodeAttrGet(g_ctx.system, "TPM");
+	LPCSTR sb = NWL_NodeAttrGet(g_ctx.uefi, "Secure Boot");
 
 	nk_layout_row(ctx, NK_DYNAMIC, 0, 3, (float[3]) { 0.3f, 0.7f - g_ctx.gui_ratio, g_ctx.gui_ratio });
 	nk_image_label(ctx, GET_PNG(IDR_PNG_FIRMWARE), gnwinfo_get_text(L"BIOS"), NK_TEXT_LEFT, g_color_text_d);
 
-	strcpy_s(m_buf, MAX_PATH, gnwinfo_get_node_attr(g_ctx.system, "Firmware"));
+	strcpy_s(m_buf, MAX_PATH, NWL_NodeAttrGet(g_ctx.system, "Firmware"));
 	if (sb[0] == 'E')
 		snprintf(m_buf, MAX_PATH, "%s %s", m_buf, gnwinfo_get_text(L"SecureBoot"));
 	else if (sb[0] == 'D')
@@ -96,7 +96,7 @@ draw_bios(struct nk_context* ctx)
 static BOOL
 is_motherboard(PNODE node, const PVOID ctx)
 {
-	LPCSTR str = gnwinfo_get_node_attr(node, "Board Type");
+	LPCSTR str = NWL_NodeAttrGet(node, "Board Type");
 	return (strcmp(str, "Motherboard") == 0);
 }
 
@@ -106,7 +106,7 @@ draw_computer(struct nk_context* ctx)
 	struct nk_color color = g_color_unknown;
 	BOOL has_battery = TRUE;
 	LPCSTR time = "";
-	LPCSTR bat = gnwinfo_get_node_attr(g_ctx.battery, "Battery Status");
+	LPCSTR bat = NWL_NodeAttrGet(g_ctx.battery, "Battery Status");
 	LPCSTR ac = "";
 
 	nk_layout_row(ctx, NK_DYNAMIC, 0, 2, (float[2]) { 1.0f - g_ctx.gui_ratio, g_ctx.gui_ratio });
@@ -131,12 +131,12 @@ draw_computer(struct nk_context* ctx)
 	if (strcmp(bat, "Charging") == 0)
 	{
 		color = g_color_good;
-		time = gnwinfo_get_node_attr(g_ctx.battery, "Battery Life Full");
+		time = NWL_NodeAttrGet(g_ctx.battery, "Battery Life Full");
 	}
 	else if (strcmp(bat, "Not Charging") == 0)
 	{
 		color = g_color_warning;
-		time = gnwinfo_get_node_attr(g_ctx.battery, "Battery Life Remaining");
+		time = NWL_NodeAttrGet(g_ctx.battery, "Battery Life Remaining");
 	}
 	else
 		has_battery = FALSE;
@@ -144,18 +144,18 @@ draw_computer(struct nk_context* ctx)
 	if (strcmp(time, "UNKNOWN") == 0)
 		time = "";
 
-	if (strcmp(gnwinfo_get_node_attr(g_ctx.battery, "AC Power"), "Online") == 0)
+	if (strcmp(NWL_NodeAttrGet(g_ctx.battery, "AC Power"), "Online") == 0)
 		ac = u8"AC ";
 
 	nk_layout_row(ctx, NK_DYNAMIC, 0, 3, (float[3]) { 0.3f, 0.7f - g_ctx.gui_ratio, g_ctx.gui_ratio });
 	nk_lhsc(ctx, gnwinfo_get_text(L"Power Status"), NK_TEXT_LEFT, g_color_text_d, nk_false, nk_true);
 	snprintf(m_buf, MAX_PATH, "%s %s",
-		ac, gnwinfo_get_node_attr(g_ctx.battery, "Active Power Scheme Name"));
+		ac, NWL_NodeAttrGet(g_ctx.battery, "Active Power Scheme Name"));
 	if (has_battery)
 	{
 		snprintf(m_buf, MAX_PATH, "%s %s %s",
 			m_buf,
-			gnwinfo_get_node_attr(g_ctx.battery, "Battery Life Percentage"),
+			NWL_NodeAttrGet(g_ctx.battery, "Battery Life Percentage"),
 			time);
 	}
 	nk_lhc(ctx, m_buf, NK_TEXT_LEFT, g_color_text_l);
@@ -169,7 +169,7 @@ static BOOL
 is_cache_level_equal(PNODE node, const PVOID ctx)
 {
 	UINT8 cache_level = *(const PUINT8)ctx;
-	LPCSTR str = gnwinfo_get_node_attr(node, "Cache Level");
+	LPCSTR str = NWL_NodeAttrGet(node, "Cache Level");
 	CHAR buf[] = "L1";
 	buf[1] += cache_level;
 	return (strcmp(str, buf) == 0);
@@ -195,7 +195,7 @@ draw_processor(struct nk_context* ctx)
 	{
 		snprintf(name, sizeof(name), "CPU%d", i);
 		PNODE cpu = NWL_NodeGetChild(g_ctx.cpuid, name);
-		LPCSTR brand = gnwinfo_get_node_attr(cpu, "Brand");
+		LPCSTR brand = NWL_NodeAttrGet(cpu, "Brand");
 
 		nk_layout_row(ctx, NK_DYNAMIC, 0, 2, (float[2]) { 0.3f, 0.7f });
 		nk_lhsc(ctx, name, NK_TEXT_LEFT, g_color_text_d, nk_false, nk_true);
@@ -206,9 +206,9 @@ draw_processor(struct nk_context* ctx)
 
 		nk_layout_row(ctx, NK_DYNAMIC, 0, 3, (float[3]) { 0.3f, 0.4f, 0.3f });
 		nk_spacer(ctx);
-		snprintf(m_buf, MAX_PATH, "%s %s", gnwinfo_get_node_attr(cpu, "Cores"), gnwinfo_get_text(L"cores"));
+		snprintf(m_buf, MAX_PATH, "%s %s", NWL_NodeAttrGet(cpu, "Cores"), gnwinfo_get_text(L"cores"));
 		snprintf(m_buf, MAX_PATH, "%s %s %s", m_buf,
-			gnwinfo_get_node_attr(cpu, "Logical CPUs"),
+			NWL_NodeAttrGet(cpu, "Logical CPUs"),
 			gnwinfo_get_text(L"threads"));
 		if (g_ctx.cpu_info[i].MsrPower > 0.0)
 			snprintf(m_buf, MAX_PATH, "%s %.2fW", m_buf, g_ctx.cpu_info[i].MsrPower);
@@ -282,20 +282,20 @@ draw_memory(struct nk_context* ctx)
 		for (i = 0; g_ctx.smbios->Children[i].LinkedNode; i++)
 		{
 			PNODE tab = g_ctx.smbios->Children[i].LinkedNode;
-			LPCSTR attr = gnwinfo_get_node_attr(tab, "Table Type");
+			LPCSTR attr = NWL_NodeAttrGet(tab, "Table Type");
 			if (strcmp(attr, "17") != 0)
 				continue;
-			LPCSTR ddr = gnwinfo_get_node_attr(tab, "Device Type");
+			LPCSTR ddr = NWL_NodeAttrGet(tab, "Device Type");
 			if (ddr[0] == '-')
 				continue;
-			nk_lhsc(ctx, gnwinfo_get_node_attr(tab, "Bank Locator"), NK_TEXT_LEFT, g_color_text_d, nk_true, nk_true);
+			nk_lhsc(ctx, NWL_NodeAttrGet(tab, "Bank Locator"), NK_TEXT_LEFT, g_color_text_d, nk_true, nk_true);
 			nk_lhcf(ctx, NK_TEXT_LEFT, g_color_text_l,
 				"%s-%s %s %s %s",
 				ddr,
-				gnwinfo_get_node_attr(tab, "Speed (MT/s)"),
-				gnwinfo_get_node_attr(tab, "Device Size"),
-				gnwinfo_get_node_attr(tab, "Manufacturer"),
-				gnwinfo_get_node_attr(tab, "Serial Number"));
+				NWL_NodeAttrGet(tab, "Speed (MT/s)"),
+				NWL_NodeAttrGet(tab, "Device Size"),
+				NWL_NodeAttrGet(tab, "Manufacturer"),
+				NWL_NodeAttrGet(tab, "Serial Number"));
 		}
 	}
 }
@@ -334,18 +334,18 @@ draw_display(struct nk_context* ctx)
 	for (i = 0; g_ctx.edid->Children[i].LinkedNode; i++)
 	{
 		PNODE mon = g_ctx.edid->Children[i].LinkedNode;
-		LPCSTR id = gnwinfo_get_node_attr(mon, "ID");
+		LPCSTR id = NWL_NodeAttrGet(mon, "ID");
 		if (id[0] == '-')
 			continue;
 		nk_layout_row(ctx, NK_DYNAMIC, 0, 2, (float[2]) { 0.3f, 0.7f });
-		nk_lhsc(ctx, gnwinfo_get_node_attr(mon, "Manufacturer"), NK_TEXT_LEFT, g_color_text_d, nk_true, nk_true);
+		nk_lhsc(ctx, NWL_NodeAttrGet(mon, "Manufacturer"), NK_TEXT_LEFT, g_color_text_d, nk_true, nk_true);
 		nk_lhcf(ctx, NK_TEXT_LEFT, g_color_text_l,
 			"%s %s@%sHz %s\" %s",
 			id,
-			gnwinfo_get_node_attr(mon, "Max Resolution"),
-			gnwinfo_get_node_attr(mon, "Max Refresh Rate (Hz)"),
-			gnwinfo_get_node_attr(mon, "Diagonal (in)"),
-			gnwinfo_get_node_attr(mon, "Display Name"));
+			NWL_NodeAttrGet(mon, "Max Resolution"),
+			NWL_NodeAttrGet(mon, "Max Refresh Rate (Hz)"),
+			NWL_NodeAttrGet(mon, "Diagonal (in)"),
+			NWL_NodeAttrGet(mon, "Display Name"));
 	}
 }
 
@@ -359,7 +359,7 @@ get_drive_letter(PNODE volume)
 	for (i = 0; vol_path_name->Children[i].LinkedNode; i++)
 	{
 		PNODE mnt = vol_path_name->Children[i].LinkedNode;
-		LPCSTR attr = gnwinfo_get_node_attr(mnt, "Drive Letter");
+		LPCSTR attr = NWL_NodeAttrGet(mnt, "Drive Letter");
 		if (attr[0] != '-')
 			return attr;
 	}
@@ -390,23 +390,23 @@ draw_volume(struct nk_context* ctx, PNODE disk, BOOL cdrom)
 	{
 		struct nk_image img = GET_PNG(IDR_PNG_DIR);
 		PNODE tab = vol->Children[i].LinkedNode;
-		LPCSTR path = gnwinfo_get_node_attr(tab, "Path");
+		LPCSTR path = NWL_NodeAttrGet(tab, "Path");
 		LPCSTR drive = get_drive_letter(tab);
-		LPCSTR volume_guid = gnwinfo_get_node_attr(tab, "Volume GUID");
-		double percent = strtod(gnwinfo_get_node_attr(tab, "Usage"), NULL);
+		LPCSTR volume_guid = NWL_NodeAttrGet(tab, "Volume GUID");
+		double percent = strtod(NWL_NodeAttrGet(tab, "Usage"), NULL);
 		if (strcmp(path, g_ctx.sys_disk) == 0)
 			img = GET_PNG(IDR_PNG_OS);
 		if (cdrom)
 			img = GET_PNG(IDR_PNG_CD);
 		nk_spacer(ctx);
 		nk_lhcf(ctx, NK_TEXT_LEFT, g_color_text_d, "[%s]",
-			drive ? drive : gnwinfo_get_node_attr(tab, "Partition Flag"));
+			drive ? drive : NWL_NodeAttrGet(tab, "Partition Flag"));
 		nk_lhcf(ctx, NK_TEXT_LEFT,
 			g_color_text_l,
 			"%s %s %s",
-			gnwinfo_get_node_attr(tab, "Total Space"),
-			gnwinfo_get_node_attr(tab, "Filesystem"),
-			gnwinfo_get_node_attr(tab, "Label"));
+			NWL_NodeAttrGet(tab, "Total Space"),
+			NWL_NodeAttrGet(tab, "Filesystem"),
+			NWL_NodeAttrGet(tab, "Label"));
 		if (g_ctx.main_flag & MAIN_VOLUME_PROG)
 			gnwinfo_draw_percent_prog(ctx, percent);
 		else
@@ -415,7 +415,7 @@ draw_volume(struct nk_context* ctx, PNODE disk, BOOL cdrom)
 				"%.0f%% %s: %s",
 				percent,
 				gnwinfo_get_text(L"Free"),
-				gnwinfo_get_node_attr(tab, "Free Space"));
+				NWL_NodeAttrGet(tab, "Free Space"));
 		if (nk_button_image_hover(ctx, img, volume_guid))
 			open_folder(drive, volume_guid);
 	}
@@ -460,8 +460,8 @@ draw_net_drive(struct nk_context* ctx)
 	for (i = 0; g_ctx.smb->Children[i].LinkedNode; i++)
 	{
 		PNODE nd = g_ctx.smb->Children[i].LinkedNode;
-		LPCSTR local = gnwinfo_get_node_attr(nd, "Local Name");
-		LPCSTR remote = gnwinfo_get_node_attr(nd, "Remote Name");
+		LPCSTR local = NWL_NodeAttrGet(nd, "Local Name");
+		LPCSTR remote = NWL_NodeAttrGet(nd, "Remote Name");
 		nk_layout_row(ctx, NK_DYNAMIC, 0, 3, (float[3]) { 0.3f, 0.7f - g_ctx.gui_ratio, g_ctx.gui_ratio });
 		nk_lhsc(ctx, gnwinfo_get_text(L"Network Drives"), NK_TEXT_LEFT, g_color_text_d, nk_false, nk_true);
 		nk_lhcf(ctx, NK_TEXT_LEFT, g_color_text_l, "[%s] %s", local, remote);
@@ -485,7 +485,7 @@ draw_net_drive_compact(struct nk_context* ctx)
 	for (i = 0; g_ctx.smb->Children[i].LinkedNode; i++)
 	{
 		PNODE tab = g_ctx.smb->Children[i].LinkedNode;
-		LPCSTR drive = gnwinfo_get_node_attr(tab, "Local Name");
+		LPCSTR drive = NWL_NodeAttrGet(tab, "Local Name");
 		buf[0] = drive[0];
 		nk_layout_row_push(ctx, g_ctx.gui_ratio * g_ctx.gui_width);
 		if (nk_button_label(ctx, buf))
@@ -513,7 +513,7 @@ draw_storage(struct nk_context* ctx)
 		PNODE disk = g_ctx.disk->Children[i].LinkedNode;
 		if (!disk)
 			continue;
-		path = gnwinfo_get_node_attr(disk, "Path");
+		path = NWL_NodeAttrGet(disk, "Path");
 		if (strncmp(path, "\\\\.\\CdRom", 9) == 0)
 		{
 			cdrom = TRUE;
@@ -524,9 +524,9 @@ draw_storage(struct nk_context* ctx)
 		{
 			cdrom = FALSE;
 			id = &path[17];
-			if (strcmp(gnwinfo_get_node_attr(disk, "SSD"), "Yes") == 0)
+			if (strcmp(NWL_NodeAttrGet(disk, "SSD"), "Yes") == 0)
 				ssd = " SSD";
-			if (strcmp(gnwinfo_get_node_attr(disk, "Removable"), "Yes") == 0)
+			if (strcmp(NWL_NodeAttrGet(disk, "Removable"), "Yes") == 0)
 				prefix = "RM";
 		}
 		else
@@ -536,23 +536,23 @@ draw_storage(struct nk_context* ctx)
 		snprintf(m_buf, MAX_PATH, "%s%s %s%s",
 			prefix,
 			id,
-			gnwinfo_get_node_attr(disk, "Type"),
+			NWL_NodeAttrGet(disk, "Type"),
 			ssd);
 		nk_lhsc(ctx, m_buf, NK_TEXT_LEFT, g_color_text_d, nk_true, nk_true);
 		nk_lhcf(ctx, NK_TEXT_LEFT,
 			g_color_text_l,
 			"%s %s %s",
-			gnwinfo_get_node_attr(disk, "Size"),
-			gnwinfo_get_node_attr(disk, "Partition Table"),
-			gnwinfo_get_node_attr(disk, "Product ID"));
+			NWL_NodeAttrGet(disk, "Size"),
+			NWL_NodeAttrGet(disk, "Partition Table"),
+			NWL_NodeAttrGet(disk, "Product ID"));
 
-		LPCSTR health = gnwinfo_get_node_attr(disk, "Health Status");
+		LPCSTR health = NWL_NodeAttrGet(disk, "Health Status");
 		if ((g_ctx.main_flag & MAIN_DISK_SMART) && strcmp(health, "-") != 0)
 		{
 			LPCSTR life = strchr(health, '(');
 			LPCWSTR whealth = L"Unknown";
 			struct nk_color color = g_color_unknown;
-			LPCSTR temp = gnwinfo_get_node_attr(disk, "Temperature (C)");
+			LPCSTR temp = NWL_NodeAttrGet(disk, "Temperature (C)");
 			if (strncmp(health, "Good", 4) == 0)
 			{
 				color = g_color_good;
@@ -598,7 +598,7 @@ get_first_ipv4(PNODE node)
 	for (i = 0; unicasts->Children[i].LinkedNode; i++)
 	{
 		PNODE ip = unicasts->Children[i].LinkedNode;
-		LPCSTR addr = gnwinfo_get_node_attr(ip, "IPv4");
+		LPCSTR addr = NWL_NodeAttrGet(ip, "IPv4");
 		if (strcmp(addr, "-") != 0)
 			return addr;
 	}
@@ -624,45 +624,45 @@ draw_network(struct nk_context* ctx)
 		struct nk_color color = g_color_error;
 		if (!nw)
 			continue;
-		if (strcmp(gnwinfo_get_node_attr(nw, "Status"), "Active") == 0)
+		if (strcmp(NWL_NodeAttrGet(nw, "Status"), "Active") == 0)
 		{
 			color = g_color_good;
 			is_active = TRUE;
 		}
 
 		nk_layout_row(ctx, NK_DYNAMIC, 0, 3, (float[3]) { 0.64f, 0.36f - g_ctx.gui_ratio, g_ctx.gui_ratio });
-		nk_lhsc(ctx, gnwinfo_get_node_attr(nw, "Description"), NK_TEXT_LEFT, g_color_text_d, nk_true, nk_true);
+		nk_lhsc(ctx, NWL_NodeAttrGet(nw, "Description"), NK_TEXT_LEFT, g_color_text_d, nk_true, nk_true);
 		nk_lhc(ctx, get_first_ipv4(nw), NK_TEXT_LEFT, color);
 		if (nk_button_image_hover(ctx,
-			strcmp(gnwinfo_get_node_attr(nw, "Type"), "IEEE 802.11 Wireless") == 0 ? GET_PNG(IDR_PNG_WLAN) : GET_PNG(IDR_PNG_ETH), NULL))
+			strcmp(NWL_NodeAttrGet(nw, "Type"), "IEEE 802.11 Wireless") == 0 ? GET_PNG(IDR_PNG_WLAN) : GET_PNG(IDR_PNG_ETH), NULL))
 		{
 			swprintf((WCHAR*)m_buf, MAX_PATH / sizeof(WCHAR),
-				L"::{7007ACC7-3202-11D1-AAD2-00805FC1270E}\\::%s", NWL_Utf8ToUcs2(gnwinfo_get_node_attr(nw, "Network Adapter")));
+				L"::{7007ACC7-3202-11D1-AAD2-00805FC1270E}\\::%s", NWL_Utf8ToUcs2(NWL_NodeAttrGet(nw, "Network Adapter")));
 			ShellExecuteW(NULL, NULL, (WCHAR*)m_buf, NULL, NULL, SW_NORMAL);
 		}
 
 		if (g_ctx.main_flag & MAIN_NET_DETAIL)
 		{
 			nk_layout_row(ctx, NK_DYNAMIC, 0, 2, (float[2]) { 0.64f, 0.36f });
-			strcpy_s(m_buf, MAX_PATH, strcmp(gnwinfo_get_node_attr(nw, "DHCP Enabled"), "Yes") == 0 ? " DHCP" : "");
+			strcpy_s(m_buf, MAX_PATH, strcmp(NWL_NodeAttrGet(nw, "DHCP Enabled"), "Yes") == 0 ? " DHCP" : "");
 			if (is_active)
 				snprintf(m_buf, MAX_PATH, u8"%s \u21c5 %s / %s",
 					m_buf,
-					gnwinfo_get_node_attr(nw, "Transmit Link Speed"),
-					gnwinfo_get_node_attr(nw, "Receive Link Speed"));
+					NWL_NodeAttrGet(nw, "Transmit Link Speed"),
+					NWL_NodeAttrGet(nw, "Receive Link Speed"));
 			nk_lhsc(ctx, m_buf, NK_TEXT_LEFT, g_color_text_d, nk_true, nk_true);
 			nk_lhc(ctx,
-				gnwinfo_get_node_attr(nw, "MAC Address"), NK_TEXT_LEFT, g_color_text_l);
+				NWL_NodeAttrGet(nw, "MAC Address"), NK_TEXT_LEFT, g_color_text_l);
 
-			if (strcmp(gnwinfo_get_node_attr(nw, "WLAN State"), "Connected") == 0)
+			if (strcmp(NWL_NodeAttrGet(nw, "WLAN State"), "Connected") == 0)
 			{
 				nk_layout_row(ctx, NK_DYNAMIC, 0, 2, (float[2]) { 0.64f, 0.36f });
 				nk_lhscf(ctx, NK_TEXT_LEFT, g_color_text_d, nk_true, nk_true, " %s%% %s",
-					gnwinfo_get_node_attr(nw, "WLAN Signal Quality"),
-					gnwinfo_get_node_attr(nw, "WLAN Profile"));
+					NWL_NodeAttrGet(nw, "WLAN Signal Quality"),
+					NWL_NodeAttrGet(nw, "WLAN Profile"));
 				nk_lhscf(ctx, NK_TEXT_LEFT, g_color_text_d, nk_true, nk_false, "%s %s",
-					gnwinfo_get_node_attr(nw, "WLAN Auth"),
-					gnwinfo_get_node_attr(nw, "WLAN Cipher"));
+					NWL_NodeAttrGet(nw, "WLAN Auth"),
+					NWL_NodeAttrGet(nw, "WLAN Cipher"));
 			}
 		}
 	}

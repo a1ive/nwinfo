@@ -8,18 +8,14 @@
 #include "libnw.h"
 #include "utils.h"
 
-PNODE NW_Pci(VOID)
+PNODE NWL_EnumPci(PNODE pNode, LPCSTR pciClass)
 {
 	HDEVINFO Info = NULL;
 	DWORD i = 0;
 	SP_DEVINFO_DATA DeviceInfoData = { .cbSize = sizeof(SP_DEVINFO_DATA) };
 	DWORD Flags = DIGCF_PRESENT | DIGCF_ALLCLASSES;
-	CHAR* Ids = NULL;
 	DWORD IdsSize = 0;
-	PNODE node = NWL_NodeAlloc("PCI", NFLG_TABLE);
-	if (NWLC->PciInfo)
-		NWL_NodeAppendChild(NWLC->NwRoot, node);
-	Ids = NWL_LoadIdsToMemory(L"pci.ids", &IdsSize);
+	CHAR* Ids = NWL_LoadIdsToMemory(L"pci.ids", &IdsSize);
 	Info = SetupDiGetClassDevsW(NULL, L"PCI", NULL, Flags);
 	if (Info == INVALID_HANDLE_VALUE)
 	{
@@ -43,15 +39,15 @@ PNODE NW_Pci(VOID)
 				break;
 			}
 		}
-		if (NWLC->PciClass)
+		if (pciClass)
 		{
-			size_t PciClassLen = strlen(NWLC->PciClass);
+			size_t PciClassLen = strlen(pciClass);
 			if (PciClassLen > 6)
 				PciClassLen = 6;
-			if (_strnicmp(NWLC->PciClass, HwClass, PciClassLen) != 0)
+			if (_strnicmp(pciClass, HwClass, PciClassLen) != 0)
 				continue;
 		}
-		npci = NWL_NodeAppendNew(node, "Device", NFLG_TABLE_ROW);
+		npci = NWL_NodeAppendNew(pNode, "Device", NFLG_TABLE_ROW);
 		NWL_NodeAttrSet(npci, "HWID", NWL_Ucs2ToUtf8(NWLC->NwBufW), 0);
 		NWL_NodeAttrSet(npci, "Class Code", HwClass, 0);
 		NWL_FindClass(npci, Ids, IdsSize, HwClass, 0);
@@ -60,5 +56,13 @@ PNODE NW_Pci(VOID)
 	SetupDiDestroyDeviceInfoList(Info);
 fail:
 	free(Ids);
-	return node;
+	return pNode;
+}
+
+PNODE NW_Pci(VOID)
+{
+	PNODE node = NWL_NodeAlloc("PCI", NFLG_TABLE);
+	if (NWLC->PciInfo)
+		NWL_NodeAppendChild(NWLC->NwRoot, node);
+	return NWL_EnumPci(node, NWLC->PciClass);
 }

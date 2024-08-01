@@ -11,7 +11,7 @@ static void draw_pci_node(struct nk_context* ctx, PNODE node)
 		return;
 	if (nk_tree_image_push_id(ctx, NK_TREE_TAB,
 		GET_PNG(IDR_PNG_PCI),
-		gnwinfo_get_node_attr(node, "HWID"),
+		NWL_NodeAttrGet(node, "HWID"),
 		NK_MINIMIZED, tree_id++))
 	{
 		const float ratio[] = { 0.2f, 0.8f };
@@ -34,7 +34,7 @@ void draw_pci_class(struct nk_context* ctx, const char* title, struct nk_image i
 		PNODE_LINK pci;
 		for (pci = &g_ctx.pci->Children[0]; pci->LinkedNode != NULL; pci++)
 		{
-			const char* cl = gnwinfo_get_node_attr(pci->LinkedNode, "Class Code");
+			const char* cl = NWL_NodeAttrGet(pci->LinkedNode, "Class Code");
 			if (_strnicmp(cl, code, 2) != 0)
 				continue;
 			draw_pci_node(ctx, pci->LinkedNode);
@@ -77,7 +77,7 @@ VOID gnwinfo_draw_pci_window(struct nk_context* ctx, float width, float height)
 		PNODE_LINK pci;
 		for (pci = &g_ctx.pci->Children[0]; pci->LinkedNode != NULL; pci++)
 		{
-			const char* cl = gnwinfo_get_node_attr(pci->LinkedNode, "Class Code");
+			const char* cl = NWL_NodeAttrGet(pci->LinkedNode, "Class Code");
 			if (cl[0] == '0' ||
 				(cl[0] == '1' && cl[1] == '0'))
 				continue;
