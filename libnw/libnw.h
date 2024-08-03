@@ -232,6 +232,21 @@ typedef struct _NWLIB_CUR_DISPLAY
 } NWLIB_CUR_DISPLAY;
 VOID NWL_GetCurDisplay(HWND wnd, NWLIB_CUR_DISPLAY* info);
 
+typedef struct _NWLIB_GPU_INFO
+{
+	BOOL driver;
+	CHAR gpu_if[NWL_STR_SIZE];
+	CHAR gpu_hwid[NWL_STR_SIZE];
+	CHAR gpu_device[NWL_STR_SIZE];
+	CHAR gpu_vendor[NWL_STR_SIZE];
+	CHAR gpu_driver_date[NWL_STR_SIZE];
+	CHAR gpu_driver_ver[NWL_STR_SIZE];
+	CHAR gpu_location[NWL_STR_SIZE];
+	UINT64 gpu_mem_size;
+} NWLIB_GPU_INFO;
+#define NWL_GPU_MAX_COUNT 8
+int NWL_GetGpuInfo(NWLIB_GPU_INFO* info, int count);
+
 #define NWL_Debugf(...) \
 	do \
 	{ \

@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: Unlicense
 
+#include <windows.h>
 #include "gnwinfo.h"
+#include "utils.h"
 
 static inline VOID
 draw_key_value(struct nk_context* ctx, PNODE node, LPCSTR key)
@@ -63,7 +65,8 @@ draw_gpu(struct nk_context* ctx)
 			draw_gpu_attr(ctx, "Driver Date", g_ctx.gpu_info[i].gpu_driver_date);
 			draw_gpu_attr(ctx, "Driver Version", g_ctx.gpu_info[i].gpu_driver_ver);
 			draw_gpu_attr(ctx, "Location Info", g_ctx.gpu_info[i].gpu_location);
-			draw_gpu_attr(ctx, "Memory Size", g_ctx.gpu_info[i].gpu_mem);
+			draw_gpu_attr(ctx, "Memory Size",
+				NWL_GetHumanSize(g_ctx.gpu_info[i].gpu_mem_size, NWLC->NwUnits, 1024));
 		}
 	}
 }

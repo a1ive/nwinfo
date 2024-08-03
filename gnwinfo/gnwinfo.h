@@ -86,19 +86,6 @@ nk_block(struct nk_context* ctx, struct nk_color color, const char* str);
 #define MAIN_OS_BUILD       (1U << 30)
 #define MAIN_VOLUME_PROG    (1U << 31)
 
-typedef struct _GNW_GPU_INFO
-{
-	BOOL driver;
-	CHAR gpu_hwid[NWL_STR_SIZE];
-	CHAR gpu_device[NWL_STR_SIZE];
-	CHAR gpu_vendor[NWL_STR_SIZE];
-	CHAR gpu_driver_date[NWL_STR_SIZE];
-	CHAR gpu_driver_ver[NWL_STR_SIZE];
-	CHAR gpu_location[NWL_STR_SIZE];
-	CHAR gpu_mem[NWL_STR_SIZE];
-}GNW_GPU_INFO;
-#define GNWC_GPU_MAX_COUNT 8
-
 #define GUI_WINDOW_CPUID    (1U << 0)
 #define GUI_WINDOW_SMART    (1U << 1)
 #define GUI_WINDOW_ABOUT    (1U << 2)
@@ -140,7 +127,6 @@ typedef struct _GNW_CONTEXT
 	PNODE uefi;
 	PNODE battery;
 	PNODE smb;
-	PNODE gpu;
 
 	LPCSTR sys_boot;
 	LPCSTR sys_disk;
@@ -156,8 +142,8 @@ typedef struct _GNW_CONTEXT
 	NWLIB_MEM_INFO mem_status;
 
 	NWLIB_CUR_DISPLAY cur_display;
-	size_t gpu_count;
-	GNW_GPU_INFO gpu_info[GNWC_GPU_MAX_COUNT];
+	int gpu_count;
+	NWLIB_GPU_INFO gpu_info[NWL_GPU_MAX_COUNT];
 
 	UINT audio_count;
 	NWLIB_AUDIO_DEV* audio;

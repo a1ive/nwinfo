@@ -36,59 +36,6 @@ gnwinfo_ctx_error_callback(LPCSTR lpszText)
 	MessageBoxA(g_ctx.wnd, lpszText, "Error", MB_ICONERROR);
 }
 
-static void
-get_gpu_info(void)
-{
-	if (g_ctx.gpu)
-		NWL_NodeFree(g_ctx.gpu, 1);
-	g_ctx.gpu = NW_Gpu();
-
-	g_ctx.lib.PciClass = "03";
-	g_ctx.lib.PciInfo = FALSE;
-	PNODE gpu_list = NW_Pci();
-	g_ctx.lib.PciClass = NULL;
-	g_ctx.lib.PciInfo = TRUE;
-
-	for (g_ctx.gpu_count = 0; gpu_list->Children[g_ctx.gpu_count].LinkedNode; g_ctx.gpu_count++)
-		;
-	if (g_ctx.gpu_count > GNWC_GPU_MAX_COUNT)
-		g_ctx.gpu_count = GNWC_GPU_MAX_COUNT;
-	for (size_t i = 0; i < g_ctx.gpu_count; i++)
-	{
-		PNODE pci = gpu_list->Children[i].LinkedNode;
-		LPCSTR hwid = NWL_NodeAttrGet(pci, "HWID");
-		strcpy_s(g_ctx.gpu_info[i].gpu_hwid, NWL_STR_SIZE, hwid);
-		LPCSTR vendor = NWL_NodeAttrGet(pci, "Vendor");
-		if (strcmp(vendor, "-") == 0)
-			vendor = NWL_NodeAttrGet(pci, "Vendor ID");
-		strcpy_s(g_ctx.gpu_info[i].gpu_vendor, NWL_STR_SIZE, vendor);
-		LPCSTR device = NWL_NodeAttrGet(pci, "Device");
-		if (strcmp(device, "-") == 0)
-			device = NWL_NodeAttrGet(pci, "Device ID");
-		strcpy_s(g_ctx.gpu_info[i].gpu_device, NWL_STR_SIZE, device);
-		for (size_t j = 0; g_ctx.gpu->Children[j].LinkedNode; j++)
-		{
-			PNODE gpu = g_ctx.gpu->Children[j].LinkedNode;
-			if (_stricmp(hwid, NWL_NodeAttrGet(gpu, "HWID")) != 0)
-				continue;
-			g_ctx.gpu_info[i].driver = TRUE;
-			strcpy_s(g_ctx.gpu_info[i].gpu_vendor, NWL_STR_SIZE,
-				NWL_NodeAttrGet(gpu, "Manufacturer"));
-			strcpy_s(g_ctx.gpu_info[i].gpu_device, NWL_STR_SIZE,
-				NWL_NodeAttrGet(gpu, "Description"));
-			strcpy_s(g_ctx.gpu_info[i].gpu_driver_date, NWL_STR_SIZE,
-				NWL_NodeAttrGet(gpu, "Driver Date"));
-			strcpy_s(g_ctx.gpu_info[i].gpu_driver_ver, NWL_STR_SIZE,
-				NWL_NodeAttrGet(gpu, "Driver Version"));
-			strcpy_s(g_ctx.gpu_info[i].gpu_location, NWL_STR_SIZE,
-				NWL_NodeAttrGet(gpu, "Location Info"));
-			strcpy_s(g_ctx.gpu_info[i].gpu_mem, NWL_STR_SIZE,
-				NWL_NodeAttrGet(gpu, "Memory Size"));
-		}
-	}
-	NWL_NodeFree(gpu_list, 1);
-}
-
 void
 gnwinfo_ctx_update(WPARAM wparam)
 {
@@ -107,7 +54,7 @@ gnwinfo_ctx_update(WPARAM wparam)
 		g_ctx.cpu_freq = NWL_GetCpuFreq();
 		NWL_GetCpuMsr(g_ctx.cpu_count, g_ctx.cpu_info);
 		NWL_GetCurDisplay(g_ctx.wnd, &g_ctx.cur_display);
-		get_gpu_info();
+		g_ctx.gpu_count = NWL_GetGpuInfo(g_ctx.gpu_info, NWL_GPU_MAX_COUNT);
 		if (g_ctx.audio)
 		{
 			free(g_ctx.audio);

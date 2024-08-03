@@ -322,7 +322,8 @@ draw_display(struct nk_context* ctx)
 			nk_layout_row(ctx, NK_DYNAMIC, 0, 3, (float[3]) { 0.3f, 0.4f, 0.3f });
 			nk_lhsc(ctx, name, NK_TEXT_LEFT, g_color_text_d, nk_false, nk_true);
 			nk_lhc(ctx, g_ctx.gpu_info[i].gpu_device, NK_TEXT_LEFT, g_color_text_l);
-			nk_lhc(ctx, g_ctx.gpu_info[i].gpu_mem, NK_TEXT_LEFT, g_color_text_l);
+			nk_lhc(ctx, NWL_GetHumanSize(g_ctx.gpu_info[i].gpu_mem_size, NWLC->NwUnits, 1024),
+				NK_TEXT_LEFT, g_color_text_l);
 		}
 		else
 		{
