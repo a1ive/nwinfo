@@ -50,7 +50,7 @@ draw_gpu_attr(struct nk_context* ctx, LPCSTR str, LPCSTR attr)
 static VOID
 draw_gpu(struct nk_context* ctx)
 {
-	size_t i;
+	int i;
 	for (i = 0; i < g_ctx.gpu_count; i++)
 	{
 		nk_layout_row_dynamic(ctx, 0, 1);

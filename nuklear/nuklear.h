@@ -5804,7 +5804,7 @@ struct nk_context {
 #define NK_ALIGN_PTR_BACK(x, mask)\
     (NK_UINT_TO_PTR((NK_PTR_TO_UINT((nk_byte*)(x)) & ~(mask-1))))
 
-#if (defined(__GNUC__) && __GNUC__ >= 4) || defined(__clang__)
+#if ((defined(__GNUC__) && __GNUC__ >= 4) || defined(__clang__)) && !defined(EMSCRIPTEN)
 #define NK_OFFSETOF(st,m) (__builtin_offsetof(st,m))
 #else
 #define NK_OFFSETOF(st,m) ((nk_ptr)&(((st*)0)->m))
@@ -9694,14 +9694,16 @@ nk_draw_list_push_image(struct nk_draw_list *list, nk_handle texture)
         struct nk_draw_command *prev = nk_draw_list_command_last(list);
         if (prev->elem_count == 0) {
             prev->texture = texture;
-        #ifdef NK_INCLUDE_COMMAND_USERDATA
+            #ifdef NK_INCLUDE_COMMAND_USERDATA
             prev->userdata = list->userdata;
-        #endif
-    } else if (prev->texture.id != texture.id
-        #ifdef NK_INCLUDE_COMMAND_USERDATA
-            || prev->userdata.id != list->userdata.id
-        #endif
-        ) nk_draw_list_push_command(list, prev->clip_rect, texture);
+            #endif
+        } else if (prev->texture.id != texture.id
+                #ifdef NK_INCLUDE_COMMAND_USERDATA
+                || prev->userdata.id != list->userdata.id
+                #endif
+                ) {
+            nk_draw_list_push_command(list, prev->clip_rect, texture);
+        }
     }
 }
 #ifdef NK_INCLUDE_COMMAND_USERDATA

@@ -133,7 +133,7 @@ FillGpuInfo(NWLIB_GPU_INFO* info, LPCWSTR devIf)
 static inline BOOL
 CompareHwid(LPCSTR hwid, NWLIB_GPU_INFO* info, int count)
 {
-	for (size_t i = 0; i < count && info[i].driver; i++)
+	for (int i = 0; i < count && info[i].driver; i++)
 	{
 		if (_stricmp(hwid, info[i].gpu_hwid) == 0)
 			return TRUE;

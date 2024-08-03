@@ -313,7 +313,7 @@ draw_display(struct nk_context* ctx)
 	if (nk_button_image_hover(ctx, GET_PNG(IDR_PNG_MONITOR), gnwinfo_get_text(L"Display Devices")))
 		g_ctx.window_flag |= GUI_WINDOW_DISPLAY;
 
-	for (i = 0; (size_t)i < g_ctx.gpu_count; i++)
+	for (i = 0; i < g_ctx.gpu_count; i++)
 	{
 		if (g_ctx.gpu_info[i].driver)
 		{
