@@ -5,6 +5,7 @@
 #include <windows.h>
 #include <setupapi.h>
 #include <cfgmgr32.h>
+#include <pdhmsg.h>
 
 #include "libnw.h"
 #include "utils.h"
@@ -190,6 +191,55 @@ fail:
 	if (deviceInterfaceList)
 		free(deviceInterfaceList);
 	return ret;
+}
+
+static inline BOOL
+CompareWcsSuffix(LPCWSTR str, LPCWSTR suffix)
+{
+	size_t strLen = wcslen(str);
+	size_t suffixLen = wcslen(suffix);
+	if (suffixLen > strLen)
+		return FALSE;
+	return (wcscmp(&str[strLen - suffixLen], suffix) == 0);
+}
+
+static double
+GetPdhLargeSum(PDH_HCOUNTER counter, LPCWSTR suffix)
+{
+	PDH_STATUS status = ERROR_SUCCESS;
+	DWORD dwBufferSize = 0;
+	DWORD dwItemCount = 0;
+	PDH_FMT_COUNTERVALUE_ITEM* pItems = NULL;
+	double ret = 0.0f;
+
+	status = NWLC->PdhGetFormattedCounterArrayW(counter, PDH_FMT_DOUBLE, &dwBufferSize, &dwItemCount, pItems);
+	if (status != PDH_MORE_DATA)
+		return 0.0f;
+	pItems = malloc(dwBufferSize);
+	if (!pItems)
+		return 0.0f;
+	status = NWLC->PdhGetFormattedCounterArrayW(counter, PDH_FMT_DOUBLE, &dwBufferSize, &dwItemCount, pItems);
+	if (status != ERROR_SUCCESS)
+		goto out;
+	for (DWORD i = 0; i < dwItemCount; i++)
+	{
+		if (CompareWcsSuffix(pItems[i].szName, suffix))
+			ret += pItems[i].FmtValue.doubleValue;
+	}
+
+out:
+	if (pItems)
+		free(pItems);
+	return ret;
+}
+
+double
+NWL_GetGpuUsage(LPCWSTR suffix)
+{
+	if (NWLC->PdhGpuUsage)
+		return GetPdhLargeSum(NWLC->PdhGpuUsage, suffix);
+	// TODO: get gpu usage
+	return 0.0f;
 }
 
 PNODE NW_Gpu(VOID)

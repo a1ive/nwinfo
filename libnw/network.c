@@ -5,6 +5,7 @@
 #include <ws2tcpip.h>
 #include <netioapi.h>
 #include <wlanapi.h>
+#include <pdhmsg.h>
 
 #include "libnw.h"
 #include "utils.h"
@@ -19,6 +20,35 @@ static const char* bps_human_sizes[6] =
 { "bps", "kbps", "Mbps", "Gbps", "Tbps", "Pbps", };
 
 static UINT64 total_recv = 0, total_send = 0;
+
+static UINT64
+GetPdhLargeSum(PDH_HCOUNTER counter)
+{
+	PDH_STATUS status = ERROR_SUCCESS;
+	DWORD dwBufferSize = 0;
+	DWORD dwItemCount = 0;
+	PDH_FMT_COUNTERVALUE_ITEM* pItems = NULL;
+	UINT64 ret = 0;
+
+	status = NWLC->PdhGetFormattedCounterArrayW(counter, PDH_FMT_LARGE, &dwBufferSize, &dwItemCount, pItems);
+	if (status != PDH_MORE_DATA)
+		return 0;
+	pItems = malloc(dwBufferSize);
+	if (!pItems)
+		return 0;
+	status = NWLC->PdhGetFormattedCounterArrayW(counter, PDH_FMT_LARGE, &dwBufferSize, &dwItemCount, pItems);
+	if (status != ERROR_SUCCESS)
+		goto out;
+	for (DWORD i = 0; i < dwItemCount; i++)
+	{
+		ret += pItems[i].FmtValue.largeValue;
+	}
+
+out:
+	if (pItems)
+		free(pItems);
+	return ret;
+}
 
 VOID
 NWL_GetNetTraffic(NWLIB_NET_TRAFFIC* info, BOOL bit)
@@ -36,9 +66,9 @@ NWL_GetNetTraffic(NWLIB_NET_TRAFFIC* info, BOOL bit)
 	old_send = total_send;
 
 	if (NWLC->PdhNetRecv)
-		diff_recv = NWL_PdhGetSum(NWLC->PdhNetRecv);
+		diff_recv = GetPdhLargeSum(NWLC->PdhNetRecv);
 	if (NWLC->PdhNetSend)
-		diff_send = NWL_PdhGetSum(NWLC->PdhNetSend);
+		diff_send = GetPdhLargeSum(NWLC->PdhNetSend);
 	if (bit)
 	{
 		memcpy(info->StrRecv, NWL_GetHumanSize(diff_recv * 8, bit_units, 1000), NWL_STR_SIZE);

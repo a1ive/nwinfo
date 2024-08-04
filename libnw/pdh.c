@@ -48,39 +48,12 @@ NWL_PdhInit(VOID)
 		NWLC->PdhNetSend = NULL;
 	if (NWLC->PdhAddCounterW(NWLC->Pdh, L"\\Network Interface(*)\\Bytes Received/sec", 0, &NWLC->PdhNetRecv) != ERROR_SUCCESS)
 		NWLC->PdhNetRecv = NULL;
+	if (NWLC->PdhAddCounterW(NWLC->Pdh, L"\\GPU Engine(*)\\Utilization Percentage", 0, &NWLC->PdhGpuUsage) != ERROR_SUCCESS)
+		NWLC->PdhGpuUsage = NULL;
 	NWLC->PdhCollectQueryData(NWLC->Pdh);
 	return;
 fail:
 	NWL_PdhFini();
-}
-
-UINT64
-NWL_PdhGetSum(PDH_HCOUNTER counter)
-{
-	PDH_STATUS status = ERROR_SUCCESS;
-	DWORD dwBufferSize = 0;
-	DWORD dwItemCount = 0;
-	PDH_FMT_COUNTERVALUE_ITEM* pItems = NULL;
-	UINT64 ret = 0;
-
-	status = NWLC->PdhGetFormattedCounterArrayW(counter, PDH_FMT_LARGE, &dwBufferSize, &dwItemCount, pItems);
-	if (status != PDH_MORE_DATA)
-		return 0;
-	pItems = malloc(dwBufferSize);
-	if (!pItems)
-		return 0;
-	status = NWLC->PdhGetFormattedCounterArrayW(counter, PDH_FMT_LARGE, &dwBufferSize, &dwItemCount, pItems);
-	if (status != ERROR_SUCCESS)
-		goto out;
-	for (DWORD i = 0; i < dwItemCount; i++)
-	{
-		ret += pItems[i].FmtValue.largeValue;
-	}
-
-out:
-	if (pItems)
-		free(pItems);
-	return ret;
 }
 
 VOID

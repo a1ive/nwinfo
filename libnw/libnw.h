@@ -110,6 +110,7 @@ typedef struct _NWLIB_CONTEXT
 	PDH_HCOUNTER PdhCpuBaseFreq;
 	PDH_HCOUNTER PdhNetRecv;
 	PDH_HCOUNTER PdhNetSend;
+	PDH_HCOUNTER PdhGpuUsage;
 
 	struct wr0_drv_t* NwDrv;
 	UINT CodePage;
@@ -141,7 +142,6 @@ VOID NW_Fini(VOID);
 VOID NWL_PdhInit(VOID);
 VOID NWL_PdhUpdate(VOID);
 VOID NWL_PdhFini(VOID);
-UINT64 NWL_PdhGetSum(PDH_HCOUNTER counter);
 
 noreturn VOID NWL_ErrExit(INT nExitCode, LPCSTR lpszText);
 
@@ -246,6 +246,8 @@ typedef struct _NWLIB_GPU_INFO
 } NWLIB_GPU_INFO;
 #define NWL_GPU_MAX_COUNT 8
 int NWL_GetGpuInfo(NWLIB_GPU_INFO* info, int count);
+
+double NWL_GetGpuUsage(LPCWSTR suffix);
 
 #define NWL_Debugf(...) \
 	do \

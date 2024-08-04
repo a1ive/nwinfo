@@ -54,6 +54,7 @@ gnwinfo_ctx_update(WPARAM wparam)
 		g_ctx.cpu_freq = NWL_GetCpuFreq();
 		NWL_GetCpuMsr(g_ctx.cpu_count, g_ctx.cpu_info);
 		NWL_GetCurDisplay(g_ctx.wnd, &g_ctx.cur_display);
+		g_ctx.gpu_3d_usage = NWL_GetGpuUsage(L"engtype_3D");
 		g_ctx.gpu_count = NWL_GetGpuInfo(g_ctx.gpu_info, NWL_GPU_MAX_COUNT);
 		if (g_ctx.audio)
 		{
