@@ -122,8 +122,8 @@ if (Test-Path -Path $LibcdiZipPath) {
 		# Extract the zip file
 		Expand-Archive -Path $LibcdiZipPath -DestinationPath $ExtractPath -Force
 		# Copy the DLL files
-		$LibcdiX86Dll = Join-Path -Path $ExtractPath -ChildPath "libcdi\x86\libcdi.dll"
-		$LibcdiX64Dll = Join-Path -Path $ExtractPath -ChildPath "libcdi\x64\libcdi.dll"
+		$LibcdiX86Dll = Join-Path -Path $ExtractPath -ChildPath "x86\libcdi.dll"
+		$LibcdiX64Dll = Join-Path -Path $ExtractPath -ChildPath "x64\libcdi.dll"
 		if (Test-Path -Path $LibcdiX86Dll) {
 			Copy-Item -Path $LibcdiX86Dll -Destination (Join-Path -Path $TargetFolder -ChildPath "libcdi.Win32.dll") -Force
 		} else {
