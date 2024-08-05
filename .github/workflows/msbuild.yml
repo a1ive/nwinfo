@@ -37,10 +37,10 @@ jobs:
       working-directory: ${{env.GITHUB_WORKSPACE}}
       run: |
         md nwinfo
-        move x64\Release\nwinfo.exe nwinfo\nwinfo_x64.exe
-        move x64\Release\gnwinfo.exe nwinfo\gnwinfo_x64.exe
-        move Win32\Release\nwinfo.exe nwinfo\nwinfo_x86.exe
-        move Win32\Release\gnwinfo.exe nwinfo\gnwinfo_x86.exe
+        move x64\Release\nwinfo.exe nwinfo\nwinfox64.exe
+        move x64\Release\gnwinfo.exe nwinfo\gnwinfox64.exe
+        move Win32\Release\nwinfo.exe nwinfo\nwinfo.exe
+        move Win32\Release\gnwinfo.exe nwinfo\gnwinfo.exe
         copy gnwinfo\gnwinfo.ini nwinfo\gnwinfo.ini
         copy Win32\Release\ryzenadj.dll nwinfo\ryzenadj.dll
         copy x64\Release\ryzenadjx64.dll nwinfo\ryzenadjx64.dll
@@ -59,12 +59,12 @@ jobs:
       with:
         version: latest
         files: |
-          .\nwinfo\nwinfo_x64.exe
-          .\nwinfo\nwinfo_x86.exe
-          .\nwinfo\gnwinfo_x64.exe
-          .\nwinfo\gnwinfo_x86.exe
-          .\nwinfo\libcdi.Win32.dll
-          .\nwinfo\libcdi.x64.dll
+          .\nwinfo\nwinfox64.exe
+          .\nwinfo\nwinfo.exe
+          .\nwinfo\gnwinfox64.exe
+          .\nwinfo\gnwinfo.exe
+          .\nwinfo\libcdi.dll
+          .\nwinfo\libcdix64.dll
           # .\nwinfo\ryzenadj.dll
           # .\nwinfo\ryzenadjx64.dll
         args: --best

@@ -125,12 +125,12 @@ if (Test-Path -Path $LibcdiZipPath) {
 		$LibcdiX86Dll = Join-Path -Path $ExtractPath -ChildPath "x86\libcdi.dll"
 		$LibcdiX64Dll = Join-Path -Path $ExtractPath -ChildPath "x64\libcdi.dll"
 		if (Test-Path -Path $LibcdiX86Dll) {
-			Copy-Item -Path $LibcdiX86Dll -Destination (Join-Path -Path $TargetFolder -ChildPath "libcdi.Win32.dll") -Force
+			Copy-Item -Path $LibcdiX86Dll -Destination (Join-Path -Path $TargetFolder -ChildPath "libcdi.dll") -Force
 		} else {
 			Write-Error "File not found: $LibcdiX86Dll"
 		}
 		if (Test-Path -Path $LibcdiX64Dll) {
-			Copy-Item -Path $LibcdiX64Dll -Destination (Join-Path -Path $TargetFolder -ChildPath "libcdi.x64.dll") -Force
+			Copy-Item -Path $LibcdiX64Dll -Destination (Join-Path -Path $TargetFolder -ChildPath "libcdix64.dll") -Force
 		} else {
 			Write-Error "File not found: $LibcdiX64Dll"
 		}

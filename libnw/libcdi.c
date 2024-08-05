@@ -26,9 +26,9 @@ static struct
 } m_cdi;
 
 #ifdef _WIN64
-#define LIBCDI_DLL L"libcdi.x64.dll"
+#define LIBCDI_DLL L"libcdix64.dll"
 #else
-#define LIBCDI_DLL L"libcdi.Win32.dll"
+#define LIBCDI_DLL L"libcdi.dll"
 #endif
 
 CDI_SMART* WINAPI cdi_create_smart(VOID)
