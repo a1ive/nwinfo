@@ -999,8 +999,7 @@ static void update_cache_instances(struct internal_cache_instances_t* caches,
 
 int cpu_identify_all(struct cpu_raw_data_array_t* raw_array, struct system_id_t* system)
 {
-	int cur_error = cpuid_set_error(ERR_OK);
-	int ret_error = cpuid_set_error(ERR_OK);
+	int r = ERR_OK;
 	double smt_divisor;
 	bool is_smt_supported;
 	bool is_topology_supported = true;
@@ -1047,10 +1046,9 @@ int cpu_identify_all(struct cpu_raw_data_array_t* raw_array, struct system_id_t*
 			cpu_type_index = system->num_cpu_types;
 			cpuid_grow_system_id(system, system->num_cpu_types + 1);
 			cpuid_grow_type_info(&type_info, type_info.num + 1);
-			cur_error = cpu_ident_internal(&raw_array->raw[logical_cpu], &system->cpu_types[cpu_type_index], &type_info.data[cpu_type_index].id_info);
+			if ((r = cpu_ident_internal(&raw_array->raw[logical_cpu], &system->cpu_types[cpu_type_index], &type_info.data[cpu_type_index].id_info)) != ERR_OK)
+				return r;
 			type_info.data[cpu_type_index].purpose = purpose;
-			if (ret_error == ERR_OK)
-				ret_error = cur_error;
 			if (is_topology_supported)
 				type_info.data[cpu_type_index].package_id = cur_package_id;
 			if (raw_array->with_affinity)
@@ -1103,19 +1101,19 @@ int cpu_identify_all(struct cpu_raw_data_array_t* raw_array, struct system_id_t*
 		system->l4_total_instances             = caches_all->instances[L4];
 	}
 
-	return ret_error;
+	return cpuid_set_error(ERR_OK);
 }
 
 int cpu_request_core_type(cpu_purpose_t purpose, struct cpu_raw_data_array_t* raw_array, struct cpu_id_t* data)
 {
-	int error;
+	int r;
 	logical_cpu_t logical_cpu = 0;
 	struct cpu_raw_data_array_t my_raw_array;
 	struct internal_id_info_t throwaway;
 
 	if (!raw_array) {
-		if ((error = cpuid_get_all_raw_data(&my_raw_array)) < 0)
-			return cpuid_set_error(error);
+		if ((r = cpuid_get_all_raw_data(&my_raw_array)) < 0)
+			return r;
 		raw_array = &my_raw_array;
 	}
 
