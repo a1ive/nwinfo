@@ -311,28 +311,29 @@ draw_display(struct nk_context* ctx)
 		"%ldx%ld %u DPI (%u%%)",
 		g_ctx.cur_display.Width, g_ctx.cur_display.Height, g_ctx.cur_display.Dpi, g_ctx.cur_display.Scale);
 	nk_lhcf(ctx, NK_TEXT_LEFT, g_color_text_l,
-		"GPU 3D %.0f%%",
-		g_ctx.gpu_3d_usage);
+		"GPU 3D %.1f%% RAM %.1f%%",
+		g_ctx.gpu_info.Usage3D,
+		g_ctx.gpu_info.UsageDedicated);
 	if (nk_button_image_hover(ctx, GET_PNG(IDR_PNG_MONITOR), gnwinfo_get_text(L"Display Devices")))
 		g_ctx.window_flag |= GUI_WINDOW_DISPLAY;
 
-	for (i = 0; i < g_ctx.gpu_count; i++)
+	for (i = 0; i < g_ctx.gpu_info.DeviceCount; i++)
 	{
-		if (g_ctx.gpu_info[i].driver)
+		if (g_ctx.gpu_info.Device[i].driver)
 		{
 			CHAR name[32];
 			snprintf(name, sizeof(name), "GPU%d", i);
 			nk_layout_row(ctx, NK_DYNAMIC, 0, 3, (float[3]) { 0.3f, 0.4f, 0.3f });
 			nk_lhsc(ctx, name, NK_TEXT_LEFT, g_color_text_d, nk_false, nk_true);
-			nk_lhc(ctx, g_ctx.gpu_info[i].gpu_device, NK_TEXT_LEFT, g_color_text_l);
-			nk_lhc(ctx, NWL_GetHumanSize(g_ctx.gpu_info[i].gpu_mem_size, NWLC->NwUnits, 1024),
+			nk_lhc(ctx, g_ctx.gpu_info.Device[i].gpu_device, NK_TEXT_LEFT, g_color_text_l);
+			nk_lhc(ctx, NWL_GetHumanSize(g_ctx.gpu_info.Device[i].gpu_mem_size, NWLC->NwUnits, 1024),
 				NK_TEXT_LEFT, g_color_text_l);
 		}
 		else
 		{
 			nk_layout_row(ctx, NK_DYNAMIC, 0, 2, (float[2]) { 0.3f, 0.7f });
-			nk_lhsc(ctx, g_ctx.gpu_info[i].gpu_vendor, NK_TEXT_LEFT, g_color_text_d, nk_true, nk_true);
-			nk_lhc(ctx, g_ctx.gpu_info[i].gpu_device, NK_TEXT_LEFT, g_color_text_l);
+			nk_lhsc(ctx, g_ctx.gpu_info.Device[i].gpu_vendor, NK_TEXT_LEFT, g_color_text_d, nk_true, nk_true);
+			nk_lhc(ctx, g_ctx.gpu_info.Device[i].gpu_device, NK_TEXT_LEFT, g_color_text_l);
 		}
 	}
 	for (i = 0; g_ctx.edid->Children[i].LinkedNode; i++)

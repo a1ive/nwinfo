@@ -90,7 +90,7 @@ SetDevicePropertyString(CHAR* strBuf, size_t strSize, DEVINST devHandle, const D
 }
 
 static void
-FillGpuInfo(NWLIB_GPU_INFO* info, LPCWSTR devIf)
+FillGpuInfo(NWLIB_GPU_DEV* info, LPCWSTR devIf)
 {
 	DEVPROPTYPE devicePropertyType;
 	DEVINST deviceInstanceHandle;
@@ -132,7 +132,7 @@ FillGpuInfo(NWLIB_GPU_INFO* info, LPCWSTR devIf)
 }
 
 static inline BOOL
-CompareHwid(LPCSTR hwid, NWLIB_GPU_INFO* info, int count)
+CompareHwid(LPCSTR hwid, NWLIB_GPU_DEV* info, int count)
 {
 	for (int i = 0; i < count && info[i].driver; i++)
 	{
@@ -142,8 +142,8 @@ CompareHwid(LPCSTR hwid, NWLIB_GPU_INFO* info, int count)
 	return FALSE;
 }
 
-int
-NWL_GetGpuInfo(NWLIB_GPU_INFO* info, int count)
+static int
+GetGpuDev(NWLIB_GPU_DEV* dev, int count, PUINT64 ram)
 {
 	int ret = 0;
 	PWSTR deviceInterfaceList = NULL;
@@ -151,6 +151,8 @@ NWL_GetGpuInfo(NWLIB_GPU_INFO* info, int count)
 	ULONG deviceInterfaceListLength = 0;
 	GUID guidDisplayDevice = { 0x1CA05180, 0xA699, 0x450A,
 		{ 0x9A, 0x0C, 0xDE, 0x4F, 0xBE, 0x3D, 0xDD, 0x89 } };
+
+	*ram = 0;
 
 	if (CM_Get_Device_Interface_List_SizeW(&deviceInterfaceListLength,
 		&guidDisplayDevice, NULL,
@@ -170,7 +172,8 @@ NWL_GetGpuInfo(NWLIB_GPU_INFO* info, int count)
 	{
 		if (_wcsnicmp(p, L"\\\\?\\PCI#VEN_", 12) != 0)
 			continue;
-		FillGpuInfo(&info[ret], p);
+		FillGpuInfo(&dev[ret], p);
+		*ram += dev[ret].gpu_mem_size;
 		ret++;
 	}
 
@@ -179,11 +182,11 @@ NWL_GetGpuInfo(NWLIB_GPU_INFO* info, int count)
 	{
 		PNODE pci = pciList->Children[i].LinkedNode;
 		LPCSTR hwid = NWL_NodeAttrGet(pci, "HWID");
-		if (CompareHwid(hwid, info, count))
+		if (CompareHwid(hwid, dev, count))
 			continue;
-		strcpy_s(info[ret].gpu_hwid, NWL_STR_SIZE, hwid);
-		strcpy_s(info[ret].gpu_device, NWL_STR_SIZE, NWL_NodeAttrGet(pci, "Device"));
-		strcpy_s(info[ret].gpu_vendor, NWL_STR_SIZE, NWL_NodeAttrGet(pci, "Vendor"));
+		strcpy_s(dev[ret].gpu_hwid, NWL_STR_SIZE, hwid);
+		strcpy_s(dev[ret].gpu_device, NWL_STR_SIZE, NWL_NodeAttrGet(pci, "Device"));
+		strcpy_s(dev[ret].gpu_vendor, NWL_STR_SIZE, NWL_NodeAttrGet(pci, "Vendor"));
 		ret++;
 	}
 
@@ -193,79 +196,48 @@ fail:
 	return ret;
 }
 
-static inline BOOL
-CompareWcsSuffix(LPCWSTR str, LPCWSTR suffix)
+VOID NWL_GetGpuInfo(PNWLIB_GPU_INFO info)
 {
-	size_t strLen = wcslen(str);
-	size_t suffixLen = wcslen(suffix);
-	if (suffixLen > strLen)
-		return FALSE;
-	return (wcscmp(&str[strLen - suffixLen], suffix) == 0);
-}
-
-static double
-GetPdhLargeSum(PDH_HCOUNTER counter, LPCWSTR suffix)
-{
-	PDH_STATUS status = ERROR_SUCCESS;
-	DWORD dwBufferSize = 0;
-	DWORD dwItemCount = 0;
-	PDH_FMT_COUNTERVALUE_ITEM* pItems = NULL;
-	double ret = 0.0f;
-
-	status = NWLC->PdhGetFormattedCounterArrayW(counter, PDH_FMT_DOUBLE, &dwBufferSize, &dwItemCount, pItems);
-	if (status != PDH_MORE_DATA)
-		return 0.0f;
-	pItems = malloc(dwBufferSize);
-	if (!pItems)
-		return 0.0f;
-	status = NWLC->PdhGetFormattedCounterArrayW(counter, PDH_FMT_DOUBLE, &dwBufferSize, &dwItemCount, pItems);
-	if (status != ERROR_SUCCESS)
-		goto out;
-	for (DWORD i = 0; i < dwItemCount; i++)
-	{
-		if (CompareWcsSuffix(pItems[i].szName, suffix))
-			ret += pItems[i].FmtValue.doubleValue;
-	}
-
-out:
-	if (pItems)
-		free(pItems);
-	return ret;
-}
-
-double
-NWL_GetGpuUsage(LPCWSTR suffix)
-{
+	ZeroMemory(info, sizeof(NWLIB_GPU_INFO));
+	info->DeviceCount = GetGpuDev(info->Device, NWL_GPU_MAX_COUNT, &info->DedicatedTotal);
 	if (NWLC->PdhGpuUsage)
-		return GetPdhLargeSum(NWLC->PdhGpuUsage, suffix);
-	// TODO: get gpu usage
-	return 0.0f;
+	{
+		info->Usage3D = NWL_GetPdhSum(NWLC->PdhGpuUsage, PDH_FMT_DOUBLE, L"engtype_3D").doubleValue;
+		info->UsageCopy = NWL_GetPdhSum(NWLC->PdhGpuUsage, PDH_FMT_DOUBLE, L"engtype_Copy").doubleValue;
+		info->UsageCompute0 = NWL_GetPdhSum(NWLC->PdhGpuUsage, PDH_FMT_DOUBLE, L"engtype_Compute 0").doubleValue;
+		info->UsageCompute1 = NWL_GetPdhSum(NWLC->PdhGpuUsage, PDH_FMT_DOUBLE, L"engtype_Compute 1").doubleValue;
+	}
+	if (NWLC->PdhGpuCurMem)
+		info->DedicatedInUse = NWL_GetPdhSum(NWLC->PdhGpuCurMem, PDH_FMT_LARGE, NULL).largeValue;
+	if (info->DedicatedTotal > 0)
+		info->UsageDedicated = (double)info->DedicatedInUse / (double)info->DedicatedTotal * 100.0f;
+	if (info->UsageDedicated > 100.0f)
+		info->UsageDedicated = 100.0f;
 }
 
 PNODE NW_Gpu(VOID)
 {
-	NWLIB_GPU_INFO info[NWL_GPU_MAX_COUNT] = { 0 };
-	int count = NWL_GPU_MAX_COUNT;
+	NWLIB_GPU_INFO info;
 
 	PNODE node = NWL_NodeAlloc("GPU", NFLG_TABLE);
 	if (NWLC->GpuInfo)
 		NWL_NodeAppendChild(NWLC->NwRoot, node);
 
-	count = NWL_GetGpuInfo(info, count);
-	for (int i = 0; i < count; i++)
+	NWL_GetGpuInfo(&info);
+	for (int i = 0; i < info.DeviceCount; i++)
 	{
 		PNODE gpu = NWL_NodeAppendNew(node, "Device", NFLG_TABLE_ROW);
-		NWL_NodeAttrSet(gpu, "HWID", info[i].gpu_hwid, 0);
-		NWL_NodeAttrSet(gpu, "Device", info[i].gpu_device, 0);
-		NWL_NodeAttrSet(gpu, "Vendor", info[i].gpu_vendor, 0);
-		if (info[i].driver)
+		NWL_NodeAttrSet(gpu, "HWID", info.Device[i].gpu_hwid, 0);
+		NWL_NodeAttrSet(gpu, "Device", info.Device[i].gpu_device, 0);
+		NWL_NodeAttrSet(gpu, "Vendor", info.Device[i].gpu_vendor, 0);
+		if (info.Device[i].driver)
 		{
-			NWL_NodeAttrSet(gpu, "Interface", info[i].gpu_if, 0);
-			NWL_NodeAttrSet(gpu, "Driver Date", info[i].gpu_driver_date, 0);
-			NWL_NodeAttrSet(gpu, "Driver Version", info[i].gpu_driver_ver, 0);
-			NWL_NodeAttrSet(gpu, "Location", info[i].gpu_location, 0);
+			NWL_NodeAttrSet(gpu, "Interface", info.Device[i].gpu_if, 0);
+			NWL_NodeAttrSet(gpu, "Driver Date", info.Device[i].gpu_driver_date, 0);
+			NWL_NodeAttrSet(gpu, "Driver Version", info.Device[i].gpu_driver_ver, 0);
+			NWL_NodeAttrSet(gpu, "Location", info.Device[i].gpu_location, 0);
 			NWL_NodeAttrSet(gpu, "Memory Size",
-				NWL_GetHumanSize(info[i].gpu_mem_size, NWLC->NwUnits, 1024), NAFLG_FMT_HUMAN_SIZE);
+				NWL_GetHumanSize(info.Device[i].gpu_mem_size, NWLC->NwUnits, 1024), NAFLG_FMT_HUMAN_SIZE);
 		}
 	}
 

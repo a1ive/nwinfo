@@ -142,9 +142,7 @@ typedef struct _GNW_CONTEXT
 	NWLIB_MEM_INFO mem_status;
 
 	NWLIB_CUR_DISPLAY cur_display;
-	double gpu_3d_usage;
-	int gpu_count;
-	NWLIB_GPU_INFO gpu_info[NWL_GPU_MAX_COUNT];
+	NWLIB_GPU_INFO gpu_info;
 
 	UINT audio_count;
 	NWLIB_AUDIO_DEV* audio;

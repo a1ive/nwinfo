@@ -51,22 +51,22 @@ static VOID
 draw_gpu(struct nk_context* ctx)
 {
 	int i;
-	for (i = 0; i < g_ctx.gpu_count; i++)
+	for (i = 0; i < g_ctx.gpu_info.DeviceCount; i++)
 	{
 		nk_layout_row_dynamic(ctx, 0, 1);
-		nk_image_label(ctx, GET_PNG(IDR_PNG_GPU), g_ctx.gpu_info[i].gpu_hwid, NK_TEXT_LEFT, g_color_text_l);
+		nk_image_label(ctx, GET_PNG(IDR_PNG_GPU), g_ctx.gpu_info.Device[i].gpu_hwid, NK_TEXT_LEFT, g_color_text_l);
 
 		nk_layout_row(ctx, NK_DYNAMIC, 0, 2, (float[2]) { 0.3f, 0.7f });
 
-		draw_gpu_attr(ctx, "Vendor", g_ctx.gpu_info[i].gpu_vendor);
-		draw_gpu_attr(ctx, "Device", g_ctx.gpu_info[i].gpu_device);
-		if (g_ctx.gpu_info[i].driver)
+		draw_gpu_attr(ctx, "Vendor", g_ctx.gpu_info.Device[i].gpu_vendor);
+		draw_gpu_attr(ctx, "Device", g_ctx.gpu_info.Device[i].gpu_device);
+		if (g_ctx.gpu_info.Device[i].driver)
 		{
-			draw_gpu_attr(ctx, "Driver Date", g_ctx.gpu_info[i].gpu_driver_date);
-			draw_gpu_attr(ctx, "Driver Version", g_ctx.gpu_info[i].gpu_driver_ver);
-			draw_gpu_attr(ctx, "Location Info", g_ctx.gpu_info[i].gpu_location);
+			draw_gpu_attr(ctx, "Driver Date", g_ctx.gpu_info.Device[i].gpu_driver_date);
+			draw_gpu_attr(ctx, "Driver Version", g_ctx.gpu_info.Device[i].gpu_driver_ver);
+			draw_gpu_attr(ctx, "Location Info", g_ctx.gpu_info.Device[i].gpu_location);
 			draw_gpu_attr(ctx, "Memory Size",
-				NWL_GetHumanSize(g_ctx.gpu_info[i].gpu_mem_size, NWLC->NwUnits, 1024));
+				NWL_GetHumanSize(g_ctx.gpu_info.Device[i].gpu_mem_size, NWLC->NwUnits, 1024));
 		}
 	}
 }
