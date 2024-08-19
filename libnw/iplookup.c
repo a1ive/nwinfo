@@ -4,10 +4,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <wininet.h>
-#pragma comment(lib, "wininet.lib")
 
 #include "libnw.h"
 #include "utils.h"
+
+static HINTERNET (WINAPI *OsInetOpen) (LPCWSTR, DWORD, LPCWSTR, LPCWSTR, DWORD);
+static HINTERNET (WINAPI *OsInetOpenUrl) (HINTERNET, LPCWSTR, LPCWSTR, DWORD, DWORD, DWORD_PTR);
+static BOOL (WINAPI *OsInetReadFile) (HINTERNET, LPVOID, DWORD, LPDWORD);
+static BOOL (WINAPI *OsInetCloseHandle) (HINTERNET);
 
 static LPSTR
 GetYamlField(LPCSTR lpszBuffer, LPCSTR lpszField)
@@ -48,18 +52,18 @@ GetUrlData(LPCWSTR lpszUrl, void* lpBuffer, DWORD dwSize)
 	if (dwSize <= 1)
 		goto fail;
 	ZeroMemory(lpBuffer, dwSize);
-	net = InternetOpenW(NULL, INTERNET_OPEN_TYPE_PRECONFIG, NULL, NULL, 0);
+	net = OsInetOpen(NULL, INTERNET_OPEN_TYPE_PRECONFIG, NULL, NULL, 0);
 	if (!net)
 		goto fail;
-	file = InternetOpenUrlW(net, lpszUrl, NULL, 0, INTERNET_FLAG_RELOAD, 0);
+	file = OsInetOpenUrl(net, lpszUrl, NULL, 0, INTERNET_FLAG_RELOAD, 0);
 	if (!file)
 		goto fail;
-	InternetReadFile(file, lpBuffer, dwSize - 1, &size);
+	OsInetReadFile(file, lpBuffer, dwSize - 1, &size);
 fail:
 	if (file)
-		InternetCloseHandle(file);
+		OsInetCloseHandle(file);
 	if (net)
-		InternetCloseHandle(net);
+		OsInetCloseHandle(net);
 	return size;
 }
 
@@ -97,10 +101,33 @@ static void PrintGeoInfo(PNODE node)
 
 PNODE NW_PublicIp(VOID)
 {
+	HMODULE inet = LoadLibraryW(L"wininet.dll");
 	PNODE node = NWL_NodeAlloc("PublicIP", 0);
 	if (NWLC->PublicIpInfo)
 		NWL_NodeAppendChild(NWLC->NwRoot, node);
+	if (inet == NULL)
+		goto out;
+	*(FARPROC*)&OsInetOpen = GetProcAddress(inet, "InternetOpenW");
+	if (OsInetOpen == NULL)
+		goto out;
+	*(FARPROC*)&OsInetOpenUrl = GetProcAddress(inet, "InternetOpenUrlW");
+	if (OsInetOpenUrl == NULL)
+		goto out;
+	*(FARPROC*)&OsInetReadFile = GetProcAddress(inet, "InternetReadFile");
+	if (OsInetReadFile == NULL)
+		goto out;
+	*(FARPROC*)&OsInetCloseHandle = GetProcAddress(inet, "InternetCloseHandle");
+	if (OsInetCloseHandle == NULL)
+		goto out;
 	PrintIpAddress(node);
 	PrintGeoInfo(node);
+
+out:
+	if (inet)
+		FreeLibrary(inet);
+	OsInetOpen = NULL;
+	OsInetOpenUrl = NULL;
+	OsInetReadFile = NULL;
+	OsInetCloseHandle = NULL;
 	return node;
 }
