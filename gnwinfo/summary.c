@@ -310,10 +310,13 @@ draw_display(struct nk_context* ctx)
 	nk_lhcf(ctx, NK_TEXT_LEFT, g_color_text_l,
 		"%ldx%ld %u DPI (%u%%)",
 		g_ctx.cur_display.Width, g_ctx.cur_display.Height, g_ctx.cur_display.Dpi, g_ctx.cur_display.Scale);
-	nk_lhcf(ctx, NK_TEXT_LEFT, g_color_text_l,
-		"GPU 3D %.1f%% RAM %.1f%%",
-		g_ctx.gpu_info.Usage3D,
-		g_ctx.gpu_info.UsageDedicated);
+	if (g_ctx.gpu_info.Usage3D > 0.0f || g_ctx.gpu_info.UsageDedicated > 0.0f)
+		nk_lhcf(ctx, NK_TEXT_LEFT, g_color_text_l,
+			"GPU 3D %.1f%% RAM %.1f%%",
+			g_ctx.gpu_info.Usage3D,
+			g_ctx.gpu_info.UsageDedicated);
+	else
+		nk_spacer(ctx);
 	if (nk_button_image_hover(ctx, GET_PNG(IDR_PNG_MONITOR), gnwinfo_get_text(L"Display Devices")))
 		g_ctx.window_flag |= GUI_WINDOW_DISPLAY;
 
