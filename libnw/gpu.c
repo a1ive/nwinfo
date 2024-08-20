@@ -10,7 +10,8 @@
 #include "libnw.h"
 #include "utils.h"
 
-#pragma comment(lib, "cfgmgr32.lib")
+static CONFIGRET (WINAPI *OsCMGetDeviceInterfaceProperty)
+	(LPCWSTR pszDeviceInterface, CONST DEVPROPKEY* PropertyKey, DEVPROPTYPE* PropertyType, PBYTE PropertyBuffer, PULONG PropertyBufferSize, ULONG ulFlags);
 
 static UINT64
 GetRegValue(HKEY hKey, LPCWSTR lpszName)
@@ -112,7 +113,7 @@ FillGpuInfo(NWLIB_GPU_DEV* info, LPCWSTR devIf)
 	DEVPROPKEY devpkeyLocationInfo = { { 0xa45c254e, 0xdf1c, 0x4efd,
 		{0x80, 0x20, 0x67, 0xd1, 0x46, 0xa8, 0x50, 0xe0} }, 15 };
 
-	if (CM_Get_Device_Interface_PropertyW(devIf, &devpkeyInstanceId, &devicePropertyType,
+	if (OsCMGetDeviceInterfaceProperty(devIf, &devpkeyInstanceId, &devicePropertyType,
 		(PBYTE)deviceInstanceId, &deviceInstanceIdLength, 0) != CR_SUCCESS)
 		return;
 	if (CM_Locate_DevNodeW(&deviceInstanceHandle, deviceInstanceId, CM_LOCATE_DEVNODE_NORMAL) != CR_SUCCESS)
@@ -151,9 +152,15 @@ GetGpuDev(NWLIB_GPU_DEV* dev, int count, PUINT64 ram)
 	ULONG deviceInterfaceListLength = 0;
 	GUID guidDisplayDevice = { 0x1CA05180, 0xA699, 0x450A,
 		{ 0x9A, 0x0C, 0xDE, 0x4F, 0xBE, 0x3D, 0xDD, 0x89 } };
+	HMODULE hDll = LoadLibraryW(L"cfgmgr32.dll");
 
 	*ram = 0;
 
+	if (hDll == NULL)
+		goto fail;
+	*(FARPROC*)&OsCMGetDeviceInterfaceProperty = GetProcAddress(hDll, "CM_Get_Device_Interface_PropertyW");
+	if (OsCMGetDeviceInterfaceProperty == NULL)
+		goto fail;
 	if (CM_Get_Device_Interface_List_SizeW(&deviceInterfaceListLength,
 		&guidDisplayDevice, NULL,
 		CM_GET_DEVICE_INTERFACE_LIST_PRESENT) != CR_SUCCESS)
@@ -193,6 +200,9 @@ GetGpuDev(NWLIB_GPU_DEV* dev, int count, PUINT64 ram)
 fail:
 	if (deviceInterfaceList)
 		free(deviceInterfaceList);
+	OsCMGetDeviceInterfaceProperty = NULL;
+	if (hDll)
+		FreeLibrary(hDll);
 	return ret;
 }
 
