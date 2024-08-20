@@ -102,7 +102,7 @@ OPTIONS:
   --spd            Print SPD info.
   --battery        Print battery info.
   --uefi[=FLAG,..] Print UEFI info.
-    FLAGS:\n"
+    FLAGS:
       MENU         Print UEFI boot menus.
       VARS         List all UEFI variables.
   --shares         Print network mapped drives and shared folders.
