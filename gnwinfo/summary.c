@@ -468,6 +468,8 @@ draw_net_drive(struct nk_context* ctx)
 	for (i = 0; g_ctx.smb->Children[i].LinkedNode; i++)
 	{
 		PNODE nd = g_ctx.smb->Children[i].LinkedNode;
+		if (strcmp(nd->Name, "Drive") != 0)
+			continue;
 		LPCSTR local = NWL_NodeAttrGet(nd, "Local Name");
 		LPCSTR remote = NWL_NodeAttrGet(nd, "Remote Name");
 		nk_layout_row(ctx, NK_DYNAMIC, 0, 3, (float[3]) { 0.3f, 0.7f - g_ctx.gui_ratio, g_ctx.gui_ratio });
