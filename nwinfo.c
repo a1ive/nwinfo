@@ -72,7 +72,7 @@ static void nwinfo_help(void)
 		"    FLAGS:\n"
 		"      MENU         Print UEFI boot menus.\n"
 		"      VARS         List all UEFI variables.\n"
-		"  --shares         Print network mapped drives.\n"
+		"  --shares         Print network mapped drives and shared folders.\n"
 		"  --audio          Print audio devices.\n"
 		"  --public-ip      Print public IP address.\n"
 		"  --product-policy Print ProductPolicy.\n"

@@ -105,7 +105,7 @@ OPTIONS:
     FLAGS:\n"
       MENU         Print UEFI boot menus.
       VARS         List all UEFI variables.
-  --shares         Print network mapped drives.
+  --shares         Print network mapped drives and shared folders.
   --audio          Print audio devices.
   --public-ip      Print public IP address.
   --product-policy Print ProductPolicy.
