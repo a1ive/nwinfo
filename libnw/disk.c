@@ -218,6 +218,31 @@ RemoveTrailingBackslash(WCHAR* lpszPath)
 	lpszPath[len - 1] = L'\0';
 }
 
+static VOID
+TrimString(CHAR* str)
+{
+	char* p1 = str;
+	char* p2 = str;
+	size_t len = strlen(str);
+	while (len > 0)
+	{
+		if (!isblank(str[len - 1]))
+			break;
+		str[len - 1] = '\0';
+		len--;
+	}
+	while (isblank(*p1))
+		p1++;
+	while (*p1)
+	{
+		if (!isprint(*p1))
+			*p1 = '?';
+		*p2++ = *p1++;
+	}
+	*p2++ = 0;
+
+}
+
 typedef struct
 {
 	DWORD  cbSize;
@@ -325,28 +350,28 @@ static DWORD GetDriveInfoList(BOOL bIsCdRom, PHY_DRIVE_INFO** pDriveList)
 		{
 			strcpy_s(pInfo[i].VendorId, MAX_PATH,
 				(char*)pDevDesc + pDevDesc->VendorIdOffset);
-			NWL_TrimString(pInfo[i].VendorId);
+			TrimString(pInfo[i].VendorId);
 		}
 
 		if (pDevDesc->ProductIdOffset)
 		{
 			strcpy_s(pInfo[i].ProductId, MAX_PATH,
 				(char*)pDevDesc + pDevDesc->ProductIdOffset);
-			NWL_TrimString(pInfo[i].ProductId);
+			TrimString(pInfo[i].ProductId);
 		}
 
 		if (pDevDesc->ProductRevisionOffset)
 		{
 			strcpy_s(pInfo[i].ProductRev, MAX_PATH,
 				(char*)pDevDesc + pDevDesc->ProductRevisionOffset);
-			NWL_TrimString(pInfo[i].ProductRev);
+			TrimString(pInfo[i].ProductRev);
 		}
 
 		if (pDevDesc->SerialNumberOffset)
 		{
 			strcpy_s(pInfo[i].SerialNumber, MAX_PATH,
 				(char*)pDevDesc + pDevDesc->SerialNumberOffset);
-			NWL_TrimString(pInfo[i].SerialNumber);
+			TrimString(pInfo[i].SerialNumber);
 		}
 
 		GetDiskPartMap(hDrive, bIsCdRom, &pInfo[i]);

@@ -29,7 +29,6 @@ PVOID NWL_GetAcpi(DWORD TableId);
 PVOID NWL_GetAcpiByAddr(DWORD_PTR Addr);
 
 UINT8 NWL_AcpiChecksum(VOID* base, UINT size);
-VOID NWL_TrimString(CHAR* String);
 INT NWL_GetRegDwordValue(HKEY Key, LPCWSTR SubKey, LPCWSTR ValueName, DWORD* pValue);
 HANDLE NWL_GetDiskHandleById(BOOL Cdrom, BOOL Write, DWORD Id);
 LPCSTR NWL_GetBusTypeString(STORAGE_BUS_TYPE Type);

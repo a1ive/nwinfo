@@ -353,30 +353,6 @@ NWL_AcpiChecksum(VOID* base, UINT size)
 	return ret;
 }
 
-VOID NWL_TrimString(CHAR* String)
-{
-	CHAR* Pos1 = String;
-	CHAR* Pos2 = String;
-	size_t Len = strlen(String);
-
-	while (Len > 0)
-	{
-		if (String[Len - 1] != ' ' && String[Len - 1] != '\t')
-			break;
-		String[Len - 1] = 0;
-		Len--;
-	}
-
-	while (*Pos1 == ' ' || *Pos1 == '\t')
-		Pos1++;
-
-	while (*Pos1)
-		*Pos2++ = *Pos1++;
-	*Pos2++ = 0;
-
-	return;
-}
-
 INT NWL_GetRegDwordValue(HKEY Key, LPCWSTR SubKey, LPCWSTR ValueName, DWORD* pValue)
 {
 	HKEY hKey;
