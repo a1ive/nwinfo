@@ -53,7 +53,7 @@ struct arm_arch_feature_t {
 };
 
 struct arm_arch_extension_t {
-	struct arm_arch_feature_t present[NUM_CPU_FEATURE_LEVELS], total[NUM_CPU_FEATURE_LEVELS];
+	struct arm_arch_feature_t present[NUM_FEATURE_LEVELS], total[NUM_FEATURE_LEVELS];
 };
 
 struct arm_id_part {

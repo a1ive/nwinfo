@@ -335,11 +335,11 @@ void decode_architecture_version_x86(struct cpu_id_t* data)
 
 	const struct { const int family; const cpu_feature_level_t feature_level; }
 	architecture_matchtable_ia_32[] = {
-		{  3, CPU_FEATURE_LEVEL_I386 },
-		{  4, CPU_FEATURE_LEVEL_I486 },
-		{  5, CPU_FEATURE_LEVEL_I586 },
-		{  6, CPU_FEATURE_LEVEL_I686 },
-		{ 15, CPU_FEATURE_LEVEL_I686 }, // Intel Pentium 4, AMD K8
+		{  3, FEATURE_LEVEL_I386 },
+		{  4, FEATURE_LEVEL_I486 },
+		{  5, FEATURE_LEVEL_I586 },
+		{  6, FEATURE_LEVEL_I686 },
+		{ 15, FEATURE_LEVEL_I686 }, // Intel Pentium 4, AMD K8
 	};
 
 	const cpu_feature_t architecture_x86_64_v1[] = {
@@ -388,10 +388,10 @@ void decode_architecture_version_x86(struct cpu_id_t* data)
 
 	const struct { const cpu_feature_t* features_array; const cpu_feature_level_t feature_level; }
 	architecture_matchtable_x86_64[] = {
-		{ architecture_x86_64_v1, CPU_FEATURE_LEVEL_X86_64_V1 },
-		{ architecture_x86_64_v2, CPU_FEATURE_LEVEL_X86_64_V2 },
-		{ architecture_x86_64_v3, CPU_FEATURE_LEVEL_X86_64_V3 },
-		{ architecture_x86_64_v4, CPU_FEATURE_LEVEL_X86_64_V4 },
+		{ architecture_x86_64_v1, FEATURE_LEVEL_X86_64_V1 },
+		{ architecture_x86_64_v2, FEATURE_LEVEL_X86_64_V2 },
+		{ architecture_x86_64_v3, FEATURE_LEVEL_X86_64_V3 },
+		{ architecture_x86_64_v4, FEATURE_LEVEL_X86_64_V4 },
 	};
 
 	if (!data->flags[CPU_FEATURE_LM]) {

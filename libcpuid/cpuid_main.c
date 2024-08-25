@@ -1151,14 +1151,14 @@ const char* cpu_feature_level_str(cpu_feature_level_t level)
 	matchtable[] = {
 		{ FEATURE_LEVEL_UNKNOWN,       "unknown"   },
 		/* x86 */
-		{ CPU_FEATURE_LEVEL_I386,      "i386"      },
-		{ CPU_FEATURE_LEVEL_I486,      "i486"      },
-		{ CPU_FEATURE_LEVEL_I586,      "i586"      },
-		{ CPU_FEATURE_LEVEL_I686,      "i686"      },
-		{ CPU_FEATURE_LEVEL_X86_64_V1, "x86-64-v1" },
-		{ CPU_FEATURE_LEVEL_X86_64_V2, "x86-64-v2" },
-		{ CPU_FEATURE_LEVEL_X86_64_V3, "x86-64-v3" },
-		{ CPU_FEATURE_LEVEL_X86_64_V4, "x86-64-v4" },
+		{ FEATURE_LEVEL_I386,      "i386"      },
+		{ FEATURE_LEVEL_I486,      "i486"      },
+		{ FEATURE_LEVEL_I586,      "i586"      },
+		{ FEATURE_LEVEL_I686,      "i686"      },
+		{ FEATURE_LEVEL_X86_64_V1, "x86-64-v1" },
+		{ FEATURE_LEVEL_X86_64_V2, "x86-64-v2" },
+		{ FEATURE_LEVEL_X86_64_V3, "x86-64-v3" },
+		{ FEATURE_LEVEL_X86_64_V4, "x86-64-v4" },
 		/* ARM */
 		{ FEATURE_LEVEL_ARM_V1,     "ARMv1"     },
 		{ FEATURE_LEVEL_ARM_V2,     "ARMv2"     },
@@ -1195,7 +1195,7 @@ const char* cpu_feature_level_str(cpu_feature_level_t level)
 		{ FEATURE_LEVEL_ARM_V9_4_A, "ARMv9.4-A" },
 	};
 	unsigned i, n = COUNT_OF(matchtable);
-	if (n != (NUM_CPU_FEATURE_LEVELS - FEATURE_LEVEL_ARM_V1) + (CPU_FEATURE_LEVEL_X86_64_V4 - CPU_FEATURE_LEVEL_I386) + 2) {
+	if (n != (NUM_FEATURE_LEVELS - FEATURE_LEVEL_ARM_V1) + (FEATURE_LEVEL_X86_64_V4 - FEATURE_LEVEL_I386) + 2) {
 		warnf("Warning: incomplete library, feature level matchtable size differs from the actual number of levels.\n");
 	}
 	for (i = 0; i < n; i++)
