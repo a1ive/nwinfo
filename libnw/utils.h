@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: Unlicense
 #pragma once
 
+#define VC_EXTRALEAN
 #include <windows.h>
 #include "format.h"
 #include "nt.h"

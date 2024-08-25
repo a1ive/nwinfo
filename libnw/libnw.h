@@ -2,6 +2,7 @@
 #pragma once
 
 #include <stdio.h>
+#define VC_EXTRALEAN
 #include <windows.h>
 #include <stdnoreturn.h>
 

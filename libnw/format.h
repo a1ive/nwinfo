@@ -2,6 +2,7 @@
 #pragma once
 
 #include <stdio.h>
+#define VC_EXTRALEAN
 #include <windows.h>
 
 #define NFLG_PLACEHOLDER		0x1		// Node is a placeholder with no attributes

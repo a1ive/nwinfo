@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: Unlicense
 #pragma once
 
+#define VC_EXTRALEAN
 #include <windows.h>
 
 typedef struct _UNICODE_STRING

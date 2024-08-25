@@ -3,6 +3,7 @@
 #pragma once
 
 #include <stddef.h>
+#define VC_EXTRALEAN
 #include <windows.h>
 
 #pragma pack(1)
