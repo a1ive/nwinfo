@@ -582,7 +582,7 @@ static void load_intel_features(struct cpu_raw_data_t* raw, struct cpu_id_t* dat
 		{ 14, CPU_FEATURE_XTPR },
 		{ 15, CPU_FEATURE_PDCM },
 		{ 18, CPU_FEATURE_DCA },
-		{ 21, CPU_FEATURE_X2APIC },
+		/* id 21 is handled in common */
 	};
 	const struct feature_map_t matchtable_eax6[] = {
 		{ 0, CPU_FEATURE_INTEL_DTS },
@@ -595,21 +595,12 @@ static void load_intel_features(struct cpu_raw_data_t* raw, struct cpu_id_t* dat
 		{  2, CPU_FEATURE_SGX },
 		{  4, CPU_FEATURE_HLE },
 		{ 11, CPU_FEATURE_RTM },
-		{ 16, CPU_FEATURE_AVX512F },
-		{ 17, CPU_FEATURE_AVX512DQ },
-		/* id 18 and 19 are handled in common */
+		/* id 16 to 19 are handled in common */
 		{ 26, CPU_FEATURE_AVX512PF },
 		{ 27, CPU_FEATURE_AVX512ER },
-		{ 28, CPU_FEATURE_AVX512CD },
-		/* id 29 is handled in common */
-		{ 30, CPU_FEATURE_AVX512BW },
-		{ 31, CPU_FEATURE_AVX512VL },
+		/* id 28 to 31 are handled in common */
 	};
-	const struct feature_map_t matchtable_ecx7[] = {
-		{  1, CPU_FEATURE_AVX512VBMI },
-		{  6, CPU_FEATURE_AVX512VBMI2 },
-		{ 11, CPU_FEATURE_AVX512VNNI },
-	};
+
 	if (raw->basic_cpuid[0][EAX] >= 1) {
 		match_features(matchtable_edx1, COUNT_OF(matchtable_edx1), raw->basic_cpuid[1][EDX], data);
 		match_features(matchtable_ecx1, COUNT_OF(matchtable_ecx1), raw->basic_cpuid[1][ECX], data);
@@ -624,7 +615,6 @@ static void load_intel_features(struct cpu_raw_data_t* raw, struct cpu_id_t* dat
 	// detect TSX/AVX512:
 	if (raw->basic_cpuid[0][EAX] >= 7) {
 		match_features(matchtable_ebx7, COUNT_OF(matchtable_ebx7), raw->basic_cpuid[7][EBX], data);
-		match_features(matchtable_ecx7, COUNT_OF(matchtable_ecx7), raw->basic_cpuid[7][ECX], data);
 	}
 }
 

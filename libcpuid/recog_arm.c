@@ -2545,9 +2545,9 @@ int cpuid_identify_arm(struct cpu_raw_data_t* raw, struct cpu_id_t* data)
 	const struct arm_hw_impl* hw_impl = get_cpu_implementer_from_code(data->arm.implementer);
 	const struct arm_id_part* id_part = get_cpu_implementer_parts(hw_impl, data->arm.part_num);
 	data->vendor = hw_impl->vendor;
-	strncpy_s(data->vendor_str, VENDOR_STR_MAX, hw_impl->name, VENDOR_STR_MAX);
-	strncpy_s(data->brand_str, BRAND_STR_MAX, id_part->name, BRAND_STR_MAX);
-	strncpy_s(data->cpu_codename, CODENAME_STR_MAX, id_part->codename, CODENAME_STR_MAX);
+	snprintf(data->vendor_str,   VENDOR_STR_MAX,  "%s", hw_impl->name);
+	snprintf(data->brand_str,    BRAND_STR_MAX,   "%s", id_part->name);
+	snprintf(data->cpu_codename, CODENAME_STR_MAX,"%s", id_part->codename);
 	use_cpuid_scheme = (decode_arm_architecture_version_by_midr(raw, data) == false);
 	load_arm_features(raw, data, &ext_status);
 	if (use_cpuid_scheme)

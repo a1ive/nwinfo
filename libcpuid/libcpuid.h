@@ -29,7 +29,7 @@
  * \file     libcpuid.h
  * \author   Veselin Georgiev
  * \date     Oct 2008
- * \version  0.6.5
+ * \version  0.7.0
  *
  * Version history:
  *
@@ -79,6 +79,10 @@
  *                       fix build for NetBSD and DragonFly BSD.
  * * 0.6.5 (2024-04-28): A lot of DB updates, support heterogeneous RAW dumps in cpu_identify_all(),
  *                       detection of LP E-Cores for Intel CPUs.
+ * * 0.7.0 (2024-08-26): A lot of DB updates, add cpu_clock_by_tsc() function,
+ *                       add support for ARM CPUs, add cpu_feature_level_t enumerated values,
+ *                       add more fields in cpu_raw_data_t (amd_fn80000026h, arm_*),
+ *                       detect x2APIC and AVX512 features for AMD x86 CPUs.
  */
 
 /** @mainpage A simple libcpuid introduction

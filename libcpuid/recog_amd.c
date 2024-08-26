@@ -382,6 +382,15 @@ const struct match_entry_t cpudb_amd[] = {
 	{ 15, -1, -1, 25,  117,  -1,    -1,    -1, NC, RYZEN_|_5|_H        ,     0, "Ryzen 5 (Hawk Point)"          },
 	{ 15, -1, -1, 25,  117,  -1,    -1,    -1, NC, RYZEN_|_5|_U        ,     0, "Ryzen 5 (Hawk Point)"          },
 	{ 15, -1, -1, 25,  117,  -1,    -1,    -1, NC, RYZEN_|_3|_U        ,     0, "Ryzen 3 (Hawk Point)"          },
+	/* Zen 5 (2024) => https://en.wikichip.org/wiki/amd/microarchitectures/zen_5 */
+	/*  => Granite Ridge (9000 series, Zen 5 based) */
+	{ 15, -1, -1, 26,   68,  -1,    -1,    -1, NC, RYZEN_|_9           ,     0, "Ryzen 9 (Granite Ridge)"       },
+	{ 15, -1, -1, 26,   68,  -1,    -1,    -1, NC, RYZEN_|_7           ,     0, "Ryzen 7 (Granite Ridge)"       },
+	{ 15, -1, -1, 26,   68,  -1,    -1,    -1, NC, RYZEN_|_5           ,     0, "Ryzen 5 (Granite Ridge)"       },
+	{ 15, -1, -1, 26,   68,  -1,    -1,    -1, NC, RYZEN_|_3           ,     0, "Ryzen 3 (Granite Ridge)"       },
+	/*  => Strix Point (Zen 5/RDNA3.5/XDNA2 based) */
+	{ 15, -1, -1, 26,   36,  -1,    -1,    -1, NC, RYZEN_|_AI_|_9      ,     0, "Ryzen AI 9 (Strix Point)"      },
+	{ 15, -1, -1, 26,   36,  -1,    -1,    -1, NC, RYZEN_|_AI_|_7      ,     0, "Ryzen AI 7 (Strix Point)"      },
 	/* F   M   S  EF    EM  #cores  L2$   L3$  BC  ModelBits          ModelCode  Name                           */
 };
 
@@ -587,9 +596,13 @@ static struct amd_code_and_bits_t decode_amd_codename_part1(const char *bs)
 	if (amd_has_turion_modelname(bs)) {
 		bits |= TURION_;
 	}
-	if ((i = match_pattern(bs, "Ryzen [3579Z]")) != 0) {
+	if (((i = match_pattern(bs, "Ryzen [3579Z]")) != 0) || ((i = match_pattern(bs, "Ryzen AI [3579]")) != 0)) {
 		bits |= RYZEN_;
 		i--;
+		if ((bs[i + 6] == 'A') && (bs[i + 7] == 'I')) {
+			bits |= _AI_;
+			i += 3; // "AI " offset
+		}
 		switch (bs[i + 6]) {
 			case '3': bits |= _3; break;
 			case '5': bits |= _5; break;
