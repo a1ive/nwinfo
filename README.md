@@ -93,7 +93,7 @@ OPTIONS:
                    'REALTEK', 'MEGARAID', 'VROC' and 'ASM1352R'.
                    Use 'DEFAULT' to specify the above features.
                    Other features are 'ADVANCED', 'HD204UI',
-                   'ADATA', 'NOWAKEUP' and 'JMICRON3'.
+                   'ADATA', 'NOWAKEUP', 'JMICRON3' and 'RTK9220DP'.
   --display        Print EDID info.
   --pci[=CLASS]    Print PCI info.
                    CLASS specifies the class code of pci devices,

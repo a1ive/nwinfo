@@ -60,7 +60,7 @@ static void nwinfo_help(void)
 		"                   'REALTEK', 'MEGARAID', 'VROC' and 'ASM1352R'.\n"
 		"                   Use 'DEFAULT' to specify the above features.\n"
 		"                   Other features are 'ADVANCED', 'HD204UI',\n"
-		"                   'ADATA', 'NOWAKEUP' and 'JMICRON3'.\n"
+		"                   'ADATA', 'NOWAKEUP', 'JMICRON3' and 'RTK9220DP'.\n"
 		"  --display        Print EDID info.\n"
 		"  --pci[=CLASS]    Print PCI info.\n"
 		"                   CLASS specifies the class code of pci devices,\n"
@@ -251,6 +251,7 @@ int main(int argc, char* argv[])
 				{"MEGARAID", CDI_FLAG_ENABLE_MEGA_RAID},
 				{"VROC", CDI_FLAG_ENABLE_INTEL_VROC},
 				{"ASM1352R", CDI_FLAG_ENABLE_ASM1352R},
+				{"RTK9220DP", CDI_FLAG_ENABLE_REALTEK_9220DP},
 				{"DEFAULT", CDI_FLAG_DEFAULT},
 			};
 			nwContext.NwSmartFlags = 0;
