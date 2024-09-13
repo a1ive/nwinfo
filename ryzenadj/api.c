@@ -140,6 +140,7 @@ static int request_table_ver_and_size(ryzen_access ry)
 	case FAM_REMBRANDT:
 	case FAM_PHOENIX:
 	case FAM_HAWKPOINT:
+	case FAM_STRIXPOINT:
 		get_table_ver_msg = 0x6;
 		break;
 	default:
@@ -209,6 +210,7 @@ static int request_table_addr(ryzen_access ry)
 	case FAM_REMBRANDT:
 	case FAM_PHOENIX:
 	case FAM_HAWKPOINT:
+	case FAM_STRIXPOINT:
 		get_table_addr_msg = 0x66;
 		break;
 	default:
@@ -223,6 +225,7 @@ static int request_table_addr(ryzen_access ry)
 	case FAM_REMBRANDT:
 	case FAM_PHOENIX:
 	case FAM_HAWKPOINT:
+	case FAM_STRIXPOINT:
 		ry->table_addr = (uint64_t) args.arg1 << 32 | args.arg0;
 		break;
 	default:
@@ -258,6 +261,7 @@ static int request_transfer_table(ryzen_access ry)
 	case FAM_REMBRANDT:
 	case FAM_PHOENIX:
 	case FAM_HAWKPOINT:
+	case FAM_STRIXPOINT:
 		transfer_table_msg = 0x65;
 		break;
 	default:
@@ -431,6 +435,8 @@ do {                                                \
 EXP int CALL set_stapm_limit(ryzen_access ry, uint32_t value){
     int err = ADJ_ERR_FAM_UNSUPPORTED;
 
+	/* \_SB.ALIB (0x0c, [size, 0x05, val]) */
+
 	switch (ry->family)
 	{
 	case FAM_RAVEN:
@@ -446,6 +452,7 @@ EXP int CALL set_stapm_limit(ryzen_access ry, uint32_t value){
 	case FAM_MENDOCINO:
 	case FAM_PHOENIX:
 	case FAM_HAWKPOINT:
+	case FAM_STRIXPOINT:
 		_do_adjust(0x14);
         if (err) {
             printf("%s: Retry with PSMU\n", __func__);
@@ -460,6 +467,7 @@ EXP int CALL set_stapm_limit(ryzen_access ry, uint32_t value){
 EXP int CALL set_fast_limit(ryzen_access ry, uint32_t value){
     int err = ADJ_ERR_FAM_UNSUPPORTED;
 
+	/* \_SB.ALIB (0x0c, [size, 0x06, val]) */
 	switch (ry->family)
 	{
 	case FAM_RAVEN:
@@ -475,6 +483,7 @@ EXP int CALL set_fast_limit(ryzen_access ry, uint32_t value){
 	case FAM_MENDOCINO:
 	case FAM_PHOENIX:
 	case FAM_HAWKPOINT:
+	case FAM_STRIXPOINT:
 		_do_adjust(0x15);
 	default:
 		break;
@@ -484,6 +493,8 @@ EXP int CALL set_fast_limit(ryzen_access ry, uint32_t value){
 
 EXP int CALL set_slow_limit(ryzen_access ry, uint32_t value){
     int err = ADJ_ERR_FAM_UNSUPPORTED;
+
+	/* \_SB.ALIB (0x0c, [size, 0x07, val]) */
 
 	switch (ry->family)
 	{
@@ -500,6 +511,7 @@ EXP int CALL set_slow_limit(ryzen_access ry, uint32_t value){
 	case FAM_MENDOCINO:
 	case FAM_PHOENIX:
 	case FAM_HAWKPOINT:
+	case FAM_STRIXPOINT:
 		_do_adjust(0x16);
 	default:
 		break;
@@ -509,6 +521,8 @@ EXP int CALL set_slow_limit(ryzen_access ry, uint32_t value){
 
 EXP int CALL set_slow_time(ryzen_access ry, uint32_t value){
     int err = ADJ_ERR_FAM_UNSUPPORTED;
+
+	/* \_SB.ALIB (0x0c, [size, 0x08, val]) */
 
 	switch (ry->family)
 	{
@@ -525,6 +539,7 @@ EXP int CALL set_slow_time(ryzen_access ry, uint32_t value){
 	case FAM_MENDOCINO:
 	case FAM_PHOENIX:
 	case FAM_HAWKPOINT:
+	case FAM_STRIXPOINT:
 		_do_adjust(0x17);
 	default:
 		break;
@@ -534,6 +549,8 @@ EXP int CALL set_slow_time(ryzen_access ry, uint32_t value){
 
 EXP int CALL set_stapm_time(ryzen_access ry, uint32_t value){
     int err = ADJ_ERR_FAM_UNSUPPORTED;
+
+	/* \_SB.ALIB (0x0c, [size, 0x01, val]) */
 
 	switch (ry->family)
 	{
@@ -550,6 +567,7 @@ EXP int CALL set_stapm_time(ryzen_access ry, uint32_t value){
 	case FAM_MENDOCINO:
 	case FAM_PHOENIX:
 	case FAM_HAWKPOINT:
+	case FAM_STRIXPOINT:
 		_do_adjust(0x18);
 	default:
 		break;
@@ -559,6 +577,8 @@ EXP int CALL set_stapm_time(ryzen_access ry, uint32_t value){
 
 EXP int CALL set_tctl_temp(ryzen_access ry, uint32_t value){
     int err = ADJ_ERR_FAM_UNSUPPORTED;
+
+	/* \_SB.ALIB (0x0c, [size, 0x03, val]) */
 
 	switch (ry->family)
 	{
@@ -575,6 +595,7 @@ EXP int CALL set_tctl_temp(ryzen_access ry, uint32_t value){
 	case FAM_MENDOCINO:
 	case FAM_PHOENIX:
 	case FAM_HAWKPOINT:
+	case FAM_STRIXPOINT:
 		_do_adjust(0x19);
 	default:
 		break;
@@ -584,6 +605,8 @@ EXP int CALL set_tctl_temp(ryzen_access ry, uint32_t value){
 
 EXP int CALL set_vrm_current(ryzen_access ry, uint32_t value){
     int err = ADJ_ERR_FAM_UNSUPPORTED;
+
+	/* \_SB.ALIB (0x0c, [size, 0x0b, val]) */
 
 	switch (ry->family)
 	{
@@ -600,6 +623,7 @@ EXP int CALL set_vrm_current(ryzen_access ry, uint32_t value){
 	case FAM_MENDOCINO:
 	case FAM_PHOENIX:
 	case FAM_HAWKPOINT:
+	case FAM_STRIXPOINT:
 		_do_adjust(0x1a);
 	default:
 		break;
@@ -609,6 +633,8 @@ EXP int CALL set_vrm_current(ryzen_access ry, uint32_t value){
 
 EXP int CALL set_vrmsoc_current(ryzen_access ry, uint32_t value){
     int err = ADJ_ERR_FAM_UNSUPPORTED;
+
+	/* \_SB.ALIB (0x0c, [size, 0x0e, val]) */
 
 	switch (ry->family)
 	{
@@ -625,6 +651,7 @@ EXP int CALL set_vrmsoc_current(ryzen_access ry, uint32_t value){
 	case FAM_MENDOCINO:
 	case FAM_PHOENIX:
 	case FAM_HAWKPOINT:
+	case FAM_STRIXPOINT:
 		_do_adjust(0x1b);
 	default:
 		break;
@@ -661,6 +688,8 @@ EXP int CALL set_vrmcvip_current(ryzen_access ry, uint32_t value){
 EXP int CALL set_vrmmax_current(ryzen_access ry, uint32_t value){
     int err = ADJ_ERR_FAM_UNSUPPORTED;
 
+	/* \_SB.ALIB (0x0c, [size, 0x0c, val]) */
+
 	switch (ry->family)
 	{
 	case FAM_RAVEN:
@@ -675,6 +704,7 @@ EXP int CALL set_vrmmax_current(ryzen_access ry, uint32_t value){
 	case FAM_MENDOCINO:
 	case FAM_PHOENIX:
 	case FAM_HAWKPOINT:
+	case FAM_STRIXPOINT:
 		_do_adjust(0x1c);
 		break;
 	case FAM_VANGOGH:
@@ -701,6 +731,8 @@ EXP int CALL set_vrmgfxmax_current(ryzen_access ry, uint32_t value){
 EXP int CALL set_vrmsocmax_current(ryzen_access ry, uint32_t value){
     int err = ADJ_ERR_FAM_UNSUPPORTED;
 
+	/* \_SB.ALIB (0x0c, [size, 0x11, val]) */
+
 	switch (ry->family)
 	{
 	case FAM_RAVEN:
@@ -715,6 +747,7 @@ EXP int CALL set_vrmsocmax_current(ryzen_access ry, uint32_t value){
 	case FAM_MENDOCINO:
 	case FAM_PHOENIX:
 	case FAM_HAWKPOINT:
+	case FAM_STRIXPOINT:
 		_do_adjust(0x1d);
 	default:
 		break;
@@ -951,6 +984,8 @@ EXP int CALL set_min_lclk(ryzen_access ry, uint32_t value){
 EXP int CALL set_prochot_deassertion_ramp(ryzen_access ry, uint32_t value) {
     int err = ADJ_ERR_FAM_UNSUPPORTED;
 
+	/* \_SB.ALIB (0x0c, [size, 0x09, val]) */
+
 	switch (ry->family)
 	{
 	case FAM_RAVEN:
@@ -970,6 +1005,7 @@ EXP int CALL set_prochot_deassertion_ramp(ryzen_access ry, uint32_t value) {
 	case FAM_MENDOCINO:
 	case FAM_PHOENIX:
 	case FAM_HAWKPOINT:
+	case FAM_STRIXPOINT:
 		_do_adjust(0x1f);
 	default:
 		break;
@@ -979,6 +1015,8 @@ EXP int CALL set_prochot_deassertion_ramp(ryzen_access ry, uint32_t value) {
 
 EXP int CALL set_apu_skin_temp_limit(ryzen_access ry, uint32_t value) {
     int err = ADJ_ERR_FAM_UNSUPPORTED;
+
+	/* \_SB.ALIB (0x0c, [size, 0x22, val]) */
 
 	value *= 256;
 	switch (ry->family)
@@ -1004,6 +1042,8 @@ EXP int CALL set_apu_skin_temp_limit(ryzen_access ry, uint32_t value) {
 EXP int CALL set_dgpu_skin_temp_limit(ryzen_access ry, uint32_t value) {
     int err = ADJ_ERR_FAM_UNSUPPORTED;
 
+	/* \_SB.ALIB (0x0c, [size, 0x23, val]) */
+
 	value *= 256;
 	switch (ry->family)
 	{
@@ -1017,6 +1057,7 @@ EXP int CALL set_dgpu_skin_temp_limit(ryzen_access ry, uint32_t value) {
 	case FAM_MENDOCINO:
 	case FAM_PHOENIX:
 	case FAM_HAWKPOINT:
+	case FAM_STRIXPOINT:
 		_do_adjust(0x34);
 		break;
 	default:
@@ -1028,6 +1069,8 @@ EXP int CALL set_dgpu_skin_temp_limit(ryzen_access ry, uint32_t value) {
 EXP int CALL set_apu_slow_limit(ryzen_access ry, uint32_t value) {
     int err = ADJ_ERR_FAM_UNSUPPORTED;
 
+	/* \_SB.ALIB (0x0c, [size, 0x13, val]) */
+
 	switch (ry->family)
 	{
 	case FAM_RENOIR:
@@ -1038,6 +1081,7 @@ EXP int CALL set_apu_slow_limit(ryzen_access ry, uint32_t value) {
 	case FAM_REMBRANDT:
 	case FAM_PHOENIX:
 	case FAM_HAWKPOINT:
+	case FAM_STRIXPOINT:
 		_do_adjust(0x23);
 		break;
 	default:
@@ -1048,6 +1092,8 @@ EXP int CALL set_apu_slow_limit(ryzen_access ry, uint32_t value) {
 
 EXP int CALL set_skin_temp_power_limit(ryzen_access ry, uint32_t value) {
     int err = ADJ_ERR_FAM_UNSUPPORTED;
+
+    	/* \_SB.ALIB (0x0c, [size, 0x2e, val]) */
 
 	switch (ry->family)
 	{
@@ -1061,6 +1107,7 @@ EXP int CALL set_skin_temp_power_limit(ryzen_access ry, uint32_t value) {
 	case FAM_MENDOCINO:
 	case FAM_PHOENIX:
 	case FAM_HAWKPOINT:
+	case FAM_STRIXPOINT:
 		_do_adjust(0x4a);
 		break;
 	default:
@@ -1094,6 +1141,8 @@ EXP int CALL set_power_saving(ryzen_access ry) {
     int err = ADJ_ERR_FAM_UNSUPPORTED;
 	uint32_t value = 0;
 
+	/* \_SB.ALIB (0x01, [size, 0x1]) */
+
 	switch (ry->family)
 	{
 	case FAM_RAVEN:
@@ -1109,6 +1158,7 @@ EXP int CALL set_power_saving(ryzen_access ry) {
 	case FAM_MENDOCINO:
 	case FAM_PHOENIX:
 	case FAM_HAWKPOINT:
+	case FAM_STRIXPOINT:
 		_do_adjust(0x12);
 		break;
 	default:
@@ -1120,6 +1170,8 @@ EXP int CALL set_power_saving(ryzen_access ry) {
 EXP int CALL set_max_performance(ryzen_access ry) {
     int err = ADJ_ERR_FAM_UNSUPPORTED;
 	uint32_t value = 0;
+
+	/* \_SB.ALIB (0x01, [size, 0x0]) */
 
 	switch (ry->family)
 	{
@@ -1136,6 +1188,7 @@ EXP int CALL set_max_performance(ryzen_access ry) {
 	case FAM_MENDOCINO:
 	case FAM_PHOENIX:
 	case FAM_HAWKPOINT:
+	case FAM_STRIXPOINT:
 		_do_adjust(0x11);
 		break;
 	default:
