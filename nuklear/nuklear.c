@@ -10,6 +10,7 @@
 #pragma warning(disable:4244)
 
 #include <assert.h>
+#include <math.h>
 #define NK_ASSERT(expr) assert(expr)
 
 #define NK_MEMSET memset
