@@ -146,12 +146,12 @@ static BOOL GetDriveByVolume(BOOL bIsCdRom, HANDLE hVolume, DWORD* pDrive)
 	switch (sdnDiskNumber.DeviceType)
 	{
 	case FILE_DEVICE_CD_ROM:
-	case FILE_DEVICE_CD_ROM_FILE_SYSTEM:
+	//case FILE_DEVICE_CD_ROM_FILE_SYSTEM:
 	case FILE_DEVICE_DVD:
 		return bIsCdRom ? TRUE : FALSE;
 	case FILE_DEVICE_DISK:
-	case FILE_DEVICE_DISK_FILE_SYSTEM:
-	case FILE_DEVICE_FILE_SYSTEM:
+	//case FILE_DEVICE_DISK_FILE_SYSTEM:
+	//case FILE_DEVICE_FILE_SYSTEM:
 		return bIsCdRom ? FALSE : TRUE;
 	}
 	return FALSE;
