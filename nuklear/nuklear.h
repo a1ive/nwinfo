@@ -3834,11 +3834,11 @@ NK_API struct nk_vec2 nk_rect_size(struct nk_rect);
 NK_API int nk_strlen(const char *str);
 NK_API int nk_stricmp(const char *s1, const char *s2);
 NK_API int nk_stricmpn(const char *s1, const char *s2, int n);
-NK_API int nk_strtoi(const char *str, const char **endptr);
-NK_API float nk_strtof(const char *str, const char **endptr);
+NK_API int nk_strtoi(const char *str, char **endptr);
+NK_API float nk_strtof(const char *str, char **endptr);
 #ifndef NK_STRTOD
 #define NK_STRTOD nk_strtod
-NK_API double nk_strtod(const char *str, const char **endptr);
+NK_API double nk_strtod(const char *str, char **endptr);
 #endif
 NK_API int nk_strfilter(const char *text, const char *regexp);
 NK_API int nk_strmatch_fuzzy_string(char const *str, char const *pattern, int *out_score);
@@ -6002,6 +6002,7 @@ NK_LIB int nk_ifloord(double x);
 NK_LIB int nk_ifloorf(float x);
 NK_LIB int nk_iceilf(float x);
 NK_LIB int nk_log10(double n);
+NK_LIB float nk_roundf(float x);
 
 /* util */
 enum {NK_DO_NOT_STOP_ON_NEW_LINE, NK_STOP_ON_NEW_LINE};
@@ -6459,6 +6460,11 @@ nk_log10(double n)
     if (neg) exp = -exp;
     return exp;
 }
+NK_LIB float
+nk_roundf(float x)
+{
+    return (x >= 0.0) ? nk_ifloorf(x + 0.5) : nk_iceilf(x - 0.5);
+}
 NK_API struct nk_rect
 nk_get_null_rect(void)
 {
@@ -6753,7 +6759,7 @@ nk_strlen(const char *str)
     return siz;
 }
 NK_API int
-nk_strtoi(const char *str, const char **endptr)
+nk_strtoi(const char *str, char **endptr)
 {
     int neg = 1;
     const char *p = str;
@@ -6773,15 +6779,15 @@ nk_strtoi(const char *str, const char **endptr)
         p++;
     }
     if (endptr)
-        *endptr = p;
+        *endptr = (char *)p;
     return neg*value;
 }
 NK_API double
-nk_strtod(const char *str, const char **endptr)
+nk_strtod(const char *str, char **endptr)
 {
     double m;
     double neg = 1.0;
-    const char *p = str;
+    char *p = (char *)str;
     double value = 0;
     double number = 0;
 
@@ -6834,7 +6840,7 @@ nk_strtod(const char *str, const char **endptr)
     return number;
 }
 NK_API float
-nk_strtof(const char *str, const char **endptr)
+nk_strtof(const char *str, char **endptr)
 {
     float float_value;
     double double_value;
@@ -17208,8 +17214,8 @@ nk_font_init(struct nk_font *font, float pixel_height,
  *
  * ProggyClean.ttf
  * Copyright (c) 2004, 2005 Tristan Grimmer
- * MIT license (see License.txt in http://www.upperbounds.net/download/ProggyClean.ttf.zip)
- * Download and more information at http://upperbounds.net
+ * MIT license https://github.com/bluescan/proggyfonts/blob/master/LICENSE
+ * Download and more information at https://github.com/bluescan/proggyfonts
  *-----------------------------------------------------------------------------*/
 #ifdef __clang__
 #pragma clang diagnostic push
@@ -22424,7 +22430,7 @@ nk_layout_widget_space(struct nk_rect *bounds, const struct nk_context *ctx,
     panel_space = nk_layout_row_calculate_usable_space(&ctx->style, layout->type,
                                             layout->bounds.w, layout->row.columns);
 
-    #define NK_FRAC(x) (x - (float)(int)x) /* will be used to remove fookin gaps */
+    #define NK_FRAC(x) (x - (float)(int)nk_roundf(x)) /* will be used to remove fookin gaps */
     /* calculate the width of one item inside the current layout space */
     switch (layout->row.type) {
     case NK_LAYOUT_DYNAMIC_FIXED: {
