@@ -8,6 +8,7 @@ param (
 # Define the list of files to copy or download
 $FilesToCopy = @(
 	"LICENSE",
+	"hw_report.ps1",
 	"libnw\jep106.ids",
 	"winring0\HwRwDrv.sys",
 	"winring0\HwRwDrvx64.sys"
