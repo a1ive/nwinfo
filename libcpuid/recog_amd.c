@@ -383,6 +383,7 @@ const struct match_entry_t cpudb_amd[] = {
 	{ 15, -1, -1, 25,  117,  -1,    -1,    -1, NC, RYZEN_|_5|_U        ,     0, "Ryzen 5 (Hawk Point)"          },
 	{ 15, -1, -1, 25,  117,  -1,    -1,    -1, NC, RYZEN_|_3|_U        ,     0, "Ryzen 3 (Hawk Point)"          },
 	/* Zen 5 (2024) => https://en.wikichip.org/wiki/amd/microarchitectures/zen_5 */
+	{ 15, -1, -1, 26,    2,  -1,    -1,    -1, NC, EPYC_               ,     0, "EPYC (Turin)"                  },
 	/*  => Granite Ridge (9000 series, Zen 5 based) */
 	{ 15, -1, -1, 26,   68,  -1,    -1,    -1, NC, RYZEN_|_9           ,     0, "Ryzen 9 (Granite Ridge)"       },
 	{ 15, -1, -1, 26,   68,  -1,    -1,    -1, NC, RYZEN_|_7           ,     0, "Ryzen 7 (Granite Ridge)"       },

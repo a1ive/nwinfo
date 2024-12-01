@@ -258,6 +258,8 @@ static int msr_platform_info_supported(struct msr_info_t *info)
 		{ 6, 207 },
 		/* ==> Meteor Lake */
 		{ 6, 170 },
+		/* ==> Arrow Lake */
+		{ 6, 198 },
 		/* Table 2-50. MSRs Supported by the Intel Xeon Scalable Processor Family with a CPUID Signature DisplayFamily_DisplayModel Value of 06_55H */
 		{ 0x6, 0x55 },
 		/* Table 2-56. Selected MSRs Supported by Intel Xeon PhiTM Processors with a CPUID Signature DisplayFamily_DisplayModel Value of 06_57H or 06_85H */
