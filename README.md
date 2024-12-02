@@ -18,24 +18,6 @@ NWinfo is a Win32 program that allows you to obtain system and hardware informat
 * Support exporting in JSON, YAML, and LUA table formats.
 * Compatible with Windows XP.
 
-## Note
-For Windows 11, the "Memory Integrity" and "Microsoft Vulnerable Driver Blocklist" options should be disabled.
-```
-Windows Registry Editor Version 5.00
-
-[HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\DeviceGuard\Scenarios\HypervisorEnforcedCodeIntegrity]
-"Enabled"=dword:0000000
-
-[HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\DeviceGuard]
-"EnableVirtualizationBasedSecurity"=dword:00000000
-
-[HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\DeviceGuard\Scenarios\SystemGuard]
-"Enabled"=dword:00000000
-
-[HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\CI\Config]
-"VulnerableDriverBlocklistEnable"=dword:00000000
-```
-
 ## GUI Preview
 
 <div align="center">
@@ -113,13 +95,30 @@ OPTIONS:
   --font           Print installed fonts.
 ```
 
+## Note
+For Win11, if the driver cannot be loaded properly, please modify the following registry keys.
+```
+Windows Registry Editor Version 5.00
+
+[HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\DeviceGuard\Scenarios\HypervisorEnforcedCodeIntegrity]
+"Enabled"=dword:0000000
+
+[HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\DeviceGuard]
+"EnableVirtualizationBasedSecurity"=dword:00000000
+
+[HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\DeviceGuard\Scenarios\SystemGuard]
+"Enabled"=dword:00000000
+
+[HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\CI\Config]
+"VulnerableDriverBlocklistEnable"=dword:00000000
+```
+
 ## Credits
 
 * [libcpuid](https://libcpuid.sourceforge.net)
 * [SysInv](https://github.com/cavaliercoder/sysinv)
 * [DumpSMBIOS](https://github.com/KunYi/DumpSMBIOS)
 * [CrystalDiskInfo](https://github.com/hiyohiyo/CrystalDiskInfo)
-* [CrystalDiskInfoEmbedded](https://github.com/iTXTech/CrystalDiskInfoEmbedded)
 * [Nuklear](https://github.com/Immediate-Mode-UI/Nuklear)
 * [HardInfo](https://github.com/lpereira/hardinfo)
 * [Memtest86+](https://github.com/memtest86plus/memtest86plus)
