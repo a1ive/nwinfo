@@ -27,6 +27,7 @@
   <ItemGroup>
     <None Include=".github\workflows\msbuild.yml" />
     <None Include="copy_res.ps1" />
+    <None Include="hw_report.ps1" />
     <None Include="packages.config" />
     <None Include="README.md" />
     <None Include="_config.yml" />

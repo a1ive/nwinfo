@@ -41,5 +41,6 @@
     <None Include="_config.yml" />
     <None Include="_layouts\default.html" />
     <None Include="copy_res.ps1" />
+    <None Include="hw_report.ps1" />
   </ItemGroup>
 </Project>
