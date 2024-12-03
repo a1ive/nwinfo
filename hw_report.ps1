@@ -10,12 +10,17 @@ if　(!([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentit
 	Exit
 }
 
+# Add the required assembly for GUI components
+Add-Type -AssemblyName System.Windows.Forms
+
 # Determine the appropriate nwinfo executable based on the OS architecture
 if (([Environment]::Is64BitOperatingSystem) -And (Test-Path ".\nwinfox64.exe")) {
 	$programPath = ".\nwinfox64.exe"
 } else {
 	$programPath = ".\nwinfo.exe"
 }
+
+$mainIcon = [System.Drawing.Icon]::ExtractAssociatedIcon((Resolve-Path $programPath).Path)
 
 # Define arguments to pass to the nwinfo executable
 $programArgs = @("--format=json",
@@ -152,6 +157,8 @@ foreach ($i in $audioTable.PSObject.Properties.Name) {
 	}
 }
 
+# Write-Output $outputText
+
 # Hide the powershell window: https://stackoverflow.com/a/27992426/1069307
 Add-Type -Name Window -Namespace WinAPI -MemberDefinition '
 	[DllImport("user32.dll")]
@@ -159,18 +166,15 @@ Add-Type -Name Window -Namespace WinAPI -MemberDefinition '
 $handle = (Get-Process -Id $PID).MainWindowHandle
 [WinAPI.Window]::ShowWindow($handle, 0)
 
-# Create a Windows Forms window to display the report
-# Write-Output $outputText
-Add-Type -AssemblyName System.Windows.Forms
+# Create a window to display the report
 $mainForm = New-Object System.Windows.Forms.Form
 $mainForm.Text = "Hardware Report"
 $mainForm.Size = New-Object System.Drawing.Size(800, 600)
 # $mainForm.StartPosition = "CenterScreen"
 # Set the form's icon from the nwinfo executable
-$mainIcon = [System.Drawing.Icon]::ExtractAssociatedIcon((Resolve-Path $programPath).Path)
 $mainForm.Icon = $mainIcon
 
-# Add a multiline, scrollable, read-only text box for the report
+# Add a text box for the report
 $textBox = New-Object System.Windows.Forms.TextBox
 $textBox.Multiline = $true
 $textBox.ScrollBars = "Vertical"
