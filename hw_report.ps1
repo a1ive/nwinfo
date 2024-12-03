@@ -1,4 +1,5 @@
-﻿# SPDX-License-Identifier: Unlicense
+﻿#
+# SPDX-License-Identifier: Unlicense
 
 # Set the working directory to the script's location
 Set-Location -Path (Split-Path -Parent -Path $MyInvocation.MyCommand.Path)
@@ -161,23 +162,23 @@ $handle = (Get-Process -Id $PID).MainWindowHandle
 # Create a Windows Forms window to display the report
 # Write-Output $outputText
 Add-Type -AssemblyName System.Windows.Forms
-$form = New-Object System.Windows.Forms.Form
-$form.Text = "Hardware Report"
-$form.Size = New-Object System.Drawing.Size(800, 600)
-# $form.StartPosition = "CenterScreen"
+$mainForm = New-Object System.Windows.Forms.Form
+$mainForm.Text = "Hardware Report"
+$mainForm.Size = New-Object System.Drawing.Size(800, 600)
+# $mainForm.StartPosition = "CenterScreen"
 # Set the form's icon from the nwinfo executable
-$icon = [System.Drawing.Icon]::ExtractAssociatedIcon((Resolve-Path $programPath).Path)
-$form.Icon = $icon
+$mainIcon = [System.Drawing.Icon]::ExtractAssociatedIcon((Resolve-Path $programPath).Path)
+$mainForm.Icon = $mainIcon
 
 # Add a multiline, scrollable, read-only text box for the report
-$textbox = New-Object System.Windows.Forms.TextBox
-$textbox.Multiline = $true
-$textbox.ScrollBars = "Vertical"
-$textbox.ReadOnly = $true
-$textbox.Dock = "Fill"
-$textbox.Text = $outputText -join "`r`n"
+$textBox = New-Object System.Windows.Forms.TextBox
+$textBox.Multiline = $true
+$textBox.ScrollBars = "Vertical"
+$textBox.ReadOnly = $true
+$textBox.Dock = "Fill"
+$textBox.Text = $outputText -join "`r`n"
 
-$form.Controls.Add($textbox)
+$mainForm.Controls.Add($textBox)
 
 # Show the form
-$form.ShowDialog()
+$mainForm.ShowDialog()
