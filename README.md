@@ -1,15 +1,15 @@
 <br />
 <div align="center">
   <img src="./assets/images/icon.ico">
-  <h3 align="center">NWinfo</h3>
-  <p align="center">
-    <img src="https://img.shields.io/github/stars/a1ive/nwinfo?style=flat&label=%E2%98%85&color=grey">
-    <img src="https://img.shields.io/github/license/a1ive/nwinfo?logo=unlicense&label=&color=ad1453">
-    <img src="https://img.shields.io/github/downloads/a1ive/nwinfo/total?label=%E2%87%A9&labelColor=blue&color=blue">
-    <img src="https://img.shields.io/github/v/release/a1ive/nwinfo?label=%F0%9F%93%A6&labelColor=cyan&color=cyan">
-    <img src="https://img.shields.io/github/languages/top/a1ive/nwinfo?logo=c&label=&color=1453ad">
-    <img src="https://img.shields.io/github/actions/workflow/status/a1ive/nwinfo/msbuild.yml?logo=github&label=">
-  </p>
+  <h2 align="center">NWinfo</h2>
+  <div align="center">
+    <img src="https://img.shields.io/github/stars/a1ive/nwinfo?style=flat&amp;label=%E2%98%85&amp;color=grey">
+    <img src="https://img.shields.io/github/license/a1ive/nwinfo?logo=unlicense&amp;label=&amp;color=ad1453">
+    <img src="https://img.shields.io/github/downloads/a1ive/nwinfo/total?label=%E2%87%A9&amp;labelColor=blue&amp;color=blue">
+    <img src="https://img.shields.io/github/v/release/a1ive/nwinfo?label=%F0%9F%93%A6&amp;labelColor=cyan&amp;color=cyan">
+    <img src="https://img.shields.io/github/languages/top/a1ive/nwinfo?logo=c&amp;label=&amp;color=1453ad">
+    <img src="https://img.shields.io/github/actions/workflow/status/a1ive/nwinfo/msbuild.yml?logo=github&amp;label=">
+  </div>
 </div>
 <br />
 
