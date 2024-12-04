@@ -1,6 +1,6 @@
 <br />
 <div align="center">
-  <img src="./icon.ico">
+  <img src="./assets/images/icon.ico">
   <h3 align="center">NWinfo</h3>
   <img src="https://img.shields.io/github/stars/a1ive/nwinfo?style=flat&label=%E2%98%85&color=grey">
   <img src="https://img.shields.io/github/license/a1ive/nwinfo?logo=unlicense&label=&color=ad1453">

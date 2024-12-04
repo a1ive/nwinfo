@@ -22,9 +22,6 @@
     <ResourceCompile Include="Resource.rc" />
   </ItemGroup>
   <ItemGroup>
-    <Image Include="icon.ico" />
-  </ItemGroup>
-  <ItemGroup>
     <None Include=".github\workflows\msbuild.yml" />
     <None Include="copy_res.ps1" />
     <None Include="hw_report.ps1" />
@@ -37,6 +34,9 @@
     <ProjectReference Include="libnw\libnw.vcxproj">
       <Project>{d0954ecf-a37a-4de0-8d49-0d0505f56b29}</Project>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="assets\images\icon.ico" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>

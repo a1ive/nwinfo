@@ -30,11 +30,6 @@
     </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
-    <Image Include="icon.ico">
-      <Filter>Resource Files</Filter>
-    </Image>
-  </ItemGroup>
-  <ItemGroup>
     <None Include="packages.config" />
     <None Include="README.md" />
     <None Include=".github\workflows\msbuild.yml" />
@@ -42,5 +37,10 @@
     <None Include="_layouts\default.html" />
     <None Include="copy_res.ps1" />
     <None Include="hw_report.ps1" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="assets\images\icon.ico">
+      <Filter>Resource Files</Filter>
+    </Image>
   </ItemGroup>
 </Project>

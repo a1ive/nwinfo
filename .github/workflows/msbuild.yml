@@ -23,7 +23,8 @@ jobs:
       with:
         input_path: README.md
         output_dir: nwinfo
-        image_import: .
+        images_dir: assets/images
+        image_import: ./assets/images
         build_html: false
 
     - name: Upload PDF
