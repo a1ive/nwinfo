@@ -26,6 +26,7 @@ jobs:
         images_dir: assets/images
         image_import: ./assets/images
         build_html: false
+        table_of_contents: true
 
     - name: Upload PDF
       uses: actions/upload-artifact@v4
