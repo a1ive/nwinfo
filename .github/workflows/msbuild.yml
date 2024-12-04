@@ -11,8 +11,29 @@ env:
   SOLUTION_FILE_PATH: .
 
 jobs:
+  generate-docs:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Run git checkout
+      uses: actions/checkout@v4
+
+    - name: Create PDF
+      uses: BaileyJM02/markdown-to-pdf@v1
+      with:
+        input_path: README.md
+        output_dir: nwinfo
+        build_html: false
+
+    - name: Upload PDF
+      uses: actions/upload-artifact@v3
+      with:
+        name: README.pdf
+        path: nwinfo/README.pdf
+
   build:
     runs-on: windows-latest
+    needs: generate-docs
 
     steps:
     - name: Run git checkout
@@ -46,13 +67,11 @@ jobs:
         copy x64\Release\ryzenadjx64.dll nwinfo\ryzenadjx64.dll
         powershell -ExecutionPolicy Bypass -File .\copy_res.ps1 -TargetFolder nwinfo
 
-    # - name: Create PDF
-    #  uses: BaileyJM02/markdown-to-pdf@v1
-    #  with:
-    #    input_path: README.md
-    #    output_dir: nwinfo
-    #    images_dir: doc
-    #    build_html: false
+    - name: Download README.pdf
+      uses: actions/download-artifact@v3
+      with:
+        name: README.pdf
+        path: nwinfo
 
     # - name: Run UPX
     #   uses: crazy-max/ghaction-upx@v3
