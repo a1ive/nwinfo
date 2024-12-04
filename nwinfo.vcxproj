@@ -22,6 +22,7 @@
     <ResourceCompile Include="Resource.rc" />
   </ItemGroup>
   <ItemGroup>
+    <None Include=".github\dependabot.yml" />
     <None Include=".github\workflows\msbuild.yml" />
     <None Include="copy_res.ps1" />
     <None Include="hw_report.ps1" />

@@ -15,16 +15,22 @@
 
 NWinfo is a Win32 program that allows you to obtain system and hardware information.
 
+<div style="page-break-after: always;"></div>
+
 ## Features
 * Obtain detailed information about SMBIOS, CPUID, S.M.A.R.T., PCI, EDID, and more.
 * Support exporting in JSON, YAML, and LUA table formats.
 * Compatible with Windows XP.
+
+<div style="page-break-after: always;"></div>
 
 ## GUI Preview
 
 <div align="center">
   <img src="./assets/images/demo.png">
 </div>
+
+<div style="page-break-after: always;"></div>
 
 ## CLI Usage
 ```txt
@@ -97,6 +103,8 @@ OPTIONS:
   --font           Print installed fonts.
 ```
 
+<div style="page-break-after: always;"></div>
+
 ## Note
 For Win11, if the driver cannot be loaded properly, please modify the following registry keys.
 ```
@@ -114,6 +122,8 @@ Windows Registry Editor Version 5.00
 [HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\CI\Config]
 "VulnerableDriverBlocklistEnable"=dword:00000000
 ```
+
+<div style="page-break-after: always;"></div>
 
 ## Credits
 

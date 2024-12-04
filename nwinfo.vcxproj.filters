@@ -13,6 +13,9 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="GitHub">
+      <UniqueIdentifier>{820480c6-ae1f-49c5-b5c5-709b22fe5d7a}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="nwinfo.c">
@@ -31,12 +34,23 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
-    <None Include="README.md" />
-    <None Include=".github\workflows\msbuild.yml" />
-    <None Include="_config.yml" />
-    <None Include="_layouts\default.html" />
     <None Include="copy_res.ps1" />
     <None Include="hw_report.ps1" />
+    <None Include="_layouts\default.html">
+      <Filter>GitHub</Filter>
+    </None>
+    <None Include="README.md">
+      <Filter>GitHub</Filter>
+    </None>
+    <None Include="_config.yml">
+      <Filter>GitHub</Filter>
+    </None>
+    <None Include=".github\workflows\msbuild.yml">
+      <Filter>GitHub</Filter>
+    </None>
+    <None Include=".github\dependabot.yml">
+      <Filter>GitHub</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Image Include="assets\images\icon.ico">
