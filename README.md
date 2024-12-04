@@ -3,10 +3,10 @@
   <img src="./assets/images/icon.ico">
   <h2 align="center">NWinfo</h2>
   <div align="center">
-    <img src="https://img.shields.io/github/stars/a1ive/nwinfo?style=flat&label=&#x2605;&color=grey">
+    <img src="https://img.shields.io/github/stars/a1ive/nwinfo?style=flat&logo=data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbDpzcGFjZT0icHJlc2VydmUiIHdpZHRoPSI2NTUuMzU5IiBoZWlnaHQ9IjY1NS4zNTkiIHN0eWxlPSJzaGFwZS1yZW5kZXJpbmc6Z2VvbWV0cmljUHJlY2lzaW9uO3RleHQtcmVuZGVyaW5nOmdlb21ldHJpY1ByZWNpc2lvbjtpbWFnZS1yZW5kZXJpbmc6b3B0aW1pemVRdWFsaXR5O2ZpbGwtcnVsZTpldmVub2RkO2NsaXAtcnVsZTpldmVub2RkIiB2aWV3Qm94PSIwIDAgNi44MjcgNi44MjciPjxwYXRoIHN0eWxlPSJmaWxsOiNmZjhmMDA7ZmlsbC1ydWxlOm5vbnplcm8iIGQ9Im0zLjUxIDEuMjUyLjU0NiAxLjUzNiAxLjYyOC4wNDMuMjkuMDA4LS4yMy4xNzYtMS4yOTMuOTkzLjQ2MyAxLjU2My4wODIuMjc3LS4yMzktLjE2My0xLjM0NC0uOTIzLTEuMzQzLjkyMy0uMjM5LjE2NC4wODItLjI3OC40NjItMS41NjQtMS4yOTItLjk5Mi0uMjMtLjE3Ni4yOS0uMDA4IDEuNjMtLjA0NC41NDQtMS41MzUuMDk3LS4yNzR6Ii8+PHBhdGggc3R5bGU9ImZpbGw6I2U2ODEwMDtmaWxsLXJ1bGU6bm9uemVybyIgZD0ibTMuNTEgMS4yNTIuNTQ2IDEuNTM2IDEuNjI4LjA0My4yOS4wMDgtLjIzLjE3Ni0xLjI5My45OTMuNDYzIDEuNTYzLjA4Mi4yNzctLjIzOS0uMTYzLTEuMzQ0LS45MjNWLjk4eiIvPjxwYXRoIHN0eWxlPSJmaWxsOm5vbmUiIGQ9Ik0wIDBoNi44Mjd2Ni44MjdIMHoiLz48L3N2Zz4=&label=&color=grey">
     <img src="https://img.shields.io/github/license/a1ive/nwinfo?logo=unlicense&label=&color=ad1453">
-    <img src="https://img.shields.io/github/downloads/a1ive/nwinfo/total?label=&#x21E9;&labelColor=blue&color=blue">
-    <img src="https://img.shields.io/github/v/release/a1ive/nwinfo?label=&#x1F4E6;&labelColor=cyan&color=cyan">
+    <img src="https://img.shields.io/github/downloads/a1ive/nwinfo/total?label=%E2%87%A9&labelColor=blue&color=blue">
+    <img src="https://img.shields.io/github/v/release/a1ive/nwinfo?label=%F0%9F%93%A6&labelColor=cyan&color=cyan">
     <img src="https://img.shields.io/github/languages/top/a1ive/nwinfo?logo=c&label=&color=1453ad">
     <img src="https://img.shields.io/github/actions/workflow/status/a1ive/nwinfo/msbuild.yml?logo=github&label=">
   </div>
