@@ -26,7 +26,7 @@ jobs:
         build_html: false
 
     - name: Upload PDF
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: README.pdf
         path: nwinfo/README.pdf
@@ -68,7 +68,7 @@ jobs:
         powershell -ExecutionPolicy Bypass -File .\copy_res.ps1 -TargetFolder nwinfo
 
     - name: Download README.pdf
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v4
       with:
         name: README.pdf
         path: nwinfo

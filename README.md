@@ -1,6 +1,6 @@
 <br />
 <div align="center">
-  <img src="icon.ico">
+  <img src="./icon.ico">
   <h3 align="center">NWinfo</h3>
   <img src="https://img.shields.io/github/stars/a1ive/nwinfo?style=flat&label=%E2%98%85&color=grey">
   <img src="https://img.shields.io/github/license/a1ive/nwinfo?logo=unlicense&label=&color=ad1453">
@@ -21,7 +21,7 @@ NWinfo is a Win32 program that allows you to obtain system and hardware informat
 ## GUI Preview
 
 <div align="center">
-  <img src="assets/images/demo.png">
+  <img src="./assets/images/demo.png">
 </div>
 
 ## CLI Usage
