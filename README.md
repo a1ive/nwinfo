@@ -9,7 +9,7 @@
 </div>
 <br />
 
-NWinfo is a Win32 program that allows you to obtain system and hardware information.
+**NWinfo** is a Win32 program that allows you to obtain system and hardware information.
 
 <div style="page-break-after: always;"></div>
 
@@ -20,7 +20,9 @@ NWinfo is a Win32 program that allows you to obtain system and hardware informat
 
 <div style="page-break-after: always;"></div>
 
-## GUI Preview
+## GUI (gnwinfo)
+
+### Preview
 
 <div align="center">
   <img src="./assets/images/demo.png">
@@ -28,81 +30,129 @@ NWinfo is a Win32 program that allows you to obtain system and hardware informat
 
 <div style="page-break-after: always;"></div>
 
-## CLI Usage
+## CLI (nwinfo)
+
+### Usage
+
 ```txt
 .\nwinfo.exe OPTIONS
-OPTIONS:
-  --format=FORMAT  Specify output format.
-                   FORMAT can be 'YAML' (default), 'JSON' and 'LUA'.
-  --output=FILE    Write to FILE instead of printing to screen.
-  --cp=CODEPAGE    Set the code page of output text.
-                   CODEPAGE can be 'ANSI' and 'UTF8'.
-  --human          Display numbers in human readable format.
-  --debug          Print debug info to stdout.
-  --hide-sensitive Hide sensitive data (MAC & S/N).
-  --sys            Print system info.
-  --cpu            Print CPUID info.
-  --net[=FLAG,...] Print network info.
-    GUID           Specify the GUID of the network interface,
-                   e.g. '{B16B00B5-CAFE-BEEF-DEAD-001453AD0529}'
-    FLAGS:
-      ACTIVE       Filter out active network interfaces.
-      PHYS         Filter out physical network interfaces.
-      ETH          Filter out Ethernet network interfaces.
-      WLAN         Filter out IEEE 802.11 wireless addresses.
-      IPV4         Filter out IPv4 addresses.
-      IPV6         Filter out IPv6 addresses.
-  --acpi[=SGN]     Print ACPI info.
-                   SGN specifies the signature of the ACPI table,
-                   e.g. 'FACP' (Fixed ACPI Description Table).
-  --smbios[=TYPE]  Print SMBIOS info.
-                   TYPE specifies the type of the SMBIOS table,
-                   e.g. '2' (Base Board Information).
-  --disk[=FLAG,..] Print disk info.
-    PATH           Specify the path of the disk,
-                   e.g. '\\.\PhysicalDrive0', '\\.\CdRom0'.
-    FLAGS:
-      NO-SMART     Don't print disk S.M.A.R.T. info.
-      PHYS         Exclude virtual drives.
-      CD           Filter out CD-ROM devices.
-      HD           Filter out hard drives.
-      NVME         Filter out NVMe devices.
-      SATA         Filter out SATA devices.
-      SCSI         Filter out SCSI devices.
-      SAS          Filter out SAS devices.
-      USB          Filter out USB devices.
-  --smart=FLAG,... Specify S.M.A.R.T. features.
-                   Features enabled by default: 'WMI', 'ATA',
-                   'NVIDIA', 'MARVELL', 'SAT', 'SUNPLUS',
-                   'IODATA', 'LOGITEC', 'PROLIFIC', 'USBJMICRON',
-                   'CYPRESS', 'MEMORY', 'JMICRON', 'ASMEDIA',
-                   'REALTEK', 'MEGARAID', 'VROC' and 'ASM1352R'.
-                   Use 'DEFAULT' to specify the above features.
-                   Other features are 'ADVANCED', 'HD204UI',
-                   'ADATA', 'NOWAKEUP', 'JMICRON3' and 'RTK9220DP'.
-  --display        Print EDID info.
-  --pci[=CLASS]    Print PCI info.
-                   CLASS specifies the class code of pci devices,
-                   e.g. '0C05' (SMBus).
-  --usb            Print USB info.
-  --spd            Print SPD info.
-  --battery        Print battery info.
-  --uefi[=FLAG,..] Print UEFI info.
-    FLAGS:
-      MENU         Print UEFI boot menus.
-      VARS         List all UEFI variables.
-  --shares         Print network mapped drives and shared folders.
-  --audio          Print audio devices.
-  --public-ip      Print public IP address.
-  --product-policy Print ProductPolicy.
-  --gpu            Print GPU usage.
-  --font           Print installed fonts.
 ```
+
+### Example Command
+
+```txt
+.\nwinfo.exe --format=json --output=report.json --cp=UTF8 --sys --disk --smbios --net
+```
+
+This command exports system, disk, SMBIOS, and network information to `report.json` in JSON format.
+
+### General Options
+
+- --format=`FORMAT`  
+  Specify output format.  
+  `FORMAT` can be `YAML` (default), `JSON` and `LUA`.  
+- --output=`FILE`  
+  Write to `FILE` instead of printing to screen.  
+- --cp=`CODEPAGE`  
+  Set the code page of output text.  
+  `CODEPAGE` can be `ANSI` and `UTF8`.  
+- --human  
+  Display numbers in human readable format.  
+- --debug  
+  Print debug info to stdout.  
+- --hide-sensitive  
+  Hide sensitive data (MAC & S/N).  
 
 <div style="page-break-after: always;"></div>
 
-## Note
-For Win11, if the driver cannot be loaded properly, please modify the following registry keys.
+### Hardware Details
+
+- --cpu  
+  Print CPUID info.  
+- --net[=`FLAG,...`]  
+  Print network info.  
+  - `GUID`  
+    Specify the GUID of the network interface, e.g. `{B16B00B5-CAFE-BEEF-DEAD-001453AD0529}`  
+  - `FLAGS`  
+    `ACTIVE` Filter out active network interfaces.  
+    `PHYS`   Filter out physical network interfaces.  
+    `ETH`    Filter out Ethernet network interfaces.  
+    `WLAN`   Filter out IEEE 802.11 wireless addresses.  
+    `IPV4`   Filter out IPv4 addresses.  
+    `IPV6`   Filter out IPv6 addresses.  
+- --acpi[=`SGN`]  
+  Print ACPI info.  
+  `SGN` specifies the signature of the ACPI table, e.g. `FACP` (Fixed ACPI Description Table).  
+- --smbios[=`TYPE`]  
+  Print SMBIOS info.  
+  `TYPE` specifies the type of the SMBIOS table, e.g. `2` (Base Board Information).  
+- --disk[=`FLAG,..`]  
+  Print disk info.  
+  - `PATH`  
+    Specify the path of the disk, e.g. `\\.\PhysicalDrive0`, `\\.\CdRom0`.  
+  - `FLAGS`  
+    `NO-SMART` Don't print disk S.M.A.R.T. info.  
+    `PHYS`     Exclude virtual drives.  
+    `CD`       Filter out CD-ROM devices.  
+    `HD`       Filter out hard drives.  
+    `NVME`     Filter out NVMe devices.  
+    `SATA`     Filter out SATA devices.  
+    `SCSI`     Filter out SCSI devices.  
+    `SAS`      Filter out SAS devices.  
+    `USB`      Filter out USB devices.  
+- --smart=`FLAG,...`  
+  Specify S.M.A.R.T. features.  
+  Features enabled by default:
+  `WMI`, `ATA`, `NVIDIA`, `MARVELL`, `SAT`, `SUNPLUS`, `IODATA`, `LOGITEC`, `PROLIFIC`, `USBJMICRON`,
+  `CYPRESS`, `MEMORY`, `JMICRON`, `ASMEDIA`, `REALTEK`, `MEGARAID`, `VROC` and `ASM1352R`.  
+  Use `DEFAULT` to specify the above features.  
+  Other features are `ADVANCED`, `HD204UI`, `ADATA`, `NOWAKEUP`, `JMICRON3` and `RTK9220DP`.  
+- --display  
+  Print EDID info.  
+- --pci[=`CLASS`]  
+  Print PCI info.  
+  `CLASS` specifies the class code of pci devices, e.g. `0C05` (SMBus).  
+- --usb  
+  Print USB info.  
+- --spd  
+  Print SPD info.  
+- --battery  
+  Print battery info.  
+- --uefi[=`FLAG,..`]  
+  Print UEFI info.  
+  - `FLAGS`  
+    `MENU` Print UEFI boot menus.  
+    `VARS` List all UEFI variables.  
+ - --audio  
+   Print audio devices.  
+ - --gpu  
+   Print GPU usage.  
+
+<div style="page-break-after: always;"></div>
+
+### System Information
+
+- --sys  
+  Print system info.  
+- --shares  
+  Print network mapped drives and shared folders.  
+- --public-ip  
+  Print public IP address.  
+- --product-policy  
+  Print ProductPolicy.  
+- --font  
+  Print installed fonts.  
+
+### PowerShell Script for System Diagnostics
+
+`hw_report.ps1` is a PowerShell script designed to generate and display a detailed hardware and system report using `nwinfo`.
+
+<div style="page-break-after: always;"></div>
+
+## Notes
+
+### Windows 11
+If the driver cannot be loaded properly, modify the following registry keys:
 ```
 Windows Registry Editor Version 5.00
 
@@ -119,9 +169,17 @@ Windows Registry Editor Version 5.00
 "VulnerableDriverBlocklistEnable"=dword:00000000
 ```
 
+### Windows 7
+For earlier versions of Windows 7, the driver may not work properly and requires a SHA1-signed certificate.
+
+### Windows XP
+This project is compatible with Windows XP using [YY-Thunks](https://github.com/Chuyu-Team/YY-Thunks), but it may not retrieve some hardware information.
+
 <div style="page-break-after: always;"></div>
 
-## Credits
+## Licenses & Credits
+
+This project is licensed under the [Unlicense](https://unlicense.org/) license.
 
 * [libcpuid](https://libcpuid.sourceforge.net)
 * [SysInv](https://github.com/cavaliercoder/sysinv)
