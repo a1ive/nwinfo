@@ -11,11 +11,10 @@
 
 **NWinfo** is a Win32 program that allows you to obtain system and hardware information.
 
-<div style="page-break-after: always;"></div>
-
 ## Features
 * Obtain detailed information about SMBIOS, CPUID, S.M.A.R.T., PCI, EDID, and more.
 * Support exporting in JSON, YAML, and LUA table formats.
+* Gathers information directly without relying on WMI.
 * Compatible with Windows XP.
 
 <div style="page-break-after: always;"></div>
@@ -62,8 +61,6 @@ This command exports system, disk, SMBIOS, and network information to `report.js
   Print debug info to stdout.  
 - --hide-sensitive  
   Hide sensitive data (MAC & S/N).  
-
-<div style="page-break-after: always;"></div>
 
 ### Hardware Details
 
@@ -127,8 +124,6 @@ This command exports system, disk, SMBIOS, and network information to `report.js
    Print audio devices.  
  - --gpu  
    Print GPU usage.  
-
-<div style="page-break-after: always;"></div>
 
 ### System Information
 
