@@ -37,12 +37,17 @@ static void
 PrintProductPolicyEntry(PNODE node, PPRODUCT_POLICY_VALUE ppValue)
 {
 	CHAR hex[] = "0123456789ABCDEF";
-	PNODE pp = NWL_NodeAppendNew(node, "Entry", NFLG_TABLE_ROW);
+	PNODE pp;
 	PUINT8 pValueData = (PUINT8)ppValue + sizeof(PRODUCT_POLICY_VALUE) + ppValue->wNameSize;
+	LPCSTR pName;
 
 	wcsncpy_s(NWLC->NwBufW, NWINFO_BUFSZW,
 		(WCHAR*)((PUINT8)ppValue + sizeof(PRODUCT_POLICY_VALUE)), ppValue->wNameSize / sizeof(WCHAR));
-	NWL_NodeAttrSet(pp, "Name", NWL_Ucs2ToUtf8(NWLC->NwBufW), 0);
+	pName = NWL_Ucs2ToUtf8(NWLC->NwBufW);
+	if (NWLC->ProductPolicy && _stricmp(pName, NWLC->ProductPolicy) != 0)
+		return;
+	pp = NWL_NodeAppendNew(node, "Entry", NFLG_TABLE_ROW);
+	NWL_NodeAttrSet(pp, "Name", pName, 0);
 	//NWL_NodeAttrSetf(pp, "Flags", NAFLG_FMT_NUMERIC, "%lu", ppValue->dwFlags);
 
 	switch (ppValue->wType)

@@ -75,7 +75,9 @@ static void nwinfo_help(void)
 		"  --shares         Print network mapped drives and shared folders.\n"
 		"  --audio          Print audio devices.\n"
 		"  --public-ip      Print public IP address.\n"
-		"  --product-policy Print ProductPolicy.\n"
+		"  --product-policy[=NAME]\n"
+		"                   Print ProductPolicy.\n"
+		"                   NAME specifies the name of the product policy.\n"
 		"  --gpu            Print GPU usage.\n"
 		"  --font           Print installed fonts.\n");
 }
@@ -288,8 +290,12 @@ int main(int argc, char* argv[])
 			nwContext.AudioInfo = TRUE;
 		else if (_stricmp(argv[i], "--public-ip") == 0)
 			nwContext.PublicIpInfo = TRUE;
-		else if (_stricmp(argv[i], "--product-policy") == 0)
+		else if (_strnicmp(argv[i], "--product-policy", 16) == 0)
+		{
 			nwContext.ProductPolicyInfo = TRUE;
+			if (argv[i][16] == '=' && argv[i][17])
+				nwContext.ProductPolicy = &argv[i][17];
+		}
 		else if (_stricmp(argv[i], "--gpu") == 0)
 			nwContext.GpuInfo = TRUE;
 		else if (_stricmp(argv[i], "--font") == 0)

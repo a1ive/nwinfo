@@ -133,8 +133,9 @@ This command exports system, disk, SMBIOS, and network information to `report.js
   Print network mapped drives and shared folders.  
 - --public-ip  
   Print public IP address.  
-- --product-policy  
+- --product-policy[=`NAME`]  
   Print ProductPolicy.  
+  `NAME` specifies the name of the product policy.  
 - --font  
   Print installed fonts.  
 
