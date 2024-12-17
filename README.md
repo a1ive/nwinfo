@@ -71,12 +71,12 @@ This command exports system, disk, SMBIOS, and network information to `report.js
   - `GUID`  
     Specify the GUID of the network interface, e.g. `{B16B00B5-CAFE-BEEF-DEAD-001453AD0529}`  
   - `FLAGS`  
-    `ACTIVE` Filter out active network interfaces.  
-    `PHYS`   Filter out physical network interfaces.  
-    `ETH`    Filter out Ethernet network interfaces.  
-    `WLAN`   Filter out IEEE 802.11 wireless addresses.  
-    `IPV4`   Filter out IPv4 addresses.  
-    `IPV6`   Filter out IPv6 addresses.  
+    `ACTIVE` Exclude inactive network interfaces.  
+    `PHYS`   Exclude virtual network interfaces.  
+    `ETH`    Include Ethernet network interfaces.  
+    `WLAN`   Include IEEE 802.11 wireless addresses.  
+    `IPV4`   Show IPv4 addresses only.  
+    `IPV6`   Show IPv6 addresses only.  
 - --acpi[=`SGN`]  
   Print ACPI info.  
   `SGN` specifies the signature of the ACPI table, e.g. `FACP` (Fixed ACPI Description Table).  
@@ -90,13 +90,13 @@ This command exports system, disk, SMBIOS, and network information to `report.js
   - `FLAGS`  
     `NO-SMART` Don't print disk S.M.A.R.T. info.  
     `PHYS`     Exclude virtual drives.  
-    `CD`       Filter out CD-ROM devices.  
-    `HD`       Filter out hard drives.  
-    `NVME`     Filter out NVMe devices.  
-    `SATA`     Filter out SATA devices.  
-    `SCSI`     Filter out SCSI devices.  
-    `SAS`      Filter out SAS devices.  
-    `USB`      Filter out USB devices.  
+    `CD`       Include CD-ROM devices.  
+    `HD`       Include hard drives.  
+    `NVME`     Include NVMe devices.  
+    `SATA`     Include SATA devices.  
+    `SCSI`     Include SCSI devices.  
+    `SAS`      Include SAS devices.  
+    `USB`      Include USB devices.  
 - --smart=`FLAG,...`  
   Specify S.M.A.R.T. features.  
   Features enabled by default:
