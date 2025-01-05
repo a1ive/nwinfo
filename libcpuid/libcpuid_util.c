@@ -424,7 +424,7 @@ void decode_architecture_version_x86(struct cpu_id_t* data)
 
 	data->feature_level = feature_level;
 	if (feature_level == FEATURE_LEVEL_UNKNOWN)
-		warnf("Warning: CPU with CPUID signature %02X_%02XH has an unkown architecture version (LM=%i).\n", data->x86.ext_family, data->x86.ext_model, data->flags[CPU_FEATURE_LM]);
+		warnf("Warning: CPU with CPUID signature %02X_%02XH has an unknown architecture version (LM=%i).\n", data->x86.ext_family, data->x86.ext_model, data->flags[CPU_FEATURE_LM]);
 	else
 		debugf(2, "x86 architecture version is %s\n", cpu_feature_level_str(feature_level));
 }
