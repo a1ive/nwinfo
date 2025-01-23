@@ -54,6 +54,9 @@
     <ClInclude Include="..\libcdi\libcdi.h">
       <Filter>libcdi</Filter>
     </ClInclude>
+    <ClInclude Include="vbr.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="acpi.c">

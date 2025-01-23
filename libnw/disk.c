@@ -6,6 +6,7 @@
 #include <setupapi.h>
 
 #include "utils.h"
+#include "vbr.h"
 #include "../libcdi/libcdi.h"
 
 static LPCSTR GetRealVolumePath(LPCWSTR lpszVolume)
@@ -84,6 +85,53 @@ PrintPartitionInfo(PNODE pNode, LPCWSTR lpszPath, PHY_DRIVE_INFO* pParent)
 	}
 }
 
+static const char*
+GetVolumeFsUuid(LPCWSTR lpszVolume)
+{
+	static char cchUuid[17] = "";
+	union VOLUME_BOOT_RECORD vbrData;
+	FILE* fd = _wfopen(lpszVolume, L"rb");
+
+	if (fd == NULL)
+		return "";
+
+	if (fread(&vbrData, sizeof(vbrData), 1, fd) != 1)
+		goto out;
+
+	if (memcmp(vbrData.Exfat.oem_name, "EXFAT", 5) == 0)
+	{
+		snprintf(cchUuid, 17, "%04x-%04x",
+			(uint16_t)(vbrData.Exfat.num_serial >> 16),
+			(uint16_t)vbrData.Exfat.num_serial);
+	}
+	else if (memcmp(vbrData.Ntfs.oem_name, "NTFS", 4) == 0)
+	{
+		snprintf(cchUuid, 17, "%016llx", (unsigned long long) vbrData.Ntfs.num_serial);
+	}
+	else if (memcmp(vbrData.Fat.version.fat12_or_fat16.fstype, "FAT12", 5) == 0)
+	{
+		snprintf(cchUuid, 17, "%04x-%04x",
+			(uint16_t)(vbrData.Fat.version.fat12_or_fat16.num_serial >> 16),
+			(uint16_t)vbrData.Fat.version.fat12_or_fat16.num_serial);
+	}
+	else if (memcmp(vbrData.Fat.version.fat12_or_fat16.fstype, "FAT16", 5) == 0)
+	{
+		snprintf(cchUuid, 17, "%04x-%04x",
+			(uint16_t)(vbrData.Fat.version.fat12_or_fat16.num_serial >> 16),
+			(uint16_t)vbrData.Fat.version.fat12_or_fat16.num_serial);
+	}
+	else if (memcmp(vbrData.Fat.version.fat32.fstype, "FAT32", 5) == 0)
+	{
+		snprintf(cchUuid, 17, "%04x-%04x",
+			(uint16_t)(vbrData.Fat.version.fat32.num_serial >> 16),
+			(uint16_t)vbrData.Fat.version.fat32.num_serial);
+	}
+
+out:
+	fclose(fd);
+	return cchUuid;
+}
+
 static void
 PrintVolumeInfo(PNODE pNode, LPCWSTR lpszVolume, PHY_DRIVE_INFO* pParent)
 {
@@ -105,6 +153,7 @@ PrintVolumeInfo(PNODE pNode, LPCWSTR lpszVolume, PHY_DRIVE_INFO* pParent)
 		NWL_NodeAttrSet(pNode, "Label", NWL_Ucs2ToUtf8(cchLabel), 0);
 		NWL_NodeAttrSet(pNode, "Filesystem", NWL_Ucs2ToUtf8(cchFs), 0);
 	}
+	NWL_NodeAttrSet(pNode, "FS UUID", GetVolumeFsUuid(lpszVolume), 0);
 	if (GetDiskFreeSpaceExW(cchPath, NULL, NULL, &ulFreeSpace))
 		NWL_NodeAttrSet(pNode, "Free Space",
 			NWL_GetHumanSize(ulFreeSpace.QuadPart, NWLC->NwUnits, 1024), NAFLG_FMT_HUMAN_SIZE);
