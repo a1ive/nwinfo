@@ -485,10 +485,15 @@ static VOID
 draw_net_drive_compact(struct nk_context* ctx)
 {
 	INT i;
-	INT count;
+	INT count = 0;
 	CHAR buf[] = "A";
-	count = NWL_NodeChildCount(g_ctx.smb);
-	if (count <= 0)
+	for (i = 0; g_ctx.smb->Children[i].LinkedNode; i++)
+	{
+		if (strcmp(g_ctx.smb->Children[i].LinkedNode->Name, "Drive") != 0)
+			continue;
+		count++;
+	}
+	if (count < 1)
 		return;
 	nk_layout_row_begin(ctx, NK_STATIC, 0, count + 1);
 	nk_layout_row_push(ctx, 0.3f * g_ctx.gui_width);
@@ -496,6 +501,8 @@ draw_net_drive_compact(struct nk_context* ctx)
 	for (i = 0; g_ctx.smb->Children[i].LinkedNode; i++)
 	{
 		PNODE tab = g_ctx.smb->Children[i].LinkedNode;
+		if (strcmp(tab->Name, "Drive") != 0)
+			continue;
 		LPCSTR drive = NWL_NodeAttrGet(tab, "Local Name");
 		buf[0] = drive[0];
 		nk_layout_row_push(ctx, g_ctx.gui_ratio * g_ctx.gui_width);
