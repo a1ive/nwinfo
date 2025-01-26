@@ -193,6 +193,8 @@ VOID gnwinfo_draw_pci_window(struct nk_context* ctx, float width, float height);
 VOID gnwinfo_draw_dmi_window(struct nk_context* ctx, float width, float height);
 VOID gnwinfo_draw_display_window(struct nk_context* ctx, float width, float height);
 
+VOID gnwinfo_set_style(struct nk_context* ctx);
+
 VOID gnwinfo_init_mm_window(struct nk_context* ctx);
 VOID gnwinfo_draw_mm_window(struct nk_context* ctx, float width, float height);
 

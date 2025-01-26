@@ -78,6 +78,9 @@
     <ClCompile Include="..\nuklear\nuklear.c">
       <Filter>Nuklear</Filter>
     </ClCompile>
+    <ClCompile Include="style.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="gnwinfo.rc">
