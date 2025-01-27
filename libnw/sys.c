@@ -284,6 +284,14 @@ static void PrintOsInfo(PNODE node)
 		NWL_NodeAttrSetBool(node, "UAC", dwType, 0);
 	if (NWL_GetRegDwordValue(HKEY_LOCAL_MACHINE, L"SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Power", L"HiberbootEnabled", &dwType) == 0)
 		NWL_NodeAttrSetBool(node, "Fast Startup", dwType, 0);
+	if (NWL_GetRegDwordValue(HKEY_LOCAL_MACHINE, L"SYSTEM\\CurrentControlSet\\Control\\DeviceGuard\\Scenarios\\SystemGuard", L"Enabled", &dwType) == 0)
+		NWL_NodeAttrSetBool(node, "System Guard", dwType, 0);
+	if (NWL_GetRegDwordValue(HKEY_LOCAL_MACHINE, L"SYSTEM\\CurrentControlSet\\Control\\DeviceGuard\\Scenarios\\HypervisorEnforcedCodeIntegrity", L"Enabled", &dwType) == 0)
+		NWL_NodeAttrSetBool(node, "HVCI", dwType, 0);
+	if (NWL_GetRegDwordValue(HKEY_LOCAL_MACHINE, L"SYSTEM\\CurrentControlSet\\Control\\DeviceGuard", L"EnableVirtualizationBasedSecurity", &dwType) == 0)
+		NWL_NodeAttrSetBool(node, "Virtualization-based Security", dwType, 0);
+	if (NWL_GetRegDwordValue(HKEY_LOCAL_MACHINE, L"SYSTEM\\CurrentControlSet\\Control\\CI\\Config", L"VulnerableDriverBlocklistEnable", &dwType) == 0)
+		NWL_NodeAttrSetBool(node, "Vulnerable Driver Blocklist", dwType, 0);
 	NWL_GetUptime((CHAR*)NWLC->NwBuf, NWINFO_BUFSZ);
 	NWL_NodeAttrSet(node, "Uptime", (CHAR*)NWLC->NwBuf, 0);
 	switch (NWLC->NwSi.wProcessorArchitecture)
