@@ -477,7 +477,7 @@ draw_net_drive(struct nk_context* ctx)
 		nk_lhsc(ctx, gnwinfo_get_text(L"Network Drives"), NK_TEXT_LEFT, g_color_text_d, nk_false, nk_true);
 		nk_lhcf(ctx, NK_TEXT_LEFT, g_color_text_l, "[%s] %s", local, remote);
 		if (nk_button_image_hover(ctx, GET_PNG(IDR_PNG_DIR), NULL))
-			open_folder(local, remote);
+			open_folder(NULL, remote);
 	}
 }
 
