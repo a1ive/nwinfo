@@ -5,7 +5,7 @@
 #include "gnwinfo.h"
 #include "utils.h"
 
-#define TEMP_CELSIUS_SYMBOL "\u2103" // \u2103 or \u00b0C
+#define TEMP_CELSIUS_SYMBOL u8"\u2103" // \u2103 or \u00b0C
 
 static CHAR m_buf[MAX_PATH];
 
