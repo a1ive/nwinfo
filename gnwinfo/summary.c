@@ -5,6 +5,8 @@
 #include "gnwinfo.h"
 #include "utils.h"
 
+#define TEMP_CELSIUS_SYMBOL "\u2103" // \u2103 or \u00b0C
+
 static CHAR m_buf[MAX_PATH];
 
 static VOID
@@ -218,7 +220,7 @@ draw_processor(struct nk_context* ctx)
 		if (g_ctx.cpu_info[i].MsrTemp > 0)
 			nk_lhcf(ctx, NK_TEXT_LEFT,
 				gnwinfo_get_color((double)g_ctx.cpu_info[i].MsrTemp, 65.0, 85.0),
-				u8"%d\u2103", g_ctx.cpu_info[i].MsrTemp);
+				u8"%d"TEMP_CELSIUS_SYMBOL, g_ctx.cpu_info[i].MsrTemp);
 		else
 			nk_spacer(ctx);
 	}
@@ -590,7 +592,7 @@ draw_storage(struct nk_context* ctx)
 				life = "";
 
 			nk_lhcf(ctx, NK_TEXT_LEFT, color,
-				u8"%s%s %s\u2103", gnwinfo_get_text(whealth), life,
+				u8"%s %s %s"TEMP_CELSIUS_SYMBOL, gnwinfo_get_text(whealth), life,
 				temp[0] == '-' ? "-" : temp);
 		}
 		else
