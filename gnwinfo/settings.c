@@ -196,8 +196,6 @@ gnwinfo_draw_settings_window(struct nk_context* ctx, float width, float height)
 	nk_spacer(ctx);
 	nk_checkbox_flags_label(ctx, gnwinfo_get_text(L"Enable USB Memory"), &g_ctx.smart_flag, CDI_FLAG_ENABLE_USB_MEMORY);
 	nk_spacer(ctx);
-	nk_checkbox_flags_label(ctx, gnwinfo_get_text(L"Enable NVMe JMicron3"), &g_ctx.smart_flag, CDI_FLAG_ENABLE_NVME_JMICRON3);
-	nk_spacer(ctx);
 	nk_checkbox_flags_label(ctx, gnwinfo_get_text(L"Enable NVMe JMicron"), &g_ctx.smart_flag, CDI_FLAG_ENABLE_NVME_JMICRON);
 	nk_spacer(ctx);
 	nk_checkbox_flags_label(ctx, gnwinfo_get_text(L"Enable NVMe ASMedia"), &g_ctx.smart_flag, CDI_FLAG_ENABLE_NVME_ASMEDIA);
