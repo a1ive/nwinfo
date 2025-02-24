@@ -158,10 +158,10 @@ NWL_ParseHwid(PNODE nd, CHAR* Ids, DWORD IdsSize, LPCWSTR Hwid, INT usb)
 	{
 		p += 7;
 		for (i = 0; i < 4 && p[i]; i++)
-			subsys[i] = (CHAR)p[i];
+			subsys[i + 5] = (CHAR)p[i];
 		subsys[4] = ' ';
 		for (i = 4; i < 8 && p[i]; i++)
-			subsys[i + 1] = (CHAR)p[i];
+			subsys[i - 4] = (CHAR)p[i];
 	}
 
 	NWL_NodeAttrSet(nd, "Vendor ID", vid, 0);
