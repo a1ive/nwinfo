@@ -103,7 +103,7 @@ This command exports system, disk, SMBIOS, and network information to `report.js
   `WMI`, `ATA`, `NVIDIA`, `MARVELL`, `SAT`, `SUNPLUS`, `IODATA`, `LOGITEC`, `PROLIFIC`, `USBJMICRON`,
   `CYPRESS`, `MEMORY`, `JMICRON`, `ASMEDIA`, `REALTEK`, `MEGARAID`, `VROC` and `ASM1352R`.  
   Use `DEFAULT` to specify the above features.  
-  Other features are `ADVANCED`, `HD204UI`, `ADATA`, `NOWAKEUP`, `JMICRON3` and `RTK9220DP`.  
+  Other features are `ADVANCED`, `HD204UI`, `ADATA`, `NOWAKEUP` and `RTK9220DP`.  
 - --display  
   Print EDID info.  
 - --pci[=`CLASS`]  

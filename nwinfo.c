@@ -60,7 +60,7 @@ static void nwinfo_help(void)
 		"                   'REALTEK', 'MEGARAID', 'VROC' and 'ASM1352R'.\n"
 		"                   Use 'DEFAULT' to specify the above features.\n"
 		"                   Other features are 'ADVANCED', 'HD204UI',\n"
-		"                   'ADATA', 'NOWAKEUP', 'JMICRON3' and 'RTK9220DP'.\n"
+		"                   'ADATA', 'NOWAKEUP' and 'RTK9220DP'.\n"
 		"  --display        Print EDID info.\n"
 		"  --pci[=CLASS]    Print PCI info.\n"
 		"                   CLASS specifies the class code of pci devices,\n"
@@ -246,7 +246,6 @@ int main(int argc, char* argv[])
 				{"USBJMICRON", CDI_FLAG_ENABLE_USB_JMICRON},
 				{"CYPRESS", CDI_FLAG_ENABLE_USB_CYPRESS},
 				{"MEMORY", CDI_FLAG_ENABLE_USB_MEMORY},
-				{"JMICRON3", CDI_FLAG_ENABLE_NVME_JMICRON3},
 				{"JMICRON", CDI_FLAG_ENABLE_NVME_JMICRON},
 				{"ASMEDIA", CDI_FLAG_ENABLE_NVME_ASMEDIA},
 				{"REALTEK", CDI_FLAG_ENABLE_NVME_REALTEK},
