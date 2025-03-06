@@ -101,7 +101,7 @@ This command exports system, disk, SMBIOS, and network information to `report.js
   Specify S.M.A.R.T. features.  
   Features enabled by default:
   `WMI`, `ATA`, `NVIDIA`, `MARVELL`, `SAT`, `SUNPLUS`, `IODATA`, `LOGITEC`, `PROLIFIC`, `USBJMICRON`,
-  `CYPRESS`, `MEMORY`, `JMICRON`, `ASMEDIA`, `REALTEK`, `MEGARAID`, `VROC` and `ASM1352R`.  
+  `CYPRESS`, `MEMORY`, `JMICRON`, `ASMEDIA`, `REALTEK`, `MEGARAID`, `VROC`, `ASM1352R` and `HIDERAID`.  
   Use `DEFAULT` to specify the above features.  
   Other features are `ADVANCED`, `HD204UI`, `ADATA`, `NOWAKEUP` and `RTK9220DP`.  
 - --display  

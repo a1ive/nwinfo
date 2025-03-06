@@ -209,6 +209,8 @@ gnwinfo_draw_settings_window(struct nk_context* ctx, float width, float height)
 	nk_checkbox_flags_label(ctx, gnwinfo_get_text(L"Enable AMD RC2"), &g_ctx.smart_flag, CDI_FLAG_ENABLE_AMD_RC2);
 	nk_spacer(ctx);
 	nk_checkbox_flags_label(ctx, gnwinfo_get_text(L"Enable Realtek 9220DP"), &g_ctx.smart_flag, CDI_FLAG_ENABLE_REALTEK_9220DP);
+	nk_spacer(ctx);
+	nk_checkbox_flags_label(ctx, gnwinfo_get_text(L"Hide RAID Volume"), &g_ctx.smart_flag, CDI_FLAG_HIDE_RAID_VOLUME);
 
 	nk_layout_row_dynamic(ctx, 0, 1);
 	set_label(ctx, gnwinfo_get_text(L"Window (Restart required)"));
