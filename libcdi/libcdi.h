@@ -3,8 +3,6 @@
 #define VC_EXTRALEAN
 #include <windows.h>
 
-#define CDI_VERSION "9.6.2"
-
 enum CDI_ATA_BOOL
 {
 	CDI_BOOL_SSD = 0,
