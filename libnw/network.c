@@ -314,6 +314,8 @@ PNODE NW_Network(VOID)
 				goto next_addr;
 			if (strncmp(desc, "VirtualBox Host-Only Ethernet Adapter", 37) == 0)
 				goto next_addr;
+			if (strncmp(desc, "Hyper-V Virtual Ethernet Adapter", 32) == 0)
+				goto next_addr;
 		}
 		pCurrAddressesLH = (PIP_ADAPTER_ADDRESSES_LH)pCurrAddresses;
 		nic = NWL_NodeAppendNew(node, "Interface", NFLG_TABLE_ROW);
