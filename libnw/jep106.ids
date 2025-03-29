@@ -1,11 +1,11 @@
 
-# JEP106BH
-# Version: 2024.05.02
+# JEP106BL
+# Version: 2025.02.13
 1
 	1 AMD
 	2 AMI
 	3 Fairchild
-	4 Fujitsu
+	4 RAMXEED Limited
 	5 GTE
 	6 Harris
 	7 Hitachi
@@ -170,7 +170,7 @@
 	39 Cabletron
 	40 STEC (Silicon Tech)
 	41 Vanguard
-	42 Hagiwara Sys-Com
+	42 Hagiwara Solutions Co Ltd
 	43 Vantis
 	44 Celestica
 	45 Century
@@ -1660,7 +1660,7 @@
 	5 Global Mixed-mode Technology Inc
 	6 Shenzhen Weien Electronics Co. Ltd.
 	7 Shenzhen Cooyes Technology Co Ltd
-	8 Keymos Electronics Co., Limited
+	8 ShenZhen ChaoYing ZhiNeng
 	9 E-Rockic Technology Company Limited
 	10 Aerospace Science Memory Shenzhen
 	11 Shenzhen Quanji Technology Co Ltd
@@ -1750,7 +1750,7 @@
 	95 Guangdong OPPO Mobile Telecommunication
 	96 Akeana
 	97 Lyczar
-	98 Shenzhen Qiji Technology Co Ltd
+	98 QJTEK
 	99 Shenzhen Shangzhaoyuan Technology
 	100 Han Stor
 	101 China Micro Semicon Co., Ltd.
@@ -1970,3 +1970,90 @@
 	61 Shenzhen Titan Micro Electronics Co Ltd
 	62 Shenzhen Macroflash Technology Co Ltd
 	63 Advantech Group
+	64 Shenzhen Xingjiachen Electronics Co Ltd
+	65 CHUQI
+	66 Dongguan Liesun Trading Co Ltd
+	67 Shenzhen Miuman Technology Co Ltd
+	68 Shenzhen Techwinsemi Technology Twsc
+	69 Encharge AI Inc
+	70 Shenzhen Zhenchuang Electronics Co Ltd
+	71 Giant Chip Co. Ltd
+	72 Shenzhen Runner Semiconductor Co Ltd
+	73 Scalinx
+	74 Shenzhen Lanqi Electronics Co Ltd
+	75 CoreComm Technology Co Ltd
+	76 DLI Memory
+	77 Shenzhen Fidat Technology Co Ltd
+	78 Hubei Yangtze Mason Semiconductor Tech
+	79 Flastor
+	80 PIRATEMAN
+	81 Barrie Technologies Co Ltd
+	82 Dynacard Co Ltd
+	83 Rivian Automotive
+	84 Shenzhen Fidat Technology Co Ltd
+	85 Zhejang Weiming Semiconductor Co Ltd
+	86 Shenzhen Xinhua Micro Technology Co Ltd
+	87 Duvonn Electronic Technology Co Ltd
+	88 Shenzhen Xinchang Technology Co Ltd
+	89 Leidos
+	90 Keepixo
+	91 Applied Brain Research Inc
+	92 Maxio Technology (Hangzhou) Co Ltd
+	93 HK DCHIP Technology Limited
+	94 Hitachi-LG Data Storage
+	95 Shenzhen Huadian Communication Co Ltd
+	96 Achieve Memory Technology (Suzhou) Co
+	97 Shenzhen Think Future Semiconductor Co
+	98 Innosilicon
+	99 Shenzhen Weilida Technology Co Ltd
+	100 Agrade Storage (Shenzhen) Co Ltd
+	101 Shenzhen Worldshine Data Technology Co
+	102 Mindgrove Technologies
+	103 BYD Semiconductor Co Ltd
+	104 Chipsine Semiconductor (Suzhou) Co Ltd
+	105 Shen Zhen Shi Xun He Shi Ji Dian Zi You
+	106 Shenzhen Jindacheng Computer Co Ltd
+	107 Shenzhen Baina Haichuan Technology Co
+	108 Shanghai Hengshi Electronic Technology
+	109 Beijing Boyu Tuxian Technology Co Ltd
+	110 China Chips Star Semiconductor Co Ltd
+	111 Shenzhen Shenghuacan Technology Co
+	112 Kinara Inc
+	113 TRASNA Semiconductor
+	114 KEYSOM
+	115 Shenzhen YYF Info Tech Co Ltd
+	116 Sharetronics Data Technology Co Ltd
+	117 AptCore Limited
+	118 Uchampion Semiconductor Co Ltd
+	119 YCT Semiconductor
+	120 FADU Inc
+	121 Hefei CLT Microelectronics Co LTD
+	122 Smart Technologies (BD) Ltd
+	123 Zhangdian District Qunyuan Computer Firm
+	124 Silicon Xpandas Electronics Co Ltd
+	125 PC Components Y Multimedia S
+	126 Shenzhen Tanlr Technology Group Co Ltd
+17
+	1 Shenzhen JIEQING Technology Co Ltd
+	2 Orionix
+	3 JoulWatt Technology Co Ltd
+	4 Tenstorrent
+	5 Unis Flash Memory Technology (Chengdu)
+	6 Huatu Stars
+	7 Ardor Gaming
+	8 QuanZhou KunFang Semiconductor Co Ltd
+	9 EIAI PLANET
+	10 Ningbo Lingkai Semiconductor Technology Inc
+	11 Shenzhen Hancun Technology Co Ltd
+	12 Hongkong Manyi Technology Co Limited
+	13 Shenzhen Storgon Technology Co Ltd
+	14 YUNTU Microelectronics
+	15 Essencore
+	16 Shenzhen Xingyun Lianchuang Computer Tech
+	17 ShenZhen Aoscar Digital Tech Co Ltd
+	18 XOC Technologies Inc
+	19 BOS Semiconductors
+	20 Eliyan Corp
+	21 Hangzhou Lishu Technology Co Ltd
+	22 Tier IV Inc
+	23 Wuhan Xuanluzhe Network Technology Co
