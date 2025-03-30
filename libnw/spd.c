@@ -283,7 +283,10 @@ DDR3Speed(UINT8* rawSpd)
 static UINT32
 DDRSpeed(UINT8* rawSpd)
 {
-	return 2 * 10000 / ((rawSpd[9] >> 4) * 10 + (rawSpd[9] & 0x0F));
+	UINT32 div = (rawSpd[9] >> 4) * 10 + (rawSpd[9] & 0x0F);
+	if (div == 0)
+		return 0;
+	return 2 * 10000 / div;
 }
 
 static void
