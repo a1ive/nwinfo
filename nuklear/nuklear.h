@@ -4843,7 +4843,7 @@ struct nk_command_text {
     unsigned short w, h;
     float height;
     int length;
-    char string[1];
+    char string[2];
 };
 
 enum nk_command_clipping {
@@ -18304,7 +18304,7 @@ nk_input_glyph(struct nk_context *ctx, const nk_glyph glyph)
 NK_API void
 nk_input_char(struct nk_context *ctx, char c)
 {
-    nk_glyph glyph;
+    nk_glyph glyph = {0};
     NK_ASSERT(ctx);
     if (!ctx) return;
     glyph[0] = c;
@@ -20315,7 +20315,7 @@ nk_panel_end(struct nk_context *ctx)
                 root_window = root_window->parent;
 
             /* only allow scrolling if parent window is active */
-            scroll_has_scrolling = 0;
+            scroll_has_scrolling = nk_false;
             if ((root_window == ctx->active) && layout->has_scrolling) {
                 /* and panel is being hovered and inside clip rect*/
                 if (nk_input_is_mouse_hovering_rect(in, layout->bounds) &&
@@ -20332,13 +20332,13 @@ nk_panel_end(struct nk_context *ctx)
                     scroll_has_scrolling = nk_true;
                 }
             }
-        } else if (!nk_panel_is_sub(layout->type)) {
+        } else {
             /* window mouse wheel scrolling */
             scroll_has_scrolling = (window == ctx->active) && layout->has_scrolling;
             if (in && (in->mouse.scroll_delta.y > 0 || in->mouse.scroll_delta.x > 0) && scroll_has_scrolling)
                 window->scrolled = nk_true;
             else window->scrolled = nk_false;
-        } else scroll_has_scrolling = nk_false;
+        }
 
         {
             /* vertical scrollbar */
@@ -26105,16 +26105,18 @@ nk_knob_behavior(nk_flags *state, struct nk_input *in,
     /* knob widget state */
     if (nk_input_is_mouse_hovering_rect(in, bounds)){
         *state = NK_WIDGET_STATE_HOVERED;
-        if (in) {
-            /* handle scroll and arrow inputs */
-            if (in->mouse.scroll_delta.y > 0 ||
-               (in->keyboard.keys[NK_KEY_UP].down && in->keyboard.keys[NK_KEY_UP].clicked))
-                knob_value += knob_step;
-
-            if (in->mouse.scroll_delta.y < 0 ||
-               (in->keyboard.keys[NK_KEY_DOWN].down && in->keyboard.keys[NK_KEY_DOWN].clicked))
-                knob_value -= knob_step;
+        /* handle scroll and arrow inputs */
+        if (in->mouse.scroll_delta.y > 0 ||
+           (in->keyboard.keys[NK_KEY_UP].down && in->keyboard.keys[NK_KEY_UP].clicked)) {
+            knob_value += knob_step;
         }
+
+        if (in->mouse.scroll_delta.y < 0 ||
+           (in->keyboard.keys[NK_KEY_DOWN].down && in->keyboard.keys[NK_KEY_DOWN].clicked)) {
+            knob_value -= knob_step;
+        }
+        /* easiest way to disable scrolling of parent panels..knob eats scrolling */
+        in->mouse.scroll_delta.y = 0;
         knob_value = NK_CLAMP(knob_min, knob_value, knob_max);
     }
     if (*state & NK_WIDGET_STATE_HOVER &&
@@ -30698,6 +30700,9 @@ nk_tooltipfv(struct nk_context *ctx, const char *fmt, va_list args)
 ///   - [y]: Minor version with non-breaking API and library changes
 ///   - [z]: Patch version with no direct changes to the API
 ///
+/// - 2025/03/29 (4.12.6) - Fix unitialized data in nk_input_char
+/// - 2025/03/05 (4.12.5) - Fix scrolling knob also scrolling parent window, remove dead code
+/// - 2024/12/11 (4.12.4) - Fix array subscript [0, 0] is outside array bounds of ‘char[1]’
 /// - 2024/12/11 (4.12.3) - Fix border color for property widgets
 /// - 2024/11/20 (4.12.2) - Fix int/float type conversion warnings in `nk_roundf`
 /// - 2024/03/07 (4.12.1) - Fix bitwise operations warnings in C++20
