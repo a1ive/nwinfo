@@ -32,11 +32,14 @@ static uint8_t get_smbios_memory_type(void)
 		if (hdr->Type == 17 && hdr->Length >= 0x12)
 		{
 			PMemoryDevice md = (PMemoryDevice)p;
-			if (md->MemoryType == 0x1a || md->MemoryType == 0x1e)
-				type = 16; // DDR4
-			else if (md->MemoryType == 0x22 || md->MemoryType == 0x23)
-				type = 18; // DDR5
-			break;
+			if (md->Size > 0)
+			{
+				if (md->MemoryType == 0x1a || md->MemoryType == 0x1e)
+					type = 16; // DDR4
+				else if (md->MemoryType == 0x22 || md->MemoryType == 0x23)
+					type = 18; // DDR5
+				break;
+			}
 		}
 		if ((hdr->Type == 127) && (hdr->Length == 4))
 			break;
