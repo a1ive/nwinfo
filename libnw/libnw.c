@@ -72,8 +72,10 @@ VOID NW_Print(LPCSTR lpFileName)
 		NW_Pci();
 	if (NWLC->DmiInfo)
 		NW_Smbios();
+#ifdef NW_ENABLE_SPD
 	if (NWLC->SpdInfo)
 		NW_Spd();
+#endif
 	if (NWLC->SysInfo)
 		NW_System();
 	if (NWLC->UsbInfo)

@@ -9,6 +9,8 @@
 #include "utils.h"
 #include "spd.h"
 
+#ifdef NW_ENABLE_SPD
+
 #if 0
 static int Parity(int value)
 {
@@ -473,3 +475,5 @@ PNODE NW_Spd(VOID)
 	NWLC->HumanSize = saved_human_size;
 	return node;
 }
+
+#endif // NW_ENABLE_SPD

@@ -66,7 +66,9 @@ static void nwinfo_help(void)
 		"                   CLASS specifies the class code of pci devices,\n"
 		"                   e.g. '0C05' (SMBus).\n"
 		"  --usb            Print USB info.\n"
+#ifdef NW_ENABLE_SPD
 		"  --spd            Print SPD info.\n"
+#endif
 		"  --battery        Print battery info.\n"
 		"  --uefi[=FLAG,..] Print UEFI info.\n"
 		"    FLAGS:\n"
@@ -270,8 +272,10 @@ int main(int argc, char* argv[])
 		}
 		else if (_stricmp(argv[i], "--usb") == 0)
 			nwContext.UsbInfo = TRUE;
+#ifdef NW_ENABLE_SPD
 		else if (_stricmp(argv[i], "--spd") == 0)
 			nwContext.SpdInfo = TRUE;
+#endif
 		else if (_stricmp(argv[i], "--battery") == 0)
 			nwContext.BatteryInfo = TRUE;
 		else if (_strnicmp(argv[i], "--uefi", 6) == 0)

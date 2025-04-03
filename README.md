@@ -111,8 +111,6 @@ This command exports system, disk, SMBIOS, and network information to `report.js
   `CLASS` specifies the class code of pci devices, e.g. `0C05` (SMBus).  
 - --usb  
   Print USB info.  
-- --spd  
-  Print SPD info.  
 - --battery  
   Print battery info.  
 - --uefi[=`FLAG,..`]  

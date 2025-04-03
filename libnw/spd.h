@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: Unlicense
 #pragma once
 
+#ifdef NW_ENABLE_SPD
+
 #include <stdint.h>
 
 void NWL_SpdInit(void);
@@ -67,3 +69,5 @@ void NWL_SpdFini(void);
 #define NVSMBSTS_STATUS     0x1f
 
 #define PIIX4_SMB_BASE_ADR_DEFAULT  0x90
+
+#endif // NW_ENABLE_SPD

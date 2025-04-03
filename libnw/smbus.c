@@ -7,6 +7,8 @@
 #include "spd.h"
 #include "smbios.h"
 
+#ifdef NW_ENABLE_SPD
+
 static unsigned char* spd_raw = NULL;
 static uint16_t smbus_vid = 0xFFFF;
 static uint16_t smbus_did = 0xFFFF;
@@ -437,3 +439,5 @@ NWL_SpdFini(void)
 		free(spd_raw);
 	spd_raw = NULL;
 }
+
+#endif // NW_ENABLE_SPD
