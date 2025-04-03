@@ -17,7 +17,7 @@ $FilesToCopy = @(
 $FilesToDownload = @(
 	"https://raw.githubusercontent.com/pciutils/pciids/master/pci.ids",
 	"https://raw.githubusercontent.com/vcrhonek/hwdata/master/pnp.ids",
-	"http://www.linux-usb.org/usb.ids",
+	"https://raw.githubusercontent.com/vcrhonek/hwdata/master/usb.ids",
 	"https://github.com/a1ive/libcdi/releases/download/latest/libcdi.zip"
 )
 
