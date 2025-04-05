@@ -32,6 +32,10 @@
 GdipFont*
 nk_gdip_load_font(LPCWSTR name, int size);
 
+nk_bool
+nk_begin_ex(struct nk_context* ctx, const char* title,
+	struct nk_rect bounds, nk_flags flags, struct nk_image img_close);
+
 void
 nk_image_label(struct nk_context* ctx, struct nk_image img,
 	const char* str, nk_flags align, struct nk_color color);

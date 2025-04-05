@@ -47,9 +47,10 @@ VOID gnwinfo_draw_pci_window(struct nk_context* ctx, float width, float height)
 {
 	if (!(g_ctx.window_flag & GUI_WINDOW_PCI))
 		return;
-	if (!nk_begin(ctx, "PCI",
+	if (!nk_begin_ex(ctx, "PCI",
 		nk_rect(0, height / 4.0f, width * 0.98f, height / 2.0f),
-		NK_WINDOW_BORDER | NK_WINDOW_MOVABLE | NK_WINDOW_SCALABLE | NK_WINDOW_CLOSABLE))
+		NK_WINDOW_BORDER | NK_WINDOW_MOVABLE | NK_WINDOW_SCALABLE | NK_WINDOW_CLOSABLE,
+		GET_PNG(IDR_PNG_CLOSE)))
 	{
 		g_ctx.window_flag &= ~GUI_WINDOW_PCI;
 		goto out;

@@ -103,9 +103,10 @@ gnwinfo_draw_cpuid_window(struct nk_context* ctx, float width, float height)
 	static int cpu_index = 0;
 	if (!(g_ctx.window_flag & GUI_WINDOW_CPUID))
 		return;
-	if (!nk_begin(ctx, "CPUID",
+	if (!nk_begin_ex(ctx, "CPUID",
 		nk_rect(0, height / 4.0f, width * 0.98f, height / 2.0f),
-		NK_WINDOW_BORDER | NK_WINDOW_MOVABLE | NK_WINDOW_SCALABLE | NK_WINDOW_CLOSABLE))
+		NK_WINDOW_BORDER | NK_WINDOW_MOVABLE | NK_WINDOW_SCALABLE | NK_WINDOW_CLOSABLE,
+		GET_PNG(IDR_PNG_CLOSE)))
 	{
 		g_ctx.window_flag &= ~GUI_WINDOW_CPUID;
 		goto out;

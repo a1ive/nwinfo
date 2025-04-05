@@ -713,9 +713,10 @@ draw_audio(struct nk_context* ctx)
 VOID
 gnwinfo_draw_main_window(struct nk_context* ctx, float width, float height)
 {
-	if (!nk_begin(ctx, "NWinfo GUI",
+	if (!nk_begin_ex(ctx, "NWinfo GUI",
 		nk_rect(0, 0, width, height),
-		g_bginfo ? NK_WINDOW_BACKGROUND : (NK_WINDOW_BACKGROUND | NK_WINDOW_CLOSABLE | NK_WINDOW_TITLE)))
+		g_bginfo ? NK_WINDOW_BACKGROUND : (NK_WINDOW_BACKGROUND | NK_WINDOW_CLOSABLE | NK_WINDOW_TITLE),
+		GET_PNG(IDR_PNG_CLOSE)))
 	{
 		nk_end(ctx);
 		gnwinfo_ctx_exit();
