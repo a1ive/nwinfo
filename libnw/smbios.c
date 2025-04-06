@@ -396,6 +396,7 @@ pProcessorFamilyToStr(UCHAR Family, LPCSTR lpManufacturer)
 	case 0xCD: return "Intel Core i5 processor";
 	case 0xCE: return "Intel Core i3 processor";
 	case 0xCF: return "Intel Core i9 processor";
+	case 0xD0: return "Intel Xeon D Processor family";
 
 	case 0xD2: return "VIA C7 - M Processor Family";
 	case 0xD3: return "VIA C7 - D Processor Family";
@@ -425,6 +426,23 @@ pProcessorFamilyToStr(UCHAR Family, LPCSTR lpManufacturer)
 	case 0xED: return "AMD Athlon II Processor Family";
 	case 0xEE: return "Six - Core AMD Opteron Processor Family";
 	case 0xEF: return "AMD Sempron M Processor Family";
+	}
+	return "Unknown";
+}
+
+static const CHAR*
+pProcessorFamily2ToStr(UINT16 Family)
+{
+	switch (Family)
+	{
+	case 0x300: return "Intel Core 3";
+	case 0x301: return "Intel Core 5";
+	case 0x302: return "Intel Core 7";
+	case 0x303: return "Intel Core 9";
+	case 0x304: return "Intel Core Ultra 3";
+	case 0x305: return "Intel Core Ultra 5";
+	case 0x306: return "Intel Core Ultra 7";
+	case 0x307: return "Intel Core Ultra 9";
 	}
 	return "Unknown";
 }
@@ -470,6 +488,8 @@ static void ProcProcessorInfo(PNODE tab, void* p)
 	NWL_NodeAttrSet(tab, "Part Number", LocateString(p, pProcessor->PartNum), 0);
 	if (pProcessor->Header.Length < 0x28) // 2.5
 		return;
+	if (pProcessor->Family == 0xef && pProcessor->Header.Length > 0x28)
+		NWL_NodeAttrSet(tab, "Processor Family", pProcessorFamily2ToStr(pProcessor->Family2), 0);
 	if (pProcessor->CoreCount == 0xff && pProcessor->Header.Length > 0x2a)
 		NWL_NodeAttrSetf(tab, "Core Count", NAFLG_FMT_NUMERIC, "%u", pProcessor->CoreCount2);
 	else
@@ -482,7 +502,11 @@ static void ProcProcessorInfo(PNODE tab, void* p)
 		NWL_NodeAttrSetf(tab, "Thread Count", NAFLG_FMT_NUMERIC, "%u", pProcessor->ThreadCount2);
 	else
 		NWL_NodeAttrSetf(tab, "Thread Count", NAFLG_FMT_NUMERIC, "%u", pProcessor->ThreadCount);
+	if (pProcessor->Header.Length > 0x30)
+		NWL_NodeAttrSetf(tab, "Thread Enabled", NAFLG_FMT_NUMERIC, "%u", pProcessor->ThreadEnabled);
 	NWL_NodeAttrSetf(tab, "Processor Characteristics", 0, "0x%04X", pProcessor->ProcessorChar);
+	if (pProcessor->Header.Length > 0x32)
+		NWL_NodeAttrSet(tab, "Socket Type", LocateString(p, pProcessor->SocketType), 0);
 }
 
 static void ProcMemCtrlInfo(PNODE tab, void* p)

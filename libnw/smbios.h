@@ -154,6 +154,8 @@ typedef struct _TYPE_4_
 	UINT16 CoreCount2;
 	UINT16 CoreEnabled2;
 	UINT16 ThreadCount2;
+	UINT16 ThreadEnabled;
+	UINT8 SocketType;
 } ProcessorInfo, * PProcessorInfo;
 
 typedef struct _TYPE_5_
