@@ -73,6 +73,7 @@ nk_block(struct nk_context* ctx, struct nk_color color, const char* str);
 #define MAIN_INFO_NETWORK   (1U << 7)
 #define MAIN_INFO_AUDIO     (1U << 8)
 
+#define MAIN_NO_QUICK       (1U << 15)
 #define MAIN_NET_INACTIVE   (1U << 16)
 #define MAIN_NO_PDH         (1U << 17)
 #define MAIN_NET_DETAIL     (1U << 18)
