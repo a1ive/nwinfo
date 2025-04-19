@@ -1,10 +1,14 @@
 // SPDX-License-Identifier: Unlicense
 
 #include "gnwinfo.h"
+#include "gettext.h"
 
 #include <pathcch.h>
 #include <windowsx.h>
 #include <dbt.h>
+
+LPCSTR NWL_Ucs2ToUtf8(LPCWSTR src);
+LPCWSTR NWL_Utf8ToUcs2(LPCSTR src);
 
 unsigned int g_init_width = 600;
 unsigned int g_init_height = 800;
@@ -14,7 +18,6 @@ int g_font_size = 12;
 double g_dpi_factor = 1.0;
 nk_bool g_dpi_scaling = 1;
 nk_bool g_bginfo = 0;
-WCHAR g_lang_id[10];
 
 static UINT m_dpi = USER_DEFAULT_SCREEN_DPI;
 
@@ -29,9 +32,7 @@ set_dpi_scaling(HWND wnd)
 	WCHAR font_name[64];
 	GetPrivateProfileStringW(L"Window", L"Font", L"-", font_name, 64, g_ini_path);
 	if (wcscmp(font_name, L"-") == 0)
-		GetPrivateProfileStringW(g_lang_id, L"DefaultFont", L"-", font_name, 64, g_ini_path);
-	if (wcscmp(font_name, L"-") == 0)
-		wcscpy_s(font_name, 64, L"Courier New");
+		wcscpy_s(font_name, 64, NWL_Utf8ToUcs2(N_(N__FONT_)));
 	if (g_bginfo)
 		g_dpi_scaling = 0;
 	else
@@ -230,8 +231,6 @@ wWinMain(_In_ HINSTANCE hInstance,
 	get_ini_color(L"StateWarn", &g_color_warning);
 	get_ini_color(L"StateError", &g_color_error);
 	get_ini_color(L"StateUnknown", &g_color_unknown);
-
-	swprintf(g_lang_id, 10, L"Lang%u", GetUserDefaultUILanguage());
 
 	/* Win32 */
 	memset(&wc, 0, sizeof(wc));

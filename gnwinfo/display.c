@@ -3,6 +3,7 @@
 #include <windows.h>
 #include "gnwinfo.h"
 #include "utils.h"
+#include "gettext.h"
 
 static inline VOID
 draw_key_value(struct nk_context* ctx, PNODE node, LPCSTR key)
@@ -77,7 +78,7 @@ gnwinfo_draw_display_window(struct nk_context* ctx, float width, float height)
 	if (!(g_ctx.window_flag & GUI_WINDOW_DISPLAY))
 		return;
 	struct nk_rect window = { .x = 0, .y = height / 4.0f, .w = width * 0.98f, .h = height / 2.0f };
-	if (!nk_begin_ex(ctx, gnwinfo_get_text(L"Display Devices"),
+	if (!nk_begin_ex(ctx, N_(N__DISPLAY),
 		window,
 		NK_WINDOW_BORDER | NK_WINDOW_MOVABLE | NK_WINDOW_SCALABLE | NK_WINDOW_CLOSABLE,
 		GET_PNG(IDR_PNG_CLOSE)))

@@ -4,6 +4,7 @@
 #include <winioctl.h>
 #include "gnwinfo.h"
 #include "utils.h"
+#include "gettext.h"
 
 #include "../libcpuid/libcpuid.h"
 #include "../libcpuid/libcpuid_util.h"
@@ -105,12 +106,12 @@ gnwinfo_ctx_init(HINSTANCE inst, HWND wnd, struct nk_context* ctx, float width, 
 	g_ctx.smart_flag = strtoul(gnwinfo_get_ini_value(L"Widgets", L"SmartFlags", L"0xFE04007E"), NULL, 16);
 	g_ctx.gui_aa = strtoul(gnwinfo_get_ini_value(L"Window", L"AntiAliasing", L"1"), NULL, 10);
 
-	nk_begin_ex(ctx, gnwinfo_get_text(L"Loading"),
+	nk_begin_ex(ctx, N_(N__LOADING),
 		nk_rect(width * 0.2f, height / 3, width * 0.6f, height / 4),
 		NK_WINDOW_TITLE | NK_WINDOW_BORDER | NK_WINDOW_NO_INPUT, GET_PNG(IDR_PNG_CLOSE));
 	nk_layout_row_dynamic(ctx, 0, 1);
 	nk_spacer(ctx);
-	nk_lhsc(ctx, gnwinfo_get_text(L"Please wait ..."), NK_TEXT_CENTERED, g_color_text_d, nk_false, nk_false);
+	nk_lhsc(ctx, N_(N__PLS_WAIT), NK_TEXT_CENTERED, g_color_text_d, nk_false, nk_false);
 	nk_spacer(ctx);
 	nk_end(ctx);
 	nk_gdip_render(g_ctx.gui_aa, g_color_back);

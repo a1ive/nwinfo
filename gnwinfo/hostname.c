@@ -4,6 +4,7 @@
 #include <winioctl.h>
 #include "gnwinfo.h"
 #include "utils.h"
+#include "gettext.h"
 
 static struct
 {
@@ -116,7 +117,7 @@ gnwinfo_draw_hostname_window(struct nk_context* ctx, float width, float height)
 {
 	if (!(g_ctx.window_flag & GUI_WINDOW_HOSTNAME))
 		return;
-	if (!nk_begin_ex(ctx, gnwinfo_get_text(L"Hostname"),
+	if (!nk_begin_ex(ctx, N_(N__HOSTNAME),
 		nk_rect(width / 8.0f, height / 4.0f, width * 0.75f, NK_MIN(height / 2.0f, 6 * m_ctx.col_height)),
 		NK_WINDOW_BORDER | NK_WINDOW_MOVABLE | NK_WINDOW_SCALABLE | NK_WINDOW_CLOSABLE,
 		GET_PNG(IDR_PNG_CLOSE)))
@@ -138,10 +139,10 @@ gnwinfo_draw_hostname_window(struct nk_context* ctx, float width, float height)
 
 	nk_layout_row(ctx, NK_DYNAMIC, m_ctx.col_height, 5, (float[5]) { 0.15f, 0.3f, 0.1f, 0.3f, 0.15f });
 	nk_spacer(ctx);
-	if (nk_button_label(ctx, gnwinfo_get_text(L"Random")))
+	if (nk_button_label(ctx, N_(N__RANDOM)))
 		gen_hostname();
 	nk_spacer(ctx);
-	if (nk_button_label(ctx, gnwinfo_get_text(L"OK")))
+	if (nk_button_label(ctx, N_(N__OK)))
 	{
 		set_hostname(m_ctx.hostname);
 		g_ctx.window_flag &= ~GUI_WINDOW_HOSTNAME;

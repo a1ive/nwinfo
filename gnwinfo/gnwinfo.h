@@ -155,7 +155,6 @@ extern GNW_CONTEXT g_ctx;
 
 #define GET_PNG(x) g_ctx.image[x - IDR_PNG_MIN]
 
-extern WCHAR g_lang_id[10];
 extern WCHAR g_ini_path[MAX_PATH];
 extern unsigned int g_init_width;
 extern unsigned int g_init_height;
@@ -206,7 +205,6 @@ VOID gnwinfo_init_hostname_window(struct nk_context* ctx);
 VOID gnwinfo_draw_hostname_window(struct nk_context* ctx, float width, float height);
 
 LPCSTR gnwinfo_get_ini_value(LPCWSTR section, LPCWSTR key, LPCWSTR fallback);
-LPCSTR gnwinfo_get_text(LPCWSTR text);
 void gnwinfo_set_ini_value(LPCWSTR section, LPCWSTR key, LPCWSTR _Printf_format_string_ format, ...);
 
 LPCSTR gnwinfo_get_smbios_attr(LPCSTR type, LPCSTR key, PVOID ctx, BOOL(*cond)(PNODE node, PVOID ctx));

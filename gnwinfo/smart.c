@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: Unlicense
 
 #include "gnwinfo.h"
+#include "gettext.h"
 #include "../libcdi/libcdi.h"
 
 LPCSTR NWL_Ucs2ToUtf8(LPCWSTR src);
@@ -28,13 +29,13 @@ get_health_status(enum CDI_DISK_STATUS status)
 	switch (status)
 	{
 	case CDI_DISK_STATUS_GOOD:
-		return gnwinfo_get_text(L"Good");
+		return N_(N__GOOD);
 	case CDI_DISK_STATUS_CAUTION:
-		return gnwinfo_get_text(L"Caution");
+		return N_(N__CAUTION);
 	case CDI_DISK_STATUS_BAD:
-		return gnwinfo_get_text(L"Bad");
+		return N_(N__BAD);
 	}
-	return gnwinfo_get_text(L"Unknown");
+	return N_(N__UNKNOWN);
 }
 
 static void
@@ -47,7 +48,7 @@ draw_health(struct nk_context* ctx, CDI_SMART* smart, int disk, float height)
 	{
 		int health;
 		nk_layout_row_dynamic(ctx, height / 5.0f, 1);
-		nk_l(ctx, gnwinfo_get_text(L"Health Status"), NK_TEXT_CENTERED);
+		nk_l(ctx, N_(N__HEALTH_STATUS), NK_TEXT_CENTERED);
 		n = cdi_get_int(smart, disk, CDI_INT_LIFE);
 		health = cdi_get_int(smart, disk, CDI_INT_DISK_STATUS);
 		if (n >= 0)
@@ -56,7 +57,7 @@ draw_health(struct nk_context* ctx, CDI_SMART* smart, int disk, float height)
 			snprintf(tmp, sizeof(tmp), "%s", get_health_status(health));
 		nk_block(ctx, get_attr_color(health), tmp);
 
-		nk_l(ctx, gnwinfo_get_text(L"Temperature"), NK_TEXT_CENTERED);
+		nk_l(ctx, N_(N__TEMPERATURE), NK_TEXT_CENTERED);
 		int alarm = cdi_get_int(smart, disk, CDI_INT_TEMPERATURE_ALARM);
 		if (alarm <= 0)
 			alarm = 60;
@@ -83,14 +84,14 @@ draw_info(struct nk_context* ctx, CDI_SMART* smart, int disk)
 
 		nk_layout_row(ctx, NK_DYNAMIC, 0, 4, (float[4]) { 0.2f, 0.4f, 0.24f, 0.16f });
 
-		nk_l(ctx, gnwinfo_get_text(L"Firmware"), NK_TEXT_LEFT);
+		nk_l(ctx, N_(N__FIRMWARE), NK_TEXT_LEFT);
 		str = cdi_get_string(smart, disk, CDI_STRING_FIRMWARE);
 		nk_lhc(ctx, NWL_Ucs2ToUtf8(str), NK_TEXT_LEFT, g_color_text_l);
 		cdi_free_string(str);
 		if (is_ssd)
 		{
 			n = cdi_get_int(smart, disk, CDI_INT_HOST_READS);
-			nk_l(ctx, gnwinfo_get_text(L"Total Reads"), NK_TEXT_LEFT);
+			nk_l(ctx, N_(N__TOTAL_READS), NK_TEXT_LEFT);
 			if (n < 0)
 				nk_lhc(ctx, "-", NK_TEXT_RIGHT, g_color_text_l);
 			else
@@ -99,7 +100,7 @@ draw_info(struct nk_context* ctx, CDI_SMART* smart, int disk)
 		else
 		{
 			d = cdi_get_dword(smart, disk, CDI_DWORD_BUFFER_SIZE);
-			nk_l(ctx, gnwinfo_get_text(L"Buffer Size"), NK_TEXT_LEFT);
+			nk_l(ctx, N_(N__BUFFER_SIZE), NK_TEXT_LEFT);
 			if (d >= 10 * 1024 * 1024) // 10 MB
 				nk_lhcf(ctx, NK_TEXT_RIGHT, g_color_text_l, "%lu M", d / 1024 / 1024);
 			else if (d > 1024)
@@ -108,14 +109,14 @@ draw_info(struct nk_context* ctx, CDI_SMART* smart, int disk)
 				nk_lhcf(ctx, NK_TEXT_RIGHT, g_color_text_l, "%lu B", d);
 		}
 
-		nk_l(ctx, gnwinfo_get_text(L"S / N"), NK_TEXT_LEFT);
+		nk_l(ctx, N_(N__S_N), NK_TEXT_LEFT);
 		str = cdi_get_string(smart, disk, CDI_STRING_SN);
 		nk_lhc(ctx, NWL_Ucs2ToUtf8(str), NK_TEXT_LEFT, g_color_text_l);
 		cdi_free_string(str);
 		if (is_ssd)
 		{
 			n = cdi_get_int(smart, disk, CDI_INT_HOST_WRITES);
-			nk_l(ctx, gnwinfo_get_text(L"Total Writes"), NK_TEXT_LEFT);
+			nk_l(ctx, N_(N__TOTAL_WRITES), NK_TEXT_LEFT);
 			if (n < 0)
 				nk_lhc(ctx, "-", NK_TEXT_RIGHT, g_color_text_l);
 			else
@@ -127,14 +128,14 @@ draw_info(struct nk_context* ctx, CDI_SMART* smart, int disk)
 			nk_lhc(ctx, "-", NK_TEXT_RIGHT, g_color_text_l);
 		}
 
-		nk_l(ctx, gnwinfo_get_text(L"Interface"), NK_TEXT_LEFT);
+		nk_l(ctx, N_(N__INTERFACE), NK_TEXT_LEFT);
 		str = cdi_get_string(smart, disk, CDI_STRING_INTERFACE);
 		nk_lhc(ctx, NWL_Ucs2ToUtf8(str), NK_TEXT_LEFT, g_color_text_l);
 		cdi_free_string(str);
 		if (is_ssd && !is_nvme)
 		{
 			n = cdi_get_int(smart, disk, CDI_INT_NAND_WRITES);
-			nk_l(ctx, gnwinfo_get_text(L"NAND Writes"), NK_TEXT_LEFT);
+			nk_l(ctx, N_(N__NAND_WRITES), NK_TEXT_LEFT);
 			if (n < 0)
 				nk_lhc(ctx, "-", NK_TEXT_RIGHT, g_color_text_l);
 			else
@@ -142,7 +143,7 @@ draw_info(struct nk_context* ctx, CDI_SMART* smart, int disk)
 		}
 		else
 		{
-			nk_l(ctx, gnwinfo_get_text(L"RPM"), NK_TEXT_LEFT);
+			nk_l(ctx, N_(N__RPM), NK_TEXT_LEFT);
 			if (is_ssd)
 				nk_lhc(ctx, "(SSD)", NK_TEXT_RIGHT, g_color_text_l);
 			else
@@ -153,7 +154,7 @@ draw_info(struct nk_context* ctx, CDI_SMART* smart, int disk)
 			
 		}
 
-		nk_l(ctx, gnwinfo_get_text(L"Mode"), NK_TEXT_LEFT);
+		nk_l(ctx, N_(N__MODE), NK_TEXT_LEFT);
 		str = cdi_get_string(smart, disk, CDI_STRING_TRANSFER_MODE_CUR);
 		strcpy_s(NWLC->NwBuf, NWINFO_BUFSZ, NWL_Ucs2ToUtf8(str));
 		cdi_free_string(str);
@@ -161,15 +162,15 @@ draw_info(struct nk_context* ctx, CDI_SMART* smart, int disk)
 		snprintf(NWLC->NwBuf, NWINFO_BUFSZ, "%s|%s", NWLC->NwBuf, NWL_Ucs2ToUtf8(str));
 		cdi_free_string(str);
 		nk_lhc(ctx, NWLC->NwBuf, NK_TEXT_LEFT, g_color_text_l);
-		nk_l(ctx, gnwinfo_get_text(L"Power On Count"), NK_TEXT_LEFT);
+		nk_l(ctx, N_(N__POWER_ON_COUNT), NK_TEXT_LEFT);
 		d = cdi_get_dword(smart, disk, CDI_DWORD_POWER_ON_COUNT);
 		nk_lhcf(ctx, NK_TEXT_RIGHT, g_color_text_l, "%lu", d);
 
-		nk_l(ctx, gnwinfo_get_text(L"Drive"), NK_TEXT_LEFT);
+		nk_l(ctx, N_(N__DRIVE), NK_TEXT_LEFT);
 		str = cdi_get_string(smart, disk, CDI_STRING_DRIVE_MAP);
 		nk_lhc(ctx, NWL_Ucs2ToUtf8(str), NK_TEXT_LEFT, g_color_text_l);
 		cdi_free_string(str);
-		nk_l(ctx, gnwinfo_get_text(L"Power On Hours"), NK_TEXT_LEFT);
+		nk_l(ctx, N_(N__POWER_ON_HOURS), NK_TEXT_LEFT);
 		n = cdi_get_int(smart, disk, CDI_INT_POWER_ON_HOURS);
 		if (n < 0)
 			nk_lhc(ctx, "-", NK_TEXT_RIGHT, g_color_text_l);
@@ -178,12 +179,12 @@ draw_info(struct nk_context* ctx, CDI_SMART* smart, int disk)
 
 		nk_layout_row(ctx, NK_DYNAMIC, 0, 2, (float[2]) { 0.2f, 0.8f });
 
-		nk_l(ctx, gnwinfo_get_text(L"Standard"), NK_TEXT_LEFT);
+		nk_l(ctx, N_(N__STANDARD), NK_TEXT_LEFT);
 		str = cdi_get_string(smart, disk, CDI_STRING_VERSION_MAJOR);
 		nk_lhc(ctx, NWL_Ucs2ToUtf8(str), NK_TEXT_LEFT, g_color_text_l);
 		cdi_free_string(str);
 
-		nk_l(ctx, gnwinfo_get_text(L"Features"), NK_TEXT_LEFT);
+		nk_l(ctx, N_(N__FEATURES), NK_TEXT_LEFT);
 		nk_lhcf(ctx, NK_TEXT_LEFT, g_color_text_l, "%s%s%s%s%s%s%s%s%s%s",
 			cdi_get_bool(smart, disk, CDI_BOOL_SMART) ? "SMART " : "",
 			cdi_get_bool(smart, disk, CDI_BOOL_AAM) ?  "AAM " : "",
@@ -245,8 +246,8 @@ draw_smart(struct nk_context* ctx, CDI_SMART* smart, int disk)
 		DWORD i, count = cdi_get_dword(smart, disk, CDI_DWORD_ATTR_COUNT);
 		nk_layout_row(ctx, NK_DYNAMIC, 0, 4, (float[4]) { 0.05f, 0.05f, 0.55f, 0.35f });
 		nk_spacer(ctx);
-		nk_l(ctx, gnwinfo_get_text(L"ID"), NK_TEXT_LEFT);
-		nk_l(ctx, gnwinfo_get_text(L"Attribute"), NK_TEXT_LEFT);
+		nk_l(ctx, N_(N__ID), NK_TEXT_LEFT);
+		nk_l(ctx, N_(N__ATTRIBUTE), NK_TEXT_LEFT);
 		format = cdi_get_smart_format(smart, disk);
 		nk_l(ctx, NWL_Ucs2ToUtf8(format), NK_TEXT_LEFT);
 
@@ -296,7 +297,7 @@ gnwinfo_draw_smart_window(struct nk_context* ctx, float width, float height)
 	if (count <= 0)
 	{
 		nk_layout_row_dynamic(ctx, 0, 1);
-		nk_l(ctx, gnwinfo_get_text(L"No disks found"), NK_TEXT_CENTERED);
+		nk_l(ctx, N_(N__NO_DISKS_FOUND), NK_TEXT_CENTERED);
 		goto out;
 	}
 	if (cur_disk >= count)
@@ -309,9 +310,9 @@ gnwinfo_draw_smart_window(struct nk_context* ctx, float width, float height)
 		NWL_Ucs2ToUtf8(str),
 		NWL_GetHumanSize(cdi_get_dword(NWLC->NwSmart, cur_disk, CDI_DWORD_DISK_SIZE), &NWLC->NwUnits[2], 1000));
 	cdi_free_string(str);
-	if (nk_button_image_label(ctx, GET_PNG(IDR_PNG_REFRESH), gnwinfo_get_text(L"Refresh"), NK_TEXT_CENTERED))
+	if (nk_button_image_label(ctx, GET_PNG(IDR_PNG_REFRESH), N_(N__REFRESH), NK_TEXT_CENTERED))
 		cdi_update_smart(NWLC->NwSmart, cur_disk);
-	g_ctx.smart_hex = !nk_check_label(ctx, gnwinfo_get_text(L"HEX"), !g_ctx.smart_hex);
+	g_ctx.smart_hex = !nk_check_label(ctx, N_(N__HEX), !g_ctx.smart_hex);
 	
 	nk_layout_row(ctx, NK_DYNAMIC, height / 4.0f, 2, (float[2]) {0.2f, 0.8f});
 	draw_health(ctx, NWLC->NwSmart, cur_disk, height / 4.0f);

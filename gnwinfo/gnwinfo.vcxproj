@@ -123,6 +123,7 @@
   <ItemGroup>
     <ClInclude Include="..\nuklear\nuklear.h" />
     <ClInclude Include="..\nuklear\nuklear_gdip.h" />
+    <ClInclude Include="gettext.h" />
     <ClInclude Include="gnwinfo.h" />
     <ClInclude Include="resource.h" />
   </ItemGroup>
@@ -133,6 +134,7 @@
     <ClCompile Include="cpuid.c" />
     <ClCompile Include="display.c" />
     <ClCompile Include="dmi.c" />
+    <ClCompile Include="gettext.c" />
     <ClCompile Include="gnwinfo.c" />
     <ClCompile Include="hostname.c" />
     <ClCompile Include="memory.c" />

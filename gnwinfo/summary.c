@@ -3,6 +3,7 @@
 #include <windows.h>
 #include <shellapi.h>
 #include "gnwinfo.h"
+#include "gettext.h"
 #include "utils.h"
 
 #define TEMP_CELSIUS_SYMBOL u8"\u2103" // \u2103 or \u00b0C
@@ -13,7 +14,7 @@ static VOID
 draw_os(struct nk_context* ctx)
 {
 	nk_layout_row(ctx, NK_DYNAMIC, 0, 3, (float[3]) { 0.3f, 0.7f - g_ctx.gui_ratio, g_ctx.gui_ratio });
-	nk_image_label(ctx, GET_PNG(IDR_PNG_OS), gnwinfo_get_text(L"Operating System"), NK_TEXT_LEFT, g_color_text_d);
+	nk_image_label(ctx, GET_PNG(IDR_PNG_OS), N_(N__OS), NK_TEXT_LEFT, g_color_text_d);
 	snprintf(m_buf, MAX_PATH, "%s %s",
 		NWL_NodeAttrGet(g_ctx.system, "OS"),
 		NWL_NodeAttrGet(g_ctx.system, "Processor Architecture"));
@@ -34,7 +35,7 @@ draw_os(struct nk_context* ctx)
 	if (g_ctx.main_flag & MAIN_OS_DETAIL)
 	{
 		nk_layout_row(ctx, NK_DYNAMIC, 0, 3, (float[3]) { 0.3f, 0.7f - g_ctx.gui_ratio, g_ctx.gui_ratio });
-		nk_lhsc(ctx, gnwinfo_get_text(L"Login Status"), NK_TEXT_LEFT, g_color_text_d, nk_false, nk_true);
+		nk_lhsc(ctx, N_(N__LOGIN), NK_TEXT_LEFT, g_color_text_d, nk_false, nk_true);
 		nk_lhcf(ctx, NK_TEXT_LEFT,
 			g_color_text_l,
 			"%s@%s%s%s%s%s",
@@ -44,14 +45,14 @@ draw_os(struct nk_context* ctx)
 			strcmp(NWL_NodeAttrGet(g_ctx.system, "BitLocker Boot"), "Yes") == 0 ? " BitLocker" : "",
 			strcmp(NWL_NodeAttrGet(g_ctx.system, "VHD Boot"), "Yes") == 0 ? " VHD" : "",
 			strcmp(NWL_NodeAttrGet(g_ctx.system, "Fast Startup"), "Yes") == 0 ? " FastStartup" : "");
-		if (nk_button_image_hover(ctx, GET_PNG(IDR_PNG_EDIT), gnwinfo_get_text(L"Hostname")))
+		if (nk_button_image_hover(ctx, GET_PNG(IDR_PNG_EDIT), N_(N__HOSTNAME)))
 			gnwinfo_init_hostname_window(ctx);
 	}
 
 	if (g_ctx.main_flag & MAIN_OS_UPTIME)
 	{
 		nk_layout_row(ctx, NK_DYNAMIC, 0, 2, (float[2]) { 0.3f, 0.7f });
-		nk_lhsc(ctx, gnwinfo_get_text(L"Uptime"), NK_TEXT_LEFT, g_color_text_d, nk_false, nk_true);
+		nk_lhsc(ctx, N_(N__UPTIME), NK_TEXT_LEFT, g_color_text_d, nk_false, nk_true);
 		nk_lhc(ctx, g_ctx.sys_uptime, NK_TEXT_LEFT, g_color_text_l);
 	}
 }
@@ -63,13 +64,13 @@ draw_bios(struct nk_context* ctx)
 	LPCSTR sb = NWL_NodeAttrGet(g_ctx.uefi, "Secure Boot");
 
 	nk_layout_row(ctx, NK_DYNAMIC, 0, 3, (float[3]) { 0.3f, 0.7f - g_ctx.gui_ratio, g_ctx.gui_ratio });
-	nk_image_label(ctx, GET_PNG(IDR_PNG_FIRMWARE), gnwinfo_get_text(L"BIOS"), NK_TEXT_LEFT, g_color_text_d);
+	nk_image_label(ctx, GET_PNG(IDR_PNG_FIRMWARE), N_(N__BIOS), NK_TEXT_LEFT, g_color_text_d);
 
 	strcpy_s(m_buf, MAX_PATH, NWL_NodeAttrGet(g_ctx.system, "Firmware"));
 	if (sb[0] == 'E')
-		snprintf(m_buf, MAX_PATH, "%s %s", m_buf, gnwinfo_get_text(L"SecureBoot"));
+		snprintf(m_buf, MAX_PATH, "%s %s", m_buf, N_(N__SB));
 	else if (sb[0] == 'D')
-		snprintf(m_buf, MAX_PATH, "%s %s", m_buf, gnwinfo_get_text(L"SecureBootOff"));
+		snprintf(m_buf, MAX_PATH, "%s %s", m_buf, N_(N__SB_OFF));
 
 	if (tpm[0] == 'v')
 		snprintf(m_buf, MAX_PATH, "%s TPM%s", m_buf, tpm);
@@ -82,13 +83,13 @@ draw_bios(struct nk_context* ctx)
 	if (g_ctx.main_flag & MAIN_B_VENDOR)
 	{
 		nk_layout_row(ctx, NK_DYNAMIC, 0, 2, (float[2]) { 0.3f, 0.7f });
-		nk_lhsc(ctx, gnwinfo_get_text(L"Vendor"), NK_TEXT_LEFT, g_color_text_d, nk_false, nk_true);
+		nk_lhsc(ctx, N_(N__VENDOR), NK_TEXT_LEFT, g_color_text_d, nk_false, nk_true);
 		nk_lhc(ctx, gnwinfo_get_smbios_attr("0", "Vendor", NULL, NULL), NK_TEXT_LEFT, g_color_text_l);
 	}
 	if (g_ctx.main_flag & MAIN_B_VERSION)
 	{
 		nk_layout_row(ctx, NK_DYNAMIC, 0, 2, (float[2]) { 0.3f, 0.7f });
-		nk_lhsc(ctx, gnwinfo_get_text(L"Version"), NK_TEXT_LEFT, g_color_text_d, nk_false, nk_true);
+		nk_lhsc(ctx, N_(N__VERSION), NK_TEXT_LEFT, g_color_text_d, nk_false, nk_true);
 		nk_lhcf(ctx, NK_TEXT_LEFT, g_color_text_l,
 			"%s %s",
 			gnwinfo_get_smbios_attr("0", "Version", NULL, NULL),
@@ -113,7 +114,7 @@ draw_computer(struct nk_context* ctx)
 	LPCSTR ac = "";
 
 	nk_layout_row(ctx, NK_DYNAMIC, 0, 2, (float[2]) { 1.0f - g_ctx.gui_ratio, g_ctx.gui_ratio });
-	nk_image_label(ctx, GET_PNG(IDR_PNG_PC), gnwinfo_get_text(L"Computer"), NK_TEXT_LEFT, g_color_text_d);
+	nk_image_label(ctx, GET_PNG(IDR_PNG_PC), N_(N__PC), NK_TEXT_LEFT, g_color_text_d);
 	if (nk_button_image_hover(ctx, GET_PNG(IDR_PNG_PCI), "PCI"))
 		g_ctx.window_flag |= GUI_WINDOW_PCI;
 
@@ -151,7 +152,7 @@ draw_computer(struct nk_context* ctx)
 		ac = u8"AC ";
 
 	nk_layout_row(ctx, NK_DYNAMIC, 0, 3, (float[3]) { 0.3f, 0.7f - g_ctx.gui_ratio, g_ctx.gui_ratio });
-	nk_lhsc(ctx, gnwinfo_get_text(L"Power Status"), NK_TEXT_LEFT, g_color_text_d, nk_false, nk_true);
+	nk_lhsc(ctx, N_(N__POWER_STAT), NK_TEXT_LEFT, g_color_text_d, nk_false, nk_true);
 	snprintf(m_buf, MAX_PATH, "%s %s",
 		ac, NWL_NodeAttrGet(g_ctx.battery, "Active Power Scheme Name"));
 	if (has_battery)
@@ -185,7 +186,7 @@ draw_processor(struct nk_context* ctx)
 	CHAR name[32];
 
 	nk_layout_row(ctx, NK_DYNAMIC, 0, 4, (float[4]) { 0.3f, 0.4f, 0.3f - g_ctx.gui_ratio, g_ctx.gui_ratio });
-	nk_image_label(ctx, GET_PNG(IDR_PNG_CPU), gnwinfo_get_text(L"Processor"), NK_TEXT_LEFT, g_color_text_d);
+	nk_image_label(ctx, GET_PNG(IDR_PNG_CPU), N_(N__CPU), NK_TEXT_LEFT, g_color_text_d);
 	nk_lhcf(ctx, NK_TEXT_LEFT, gnwinfo_get_color(g_ctx.cpu_usage, 70.0, 90.0),
 		"%.2f%% %lu MHz",
 		g_ctx.cpu_usage,
@@ -209,10 +210,10 @@ draw_processor(struct nk_context* ctx)
 
 		nk_layout_row(ctx, NK_DYNAMIC, 0, 3, (float[3]) { 0.3f, 0.4f, 0.3f });
 		nk_spacer(ctx);
-		snprintf(m_buf, MAX_PATH, "%s %s", NWL_NodeAttrGet(cpu, "Cores"), gnwinfo_get_text(L"cores"));
+		snprintf(m_buf, MAX_PATH, "%s %s", NWL_NodeAttrGet(cpu, "Cores"), N_(N__CORES));
 		snprintf(m_buf, MAX_PATH, "%s %s %s", m_buf,
 			NWL_NodeAttrGet(cpu, "Logical CPUs"),
-			gnwinfo_get_text(L"threads"));
+			N_(N__THREADS));
 		if (g_ctx.cpu_info[i].MsrPower > 0.0)
 			snprintf(m_buf, MAX_PATH, "%s %.2fW", m_buf, g_ctx.cpu_info[i].MsrPower);
 
@@ -232,7 +233,7 @@ draw_processor(struct nk_context* ctx)
 			cache_size[cache_level] = gnwinfo_get_smbios_attr("7", "Installed Cache Size", &cache_level, is_cache_level_equal);
 
 		nk_layout_row(ctx, NK_DYNAMIC, 0, 2, (float[2]) { 0.3f, 0.7f });
-		nk_lhsc(ctx, gnwinfo_get_text(L"Cache"), NK_TEXT_LEFT, g_color_text_d, nk_false, nk_true);
+		nk_lhsc(ctx, N_(N__CACHE), NK_TEXT_LEFT, g_color_text_d, nk_false, nk_true);
 		snprintf(m_buf, MAX_PATH, "L1 %s", cache_size[0]);
 		if (cache_size[1][0] != '-')
 			snprintf(m_buf, MAX_PATH, "%s L2 %s", m_buf, cache_size[1]);
@@ -247,7 +248,7 @@ draw_processor(struct nk_context* ctx)
 static VOID
 draw_mem_capacity(struct nk_context* ctx)
 {
-	nk_lhsc(ctx, gnwinfo_get_text(L"Max Capacity"), NK_TEXT_LEFT, g_color_text_d, nk_false, nk_true);
+	nk_lhsc(ctx, N_(N__MAX_CAPACITY), NK_TEXT_LEFT, g_color_text_d, nk_false, nk_true);
 	LPCSTR id = "16";
 	LPCSTR capacity = gnwinfo_get_smbios_attr(id, "Max Capacity", NULL, NULL);
 	if (capacity[0] == '-')
@@ -257,7 +258,7 @@ draw_mem_capacity(struct nk_context* ctx)
 	}
 	snprintf(m_buf, MAX_PATH, "%s %s %s%s",
 		gnwinfo_get_smbios_attr(id, "Number of Slots", NULL, NULL),
-		gnwinfo_get_text(L"slots"),
+		N_(N__SLOTS),
 		capacity,
 		id[0] == '5' ? " MB" : "");
 	nk_lhc(ctx, m_buf, NK_TEXT_LEFT, g_color_text_l);
@@ -269,13 +270,13 @@ draw_memory(struct nk_context* ctx)
 	INT i;
 
 	nk_layout_row(ctx, NK_DYNAMIC, 0, 4, (float[4]) { 0.3f, 0.4f, 0.3f - g_ctx.gui_ratio, g_ctx.gui_ratio });
-	nk_image_label(ctx, GET_PNG(IDR_PNG_MEMORY), gnwinfo_get_text(L"Memory"), NK_TEXT_LEFT, g_color_text_d);
+	nk_image_label(ctx, GET_PNG(IDR_PNG_MEMORY), N_(N__MEMORY), NK_TEXT_LEFT, g_color_text_d);
 	nk_lhcf(ctx, NK_TEXT_LEFT,
 		gnwinfo_get_color((double)g_ctx.mem_status.PhysUsage, 70.0, 90.0),
 		"%lu%% %s / %s",
 		g_ctx.mem_status.PhysUsage, g_ctx.mem_status.StrPhysAvail, g_ctx.mem_status.StrPhysTotal);
 	gnwinfo_draw_percent_prog(ctx, (double)g_ctx.mem_status.PhysUsage);
-	if (nk_button_image_hover(ctx, GET_PNG(IDR_PNG_ROCKET), gnwinfo_get_text(L"Clean Memory")))
+	if (nk_button_image_hover(ctx, GET_PNG(IDR_PNG_ROCKET), N_(N__CLEAN_MEMORY)))
 		gnwinfo_init_mm_window(ctx);
 
 	if (g_ctx.main_flag & MAIN_MEM_DETAIL)
@@ -309,7 +310,7 @@ draw_display(struct nk_context* ctx)
 	INT i;
 
 	nk_layout_row(ctx, NK_DYNAMIC, 0, 4, (float[4]) { 0.3f, 0.4f, 0.3f - g_ctx.gui_ratio, g_ctx.gui_ratio });
-	nk_image_label(ctx, GET_PNG(IDR_PNG_DISPLAY), gnwinfo_get_text(L"Display Devices"), NK_TEXT_LEFT, g_color_text_d);
+	nk_image_label(ctx, GET_PNG(IDR_PNG_DISPLAY), N_(N__DISPLAY), NK_TEXT_LEFT, g_color_text_d);
 	nk_lhcf(ctx, NK_TEXT_LEFT, g_color_text_l,
 		"%ldx%ld %u DPI (%u%%)",
 		g_ctx.cur_display.Width, g_ctx.cur_display.Height, g_ctx.cur_display.Dpi, g_ctx.cur_display.Scale);
@@ -320,7 +321,7 @@ draw_display(struct nk_context* ctx)
 			g_ctx.gpu_info.UsageDedicated);
 	else
 		nk_spacer(ctx);
-	if (nk_button_image_hover(ctx, GET_PNG(IDR_PNG_MONITOR), gnwinfo_get_text(L"Display Devices")))
+	if (nk_button_image_hover(ctx, GET_PNG(IDR_PNG_MONITOR), N_(N__DISPLAY)))
 		g_ctx.window_flag |= GUI_WINDOW_DISPLAY;
 
 	for (i = 0; i < g_ctx.gpu_info.DeviceCount; i++)
@@ -425,7 +426,7 @@ draw_volume(struct nk_context* ctx, PNODE disk, BOOL cdrom)
 				gnwinfo_get_color(percent, 70.0, 90.0),
 				"%.0f%% %s: %s",
 				percent,
-				gnwinfo_get_text(L"Free"),
+				N_(N__FREE),
 				NWL_NodeAttrGet(tab, "Free Space"));
 		if (nk_button_image_hover(ctx, img, volume_guid))
 			open_folder(drive, volume_guid);
@@ -476,7 +477,7 @@ draw_net_drive(struct nk_context* ctx)
 		LPCSTR local = NWL_NodeAttrGet(nd, "Local Name");
 		LPCSTR remote = NWL_NodeAttrGet(nd, "Remote Name");
 		nk_layout_row(ctx, NK_DYNAMIC, 0, 3, (float[3]) { 0.3f, 0.7f - g_ctx.gui_ratio, g_ctx.gui_ratio });
-		nk_lhsc(ctx, gnwinfo_get_text(L"Network Drives"), NK_TEXT_LEFT, g_color_text_d, nk_false, nk_true);
+		nk_lhsc(ctx, N_(N__NETWORK_DRIVES), NK_TEXT_LEFT, g_color_text_d, nk_false, nk_true);
 		nk_lhcf(ctx, NK_TEXT_LEFT, g_color_text_l, "[%s] %s", local, remote);
 		if (nk_button_image_hover(ctx, GET_PNG(IDR_PNG_DIR), NULL))
 			open_folder(NULL, remote);
@@ -499,7 +500,7 @@ draw_net_drive_compact(struct nk_context* ctx)
 		return;
 	nk_layout_row_begin(ctx, NK_STATIC, 0, count + 1);
 	nk_layout_row_push(ctx, 0.3f * g_ctx.gui_width);
-	nk_lhsc(ctx, gnwinfo_get_text(L"Network Drives"), NK_TEXT_LEFT, g_color_text_d, nk_false, nk_true);
+	nk_lhsc(ctx, N_(N__NETWORK_DRIVES), NK_TEXT_LEFT, g_color_text_d, nk_false, nk_true);
 	for (i = 0; g_ctx.smb->Children[i].LinkedNode; i++)
 	{
 		PNODE tab = g_ctx.smb->Children[i].LinkedNode;
@@ -520,7 +521,7 @@ draw_storage(struct nk_context* ctx)
 	INT i;
 
 	nk_layout_row(ctx, NK_DYNAMIC, 0, 2, (float[2]) { 1.0f - g_ctx.gui_ratio, g_ctx.gui_ratio });
-	nk_image_label(ctx, GET_PNG(IDR_PNG_DISK), gnwinfo_get_text(L"Storage"), NK_TEXT_LEFT, g_color_text_d);
+	nk_image_label(ctx, GET_PNG(IDR_PNG_DISK), N_(N__STORAGE), NK_TEXT_LEFT, g_color_text_d);
 	if (nk_button_image_hover(ctx, GET_PNG(IDR_PNG_SMART), "S.M.A.R.T."))
 		g_ctx.window_flag |= GUI_WINDOW_SMART;
 
@@ -570,29 +571,29 @@ draw_storage(struct nk_context* ctx)
 		if ((g_ctx.main_flag & MAIN_DISK_SMART) && strcmp(health, "-") != 0)
 		{
 			LPCSTR life = strchr(health, '(');
-			LPCWSTR whealth = L"Unknown";
+			GETTEXT_STR_ID whealth = N__UNKNOWN;
 			struct nk_color color = g_color_unknown;
 			LPCSTR temp = NWL_NodeAttrGet(disk, "Temperature (C)");
 			if (strncmp(health, "Good", 4) == 0)
 			{
 				color = g_color_good;
-				whealth = L"Good";
+				whealth = N__GOOD;
 			}
 			else if (strncmp(health, "Caution", 7) == 0)
 			{
 				color = g_color_warning;
-				whealth = L"Caution";
+				whealth = N__CAUTION;
 			}
 			else if (strncmp(health, "Bad", 3) == 0)
 			{
 				color = g_color_error;
-				whealth = L"Bad";
+				whealth = N__BAD;
 			}
 			if (life == NULL)
 				life = "";
 
 			nk_lhcf(ctx, NK_TEXT_LEFT, color,
-				u8"%s %s %s"TEMP_CELSIUS_SYMBOL, gnwinfo_get_text(whealth), life,
+				u8"%s %s %s"TEMP_CELSIUS_SYMBOL, N_(whealth), life,
 				temp[0] == '-' ? "-" : temp);
 		}
 		else
@@ -631,7 +632,7 @@ draw_network(struct nk_context* ctx)
 	INT i;
 
 	nk_layout_row(ctx, NK_DYNAMIC, 0, 4, (float[4]) { 0.64f, 0.18f - g_ctx.gui_ratio, 0.18f, g_ctx.gui_ratio });
-	nk_image_label(ctx, GET_PNG(IDR_PNG_NETWORK), gnwinfo_get_text(L"Network"), NK_TEXT_LEFT, g_color_text_d);
+	nk_image_label(ctx, GET_PNG(IDR_PNG_NETWORK), N_(N__NETWORK), NK_TEXT_LEFT, g_color_text_d);
 	nk_lhcf(ctx, NK_TEXT_LEFT, g_color_warning, u8"\u2191 %s", g_ctx.net_traffic.StrSend);
 	nk_lhcf(ctx, NK_TEXT_LEFT, g_color_unknown, u8"\u2193 %s", g_ctx.net_traffic.StrRecv);
 	if (nk_button_image_hover(ctx, GET_PNG(IDR_PNG_EDIT), NULL))
@@ -696,7 +697,7 @@ draw_audio(struct nk_context* ctx)
 		return;
 
 	nk_layout_row(ctx, NK_DYNAMIC, 0, 2, (float[2]) { 1.0f - g_ctx.gui_ratio, g_ctx.gui_ratio });
-	nk_image_label(ctx, GET_PNG(IDR_PNG_MM), gnwinfo_get_text(L"Audio Devices"), NK_TEXT_LEFT, g_color_text_d);
+	nk_image_label(ctx, GET_PNG(IDR_PNG_MM), N_(N__AUDIO), NK_TEXT_LEFT, g_color_text_d);
 	if (nk_button_image_hover(ctx, GET_PNG(IDR_PNG_SETTINGS), NULL))
 		ShellExecuteW(NULL, NULL, L"::{26EE0668-A00A-44D7-9371-BEB064C98683}\\2\\::{F2DDFC82-8F12-4CDD-B7DC-D4FE1425AA4D}", NULL, NULL, SW_NORMAL);
 	nk_layout_row(ctx, NK_DYNAMIC, 0, 2, (float[2]) { 0.7f, 0.3f });
@@ -728,10 +729,10 @@ gnwinfo_draw_main_window(struct nk_context* ctx, float width, float height)
 	g_ctx.gui_ratio = rect.h / rect.w;
 
 	nk_layout_row_push(ctx, g_ctx.gui_ratio);
-	if (nk_button_image_hover(ctx, GET_PNG(IDR_PNG_SETTINGS), gnwinfo_get_text(L"Settings")))
+	if (nk_button_image_hover(ctx, GET_PNG(IDR_PNG_SETTINGS), N_(N__SETTINGS)))
 		g_ctx.window_flag |= GUI_WINDOW_SETTINGS;
 	nk_layout_row_push(ctx, g_ctx.gui_ratio);
-	if (nk_button_image_hover(ctx, GET_PNG(IDR_PNG_REFRESH), gnwinfo_get_text(L"Refresh")))
+	if (nk_button_image_hover(ctx, GET_PNG(IDR_PNG_REFRESH), N_(N__REFRESH)))
 	{
 		gnwinfo_ctx_update(IDT_TIMER_1M);
 		gnwinfo_ctx_update(IDT_TIMER_DISK);
@@ -739,10 +740,10 @@ gnwinfo_draw_main_window(struct nk_context* ctx, float width, float height)
 		gnwinfo_ctx_update(IDT_TIMER_SMB);
 	}
 	nk_layout_row_push(ctx, g_ctx.gui_ratio);
-	if (nk_button_image_hover(ctx, GET_PNG(IDR_PNG_INFO), gnwinfo_get_text(L"About")))
+	if (nk_button_image_hover(ctx, GET_PNG(IDR_PNG_INFO), N_(N__ABOUT)))
 		g_ctx.window_flag |= GUI_WINDOW_ABOUT;
 	nk_layout_row_push(ctx, g_ctx.gui_ratio);
-	if (nk_button_image_hover(ctx, GET_PNG(IDR_PNG_CLOSE), gnwinfo_get_text(L"Close")))
+	if (nk_button_image_hover(ctx, GET_PNG(IDR_PNG_CLOSE), N_(N__CLOSE)))
 		gnwinfo_ctx_exit();
 	nk_layout_row_end(ctx);
 
