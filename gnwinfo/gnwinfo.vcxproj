@@ -125,6 +125,14 @@
     <ClInclude Include="..\nuklear\nuklear_gdip.h" />
     <ClInclude Include="gettext.h" />
     <ClInclude Include="gnwinfo.h" />
+    <ClInclude Include="lang\en_US.h" />
+    <ClInclude Include="lang\it_IT.h" />
+    <ClInclude Include="lang\ja_JP.h" />
+    <ClInclude Include="lang\ko_KR.h" />
+    <ClInclude Include="lang\sv_SE.h" />
+    <ClInclude Include="lang\tr_TR.h" />
+    <ClInclude Include="lang\zh_CN.h" />
+    <ClInclude Include="lang\zh_TW.h" />
     <ClInclude Include="resource.h" />
   </ItemGroup>
   <ItemGroup>

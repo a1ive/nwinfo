@@ -16,6 +16,9 @@
     <Filter Include="Nuklear">
       <UniqueIdentifier>{65d3c7fa-2522-41b2-af3b-e9a1db1500bc}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Lang">
+      <UniqueIdentifier>{8a0edad7-af44-4042-b02a-cf8df3843b1a}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
@@ -36,6 +39,30 @@
     </ClInclude>
     <ClInclude Include="gettext.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="lang\en_US.h">
+      <Filter>Lang</Filter>
+    </ClInclude>
+    <ClInclude Include="lang\it_IT.h">
+      <Filter>Lang</Filter>
+    </ClInclude>
+    <ClInclude Include="lang\ja_JP.h">
+      <Filter>Lang</Filter>
+    </ClInclude>
+    <ClInclude Include="lang\ko_KR.h">
+      <Filter>Lang</Filter>
+    </ClInclude>
+    <ClInclude Include="lang\sv_SE.h">
+      <Filter>Lang</Filter>
+    </ClInclude>
+    <ClInclude Include="lang\tr_TR.h">
+      <Filter>Lang</Filter>
+    </ClInclude>
+    <ClInclude Include="lang\zh_CN.h">
+      <Filter>Lang</Filter>
+    </ClInclude>
+    <ClInclude Include="lang\zh_TW.h">
+      <Filter>Lang</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

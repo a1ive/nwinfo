@@ -5,6 +5,7 @@
 typedef enum _GETTEXT_STR_ID
 {
 	N__FONT_ = 0,
+	N__LANG_NAME_,
 	N__LOADING,
 	N__PLS_WAIT,
 	N__OS,
