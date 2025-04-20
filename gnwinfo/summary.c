@@ -738,10 +738,10 @@ gnwinfo_draw_main_window(struct nk_context* ctx, float width, float height)
 	g_ctx.gui_ratio = rect.h / rect.w;
 
 	nk_layout_row_push(ctx, g_ctx.gui_ratio);
-	if (quick_access_button(ctx, GET_PNG(IDR_PNG_SETTINGS), N_(N__SETTINGS)))
+	if (nk_button_image_hover(ctx, GET_PNG(IDR_PNG_SETTINGS), N_(N__SETTINGS)))
 		g_ctx.window_flag |= GUI_WINDOW_SETTINGS;
 	nk_layout_row_push(ctx, g_ctx.gui_ratio);
-	if (quick_access_button(ctx, GET_PNG(IDR_PNG_REFRESH), N_(N__REFRESH)))
+	if (nk_button_image_hover(ctx, GET_PNG(IDR_PNG_REFRESH), N_(N__REFRESH)))
 	{
 		gnwinfo_ctx_update(IDT_TIMER_1M);
 		gnwinfo_ctx_update(IDT_TIMER_DISK);
@@ -749,10 +749,10 @@ gnwinfo_draw_main_window(struct nk_context* ctx, float width, float height)
 		gnwinfo_ctx_update(IDT_TIMER_SMB);
 	}
 	nk_layout_row_push(ctx, g_ctx.gui_ratio);
-	if (quick_access_button(ctx, GET_PNG(IDR_PNG_INFO), N_(N__ABOUT)))
+	if (nk_button_image_hover(ctx, GET_PNG(IDR_PNG_INFO), N_(N__ABOUT)))
 		g_ctx.window_flag |= GUI_WINDOW_ABOUT;
 	nk_layout_row_push(ctx, g_ctx.gui_ratio);
-	if (quick_access_button(ctx, GET_PNG(IDR_PNG_CLOSE), N_(N__CLOSE)))
+	if (nk_button_image_hover(ctx, GET_PNG(IDR_PNG_CLOSE), N_(N__CLOSE)))
 		gnwinfo_ctx_exit();
 	nk_layout_row_end(ctx);
 
