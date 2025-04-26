@@ -90,8 +90,8 @@ const struct match_entry_t cpudb_centaur[] = {
 //     F   M   S  EF  EM  #cores  L2$   L3$  BC  ModelBits              ModelCode  Name
 	{  7, -1, -1, -1,   -1,  -1,    -1,    -1, ZHAOXIN, 0                ,      0, "Unknown Zhaoxin CPU"           },
 	/* Zhangjiang (2015, 28 nm) */
-	{  7, -1, -1, -1,   15,  -1,    -1,    -1, ZHAOXIN, KAISHENG_|_KH_|_C,      0, "Zhaoxin KaisHeng (ZhangJiang)" }, // C+ (4000)
-	{  7, -1, -1, -1,   15,  -1,    -1,    -1, ZHAOXIN, KAIXIAN_|_ZX_|_C ,      0, "Zhaoxin KaiXian (ZhangJiang)"  }, // C/C+ (4000)
+	{  7, -1, -1, -1,   15,  -1,    -1,    -1, ZHAOXIN, KAISHENG_|_KH_|__C,     0, "Zhaoxin KaisHeng (ZhangJiang)" }, // C+ (4000)
+	{  7, -1, -1, -1,   15,  -1,    -1,    -1, ZHAOXIN, KAIXIAN_|_ZX_|__C ,     0, "Zhaoxin KaiXian (ZhangJiang)"  }, // C/C+ (4000)
 	/* WuDaoKou (2017, 28 nm) */
 	{  7, -1, -1, -1,   27,  -1,    -1,    -1, ZHAOXIN, KAISHENG_|_KH_   , _20000, "Zhaoxin KaisHeng (WuDaoKou)"   }, // KH (20000)
 	{  7, -1, -1, -1,   27,  -1,    -1,    -1, ZHAOXIN, KAIXIAN_|_KX_    ,  _5000, "Zhaoxin KaiXian (WuDaoKou)"    }, // KX (5000)
@@ -133,7 +133,7 @@ static centaur_code_and_bits_t get_brand_code_and_bits(struct cpu_id_t* data)
 		{ _KH_, "KH" },
 		{ _KX_, "KX" },
 		{ _ZX_, "ZX" },
-		{ _C,   "-C" },
+		{ __C,   "-C" },
 		{ _D,   "-D" },
 		{ _E,   "-E" },
 	};
