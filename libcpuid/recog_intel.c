@@ -856,7 +856,7 @@ static intel_code_and_bits_t get_brand_code_and_bits(struct cpu_id_t* data)
 			case '7': bits |= _7; break;
 			case '9': bits |= _9; break;
 		}
-		for(i = i + 10; i < n; i++) {
+		for(i = i + 10; i < (int)n; i++) {
 			switch (bs[i]) {
 				case 'E': bits |= _E; break;
 				case 'F': bits |= _F; break;
