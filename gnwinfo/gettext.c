@@ -15,18 +15,18 @@
 #include "lang/zh_TW.h"
 
 // https://learn.microsoft.com/en-us/openspecs/office_standards/ms-oe376/6c085406-a698-4e12-9d4d-c3b0ee3dbc4a
-static LANGID static_lang_id;
+LANGID g_lang_id;
 
 const char*
 N_(GETTEXT_STR_ID id)
 {
-	if (static_lang_id == 0)
-		static_lang_id = GetUserDefaultUILanguage();
+	if (g_lang_id == 0)
+		g_lang_id = GetUserDefaultUILanguage();
 	if (id >= N__MAX_)
 		return INVALID_N_ID;
 
 	const char* str = NULL;
-	switch (static_lang_id)
+	switch (g_lang_id)
 	{
 	case 2052: // Chinese - People's Republic of China
 		str = lang_zh_cn[id];

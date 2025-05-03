@@ -150,5 +150,7 @@ typedef enum _GETTEXT_STR_ID
 	N__MAX_,
 } GETTEXT_STR_ID;
 
+LANGID g_lang_id;
+
 const char*
 N_(GETTEXT_STR_ID id);

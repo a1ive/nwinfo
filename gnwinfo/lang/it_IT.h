@@ -6,12 +6,13 @@
 static const char*
 lang_it_it[N__MAX_] =
 {
-	[N__FONT_] = u8"Consolas",
-	[N__LANG_NAME_] = u8"Italiano",
+	[N__FONT_] = u8"Consolas", // The font name used in the GUI, should not be translated
+	[N__LANG_NAME_] = u8"Italiano", // The language name used in the GUI
 	[N__LOADING] = u8"Caricamento",
 	[N__PLS_WAIT] = u8"Attendi...",
 	[N__OS] = u8"Sistema operativo",
 	[N__PC] = u8"Computer",
+	//[N__BIOS],
 	[N__CPU] = u8"Processore",
 	[N__MEMORY] = u8"Memoria",
 	[N__DISPLAY] = u8"Dispositivi visualizzazione",
@@ -37,12 +38,20 @@ lang_it_it[N__MAX_] =
 	[N__SB_OFF] = u8"Boot sicuro disabilitato",
 	[N__TOTAL] = u8"Totale",
 	[N__FEATURES] = u8"Funzionalità",
+	//[N__MSR],
 	[N__MULTIPLIER] = u8"Moltiplicatore",
 	[N__BUS_CLOCK] = u8"Clock bus",
 	[N__TEMPERATURE] = u8"Temperatura",
 	[N__VOLTAGE] = u8"Voltaggio",
 	[N__CPU_POWER] = u8"Alimentazione",
-	[N__BRAND] = u8"Marca",
+	//[N__PL1],
+	//[N__PL2],
+	//[N__L1_D],
+	//[N__L1_I],
+	//[N__L2],
+	//[N__L3],
+	//[N__L4],
+	[N__BRAND] = u8"Marca", // refer to the brand (e.g. 'Intel(R) Core(TM) i7-7700K CPU @ 4.20GHz')
 	[N__HYPERVISOR] = u8"Hypervisor",
 	[N__CODE_NAME] = u8"Nome in codice",
 	[N__FAMILY] = u8"Famiglia",
@@ -110,15 +119,17 @@ lang_it_it[N__MAX_] =
 	[N__TOTAL_WRITES] = u8"Totale scritture",
 	[N__NAND_WRITES] = u8"Scritture NAND",
 	[N__BUFFER_SIZE] = u8"Dim. buffer",
-	[N__S_N] = u8"S/N",
+	[N__S_N] = u8"S / N",
 	[N__INTERFACE] = u8"Interfaccia",
 	[N__RPM] = u8"Giri/sec",
 	[N__MODE] = u8"Modo",
 	[N__POWER_ON_COUNT] = u8"N. accensioni",
 	[N__POWER_ON_HOURS] = u8"Ore accensione",
 	[N__DRIVE] = u8"Unità",
-	[N__STANDARD] = u8"Standard",
+	[N__STANDARD] = u8"Standard",  // refer to the standard of the drive (e.g. SATA, NVMe)
+	//[N__ID],
 	[N__ATTRIBUTE] = u8"Attributo",
+	//[N__HEX], // hexadecimal
 	[N__PHYSICAL_MEMORY] = u8"Memoria fisica",
 	[N__PAGE_FILE] = u8"File pagina",
 	[N__SYSTEM_WORKING_SET] = u8"Set lavoro sistema",
