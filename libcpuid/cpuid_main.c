@@ -116,6 +116,11 @@ int cpuid_set_error(cpu_error_t err)
 	return (int) err;
 }
 
+int cpuid_get_error(void)
+{
+	return _libcpuid_errno;
+}
+
 static void raw_data_t_constructor(struct cpu_raw_data_t* raw)
 {
 	memset(raw, 0, sizeof(struct cpu_raw_data_t));
@@ -280,6 +285,316 @@ static cpu_architecture_t cpuid_architecture_identify(struct cpu_raw_data_t* raw
 	return ARCHITECTURE_UNKNOWN;
 }
 
+static int cpuid_serialize_raw_data_internal(struct cpu_raw_data_t* single_raw, struct cpu_raw_data_array_t* raw_array, const char* filename)
+{
+	int i;
+	bool end_loop = false;
+	const bool use_raw_array = (raw_array != NULL) && raw_array->num_raw > 0;
+	logical_cpu_t logical_cpu = 0;
+	struct cpu_raw_data_t* raw_ptr = use_raw_array ? &raw_array->raw[0] : single_raw;
+	const cpu_architecture_t architecture = cpuid_architecture_identify(raw_ptr);
+	FILE *f;
+
+	/* Open file descriptor */
+	f = !strcmp(filename, "") ? stdout : fopen(filename, "wt");
+	if (!f)
+		return cpuid_set_error(ERR_OPEN);
+	debugf(1, "Writing raw CPUID dump to '%s'\n", f == stdout ? "stdout" : filename);
+
+	/* Write raw data to output file */
+	fprintf(f, "version=%s\n", VERSION);
+	while (!end_loop) {
+		if (use_raw_array) {
+			debugf(2, "Writing raw dump for logical CPU %i\n", logical_cpu);
+			fprintf(f, "\n_________________ Logical CPU #%" PRIi16 " _________________\n", logical_cpu);
+			raw_ptr = &raw_array->raw[logical_cpu];
+		}
+		switch (architecture) {
+			case ARCHITECTURE_X86:
+				for (i = 0; i < MAX_CPUID_LEVEL; i++)
+					fprintf(f, "basic_cpuid[%d]=%08" PRIx32 " %08" PRIx32 " %08" PRIx32 " %08" PRIx32 "\n", i,
+						raw_ptr->basic_cpuid[i][EAX], raw_ptr->basic_cpuid[i][EBX],
+						raw_ptr->basic_cpuid[i][ECX], raw_ptr->basic_cpuid[i][EDX]);
+				for (i = 0; i < MAX_EXT_CPUID_LEVEL; i++)
+					fprintf(f, "ext_cpuid[%d]=%08" PRIx32 " %08" PRIx32 " %08" PRIx32 " %08" PRIx32 "\n", i,
+						raw_ptr->ext_cpuid[i][EAX], raw_ptr->ext_cpuid[i][EBX],
+						raw_ptr->ext_cpuid[i][ECX], raw_ptr->ext_cpuid[i][EDX]);
+				for (i = 0; i < MAX_INTELFN4_LEVEL; i++)
+					fprintf(f, "intel_fn4[%d]=%08" PRIx32 " %08" PRIx32 " %08" PRIx32 " %08" PRIx32 "\n", i,
+						raw_ptr->intel_fn4[i][EAX], raw_ptr->intel_fn4[i][EBX],
+						raw_ptr->intel_fn4[i][ECX], raw_ptr->intel_fn4[i][EDX]);
+				for (i = 0; i < MAX_INTELFN11_LEVEL; i++)
+					fprintf(f, "intel_fn11[%d]=%08" PRIx32 " %08" PRIx32 " %08" PRIx32 " %08" PRIx32 "\n", i,
+						raw_ptr->intel_fn11[i][EAX], raw_ptr->intel_fn11[i][EBX],
+						raw_ptr->intel_fn11[i][ECX], raw_ptr->intel_fn11[i][EDX]);
+				for (i = 0; i < MAX_INTELFN12H_LEVEL; i++)
+					fprintf(f, "intel_fn12h[%d]=%08" PRIx32 " %08" PRIx32 " %08" PRIx32 " %08" PRIx32 "\n", i,
+						raw_ptr->intel_fn12h[i][EAX], raw_ptr->intel_fn12h[i][EBX],
+						raw_ptr->intel_fn12h[i][ECX], raw_ptr->intel_fn12h[i][EDX]);
+				for (i = 0; i < MAX_INTELFN14H_LEVEL; i++)
+					fprintf(f, "intel_fn14h[%d]=%08" PRIx32 " %08" PRIx32 " %08" PRIx32 " %08" PRIx32 "\n", i,
+						raw_ptr->intel_fn14h[i][EAX], raw_ptr->intel_fn14h[i][EBX],
+						raw_ptr->intel_fn14h[i][ECX], raw_ptr->intel_fn14h[i][EDX]);
+				for (i = 0; i < MAX_AMDFN8000001DH_LEVEL; i++)
+					fprintf(f, "amd_fn8000001dh[%d]=%08" PRIx32 " %08" PRIx32 " %08" PRIx32 " %08" PRIx32 "\n", i,
+						raw_ptr->amd_fn8000001dh[i][EAX], raw_ptr->amd_fn8000001dh[i][EBX],
+						raw_ptr->amd_fn8000001dh[i][ECX], raw_ptr->amd_fn8000001dh[i][EDX]);
+				for (i = 0; i < MAX_AMDFN80000026H_LEVEL; i++)
+					fprintf(f, "amd_fn80000026h[%d]=%08" PRIx32 " %08" PRIx32 " %08" PRIx32 " %08" PRIx32 "\n", i,
+						raw_ptr->amd_fn80000026h[i][EAX], raw_ptr->amd_fn80000026h[i][EBX],
+						raw_ptr->amd_fn80000026h[i][ECX], raw_ptr->amd_fn80000026h[i][EDX]);
+				break;
+			case ARCHITECTURE_ARM:
+				fprintf(f, "arm_midr=%016" PRIx64 "\n", raw_ptr->arm_midr);
+				fprintf(f, "arm_mpidr=%016" PRIx64 "\n", raw_ptr->arm_mpidr);
+				fprintf(f, "arm_revidr=%016" PRIx64 "\n", raw_ptr->arm_revidr);
+				for (i = 0; i < MAX_ARM_ID_AFR_REGS; i++)
+					fprintf(f, "arm_id_afr%d=%08" PRIx32 "\n", i, raw_ptr->arm_id_afr[i]);
+				for (i = 0; i < MAX_ARM_ID_DFR_REGS; i++)
+					fprintf(f, "arm_id_dfr%d=%08" PRIx32 "\n", i, raw_ptr->arm_id_dfr[i]);
+				for (i = 0; i < MAX_ARM_ID_ISAR_REGS; i++)
+					fprintf(f, "arm_id_isar%d=%08" PRIx32 "\n", i, raw_ptr->arm_id_isar[i]);
+				for (i = 0; i < MAX_ARM_ID_MMFR_REGS; i++)
+					fprintf(f, "arm_id_mmfr%d=%08" PRIx32 "\n", i, raw_ptr->arm_id_mmfr[i]);
+				for (i = 0; i < MAX_ARM_ID_PFR_REGS; i++)
+					fprintf(f, "arm_id_pfr%d=%08" PRIx32 "\n", i, raw_ptr->arm_id_pfr[i]);
+				for (i = 0; i < MAX_ARM_ID_AA64AFR_REGS; i++)
+					fprintf(f, "arm_id_aa64afr%d=%016" PRIx64 "\n", i, raw_ptr->arm_id_aa64afr[i]);
+				for (i = 0; i < MAX_ARM_ID_AA64DFR_REGS; i++)
+					fprintf(f, "arm_id_aa64dfr%d=%016" PRIx64 "\n", i, raw_ptr->arm_id_aa64dfr[i]);
+				for (i = 0; i < MAX_ARM_ID_AA64FPFR_REGS; i++)
+					fprintf(f, "arm_id_aa64fpfr%d=%016" PRIx64 "\n", i, raw_ptr->arm_id_aa64fpfr[i]);
+				for (i = 0; i < MAX_ARM_ID_AA64ISAR_REGS; i++)
+					fprintf(f, "arm_id_aa64isar%d=%016" PRIx64 "\n", i, raw_ptr->arm_id_aa64isar[i]);
+				for (i = 0; i < MAX_ARM_ID_AA64MMFR_REGS; i++)
+					fprintf(f, "arm_id_aa64mmfr%d=%016" PRIx64 "\n", i, raw_ptr->arm_id_aa64mmfr[i]);
+				for (i = 0; i < MAX_ARM_ID_AA64PFR_REGS; i++)
+					fprintf(f, "arm_id_aa64pfr%d=%016" PRIx64 "\n", i, raw_ptr->arm_id_aa64pfr[i]);
+				for (i = 0; i < MAX_ARM_ID_AA64SMFR_REGS; i++)
+					fprintf(f, "arm_id_aa64smfr%d=%016" PRIx64 "\n", i, raw_ptr->arm_id_aa64smfr[i]);
+				for (i = 0; i < MAX_ARM_ID_AA64ZFR_REGS; i++)
+					fprintf(f, "arm_id_aa64zfr%d=%016" PRIx64 "\n", i, raw_ptr->arm_id_aa64zfr[i]);
+				break;
+			default:
+				break;
+		}
+
+		logical_cpu++;
+		end_loop = ((use_raw_array && (logical_cpu >= raw_array->num_raw)) || !use_raw_array);
+	}
+
+	/* Close file descriptor */
+	if (strcmp(filename, ""))
+		fclose(f);
+	return cpuid_set_error(ERR_OK);
+}
+
+#define RAW_ASSIGN_LINE_X86(__line) __line[EAX] = eax ; __line[EBX] = ebx ; __line[ECX] = ecx ; __line[EDX] = edx
+#define RAW_ASSIGN_LINE_AARCH32(__line) __line = aarch32_reg
+#define RAW_ASSIGN_LINE_AARCH64(__line) __line = aarch64_reg
+static int cpuid_deserialize_raw_data_internal(struct cpu_raw_data_t* single_raw, struct cpu_raw_data_array_t* raw_array, const char* filename)
+{
+	int i;
+	int cur_line = 0;
+	int assigned = 0;
+	int subleaf = 0;
+	bool is_header = true;
+	bool is_libcpuid_dump = true;
+	bool is_aida64_dump = false;
+	const bool use_raw_array = (raw_array != NULL);
+	logical_cpu_t logical_cpu = 0, logical_cpu_offset = 0;
+	uint32_t addr, eax, ebx, ecx, edx, aarch32_reg;
+	uint64_t aarch64_reg;
+	char version[8] = "";
+	char line[100];
+	struct cpu_raw_data_t* raw_ptr = single_raw;
+	FILE *f;
+
+	/* Open file descriptor */
+	f = !strcmp(filename, "") ? stdin : fopen(filename, "rt");
+	if (!f)
+		return cpuid_set_error(ERR_OPEN);
+	debugf(1, "Opening raw dump from '%s'\n", f == stdin ? "stdin" : filename);
+
+	if (use_raw_array)
+		cpu_raw_data_array_t_constructor(raw_array, false);
+
+	/* Parse file and store data in cpu_raw_data_t */
+	while (fgets(line, sizeof(line), f) != NULL) {
+		i = -1;
+		line[strcspn(line, "\n")] = '\0';
+		if (line[0] == '\0') // Skip empty lines
+			continue;
+		if (!strcmp(line, "--------------------------------------------------------------------------------")) // Skip test results
+			break;
+		cur_line++;
+		if (is_header) {
+			if (sscanf(line, "version=%s", version) >= 1) {
+				debugf(2, "Recognized version '%s' from raw dump\n", version);
+				is_libcpuid_dump = true;
+				is_aida64_dump = false;
+				continue;
+			}
+			else if (sscanf(line, "basic_cpuid[%d]=%" SCNx32 "%" SCNx32 "%" SCNx32 "%" SCNx32, &i, &eax, &ebx, &ecx, &edx) >= 5) {
+				debugf(2, "Parsing raw dump for a single CPU dump\n");
+				is_header = false;
+				is_libcpuid_dump = true;
+				is_aida64_dump = false;
+				if (use_raw_array) {
+					cpuid_grow_raw_data_array(raw_array, 1);
+					raw_ptr = &raw_array->raw[0];
+					raw_array->with_affinity = false;
+				}
+			}
+			else if (!strcmp(line, "------[ Versions ]------") ||
+			         !strcmp(line, "------[ Logical CPU #0 ]------") ||
+			         !strcmp(line, "------[ CPUID Registers / Logical CPU #0 ]------") ||
+			         !strcmp(line, "CPUID Registers (CPU #1):") ||
+			         strstr(line, "CPU#000 AffMask: 0x")) {
+				debugf(2, "Recognized AIDA64 raw dump\n");
+				is_header = false;
+				is_libcpuid_dump = false;
+				is_aida64_dump = true;
+			}
+		}
+
+		if (is_libcpuid_dump) {
+			if (use_raw_array && (sscanf(line, "_________________ Logical CPU #%" SCNu16 " _________________", &logical_cpu) >= 1)) {
+				debugf(2, "Parsing raw dump for logical CPU %i\n", logical_cpu);
+				is_header = false;
+				cpuid_grow_raw_data_array(raw_array, logical_cpu + 1);
+				raw_ptr = &raw_array->raw[logical_cpu];
+				raw_array->with_affinity = true;
+			}
+			else if ((sscanf(line, "basic_cpuid[%d]=%" SCNx32 "%" SCNx32 "%" SCNx32 "%" SCNx32, &i, &eax, &ebx, &ecx, &edx) >= 5) && (i >= 0) && (i < MAX_CPUID_LEVEL)) {
+				RAW_ASSIGN_LINE_X86(raw_ptr->basic_cpuid[i]);
+			}
+			else if ((sscanf(line, "ext_cpuid[%d]=%" SCNx32 "%" SCNx32 "%" SCNx32 "%" SCNx32, &i, &eax, &ebx, &ecx, &edx) >= 5) && (i >= 0) && (i < MAX_EXT_CPUID_LEVEL)) {
+				RAW_ASSIGN_LINE_X86(raw_ptr->ext_cpuid[i]);
+			}
+			else if ((sscanf(line, "intel_fn4[%d]=%" SCNx32 "%" SCNx32 "%" SCNx32 "%" SCNx32, &i, &eax, &ebx, &ecx, &edx) >= 5) && (i >= 0) && (i < MAX_INTELFN4_LEVEL)) {
+				RAW_ASSIGN_LINE_X86(raw_ptr->intel_fn4[i]);
+			}
+			else if ((sscanf(line, "intel_fn11[%d]=%" SCNx32 "%" SCNx32 "%" SCNx32 "%" SCNx32, &i, &eax, &ebx, &ecx, &edx) >= 5) && (i >= 0) && (i < MAX_INTELFN11_LEVEL)) {
+				RAW_ASSIGN_LINE_X86(raw_ptr->intel_fn11[i]);
+			}
+			else if ((sscanf(line, "intel_fn12h[%d]=%" SCNx32 "%" SCNx32 "%" SCNx32 "%" SCNx32, &i, &eax, &ebx, &ecx, &edx) >= 5) && (i >= 0) && (i < MAX_INTELFN12H_LEVEL)) {
+				RAW_ASSIGN_LINE_X86(raw_ptr->intel_fn12h[i]);
+			}
+			else if ((sscanf(line, "intel_fn14h[%d]=%" SCNx32 "%" SCNx32 "%" SCNx32 "%" SCNx32, &i, &eax, &ebx, &ecx, &edx) >= 5) && (i >= 0) && (i < MAX_INTELFN14H_LEVEL)) {
+				RAW_ASSIGN_LINE_X86(raw_ptr->intel_fn14h[i]);
+			}
+			else if ((sscanf(line, "amd_fn8000001dh[%d]=%" SCNx32 "%" SCNx32 "%" SCNx32 "%" SCNx32, &i, &eax, &ebx, &ecx, &edx) >= 5) && (i >= 0) && (i < MAX_AMDFN8000001DH_LEVEL)) {
+				RAW_ASSIGN_LINE_X86(raw_ptr->amd_fn8000001dh[i]);
+			}
+			else if ((sscanf(line, "amd_fn80000026h[%d]=%" SCNx32 "%" SCNx32 "%" SCNx32 "%" SCNx32, &i, &eax, &ebx, &ecx, &edx) >= 5) && (i >= 0) && (i < MAX_AMDFN80000026H_LEVEL)) {
+				RAW_ASSIGN_LINE_X86(raw_ptr->amd_fn80000026h[i]);
+			}
+			else if ((sscanf(line, "arm_midr=%" SCNx64, &aarch64_reg) >= 1)) {
+				RAW_ASSIGN_LINE_AARCH64(raw_ptr->arm_midr);
+			}
+			else if ((sscanf(line, "arm_mpidr=%" SCNx64, &aarch64_reg) >= 1)) {
+				RAW_ASSIGN_LINE_AARCH64(raw_ptr->arm_mpidr);
+			}
+			else if ((sscanf(line, "arm_revidr=%" SCNx64, &aarch64_reg) >= 1)) {
+				RAW_ASSIGN_LINE_AARCH64(raw_ptr->arm_revidr);
+			}
+			else if ((sscanf(line, "arm_id_afr%d=%" SCNx32, &i, &aarch32_reg) >= 2)) {
+				RAW_ASSIGN_LINE_AARCH32(raw_ptr->arm_id_afr[i]);
+			}
+			else if ((sscanf(line, "arm_id_dfr%d=%" SCNx32, &i, &aarch32_reg) >= 2)) {
+				RAW_ASSIGN_LINE_AARCH32(raw_ptr->arm_id_dfr[i]);
+			}
+			else if ((sscanf(line, "arm_id_isar%d=%" SCNx32, &i, &aarch32_reg) >= 2)) {
+				RAW_ASSIGN_LINE_AARCH32(raw_ptr->arm_id_isar[i]);
+			}
+			else if ((sscanf(line, "arm_id_mmfr%d=%" SCNx32, &i, &aarch32_reg) >= 2)) {
+				RAW_ASSIGN_LINE_AARCH32(raw_ptr->arm_id_mmfr[i]);
+			}
+			else if ((sscanf(line, "arm_id_pfr%d=%" SCNx32, &i, &aarch32_reg) >= 2)) {
+				RAW_ASSIGN_LINE_AARCH32(raw_ptr->arm_id_pfr[i]);
+			}
+			else if ((sscanf(line, "arm_id_aa64afr%d=%" SCNx64, &i, &aarch64_reg) >= 2)) {
+				RAW_ASSIGN_LINE_AARCH64(raw_ptr->arm_id_aa64afr[i]);
+			}
+			else if ((sscanf(line, "arm_id_aa64dfr%d=%" SCNx64, &i, &aarch64_reg) >= 2)) {
+				RAW_ASSIGN_LINE_AARCH64(raw_ptr->arm_id_aa64dfr[i]);
+			}
+			else if ((sscanf(line, "arm_id_aa64fpfr%d=%" SCNx64, &i, &aarch64_reg) >= 2)) {
+				RAW_ASSIGN_LINE_AARCH64(raw_ptr->arm_id_aa64fpfr[i]);
+			}
+			else if ((sscanf(line, "arm_id_aa64isar%d=%" SCNx64, &i, &aarch64_reg) >= 2)) {
+				RAW_ASSIGN_LINE_AARCH64(raw_ptr->arm_id_aa64isar[i]);
+			}
+			else if ((sscanf(line, "arm_id_aa64mmfr%d=%" SCNx64, &i, &aarch64_reg) >= 2)) {
+				RAW_ASSIGN_LINE_AARCH64(raw_ptr->arm_id_aa64mmfr[i]);
+			}
+			else if ((sscanf(line, "arm_id_aa64pfr%d=%" SCNx64, &i, &aarch64_reg) >= 2)) {
+				RAW_ASSIGN_LINE_AARCH64(raw_ptr->arm_id_aa64pfr[i]);
+			}
+			else if ((sscanf(line, "arm_id_aa64smfr%d=%" SCNx64, &i, &aarch64_reg) >= 2)) {
+				RAW_ASSIGN_LINE_AARCH64(raw_ptr->arm_id_aa64smfr[i]);
+			}
+			else if ((sscanf(line, "arm_id_aa64zfr%d=%" SCNx64, &i, &aarch64_reg) >= 2)) {
+				RAW_ASSIGN_LINE_AARCH64(raw_ptr->arm_id_aa64zfr[i]);
+			}
+			else if (line[0] != '\0') {
+				warnf("Warning: file '%s', line %d: '%s' not understood!\n", filename, cur_line, line);
+			}
+		}
+		else if (is_aida64_dump) {
+			if (use_raw_array && ((sscanf(line, "------[ Logical CPU #%" SCNu16 " ]------", &logical_cpu) >= 1) ||
+			                      (sscanf(line, "------[ CPUID Registers / Logical CPU #%" SCNu16 " ]------", &logical_cpu) >= 1) ||
+			                      (sscanf(line, "CPUID Registers (CPU #%" SCNu16, &logical_cpu) >= 1) ||
+			                      (sscanf(line, "CPU#%" SCNu16 " AffMask: 0x%*x", &logical_cpu) >= 1))) {
+				/* Some raw dumps start core count from 1, we need to start from 0 */
+				if ((raw_array->num_raw == 0) && (logical_cpu >= 1))
+					logical_cpu_offset = logical_cpu;
+				logical_cpu -= logical_cpu_offset;
+				debugf(2, "Parsing AIDA64 raw dump for logical CPU %i\n", logical_cpu);
+				cpuid_grow_raw_data_array(raw_array, logical_cpu + 1);
+				raw_ptr = &raw_array->raw[logical_cpu];
+				raw_array->with_affinity = true;
+				continue;
+			}
+			subleaf = 0;
+			assigned = sscanf(line, "CPUID %" SCNx32 ": %" SCNx32 "-%" SCNx32 "-%" SCNx32 "-%" SCNx32 " [SL %02i]", &addr, &eax, &ebx, &ecx, &edx, &subleaf);
+			if (assigned == 1)
+				assigned = sscanf(line, "CPUID %" SCNx32 "  	 %" SCNx32 "-%" SCNx32 "-%" SCNx32 "-%" SCNx32 " [SL %02i]", &addr, &eax, &ebx, &ecx, &edx, &subleaf);
+			debugf(3, "raw line %d: %i items assigned for string '%s'\n", cur_line, assigned, line);
+			if ((assigned >= 5) && (subleaf == 0)) {
+				if (addr < MAX_CPUID_LEVEL) {
+					i = (int) addr;
+					RAW_ASSIGN_LINE_X86(raw_ptr->basic_cpuid[i]);
+				}
+				else if ((addr >= ADDRESS_EXT_CPUID_START) && (addr < ADDRESS_EXT_CPUID_END)) {
+					i = (int) addr - ADDRESS_EXT_CPUID_START;
+					RAW_ASSIGN_LINE_X86(raw_ptr->ext_cpuid[i]);
+				}
+			}
+			if (assigned >= 6) {
+				i = subleaf;
+				switch (addr) {
+					case 0x00000004: RAW_ASSIGN_LINE_X86(raw_ptr->intel_fn4[i]);       break;
+					case 0x0000000B: RAW_ASSIGN_LINE_X86(raw_ptr->intel_fn11[i]);      break;
+					case 0x00000012: RAW_ASSIGN_LINE_X86(raw_ptr->intel_fn12h[i]);     break;
+					case 0x00000014: RAW_ASSIGN_LINE_X86(raw_ptr->intel_fn14h[i]);     break;
+					case 0x8000001D: RAW_ASSIGN_LINE_X86(raw_ptr->amd_fn8000001dh[i]); break;
+					case 0x80000026: RAW_ASSIGN_LINE_X86(raw_ptr->amd_fn80000026h[i]); break;
+					default: break;
+				}
+			}
+		}
+	}
+
+	/* Close file descriptor */
+	if (strcmp(filename, ""))
+		fclose(f);
+	return cpuid_set_error((use_raw_array && (raw_array->num_raw == 0)) ? ERR_BADFMT : ERR_OK);
+}
+#undef RAW_ASSIGN_LINE_X86
+#undef RAW_ASSIGN_LINE_ARM
+
 static void load_features_common(struct cpu_raw_data_t* raw, struct cpu_id_t* data)
 {
 	const struct feature_map_t matchtable_edx1[] = {
@@ -428,61 +743,6 @@ static cpu_vendor_t cpuid_vendor_identify(const uint32_t *raw_vendor, char *vend
 	return vendor;
 }
 
-static hypervisor_vendor_t cpuid_get_hypervisor(struct cpu_id_t* data)
-{
-	int i;
-	uint32_t hypervisor_fn40000000h[NUM_REGS];
-	const struct { hypervisor_vendor_t hypervisor; char match[16]; }
-	matchtable[] = {
-		/* source: https://github.com/a0rtega/pafish/blob/master/pafish/cpu.c */
-		{ HYPERVISOR_ACRN       , "ACRNACRNACRN"    },
-		{ HYPERVISOR_BHYVE      , "bhyve bhyve\0"   },
-		{ HYPERVISOR_HYPERV     , "Microsoft Hv"    },
-		{ HYPERVISOR_KVM        , "KVMKVMKVM\0\0\0" },
-		{ HYPERVISOR_KVM        , "Linux KVM Hv"    },
-		{ HYPERVISOR_PARALLELS  , "prl hyperv\0\0"  },
-		{ HYPERVISOR_PARALLELS  , "lrpepyh vr\0\0"  },
-		{ HYPERVISOR_QEMU       , "TCGTCGTCGTCG"    },
-		{ HYPERVISOR_QNX        , "QNXQVMBSQG\0\0"  },
-		{ HYPERVISOR_VIRTUALBOX , "VBoxVBoxVBox"    },
-		{ HYPERVISOR_VMWARE     , "VMwareVMware"    },
-		{ HYPERVISOR_XEN        , "XenVMMXenVMM"    },
-	};
-
-	/* Intel and AMD CPUs have reserved bit 31 of ECX of CPUID leaf 0x1 as the hypervisor present bit
-	 *Source: https://kb.vmware.com/s/article/1009458 */
-	switch (data->vendor) {
-		case VENDOR_AMD:
-		case VENDOR_INTEL:
-			break;
-		default:
-			return HYPERVISOR_UNKNOWN;
-	}
-	if (!data->flags[CPU_FEATURE_HYPERVISOR])
-		return HYPERVISOR_NONE;
-
-	/* Intel and AMD have also reserved CPUID leaves 0x40000000 - 0x400000FF for software use.
-	 * Hypervisors can use these leaves to provide an interface to pass information
-	 * from the hypervisor to the guest operating system running inside a virtual machine.
-	 * The hypervisor bit indicates the presence of a hypervisor
-	 * and that it is safe to test these additional software leaves. */
-	memset(hypervisor_fn40000000h, 0, sizeof(hypervisor_fn40000000h));
-	hypervisor_fn40000000h[EAX] = 0x40000000;
-	cpu_exec_cpuid_ext(hypervisor_fn40000000h);
-
-	/* Copy the hypervisor CPUID information leaf */
-	memcpy(data->hypervisor_str + 0, &hypervisor_fn40000000h[1], 4);
-	memcpy(data->hypervisor_str + 4, &hypervisor_fn40000000h[2], 4);
-	memcpy(data->hypervisor_str + 8, &hypervisor_fn40000000h[3], 4);
-	data->hypervisor_str[12] = '\0';
-
-	/* Determine hypervisor */
-	for (i = 0; i < sizeof(matchtable) / sizeof(matchtable[0]); i++)
-		if (!strcmp(data->hypervisor_str, matchtable[i].match))
-			return matchtable[i].hypervisor;
-	return HYPERVISOR_UNKNOWN;
-}
-
 static int cpuid_basic_identify(struct cpu_raw_data_t* raw, struct cpu_id_t* data)
 {
 	int i, j, basic, xmodel, xfamily, ext;
@@ -522,6 +782,39 @@ static int cpuid_basic_identify(struct cpu_raw_data_t* raw, struct cpu_id_t* dat
 	load_features_common(raw, data);
 	data->total_logical_cpus = get_total_cpus();
 	return cpuid_set_error(ERR_OK);
+}
+
+static void make_list_from_string(const char* csv, struct cpu_list_t* list)
+{
+	int i, j, n, l, last;
+	l = (int) strlen(csv);
+	n = 0;
+	for (i = 0; i < l; i++) if (csv[i] == ',') n++;
+	n++;
+	list->names = (char**) malloc(sizeof(char*) * n);
+	if (!list->names) { /* Memory allocation failed */
+		list->num_entries = 0;
+		cpuid_set_error(ERR_NO_MEM);
+		return;
+	}
+	list->num_entries = n;
+	last = -1;
+	n = 0;
+	for (i = 0; i <= l; i++) if (i == l || csv[i] == ',') {
+		list->names[n] = (char*) malloc(i - last);
+		if (!list->names[n]) { /* Memory allocation failed */
+			cpuid_set_error(ERR_NO_MEM);
+			for (j = 0; j < n; j++) free(list->names[j]);
+			free(list->names);
+			list->num_entries = 0;
+			list->names = NULL;
+			return;
+		}
+		memcpy(list->names[n], &csv[last + 1], i - last - 1);
+		list->names[n][i - last - 1] = '\0';
+		n++;
+		last = i;
+	}
 }
 
 static bool cpu_ident_id_x86(struct cpu_raw_data_t* raw, struct internal_topology_t* topology)
@@ -758,6 +1051,7 @@ int cpuid_get_raw_data_core(struct cpu_raw_data_t* data, logical_cpu_t logical_c
 	unsigned i;
 	struct cpuid_driver_t *handle;
 
+	/* Try to use cpuid kernel driver on AArch32/AArch64 states */
 	if ((handle = cpu_cpuid_driver_open_core(logical_cpu)) != NULL) {
 		debugf(2, "Using kernel driver to read register on logical CPU %u\n", logical_cpu);
 		cpu_read_arm_register_64b(handle, REQ_MIDR, &data->arm_midr);
@@ -778,6 +1072,8 @@ int cpuid_get_raw_data_core(struct cpu_raw_data_t* data, logical_cpu_t logical_c
 			cpu_read_arm_register_64b(handle, REQ_ID_AA64AFR0 + i, &data->arm_id_aa64afr[i]);
 		for (i = 0; i < MAX_ARM_ID_AA64DFR_REGS; i++)
 			cpu_read_arm_register_64b(handle, REQ_ID_AA64DFR0 + i, &data->arm_id_aa64dfr[i]);
+		for (i = 0; i < MAX_ARM_ID_AA64FPFR_REGS; i++)
+			cpu_read_arm_register_64b(handle, REQ_ID_AA64FPFR0 + i, &data->arm_id_aa64fpfr[i]);
 		for (i = 0; i < MAX_ARM_ID_AA64ISAR_REGS; i++)
 			cpu_read_arm_register_64b(handle, REQ_ID_AA64ISAR0 + i, &data->arm_id_aa64isar[i]);
 		for (i = 0; i < MAX_ARM_ID_AA64MMFR_REGS; i++)
@@ -791,8 +1087,9 @@ int cpuid_get_raw_data_core(struct cpu_raw_data_t* data, logical_cpu_t logical_c
 # endif /* PLATFORM_AARCH64 */
 		cpu_cpuid_driver_close(handle);
 	}
-# if defined(PLATFORM_AARCH64)
 	else {
+# if defined(PLATFORM_AARCH64)
+		/* Fallback to MRS instruction on AArch64 state */
 		if (!cpuid_present())
 			return cpuid_set_error(ERR_NO_CPUID);
 		debugf(2, "Using MRS instruction to read register on logical CPU %u\n", logical_cpu);
@@ -803,9 +1100,12 @@ int cpuid_get_raw_data_core(struct cpu_raw_data_t* data, logical_cpu_t logical_c
 		cpu_exec_mrs(AARCH64_REG_ID_AA64AFR1_EL1, data->arm_id_aa64afr[1]);
 		cpu_exec_mrs(AARCH64_REG_ID_AA64DFR0_EL1, data->arm_id_aa64dfr[0]);
 		cpu_exec_mrs(AARCH64_REG_ID_AA64DFR1_EL1, data->arm_id_aa64dfr[1]);
+		cpu_exec_mrs(AARCH64_REG_ID_AA64DFR2_EL1, data->arm_id_aa64dfr[2]);
+		cpu_exec_mrs(AARCH64_REG_ID_AA64FPFR0_EL1, data->arm_id_aa64fpfr[0]);
 		cpu_exec_mrs(AARCH64_REG_ID_AA64ISAR0_EL1, data->arm_id_aa64isar[0]);
 		cpu_exec_mrs(AARCH64_REG_ID_AA64ISAR1_EL1, data->arm_id_aa64isar[1]);
 		cpu_exec_mrs(AARCH64_REG_ID_AA64ISAR2_EL1, data->arm_id_aa64isar[2]);
+		cpu_exec_mrs(AARCH64_REG_ID_AA64ISAR3_EL1, data->arm_id_aa64isar[3]);
 		cpu_exec_mrs(AARCH64_REG_ID_AA64MMFR0_EL1, data->arm_id_aa64mmfr[0]);
 		cpu_exec_mrs(AARCH64_REG_ID_AA64MMFR1_EL1, data->arm_id_aa64mmfr[1]);
 		cpu_exec_mrs(AARCH64_REG_ID_AA64MMFR2_EL1, data->arm_id_aa64mmfr[2]);
@@ -816,11 +1116,18 @@ int cpuid_get_raw_data_core(struct cpu_raw_data_t* data, logical_cpu_t logical_c
 		cpu_exec_mrs(AARCH64_REG_ID_AA64PFR2_EL1, data->arm_id_aa64pfr[2]);
 		cpu_exec_mrs(AARCH64_REG_ID_AA64SMFR0_EL1, data->arm_id_aa64smfr[0]);
 		cpu_exec_mrs(AARCH64_REG_ID_AA64ZFR0_EL1, data->arm_id_aa64zfr[0]);
-	}
+# else
+	/* Return ERR_NO_CPUID on AArch32 state */
+		return cpuid_set_error(ERR_NO_CPUID);
 # endif /* PLATFORM_AARCH64 */
+	}
 #else
-# warning This CPU architecture is not supported by libcpuid
-	UNUSED(data);
+    #if defined(_MSC_VER)
+        #pragma message("Warning: This CPU architecture is not supported by libcpuid")
+    #else
+        #warning This CPU architecture is not supported by libcpuid
+    #endif
+    UNUSED(data);
 #endif
 
 	if (affinity_saved)
@@ -852,6 +1159,27 @@ int cpuid_get_all_raw_data(struct cpu_raw_data_array_t* data)
 	if (r == ERR_INVCNB)
 		r = ERR_OK;
 	return cpuid_set_error(r);
+}
+
+int cpuid_serialize_raw_data(struct cpu_raw_data_t* data, const char* filename)
+{
+	return cpuid_serialize_raw_data_internal(data, NULL, filename);
+}
+
+int cpuid_serialize_all_raw_data(struct cpu_raw_data_array_t* data, const char* filename)
+{
+	return cpuid_serialize_raw_data_internal(NULL, data, filename);
+}
+
+int cpuid_deserialize_raw_data(struct cpu_raw_data_t* data, const char* filename)
+{
+	raw_data_t_constructor(data);
+	return cpuid_deserialize_raw_data_internal(data, NULL, filename);
+}
+
+int cpuid_deserialize_all_raw_data(struct cpu_raw_data_array_t* data, const char* filename)
+{
+	return cpuid_deserialize_raw_data_internal(NULL, data, filename);
 }
 
 int cpu_ident_internal(struct cpu_raw_data_t* raw, struct cpu_id_t* data, struct internal_id_info_t* internal)
@@ -893,6 +1221,8 @@ int cpu_ident_internal(struct cpu_raw_data_t* raw, struct cpu_id_t* data, struct
 			r = ERR_CPU_UNKN;
 			break;
 	}
+
+	data->hypervisor_vendor = cpuid_get_hypervisor(raw, data);
 
 #ifndef LIBCPUID_DISABLE_DEPRECATED
 #  if defined(__GNUC__) || defined(GNUC)
@@ -1143,7 +1473,7 @@ const char* cpu_architecture_str(cpu_architecture_t architecture)
 {
 	const struct { cpu_architecture_t architecture; const char* name; }
 	matchtable[] = {
-		{ ARCHITECTURE_UNKNOWN, "unknown" },
+		{ ARCHITECTURE_UNKNOWN, UNKN_STR  },
 		{ ARCHITECTURE_X86,     "x86"     },
 		{ ARCHITECTURE_ARM,     "ARM"     },
 	};
@@ -1161,7 +1491,7 @@ const char* cpu_feature_level_str(cpu_feature_level_t level)
 {
 	const struct { cpu_feature_level_t level; const char* name; }
 	matchtable[] = {
-		{ FEATURE_LEVEL_UNKNOWN,       "unknown"   },
+		{ FEATURE_LEVEL_UNKNOWN,   UNKN_STR    },
 		/* x86 */
 		{ FEATURE_LEVEL_I386,      "i386"      },
 		{ FEATURE_LEVEL_I486,      "i486"      },
@@ -1205,6 +1535,7 @@ const char* cpu_feature_level_str(cpu_feature_level_t level)
 		{ FEATURE_LEVEL_ARM_V9_2_A, "ARMv9.2-A" },
 		{ FEATURE_LEVEL_ARM_V9_3_A, "ARMv9.3-A" },
 		{ FEATURE_LEVEL_ARM_V9_4_A, "ARMv9.4-A" },
+		{ FEATURE_LEVEL_ARM_V9_5_A, "ARMv9.5-A" },
 	};
 	unsigned i, n = COUNT_OF(matchtable);
 	if (n != (NUM_FEATURE_LEVELS - FEATURE_LEVEL_ARM_V1) + (FEATURE_LEVEL_X86_64_V4 - FEATURE_LEVEL_I386) + 2) {
@@ -1384,14 +1715,17 @@ const char* cpu_feature_str(cpu_feature_t feature)
 		{ CPU_FEATURE_HYPERVISOR, "hypervisor" },
 		{ CPU_FEATURE_INTEL_DTS, "intel_dts" },
 		{ CPU_FEATURE_INTEL_PTM, "intel_ptm" },
+		/* Arm */
 		{ CPU_FEATURE_SWAP, "swap" },
 		{ CPU_FEATURE_THUMB, "thumb" },
 		{ CPU_FEATURE_ADVMULTU, "advmultu" },
 		{ CPU_FEATURE_ADVMULTS, "advmults" },
 		{ CPU_FEATURE_JAZELLE, "jazelle" },
+		/* Armv6.0 */
 		{ CPU_FEATURE_DEBUGV6, "debugv6" },
 		{ CPU_FEATURE_DEBUGV6P1, "debugv6p1" },
 		{ CPU_FEATURE_THUMB2, "thumb2" },
+		/* Armv7.0 */
 		{ CPU_FEATURE_DEBUGV7, "debugv7" },
 		{ CPU_FEATURE_DEBUGV7P1, "debugv7p1" },
 		{ CPU_FEATURE_THUMBEE, "thumbee" },
@@ -1399,6 +1733,7 @@ const char* cpu_feature_str(cpu_feature_t feature)
 		{ CPU_FEATURE_LPAE, "lpae" },
 		{ CPU_FEATURE_PMUV1, "pmuv1" },
 		{ CPU_FEATURE_PMUV2, "pmuv2" },
+		/* A2.2.1 The Armv8.0 architecture extension */
 		{ CPU_FEATURE_ASID16, "asid16" },
 		{ CPU_FEATURE_ADVSIMD, "advsimd" },
 		{ CPU_FEATURE_CRC32, "crc32" },
@@ -1416,6 +1751,7 @@ const char* cpu_feature_str(cpu_feature_t feature)
 		{ CPU_FEATURE_SHA1, "sha1" },
 		{ CPU_FEATURE_SHA256, "sha256" },
 		{ CPU_FEATURE_NTLBPA, "ntlbpa" },
+		/* A2.2.2 The Armv8.1 architecture extension */
 		{ CPU_FEATURE_HAFDBS, "hafdbs" },
 		{ CPU_FEATURE_HPDS, "hpds" },
 		{ CPU_FEATURE_LOR, "lor" },
@@ -1425,6 +1761,7 @@ const char* cpu_feature_str(cpu_feature_t feature)
 		{ CPU_FEATURE_RDM, "rdm" },
 		{ CPU_FEATURE_VHE, "vhe" },
 		{ CPU_FEATURE_VMID16, "vmid16" },
+		/* A2.2.3 The Armv8.2 architecture extension */
 		{ CPU_FEATURE_AA32HPD, "aa32hpd" },
 		{ CPU_FEATURE_AA32I8MM, "aa32i8mm" },
 		{ CPU_FEATURE_DPB, "dpb" },
@@ -1449,6 +1786,7 @@ const char* cpu_feature_str(cpu_feature_t feature)
 		{ CPU_FEATURE_TTCNP, "ttcnp" },
 		{ CPU_FEATURE_UAO, "uao" },
 		{ CPU_FEATURE_XNX, "xnx" },
+		/* A2.2.4 The Armv8.3 architecture extension */
 		{ CPU_FEATURE_CCIDX, "ccidx" },
 		{ CPU_FEATURE_CONSTPACFIELD, "constpacfield" },
 		{ CPU_FEATURE_EPAC, "epac" },
@@ -1462,6 +1800,7 @@ const char* cpu_feature_str(cpu_feature_t feature)
 		{ CPU_FEATURE_PACQARMA5, "pacqarma5" },
 		{ CPU_FEATURE_PAUTH, "pauth" },
 		{ CPU_FEATURE_SPEV1P1, "spev1p1" },
+		/* A2.2.5 The Armv8.4 architecture extension */
 		{ CPU_FEATURE_AMUV1, "amuv1" },
 		{ CPU_FEATURE_BBM, "bbm" },
 		{ CPU_FEATURE_DIT, "dit" },
@@ -1483,6 +1822,7 @@ const char* cpu_feature_str(cpu_feature_t feature)
 		{ CPU_FEATURE_TRF, "trf" },
 		{ CPU_FEATURE_TTL, "ttl" },
 		{ CPU_FEATURE_TTST, "ttst" },
+		/* A2.2.6 The Armv8.5 architecture extension */
 		{ CPU_FEATURE_BTI, "bti" },
 		{ CPU_FEATURE_CSV2, "csv2" },
 		{ CPU_FEATURE_CSV3, "csv3" },
@@ -1501,6 +1841,7 @@ const char* cpu_feature_str(cpu_feature_t feature)
 		{ CPU_FEATURE_SPECRES, "specres" },
 		{ CPU_FEATURE_SSBS, "ssbs" },
 		{ CPU_FEATURE_SSBS2, "ssbs2" },
+		/* A2.2.7 The Armv8.6 architecture extension */
 		{ CPU_FEATURE_AA32BF16, "aa32bf16" },
 		{ CPU_FEATURE_AMUV1P1, "amuv1p1" },
 		{ CPU_FEATURE_BF16, "bf16" },
@@ -1513,6 +1854,7 @@ const char* cpu_feature_str(cpu_feature_t feature)
 		{ CPU_FEATURE_MTPMU, "mtpmu" },
 		{ CPU_FEATURE_PAUTH2, "pauth2" },
 		{ CPU_FEATURE_TWED, "twed" },
+		/* A2.2.8 The Armv8.7 architecture extension */
 		{ CPU_FEATURE_AFP, "afp" },
 		{ CPU_FEATURE_EBF16, "ebf16" },
 		{ CPU_FEATURE_HCX, "hcx" },
@@ -1528,6 +1870,7 @@ const char* cpu_feature_str(cpu_feature_t feature)
 		{ CPU_FEATURE_SPEV1P2, "spev1p2" },
 		{ CPU_FEATURE_WFXT, "wfxt" },
 		{ CPU_FEATURE_XS, "xs" },
+		/* A2.2.9 The Armv8.8 architecture extension */
 		{ CPU_FEATURE_CMOW, "cmow" },
 		{ CPU_FEATURE_DEBUGV8P8, "debugv8p8" },
 		{ CPU_FEATURE_HBC, "hbc" },
@@ -1538,6 +1881,7 @@ const char* cpu_feature_str(cpu_feature_t feature)
 		{ CPU_FEATURE_SPEV1P3, "spev1p3" },
 		{ CPU_FEATURE_TCR2, "tcr2" },
 		{ CPU_FEATURE_TIDCP1, "tidcp1" },
+		/* A2.2.10 The Armv8.9 architecture extension */
 		{ CPU_FEATURE_ADERR, "aderr" },
 		{ CPU_FEATURE_AIE, "aie" },
 		{ CPU_FEATURE_ANERR, "anerr" },
@@ -1573,6 +1917,7 @@ const char* cpu_feature_str(cpu_feature_t feature)
 		{ CPU_FEATURE_SPEV1P4, "spev1p4" },
 		{ CPU_FEATURE_SPMU, "spmu" },
 		{ CPU_FEATURE_THE, "the" },
+		/* A2.3.1 The Armv9.0 architecture extension */
 		{ CPU_FEATURE_SVE2, "sve2" },
 		{ CPU_FEATURE_SVE_AES, "sve_aes" },
 		{ CPU_FEATURE_SVE_BITPERM, "sve_bitperm" },
@@ -1581,15 +1926,18 @@ const char* cpu_feature_str(cpu_feature_t feature)
 		{ CPU_FEATURE_SVE_SM4, "sve_sm4" },
 		{ CPU_FEATURE_TME, "tme" },
 		{ CPU_FEATURE_TRBE, "trbe" },
+		/* A2.3.3 The Armv9.2 architecture extension */
 		{ CPU_FEATURE_BRBE, "brbe" },
 		{ CPU_FEATURE_RME, "rme" },
 		{ CPU_FEATURE_SME, "sme" },
 		{ CPU_FEATURE_SME_F64F64, "sme_f64f64" },
 		{ CPU_FEATURE_SME_FA64, "sme_fa64" },
 		{ CPU_FEATURE_SME_I16I64, "sme_i16i64" },
+		/* A2.3.4 The Armv9.3 architecture extension */
 		{ CPU_FEATURE_BRBEV1P1, "brbev1p1" },
 		{ CPU_FEATURE_MEC, "mec" },
 		{ CPU_FEATURE_SME2, "sme2" },
+		/* A2.3.5 The Armv9.4 architecture extension */
 		{ CPU_FEATURE_ABLE, "able" },
 		{ CPU_FEATURE_BWE, "bwe" },
 		{ CPU_FEATURE_D128, "d128" },
@@ -1606,6 +1954,35 @@ const char* cpu_feature_str(cpu_feature_t feature)
 		{ CPU_FEATURE_SYSINSTR128, "sysinstr128" },
 		{ CPU_FEATURE_SYSREG128, "sysreg128" },
 		{ CPU_FEATURE_TRBE_EXT, "trbe_ext" },
+		/* A2.3.6 The Armv9.5 architecture extension */
+		{ CPU_FEATURE_ASID2, "asid2" },
+		{ CPU_FEATURE_BWE2, "bwe2" },
+		{ CPU_FEATURE_CPA, "cpa" },
+		{ CPU_FEATURE_CPA2, "cpa2" },
+		{ CPU_FEATURE_E2H0, "e2h0" },
+		{ CPU_FEATURE_E3DSE, "e3dse" },
+		{ CPU_FEATURE_ETS3, "ets3" },
+		{ CPU_FEATURE_FAMINMAX, "faminmax" },
+		{ CPU_FEATURE_FGWTE3, "fgwte3" },
+		{ CPU_FEATURE_FP8, "fp8" },
+		{ CPU_FEATURE_FP8DOT2, "fp8dot2" },
+		{ CPU_FEATURE_FP8DOT4, "fp8dot4" },
+		{ CPU_FEATURE_FP8FMA, "fp8fma" },
+		{ CPU_FEATURE_FPMR, "fpmr" },
+		{ CPU_FEATURE_HACDBS, "hacdbs" },
+		{ CPU_FEATURE_HDBSS, "hdbss" },
+		{ CPU_FEATURE_LUT, "lut" },
+		{ CPU_FEATURE_PAUTH_LR, "pauth_lr" },
+		{ CPU_FEATURE_RME_GPC2, "rme_gpc2" },
+		{ CPU_FEATURE_SME_F8F16, "sme_f8f16" },
+		{ CPU_FEATURE_SME_F8F32, "sme_f8f32" },
+		{ CPU_FEATURE_SME_LUTV2, "sme_lutv2" },
+		{ CPU_FEATURE_SPMU2, "spmu2" },
+		{ CPU_FEATURE_SSVE_FP8DOT2, "ssve_fp8dot2" },
+		{ CPU_FEATURE_SSVE_FP8DOT4, "ssve_fp8dot4" },
+		{ CPU_FEATURE_SSVE_FP8FMA, "ssve_fp8fma" },
+		{ CPU_FEATURE_STEP2, "step2" },
+		{ CPU_FEATURE_TLBIW, "tlbiw" },
 	};
 	unsigned i, n = COUNT_OF(matchtable);
 	if (n != NUM_CPU_FEATURES) {
@@ -1655,6 +2032,18 @@ const char* cpuid_lib_version(void)
 	return VERSION;
 }
 
+libcpuid_warn_fn_t cpuid_set_warn_function(libcpuid_warn_fn_t new_fn)
+{
+	libcpuid_warn_fn_t ret = _warn_fun;
+	_warn_fun = new_fn;
+	return ret;
+}
+
+void cpuid_set_verbosiness_level(int level)
+{
+	_current_verboselevel = level;
+}
+
 cpu_vendor_t cpuid_get_vendor(void)
 {
 	static cpu_vendor_t vendor = VENDOR_UNKNOWN;
@@ -1670,6 +2059,136 @@ cpu_vendor_t cpuid_get_vendor(void)
 		}
 	}
 	return vendor;
+}
+
+void cpuid_get_cpu_list(cpu_vendor_t vendor, struct cpu_list_t* list)
+{
+	switch (vendor) {
+		case VENDOR_INTEL:
+			cpuid_get_list_intel(list);
+			cpuid_get_list_arm(vendor, list);
+			break;
+		case VENDOR_AMD:
+		case VENDOR_HYGON:
+			cpuid_get_list_amd(list);
+			break;
+		case VENDOR_CYRIX:
+			make_list_from_string("Cx486,Cx5x86,6x86,6x86MX,M II,MediaGX,MediaGXi,MediaGXm", list);
+			break;
+		case VENDOR_NEXGEN:
+			make_list_from_string("Nx586", list);
+			break;
+		case VENDOR_TRANSMETA:
+			make_list_from_string("Crusoe,Efficeon", list);
+			break;
+		case VENDOR_UMC:
+			make_list_from_string("UMC x86 CPU", list);
+			break;
+		case VENDOR_CENTAUR:
+			cpuid_get_list_centaur(list);
+			break;
+		case VENDOR_RISE:
+			make_list_from_string("Rise mP6", list);
+			break;
+		case VENDOR_SIS:
+			make_list_from_string("SiS mP6", list);
+			break;
+		case VENDOR_NSC:
+			make_list_from_string("Geode GXm,Geode GXLV,Geode GX1,Geode GX2", list);
+			break;
+		case VENDOR_ARM:
+		case VENDOR_BROADCOM:
+		case VENDOR_CAVIUM:
+		case VENDOR_DEC:
+		case VENDOR_FUJITSU:
+		case VENDOR_HISILICON:
+		case VENDOR_INFINEON:
+		case VENDOR_FREESCALE:
+		case VENDOR_NVIDIA:
+		case VENDOR_APM:
+		case VENDOR_QUALCOMM:
+		case VENDOR_SAMSUNG:
+		case VENDOR_MARVELL:
+		case VENDOR_APPLE:
+		case VENDOR_FARADAY:
+		case VENDOR_MICROSOFT:
+		case VENDOR_PHYTIUM:
+		case VENDOR_AMPERE:
+			cpuid_get_list_arm(vendor, list);
+			break;
+		default:
+			warnf("Unknown vendor passed to cpuid_get_cpu_list()\n");
+			cpuid_set_error(ERR_INVRANGE);
+			list->num_entries = 0;
+			list->names = NULL;
+			break;
+ 	}
+}
+
+hypervisor_vendor_t cpuid_get_hypervisor(struct cpu_raw_data_t* raw, struct cpu_id_t* data)
+{
+	int i;
+	uint32_t hypervisor_fn40000000h[NUM_REGS];
+	const struct { hypervisor_vendor_t hypervisor; char match[16]; }
+	matchtable[] = {
+		/* source: https://github.com/a0rtega/pafish/blob/master/pafish/cpu.c */
+		{ HYPERVISOR_ACRN       , "ACRNACRNACRN"    },
+		{ HYPERVISOR_BHYVE      , "bhyve bhyve\0"   },
+		{ HYPERVISOR_HYPERV     , "Microsoft Hv"    },
+		{ HYPERVISOR_KVM        , "KVMKVMKVM\0\0\0" },
+		{ HYPERVISOR_KVM        , "Linux KVM Hv"    },
+		{ HYPERVISOR_PARALLELS  , "prl hyperv\0\0"  },
+		{ HYPERVISOR_PARALLELS  , "lrpepyh vr\0\0"  },
+		{ HYPERVISOR_QEMU       , "TCGTCGTCGTCG"    },
+		{ HYPERVISOR_QNX        , "QNXQVMBSQG\0\0"  },
+		{ HYPERVISOR_VIRTUALBOX , "VBoxVBoxVBox"    },
+		{ HYPERVISOR_VMWARE     , "VMwareVMware"    },
+		{ HYPERVISOR_XEN        , "XenVMMXenVMM"    },
+	};
+
+	/* Intel and AMD CPUs have reserved bit 31 of ECX of CPUID leaf 0x1 as the hypervisor present bit
+	Source: https://kb.vmware.com/s/article/1009458 */
+	switch (data->vendor) {
+		case VENDOR_AMD:
+		case VENDOR_INTEL:
+			break;
+		default:
+			return HYPERVISOR_UNKNOWN;
+	}
+	if (!data->flags[CPU_FEATURE_HYPERVISOR])
+		return HYPERVISOR_NONE;
+
+	/* Intel and AMD have also reserved CPUID leaves 0x40000000 - 0x400000FF for software use.
+	Hypervisors can use these leaves to provide an interface to pass information
+	from the hypervisor to the guest operating system running inside a virtual machine.
+	The hypervisor bit indicates the presence of a hypervisor
+	and that it is safe to test these additional software leaves. */
+	memset(hypervisor_fn40000000h, 0, sizeof(hypervisor_fn40000000h));
+	hypervisor_fn40000000h[EAX] = 0x40000000;
+	cpu_exec_cpuid_ext(hypervisor_fn40000000h);
+
+	/* Copy the hypervisor CPUID information leaf */
+	memcpy(data->hypervisor_str + 0, &hypervisor_fn40000000h[1], 4);
+	memcpy(data->hypervisor_str + 4, &hypervisor_fn40000000h[2], 4);
+	memcpy(data->hypervisor_str + 8, &hypervisor_fn40000000h[3], 4);
+	data->hypervisor_str[12] = '\0';
+
+	/* Determine hypervisor */
+	for (i = 0; i < sizeof(matchtable) / sizeof(matchtable[0]); i++)
+		if (!strcmp(data->hypervisor_str, matchtable[i].match))
+			return matchtable[i].hypervisor;
+	return HYPERVISOR_UNKNOWN;
+}
+
+void cpuid_free_cpu_list(struct cpu_list_t* list)
+{
+	int i;
+	if (list->num_entries <= 0) return;
+	for (i = 0; i < list->num_entries; i++)
+		free(list->names[i]);
+	free(list->names);
+	list->names = NULL;
+	list->num_entries = 0;
 }
 
 void cpuid_free_raw_data_array(struct cpu_raw_data_array_t* raw_array)

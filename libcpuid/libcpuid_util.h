@@ -39,22 +39,34 @@ struct feature_map_t {
 void match_features(const struct feature_map_t* matchtable, int count,
                     uint32_t reg, struct cpu_id_t* data);
 
+
 struct match_entry_t {
 	int family, model, stepping, ext_family, ext_model;
-	int ncores, l2cache, l3cache, brand_code;
-	uint64_t model_bits;
-	int model_code;
+	int ncores, l2cache, l3cache;
+	struct {
+		char pattern[BRAND_STR_MAX];
+		int score;
+	} brand;
 	char name[CODENAME_STR_MAX];
+	char technology[TECHNOLOGY_STR_MAX];
 };
 
 // returns the match score:
-int match_cpu_codename(const struct match_entry_t* matchtable, int count,
-                       struct cpu_id_t* data, int brand_code, uint64_t bits,
-                       int model_code);
 
-#define warnf(...)
-#define debugf(...)
-#define debug_print_lbits(...)
+int match_cpu_codename(const struct match_entry_t* matchtable, int count, struct cpu_id_t* data);
+
+void warnf(const char* format, ...)
+#ifdef __GNUC__
+__attribute__((format(printf, 1, 2)))
+#endif
+;
+void debugf(int verboselevel, const char* format, ...)
+#ifdef __GNUC__
+__attribute__((format(printf, 2, 3)))
+#endif
+;
+void generic_get_cpu_list(const struct match_entry_t* matchtable, int count,
+                          struct cpu_list_t* list);
 
 /*
  * Seek for a pattern in `haystack'.
@@ -69,6 +81,16 @@ int match_cpu_codename(const struct match_entry_t* matchtable, int count,
 int match_pattern(const char* haystack, const char* pattern);
 
 /*
+ * Remove a substring from a string
+*/
+void remove_substring(char* string, const char* substring);
+
+/*
+ * Remove useless spaces from a string
+ */
+void collapse_spaces(char* string);
+
+/*
  * Gets an initialized cpu_id_t. It is cached, so that internal libcpuid
  * machinery doesn't need to issue cpu_identify more than once.
  */
@@ -78,10 +100,21 @@ struct cpu_id_t* get_cached_cpuid(void);
 /* returns true if all bits of mask are present in `bits'. */
 int match_all(uint64_t bits, uint64_t mask);
 
+/* print what bits a mask consists of */
+void debug_print_lbits(int debuglevel, uint64_t mask);
+
 /*
  * Sets the current errno
  */
 int cpuid_set_error(cpu_error_t err);
+
+/*
+ * Gets the current errno
+ */
+int cpuid_get_error(void);
+
+extern libcpuid_warn_fn_t _warn_fun;
+extern int _current_verboselevel;
 
 /*
  * Manage cpu_affinity_mask_t type

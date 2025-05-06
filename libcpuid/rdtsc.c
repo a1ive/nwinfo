@@ -85,14 +85,10 @@ int cpu_clock_by_os(void)
 	DWORD result;
 	DWORD size = 4;
 
-	if (RegOpenKeyExW(HKEY_LOCAL_MACHINE,
-		L"HARDWARE\\DESCRIPTION\\System\\CentralProcessor\\0",
-		0, KEY_READ, &key) != ERROR_SUCCESS)
+	if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, TEXT("HARDWARE\\DESCRIPTION\\System\\CentralProcessor\\0"), 0, KEY_READ, &key) != ERROR_SUCCESS)
 		return -1;
 
-	if (RegQueryValueExW(key, L"~MHz",
-		NULL, NULL, (LPBYTE) &result, (LPDWORD) &size) != ERROR_SUCCESS)
-	{
+	if (RegQueryValueEx(key, TEXT("~MHz"), NULL, NULL, (LPBYTE) &result, (LPDWORD) &size) != ERROR_SUCCESS) {
 		RegCloseKey(key);
 		return -1;
 	}

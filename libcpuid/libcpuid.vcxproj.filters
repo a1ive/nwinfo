@@ -66,9 +66,6 @@
     <ClInclude Include="rdcpuid.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="libcpuid_ctype.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="asm-bits.c">

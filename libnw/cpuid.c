@@ -258,10 +258,15 @@ PrintCpuInfo(PNODE node, struct cpu_id_t* data)
 	NWL_NodeAttrSetf(node, "Logical CPUs", NAFLG_FMT_NUMERIC, "%d", data->num_logical_cpus);
 	NWL_NodeAttrSet(node, "Affinity Mask", affinity_mask_str(&data->affinity_mask), 0);
 	NWL_NodeAttrSetf(node, "SSE Units", 0, "%d bits (%s)",
-		data->sse_size, data->detection_hints[CPU_HINT_SSE_SIZE_AUTH] ? "authoritative" : "non-authoritative");
+		data->x86.sse_size, data->detection_hints[CPU_HINT_SSE_SIZE_AUTH] ? "authoritative" : "non-authoritative");
 	PrintCache(node, data);
 	PrintCpuMsr(node, data);
 	PrintFeatures(node, data);
+}
+
+static void libcpuid_warn (const char* msg)
+{
+	NWL_NodeAppendMultiSz(&NWLC->ErrLog, msg);
 }
 
 PNODE NW_Cpuid(VOID)
@@ -272,6 +277,7 @@ PNODE NW_Cpuid(VOID)
 	PNODE node = NWL_NodeAlloc("CPUID", 0);
 	if (NWLC->CpuInfo)
 		NWL_NodeAppendChild(NWLC->NwRoot, node);
+	cpuid_set_warn_function(libcpuid_warn);
 	cpuid_free_system_id(id);
 	cpuid_free_raw_data_array(raw);
 	NWL_NodeAttrSetf(node, "Total CPUs", NAFLG_FMT_NUMERIC, "%d", cpuid_get_total_cpus());

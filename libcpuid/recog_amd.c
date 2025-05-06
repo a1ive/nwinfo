@@ -26,374 +26,405 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <ctype.h>
 #include "libcpuid.h"
-#include "libcpuid_ctype.h"
 #include "libcpuid_util.h"
 #include "libcpuid_internal.h"
 #include "recog_amd.h"
 
-const struct amd_code_str { amd_code_t code; char *str; } amd_code_str[] = {
-	#define CODE(x) { x, #x }
-	#define CODE2(x, y) CODE(x)
-	#include "amd_code_t.h"
-	#undef CODE
-};
-
-struct amd_code_and_bits_t {
-	int code;
-	uint64_t bits;
-};
-
-
+/*
+ * Useful links:
+ * - List of AMD CPU microarchitectures: https://en.wikipedia.org/wiki/List_of_AMD_CPU_microarchitectures
+ * - List of AMD Athlon processors: https://en.wikipedia.org/wiki/List_of_AMD_Athlon_processors#Desktop_processors
+ * - List of AMD Duron processors: https://en.wikipedia.org/wiki/List_of_AMD_Duron_processors
+ * - List of AMD Sempron processors: https://en.wikipedia.org/wiki/List_of_AMD_Sempron_processors
+ * - List of AMD Turion processors: https://en.wikipedia.org/wiki/List_of_AMD_Turion_processors
+ * - List of AMD Opteron processors: https://en.wikipedia.org/wiki/List_of_AMD_Opteron_processors
+ * - List of AMD Phenom processors: https://en.wikipedia.org/wiki/List_of_AMD_Phenom_processors
+ * - List of AMD FX processors: https://en.wikipedia.org/wiki/List_of_AMD_FX_processors
+ * - List of AMD processors with 3D graphics: https://en.wikipedia.org/wiki/List_of_AMD_processors_with_3D_graphics
+ * - List of AMD Ryzen processors: https://en.wikipedia.org/wiki/List_of_AMD_Ryzen_processors
+ * - List of AMD Epyc processors: https://en.wikipedia.org/wiki/Epyc#List_of_Epyc_processors
+ */
 const struct match_entry_t cpudb_amd[] = {
-//     F   M   S  EF  EM  #cores  L2$   L3$  BC  ModelBits     ModelCode  Name
-	{ -1, -1, -1, -1,   -1,   1,    -1,    -1, NC, 0                   ,     0, "Unknown AMD CPU"               },
+//     F   M   S  EF    EM #cores  L2$    L3$  Pattern                          Codename                          Technology
+	{ -1, -1, -1, -1,   -1,   1,    -1,    -1, { "",                       0 }, "Unknown AMD CPU",                UNKN_STR },
 
 	/* 486 and the likes */
-	{  4, -1, -1, -1,   -1,   1,    -1,    -1, NC, 0                   ,     0, "Unknown AMD 486"               },
-	{  4,  3, -1, -1,   -1,   1,    -1,    -1, NC, 0                   ,     0, "AMD 486DX2"                    },
-	{  4,  7, -1, -1,   -1,   1,    -1,    -1, NC, 0                   ,     0, "AMD 486DX2WB"                  },
-	{  4,  8, -1, -1,   -1,   1,    -1,    -1, NC, 0                   ,     0, "AMD 486DX4"                    },
-	{  4,  9, -1, -1,   -1,   1,    -1,    -1, NC, 0                   ,     0, "AMD 486DX4WB"                  },
+	{  4, -1, -1, -1,   -1,   1,    -1,    -1, { "",                       0 }, "Unknown 486",                    UNKN_STR },
+	{  4,  3, -1, -1,   -1,   1,    -1,    -1, { "",                       0 }, "AMD 486DX2",                     UNKN_STR },
+	{  4,  7, -1, -1,   -1,   1,    -1,    -1, { "",                       0 }, "AMD 486DX2WB",                   UNKN_STR },
+	{  4,  8, -1, -1,   -1,   1,    -1,    -1, { "",                       0 }, "AMD 486DX4",                     UNKN_STR },
+	{  4,  9, -1, -1,   -1,   1,    -1,    -1, { "",                       0 }, "AMD 486DX4WB",                   UNKN_STR },
 
 	/* Pentia clones */
-	{  5, -1, -1, -1,   -1,   1,    -1,    -1, NC, 0                   ,     0, "Unknown AMD 586"               },
-	{  5,  0, -1, -1,   -1,   1,    -1,    -1, NC, 0                   ,     0, "K5"                            },
-	{  5,  1, -1, -1,   -1,   1,    -1,    -1, NC, 0                   ,     0, "K5"                            },
-	{  5,  2, -1, -1,   -1,   1,    -1,    -1, NC, 0                   ,     0, "K5"                            },
-	{  5,  3, -1, -1,   -1,   1,    -1,    -1, NC, 0                   ,     0, "K5"                            },
+	{  5, -1, -1, -1,   -1,   1,    -1,    -1, { "",                       0 }, "Unknown K5",                     UNKN_STR },
+	{  5,  0, -1, -1,   -1,   1,    -1,    -1, { "",                       0 }, "K5 (SSA/5)",                     UNKN_STR },
+	{  5,  1, -1, -1,   -1,   1,    -1,    -1, { "K5(tm)",                 2 }, "K5 (5k86)",                      "350 nm" },
+	{  5,  2, -1, -1,   -1,   1,    -1,    -1, { "K5(tm)",                 2 }, "K5 (5k86)",                      "350 nm" },
+	{  5,  3, -1, -1,   -1,   1,    -1,    -1, { "K5(tm)",                 2 }, "K5 (5k86)",                      "350 nm" },
 
-	/* The K6 */
-	{  5,  6, -1, -1,   -1,   1,    -1,    -1, NC, 0                   ,     0, "K6"                            },
-	{  5,  7, -1, -1,   -1,   1,    -1,    -1, NC, 0                   ,     0, "K6"                            },
+	/* K6 Architecture */
+	{  5, -1, -1, -1,   -1,   1,    -1,    -1, { "",                       0 }, "Unknown K6",                     UNKN_STR },
+	{  5,  6, -1, -1,   -1,   1,    -1,    -1, { "K6",                     2 }, "K6",                             "350 nm" },
+	{  5,  7, -1, -1,   -1,   1,    -1,    -1, { "K6",                     2 }, "K6 (Little Foot)",               "250 nm" },
+	{  5,  8,  0, -1,   -1,   1,    -1,    -1, { "K6(tm)",                 2 }, "K6-2 (Chomper)",                 "250 nm" },
+	{  5,  8, 12, -1,   -1,   1,    -1,    -1, { "K6(tm)",                 2 }, "K6-2 (Chomper Extended)",        "250 nm" },
+	{  5,  9, -1, -1,   -1,   1,    -1,    -1, { "K6(tm)",                 2 }, "K6-III (Sharptooth)",            "250 nm" },
+	{  5, 13, -1, -1,   -1,   1,    -1,    -1, { "K6(tm)",                 2 }, "K6-2+",                          "180 nm" },
+	{  5, 13, -1, -1,   -1,   1,    -1,    -1, { "K6(tm)-III ",            4 }, "K6-III+",                        "180 nm" },
 
-	{  5,  8, -1, -1,   -1,   1,    -1,    -1, NC, 0                   ,     0, "K6-2"                          },
-	{  5,  9, -1, -1,   -1,   1,    -1,    -1, NC, 0                   ,     0, "K6-III"                        },
-	{  5, 10, -1, -1,   -1,   1,    -1,    -1, NC, 0                   ,     0, "Unknown K6"                    },
-	{  5, 11, -1, -1,   -1,   1,    -1,    -1, NC, 0                   ,     0, "Unknown K6"                    },
-	{  5, 12, -1, -1,   -1,   1,    -1,    -1, NC, 0                   ,     0, "Unknown K6"                    },
-	{  5, 13, -1, -1,   -1,   1,    -1,    -1, NC, 0                   ,     0, "K6-2+"                         },
+	/* K7 Architecture */
+	{  6, -1, -1, 15,   -1,   1,    -1,    -1, { "",                       0 }, "Unknown K7",                     UNKN_STR },
 
-	/* Athlon et al. */
-	{  6,  1, -1, -1,   -1,   1,    -1,    -1, NC, 0                   ,     0, "Athlon (Slot-A)"               },
-	{  6,  2, -1, -1,   -1,   1,    -1,    -1, NC, 0                   ,     0, "Athlon (Slot-A)"               },
-	{  6,  3, -1, -1,   -1,   1,    -1,    -1, NC, 0                   ,     0, "Duron (Spitfire)"              },
-	{  6,  4, -1, -1,   -1,   1,    -1,    -1, NC, 0                   ,     0, "Athlon (ThunderBird)"          },
+	{  6,  1, -1, -1,   -1,   1,    -1,    -1, { "K7(tm)",                 0 }, "Athlon (Argon)",                 "250 nm" },
 
-	{  6,  6, -1, -1,   -1,   1,    -1,    -1, NC, 0                   ,     0, "Unknown Athlon"                },
-	{  6,  6, -1, -1,   -1,   1,    -1,    -1, NC, ATHLON_             ,     0, "Athlon (Palomino)"             },
-	{  6,  6, -1, -1,   -1,   1,    -1,    -1, NC, ATHLON_|_MP_        ,     0, "Athlon MP (Palomino)"          },
-	{  6,  6, -1, -1,   -1,   1,    -1,    -1, NC, DURON_              ,     0, "Duron (Palomino)"              },
-	{  6,  6, -1, -1,   -1,   1,    -1,    -1, NC, ATHLON_|_XP_        ,     0, "Athlon XP"                     },
+	{  6,  2, -1, -1,   -1,   1,    -1,    -1, { "Athlon(tm)",             0 }, "Athlon (Pluto/Orion)",           "180 nm" },
 
-	{  6,  7, -1, -1,   -1,   1,    -1,    -1, NC, 0                   ,     0, "Unknown Athlon XP"             },
-	{  6,  7, -1, -1,   -1,   1,    -1,    -1, NC, DURON_              ,     0, "Duron (Morgan)"                },
+	{  6,  3, -1, -1,   -1,   1,    -1,    -1, { "Duron(tm)",              2 }, "Duron (Spitfire)",               "180 nm" },
+	{  6,  3, -1, -1,   -1,   1,    -1,    -1, { "Duron(tm) M",            4 }, "Mobile Duron (Spitfire)",        "180 nm" },
 
-	{  6,  8, -1, -1,   -1,   1,    -1,    -1, NC, 0                   ,     0, "Athlon XP"                     },
-	{  6,  8, -1, -1,   -1,   1,    -1,    -1, NC, ATHLON_             ,     0, "Athlon XP (Thoroughbred)"      },
-	{  6,  8, -1, -1,   -1,   1,    -1,    -1, NC, ATHLON_|_XP_        ,     0, "Athlon XP (Thoroughbred)"      },
-	{  6,  8, -1, -1,   -1,   1,    -1,    -1, NC, DURON_              ,     0, "Duron (Applebred)"             },
-	{  6,  8, -1, -1,   -1,   1,    -1,    -1, NC, SEMPRON_            ,     0, "Sempron (Thoroughbred)"        },
-	{  6,  8, -1, -1,   -1,   1,   128,    -1, NC, SEMPRON_            ,     0, "Sempron (Thoroughbred)"        },
-	{  6,  8, -1, -1,   -1,   1,   256,    -1, NC, SEMPRON_            ,     0, "Sempron (Thoroughbred)"        },
-	{  6,  8, -1, -1,   -1,   1,    -1,    -1, NC, ATHLON_|_MP_        ,     0, "Athlon MP (Thoroughbred)"      },
-	{  6,  8, -1, -1,   -1,   1,    -1,    -1, NC, ATHLON_|_XP_|_M_    ,     0, "Mobile Athlon (T-Bred)"        },
-	{  6,  8, -1, -1,   -1,   1,    -1,    -1, NC, ATHLON_|_XP_|_M_|_LV_,    0, "Mobile Athlon (T-Bred)"        },
+	{  6,  4, -1, -1,   -1,   1,    -1,    -1, { "Athlon(tm)",             2 }, "Athlon (ThunderBird)",           "180 nm" },
 
-	{  6, 10, -1, -1,   -1,   1,    -1,    -1, NC, 0                   ,     0, "Athlon XP (Barton)"            },
-	{  6, 10, -1, -1,   -1,   1,   512,    -1, NC, ATHLON_|_XP_        ,     0, "Athlon XP (Barton)"            },
-	{  6, 10, -1, -1,   -1,   1,   512,    -1, NC, SEMPRON_            ,     0, "Sempron (Barton)"              },
-	{  6, 10, -1, -1,   -1,   1,   256,    -1, NC, SEMPRON_            ,     0, "Sempron (Thorton)"             },
-	{  6, 10, -1, -1,   -1,   1,   256,    -1, NC, ATHLON_|_XP_        ,     0, "Athlon XP (Thorton)"           },
-	{  6, 10, -1, -1,   -1,   1,    -1,    -1, NC, ATHLON_|_MP_        ,     0, "Athlon MP (Barton)"            },
-	{  6, 10, -1, -1,   -1,   1,    -1,    -1, NC, ATHLON_|_XP_|_M_    ,     0, "Mobile Athlon (Barton)"        },
-	{  6, 10, -1, -1,   -1,   1,    -1,    -1, NC, ATHLON_|_XP_|_M_|_LV_,    0, "Mobile Athlon (Barton)"        },
+	{  6,  6, -1, -1,   -1,   1,    -1,    -1, { "Athlon XP",              4 }, "Athlon (Palomino)",              "180 nm" },
+	{  6,  6, -1, -1,   -1,   1,    -1,    -1, { "Athlon(tm) MP",          4 }, "Athlon MP (Palomino)",           "180 nm" },
+	{  6,  6, -1, -1,   -1,   1,    -1,    -1, { "Duron(tm)",              2 }, "Duron (Palomino)",               "180 nm" },
+
+	{  6,  7, -1, -1,   -1,   1,    -1,    -1, { "Duron(tm)",              2 }, "Duron (Morgan)",                 "180 nm" },
+	{  6,  7, -1, -1,   -1,   1,    -1,    -1, { "Duron(tm) M",            4 }, "Mobile Duron (Camaro)",          "180 nm" },
+
+	{  6,  8, -1, -1,   -1,   1,    -1,    -1, { "Athlon",                 2 }, "Athlon XP (Thoroughbred)",       "130 nm" },
+	{  6,  8, -1, -1,   -1,   1,    -1,    -1, { "Athlon(tm) XP",          4 }, "Athlon XP (Thoroughbred)",       "130 nm" },
+	{  6,  8, -1, -1,   -1,   1,    -1,    -1, { "Duron(tm)",              2 }, "Duron (Applebred)",              "130 nm" },
+	{  6,  8, -1, -1,   -1,   1,    -1,    -1, { "Sempron(tm)",            2 }, "Sempron (Thoroughbred)",         "130 nm" },
+	{  6,  8, -1, -1,   -1,   1,   128,    -1, { "Sempron(tm)",            2 }, "Sempron (Thoroughbred)",         "130 nm" },
+	{  6,  8, -1, -1,   -1,   1,   256,    -1, { "Sempron(tm)",            2 }, "Sempron (Thoroughbred)",         "130 nm" },
+	{  6,  8, -1, -1,   -1,   1,    -1,    -1, { "Athlon(tm) MP",          4 }, "Athlon MP (Thoroughbred)",       "130 nm" },
+	{  6,  8, -1, -1,   -1,   1,    -1,    -1, { "Athlon(tm) XP-M",        6 }, "Mobile Athlon (Thoroughbred)",   "130 nm" },
+
+	{  6, 10, -1, -1,   -1,   1,   512,    -1, { "Athlon(tm) XP",          4 }, "Athlon XP (Barton)",             "130 nm" },
+	{  6, 10, -1, -1,   -1,   1,   512,    -1, { "Sempron(tm)",            2 }, "Sempron (Barton)",               "130 nm" },
+	{  6, 10, -1, -1,   -1,   1,   256,    -1, { "Sempron(tm)",            2 }, "Sempron (Thorton)",              "130 nm" },
+	{  6, 10, -1, -1,   -1,   1,   256,    -1, { "Athlon(tm) XP",          4 }, "Athlon XP (Thorton)",            "130 nm" },
+	{  6, 10, -1, -1,   -1,   1,    -1,    -1, { "Athlon(tm) MP",          4 }, "Athlon MP (Barton)",             "130 nm" },
+	{  6, 10, -1, -1,   -1,   1,    -1,    -1, { "Athlon(tm) XP-M",        6 }, "Mobile Athlon (Barton)",         "130 nm" },
 
 	/* K8 Architecture */
-	{ 15, -1, -1, 15,   -1,   1,    -1,    -1, NC, 0                   ,     0, "Unknown K8"                    },
-	{ 15, -1, -1, 16,   -1,   1,    -1,    -1, NC, 0                   ,     0, "Unknown K9"                    },
+	{ 15, -1, -1, 15,   -1,   1,    -1,    -1, { "",                       0 }, "Unknown K8",                     UNKN_STR },
+	{ 15, -1, -1, 16,   -1,   1,    -1,    -1, { "",                       0 }, "Unknown K9",                     UNKN_STR },
+	{ 15, -1, -1, 15,   -1,   1,    -1,    -1, { "",                       0 }, "Unknown A64",                    UNKN_STR },
+	{ 15, -1, -1, 15,   -1,   1,    -1,    -1, { "Opteron(tm)",            2 }, "Opteron",                        UNKN_STR },
+	{ 15, -1, -1, 15,   -1,   2,    -1,    -1, { "Dual Core AMD Opteron",  8 }, "Opteron (Dual Core)",            UNKN_STR },
+	{ 15,  1, -1, 15,   65,   2,    -1,    -1, { "Opteron(tm) 22##",       6 }, "Opteron (Santa Rosa)",           "90 nm" },
+	{ 15,  3, -1, 15,   -1,   1,    -1,    -1, { "Opteron(tm)",            2 }, "Opteron",                        UNKN_STR },
+	{ 15,  3, -1, 15,   -1,   2,    -1,    -1, { "Dual Core AMD Opteron",  8 }, "Opteron (Dual Core)",            UNKN_STR },
+	{ 15,  5, -1, 15,    5,  -1,    -1,    -1, { "Opteron(tm) [128]##",    4 }, "Opteron (SledgeHammer)",         "130 nm" },
+	{ 15, -1, -1, 15,   -1,   1,   512,    -1, { "Athlon(tm) 64",          4 }, "Athlon 64 (512K)",               UNKN_STR },
+	{ 15, -1, -1, 15,   -1,   1,  1024,    -1, { "Athlon(tm) 64",          4 }, "Athlon 64 (1024K)",              UNKN_STR },
+	{ 15, -1, -1, 15,   -1,   1,    -1,    -1, { "Athlon(tm) FX",          4 }, "Athlon FX",                      UNKN_STR },
+	{ 15, -1, -1, 15,   -1,   1,    -1,    -1, { "Athlon(tm) 64 FX",       6 }, "Athlon 64 FX",                   UNKN_STR },
+	{ 15,  3, -1, 15,   35,   2,    -1,    -1, { "Athlon(tm) 64 FX",       6 }, "Athlon 64 FX X2 (Toledo)",       "90 nm"  },
+	{ 15, -1, -1, 15,   -1,   2,   512,    -1, { "Athlon(tm) 64 X2",       6 }, "Athlon 64 X2 (512K)",            UNKN_STR },
+	{ 15, -1, -1, 15,   -1,   2,  1024,    -1, { "Athlon(tm) 64 X2",       6 }, "Athlon 64 X2 (1024K)",           UNKN_STR },
+	{ 15, -1, -1, 15,   -1,   1,   512,    -1, { "Turion(tm) 64",          4 }, "Turion 64 (512K)",               UNKN_STR },
+	{ 15, -1, -1, 15,   -1,   1,  1024,    -1, { "Turion(tm) 64",          4 }, "Turion 64 (1024K)",              UNKN_STR },
+	{ 15, -1, -1, 15,   -1,   2,   512,    -1, { "Turion(tm) X2",          4 }, "Turion 64 X2 (512K)",            UNKN_STR },
+	{ 15, -1, -1, 15,   -1,   2,  1024,    -1, { "Turion(tm) X2",          4 }, "Turion 64 X2 (1024K)",           UNKN_STR },
+	{ 15, -1, -1, 15,   -1,   1,   128,    -1, { "Sempron(tm)",            2 }, "A64 Sempron (128K)",             UNKN_STR },
+	{ 15, -1, -1, 15,   -1,   1,   256,    -1, { "Sempron(tm)",            2 }, "A64 Sempron (256K)",             UNKN_STR },
+	{ 15, -1, -1, 15,   -1,   1,   512,    -1, { "Sempron(tm)",            2 }, "A64 Sempron (512K)",             UNKN_STR },
+	{ 15, -1, -1, 15, 0x4f,   1,   512,    -1, { "Athlon(tm) 64",          4 }, "Athlon 64 (Orleans/512K)",       "90 nm"  },
+	{ 15, -1, -1, 15, 0x5f,   1,   512,    -1, { "Athlon(tm) 64",          4 }, "Athlon 64 (Orleans/512K)",       "90 nm"  },
+	{ 15, -1, -1, 15, 0x2f,   1,   512,    -1, { "Athlon(tm) 64",          4 }, "Athlon 64 (Venice/512K)",        "90 nm"  },
+	{ 15, -1, -1, 15, 0x2c,   1,   512,    -1, { "Athlon(tm) 64",          4 }, "Athlon 64 (Venice/512K)",        "90 nm"  },
+	{ 15, -1, -1, 15, 0x1f,   1,   512,    -1, { "Athlon(tm) 64",          4 }, "Athlon 64 (Winchester/512K)",    "90 nm"  },
+	{ 15, -1, -1, 15, 0x0c,   1,   512,    -1, { "Athlon(tm) 64",          4 }, "Athlon 64 (Newcastle/512K)",     "130 nm" },
+	{ 15, -1, -1, 15, 0x27,   1,   512,    -1, { "Athlon(tm) 64",          4 }, "Athlon 64 (San Diego/512K)",     "90 nm"  },
+	{ 15, -1, -1, 15, 0x37,   1,   512,    -1, { "Athlon(tm) 64",          4 }, "Athlon 64 (San Diego/512K)",     "90 nm"  },
+	{ 15, -1, -1, 15, 0x04,   1,   512,    -1, { "Athlon(tm) 64",          4 }, "Athlon 64 (ClawHammer/512K)",    "130 nm" },
 
-	{ 15, -1, -1, 15,   -1,   1,    -1,    -1, NC, 0                   ,     0, "Unknown A64"                   },
-	{ 15, -1, -1, 15,   -1,   1,    -1,    -1, NC, OPTERON_            ,     0, "Opteron"                       },
-	{ 15, -1, -1, 15,   -1,   2,    -1,    -1, NC, OPTERON_|_X2        ,     0, "Opteron (Dual Core)"           },
-	{ 15,  3, -1, 15,   -1,   1,    -1,    -1, NC, OPTERON_            ,     0, "Opteron"                       },
-	{ 15,  3, -1, 15,   -1,   2,    -1,    -1, NC, OPTERON_|_X2        ,     0, "Opteron (Dual Core)"           },
-	{ 15, -1, -1, 15,   -1,   1,   512,    -1, NC, ATHLON_|_64_        ,     0, "Athlon 64 (512K)"              },
-	{ 15, -1, -1, 15,   -1,   1,  1024,    -1, NC, ATHLON_|_64_        ,     0, "Athlon 64 (1024K)"             },
-	{ 15, -1, -1, 15,   -1,   1,    -1,    -1, NC, ATHLON_|_FX         ,     0, "Athlon FX"                     },
-	{ 15, -1, -1, 15,   -1,   1,    -1,    -1, NC, ATHLON_|_64_|_FX    ,     0, "Athlon 64 FX"                  },
-	{ 15,  3, -1, 15,   35,   2,    -1,    -1, NC, ATHLON_|_64_|_FX    ,     0, "Athlon 64 FX X2 (Toledo)"      },
-	{ 15, -1, -1, 15,   -1,   2,   512,    -1, NC, ATHLON_|_64_|_X2    ,     0, "Athlon 64 X2 (512K)"           },
-	{ 15, -1, -1, 15,   -1,   2,  1024,    -1, NC, ATHLON_|_64_|_X2    ,     0, "Athlon 64 X2 (1024K)"          },
-	{ 15, -1, -1, 15,   -1,   1,   512,    -1, NC, TURION_|_64_        ,     0, "Turion 64 (512K)"              },
-	{ 15, -1, -1, 15,   -1,   1,  1024,    -1, NC, TURION_|_64_        ,     0, "Turion 64 (1024K)"             },
-	{ 15, -1, -1, 15,   -1,   2,   512,    -1, NC, TURION_|_X2         ,     0, "Turion 64 X2 (512K)"           },
-	{ 15, -1, -1, 15,   -1,   2,  1024,    -1, NC, TURION_|_X2         ,     0, "Turion 64 X2 (1024K)"          },
-	{ 15, -1, -1, 15,   -1,   1,   128,    -1, NC, SEMPRON_            ,     0, "A64 Sempron (128K)"            },
-	{ 15, -1, -1, 15,   -1,   1,   256,    -1, NC, SEMPRON_            ,     0, "A64 Sempron (256K)"            },
-	{ 15, -1, -1, 15,   -1,   1,   512,    -1, NC, SEMPRON_            ,     0, "A64 Sempron (512K)"            },
-	{ 15, -1, -1, 15, 0x4f,   1,   512,    -1, NC, ATHLON_|_64_        ,     0, "Athlon 64 (Orleans/512K)"      },
-	{ 15, -1, -1, 15, 0x5f,   1,   512,    -1, NC, ATHLON_|_64_        ,     0, "Athlon 64 (Orleans/512K)"      },
-	{ 15, -1, -1, 15, 0x2f,   1,   512,    -1, NC, ATHLON_|_64_        ,     0, "Athlon 64 (Venice/512K)"       },
-	{ 15, -1, -1, 15, 0x2c,   1,   512,    -1, NC, ATHLON_|_64_        ,     0, "Athlon 64 (Venice/512K)"       },
-	{ 15, -1, -1, 15, 0x1f,   1,   512,    -1, NC, ATHLON_|_64_        ,     0, "Athlon 64 (Winchester/512K)"   },
-	{ 15, -1, -1, 15, 0x0c,   1,   512,    -1, NC, ATHLON_|_64_        ,     0, "Athlon 64 (Newcastle/512K)"    },
-	{ 15, -1, -1, 15, 0x27,   1,   512,    -1, NC, ATHLON_|_64_        ,     0, "Athlon 64 (San Diego/512K)"    },
-	{ 15, -1, -1, 15, 0x37,   1,   512,    -1, NC, ATHLON_|_64_        ,     0, "Athlon 64 (San Diego/512K)"    },
-	{ 15, -1, -1, 15, 0x04,   1,   512,    -1, NC, ATHLON_|_64_        ,     0, "Athlon 64 (ClawHammer/512K)"   },
+	{ 15, -1, -1, 15, 0x5f,   1,  1024,    -1, { "Athlon(tm) 64",          4 }, "Athlon 64 (Orleans/1024K)",      "90 nm"  },
+	{ 15, -1, -1, 15, 0x27,   1,  1024,    -1, { "Athlon(tm) 64",          4 }, "Athlon 64 (San Diego/1024K)",    "90 nm"  },
+	{ 15, -1, -1, 15, 0x04,   1,  1024,    -1, { "Athlon(tm) 64",          4 }, "Athlon 64 (ClawHammer/1024K)",   "130 nm" },
 
-	{ 15, -1, -1, 15, 0x5f,   1,  1024,    -1, NC, ATHLON_|_64_        ,     0, "Athlon 64 (Orleans/1024K)"     },
-	{ 15, -1, -1, 15, 0x27,   1,  1024,    -1, NC, ATHLON_|_64_        ,     0, "Athlon 64 (San Diego/1024K)"   },
-	{ 15, -1, -1, 15, 0x04,   1,  1024,    -1, NC, ATHLON_|_64_        ,     0, "Athlon 64 (ClawHammer/1024K)"  },
+	{ 15, -1, -1, 15, 0x4b,   2,   256,    -1, { "Athlon(tm) 64 X2",       6 }, "Athlon 64 X2 (Windsor/256K)",    "90 nm" },
 
-	{ 15, -1, -1, 15, 0x4b,   2,   256,    -1, NC, SEMPRON_            ,     0, "Athlon 64 X2 (Windsor/256K)"   },
+	{ 15, -1, -1, 15, 0x23,   2,   512,    -1, { "Athlon(tm) 64 X2",       6 }, "Athlon 64 X2 (Toledo/512K)",     "90 nm" },
+	{ 15, -1, -1, 15, 0x4b,   2,   512,    -1, { "Athlon(tm) 64 X2",       6 }, "Athlon 64 X2 (Windsor/512K)",    "90 nm" },
+	{ 15, -1, -1, 15, 0x43,   2,   512,    -1, { "Athlon(tm) 64 X2",       6 }, "Athlon 64 X2 (Windsor/512K)",    "90 nm" },
+	{ 15, -1, -1, 15, 0x6b,   2,   512,    -1, { "Athlon(tm) 64 X2",       6 }, "Athlon 64 X2 (Brisbane/512K)",   "65 nm" },
+	{ 15, -1, -1, 15, 0x2b,   2,   512,    -1, { "Athlon(tm) 64 X2",       6 }, "Athlon 64 X2 (Manchester/512K)", "90 nm" },
 
-	{ 15, -1, -1, 15, 0x23,   2,   512,    -1, NC, ATHLON_|_64_|_X2    ,     0, "Athlon 64 X2 (Toledo/512K)"    },
-	{ 15, -1, -1, 15, 0x4b,   2,   512,    -1, NC, ATHLON_|_64_|_X2    ,     0, "Athlon 64 X2 (Windsor/512K)"   },
-	{ 15, -1, -1, 15, 0x43,   2,   512,    -1, NC, ATHLON_|_64_|_X2    ,     0, "Athlon 64 X2 (Windsor/512K)"   },
-	{ 15, -1, -1, 15, 0x6b,   2,   512,    -1, NC, ATHLON_|_64_|_X2    ,     0, "Athlon 64 X2 (Brisbane/512K)"  },
-	{ 15, -1, -1, 15, 0x2b,   2,   512,    -1, NC, ATHLON_|_64_|_X2    ,     0, "Athlon 64 X2 (Manchester/512K)"},
+	{ 15, -1, -1, 15, 0x23,   2,  1024,    -1, { "Athlon(tm) 64 X2",       6 }, "Athlon 64 X2 (Toledo/1024K)",    "90 nm" },
+	{ 15, -1, -1, 15, 0x43,   2,  1024,    -1, { "Athlon(tm) 64 X2",       6 }, "Athlon 64 X2 (Windsor/1024K)",   "90 nm" },
 
-	{ 15, -1, -1, 15, 0x23,   2,  1024,    -1, NC, ATHLON_|_64_|_X2    ,     0, "Athlon 64 X2 (Toledo/1024K)"   },
-	{ 15, -1, -1, 15, 0x43,   2,  1024,    -1, NC, ATHLON_|_64_|_X2    ,     0, "Athlon 64 X2 (Windsor/1024K)"  },
+	{ 15, -1, -1, 15, 0x08,   1,   128,    -1, { "Mobile AMD Sempron(tm)", 6 }, "Mobile Sempron 64 (Dublin/128K)", "130 nm" },
+	{ 15, -1, -1, 15, 0x08,   1,   256,    -1, { "Mobile AMD Sempron(tm)", 6 }, "Mobile Sempron 64 (Dublin/256K)", "130 nm" },
+	{ 15, -1, -1, 15, 0x0c,   1,   256,    -1, { "Sempron(tm)",            2 }, "Sempron 64 (Paris)",              "130 nm" },
+	{ 15, -1, -1, 15, 0x1c,   1,   128,    -1, { "Sempron(tm)",            2 }, "Sempron 64 (Palermo/128K)",       "90 nm"  },
+	{ 15, -1, -1, 15, 0x1c,   1,   256,    -1, { "Sempron(tm)",            2 }, "Sempron 64 (Palermo/256K)",       "90 nm"  },
+	{ 15, -1, -1, 15, 0x1c,   1,   128,    -1, { "Mobile AMD Sempron(tm)", 6 }, "Mobile Sempron 64 (Sonora/128K)", "90 nm"  },
+	{ 15, -1, -1, 15, 0x1c,   1,   256,    -1, { "Mobile AMD Sempron(tm)", 6 }, "Mobile Sempron 64 (Sonora/256K)", "90 nm"  },
+	{ 15, -1, -1, 15, 0x2c,   1,   128,    -1, { "Sempron(tm)",            2 }, "Sempron 64 (Palermo/128K)",       "90 nm"  },
+	{ 15, -1, -1, 15, 0x2c,   1,   256,    -1, { "Sempron(tm)",            2 }, "Sempron 64 (Palermo/256K)",       "90 nm"  },
+	{ 15, -1, -1, 15, 0x2c,   1,   128,    -1, { "Mobile AMD Sempron(tm)", 6 }, "Mobile Sempron 64 (Albany/128K)", "90 nm"  },
+	{ 15, -1, -1, 15, 0x2c,   1,   256,    -1, { "Mobile AMD Sempron(tm)", 6 }, "Mobile Sempron 64 (Albany/256K)", "90 nm"  },
+	{ 15, -1, -1, 15, 0x2f,   1,   128,    -1, { "Sempron(tm)",            2 }, "Sempron 64 (Palermo/128K)",       "90 nm"  },
+	{ 15, -1, -1, 15, 0x2f,   1,   256,    -1, { "Sempron(tm)",            2 }, "Sempron 64 (Palermo/256K)",       "90 nm"  },
+	{ 15, -1, -1, 15, 0x4f,   1,   128,    -1, { "Sempron(tm)",            2 }, "Sempron 64 (Manila/128K)",        "90 nm"  },
+	{ 15, -1, -1, 15, 0x4f,   1,   256,    -1, { "Sempron(tm)",            2 }, "Sempron 64 (Manila/256K)",        "90 nm"  },
+	{ 15, -1, -1, 15, 0x5f,   1,   128,    -1, { "Sempron(tm)",            2 }, "Sempron 64 (Manila/128K)",        "90 nm"  },
+	{ 15, -1, -1, 15, 0x5f,   1,   256,    -1, { "Sempron(tm)",            2 }, "Sempron 64 (Manila/256K)",        "90 nm"  },
+	{ 15, -1, -1, 15, 0x6b,   2,   256,    -1, { "Sempron(tm)",            2 }, "Sempron 64 Dual (Sherman/256K)",  "65 nm"  },
+	{ 15, -1, -1, 15, 0x6b,   2,   512,    -1, { "Sempron(tm)",            2 }, "Sempron 64 Dual (Sherman/512K)",  "65 nm"  },
+	{ 15, -1, -1, 15, 0x7c,   1,   512,    -1, { "Athlon(tm) 64",          4 }, "Athlon 64 (Sherman/512K)",        "65 nm"  },
+	{ 15, -1, -1, 15, 0x7f,   1,   256,    -1, { "Sempron(tm)",            2 }, "Sempron 64 (Sparta/256K)",        "65 nm"  },
+	{ 15, -1, -1, 15, 0x7f,   1,   512,    -1, { "Sempron(tm)",            2 }, "Sempron 64 (Sparta/512K)",        "65 nm"  },
+	{ 15, -1, -1, 15, 0x4c,   1,   256,    -1, { "Mobile AMD Sempron(tm)", 6 }, "Mobile Sempron 64 (Keene/256K)",  "90 nm"  },
+	{ 15, -1, -1, 15, 0x4c,   1,   512,    -1, { "Mobile AMD Sempron(tm)", 6 }, "Mobile Sempron 64 (Keene/512K)",  "90 nm"  },
 
-	{ 15, -1, -1, 15, 0x08,   1,   128,    -1, NC, MOBILE_|SEMPRON_    ,     0, "Mobile Sempron 64 (Dublin/128K)"},
-	{ 15, -1, -1, 15, 0x08,   1,   256,    -1, NC, MOBILE_|SEMPRON_    ,     0, "Mobile Sempron 64 (Dublin/256K)"},
-	{ 15, -1, -1, 15, 0x0c,   1,   256,    -1, NC, SEMPRON_            ,     0, "Sempron 64 (Paris)"            },
-	{ 15, -1, -1, 15, 0x1c,   1,   128,    -1, NC, SEMPRON_            ,     0, "Sempron 64 (Palermo/128K)"     },
-	{ 15, -1, -1, 15, 0x1c,   1,   256,    -1, NC, SEMPRON_            ,     0, "Sempron 64 (Palermo/256K)"     },
-	{ 15, -1, -1, 15, 0x1c,   1,   128,    -1, NC, MOBILE_| SEMPRON_   ,     0, "Mobile Sempron 64 (Sonora/128K)"},
-	{ 15, -1, -1, 15, 0x1c,   1,   256,    -1, NC, MOBILE_| SEMPRON_   ,     0, "Mobile Sempron 64 (Sonora/256K)"},
-	{ 15, -1, -1, 15, 0x2c,   1,   128,    -1, NC, SEMPRON_            ,     0, "Sempron 64 (Palermo/128K)"     },
-	{ 15, -1, -1, 15, 0x2c,   1,   256,    -1, NC, SEMPRON_            ,     0, "Sempron 64 (Palermo/256K)"     },
-	{ 15, -1, -1, 15, 0x2c,   1,   128,    -1, NC, MOBILE_| SEMPRON_   ,     0, "Mobile Sempron 64 (Albany/128K)"},
-	{ 15, -1, -1, 15, 0x2c,   1,   256,    -1, NC, MOBILE_| SEMPRON_   ,     0, "Mobile Sempron 64 (Albany/256K)"},
-	{ 15, -1, -1, 15, 0x2f,   1,   128,    -1, NC, SEMPRON_            ,     0, "Sempron 64 (Palermo/128K)"     },
-	{ 15, -1, -1, 15, 0x2f,   1,   256,    -1, NC, SEMPRON_            ,     0, "Sempron 64 (Palermo/256K)"     },
-	{ 15, -1, -1, 15, 0x4f,   1,   128,    -1, NC, SEMPRON_            ,     0, "Sempron 64 (Manila/128K)"      },
-	{ 15, -1, -1, 15, 0x4f,   1,   256,    -1, NC, SEMPRON_            ,     0, "Sempron 64 (Manila/256K)"      },
-	{ 15, -1, -1, 15, 0x5f,   1,   128,    -1, NC, SEMPRON_            ,     0, "Sempron 64 (Manila/128K)"      },
-	{ 15, -1, -1, 15, 0x5f,   1,   256,    -1, NC, SEMPRON_            ,     0, "Sempron 64 (Manila/256K)"      },
-	{ 15, -1, -1, 15, 0x6b,   2,   256,    -1, NC, SEMPRON_            ,     0, "Sempron 64 Dual (Sherman/256K)"},
-	{ 15, -1, -1, 15, 0x6b,   2,   512,    -1, NC, SEMPRON_            ,     0, "Sempron 64 Dual (Sherman/512K)"},
-	{ 15, -1, -1, 15, 0x7c,   1,   512,    -1, NC, ATHLON_             ,     0, "Athlon 64 (Sherman/512K)"      },
-	{ 15, -1, -1, 15, 0x7f,   1,   256,    -1, NC, SEMPRON_            ,     0, "Sempron 64 (Sparta/256K)"      },
-	{ 15, -1, -1, 15, 0x7f,   1,   512,    -1, NC, SEMPRON_            ,     0, "Sempron 64 (Sparta/512K)"      },
-	{ 15, -1, -1, 15, 0x4c,   1,   256,    -1, NC, MOBILE_| SEMPRON_   ,     0, "Mobile Sempron 64 (Keene/256K)"},
-	{ 15, -1, -1, 15, 0x4c,   1,   512,    -1, NC, MOBILE_| SEMPRON_   ,     0, "Mobile Sempron 64 (Keene/512K)"},
-	{ 15, -1, -1, 15,   -1,   2,    -1,    -1, NC, SEMPRON_            ,     0, "Sempron Dual Core"             },
-
-	{ 15, -1, -1, 15, 0x24,   1,   512,    -1, NC, TURION_|_64_        ,     0, "Turion 64 (Lancaster/512K)"    },
-	{ 15, -1, -1, 15, 0x24,   1,  1024,    -1, NC, TURION_|_64_        ,     0, "Turion 64 (Lancaster/1024K)"   },
-	{ 15, -1, -1, 15, 0x48,   2,   256,    -1, NC, TURION_|_X2         ,     0, "Turion X2 (Taylor)"            },
-	{ 15, -1, -1, 15, 0x48,   2,   512,    -1, NC, TURION_|_X2         ,     0, "Turion X2 (Trinidad)"          },
-	{ 15, -1, -1, 15, 0x4c,   1,   512,    -1, NC, TURION_|_64_        ,     0, "Turion 64 (Richmond)"          },
-	{ 15, -1, -1, 15, 0x68,   2,   256,    -1, NC, TURION_|_X2         ,     0, "Turion X2 (Tyler/256K)"        },
-	{ 15, -1, -1, 15, 0x68,   2,   512,    -1, NC, TURION_|_X2         ,     0, "Turion X2 (Tyler/512K)"        },
-	{ 15, -1, -1, 17,    3,   2,   512,    -1, NC, TURION_|_X2         ,     0, "Turion X2 (Griffin/512K)"      },
-	{ 15, -1, -1, 17,    3,   2,  1024,    -1, NC, TURION_|_X2         ,     0, "Turion X2 (Griffin/1024K)"     },
+	{ 15, -1, -1, 15, 0x24,   1,   512,    -1, { "Turion(tm) 64",          4 }, "Turion 64 (Lancaster/512K)",      "90 nm" },
+	{ 15, -1, -1, 15, 0x24,   1,  1024,    -1, { "Turion(tm) 64",          4 }, "Turion 64 (Lancaster/1024K)",     "90 nm" },
+	{ 15, -1, -1, 15, 0x48,   2,   256,    -1, { "Turion(tm) X2",          4 }, "Turion X2 (Taylor)",              "90 nm" },
+	{ 15, -1, -1, 15, 0x48,   2,   512,    -1, { "Turion(tm) X2",          4 }, "Turion X2 (Trinidad)",            "90 nm" },
+	{ 15, -1, -1, 15, 0x4c,   1,   512,    -1, { "Turion(tm) 64",          4 }, "Turion 64 (Richmond)",            "90 nm" },
+	{ 15, -1, -1, 15, 0x68,   2,   256,    -1, { "Turion(tm) X2",          4 }, "Turion X2 (Tyler/256K)",          "65 nm" },
+	{ 15, -1, -1, 15, 0x68,   2,   512,    -1, { "Turion(tm) X2",          4 }, "Turion X2 (Tyler/512K)",          "65 nm" },
+	{ 15, -1, -1, 17,    3,   2,   512,    -1, { "Turion(tm) X2",          4 }, "Turion X2 (Griffin/512K)",        "65 nm" },
+	{ 15, -1, -1, 17,    3,   2,  1024,    -1, { "Turion(tm) X2",          4 }, "Turion X2 (Griffin/1024K)",       "65 nm" },
 
 	/* K10 Architecture (2007) */
-	{ 15, -1, -1, 16,   -1,   1,    -1,    -1, PHENOM, 0               ,     0, "Unknown AMD Phenom"            },
-	{ 15,  2, -1, 16,   -1,   1,    -1,    -1, PHENOM, 0               ,     0, "Phenom"                        },
-	{ 15,  2, -1, 16,   -1,   3,    -1,    -1, PHENOM, 0               ,     0, "Phenom X3 (Toliman)"           },
-	{ 15,  2, -1, 16,   -1,   4,    -1,    -1, PHENOM, 0               ,     0, "Phenom X4 (Agena)"             },
-	{ 15,  2, -1, 16,   -1,   3,   512,    -1, PHENOM, 0               ,     0, "Phenom X3 (Toliman/256K)"      },
-	{ 15,  2, -1, 16,   -1,   3,   512,    -1, PHENOM, 0               ,     0, "Phenom X3 (Toliman/512K)"      },
-	{ 15,  2, -1, 16,   -1,   4,   128,    -1, PHENOM, 0               ,     0, "Phenom X4 (Agena/128K)"        },
-	{ 15,  2, -1, 16,   -1,   4,   256,    -1, PHENOM, 0               ,     0, "Phenom X4 (Agena/256K)"        },
-	{ 15,  2, -1, 16,   -1,   4,   512,    -1, PHENOM,  0              ,     0, "Phenom X4 (Agena/512K)"        },
-	{ 15,  2, -1, 16,   -1,   2,   512,    -1, NC, ATHLON_|_64_|_X2    ,     0, "Athlon X2 (Kuma)"              },
+	{ 15,  2, -1, 16,   -1,   3,    -1,    -1, { "Phenom(tm)",             2 }, "Phenom X3 (Toliman)",            "65 nm" },
+	{ 15,  2, -1, 16,   -1,   4,    -1,    -1, { "Phenom(tm)",             2 }, "Phenom X4 (Agena)",              "65 nm" },
+	{ 15,  2, -1, 16,   -1,   3,   512,    -1, { "Phenom(tm)",             2 }, "Phenom X3 (Toliman/256K)",       "65 nm" },
+	{ 15,  2, -1, 16,   -1,   3,   512,    -1, { "Phenom(tm)",             2 }, "Phenom X3 (Toliman/512K)",       "65 nm" },
+	{ 15,  2, -1, 16,   -1,   4,   128,    -1, { "Phenom(tm)",             2 }, "Phenom X4 (Agena/128K)",         "65 nm" },
+	{ 15,  2, -1, 16,   -1,   4,   256,    -1, { "Phenom(tm)",             2 }, "Phenom X4 (Agena/256K)",         "65 nm" },
+	{ 15,  2, -1, 16,   -1,   4,   512,    -1, { "Phenom(tm)",             2 }, "Phenom X4 (Agena/512K)",         "65 nm" },
+	{ 15,  2, -1, 16,   -1,   2,   512,    -1, { "Athlon(tm) 64 X2",       6 }, "Athlon X2 (Kuma)",               "65 nm" },
 	/* Phenom II derivates: */
-	{ 15,  4, -1, 16,   -1,   4,    -1,    -1, NC, 0                   ,     0, "Phenom (Deneb-based)"          },
-	{ 15,  4, -1, 16,   -1,   1,  1024,    -1, NC, SEMPRON_            ,     0, "Sempron (Sargas)"              },
-	{ 15,  4, -1, 16,   -1,   2,   512,    -1, PHENOM2, 0              ,     0, "Phenom II X2 (Callisto)"       },
-	{ 15,  4, -1, 16,   -1,   3,   512,    -1, PHENOM2, 0              ,     0, "Phenom II X3 (Heka)"           },
-	{ 15,  4, -1, 16,   -1,   4,   512,    -1, PHENOM2, 0              ,     0, "Phenom II X4"                  },
-	{ 15,  4, -1, 16,    4,   4,   512,    -1, PHENOM2, 0              ,     0, "Phenom II X4 (Deneb)"          },
-	{ 15,  5, -1, 16,    5,   4,   512,    -1, PHENOM2, 0              ,     0, "Phenom II X4 (Deneb)"          },
-	{ 15,  4, -1, 16,   10,   4,   512,    -1, PHENOM2, 0              ,     0, "Phenom II X4 (Zosma)"          },
-	{ 15,  4, -1, 16,   10,   6,   512,    -1, PHENOM2, 0              ,     0, "Phenom II X6 (Thuban)"         },
+	{ 15,  4, -1, 16,   -1,   1,  1024,    -1, { "Sempron(tm)",            2 }, "Sempron (Sargas)",               "45 nm" },
+	{ 15,  4, -1, 16,   -1,   2,   512,    -1, { "Phenom(tm) II",          4 }, "Phenom II X2 (Callisto)",        "45 nm" },
+	{ 15,  4, -1, 16,   -1,   3,   512,    -1, { "Phenom(tm) II",          4 }, "Phenom II X3 (Heka)",            "45 nm" },
+	{ 15,  4, -1, 16,    4,   4,   512,    -1, { "Phenom(tm) II",          4 }, "Phenom II X4 (Deneb)",           "45 nm" },
+	{ 15,  5, -1, 16,    5,   4,   512,    -1, { "Phenom(tm) II",          4 }, "Phenom II X4 (Deneb)",           "45 nm" },
+	{ 15,  4, -1, 16,   10,   4,   512,    -1, { "Phenom(tm) II",          4 }, "Phenom II X4 (Zosma)",           "45 nm" },
+	{ 15,  4, -1, 16,   10,   6,   512,    -1, { "Phenom(tm) II",          4 }, "Phenom II X6 (Thuban)",          "45 nm" },
 	/* Athlon II derivates: */
-	{ 15,  6, -1, 16,    6,   2,   512,    -1, NC, ATHLON_|_X2         ,     0, "Athlon II (Champlain)"         },
-	{ 15,  6, -1, 16,    6,   2,   512,    -1, NC, ATHLON_|_64_|_X2    ,     0, "Athlon II X2 (Regor)"          },
-	{ 15,  6, -1, 16,    6,   2,  1024,    -1, NC, ATHLON_|_64_|_X2    ,     0, "Athlon II X2 (Regor)"          },
-	{ 15,  5, -1, 16,    5,   3,   512,    -1, NC, ATHLON_|_64_|_X3    ,     0, "Athlon II X3 (Rana)"           },
-	{ 15,  5, -1, 16,    5,   4,   512,    -1, NC, ATHLON_|_64_|_X4    ,     0, "Athlon II X4 (Propus)"         },
+	{ 15,  6, -1, 16,    6,   2,   512,    -1, { "Athlon(tm) II",          4 }, "Athlon II (Champlain)",          "45 nm" },
+	{ 15,  6, -1, 16,    6,   2,   512,    -1, { "Athlon(tm) II X2",       6 }, "Athlon II X2 (Regor)",           "45 nm" },
+	{ 15,  6, -1, 16,    6,   2,  1024,    -1, { "Athlon(tm) II X2",       6 }, "Athlon II X2 (Regor)",           "45 nm" },
+	{ 15,  5, -1, 16,    5,   3,   512,    -1, { "Athlon(tm) II X3",       6 }, "Athlon II X3 (Rana)",            "45 nm" },
+	{ 15,  5, -1, 16,    5,   4,   512,    -1, { "Athlon(tm) X4",          4 }, "Athlon II X4 (Propus)",          "45 nm" },
+	{ 15,  5, -1, 16,    5,   4,   512,    -1, { "Athlon(tm) II X4",       6 }, "Athlon II X4 (Propus)",          "45 nm" },
 	/* Opteron derivates: */
-	{ 15,  9, -1, 22,    9,   8,    -1,    -1, NC, OPTERON_            ,     0, "Magny-Cours Opteron"           },
+	{ 15,  2, -1, 16,    2,  -1,    -1,    -1, { "Opteron(tm) [28]3##",    4 }, "Opteron (Barcelona)",   "45 nm" },
+	{ 15,  4, -1, 16,    4,  -1,    -1,    -1, { "Opteron(tm) [28]3##",    4 }, "Opteron (Shanghai)",    "45 nm" },
+	{ 15,  8, -1, 16,    8,  -1,    -1,    -1, { "Opteron(tm) [28]4##",    4 }, "Opteron (Istanbul)",    "45 nm" },
+	{ 15,  8, -1, 16,    8,  -1,    -1,    -1, { "Opteron(tm) 41##",       4 }, "Opteron (Lisbon)",      "45 nm" },
+	{ 15,  9, -1, 16,    9,   8,    -1,    -1, { "Opteron(tm) 64##",       4 }, "Opteron (Magny-Cours)", "45 nm" },
+
 	/* Llano APUs (2011): */
-	{ 15,  1, -1, 18,    1,   2,    -1,    -1, FUSION_EA, 0            ,     0, "Llano X2"                      },
-	{ 15,  1, -1, 18,    1,   3,    -1,    -1, FUSION_EA, 0            ,     0, "Llano X3"                      },
-	{ 15,  1, -1, 18,    1,   4,    -1,    -1, FUSION_EA, 0            ,     0, "Llano X4"                      },
+	{ 15,  1, -1, 18,    1,   4,    -1,    -1, { "Athlon(tm) II X4 6##",     6 }, "Athlon II X4 (Llano)", "GF 32SHP" },
+	{ 15,  1, -1, 18,    1,   2,    -1,    -1, { "Athlon(tm) II X2 2##",     6 }, "Athlon II X2 (Llano)", "GF 32SHP" },
+	{ 15,  1, -1, 18,    1,   2,    -1,    -1, { "Sempron(tm) X2 1##",       6 }, "Sempron X2 (Llano)",   "GF 32SHP" },
+	{ 15,  1, -1, 18,    1,  -1,    -1,    -1, { "E2-3###",                  4 }, "E-Series (Llano)",     "GF 32SHP" },
+	{ 15,  1, -1, 18,    1,  -1,    -1,    -1, { "A[468]-3###",              4 }, "A-Series (Llano)",     "GF 32SHP" },
 
 	/* Family 14h: Bobcat Architecture (2011) */
-	{ 15,  2, -1, 20,   -1,   1,    -1,    -1, FUSION_C, 0             ,     0, "Brazos Ontario"                },
-	{ 15,  2, -1, 20,   -1,   2,    -1,    -1, FUSION_C, 0             ,     0, "Brazos Ontario (Dual-core)"    },
-	{ 15,  1, -1, 20,   -1,   1,    -1,    -1, FUSION_E, 0             ,     0, "Brazos Zacate"                 },
-	{ 15,  1, -1, 20,   -1,   2,    -1,    -1, FUSION_E, 0             ,     0, "Brazos Zacate (Dual-core)"     },
-	{ 15,  2, -1, 20,   -1,   2,    -1,    -1, FUSION_Z, 0             ,     0, "Brazos Desna (Dual-core)"      },
+	{ 15,  1, -1, 20,   -1,  -1,    -1,    -1, { "C-[356]#",                 4 }, "C-Series (Ontario)",  "TSMC N40" },
+	{ 15,  1, -1, 20,   -1,  -1,    -1,    -1, { "E-[234]##",                4 }, "E-Series (Zacate)",   "TSMC N40" },
+	{ 15,  1, -1, 20,   -1,  -1,    -1,    -1, { "G-T##[LRNE]",              6 }, "G-Series (Zacate)",   "TSMC N40" },
+	{ 15,  1, -1, 20,   -1,  -1,    -1,    -1, { "Z-##",                     4 }, "Z-Series (Desna)",    "TSMC N40" },
 
 	/* Family 15h: Bulldozer Architecture (2011) */
-	{ 15, -1, -1, 21,    0,   4,    -1,    -1, NC, 0                   ,     0, "Zambezi X2"                    },
-	{ 15, -1, -1, 21,    1,   4,    -1,    -1, NC, 0                   ,     0, "Zambezi X2"                    },
-	{ 15, -1, -1, 21,    1,   6,    -1,    -1, NC, 0                   ,     0, "Zambezi X3"                    },
-	{ 15, -1, -1, 21,    1,   8,    -1,    -1, NC, 0                   ,     0, "Zambezi X4"                    },
-	{ 15, -1, -1, 21,    1,  -1,    -1,    -1, NC, OPTERON_            ,     0, "Interlagos"                    },
+	{ 15, -1, -1, 21,    0,  -1,    -1,    -1, { "FX(tm)-[468]###",          4 }, "FX (Zambezi)",         "GF 32SHP" },
+	{ 15, -1, -1, 21,    1,  -1,    -1,    -1, { "FX(tm)-[468]###",          4 }, "FX (Zambezi)",         "GF 32SHP" },
+	{ 15, -1, -1, 21,    1,  -1,    -1,    -1, { "Opteron(tm)",              2 }, "Opteron (Interlagos)", "GF 32SHP" },
 	/* 2nd-gen, Piledriver core (2012): */
-	{ 15, -1, -1, 21,    2,   4,    -1,    -1, NC, 0                   ,     0, "Vishera X2"                    },
-	{ 15, -1, -1, 21,    2,   6,    -1,    -1, NC, 0                   ,     0, "Vishera X3"                    },
-	{ 15, -1, -1, 21,    2,   8,    -1,    -1, NC, 0                   ,     0, "Vishera X4"                    },
-	{ 15,  0, -1, 21,   16,   2,    -1,    -1, FUSION_A, 0             ,     0, "Trinity X2"                    },
-	{ 15,  0, -1, 21,   16,   4,    -1,    -1, FUSION_A, 0             ,     0, "Trinity X4"                    },
-	{ 15,  3, -1, 21,   19,   2,    -1,    -1, FUSION_A, 0             ,     0, "Richland X2"                   },
-	{ 15,  3, -1, 21,   19,   4,    -1,    -1, FUSION_A, 0             ,     0, "Richland X4"                   },
-	{ 15,  2, -1, 21,    2,  -1,    -1,    -1, NC, OPTERON_            ,     0, "Abu Dhabi"                     },
+	{ 15, -1, -1, 21,    2,  -1,    -1,    -1, { "FX(tm)-[4689]###",         4 }, "FX (Vishera)",          "GF 32SHP" },
+	{ 15,  0, -1, 21,   16,   4,    -1,    -1, { "Athlon(tm) X4 7##",        6 }, "Athlon X4 (Trinity)",   "GF 32SHP" },
+	{ 15,  0, -1, 21,   16,   2,    -1,    -1, { "Athlon(tm) X2 3##",        6 }, "Athlon X2 (Trinity)",   "GF 32SHP" },
+	{ 15,  0, -1, 21,   16,   2,    -1,    -1, { "Sempron(tm) X2 2##",       6 }, "Sempron X2 (Trinity)",  "GF 32SHP" },
+	{ 15,  0, -1, 21,   16,  -1,    -1,    -1, { "A[468]-5###",              4 }, "A-Series (Trinity)",    "GF 32SHP" },
+	{ 15,  0, -1, 21,   16,  -1,    -1,    -1, { "A10-5###",                 4 }, "A-Series (Trinity)",    "GF 32SHP" },
+	{ 15,  0, -1, 21,   16,  -1,    -1,    -1, { "A[468]-4###M",             6 }, "A-Series (Trinity)",    "GF 32SHP" },
+	{ 15,  0, -1, 21,   16,  -1,    -1,    -1, { "A10-4###M",                6 }, "A-Series (Trinity)",    "GF 32SHP" },
+	{ 15,  0, -1, 21,   19,  -1,    -1,    -1, { "FX(tm)-6##K",              6 }, "FX (Richland)",         "GF 32SHP" },
+	{ 15,  0, -1, 21,   19,   4,    -1,    -1, { "Athlon(tm) X4 7##",        6 }, "Athlon X4 (Richland)",  "GF 32SHP" },
+	{ 15,  0, -1, 21,   19,   2,    -1,    -1, { "Athlon(tm) X2 3##",        6 }, "Athlon X2 (Richland)",  "GF 32SHP" },
+	{ 15,  0, -1, 21,   19,   2,    -1,    -1, { "Sempron(tm) X2 2##",       6 }, "Sempron X2 (Richland)", "GF 32SHP" },
+	{ 15,  0, -1, 21,   19,  -1,    -1,    -1, { "A4 PRO-7###B",             8 }, "A-Series (Richland)",   "GF 32SHP" },
+	{ 15,  0, -1, 21,   19,  -1,    -1,    -1, { "A[468]-[467]###",          4 }, "A-Series (Richland)",   "GF 32SHP" },
+	{ 15,  0, -1, 21,   19,  -1,    -1,    -1, { "A10-6###",                 4 }, "A-Series (Richland)",   "GF 32SHP" },
+	{ 15,  0, -1, 21,   19,  -1,    -1,    -1, { "A[468]-5###M",             6 }, "A-Series (Richland)",   "GF 32SHP" },
+	{ 15,  0, -1, 21,   19,  -1,    -1,    -1, { "A10-5###M",                6 }, "A-Series (Richland)",   "GF 32SHP" },
+	{ 15,  2, -1, 21,    2,  -1,    -1,    -1, { "Opteron(tm)",              2 }, "Opteron (Abu Dhabi)",   "GF 32SHP" },
 	/* 3rd-gen, Steamroller core (2014): */
-	{ 15,  0, -1, 21,   48,   2,    -1,    -1, FUSION_A, 0             ,     0, "Kaveri X2"                     },
-	{ 15,  0, -1, 21,   48,   4,    -1,    -1, FUSION_A, 0             ,     0, "Kaveri X4"                     },
-	{ 15,  8, -1, 21,   56,   2,    -1,    -1, FUSION_A, 0             ,     0, "Godavari X2"                   },
-	{ 15,  8, -1, 21,   56,   4,    -1,    -1, FUSION_A, 0             ,     0, "Godavari X4"                   },
-	{ 15,  8, -1, 21,   56,   4,    -1,    -1, NC      , ATHLON_|_X4   ,     0, "Godavari X4"                   },
-	{ 15,  0, -1, 21,   48,   2,    -1,    -1, FUSION_RX, 0            ,     0, "Bald Eagle X2"                 },
-	{ 15,  0, -1, 21,   48,   4,    -1,    -1, FUSION_RX, 0            ,     0, "Bald Eagle X4"                 },
+	{ 15,  8, -1, 21,   48,  -1,    -1,    -1, { "FX(tm)-7##K",              6 }, "FX (Kaveri)",            "TSMC N28" },
+	{ 15,  8, -1, 21,   48,  -1,    -1,    -1, { "FX(tm)-7###",              4 }, "FX (Kaveri)",            "TSMC N28" },
+	{ 15,  8, -1, 21,   48,   4,    -1,    -1, { "Athlon(tm) X4 8##",        6 }, "Athlon X4 (Kaveri)",     "TSMC N28" },
+	{ 15,  8, -1, 21,   48,   2,    -1,    -1, { "Athlon(tm) X2 4##",        6 }, "Athlon X2 (Kaveri)",     "TSMC N28" },
+	{ 15,  8, -1, 21,   48,  -1,    -1,    -1, { "A[468] PRO-[78]###B",      8 }, "A-Series (Kaveri)",      "TSMC N28" },
+	{ 15,  8, -1, 21,   48,  -1,    -1,    -1, { "A[468]-7###",              4 }, "A-Series (Kaveri)",      "TSMC N28" },
+	{ 15,  8, -1, 21,   48,  -1,    -1,    -1, { "A10 PRO-[78]###B",         8 }, "A-Series (Kaveri)",      "TSMC N28" },
+	{ 15,  8, -1, 21,   48,  -1,    -1,    -1, { "A10-7###",                 4 }, "A-Series (Kaveri)",      "TSMC N28" },
+	{ 15,  8, -1, 21,   56,  -1,    -1,    -1, { "A[468]-[78]###",           4 }, "A-Series (Godavari)",    "TSMC N28" },
+	{ 15,  8, -1, 21,   56,  -1,    -1,    -1, { "A10-[78]###",              4 }, "A-Series (Godavari)",    "TSMC N28" },
+	{ 15,  8, -1, 21,   56,   4,    -1,    -1, { "Athlon(tm) X4 8##",        6 }, "Athlon X4 (Godavari)",   "TSMC N28" },
+	{ 15,  0, -1, 21,   48,  -1,    -1,    -1, { "RX-###",                   4 }, "R-Series (Bald Eagle)",  "TSMC N28" },
 	/* 4th-gen, Excavator core (2015): */
-	{ 15,  1, -1, 21,   96,   2,    -1,    -1, FUSION_A, 0             ,     0, "Carrizo X2"                    },
-	{ 15,  1, -1, 21,   96,   4,    -1,    -1, FUSION_A, 0             ,     0, "Carrizo X4"                    },
-	{ 15,  5, -1, 21,  101,   2,    -1,    -1, FUSION_A, 0             ,     0, "Bristol Ridge X2"              },
-	{ 15,  5, -1, 21,  101,   4,    -1,    -1, FUSION_A, 0             ,     0, "Bristol Ridge X4"              },
-	{ 15,  0, -1, 21,  112,   2,    -1,    -1, FUSION_A, 0             ,     0, "Stoney Ridge X2"               },
-	{ 15,  0, -1, 21,  112,   2,    -1,    -1, FUSION_E, 0             ,     0, "Stoney Ridge X2"               },
+	{ 15,  0, -1, 21,   96,  -1,    -1,    -1, { "FX-8###P",                 6 }, "FX (Carrizo)",              "GF 28SHP" },
+	{ 15,  1, -1, 21,   96,   4,    -1,    -1, { "Athlon(tm) X4 8##",        6 }, "Athlon X4 (Carrizo)",       "GF 28SHP" },
+	{ 15,  1, -1, 21,   96,  -1,    -1,    -1, { "A[68] PRO-8###",           6 }, "A-Series (Carrizo)",        "GF 28SHP" },
+	{ 15,  1, -1, 21,   96,  -1,    -1,    -1, { "A[68]-[78]###",            4 }, "A-Series (Carrizo)",        "GF 28SHP" },
+	{ 15,  1, -1, 21,   96,  -1,    -1,    -1, { "A1[02] PRO-8###",          6 }, "A-Series (Carrizo)",        "GF 28SHP" },
+	{ 15,  1, -1, 21,   96,  -1,    -1,    -1, { "A1[02]-8###",              4 }, "A-Series (Carrizo)",        "GF 28SHP" },
+	{ 15,  5, -1, 21,  101,  -1,    -1,    -1, { "FX-9###P",                 6 }, "FX (Bristol Ridge)",        "GF 28SHP" },
+	{ 15,  5, -1, 21,  101,  -1,    -1,    -1, { "Athlon(tm) X4 9##",        6 }, "Athlon X4 (Bristol Ridge)", "GF 28SHP" },
+	{ 15,  5, -1, 21,  101,  -1,    -1,    -1, { "A[68] PRO-9###",           6 }, "A-Series (Bristol Ridge)",  "GF 28SHP" },
+	{ 15,  5, -1, 21,  101,  -1,    -1,    -1, { "A[68]-9###",               4 }, "A-Series (Bristol Ridge)",  "GF 28SHP" },
+	{ 15,  5, -1, 21,  101,  -1,    -1,    -1, { "A1[02] PRO-9###",          6 }, "A-Series (Bristol Ridge)",  "GF 28SHP" },
+	{ 15,  5, -1, 21,  101,  -1,    -1,    -1, { "A1[02]-9###",              4 }, "A-Series (Bristol Ridge)",  "GF 28SHP" },
+	{ 15,  0, -1, 21,  112,   2,    -1,    -1, { "A[469]-9###",              4 }, "A-Series (Stoney Ridge)",   "GF 28SHP" },
+	{ 15,  0, -1, 21,  112,  -1,    -1,    -1, { "E2-9###",                  4 }, "E-Series (Stoney Ridge)",   "GF 28SHP" },
+	{ 15,  0, -1, 21,   96,  -1,    -1,    -1, { "Opteron(tm) X3###",        6 }, "Opteron (Toronto)",         "GF 28SHP" },
 
 	/* Family 16h: Jaguar Architecture (2013) */
-	{ 15,  0, -1, 22,    0,   2,    -1,    -1, FUSION_A, 0             ,     0, "Kabini X2"                     },
-	{ 15,  0, -1, 22,    0,   4,    -1,    -1, FUSION_A, 0             ,     0, "Kabini X4"                     },
-	{ 15,  0, -1, 22,    0,   2,    -1,    -1, NC,       SEMPRON_|_X2  ,     0, "Kabini X2"                     },
-	{ 15,  0, -1, 22,    0,   4,    -1,    -1, NC,       SEMPRON_|_X4  ,     0, "Kabini X4"                     },
-	{ 15,  0, -1, 22,    0,   4,    -1,    -1, NC,       ATHLON_|_X4   ,     0, "Kabini X4"                     },
+	{ 15,  0, -1, 22,    0,   4,    -1,    -1, { "Athlon(tm) X4 5##",        6 }, "Athlon X4 (Kabini)",  "TSMC N28" },
+	{ 15,  0, -1, 22,    0,   4,    -1,    -1, { "Athlon(tm) 5###",          4 }, "Athlon X4 (Kabini)",  "TSMC N28" },
+	{ 15,  0, -1, 22,    0,  -1,    -1,    -1, { "Sempron(tm) [23]###",      4 }, "Sempron (Kabini)",    "TSMC N28" },
+	{ 15,  0, -1, 22,    0,  -1,    -1,    -1, { "E1-2###",                  4 }, "E-Series (Kabini)",   "TSMC N28" },
+	{ 15,  0, -1, 22,    0,  -1,    -1,    -1, { "E2-3###",                  4 }, "E-Series (Kabini)",   "TSMC N28" },
+	{ 15,  0, -1, 22,    0,  -1,    -1,    -1, { "A4 PRO-3###",              6 }, "A-Series (Kabini)",   "TSMC N28" },
+	{ 15,  0, -1, 22,    0,  -1,    -1,    -1, { "A[46]-5###",               4 }, "A-Series (Kabini)",   "TSMC N28" },
 	/* 2nd-gen, Puma core (2013): */
-	{ 15,  0, -1, 22,   48,   2,    -1,    -1, FUSION_E, 0             ,     0, "Mullins X2"                    },
-	{ 15,  0, -1, 22,   48,   4,    -1,    -1, FUSION_A, 0             ,     0, "Mullins X4"                    },
-	{ 15,  0,  1, 22,   48,   2,    -1,    -1, FUSION_A, 0             ,     0, "Beema X2"                      },
-	{ 15,  0,  1, 22,   48,   4,    -1,    -1, FUSION_A, 0             ,     0, "Beema X4"                      },
-	{ 15,  0,  1, 22,   48,   2,    -1,    -1, FUSION_GX, 0            ,     0, "Steppe Eagle X2"               },
-	{ 15,  0,  1, 22,   48,   4,    -1,    -1, FUSION_GX, 0            ,     0, "Steppe Eagle X4"               },
+	{ 15,  0, -1, 22,   48,   2,    -1,    -1, { "E1 Micro-62##T",           8 }, "E-Series (Mullins)",       "GF 28SHP" },
+	{ 15,  0, -1, 22,   48,   4,    -1,    -1, { "A4 Micro-64##T",           8 }, "A-Series (Mullins)",       "GF 28SHP" },
+	{ 15,  0, -1, 22,   48,   4,    -1,    -1, { "A10 Micro-67##T",          8 }, "A-Series (Mullins)",       "GF 28SHP" },
+	{ 15,  0,  1, 22,   48,  -1,    -1,    -1, { "E[12]-6###",               4 }, "E-Series (Beema)",         "GF 28SHP" },
+	{ 15,  0,  1, 22,   48,  -1,    -1,    -1, { "A[468]-6###",              4 }, "A-Series (Beema)",         "GF 28SHP" },
+	{ 15,  0,  1, 22,   48,  -1,    -1,    -1, { "GX-###",                   4 }, "G-Series (Steppe Eagle)",  "GF 28SHP" },
 
 	/* Family 17h */
 	/* Zen (2017) => https://en.wikichip.org/wiki/amd/microarchitectures/zen */
-	{ 15, -1, -1, 23,    1,  -1,    -1,    -1, NC, EPYC_               ,     0, "EPYC (Naples)"                 },
-	{ 15, -1, -1, 23,    1,  -1,    -1,    -1, NC, RYZEN_TR_           ,     0, "Threadripper (Whitehaven)"     },
-	{ 15, -1, -1, 23,    1,  -1,    -1,    -1, NC, RYZEN_|_7           ,     0, "Ryzen 7 (Summit Ridge)"        },
-	{ 15, -1, -1, 23,    1,  -1,    -1,    -1, NC, RYZEN_|_5           ,     0, "Ryzen 5 (Summit Ridge)"        },
-	{ 15, -1, -1, 23,    1,  -1,    -1,    -1, NC, RYZEN_|_3           ,     0, "Ryzen 3 (Summit Ridge)"        },
-	{ 15, -1, -1, 23,   17,  -1,    -1,    -1, NC, RYZEN_|_7           ,     0, "Ryzen 7 (Raven Ridge)"         },
-	{ 15, -1, -1, 23,   17,  -1,    -1,    -1, NC, RYZEN_|_5           ,     0, "Ryzen 5 (Raven Ridge)"         },
-	{ 15, -1, -1, 23,   17,  -1,    -1,    -1, NC, RYZEN_|_3           ,     0, "Ryzen 3 (Raven Ridge)"         },
-	{ 15, -1, -1, 23,   17,  -1,    -1,    -1, NC, ATHLON_             ,     0, "Athlon (Raven Ridge)"          },
-	{ 15, -1, -1, 23,   32,  -1,    -1,    -1, NC, RYZEN_|_3           ,     0, "Ryzen 3 (Dali)"                },
-	{ 15, -1, -1, 23,   32,  -1,    -1,    -1, NC, ATHLON_             ,     0, "Athlon (Dali)"                 },
-	{ 15, -1,  1, 23,   32,  -1,    -1,    -1, NC, 0                   ,     0, "Dali"                          },
+	{ 15, -1, -1, 23,    1,  -1,    -1,    -1, { "EPYC 7##1",              4 }, "EPYC (Naples)",                  "GF 14LP" },
+	{ 15, -1, -1, 23,    1,  -1,    -1,    -1, { "Threadripper 1###",      4 }, "Threadripper (Whitehaven)",      "GF 14LP" },
+	{ 15, -1, -1, 23,    1,  -1,    -1,    -1, { "Ryzen 7 1###",           6 }, "Ryzen 7 (Summit Ridge)",         "GF 14LP" },
+	{ 15, -1, -1, 23,    1,  -1,    -1,    -1, { "Ryzen 5 1###",           6 }, "Ryzen 5 (Summit Ridge)",         "GF 14LP" },
+	{ 15, -1, -1, 23,    1,  -1,    -1,    -1, { "Ryzen 3 1###",           6 }, "Ryzen 3 (Summit Ridge)",         "GF 14LP" },
+	{ 15, -1, -1, 23,   17,  -1,    -1,    -1, { "Ryzen 7 2###",           6 }, "Ryzen 7 (Raven Ridge)",          "GF 14LP" },
+	{ 15, -1, -1, 23,   17,  -1,    -1,    -1, { "Ryzen 5 2###",           6 }, "Ryzen 5 (Raven Ridge)",          "GF 14LP" },
+	{ 15, -1, -1, 23,   17,  -1,    -1,    -1, { "Ryzen 3 2###",           6 }, "Ryzen 3 (Raven Ridge)",          "GF 14LP" },
+	{ 15, -1, -1, 23,   17,  -1,    -1,    -1, { "Athlon",                 2 }, "Athlon (Raven Ridge)",           "GF 14LP" },
+	{ 15, -1, -1, 23,   32,  -1,    -1,    -1, { "Ryzen 3 3###",           6 }, "Ryzen 3 (Dali)",                 "GF 14LP" },
+	{ 15, -1, -1, 23,   32,  -1,    -1,    -1, { "Athlon",                 2 }, "Athlon (Dali)",                  "GF 14LP" },
+	{ 15, -1,  1, 23,   32,  -1,    -1,    -1, { "",                       0 }, "Dali",                           "GF 14LP" }, /* AMD 3020e */
 	/* Zen+ (2018) => https://en.wikichip.org/wiki/amd/microarchitectures/zen%2B */
-	{ 15, -1, -1, 23,    8,  -1,    -1,    -1, NC, RYZEN_TR_           ,     0, "Threadripper (Colfax)"         },
-	{ 15, -1, -1, 23,    8,  -1,    -1,    -1, NC, RYZEN_|_7           ,     0, "Ryzen 7 (Pinnacle Ridge)"      },
-	{ 15, -1, -1, 23,    8,  -1,    -1,    -1, NC, RYZEN_|_5           ,     0, "Ryzen 5 (Pinnacle Ridge)"      },
-	{ 15, -1, -1, 23,    8,  -1,    -1,    -1, NC, RYZEN_|_3           ,     0, "Ryzen 3 (Pinnacle Ridge)"      },
-	{ 15, -1, -1, 23,   24,  -1,    -1,    -1, NC, RYZEN_|_7           ,     0, "Ryzen 7 (Picasso)"             },
-	{ 15, -1, -1, 23,   24,  -1,    -1,    -1, NC, RYZEN_|_5           ,     0, "Ryzen 5 (Picasso)"             },
-	{ 15, -1, -1, 23,   24,  -1,    -1,    -1, NC, RYZEN_|_3           ,     0, "Ryzen 3 (Picasso)"             },
-	{ 15, -1, -1, 23,   24,  -1,    -1,    -1, NC, ATHLON_             ,     0, "Athlon (Picasso)"              },
+	{ 15, -1, -1, 23,    8,  -1,    -1,    -1, { "Threadripper 2###",      4 }, "Threadripper (Colfax)",          "GF 12LP" },
+	{ 15, -1, -1, 23,    8,  -1,    -1,    -1, { "Ryzen 7 2###",           6 }, "Ryzen 7 (Pinnacle Ridge)",       "GF 12LP" },
+	{ 15, -1, -1, 23,    8,  -1,    -1,    -1, { "Ryzen 5 2###",           6 }, "Ryzen 5 (Pinnacle Ridge)",       "GF 12LP" },
+	{ 15, -1, -1, 23,    8,  -1,    -1,    -1, { "Ryzen 3 2###",           6 }, "Ryzen 3 (Pinnacle Ridge)",       "GF 12LP" },
+	{ 15, -1, -1, 23,   24,  -1,    -1,    -1, { "Ryzen 7 3###",           6 }, "Ryzen 7 (Picasso)",              "GF 12LP" },
+	{ 15, -1, -1, 23,   24,  -1,    -1,    -1, { "Ryzen 5 3###",           6 }, "Ryzen 5 (Picasso)",              "GF 12LP" },
+	{ 15, -1, -1, 23,   24,  -1,    -1,    -1, { "Ryzen 3 3###",           6 }, "Ryzen 3 (Picasso)",              "GF 12LP" },
+	{ 15, -1, -1, 23,   24,  -1,    -1,    -1, { "Athlon",                 2 }, "Athlon (Picasso)",               "GF 12LP" },
 	/* Zen 2 (2019) => https://en.wikichip.org/wiki/amd/microarchitectures/zen_2 */
-	{ 15, -1, -1, 23,   49,  -1,    -1,    -1, NC, EPYC_               ,     0, "EPYC (Rome)"                   },
-	{ 15, -1, -1, 23,   49,  -1,    -1,    -1, NC, RYZEN_TR_           ,     0, "Threadripper (Castle Peak)"    },
-	{ 15, -1, -1, 23,  113,  -1,    -1,    -1, NC, RYZEN_|_9           ,     0, "Ryzen 9 (Matisse)"             },
-	{ 15, -1, -1, 23,  113,  -1,    -1,    -1, NC, RYZEN_|_7           ,     0, "Ryzen 7 (Matisse)"             },
-	{ 15, -1, -1, 23,  113,  -1,    -1,    -1, NC, RYZEN_|_5           ,     0, "Ryzen 5 (Matisse)"             },
-	{ 15, -1, -1, 23,  113,  -1,    -1,    -1, NC, RYZEN_|_3           ,     0, "Ryzen 3 (Matisse)"             },
-	{ 15, -1, -1, 23,   96,  -1,    -1,    -1, NC, RYZEN_|_9           ,     0, "Ryzen 9 (Renoir)"              },
-	{ 15, -1, -1, 23,   96,  -1,    -1,    -1, NC, RYZEN_|_7           ,     0, "Ryzen 7 (Renoir)"              },
-	{ 15, -1, -1, 23,   96,  -1,    -1,    -1, NC, RYZEN_|_5           ,     0, "Ryzen 5 (Renoir)"              },
-	{ 15, -1, -1, 23,   96,  -1,    -1,    -1, NC, RYZEN_|_3           ,     0, "Ryzen 3 (Renoir)"              },
-	{ 15, -1, -1, 23,  104,  -1,    -1,    -1, NC, RYZEN_|_7           ,     0, "Ryzen 7 (Lucienne)"            },
-	{ 15, -1, -1, 23,  104,  -1,    -1,    -1, NC, RYZEN_|_5           ,     0, "Ryzen 5 (Lucienne)"            },
-	{ 15, -1, -1, 23,  104,  -1,    -1,    -1, NC, RYZEN_|_3           ,     0, "Ryzen 3 (Lucienne)"            },
-	{ 15, -1, -1, 23,   71,  -1,    -1,    -1, NC, 0                   ,     0, "Desktop Kit (Zen 2)"           }, /* 4700S Desktop Kit */
-	{ 15, -1, -1, 23,  132,  -1,    -1,    -1, NC, 0                   ,     0, "Desktop Kit (Zen 2)"           }, /* 4800S Desktop Kit */
-	{ 15, -1,  2, 23,  144,  -1,    -1,    -1, NC, 0                   ,     0, "Van Gogh"                      }, /* Custom APU 0405 */
-	{ 15, -1,  0, 23,  145,  -1,    -1,    -1, NC, 0                   ,     0, "Van Gogh"                      }, /* Custom APU 0932 */
-	{ 15, -1, -1, 23,  160,  -1,    -1,    -1, NC, RYZEN_|_5           ,     0, "Ryzen 5 (Mendocino)"           },
-	{ 15, -1, -1, 23,  160,  -1,    -1,    -1, NC, RYZEN_|_3           ,     0, "Ryzen 3 (Mendocino)"           },
-	{ 15, -1, -1, 23,  160,  -1,    -1,    -1, NC, ATHLON_             ,     0, "Athlon (Mendocino)"            },
+	{ 15, -1, -1, 23,   49,  -1,    -1,    -1, { "EPYC 7##2",              4 }, "EPYC (Rome)",                    "TSMC N7FF" },
+	{ 15, -1, -1, 23,   49,  -1,    -1,    -1, { "Threadripper 3###",      4 }, "Threadripper (Castle Peak)",     "TSMC N7FF" },
+	{ 15, -1, -1, 23,  113,  -1,    -1,    -1, { "Ryzen 9 3###",           6 }, "Ryzen 9 (Matisse)",              "TSMC N7FF" },
+	{ 15, -1, -1, 23,  113,  -1,    -1,    -1, { "Ryzen 7 3###",           6 }, "Ryzen 7 (Matisse)",              "TSMC N7FF" },
+	{ 15, -1, -1, 23,  113,  -1,    -1,    -1, { "Ryzen 5 3###",           6 }, "Ryzen 5 (Matisse)",              "TSMC N7FF" },
+	{ 15, -1, -1, 23,  113,  -1,    -1,    -1, { "Ryzen 3 3###",           6 }, "Ryzen 3 (Matisse)",              "TSMC N7FF" },
+	{ 15, -1, -1, 23,   96,  -1,    -1,    -1, { "Ryzen 9 4###",           6 }, "Ryzen 9 (Renoir)",               "TSMC N7FF" },
+	{ 15, -1, -1, 23,   96,  -1,    -1,    -1, { "Ryzen 7 4###",           6 }, "Ryzen 7 (Renoir)",               "TSMC N7FF" },
+	{ 15, -1, -1, 23,   96,  -1,    -1,    -1, { "Ryzen 5 4###",           6 }, "Ryzen 5 (Renoir)",               "TSMC N7FF" },
+	{ 15, -1, -1, 23,   96,  -1,    -1,    -1, { "Ryzen 3 4###",           6 }, "Ryzen 3 (Renoir)",               "TSMC N7FF" },
+	{ 15, -1, -1, 23,  104,  -1,    -1,    -1, { "Ryzen 7 5###",           6 }, "Ryzen 7 (Lucienne)",             "TSMC N7FF" },
+	{ 15, -1, -1, 23,  104,  -1,    -1,    -1, { "Ryzen 5 5###",           6 }, "Ryzen 5 (Lucienne)",             "TSMC N7FF" },
+	{ 15, -1, -1, 23,  104,  -1,    -1,    -1, { "Ryzen 3 5###",           6 }, "Ryzen 3 (Lucienne)",             "TSMC N7FF" },
+	{ 15, -1, -1, 23,   71,  -1,    -1,    -1, { "Desktop Kit",            4 }, "Desktop Kit (Zen 2)",            "TSMC N7FF" }, /* 4700S Desktop Kit */
+	{ 15, -1, -1, 23,  132,  -1,    -1,    -1, { "Desktop Kit",            4 }, "Desktop Kit (Zen 2)",            "TSMC N7FF" }, /* 4800S Desktop Kit */
+	{ 15, -1,  2, 23,  144,  -1,    -1,    -1, { "Custom APU",             4 }, "Van Gogh",                       "TSMC N7FF" }, /* Custom APU 0405 */
+	{ 15, -1,  0, 23,  145,  -1,    -1,    -1, { "Custom APU",             4 }, "Van Gogh",                       "TSMC N7FF" }, /* Custom APU 0932 */
+	{ 15, -1, -1, 23,  160,  -1,    -1,    -1, { "Ryzen 5 7###",           6 }, "Ryzen 5 (Mendocino)",            "TSMC N6"   },
+	{ 15, -1, -1, 23,  160,  -1,    -1,    -1, { "Ryzen 3 7###",           6 }, "Ryzen 3 (Mendocino)",            "TSMC N6"   },
+	{ 15, -1, -1, 23,  160,  -1,    -1,    -1, { "Athlon",                 2 }, "Athlon (Mendocino)",             "TSMC N6"   },
 
 	/* Family 18h */
-	/* Zen Architecture for Hygon (2018) => https://en.wikichip.org/wiki/amd/microarchitectures/zen */
-	{ 15, -1, -1, 24,    0,  -1,    -1,    -1, NC, C86_|_7              ,     0, "C86 7 (Dhyana)"               },
-	{ 15, -1, -1, 24,    0,  -1,    -1,    -1, NC, C86_|_5              ,     0, "C86 5 (Dhyana)"               },
-	{ 15, -1, -1, 24,    0,  -1,    -1,    -1, NC, C86_|_3              ,     0, "C86 3 (Dhyana)"               },
+	/* Zen Architecture for Hygon (2018) => https://en.wikichip.org/wiki/hygon/microarchitectures/dhyana */
+	{ 15, -1, -1, 24,    0,  -1,    -1,    -1, { "C86",                    2 }, "C86 (Dhyana)",                   UNKN_STR },
 
 	/* Family 19h */
 	/* Zen 3 (2020) => https://en.wikichip.org/wiki/amd/microarchitectures/zen_3 */
-	{ 15, -1, -1, 25,    1,  -1,    -1,    -1, NC, EPYC_               ,     0, "EPYC (Milan)"                  },
-	{ 15, -1, -1, 25,    8,  -1,    -1,    -1, NC, RYZEN_TR_           ,     0, "Threadripper (Chagall)"        },
-	{ 15, -1, -1, 25,   33,  -1,    -1,    -1, NC, RYZEN_|_9           ,     0, "Ryzen 9 (Vermeer)"             },
-	{ 15, -1, -1, 25,   33,  -1,    -1,    -1, NC, RYZEN_|_7           ,     0, "Ryzen 7 (Vermeer)"             },
-	{ 15, -1, -1, 25,   33,  -1,    -1,    -1, NC, RYZEN_|_5           ,     0, "Ryzen 5 (Vermeer)"             },
-	{ 15, -1, -1, 25,   33,  -1,    -1,    -1, NC, RYZEN_|_3           ,     0, "Ryzen 3 (Vermeer)"             },
-	{ 15, -1, -1, 25,   80,  -1,    -1,    -1, NC, RYZEN_|_9           ,     0, "Ryzen 9 (Cezanne)"             },
-	{ 15, -1, -1, 25,   80,  -1,    -1,    -1, NC, RYZEN_|_7           ,     0, "Ryzen 7 (Cezanne)"             },
-	{ 15, -1, -1, 25,   80,  -1,    -1,    -1, NC, RYZEN_|_5           ,     0, "Ryzen 5 (Cezanne)"             },
-	{ 15, -1, -1, 25,   80,  -1,    -1,    -1, NC, RYZEN_|_3           ,     0, "Ryzen 3 (Cezanne)"             },
+	{ 15, -1, -1, 25,    1,  -1,    -1,    -1, { "EPYC 7##3",              4 }, "EPYC (Milan)",                   "TSMC N7FF" },
+	{ 15, -1, -1, 25,    8,  -1,    -1,    -1, { "Threadripper 5###",      4 }, "Threadripper (Chagall)",         "TSMC N7FF" },
+	{ 15, -1, -1, 25,   33,  -1,    -1,    -1, { "Ryzen 9 5###",           6 }, "Ryzen 9 (Vermeer)",              "TSMC N7FF" },
+	{ 15, -1, -1, 25,   33,  -1,    -1,    -1, { "Ryzen 7 5###",           6 }, "Ryzen 7 (Vermeer)",              "TSMC N7FF" },
+	{ 15, -1, -1, 25,   33,  -1,    -1,    -1, { "Ryzen 5 5###",           6 }, "Ryzen 5 (Vermeer)",              "TSMC N7FF" },
+	{ 15, -1, -1, 25,   33,  -1,    -1,    -1, { "Ryzen 3 5###",           6 }, "Ryzen 3 (Vermeer)",              "TSMC N7FF" },
+	{ 15, -1, -1, 25,   80,  -1,    -1,    -1, { "Ryzen 9 5##0[HU]",       8 }, "Ryzen 9 (Cezanne)",              "TSMC N7FF" },
+	{ 15, -1, -1, 25,   80,  -1,    -1,    -1, { "Ryzen 7 5##0[HU]",       8 }, "Ryzen 7 (Cezanne)",              "TSMC N7FF" },
+	{ 15, -1, -1, 25,   80,  -1,    -1,    -1, { "Ryzen 5 5##0[HU]",       8 }, "Ryzen 5 (Cezanne)",              "TSMC N7FF" },
+	{ 15, -1, -1, 25,   80,  -1,    -1,    -1, { "Ryzen 3 5##0[HU]",       8 }, "Ryzen 3 (Cezanne)",              "TSMC N7FF" },
+	{ 15, -1, -1, 25,   80,  -1,    -1,    -1, { "Ryzen 7 5##5U",          8 }, "Ryzen 7 (Barceló)",              "TSMC N7FF" }, /* Ryzen 7 5825U */
+	{ 15, -1, -1, 25,   80,  -1,    -1,    -1, { "Ryzen 5 5##5U",          8 }, "Ryzen 5 (Barceló)",              "TSMC N7FF" }, /* Ryzen 5 5625U */
+	{ 15, -1, -1, 25,   80,  -1,    -1,    -1, { "Ryzen 3 5##5C",          8 }, "Ryzen 3 (Barceló)",              "TSMC N7FF" }, /* Ryzen 3 5125C */
 	/* Zen 3+ (2022) */
-	{ 15, -1, -1, 25,   68,  -1,    -1,    -1, NC, RYZEN_|_9           ,     0, "Ryzen 9 (Rembrandt)"           },
-	{ 15, -1, -1, 25,   68,  -1,    -1,    -1, NC, RYZEN_|_7           ,     0, "Ryzen 7 (Rembrandt)"           },
-	{ 15, -1, -1, 25,   68,  -1,    -1,    -1, NC, RYZEN_|_5           ,     0, "Ryzen 5 (Rembrandt)"           },
-	{ 15, -1, -1, 25,   68,  -1,    -1,    -1, NC, RYZEN_|_3           ,     0, "Ryzen 3 (Rembrandt)"           },
+	{ 15, -1, -1, 25,   68,  -1,    -1,    -1, { "Ryzen 9 6###",           6 }, "Ryzen 9 (Rembrandt)",            "TSMC N6"  },
+	{ 15, -1, -1, 25,   68,  -1,    -1,    -1, { "Ryzen 7 6###",           6 }, "Ryzen 7 (Rembrandt)",            "TSMC N6"  },
+	{ 15, -1, -1, 25,   68,  -1,    -1,    -1, { "Ryzen 5 6###",           6 }, "Ryzen 5 (Rembrandt)",            "TSMC N6"  },
+	{ 15, -1, -1, 25,   68,  -1,    -1,    -1, { "Ryzen 3 6###",           6 }, "Ryzen 3 (Rembrandt)",            "TSMC N6"  },
+	{ 15, -1, -1, 25,   68,  -1,    -1,    -1, { "Ryzen 7 7###",           6 }, "Ryzen 7 (Rembrandt-R)",          "TSMC N6"  },
+	{ 15, -1, -1, 25,   68,  -1,    -1,    -1, { "Ryzen 5 7###",           6 }, "Ryzen 5 (Rembrandt-R)",          "TSMC N6"  },
+	{ 15, -1, -1, 25,   68,  -1,    -1,    -1, { "Ryzen 3 7###",           6 }, "Ryzen 3 (Rembrandt-R)",          "TSMC N6"  },
 	/* Zen 4 (2022) => https://en.wikichip.org/wiki/amd/microarchitectures/zen_4 */
-	{ 15, -1, -1, 25,   17,  -1,    -1,    -1, NC, EPYC_               ,     0, "EPYC (Genoa)"                  },
-	{ 15, -1, -1, 25,   24,  -1,    -1,    -1, NC, RYZEN_TR_           ,     0, "Threadripper (Storm Peak)"     },
+	{ 15, -1, -1, 25,   17,  -1,    -1,    -1, { "EPYC 9##4",              4 }, "EPYC (Genoa)",                   "TSMC N5"  },
+	{ 15, -1, -1, 25,   24,  -1,    -1,    -1, { "Threadripper 7###",      4 }, "Threadripper (Storm Peak)",      "TSMC N5"  },
 	/*  => Raphael (7000 series, Zen 4/RDNA2 based) */
-	{ 15, -1,  2, 25,   97,  -1,    -1,    -1, NC, RYZEN_|_9           ,     0, "Ryzen 9 (Raphael)"             },
-	{ 15, -1,  2, 25,   97,  -1,    -1,    -1, NC, RYZEN_|_7           ,     0, "Ryzen 7 (Raphael)"             },
-	{ 15, -1,  2, 25,   97,  -1,    -1,    -1, NC, RYZEN_|_5           ,     0, "Ryzen 5 (Raphael)"             },
-	{ 15, -1,  2, 25,   97,  -1,    -1,    -1, NC, RYZEN_|_3           ,     0, "Ryzen 3 (Raphael)"             },
+	{ 15, -1,  2, 25,   97,  -1,    -1,    -1, { "Ryzen 9 7###",           6 }, "Ryzen 9 (Raphael)",              "TSMC N5"  },
+	{ 15, -1,  2, 25,   97,  -1,    -1,    -1, { "Ryzen 7 7###",           6 }, "Ryzen 7 (Raphael)",              "TSMC N5"  },
+	{ 15, -1,  2, 25,   97,  -1,    -1,    -1, { "Ryzen 5 7###",           6 }, "Ryzen 5 (Raphael)",              "TSMC N5"  },
+	{ 15, -1,  2, 25,   97,  -1,    -1,    -1, { "Ryzen 3 7###",           6 }, "Ryzen 3 (Raphael)",              "TSMC N5"  },
 	/*  => Dragon Range (7045 series, Zen 4/RDNA2 based) */
-	{ 15, -1, -1, 25,   97,  -1,    -1,    -1, NC, RYZEN_|_9|_H        ,     0, "Ryzen 9 (Dragon Range)"        },
-	{ 15, -1, -1, 25,   97,  -1,    -1,    -1, NC, RYZEN_|_7|_H        ,     0, "Ryzen 7 (Dragon Range)"        },
-	{ 15, -1, -1, 25,   97,  -1,    -1,    -1, NC, RYZEN_|_5|_H        ,     0, "Ryzen 5 (Dragon Range)"        },
+	{ 15, -1, -1, 25,   97,  -1,    -1,    -1, { "Ryzen 9 7###H",          8 }, "Ryzen 9 (Dragon Range)",         "TSMC N5"  },
+	{ 15, -1, -1, 25,   97,  -1,    -1,    -1, { "Ryzen 7 7###H",          8 }, "Ryzen 7 (Dragon Range)",         "TSMC N5"  },
+	{ 15, -1, -1, 25,   97,  -1,    -1,    -1, { "Ryzen 5 7###H",          8 }, "Ryzen 5 (Dragon Range)",         "TSMC N5"  },
 	/*  => Phoenix (7040 series, Zen 4/RDNA3/XDNA based) */
-	{ 15, -1, -1, 25,  116,  -1,    -1,    -1, NC, RYZEN_|_9|_H        ,     0, "Ryzen 9 (Phoenix)"             },
-	{ 15, -1, -1, 25,  116,  -1,    -1,    -1, NC, RYZEN_|_7|_H        ,     0, "Ryzen 7 (Phoenix)"             },
-	{ 15, -1, -1, 25,  116,  -1,    -1,    -1, NC, RYZEN_|_7|_U        ,     0, "Ryzen 7 (Phoenix)"             },
-	{ 15, -1, -1, 25,  116,  -1,    -1,    -1, NC, RYZEN_|_5|_H        ,     0, "Ryzen 5 (Phoenix)"             },
-	{ 15, -1, -1, 25,  116,  -1,    -1,    -1, NC, RYZEN_|_5|_U        ,     0, "Ryzen 5 (Phoenix)"             },
-	{ 15, -1, -1, 25,  116,  -1,    -1,    -1, NC, RYZEN_|_3|_U        ,     0, "Ryzen 3 (Phoenix)"             },
-	{ 15, -1, -1, 25,  116,  -1,    -1,    -1, NC, RYZEN_|_Z           ,     0, "Ryzen Z1 (Phoenix)"            },
+	{ 15, -1, -1, 25,  116,  -1,    -1,    -1, { "Ryzen 9 7###H",          8 }, "Ryzen 9 (Phoenix)",              "TSMC N4"  },
+	{ 15, -1, -1, 25,  116,  -1,    -1,    -1, { "Ryzen 7 7###H",          8 }, "Ryzen 7 (Phoenix)",              "TSMC N4"  },
+	{ 15, -1, -1, 25,  116,  -1,    -1,    -1, { "Ryzen 7 7###U",          8 }, "Ryzen 7 (Phoenix)",              "TSMC N4"  },
+	{ 15, -1, -1, 25,  116,  -1,    -1,    -1, { "Ryzen 5 7###H",          8 }, "Ryzen 5 (Phoenix)",              "TSMC N4"  },
+	{ 15, -1, -1, 25,  116,  -1,    -1,    -1, { "Ryzen 5 7###U",          8 }, "Ryzen 5 (Phoenix)",              "TSMC N4"  },
+	{ 15, -1, -1, 25,  116,  -1,    -1,    -1, { "Ryzen 3 7###U",          8 }, "Ryzen 3 (Phoenix)",              "TSMC N4"  },
+	{ 15, -1, -1, 25,  116,  -1,    -1,    -1, { "Ryzen Z1",               4 }, "Ryzen Z1 (Phoenix)",             "TSMC N4"  },
 	/*  => Phoenix (8000 series, Zen 4 based) */
-	{ 15, -1, -1, 25,  117,  -1,    -1,    -1, NC, RYZEN_|_7|_F        ,     0, "Ryzen 7 (Phoenix)"             },
-	{ 15, -1, -1, 25,  117,  -1,    -1,    -1, NC, RYZEN_|_5|_F        ,     0, "Ryzen 5 (Phoenix)"             },
+	{ 15, -1, -1, 25,  117,  -1,    -1,    -1, { "Ryzen 7 8###F",          8 }, "Ryzen 7 (Phoenix)",              "TSMC N4"  },
+	{ 15, -1, -1, 25,  117,  -1,    -1,    -1, { "Ryzen 5 8###F",          8 }, "Ryzen 5 (Phoenix)",              "TSMC N4"  },
 	/*  => Phoenix (8000 series with Radeon Graphics, Zen 4/RDNA3/XDNA based) */
-	{ 15, -1, -1, 25,  117,  -1,    -1,    -1, NC, RYZEN_|_9|_G        ,     0, "Ryzen 9 (Phoenix)"             },
-	{ 15, -1, -1, 25,  117,  -1,    -1,    -1, NC, RYZEN_|_7|_G        ,     0, "Ryzen 7 (Phoenix)"             },
-	{ 15, -1, -1, 25,  117,  -1,    -1,    -1, NC, RYZEN_|_5|_G        ,     0, "Ryzen 5 (Phoenix)"             },
-	{ 15, -1, -1, 25,  117,  -1,    -1,    -1, NC, RYZEN_|_3|_G        ,     0, "Ryzen 3 (Phoenix)"             },
+	{ 15, -1, -1, 25,  117,  -1,    -1,    -1, { "Ryzen 9 8###G",          8 }, "Ryzen 9 (Phoenix)",              "TSMC N4"  },
+	{ 15, -1, -1, 25,  117,  -1,    -1,    -1, { "Ryzen 7 8###G",          8 }, "Ryzen 7 (Phoenix)",              "TSMC N4"  },
+	{ 15, -1, -1, 25,  117,  -1,    -1,    -1, { "Ryzen 5 8###G",          8 }, "Ryzen 5 (Phoenix)",              "TSMC N4"  },
+	{ 15, -1, -1, 25,  117,  -1,    -1,    -1, { "Ryzen 3 8###G",          8 }, "Ryzen 3 (Phoenix)",              "TSMC N4"  },
 	/*  => Hawk Point (8040 series, Zen 4/RDNA3/XDNA based) */
-	{ 15, -1, -1, 25,  117,  -1,    -1,    -1, NC, RYZEN_|_9|_H        ,     0, "Ryzen 9 (Hawk Point)"          },
-	{ 15, -1, -1, 25,  117,  -1,    -1,    -1, NC, RYZEN_|_7|_H        ,     0, "Ryzen 7 (Hawk Point)"          },
-	{ 15, -1, -1, 25,  117,  -1,    -1,    -1, NC, RYZEN_|_7|_U        ,     0, "Ryzen 7 (Hawk Point)"          },
-	{ 15, -1, -1, 25,  117,  -1,    -1,    -1, NC, RYZEN_|_5|_H        ,     0, "Ryzen 5 (Hawk Point)"          },
-	{ 15, -1, -1, 25,  117,  -1,    -1,    -1, NC, RYZEN_|_5|_U        ,     0, "Ryzen 5 (Hawk Point)"          },
-	{ 15, -1, -1, 25,  117,  -1,    -1,    -1, NC, RYZEN_|_3|_U        ,     0, "Ryzen 3 (Hawk Point)"          },
+	{ 15, -1, -1, 25,  117,  -1,    -1,    -1, { "Ryzen 9 8###H",          8 }, "Ryzen 9 (Hawk Point)",           "TSMC N4"  },
+	{ 15, -1, -1, 25,  117,  -1,    -1,    -1, { "Ryzen 7 8###H",          8 }, "Ryzen 7 (Hawk Point)",           "TSMC N4"  },
+	{ 15, -1, -1, 25,  117,  -1,    -1,    -1, { "Ryzen 7 8###U",          8 }, "Ryzen 7 (Hawk Point)",           "TSMC N4"  },
+	{ 15, -1, -1, 25,  117,  -1,    -1,    -1, { "Ryzen 5 8###H",          8 }, "Ryzen 5 (Hawk Point)",           "TSMC N4"  },
+	{ 15, -1, -1, 25,  117,  -1,    -1,    -1, { "Ryzen 5 8###U",          8 }, "Ryzen 5 (Hawk Point)",           "TSMC N4"  },
+	{ 15, -1, -1, 25,  117,  -1,    -1,    -1, { "Ryzen 3 8###U",          8 }, "Ryzen 3 (Hawk Point)",           "TSMC N4"  },
 	/* Zen 5 (2024) => https://en.wikichip.org/wiki/amd/microarchitectures/zen_5 */
-	{ 15, -1, -1, 26,    2,  -1,    -1,    -1, NC, EPYC_               ,     0, "EPYC (Turin)"                  },
-	{ 15, -1, -1, 26,   17,  -1,    -1,    -1, NC, EPYC_               ,     0, "EPYC (Turin Dense)"            },
+	{ 15, -1, -1, 26,    2,  -1,    -1,    -1, { "EPYC 9##5",              4 }, "EPYC (Turin)",                   "TSMC N4X" },
+	{ 15, -1, -1, 26,   17,  -1,    -1,    -1, { "EPYC 9##5",              4 }, "EPYC (Turin Dense)",             "TSMC N3E" },
 	/*  => Granite Ridge (9000 series, Zen 5 based) */
-	{ 15, -1, -1, 26,   68,  -1,    -1,    -1, NC, RYZEN_|_9           ,     0, "Ryzen 9 (Granite Ridge)"       },
-	{ 15, -1, -1, 26,   68,  -1,    -1,    -1, NC, RYZEN_|_7           ,     0, "Ryzen 7 (Granite Ridge)"       },
-	{ 15, -1, -1, 26,   68,  -1,    -1,    -1, NC, RYZEN_|_5           ,     0, "Ryzen 5 (Granite Ridge)"       },
-	{ 15, -1, -1, 26,   68,  -1,    -1,    -1, NC, RYZEN_|_3           ,     0, "Ryzen 3 (Granite Ridge)"       },
+	{ 15, -1, -1, 26,   68,  -1,    -1,    -1, { "Ryzen 9 9###",           6 }, "Ryzen 9 (Granite Ridge)",        "TSMC N4"  },
+	{ 15, -1, -1, 26,   68,  -1,    -1,    -1, { "Ryzen 7 9###",           6 }, "Ryzen 7 (Granite Ridge)",        "TSMC N4"  },
+	{ 15, -1, -1, 26,   68,  -1,    -1,    -1, { "Ryzen 5 9###",           6 }, "Ryzen 5 (Granite Ridge)",        "TSMC N4"  },
+	{ 15, -1, -1, 26,   68,  -1,    -1,    -1, { "Ryzen 3 9###",           6 }, "Ryzen 3 (Granite Ridge)",        "TSMC N4"  },
 	/*  => Strix Point (Zen 5/RDNA3.5/XDNA2 based) */
-	{ 15, -1, -1, 26,   36,  -1,    -1,    -1, NC, RYZEN_|_AI_|_9      ,     0, "Ryzen AI 9 (Strix Point)"      },
-	{ 15, -1, -1, 26,   36,  -1,    -1,    -1, NC, RYZEN_|_AI_|_7      ,     0, "Ryzen AI 7 (Strix Point)"      },
-	/* F   M   S  EF    EM  #cores  L2$   L3$  BC  ModelBits          ModelCode  Name                           */
+	{ 15, -1, -1, 26,   36,  -1,    -1,    -1, { "Ryzen AI 9",             6 }, "Ryzen AI 9 (Strix Point)",       "TSMC N4P" },
+	{ 15, -1, -1, 26,   36,  -1,    -1,    -1, { "Ryzen AI 7",             6 }, "Ryzen AI 7 (Strix Point)",       "TSMC N4P" },
+//     F   M   S  EF    EM #cores  L2$    L3$  Pattern                          Codename                          Technology
 };
 
 
@@ -525,163 +556,6 @@ static void decode_amd_number_of_cores(struct cpu_raw_data_t* raw, struct cpu_id
 	}
 }
 
-static int amd_has_turion_modelname(const char *bs)
-{
-	/* We search for something like TL-60. Ahh, I miss regexes...*/
-	int i, l, k;
-	char code[3] = {0};
-	const char* codes[] = { "ML", "MT", "MK", "TK", "TL", "RM", "ZM", "" };
-	l = (int) strlen(bs);
-	for (i = 3; i < l - 2; i++) {
-		if (bs[i] == '-' &&
-		    isupper(bs[i-1]) && isupper(bs[i-2]) && !isupper(bs[i-3]) &&
-		    isdigit(bs[i+1]) && isdigit(bs[i+2]) && !isdigit(bs[i+3]))
-		{
-			code[0] = bs[i-2];
-			code[1] = bs[i-1];
-			for (k = 0; codes[k][0]; k++)
-				if (!strcmp(codes[k], code)) return 1;
-		}
-	}
-	return 0;
-}
-
-static struct amd_code_and_bits_t decode_amd_codename_part1(const char *bs)
-{
-	amd_code_t code = (amd_code_t) NC;
-	struct amd_code_and_bits_t result;
-	uint64_t bits = 0;
-	int i = 0;
-	const size_t n = strlen(bs);
-
-	const struct { amd_code_t c; const char *search; } code_matchtable[] = {
-		{ PHENOM2, "Phenom(tm) II" },
-		{ PHENOM, "Phenom(tm)" },
-		{ FUSION_C, "C-##" },
-		{ FUSION_E, "E-###" },
-		{ FUSION_Z, "Z-##" },
-		{ FUSION_EA, "[EA]#-####" },
-		{ FUSION_RX, "RX-###" },
-		{ FUSION_GX, "GX-###" },
-	};
-
-	const struct { uint64_t bit; const char *search; } bit_matchtable[] = {
-		{ _X2, "Dual[- ]Core" },
-		{ _X2, " X2 " },
-		{ _X3, " X3 " },
-		{ _X4, " X4 " },
-		{ OPTERON_, "Opteron" },
-		{ ATHLON_, "Athlon" },
-		{ SEMPRON_, "Sempron(tm)" },
-		{ DURON_, "Duron" },
-		{ _64_, " 64 " },
-		{ _FX, " FX" },
-		{ _MP_, " MP" },
-		{ ATHLON_|_64_, "Athlon(tm) 64" },
-		{ ATHLON_|_64_, "Athlon(tm) II X" },
-		{ ATHLON_|_64_, "Athlon(tm) X#" },
-		{ TURION_, "Turion" },
-		{ MOBILE_, "[mM]obile" },
-		{ _XP_, "XP" },
-		{ _M_, "XP-M" },
-		{ _LV_, "(LV)" },
-		{ _APU_, " APU " },
-		{ EPYC_, "EPYC" },
-		{ RYZEN_TR_, "Ryzen Threadripper" },
-		{ C86_, "C86" },
-	};
-
-	for (i = 0; i < COUNT_OF(bit_matchtable); i++) {
-		if (match_pattern(bs, bit_matchtable[i].search))
-			bits |= bit_matchtable[i].bit;
-	}
-	if (amd_has_turion_modelname(bs)) {
-		bits |= TURION_;
-	}
-	if (((i = match_pattern(bs, "Ryzen [3579Z]")) != 0) || ((i = match_pattern(bs, "Ryzen AI [3579]")) != 0)) {
-		bits |= RYZEN_;
-		i--;
-		if ((bs[i + 6] == 'A') && (bs[i + 7] == 'I')) {
-			bits |= _AI_;
-			i += 3; // "AI " offset
-		}
-		switch (bs[i + 6]) {
-			case '3': bits |= _3; break;
-			case '5': bits |= _5; break;
-			case '7': bits |= _7; break;
-			case '9': bits |= _9; break;
-			case 'Z': bits |= _Z; break;
-		}
-		/* Stop the loop after a whitespace to avoid to read some words like "Graphics".
-		   Example: bs="AMD Ryzen 7 8845HS w/ Radeon 780M Graphics"
-		   => loop i from 12 to 17, i.e. "8845HS" in such example
-		 */
-		for(i = i + 8; (i < (int)n) && (bs[i] != ' '); i++) {
-			switch (bs[i]) {
-				case 'F': bits |= _F; break;
-				case 'G': bits |= _G; break;
-				case 'H': bits |= _H; break;
-				case 'S': bits |= _S; break;
-				case 'U': bits |= _U; break;
-				case 'X': bits |= _X; break;
-			}
-		}
-	}
-
-	if ((i = match_pattern(bs, "C86 [357]")) != 0) {
-		bits |= C86_;
-		i--;
-		switch (bs[i + 6]) {
-			case '3': bits |= _3; break;
-			case '5': bits |= _5; break;
-			case '7': bits |= _7; break;
-		}
-	}
-
-	for (i = 0; i < COUNT_OF(code_matchtable); i++)
-		if (match_pattern(bs, code_matchtable[i].search)) {
-			code = code_matchtable[i].c;
-			break;
-		}
-
-	result.code = code;
-	result.bits = bits;
-	return result;
-}
-
-static void decode_amd_codename(struct cpu_id_t* data, struct internal_id_info_t* internal)
-{
-	struct amd_code_and_bits_t code_and_bits = decode_amd_codename_part1(data->brand_str);
-	int i = 0;
-	char* code_str = NULL;
-	int model_code = 0;
-
-	for (i = 0; i < COUNT_OF(amd_code_str); i++) {
-		if (code_and_bits.code == amd_code_str[i].code) {
-			code_str = amd_code_str[i].str;
-			break;
-		}
-	}
-	if (/*code == ATHLON_64_X2*/ match_all(code_and_bits.bits, ATHLON_|_64_|_X2) && data->l2_cache < 512) {
-		code_and_bits.bits &= ~(ATHLON_ | _64_);
-		code_and_bits.bits |= SEMPRON_;
-	}
-	if (code_str)
-		debugf(2, "Detected AMD brand code: %d (%s)\n", code_and_bits.code, code_str);
-	else
-		debugf(2, "Detected AMD brand code: %d\n", code_and_bits.code);
-
-	if (code_and_bits.bits) {
-		debugf(2, "Detected AMD bits: ");
-		debug_print_lbits(2, code_and_bits.bits);
-	}
-
-	internal->code.amd = code_and_bits.code;
-	internal->bits = code_and_bits.bits;
-	internal->score = match_cpu_codename(cpudb_amd, COUNT_OF(cpudb_amd), data, code_and_bits.code,
-	                                     code_and_bits.bits, model_code);
-}
-
 int cpuid_identify_amd(struct cpu_raw_data_t* raw, struct cpu_id_t* data, struct internal_id_info_t* internal)
 {
 	load_amd_features(raw, data);
@@ -690,10 +564,16 @@ int cpuid_identify_amd(struct cpu_raw_data_t* raw, struct cpu_id_t* data, struct
 	else
 		decode_amd_cache_info(raw, data);
 	decode_amd_number_of_cores(raw, data);
-	decode_amd_codename(data, internal);
 	decode_architecture_version_x86(data);
 	data->purpose = cpuid_identify_purpose_amd(raw);
+	internal->score = match_cpu_codename(cpudb_amd, COUNT_OF(cpudb_amd), data);
+
 	return 0;
+}
+
+void cpuid_get_list_amd(struct cpu_list_t* list)
+{
+	generic_get_cpu_list(cpudb_amd, COUNT_OF(cpudb_amd), list);
 }
 
 cpu_purpose_t cpuid_identify_purpose_amd(struct cpu_raw_data_t* raw)

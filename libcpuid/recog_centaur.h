@@ -27,5 +27,6 @@
 #define __RECOG_CENTAUR_H__
 
 int cpuid_identify_centaur(struct cpu_raw_data_t* raw, struct cpu_id_t* data, struct internal_id_info_t* internal);
+void cpuid_get_list_centaur(struct cpu_list_t* list);
 
 #endif /* __RECOG_CENTAUR_H__ */

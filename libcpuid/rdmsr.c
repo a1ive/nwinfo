@@ -263,6 +263,7 @@ static int msr_platform_info_supported(struct msr_info_t *info)
 		/* Table 2-50. MSRs Supported by the Intel Xeon Scalable Processor Family with a CPUID Signature DisplayFamily_DisplayModel Value of 06_55H */
 		/* ==> Lunar Lake */
 		{ 6, 189 },
+		/* Table 2-50. MSRs Supported by the Intel Xeon Scalable Processor Family with a CPUID Signature DisplayFamily_DisplayModel Value of 06_55H */
 		{ 0x6, 0x55 },
 		/* Table 2-56. Selected MSRs Supported by Intel Xeon PhiTM Processors with a CPUID Signature DisplayFamily_DisplayModel Value of 06_57H or 06_85H */
 		{ 0x6, 0x57 },
@@ -284,7 +285,7 @@ static int msr_platform_info_supported(struct msr_info_t *info)
 	return supported;
 }
 
-static int msr_perf_status_supported(struct msr_info_t *info)
+static int msr_intel_core_supported(struct msr_info_t *info)
 {
 	int i;
 	static int supported = -1;
@@ -395,7 +396,7 @@ static int get_amd_multipliers(struct msr_info_t *info, uint32_t pstate, double 
 
 	/* Constant values for common families */
 	const int magic_constant = (info->id->x86.ext_family == 0x11) ? 0x8 : 0x10;
-	const int is_apu = ((FUSION_C <= info->internal->code.amd) && (info->internal->code.amd <= FUSION_A)) || (info->internal->bits & _APU_);
+	const int is_apu = (strstr(info->id->brand_str, "APU") != NULL) || (strstr(info->id->brand_str, "Radeon ") != NULL);
 	const double divisor = is_apu ? 1.0 : 2.0;
 
 	/* Check if P-state is valid */
@@ -550,17 +551,19 @@ static double get_info_cur_multiplier(struct msr_info_t *info)
 	double mult;
 	uint64_t reg;
 
-	if(info->id->vendor == VENDOR_INTEL && info->internal->code.intel == PENTIUM) {
-		err = cpu_rdmsr(info->handle, MSR_EBL_CR_POWERON, &reg);
-		if (!err) return (double) ((reg>>22) & 0x1f);
-	}
-	else if(info->id->vendor == VENDOR_INTEL && info->internal->code.intel != PENTIUM) {
-		/* Refer links above
-		Table 35-2.  IA-32 Architectural MSRs (Contd.)
-		IA32_PERF_STATUS[15:0] is Current performance State Value
-		[7:0] is 0x0, [15:8] looks like current ratio */
-		err = cpu_rdmsr_range(info->handle, IA32_PERF_STATUS, 15, 8, &reg);
-		if (!err) return (double) reg;
+	if(info->id->vendor == VENDOR_INTEL) {
+		if(!msr_intel_core_supported(info)) {
+			err = cpu_rdmsr(info->handle, MSR_EBL_CR_POWERON, &reg);
+			if (!err) return (double) ((reg>>22) & 0x1f);
+		}
+		else {
+			/* Refer links above
+			Table 35-2.  IA-32 Architectural MSRs (Contd.)
+			IA32_PERF_STATUS[15:0] is Current performance State Value
+			[7:0] is 0x0, [15:8] looks like current ratio */
+			err = cpu_rdmsr_range(info->handle, IA32_PERF_STATUS, 15, 8, &reg);
+			if (!err) return (double) reg;
+		}
 	}
 	else if(info->id->vendor == VENDOR_AMD || info->id->vendor == VENDOR_HYGON) {
 		/* Refer links above
@@ -579,28 +582,30 @@ static double get_info_max_multiplier(struct msr_info_t *info)
 	double mult;
 	uint64_t reg;
 
-	if(info->id->vendor == VENDOR_INTEL && info->internal->code.intel == PENTIUM) {
-		err = cpu_rdmsr(info->handle, IA32_PERF_STATUS, &reg);
-		if (!err) return (double) ((reg >> 40) & 0x1f);
-	}
-	else if(info->id->vendor == VENDOR_INTEL && info->internal->code.intel != PENTIUM) {
-		/* Refer links above
-		Table 35-10.  Specific MSRs Supported by Intel Atom Processor C2000 Series with CPUID Signature 06_4DH
-		Table 35-12.  MSRs in Next Generation Intel Atom Processors Based on the Goldmont Microarchitecture (Contd.)
-		Table 35-13.  MSRs in Processors Based on Intel Microarchitecture Code Name Nehalem (Contd.)
-		Table 35-14.  Additional MSRs in Intel Xeon Processor 5500 and 3400 Series
-		Table 35-16.  Additional MSRs Supported by Intel Processors (Based on Intel Microarchitecture Code Name Westmere)
-		Table 35-19.  MSRs Supported by 2nd Generation Intel Core Processors (Intel microarchitecture code name Sandy Bridge)
-		Table 35-21.  Selected MSRs Supported by Intel Xeon Processors E5 Family (based on Sandy Bridge microarchitecture)
-		Table 35-28.  MSRs Supported by 4th Generation Intel Core Processors (Haswell microarchitecture) (Contd.)
-		Table 35-30.  Additional MSRs Supported by Intel Xeon Processor E5 v3 Family
-		Table 35-33.  Additional MSRs Supported by Intel Core M Processors and 5th Generation Intel Core Processors
-		Table 35-34.  Additional MSRs Common to Intel Xeon Processor D and Intel Xeon Processors E5 v4 Family Based on the Broadwell Microarchitecture
-		Table 35-37.  Additional MSRs Supported by 6th Generation Intel Core Processors Based on Skylake Microarchitecture
-		Table 35-40.  Selected MSRs Supported by Next Generation Intel Xeon Phi Processors with DisplayFamily_DisplayModel Signature 06_57H
-		MSR_TURBO_RATIO_LIMIT[7:0] is Maximum Ratio Limit for 1C */
-		err = cpu_rdmsr_range(info->handle, MSR_TURBO_RATIO_LIMIT, 7, 0, &reg);
-		if (!err) return (double) reg;
+	if(info->id->vendor == VENDOR_INTEL) {
+		if(!msr_intel_core_supported(info)) {
+			err = cpu_rdmsr(info->handle, IA32_PERF_STATUS, &reg);
+			if (!err) return (double) ((reg >> 40) & 0x1f);
+		}
+		else {
+			/* Refer links above
+			Table 35-10.  Specific MSRs Supported by Intel Atom Processor C2000 Series with CPUID Signature 06_4DH
+			Table 35-12.  MSRs in Next Generation Intel Atom Processors Based on the Goldmont Microarchitecture (Contd.)
+			Table 35-13.  MSRs in Processors Based on Intel Microarchitecture Code Name Nehalem (Contd.)
+			Table 35-14.  Additional MSRs in Intel Xeon Processor 5500 and 3400 Series
+			Table 35-16.  Additional MSRs Supported by Intel Processors (Based on Intel Microarchitecture Code Name Westmere)
+			Table 35-19.  MSRs Supported by 2nd Generation Intel Core Processors (Intel microarchitecture code name Sandy Bridge)
+			Table 35-21.  Selected MSRs Supported by Intel Xeon Processors E5 Family (based on Sandy Bridge microarchitecture)
+			Table 35-28.  MSRs Supported by 4th Generation Intel Core Processors (Haswell microarchitecture) (Contd.)
+			Table 35-30.  Additional MSRs Supported by Intel Xeon Processor E5 v3 Family
+			Table 35-33.  Additional MSRs Supported by Intel Core M Processors and 5th Generation Intel Core Processors
+			Table 35-34.  Additional MSRs Common to Intel Xeon Processor D and Intel Xeon Processors E5 v4 Family Based on the Broadwell Microarchitecture
+			Table 35-37.  Additional MSRs Supported by 6th Generation Intel Core Processors Based on Skylake Microarchitecture
+			Table 35-40.  Selected MSRs Supported by Next Generation Intel Xeon Phi Processors with DisplayFamily_DisplayModel Signature 06_57H
+			MSR_TURBO_RATIO_LIMIT[7:0] is Maximum Ratio Limit for 1C */
+			err = cpu_rdmsr_range(info->handle, MSR_TURBO_RATIO_LIMIT, 7, 0, &reg);
+			if (!err) return (double) reg;
+		}
 	}
 	else if(info->id->vendor == VENDOR_AMD || info->id->vendor == VENDOR_HYGON) {
 		/* Refer links above
@@ -688,7 +693,7 @@ static int get_info_temperature(struct msr_info_t *info)
 	int err;
 	uint64_t DigitalReadout, ReadingValid, TemperatureTarget;
 
-	if(info->id->vendor == VENDOR_INTEL && info->id->flags[CPU_FEATURE_INTEL_DTS]) {
+	if (info->id->vendor == VENDOR_INTEL && info->id->flags[CPU_FEATURE_INTEL_DTS]) {
 		/* Refer links above
 		Table 35-2.   IA-32 Architectural MSRs
 		IA32_THERM_STATUS[22:16] is Digital Readout
@@ -978,7 +983,7 @@ static double get_info_voltage(struct msr_info_t *info)
 	double VIDStep;
 	uint64_t reg, CpuVid;
 
-	if(msr_perf_status_supported(info)) {
+	if(msr_intel_core_supported(info)) {
 		/* Refer links above
 		Table 35-18.  MSRs Supported by Intel Processors based on Intel microarchitecture code name Sandy Bridge (Contd.)
 		MSR_PERF_STATUS[47:32] is Core Voltage

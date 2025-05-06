@@ -29,7 +29,7 @@
  * \file     libcpuid.h
  * \author   Veselin Georgiev
  * \date     Oct 2008
- * \version  0.7.1
+ * \version  0.8.0
  *
  * Version history:
  *
@@ -84,6 +84,10 @@
  *                       add more fields in cpu_raw_data_t (amd_fn80000026h, arm_*),
  *                       detect x2APIC and AVX512 features for AMD x86 CPUs.
  * * 0.7.1 (2024-11-30): A lot of DB updates, fix build on ARM platforms.
+ * * 0.8.0 (2025-05-04): A lot of major DB updates, fixes,
+ *                       add more fields cpu_id_t (technology_node),
+ *                       add more fields in cpu_raw_data_t (ID_AA64DFR2_EL1, ID_AA64FPFR0_EL1, ID_AA64ISAR3_EL1),
+ *                       support ARMv9.5-A (FEATURE_LEVEL_ARM_V9_5_A in cpu_feature_level_t and more CPU_FEATURE in cpu_feature_t).
  */
 
 /** @mainpage A simple libcpuid introduction
@@ -246,6 +250,7 @@ typedef enum {
 	FEATURE_LEVEL_ARM_V9_2_A, /*!< ARMv9.2-A */
 	FEATURE_LEVEL_ARM_V9_3_A, /*!< ARMv9.3-A */
 	FEATURE_LEVEL_ARM_V9_4_A, /*!< ARMv9.4-A */
+	FEATURE_LEVEL_ARM_V9_5_A, /*!< ARMv9.5-A */
 
 	NUM_FEATURE_LEVELS, /*!< Valid feature level ids: 0..NUM_FEATURE_LEVELS - 1 */
 	FEATURE_LEVEL_UNKNOWN = -1,
@@ -372,6 +377,10 @@ struct cpu_raw_data_t {
 	/** when then CPU is ARM-based and supports ID_AA64DFR*
 	 * (AArch64 Debug Feature Register) */
 	uint64_t arm_id_aa64dfr[MAX_ARM_ID_AA64DFR_REGS];
+
+	/** when then CPU is ARM-based and supports ID_AA64FPFR*
+	 * (Floating-point Feature Register) */
+	uint64_t arm_id_aa64fpfr[MAX_ARM_ID_AA64FPFR_REGS];
 
 	/** when then CPU is ARM-based and supports D_AA64ISAR*
 	 * (AArch64 Instruction Set Attribute Register) */
@@ -739,12 +748,14 @@ struct cpu_id_t {
 	 */
 	char cpu_codename[CODENAME_STR_MAX];
 
+#ifndef LIBCPUID_DISABLE_DEPRECATED
 	/**
 	 * SSE execution unit size (64 or 128; -1 if N/A)
 	 * @deprecated replaced by \ref x86_id_t::sse_size (prefix member with `x86.`, e.g. `id.x86.sse_size`)
 	 */
 	LIBCPUID_DEPRECATED("replace with '.x86.sse_size' in your code to fix the warning")
 	int32_t sse_size;
+#endif /* LIBCPUID_DISABLE_DEPRECATED */
 
 	/**
 	 * contain miscellaneous detection information. Used to test about specifics of
@@ -753,12 +764,14 @@ struct cpu_id_t {
 	 */
 	uint8_t detection_hints[CPU_HINTS_MAX];
 
+#ifndef LIBCPUID_DISABLE_DEPRECATED
 	/**
 	 * contains information about SGX features if the processor, if present
 	 * @deprecated replaced by \ref x86_id_t::sgx (prefix member with `x86.`, e.g. `id.x86.sgx`)
 	 */
 	LIBCPUID_DEPRECATED("replace with '.x86.sgx' in your code to fix the warning")
 	struct cpu_sgx_t sgx;
+#endif /* LIBCPUID_DISABLE_DEPRECATED */
 
 	/** bitmask of the affinity ids this processor type is occupying */
 	cpu_affinity_mask_t affinity_mask;
@@ -771,6 +784,9 @@ struct cpu_id_t {
 
 	/** contains the recognized hypervisor vendor */
 	hypervisor_vendor_t hypervisor_vendor;
+
+	/** contains the technology node string, e.g. "32 nm" */
+	char technology_node[TECHNOLOGY_STR_MAX];
 };
 
 /**
@@ -936,14 +952,17 @@ typedef enum {
 	CPU_FEATURE_HYPERVISOR, /*!< Hypervisor present (always zero on physical CPUs) */
 	CPU_FEATURE_INTEL_DTS, /*!< Intel Digital Thermal Sensor */
 	CPU_FEATURE_INTEL_PTM, /*!< Intel Package Thermal Management */
+	/* Arm */
 	CPU_FEATURE_SWAP, /*!< ARM: Swap instructions in the ARM instruction set */
 	CPU_FEATURE_THUMB, /*!< ARM: Thumb instruction set support */
 	CPU_FEATURE_ADVMULTU, /*!< ARM: Advanced unsigned Multiply instructions */
 	CPU_FEATURE_ADVMULTS, /*!< ARM: Advanced signed Multiply instructions */
 	CPU_FEATURE_JAZELLE, /*!< ARM: Jazelle extension support */
+	/* Armv6.0 */
 	CPU_FEATURE_DEBUGV6, /*!< ARM: Support for v6 Debug architecture */
 	CPU_FEATURE_DEBUGV6P1, /*!< ARM: Support for v6.1 Debug architecture */
 	CPU_FEATURE_THUMB2, /*!< ARM: Thumb-2, instruction set support */
+	/* Armv7.0 */
 	CPU_FEATURE_DEBUGV7, /*!< ARM: Support for v7 Debug architecture */
 	CPU_FEATURE_DEBUGV7P1, /*!< ARM: Support for v7.1 Debug architecture */
 	CPU_FEATURE_THUMBEE, /*!< ARM: ThumbEE instruction set support */
@@ -951,6 +970,7 @@ typedef enum {
 	CPU_FEATURE_LPAE, /*!< ARM: Large Physical Address Extension */
 	CPU_FEATURE_PMUV1, /*!< ARM: PMU extension version 1 */
 	CPU_FEATURE_PMUV2, /*!< ARM: PMU extension version 2 */
+	/* A2.2.1 The Armv8.0 architecture extension */
 	CPU_FEATURE_ASID16, /*!< ARM: 16 bit ASID */
 	CPU_FEATURE_ADVSIMD, /*!< ARM: Advanced SIMD Extension */
 	CPU_FEATURE_CRC32, /*!< ARM: CRC32 instructions */
@@ -968,6 +988,7 @@ typedef enum {
 	CPU_FEATURE_SHA1, /*!< ARM: Advanced SIMD SHA1 instructions */
 	CPU_FEATURE_SHA256, /*!< ARM: Advanced SIMD SHA256 instructions */
 	CPU_FEATURE_NTLBPA, /*!< ARM: Intermediate caching of translation table walks */
+	/* A2.2.2 The Armv8.1 architecture extension */
 	CPU_FEATURE_HAFDBS, /*!< ARM: Hardware management of the Access flag and dirty state */
 	CPU_FEATURE_HPDS, /*!< ARM: Hierarchical permission disables in translations tables */
 	CPU_FEATURE_LOR, /*!< ARM: Limited ordering regions */
@@ -977,6 +998,7 @@ typedef enum {
 	CPU_FEATURE_RDM, /*!< ARM: Advanced SIMD rounding double multiply accumulate instructions */
 	CPU_FEATURE_VHE, /*!< ARM: Virtualization Host Extensions */
 	CPU_FEATURE_VMID16, /*!< ARM: 16-bit VMID */
+	/* A2.2.3 The Armv8.2 architecture extension */
 	CPU_FEATURE_AA32HPD, /*!< ARM: AArch32 Hierarchical permission disables */
 	CPU_FEATURE_AA32I8MM, /*!< ARM: AArch32 Int8 matrix multiplication instructions */
 	CPU_FEATURE_DPB, /*!< ARM: DC CVAP instruction */
@@ -992,8 +1014,8 @@ typedef enum {
 	CPU_FEATURE_LVA, /*!< ARM: Large VA support */
 	CPU_FEATURE_PAN2, /*!< ARM: AT S1E1R and AT S1E1W instruction variants affected by PSTATE.PAN */
 	CPU_FEATURE_RAS, /*!< ARM: Reliability, Availability and Serviceability (RAS) Extension */
-	CPU_FEATURE_SHA3, /*!< ARM: Advanced SIMD SHA3 instructions (ARMv8.2 architecture extension) */
-	CPU_FEATURE_SHA512, /*!< ARM: Advanced SIMD SHA512 instructions (ARMv8.1 architecture extension) */
+	CPU_FEATURE_SHA3, /*!< ARM: Advanced SIMD SHA3 instructions */
+	CPU_FEATURE_SHA512, /*!< ARM: Advanced SIMD SHA512 instructions */
 	CPU_FEATURE_SM3, /*!< ARM: Advanced SIMD SM3 instructions */
 	CPU_FEATURE_SM4, /*!< ARM: Advanced SIMD SM4 instructions */
 	CPU_FEATURE_SPE, /*!< ARM: Statistical Profiling Extension */
@@ -1001,6 +1023,7 @@ typedef enum {
 	CPU_FEATURE_TTCNP, /*!< ARM: Translation table Common not private translations */
 	CPU_FEATURE_UAO, /*!< ARM: Unprivileged Access Override control */
 	CPU_FEATURE_XNX, /*!< ARM: Translation table stage 2 Unprivileged Execute-never */
+	/* A2.2.4 The Armv8.3 architecture extension */
 	CPU_FEATURE_CCIDX, /*!< ARM: Extended cache index */
 	CPU_FEATURE_CONSTPACFIELD, /*!< ARM: PAC algorithm enhancement */
 	CPU_FEATURE_EPAC, /*!< ARM: Enhanced pointer authentication */
@@ -1014,6 +1037,7 @@ typedef enum {
 	CPU_FEATURE_PACQARMA5, /*!< ARM: Pointer authentication - QARMA5 algorithm */
 	CPU_FEATURE_PAUTH, /*!< ARM: Pointer authentication */
 	CPU_FEATURE_SPEV1P1, /*!< ARM: Statistical Profiling Extension version 1 */
+	/* A2.2.5 The Armv8.4 architecture extension */
 	CPU_FEATURE_AMUV1, /*!< ARM: Activity Monitors Extension version 1 */
 	CPU_FEATURE_BBM, /*!< ARM: Translation table break-before-make levels */
 	CPU_FEATURE_DIT, /*!< ARM: Data Independent Timing instructions */
@@ -1035,6 +1059,7 @@ typedef enum {
 	CPU_FEATURE_TRF, /*!< ARM: Self-hosted Trace extensions */
 	CPU_FEATURE_TTL, /*!< ARM: Translation Table Level */
 	CPU_FEATURE_TTST, /*!< ARM: Small translation tables */
+	/* A2.2.6 The Armv8.5 architecture extension */
 	CPU_FEATURE_BTI, /*!< ARM: Branch Target Identification */
 	CPU_FEATURE_CSV2, /*!< ARM: Cache Speculation Variant 2 */
 	CPU_FEATURE_CSV3, /*!< ARM: Cache Speculation Variant 3 */
@@ -1053,6 +1078,7 @@ typedef enum {
 	CPU_FEATURE_SPECRES, /*!< ARM: Speculation restriction instructions */
 	CPU_FEATURE_SSBS, /*!< ARM: Speculative Store Bypass Safe */
 	CPU_FEATURE_SSBS2, /*!< ARM: MRS and MSR instructions for SSBS version 2 */
+	/* A2.2.7 The Armv8.6 architecture extension */
 	CPU_FEATURE_AA32BF16, /*!< ARM: AArch32 BFloat16 instructions */
 	CPU_FEATURE_AMUV1P1, /*!< ARM: Activity Monitors Extension version 1.1 */
 	CPU_FEATURE_BF16, /*!< ARM: AArch64 BFloat16 instructions */
@@ -1060,13 +1086,14 @@ typedef enum {
 	CPU_FEATURE_ECV, /*!< ARM: Enhanced Counter Virtualization */
 	CPU_FEATURE_FGT, /*!< ARM: Fine Grain Traps */
 	CPU_FEATURE_HPMN0, /*!< ARM: Setting of MDCR_EL2.HPMN to zero */
-	CPU_FEATURE_MPAMV0P1, /*!< ARM: Memory Partitioning and Monitoring version 0.1 */
-	CPU_FEATURE_MPAMV1P1, /*!< ARM: Memory Partitioning and Monitoring version 1.1 */
+	CPU_FEATURE_MPAMV0P1, /*!< ARM: Memory Partitioning and Monitoring extension version 0.1 */
+	CPU_FEATURE_MPAMV1P1, /*!< ARM: Memory Partitioning and Monitoring extension version 1.1 */
 	CPU_FEATURE_MTPMU, /*!< ARM: Multi-threaded PMU extensions */
 	CPU_FEATURE_PAUTH2, /*!< ARM: Enhancements to pointer authentication */
 	CPU_FEATURE_TWED, /*!< ARM: Delayed Trapping of WFE */
+	/* A2.2.8 The Armv8.7 architecture extension */
 	CPU_FEATURE_AFP, /*!< ARM: Alternate floating-point behavior */
-	CPU_FEATURE_EBF16, /*!< ARM: AArch64 Extended BFloat16 instructions */
+	CPU_FEATURE_EBF16, /*!< ARM: AArch64 Extended BFloat16 behaviors */
 	CPU_FEATURE_HCX, /*!< ARM: Support for the HCRX_EL2 register */
 	CPU_FEATURE_LPA2, /*!< ARM: Larger physical address for 4KB and 16KB translation granules */
 	CPU_FEATURE_LS64, /*!< ARM: Support for 64-byte loads and stores without status */
@@ -1080,6 +1107,7 @@ typedef enum {
 	CPU_FEATURE_SPEV1P2, /*!< ARM: Statistical Profiling Extensions version 1.2 */
 	CPU_FEATURE_WFXT, /*!< ARM: WFE and WFI instructions with timeout */
 	CPU_FEATURE_XS, /*!< ARM: XS attribute */
+	/* A2.2.9 The Armv8.8 architecture extension */
 	CPU_FEATURE_CMOW, /*!< ARM: Control for cache maintenance permission */
 	CPU_FEATURE_DEBUGV8P8, /*!< ARM: Debug v8.8 */
 	CPU_FEATURE_HBC, /*!< ARM: Hinted conditional branches */
@@ -1090,6 +1118,7 @@ typedef enum {
 	CPU_FEATURE_SPEV1P3, /*!< ARM: Statistical Profiling Extensions version 1.3 */
 	CPU_FEATURE_TCR2, /*!< ARM: Support for TCR2_ELx */
 	CPU_FEATURE_TIDCP1, /*!< ARM: EL0 use of IMPLEMENTATION DEFINED functionality */
+	/* A2.2.10 The Armv8.9 architecture extension */
 	CPU_FEATURE_ADERR, /*!< ARM: Asynchronous Device Error Exceptions */
 	CPU_FEATURE_AIE, /*!< ARM: Memory Attribute Index Enhancement */
 	CPU_FEATURE_ANERR, /*!< ARM: Asynchronous Normal Error Exceptions */
@@ -1119,29 +1148,33 @@ typedef enum {
 	CPU_FEATURE_S1PIE, /*!< ARM: Stage 1 permission indirections */
 	CPU_FEATURE_S1POE, /*!< ARM: Stage 1 permission overlays */
 	CPU_FEATURE_S2PIE, /*!< ARM: Stage 2 permission indirections */
-	CPU_FEATURE_S2POE, /*!< ARM: Stage 1 permission overlays */
+	CPU_FEATURE_S2POE, /*!< ARM: Stage 2 permission overlays */
 	CPU_FEATURE_SPECRES2, /*!< ARM: Enhanced speculation restriction instructions */
 	CPU_FEATURE_SPE_DPFZS, /*!< ARM: Disable Cycle Counter on SPE Freeze */
 	CPU_FEATURE_SPEV1P4, /*!< ARM: Statistical Profiling Extension version 1.4 */
 	CPU_FEATURE_SPMU, /*!< ARM: System Performance Monitors Extension */
 	CPU_FEATURE_THE, /*!< ARM: Translation Hardening Extension */
+	/* A2.3.1 The Armv9.0 architecture extension */
 	CPU_FEATURE_SVE2, /*!< ARM: Scalable Vector Extension version 2 */
 	CPU_FEATURE_SVE_AES, /*!< ARM: Scalable Vector AES instructions */
 	CPU_FEATURE_SVE_BITPERM, /*!< ARM: Scalable Vector Bit Permutes instructions */
-	CPU_FEATURE_SVE_PMULL128, /*!< ARM: Scalable Vector PMULL instructions */
+	CPU_FEATURE_SVE_PMULL128, /*!< ARM: SVE single-vector Advanced Encryption Standard and 128-bit polynomial multiply long instructions */
 	CPU_FEATURE_SVE_SHA3, /*!< ARM: Scalable Vector SHA3 instructions */
 	CPU_FEATURE_SVE_SM4, /*!< ARM: Scalable Vector SM4 instructions */
 	CPU_FEATURE_TME, /*!< ARM: Transactional Memory Extension */
 	CPU_FEATURE_TRBE, /*!< ARM: Trace Buffer Extension */
+	/* A2.3.3 The Armv9.2 architecture extension */
 	CPU_FEATURE_BRBE, /*!< ARM: Branch Record Buffer Extension */
 	CPU_FEATURE_RME, /*!< ARM: Realm Management Extension */
 	CPU_FEATURE_SME, /*!< ARM: Scalable Matrix Extension */
 	CPU_FEATURE_SME_F64F64, /*!< ARM: Double-precision floating-point outer product instructions */
 	CPU_FEATURE_SME_FA64, /*!< ARM: Full A64 instruction set support in Streaming SVE mode */
 	CPU_FEATURE_SME_I16I64, /*!< ARM: 16-bit to 64-bit integer widening outer product instructions */
+	/* A2.3.4 The Armv9.3 architecture extension */
 	CPU_FEATURE_BRBEV1P1, /*!< ARM: Branch Record Buffer Extension version 1.1 */
 	CPU_FEATURE_MEC, /*!< ARM: Memory Encryption Contexts */
 	CPU_FEATURE_SME2, /*!< ARM: Scalable Matrix Extensions version 2 */
+	/* A2.3.5 The Armv9.4 architecture extension */
 	CPU_FEATURE_ABLE, /*!< ARM: Address Breakpoint Linking Extension */
 	CPU_FEATURE_BWE, /*!< ARM: Breakpoint and watchpoint enhancements */
 	CPU_FEATURE_D128, /*!< ARM: 128-bit Translation Tables, 56 bit PA */
@@ -1152,12 +1185,41 @@ typedef enum {
 	CPU_FEATURE_LVA3, /*!< ARM: 56-bit VA */
 	CPU_FEATURE_SEBEP, /*!< ARM: Synchronous Exception-based Event Profiling */
 	CPU_FEATURE_SME2P1, /*!< ARM: Scalable Matrix Extension version 2.1 */
-	CPU_FEATURE_SME_F16F16, /*!< ARM: Non-widening half-precision FP16 to FP16 arithmetic for SME2. */
+	CPU_FEATURE_SME_F16F16, /*!< ARM: Non-widening half-precision FP16 to FP16 arithmetic for SME2 */
 	CPU_FEATURE_SVE2P1, /*!< ARM: Scalable Vector Extensions version 2.1 */
-	CPU_FEATURE_SVE_B16B16, /*!< ARM: Non-widening BFloat16 to BFloat16 arithmetic for SVE2 and SME2. */
+	CPU_FEATURE_SVE_B16B16, /*!< ARM: Non-widening BFloat16 to BFloat16 arithmetic for SVE2 and SME2 */
 	CPU_FEATURE_SYSINSTR128, /*!< ARM: 128-bit System instructions */
 	CPU_FEATURE_SYSREG128, /*!< ARM: 128-bit System registers */
 	CPU_FEATURE_TRBE_EXT, /*!< ARM: Trace Buffer external mode */
+	/* A2.3.6 The Armv9.5 architecture extension */
+	CPU_FEATURE_ASID2, /*!< ARM: Support for concurrent use of two ASIDs */
+	CPU_FEATURE_BWE2, /*!< ARM: Breakpoint and watchpoint enhancements 2 */
+	CPU_FEATURE_CPA, /*!< ARM: Instruction-only Checked Pointer Arithmetic */
+	CPU_FEATURE_CPA2, /*!< ARM: Checked Pointer Arithmetic */
+	CPU_FEATURE_E2H0, /*!< ARM: Programming of HCR_EL2.E2H. */
+	CPU_FEATURE_E3DSE, /*!< ARM: Delegated SError exception injection */
+	CPU_FEATURE_ETS3, /*!< ARM: Enhanced Translation Synchronization */
+	CPU_FEATURE_FAMINMAX, /*!< ARM: Floating-point maximum and minimum absolute value instructions */
+	CPU_FEATURE_FGWTE3, /*!< ARM: Fine-Grained Write Trap EL3 */
+	CPU_FEATURE_FP8, /*!< ARM: FP8 convert instructions */
+	CPU_FEATURE_FP8DOT2, /*!< ARM: FP8 2-way dot product to half-precision instructions */
+	CPU_FEATURE_FP8DOT4, /*!< ARM: FP8 4-way dot product to single-precision instructions */
+	CPU_FEATURE_FP8FMA, /*!< ARM: FP8 multiply-accumulate to half-precision and single-precision instructions */
+	CPU_FEATURE_FPMR, /*!< ARM: Floating-point Mode Register */
+	CPU_FEATURE_HACDBS, /*!< ARM: Hardware accelerator for cleaning Dirty state */
+	CPU_FEATURE_HDBSS, /*!< ARM: Hardware Dirty state tracking structure */
+	CPU_FEATURE_LUT, /*!< ARM: Lookup table instructions with 2-bit and 4-bit indices */
+	CPU_FEATURE_PAUTH_LR, /*!< ARM: Pointer authentication instructions that allow signing of LR using SP and PC as diversifiers */
+	CPU_FEATURE_RME_GPC2, /*!< ARM: RME Granule Protection Check 2 Extension */
+	CPU_FEATURE_SME_F8F16, /*!< ARM: SME2 ZA-targeting FP8 multiply-accumulate, dot product, and outer product to half-precision instructions */
+	CPU_FEATURE_SME_F8F32, /*!< ARM: SME2 ZA-targeting FP8 multiply-accumulate, dot product, and outer product to single-precision instructions */
+	CPU_FEATURE_SME_LUTV2, /*!< ARM: Lookup table instructions with 4-bit indices and 8-bit elements */
+	CPU_FEATURE_SPMU2, /*!< ARM: System Performance Monitors Extension version 2 */
+	CPU_FEATURE_SSVE_FP8DOT2, /*!< ARM: SVE FP8 2-way dot product to half-precision instructions in Streaming SVE mode */
+	CPU_FEATURE_SSVE_FP8DOT4, /*!< ARM: SVE2 FP8 4-way dot product to single-precision instructions in Streaming SVE mode */
+	CPU_FEATURE_SSVE_FP8FMA, /*!< ARM: SVE2 FP8 multiply-accumulate to half-precision and single-precision instructions in Streaming SVE mode */
+	CPU_FEATURE_STEP2, /*!< ARM: Enhanced Software Step Extension */
+	CPU_FEATURE_TLBIW, /*!< ARM: TLBI VMALL for Dirty state */
 	/* termination: */
 	NUM_CPU_FEATURES,
 } cpu_feature_t;
@@ -1307,6 +1369,74 @@ int cpuid_get_raw_data_core(struct cpu_raw_data_t* data, logical_cpu_t logical_c
  *          @see cpu_error_t
  */
 int cpuid_get_all_raw_data(struct cpu_raw_data_array_t* data);
+
+/**
+ * @brief Writes the raw CPUID data to a text file
+ * @param data - a pointer to cpu_raw_data_t structure
+ * @param filename - the path of the file, where the serialized data should be
+ *                   written. If empty, stdout will be used.
+ * @note This is intended primarily for debugging. On some processor, which is
+ *       not currently supported or not completely recognized by cpu_identify,
+ *       one can still successfully get the raw data and write it to a file.
+ *       libcpuid developers can later import this file and debug the detection
+ *       code as if running on the actual hardware.
+ *       The file is simple text format of "something=value" pairs. Version info
+ *       is also written, but the format is not intended to be neither backward-
+ *       nor forward compatible.
+ * @returns zero if successful, and some negative number on error.
+ *          The error message can be obtained by calling \ref cpuid_error.
+ *          @see cpu_error_t
+ */
+int cpuid_serialize_raw_data(struct cpu_raw_data_t* data, const char* filename);
+
+/**
+ * @brief Writes all the raw CPUID data to a text file
+ * @param data - a pointer to cpu_raw_data_array_t structure
+ * @param filename - the path of the file, where the serialized data for all CPUs
+ *                   should be written. If empty, stdout will be used.
+ * @note This is intended primarily for debugging. On some processor, which is
+ *       not currently supported or not completely recognized by cpu_identify_all,
+ *       one can still successfully get the raw data and write it to a file.
+ *       libcpuid developers can later import this file and debug the detection
+ *       code as if running on the actual hardware.
+ *       The file is simple text format of "something=value" pairs. Version info
+ *       is also written, but the format is not intended to be neither backward-
+ *       nor forward compatible.
+ * @returns zero if successful, and some negative number on error.
+ *          The error message can be obtained by calling \ref cpuid_error.
+ *          @see cpu_error_t
+ */
+int cpuid_serialize_all_raw_data(struct cpu_raw_data_array_t* data, const char* filename);
+
+/**
+ * @brief Reads raw CPUID data from file
+ * @param data - a pointer to cpu_raw_data_t structure. The deserialized data will
+ *               be written here.
+ * @param filename - the path of the file, containing the serialized raw data.
+ *                   If empty, stdin will be used.
+ * @note This function may fail, if the file is created by different version of
+ *       the library. Also, see the notes on cpuid_serialize_raw_data.
+ * @returns zero if successful, and some negative number on error.
+ *          The error message can be obtained by calling \ref cpuid_error.
+ *          @see cpu_error_t
+*/
+int cpuid_deserialize_raw_data(struct cpu_raw_data_t* data, const char* filename);
+
+/**
+ * @brief Reads all raw CPUID data from file
+ * @param data - a pointer to cpu_raw_data_array_t structure. The deserialized array data will
+ *               be written here.
+ * @param filename - the path of the file, containing the serialized raw data.
+ *                   If empty, stdin will be used.
+ * @note This function may fail, if the file is created by different version of
+ *       the library. Also, see the notes on cpuid_serialize_all_raw_data.
+ * @note As the memory is dynamically allocated, be sure to call
+ *       cpuid_free_raw_data_array() after you're done with the data
+ * @returns zero if successful, and some negative number on error.
+ *          The error message can be obtained by calling \ref cpuid_error.
+ *          @see cpu_error_t
+*/
+int cpuid_deserialize_all_raw_data(struct cpu_raw_data_array_t* data, const char* filename);
 
 /**
  * @brief Identifies the CPU
@@ -1676,6 +1806,36 @@ struct cpu_epc_t cpuid_get_epc(int index, const struct cpu_raw_data_t* raw);
  */
 const char* cpuid_lib_version(void);
 
+typedef void (*libcpuid_warn_fn_t) (const char *msg);
+/**
+ * @brief Sets the warning print function
+ *
+ * In some cases, the internal libcpuid machinery would like to emit useful
+ * debug warnings. By default, these warnings are written to stderr. However,
+ * you can set a custom function that will receive those warnings.
+ *
+ * @param warn_fun - the warning function you want to set. If NULL, warnings
+ *                   are disabled. The function takes const char* argument.
+ *
+ * @returns the current warning function. You can use the return value to
+ * keep the previous warning function and restore it at your discretion.
+ */
+libcpuid_warn_fn_t cpuid_set_warn_function(libcpuid_warn_fn_t warn_fun);
+
+/**
+ * @brief Sets the verbosiness level
+ *
+ * When the verbosiness level is above zero, some functions might print
+ * diagnostic information about what are they doing. The higher the level is,
+ * the more detail is printed. Level zero is guaranteed to omit all such
+ * output. The output is written using the same machinery as the warnings,
+ * @see cpuid_set_warn_function()
+ *
+ * @param level the desired verbosiness level. Useful values 0..2 inclusive
+ */
+void cpuid_set_verbosiness_level(int level);
+
+
 /**
  * @brief Obtains the CPU vendor from CPUID from the current CPU
  * @note The result is cached.
@@ -1683,6 +1843,64 @@ const char* cpuid_lib_version(void);
  *          @see cpu_vendor_t
  */
 cpu_vendor_t cpuid_get_vendor(void);
+
+/**
+ * @brief Obtains the hypervisor vendor from CPUID from the current CPU
+ * @param raw - Optional input - a pointer to the raw CPUID data, which is obtained
+ *              either by cpuid_get_raw_data or cpuid_deserialize_raw_data.
+ *              Can also be NULL, in which case the functions calls
+ *              cpuid_get_raw_data itself.
+ * @param data - Optional input - the decoded CPU features/info is written here.
+ *              Can also be NULL, in which case the functions calls
+ *              cpu_identify itself.
+ * @note If no hypervisor is detected, the hypervisor can be hidden in some cases.
+ *       Refer to https://github.com/anrieff/libcpuid/issues/90#issuecomment-296568713.
+ * @returns HYPERVISOR_UNKNOWN if failed,
+ *          HYPERVISOR_NONE if no hypervisor detected (or hidden),
+ *          otherwise the hypervisor vendor type.
+ *          @see hypervisor_vendor_t
+ */
+hypervisor_vendor_t cpuid_get_hypervisor(struct cpu_raw_data_t* raw, struct cpu_id_t* data);
+
+/**
+ * @brief a structure that holds a list of processor names
+ */
+struct cpu_list_t {
+	/** Number of entries in the list */
+	int num_entries;
+	/** Pointers to names. There will be num_entries of them */
+	char **names;
+};
+
+/**
+ * @brief Gets a list of all known CPU names from a specific vendor.
+ *
+ * This function compiles a list of all known CPU (code)names
+ * (i.e. the possible values of cpu_id_t::cpu_codename) for the given vendor.
+ *
+ * There are about 100 entries for Intel and AMD, and a few for the other
+ * vendors. The list is written out in approximate chronological introduction
+ * order of the parts.
+ *
+ * @param vendor the vendor to be queried
+ * @param list [out] the resulting list will be written here. On failure,
+ * num_entries is set to zero and names to NULL. The error message can be
+ * obtained by calling \ref cpuid_error. @see cpu_error_t
+ * NOTE: As the memory is dynamically allocated, be sure to call
+ *       cpuid_free_cpu_list() after you're done with the data
+ * @see cpu_list_t
+ */
+void cpuid_get_cpu_list(cpu_vendor_t vendor, struct cpu_list_t* list);
+
+/**
+ * @brief Frees a CPU list
+ *
+ * This function deletes all the memory associated with a CPU list, as obtained
+ * by cpuid_get_cpu_list()
+ *
+ * @param list - the list to be free()'d.
+ */
+void cpuid_free_cpu_list(struct cpu_list_t* list);
 
 /**
  * @brief Frees a raw array

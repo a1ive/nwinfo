@@ -27,9 +27,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 #include <inttypes.h>
 #include "libcpuid.h"
-#include "libcpuid_ctype.h"
 #include "libcpuid_util.h"
 #include "libcpuid_internal.h"
 #include "recog_arm.h"
@@ -60,6 +60,7 @@ struct arm_id_part {
 	const int id;
 	const char* name;
 	const char* codename;
+	const char* technology;
 };
 
 struct arm_hw_impl {
@@ -72,268 +73,276 @@ struct arm_hw_impl {
 /* Decoded PartNum for all implementers
    ID taken from lscpu-arm: https://github.com/util-linux/util-linux/blob/master/sys-utils/lscpu-arm.c
 */
-/* Codenames: https://en.wikichip.org/wiki/arm_holdings */
+/* Part numbers: https://en.wikichip.org/wiki/arm_holdings/cortex#Part_numbers
+   Codenames: https://en.wikichip.org/wiki/arm_holdings */
 static const struct arm_id_part arm_part[] = {
-	{ 0x810, "ARM810", "" },
-	{ 0x920, "ARM920", "" },
-	{ 0x922, "ARM922", "" },
-	{ 0x926, "ARM926", "" },
-	{ 0x940, "ARM940", "" },
-	{ 0x946, "ARM946", "" },
-	{ 0x966, "ARM966", "" },
-	{ 0xa20, "ARM1020", "" },
-	{ 0xa22, "ARM1022", "" },
-	{ 0xa26, "ARM1026", "" },
-	{ 0xb02, "ARM11 MPCore", "" },
-	{ 0xb36, "ARM1136", "" },
-	{ 0xb56, "ARM1156", "" },
-	{ 0xb76, "ARM1176", "" },
-	{ 0xc05, "Cortex-A5", "Sparrow" },
-	{ 0xc07, "Cortex-A7", "Kingfisher" },
-	{ 0xc08, "Cortex-A8", "Tiger" },
-	{ 0xc09, "Cortex-A9", "Falcon" },
-	{ 0xc0d, "Cortex-A17", "Owl" },	/* Originally A12 */
-	{ 0xc0f, "Cortex-A15", "Eagle" },
-	{ 0xc0e, "Cortex-A17", "Owl" },
-	{ 0xc14, "Cortex-R4", "" },
-	{ 0xc15, "Cortex-R5", "" },
-	{ 0xc17, "Cortex-R7", "" },
-	{ 0xc18, "Cortex-R8", "" },
-	{ 0xc20, "Cortex-M0", "Swift" },
-	{ 0xc21, "Cortex-M1", "Proteus" },
-	{ 0xc23, "Cortex-M3", "Sandcat" },
-	{ 0xc24, "Cortex-M4", "Merlin" },
-	{ 0xc27, "Cortex-M7", "Pelican" },
-	{ 0xc60, "Cortex-M0+", "Flycatcher" },
-	{ 0xd01, "Cortex-A32", "Minerva" },
-	{ 0xd02, "Cortex-A34", "Metis" },
-	{ 0xd03, "Cortex-A53", "Apollo" },
-	{ 0xd04, "Cortex-A35", "Mercury" },
-	{ 0xd05, "Cortex-A55", "Ananke" },
-	{ 0xd06, "Cortex-A65", "Helios" },
-	{ 0xd07, "Cortex-A57", "Atlas" },
-	{ 0xd08, "Cortex-A72", "Maia" },
-	{ 0xd09, "Cortex-A73", "Artemis" },
-	{ 0xd0a, "Cortex-A75", "Prometheus" },
-	{ 0xd0b, "Cortex-A76", "Enyo" },
-	{ 0xd0c, "Neoverse-N1", "Ares" },
-	{ 0xd0d, "Cortex-A77", "Deimos" },
-	{ 0xd0e, "Cortex-A76AE", "Enyo-AE" },
-	{ 0xd13, "Cortex-R52", "" },
-	{ 0xd15, "Cortex-R82", "" },
-	{ 0xd16, "Cortex-R52+", "" },
-	{ 0xd20, "Cortex-M23", "Grebe" },
-	{ 0xd21, "Cortex-M33", "Teal" },
-	{ 0xd22, "Cortex-M55", "Yamin" },
-	{ 0xd23, "Cortex-M85", "" },
-	{ 0xd40, "Neoverse-V1", "Zeus" },
-	{ 0xd41, "Cortex-A78", "Hercules" },
-	{ 0xd42, "Cortex-A78AE", "Hercules-AE" },
-	{ 0xd43, "Cortex-A65AE", "Helios-AE" },
-	{ 0xd44, "Cortex-X1", "Hera" },
-	{ 0xd46, "Cortex-A510", "Klein" },
-	{ 0xd47, "Cortex-A710", "Matterhorn" },
-	{ 0xd48, "Cortex-X2", "Matterhorn ELP" },
-	{ 0xd49, "Neoverse-N2", "Perseus" },
-	{ 0xd4a, "Neoverse-E1", "Helios" },
-	{ 0xd4b, "Cortex-A78C", "Hercules-C" },
-	{ 0xd4c, "Cortex-X1C", "Hera-C" },
-	{ 0xd4d, "Cortex-A715", "Makalu" },
-	{ 0xd4e, "Cortex-X3", "Makalu ELP" },
-	{ 0xd4f, "Neoverse-V2", "Demeter" },
-	{ 0xd80, "Cortex-A520", "Hayes" },
-	{ 0xd81, "Cortex-A720", "Hunter" },
-	{ 0xd82, "Cortex-X4", "Hunter ELP" },
-	{ 0xd84, "Neoverse-V3", "Poseidon" },
-	{ 0xd8e, "Neoverse-N3", "Hermes" },
-	{ -1, "unknown", "" },
+	{ 0x810, "ARM810",        UNKN_STR,         UNKN_STR   },
+	{ 0x920, "ARM920",        UNKN_STR,         UNKN_STR   },
+	{ 0x922, "ARM922",        UNKN_STR,         UNKN_STR   },
+	{ 0x926, "ARM926",        UNKN_STR,         UNKN_STR   },
+	{ 0x940, "ARM940",        UNKN_STR,         UNKN_STR   },
+	{ 0x946, "ARM946",        UNKN_STR,         UNKN_STR   },
+	{ 0x966, "ARM966",        UNKN_STR,         UNKN_STR   },
+	{ 0xa20, "ARM1020",       UNKN_STR,         UNKN_STR   },
+	{ 0xa22, "ARM1022",       UNKN_STR,         UNKN_STR   },
+	{ 0xa26, "ARM1026",       UNKN_STR,         UNKN_STR   },
+	{ 0xb02, "ARM11 MPCore",  UNKN_STR,         UNKN_STR   },
+	{ 0xb36, "ARM1136",       UNKN_STR,         UNKN_STR   },
+	{ 0xb56, "ARM1156",       UNKN_STR,         UNKN_STR   },
+	{ 0xb76, "ARM1176",       UNKN_STR,         UNKN_STR   },
+	{ 0xc05, "Cortex-A5",     "Sparrow",        "40-28 nm" },
+	{ 0xc07, "Cortex-A7",     "Kingfisher",     "40-28 nm" },
+	{ 0xc08, "Cortex-A8",     "Tiger",          "65-45 nm" },
+	{ 0xc09, "Cortex-A9",     "Falcon",         "65-28 nm" },
+	{ 0xc0d, "Cortex-A17",    "Owl",            "28 nm"    }, /* Originally A12 */
+	{ 0xc0f, "Cortex-A15",    "Eagle",          "32-20 nm" },
+	{ 0xc0e, "Cortex-A17",    "Owl",            "28 nm"    },
+	{ 0xc14, "Cortex-R4",     UNKN_STR,         UNKN_STR   },
+	{ 0xc15, "Cortex-R5",     UNKN_STR,         UNKN_STR   },
+	{ 0xc17, "Cortex-R7",     UNKN_STR,         UNKN_STR   },
+	{ 0xc18, "Cortex-R8",     UNKN_STR,         UNKN_STR   },
+	{ 0xc20, "Cortex-M0",     "Swift",          UNKN_STR   },
+	{ 0xc21, "Cortex-M1",     "Proteus",        UNKN_STR   },
+	{ 0xc23, "Cortex-M3",     "Sandcat",        UNKN_STR   },
+	{ 0xc24, "Cortex-M4",     "Merlin",         UNKN_STR   },
+	{ 0xc27, "Cortex-M7",     "Pelican",        UNKN_STR   },
+	{ 0xc60, "Cortex-M0+",    "Flycatcher",     UNKN_STR   },
+	{ 0xd01, "Cortex-A32",    "Minerva",        "28 nm"    },
+	{ 0xd02, "Cortex-A34",    "Metis",          UNKN_STR   },
+	{ 0xd03, "Cortex-A53",    "Apollo",         "28-10 nm" },
+	{ 0xd04, "Cortex-A35",    "Mercury",        "28-10 nm" },
+	{ 0xd05, "Cortex-A55",    "Ananke",         "28-5 nm"  },
+	{ 0xd06, "Cortex-A65",    "Helios",         UNKN_STR   },
+	{ 0xd07, "Cortex-A57",    "Atlas",          "28-14 nm" },
+	{ 0xd08, "Cortex-A72",    "Maia",           "28-16 nm" },
+	{ 0xd09, "Cortex-A73",    "Artemis",        "28-10 nm" },
+	{ 0xd0a, "Cortex-A75",    "Prometheus",     "28-10 nm" },
+	{ 0xd0b, "Cortex-A76",    "Enyo",           "10-7 nm"  },
+	{ 0xd0c, "Neoverse-N1",   "Ares",           "7 nm"     },
+	{ 0xd0d, "Cortex-A77",    "Deimos",         "7 nm"     },
+	{ 0xd0e, "Cortex-A76AE",  "Enyo-AE",        UNKN_STR   },
+	{ 0xd13, "Cortex-R52",    UNKN_STR,         UNKN_STR   },
+	{ 0xd15, "Cortex-R82",    UNKN_STR,         UNKN_STR   },
+	{ 0xd16, "Cortex-R52+",   UNKN_STR,         UNKN_STR   },
+	{ 0xd20, "Cortex-M23",    "Grebe",          UNKN_STR   },
+	{ 0xd21, "Cortex-M33",    "Teal",           UNKN_STR   },
+	{ 0xd22, "Cortex-M55",    "Yamin",          UNKN_STR   },
+	{ 0xd23, "Cortex-M85",    UNKN_STR,         UNKN_STR   },
+	{ 0xd40, "Neoverse-V1",   "Zeus",           "7 nm"     },
+	{ 0xd41, "Cortex-A78",    "Hercules",       "5 nm"     },
+	{ 0xd42, "Cortex-A78AE",  "Hercules-AE",    UNKN_STR   },
+	{ 0xd43, "Cortex-A65AE",  "Helios-AE",      UNKN_STR   },
+	{ 0xd44, "Cortex-X1",     "Hera",           "10-5 nm"  },
+	{ 0xd46, "Cortex-A510",   "Klein",          "7-5 nm"   },
+	{ 0xd47, "Cortex-A710",   "Matterhorn",     "7-5 nm"   },
+	{ 0xd48, "Cortex-X2",     "Matterhorn ELP", UNKN_STR   },
+	{ 0xd49, "Neoverse-N2",   "Perseus",        "5 nm"     },
+	{ 0xd4a, "Neoverse-E1",   "Helios",         UNKN_STR   },
+	{ 0xd4b, "Cortex-A78C",   "Hercules-C",     "5 nm"     },
+	{ 0xd4c, "Cortex-X1C",    "Hera-C",         UNKN_STR   },
+	{ 0xd4d, "Cortex-A715",   "Makalu",         "7-5 nm"   },
+	{ 0xd4e, "Cortex-X3",     "Makalu ELP",     UNKN_STR   },
+	{ 0xd4f, "Neoverse-V2",   "Demeter",        UNKN_STR   },
+	{ 0xd80, "Cortex-A520",   "Hayes",          "3 nm"     },
+	{ 0xd81, "Cortex-A720",   "Hunter",         "3 nm"     },
+	{ 0xd82, "Cortex-X4",     "Hunter ELP",     UNKN_STR   },
+	{ 0xd83, "Neoverse-V3AE", "Autonome",       UNKN_STR   },
+	{ 0xd84, "Neoverse-V3",   "Poseidon",       UNKN_STR   },
+	{ 0xd85, "Cortex-X925",   "Blackhawk",      "3 nm"     },
+	{ 0xd87, "Cortex-A725",   "Chaberton",      "3 nm"     },
+	{ 0xd88, "Cortex-A520AE", "Hayes-AE",       "3 nm"     },
+	{ 0xd89, "Cortex-A720AE", "Hunter-AE",      "3 nm"     },
+	{ 0xd8e, "Neoverse-N3",   "Hermes",         "5 nm"     },
+	{ 0xd8f, "Cortex-A320",   "IoT & AI",       UNKN_STR   },
+	{ -1,    UNKN_STR,        UNKN_STR,         UNKN_STR   },
 };
 
 static const struct arm_id_part brcm_part[] = {
-	{ 0x0f, "Brahma-B15", "" },
-	{ 0x100, "Brahma-B53", "" },
-	{ 0x516, "ThunderX2", "" },
-	{ -1, "unknown", "" },
+	{ 0x0f,  "Brahma-B15", UNKN_STR, UNKN_STR },
+	{ 0x100, "Brahma-B53", UNKN_STR, UNKN_STR },
+	{ 0x516, "ThunderX2",  UNKN_STR, UNKN_STR },
+	{ -1,    UNKN_STR,     UNKN_STR, UNKN_STR },
 };
 
 static const struct arm_id_part dec_part[] = {
-	{ 0xa10, "SA110", "" },
-	{ 0xa11, "SA1100", "" },
-	{ -1, "unknown", "" },
+	{ 0xa10, "SA110",  UNKN_STR, UNKN_STR },
+	{ 0xa11, "SA1100", UNKN_STR, UNKN_STR },
+	{ -1,    UNKN_STR, UNKN_STR, UNKN_STR },
 };
 
 static const struct arm_id_part cavium_part[] = {
-	{ 0x0a0, "ThunderX", "" },
-	{ 0x0a1, "ThunderX-88XX", "" },
-	{ 0x0a2, "ThunderX-81XX", "" },
-	{ 0x0a3, "ThunderX-83XX", "" },
-	{ 0x0af, "ThunderX2-99xx", "" },
-	{ 0x0b0, "OcteonTX2", "" },
-	{ 0x0b1, "OcteonTX2-98XX", "" },
-	{ 0x0b2, "OcteonTX2-96XX", "" },
-	{ 0x0b3, "OcteonTX2-95XX", "" },
-	{ 0x0b4, "OcteonTX2-95XXN", "" },
-	{ 0x0b5, "OcteonTX2-95XXMM", "" },
-	{ 0x0b6, "OcteonTX2-95XXO", "" },
-	{ 0x0b8, "ThunderX3-T110", "" },
-	{ -1, "unknown", "" },
+	{ 0x0a0, "ThunderX",         UNKN_STR, UNKN_STR },
+	{ 0x0a1, "ThunderX-88XX",    UNKN_STR, UNKN_STR },
+	{ 0x0a2, "ThunderX-81XX",    UNKN_STR, UNKN_STR },
+	{ 0x0a3, "ThunderX-83XX",    UNKN_STR, UNKN_STR },
+	{ 0x0af, "ThunderX2-99xx",   UNKN_STR, UNKN_STR },
+	{ 0x0b0, "OcteonTX2",        UNKN_STR, UNKN_STR },
+	{ 0x0b1, "OcteonTX2-98XX",   UNKN_STR, UNKN_STR },
+	{ 0x0b2, "OcteonTX2-96XX",   UNKN_STR, UNKN_STR },
+	{ 0x0b3, "OcteonTX2-95XX",   UNKN_STR, UNKN_STR },
+	{ 0x0b4, "OcteonTX2-95XXN",  UNKN_STR, UNKN_STR },
+	{ 0x0b5, "OcteonTX2-95XXMM", UNKN_STR, UNKN_STR },
+	{ 0x0b6, "OcteonTX2-95XXO",  UNKN_STR, UNKN_STR },
+	{ 0x0b8, "ThunderX3-T110",   UNKN_STR, UNKN_STR },
+	{ -1,    UNKN_STR,           UNKN_STR, UNKN_STR },
 };
 
 static const struct arm_id_part apm_part[] = {
-	{ 0x000, "X-Gene", "" },
-	{ -1, "unknown", "" },
+	{ 0x000, "X-Gene", UNKN_STR, UNKN_STR },
+	{ -1,    UNKN_STR, UNKN_STR, UNKN_STR },
 };
 
 static const struct arm_id_part qcom_part[] = {
-	{ 0x001, "Oryon", "" },
-	{ 0x00f, "Scorpion", "" },
-	{ 0x02d, "Scorpion", "" },
-	{ 0x04d, "Krait", "" },
-	{ 0x06f, "Krait", "" },
-	{ 0x201, "Kryo", "" },
-	{ 0x205, "Kryo", "" },
-	{ 0x211, "Kryo", "" },
-	{ 0x800, "Falkor-V1/Kryo", "" },
-	{ 0x801, "Kryo-V2", "" },
-	{ 0x802, "Kryo-3XX-Gold", "" },
-	{ 0x803, "Kryo-3XX-Silver", "" },
-	{ 0x804, "Kryo-4XX-Gold", "" },
-	{ 0x805, "Kryo-4XX-Silver", "" },
-	{ 0xc00, "Falkor", "" },
-	{ 0xc01, "Saphira", "" },
-	{ -1, "unknown", "" },
+	{ 0x001, "Oryon",           UNKN_STR, UNKN_STR   },
+	{ 0x00f, "Scorpion",        UNKN_STR, "65-45 nm" },
+	{ 0x02d, "Scorpion",        UNKN_STR, "65-45 nm" },
+	{ 0x04d, "Krait",           UNKN_STR, "28 nm"    },
+	{ 0x06f, "Krait",           UNKN_STR, "28 nm"    },
+	{ 0x201, "Kryo",            UNKN_STR, "14 nm"    },
+	{ 0x205, "Kryo",            UNKN_STR, "14 nm"    },
+	{ 0x211, "Kryo",            UNKN_STR, "14 nm"    },
+	{ 0x800, "Falkor-V1/Kryo",  UNKN_STR, UNKN_STR   },
+	{ 0x801, "Kryo-V2",         UNKN_STR, "14-6 nm"  },
+	{ 0x802, "Kryo-3XX-Gold",   UNKN_STR, "10 nm"    },
+	{ 0x803, "Kryo-3XX-Silver", UNKN_STR, "10 nm"    },
+	{ 0x804, "Kryo-4XX-Gold",   UNKN_STR, "11-7 nm"  },
+	{ 0x805, "Kryo-4XX-Silver", UNKN_STR, "8-7 nm"   },
+	{ 0xc00, "Falkor",          UNKN_STR, "10 nm"    },
+	{ 0xc01, "Saphira",         UNKN_STR, "8-7 nm"   },
+	{ -1,    UNKN_STR,          UNKN_STR, UNKN_STR   },
 };
 
 static const struct arm_id_part samsung_part[] = {
-	{ 0x001, "Exynos M1", "" },
-	{ 0x002, "Exynos M3", "" },
-	{ 0x003, "Exynos M4", "" },
-	{ 0x004, "Exynos M5", "" },
-	{ -1, "unknown", "" },
+	{ 0x001, "Exynos M1", UNKN_STR, "14 nm"  },
+	{ 0x002, "Exynos M3", UNKN_STR, "10 nm"  },
+	{ 0x003, "Exynos M4", UNKN_STR, "8 nm"   },
+	{ 0x004, "Exynos M5", UNKN_STR, "7 nm"   },
+	{ -1,    UNKN_STR,    UNKN_STR, UNKN_STR },
 };
 
 static const struct arm_id_part nvidia_part[] = {
-	{ 0x000, "Denver", "" },
-	{ 0x003, "Denver 2", "" },
-	{ 0x004, "Carmel", "" },
-	{ -1, "unknown", "" },
+	{ 0x000, "Denver",   UNKN_STR, "28 nm"  },
+	{ 0x003, "Denver 2", UNKN_STR, "16 nm"  },
+	{ 0x004, "Carmel",   UNKN_STR, "12 nm"  },
+	{ -1,    UNKN_STR,   UNKN_STR, UNKN_STR },
 };
 
 static const struct arm_id_part marvell_part[] = {
-	{ 0x131, "Feroceon-88FR131", "" },
-	{ 0x581, "PJ4/PJ4b", "" },
-	{ 0x584, "PJ4B-MP", "" },
-	{ -1, "unknown", "" },
+	{ 0x131, "Feroceon-88FR131", UNKN_STR, UNKN_STR },
+	{ 0x581, "PJ4/PJ4b",         UNKN_STR, UNKN_STR },
+	{ 0x584, "PJ4B-MP",          UNKN_STR, UNKN_STR },
+	{ -1,    UNKN_STR,           UNKN_STR, UNKN_STR },
 };
 
 static const struct arm_id_part apple_part[] = {
-	{ 0x000, "A6", "Swift" },
-	{ 0x001, "A7", "Cyclone" },
-	{ 0x002, "A8", "Typhoon" },
-	{ 0x003, "A8X", "Typhoon" },
-	{ 0x004, "A9", "Twister" },
-	{ 0x005, "A9X", "Twister" },
-	{ 0x006, "A10 Fusion", "Zephyr" },
-	{ 0x007, "A10 Fusion", "Hurricane" },
-	{ 0x008, "A11 Bionic", "Monsoon" },
-	{ 0x009, "A11 Bionic", "Mistral" },
-	{ 0x00b, "A12", "Vortex" },
-	{ 0x00c, "A12", "Tempest" },
-	{ 0x00f, "M9", "Tempest" },
-	{ 0x010, "A12X Bionic", "Vortex" },
-	{ 0x011, "A12X Bionic", "Tempest" },
-	{ 0x012, "A13 Bionic", "Lightning" },
-	{ 0x013, "A13 Bionic", "Thunder" },
-	{ 0x020, "A14", "Icestorm" },
-	{ 0x021, "A14", "Firestorm" },
-	{ 0x022, "M1", "Icestorm" },
-	{ 0x023, "M1", "Firestorm" },
-	{ 0x024, "M1 Pro", "Icestorm" },
-	{ 0x025, "M1 Pro", "Firestorm" },
-	{ 0x026, "M10", "Thunder" },
-	{ 0x028, "M1 Max", "Icestorm" },
-	{ 0x029, "M1 Max", "Firestorm" },
-	{ 0x030, "A15", "Blizzard" },
-	{ 0x031, "A15", "Avalanche" },
-	{ 0x032, "M2", "Blizzard" },
-	{ 0x033, "M2", "Avalanche" },
-	{ 0x034, "M2 Pro", "Blizzard" },
-	{ 0x035, "M2 Pro", "Avalanche" },
-	{ 0x036, "A16", "Sawtooth" },
-	{ 0x037, "A16", "Everest" },
-	{ 0x038, "M2 Max", "Blizzard" },
-	{ 0x039, "M2 Max", "Avalanche" },
-	{ -1, "unknown", "" },
+	{ 0x000, "A6",          "Swift",     "32 nm"    },
+	{ 0x001, "A7",          "Cyclone",   "28 nm"    },
+	{ 0x002, "A8",          "Typhoon",   "20 nm"    },
+	{ 0x003, "A8X",         "Typhoon",   "20 nm"    },
+	{ 0x004, "A9",          "Twister",   "16 nm"    },
+	{ 0x005, "A9X",         "Twister",   "16 nm"    },
+	{ 0x006, "A10 Fusion",  "Zephyr",    "16 nm"    },
+	{ 0x007, "A10 Fusion",  "Hurricane", "16 nm"    },
+	{ 0x008, "A11 Bionic",  "Monsoon",   "10 nm"    },
+	{ 0x009, "A11 Bionic",  "Mistral",   "10 nm"    },
+	{ 0x00b, "A12",         "Vortex",    "TSMC N7"  },
+	{ 0x00c, "A12",         "Tempest",   "TSMC N7"  },
+	{ 0x00f, "M9",          "Tempest",   "TSMC N7"  },
+	{ 0x010, "A12X Bionic", "Vortex",    "TSMC N7"  },
+	{ 0x011, "A12X Bionic", "Tempest",   "TSMC N7"  },
+	{ 0x012, "A13 Bionic",  "Lightning", "TSMC N7P" },
+	{ 0x013, "A13 Bionic",  "Thunder",   "TSMC N7P" },
+	{ 0x020, "A14",         "Icestorm",  "TSMC N5"  },
+	{ 0x021, "A14",         "Firestorm", "TSMC N5"  },
+	{ 0x022, "M1",          "Icestorm",  "TSMC N5"  },
+	{ 0x023, "M1",          "Firestorm", "TSMC N5"  },
+	{ 0x024, "M1 Pro",      "Icestorm",  "TSMC N5"  },
+	{ 0x025, "M1 Pro",      "Firestorm", "TSMC N5"  },
+	{ 0x026, "M10",         "Thunder",   "TSMC N7P" },
+	{ 0x028, "M1 Max",      "Icestorm",  "TSMC N5"  },
+	{ 0x029, "M1 Max",      "Firestorm", "TSMC N5"  },
+	{ 0x030, "A15",         "Blizzard",  "TSMC N5P" },
+	{ 0x031, "A15",         "Avalanche", "TSMC N5P" },
+	{ 0x032, "M2",          "Blizzard",  "TSMC N5P" },
+	{ 0x033, "M2",          "Avalanche", "TSMC N5P" },
+	{ 0x034, "M2 Pro",      "Blizzard",  "TSMC N5P" },
+	{ 0x035, "M2 Pro",      "Avalanche", "TSMC N5P" },
+	{ 0x036, "A16",         "Sawtooth",  "TSMC N4P" },
+	{ 0x037, "A16",         "Everest",   "TSMC N4P" },
+	{ 0x038, "M2 Max",      "Blizzard",  "TSMC N5P" },
+	{ 0x039, "M2 Max",      "Avalanche", "TSMC N5P" },
+	{ -1,    UNKN_STR,      UNKN_STR,    UNKN_STR   },
 };
 
 static const struct arm_id_part faraday_part[] = {
-	{ 0x526, "FA526", "" },
-	{ 0x626, "FA626", "" },
-	{ -1, "unknown", "" },
+	{ 0x526, "FA526",  UNKN_STR, UNKN_STR },
+	{ 0x626, "FA626",  UNKN_STR, UNKN_STR },
+	{ -1,    UNKN_STR, UNKN_STR, UNKN_STR },
 };
 
 static const struct arm_id_part intel_part[] = {
-	{ 0x200, "i80200", "" },
-	{ 0x210, "PXA250A", "" },
-	{ 0x212, "PXA210A", "" },
-	{ 0x242, "i80321-400", "" },
-	{ 0x243, "i80321-600", "" },
-	{ 0x290, "PXA250B/PXA26x", "" },
-	{ 0x292, "PXA210B", "" },
-	{ 0x2c2, "i80321-400-B0", "" },
-	{ 0x2c3, "i80321-600-B0", "" },
-	{ 0x2d0, "PXA250C/PXA255/PXA26x", "" },
-	{ 0x2d2, "PXA210C", "" },
-	{ 0x411, "PXA27x", "" },
-	{ 0x41c, "IPX425-533", "" },
-	{ 0x41d, "IPX425-400", "" },
-	{ 0x41f, "IPX425-266", "" },
-	{ 0x682, "PXA32x", "" },
-	{ 0x683, "PXA930/PXA935", "" },
-	{ 0x688, "PXA30x", "" },
-	{ 0x689, "PXA31x", "" },
-	{ 0xb11, "SA1110", "" },
-	{ 0xc12, "IPX1200", "" },
-	{ -1, "unknown", "" },
+	{ 0x200, "i80200",                UNKN_STR, UNKN_STR },
+	{ 0x210, "PXA250A",               UNKN_STR, UNKN_STR },
+	{ 0x212, "PXA210A",               UNKN_STR, UNKN_STR },
+	{ 0x242, "i80321-400",            UNKN_STR, UNKN_STR },
+	{ 0x243, "i80321-600",            UNKN_STR, UNKN_STR },
+	{ 0x290, "PXA250B/PXA26x",        UNKN_STR, UNKN_STR },
+	{ 0x292, "PXA210B",               UNKN_STR, UNKN_STR },
+	{ 0x2c2, "i80321-400-B0",         UNKN_STR, UNKN_STR },
+	{ 0x2c3, "i80321-600-B0",         UNKN_STR, UNKN_STR },
+	{ 0x2d0, "PXA250C/PXA255/PXA26x", UNKN_STR, UNKN_STR },
+	{ 0x2d2, "PXA210C",               UNKN_STR, UNKN_STR },
+	{ 0x411, "PXA27x",                UNKN_STR, UNKN_STR },
+	{ 0x41c, "IPX425-533",            UNKN_STR, UNKN_STR },
+	{ 0x41d, "IPX425-400",            UNKN_STR, UNKN_STR },
+	{ 0x41f, "IPX425-266",            UNKN_STR, UNKN_STR },
+	{ 0x682, "PXA32x",                UNKN_STR, UNKN_STR },
+	{ 0x683, "PXA930/PXA935",         UNKN_STR, UNKN_STR },
+	{ 0x688, "PXA30x",                UNKN_STR, UNKN_STR },
+	{ 0x689, "PXA31x",                UNKN_STR, UNKN_STR },
+	{ 0xb11, "SA1110",                UNKN_STR, UNKN_STR },
+	{ 0xc12, "IPX1200",               UNKN_STR, UNKN_STR },
+	{ -1,    UNKN_STR,                UNKN_STR, UNKN_STR },
 };
 
 static const struct arm_id_part fujitsu_part[] = {
-	{ 0x001, "A64FX", "" },
-	{ -1, "unknown", "" },
+	{ 0x001, "A64FX",  UNKN_STR, "7 nm"   },
+	{ 0x003, "MONAKA", UNKN_STR, "2 nm"   },
+	{ -1,    UNKN_STR, UNKN_STR, UNKN_STR },
 };
 
 static const struct arm_id_part hisi_part[] = {
-	{ 0xd01, "TaiShan-v110", "" },	/* used in Kunpeng-920 SoC */
-	{ 0xd02, "TaiShan-v120", "" },	/* used in Kirin 990A and 9000S SoCs */
-	{ 0xd40, "Cortex-A76", "" },	/* HiSilicon uses this ID though advertises A76 */
-	{ 0xd41, "Cortex-A77", "" },	/* HiSilicon uses this ID though advertises A77 */
-	{ -1, "unknown", "" },
+	{ 0xd01, "TaiShan-v110", UNKN_STR, UNKN_STR }, /* used in Kunpeng-920 SoC */
+	{ 0xd02, "TaiShan-v120", UNKN_STR, UNKN_STR }, /* used in Kirin 990A and 9000S SoCs */
+	{ 0xd40, "Cortex-A76",   UNKN_STR, UNKN_STR }, /* HiSilicon uses this ID though advertises A76 */
+	{ 0xd41, "Cortex-A77",   UNKN_STR, UNKN_STR }, /* HiSilicon uses this ID though advertises A77 */
+	{ -1,    UNKN_STR,       UNKN_STR, UNKN_STR },
 };
 
 static const struct arm_id_part ampere_part[] = {
-	{ 0xac3, "Ampere-1", "" },
-	{ 0xac4, "Ampere-1a", "" },
-	{ -1, "unknown", "" },
+	{ 0xac3, "Ampere-1",  UNKN_STR, UNKN_STR },
+	{ 0xac4, "Ampere-1a", UNKN_STR, UNKN_STR },
+	{ -1,    UNKN_STR,    UNKN_STR, UNKN_STR },
 };
 
 static const struct arm_id_part ft_part[] = {
-	{ 0x303, "FTC310", "" },
-	{ 0x660, "FTC660", "" },
-	{ 0x661, "FTC661", "" },
-	{ 0x662, "FTC662", "" },
-	{ 0x663, "FTC663", "" },
-	{ 0x664, "FTC664", "" },
-	{ 0x862, "FTC862", "" },
-	{ -1, "unknown", "" },
+	{ 0x303, "FTC310", UNKN_STR, UNKN_STR },
+	{ 0x660, "FTC660", UNKN_STR, UNKN_STR },
+	{ 0x661, "FTC661", UNKN_STR, UNKN_STR },
+	{ 0x662, "FTC662", UNKN_STR, UNKN_STR },
+	{ 0x663, "FTC663", UNKN_STR, UNKN_STR },
+	{ 0x664, "FTC664", UNKN_STR, UNKN_STR },
+	{ 0x862, "FTC862", UNKN_STR, UNKN_STR },
+	{ -1,    UNKN_STR, UNKN_STR, UNKN_STR },
 };
 
 static const struct arm_id_part ms_part[] = {
-	{ 0xd49, "Azure-Cobalt-100", "" },
-	{ -1, "unknown", "" },
+	{ 0xd49, "Azure-Cobalt-100", UNKN_STR, UNKN_STR },
+	{ -1,    UNKN_STR,           UNKN_STR, UNKN_STR },
 };
 
 static const struct arm_id_part unknown_part[] = {
-	{ -1, "unknown", "" },
+	{ -1, UNKN_STR, UNKN_STR, UNKN_STR },
 };
 
 /* Implementers list */
@@ -357,7 +366,7 @@ static const struct arm_hw_impl hw_implementer[] = {
 	{ 0x6d, VENDOR_MICROSOFT, ms_part,      "Microsoft"          },
 	{ 0x70, VENDOR_PHYTIUM,   ft_part,      "Phytium"            },
 	{ 0xc0, VENDOR_AMPERE,    ampere_part,  "Ampere"             },
-	{   -1, VENDOR_UNKNOWN,   unknown_part, "unknown"            },
+	{ -1,   VENDOR_UNKNOWN,   unknown_part, UNKN_STR             },
 };
 
 static const struct arm_hw_impl* get_cpu_implementer_from_code(uint8_t implementer)
@@ -2514,6 +2523,235 @@ static void load_arm_features(struct cpu_raw_data_t* raw, struct cpu_id_t* data,
 				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
 			}
 		},
+		[CPU_FEATURE_ASID2] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V9_4_A,
+			.ver_mandatory = FEATURE_LEVEL_ARM_V9_5_A,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64mmfr[4], .highbit = 11, .lowbit =  8, .value = 0b0001 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_BWE2] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V9_4_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64dfr[2],  .highbit =  7, .lowbit =  4, .value = 0b0010 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_CPA] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V9_4_A,
+			.ver_mandatory = FEATURE_LEVEL_ARM_V9_5_A,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64isar[3], .highbit =  3, .lowbit =  0, .value = 0b0001 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_CPA2] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V9_4_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64isar[3],     .highbit =  3, .lowbit =  0, .value = 0b0001 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_E2H0] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V8_0_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64mmfr[4], .highbit = 27, .lowbit = 24, .value = 0b0000 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_E3DSE] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V9_4_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64mmfr[4], .highbit = 39, .lowbit = 36, .value = 0b0001 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_ETS3] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V9_4_A,
+			.ver_mandatory = FEATURE_LEVEL_ARM_V9_5_A,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64mmfr[1], .highbit = 39, .lowbit = 36, .value = 0b0011 },
+				{ .aarch32_reg = &raw->arm_id_mmfr[5], .aarch64_reg = NULL,                     .highbit =  3, .lowbit =  0, .value = 0b0011 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_FAMINMAX] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V9_2_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64isar[3], .highbit =  7, .lowbit =  4, .value = 0b0001 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_FGWTE3] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V9_4_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64mmfr[4], .highbit = 19, .lowbit = 16, .value = 0b0001 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_FP8] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V9_2_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64fpfr[0], .highbit = 31, .lowbit = 31, .value = 0b1    },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64fpfr[0], .highbit =  1, .lowbit =  1, .value = 0b1    },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64fpfr[0], .highbit =  0, .lowbit =  0, .value = 0b1    },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_FP8DOT2] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V9_2_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64fpfr[0], .highbit = 28, .lowbit = 28, .value = 0b1    },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_FP8DOT4] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V9_2_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64fpfr[0], .highbit = 29, .lowbit = 29, .value = 0b1    },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_FP8FMA] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V9_2_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64fpfr[0], .highbit = 30, .lowbit = 30, .value = 0b1    },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_FPMR] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V9_2_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64pfr[2],  .highbit = 35, .lowbit = 32, .value = 0b0001 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_HACDBS] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V9_4_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64mmfr[4], .highbit = 15, .lowbit = 12, .value = 0b0001 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_HDBSS] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V9_4_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64mmfr[1], .highbit =  3, .lowbit =  0, .value = 0b0100 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_LUT] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V9_2_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64isar[2], .highbit = 59, .lowbit = 56, .value = 0b0001 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_PAUTH_LR] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V9_4_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64isar[1], .highbit =  7, .lowbit =  3, .value = 0b0110 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64isar[1], .highbit = 11, .lowbit =  8, .value = 0b0110 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64isar[2], .highbit = 15, .lowbit = 12, .value = 0b0110 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_RME_GPC2] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V9_4_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64pfr[0],  .highbit = 55, .lowbit = 52, .value = 0b0010 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_SME_F8F16] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V9_2_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64smfr[0], .highbit = 41, .lowbit = 41, .value = 0b1    },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_SME_F8F32] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V9_2_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64smfr[0], .highbit = 40, .lowbit = 40, .value = 0b1    },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_SME_LUTV2] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V9_2_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64smfr[0], .highbit = 60, .lowbit = 60, .value = 0b1    },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_SPMU2] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V9_4_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64dfr[1],  .highbit = 35, .lowbit = 32, .value = 0b0010 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_SSVE_FP8DOT2] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V9_2_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64smfr[0], .highbit = 28, .lowbit = 28, .value = 0b1    },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_SSVE_FP8DOT4] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V9_2_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64smfr[0], .highbit = 29, .lowbit = 29, .value = 0b1    },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_SSVE_FP8FMA] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V9_2_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64smfr[0], .highbit = 30, .lowbit = 30, .value = 0b1    },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_STEP2] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V9_4_A,
+			.ver_mandatory = FEATURE_LEVEL_ARM_V9_5_A,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64dfr[2],  .highbit =  3, .lowbit =  0, .value = 0b0001 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
+		[CPU_FEATURE_TLBIW] = {
+			.ver_optional  = FEATURE_LEVEL_ARM_V9_4_A,
+			.ver_mandatory = -1,
+			.fields        = {
+				{ .aarch32_reg = NULL,                 .aarch64_reg = &raw->arm_id_aa64isar[3], .highbit = 11, .lowbit =  8, .value = 0b0001 },
+				{ .aarch32_reg = NULL,                 .aarch64_reg = NULL,                     .highbit =  0, .lowbit =  0, .value = 0      }
+			}
+		},
 	};
 
 	for (feature = 0; feature < NUM_CPU_FEATURES; feature++)
@@ -2545,15 +2783,69 @@ int cpuid_identify_arm(struct cpu_raw_data_t* raw, struct cpu_id_t* data)
 	const struct arm_hw_impl* hw_impl = get_cpu_implementer_from_code(data->arm.implementer);
 	const struct arm_id_part* id_part = get_cpu_implementer_parts(hw_impl, data->arm.part_num);
 	data->vendor = hw_impl->vendor;
-	snprintf(data->vendor_str,   VENDOR_STR_MAX,  "%s", hw_impl->name);
-	snprintf(data->brand_str,    BRAND_STR_MAX,   "%s", id_part->name);
-	snprintf(data->cpu_codename, CODENAME_STR_MAX,"%s", id_part->codename);
+	strncpy(data->vendor_str,      hw_impl->name,       VENDOR_STR_MAX);
+	strncpy(data->brand_str,       id_part->name,       BRAND_STR_MAX);
+	strncpy(data->cpu_codename,    id_part->codename,   CODENAME_STR_MAX);
+	strncpy(data->technology_node, id_part->technology, TECHNOLOGY_STR_MAX);
 	use_cpuid_scheme = (decode_arm_architecture_version_by_midr(raw, data) == false);
 	load_arm_features(raw, data, &ext_status);
 	if (use_cpuid_scheme)
 		decode_arm_architecture_version_by_cpuid(raw, data, &ext_status);
 
 	return 0;
+}
+
+void cpuid_get_list_arm(cpu_vendor_t vendor, struct cpu_list_t* list)
+{
+	int i, j, n, good, sub_count, total_count;
+	char **tmp_names = NULL;
+	const struct arm_hw_impl* hw_impl = get_cpu_implementer_from_vendor(vendor);
+
+	/* Get item count in hw_impl->parts */
+	sub_count = 0;
+	for (i = 0; hw_impl->parts[i].id >= 0; i++)
+		sub_count++;
+	total_count = list->num_entries + sub_count;
+	if (sub_count == 0)
+		return;
+
+	/* Grow current list */
+	n = list->num_entries;
+	tmp_names = (char**) realloc(list->names, sizeof(char*) * total_count);
+	if (!tmp_names) { /* Memory allocation failure */
+		cpuid_set_error(ERR_NO_MEM);
+		return;
+	}
+	list->names = tmp_names;
+
+	/* Append item to list */
+	for (i = 0; i < sub_count; i++) {
+		if (strstr(hw_impl->parts[i].name, "Unknown")) continue;
+		good = 1;
+		for (j = n - 1; j >= 0; j--)
+			if (!strcmp(list->names[j], hw_impl->parts[i].name)) {
+				good = 0;
+				break;
+			}
+		if (!good) continue;
+#if defined(_MSC_VER)
+		list->names[n] = _strdup(hw_impl->parts[i].name);
+#else
+		list->names[n] = strdup(hw_impl->parts[i].name);
+#endif
+		if (!list->names[n]) { /* Memory allocation failure */
+			cpuid_set_error(ERR_NO_MEM);
+			list->num_entries = 0;
+			for (j = 0; j < n; j++) {
+				free(list->names[j]);
+			}
+			free(list->names);
+			list->names = NULL;
+			return;
+		}
+		n++;
+	}
+	list->num_entries = n;
 }
 
 cpu_purpose_t cpuid_identify_purpose_arm(struct cpu_raw_data_t* raw)
