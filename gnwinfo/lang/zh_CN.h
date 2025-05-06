@@ -45,6 +45,7 @@ lang_zh_cn[N__MAX_] =
 	[N__BRAND] = u8"品牌",
 	[N__HYPERVISOR] = u8"虚拟机",
 	[N__CODE_NAME] = u8"代号",
+	[N__TECHNOLOGY] = u8"工艺",
 	[N__FAMILY] = u8"系列",
 	[N__MODEL] = u8"型号",
 	[N__STEPPING] = u8"步进",

@@ -45,6 +45,7 @@ lang_sv_se[N__MAX_] =
 	[N__BRAND] = u8"Märke",
 	[N__HYPERVISOR] = u8"Hypervisor",
 	[N__CODE_NAME] = u8"Kodnamn",
+	[N__TECHNOLOGY] = u8"Teknik",
 	[N__FAMILY] = u8"Familj",
 	[N__MODEL] = u8"Modell",
 	[N__STEPPING] = u8"Stepping",

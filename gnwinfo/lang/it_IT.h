@@ -54,6 +54,7 @@ lang_it_it[N__MAX_] =
 	[N__BRAND] = u8"Marca", // refer to the brand (e.g. 'Intel(R) Core(TM) i7-7700K CPU @ 4.20GHz')
 	[N__HYPERVISOR] = u8"Hypervisor",
 	[N__CODE_NAME] = u8"Nome in codice",
+	[N__TECHNOLOGY] = u8"Tecnologia", // refer to the technology of the CPU (e.g. 14nm, 10nm, etc.)
 	[N__FAMILY] = u8"Famiglia",
 	[N__MODEL] = u8"Modello",
 	[N__STEPPING] = u8"Stepping",

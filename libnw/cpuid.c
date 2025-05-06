@@ -248,6 +248,7 @@ PrintCpuInfo(PNODE node, struct cpu_id_t* data)
 	NWL_NodeAttrSet(node, "Vendor Name", CpuVendorToStr(data->vendor), 0);
 	NWL_NodeAttrSet(node, "Brand", data->brand_str, 0);
 	NWL_NodeAttrSet(node, "Code Name", data->cpu_codename, 0);
+	NWL_NodeAttrSet(node, "Technology", data->technology_node, 0);
 	NWL_NodeAttrSetf(node, "Family", 0, "%02Xh", data->x86.family);
 	NWL_NodeAttrSetf(node, "Model", 0, "%02Xh", data->x86.model);
 	NWL_NodeAttrSetf(node, "Stepping", 0, "%02Xh", data->x86.stepping);

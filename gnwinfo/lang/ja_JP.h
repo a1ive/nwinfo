@@ -42,6 +42,7 @@ lang_ja_jp[N__MAX_] =
 	[N__BRAND] = u8"ブランド",
 	[N__HYPERVISOR] = u8"仮想マシン",
 	[N__CODE_NAME] = u8"コード名",
+	[N__TECHNOLOGY] = u8"プロセス技術",
 	[N__ABOUT] = u8"NWinfoについて",
 	[N__SETTINGS] = u8"設定",
 	[N__SAVE] = u8"保存",

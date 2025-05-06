@@ -186,6 +186,12 @@ gnwinfo_draw_cpuid_window(struct nk_context* ctx, float width, float height)
 	nk_lhc(ctx, NWL_NodeAttrGet(cpu, "Affinity Mask"), NK_TEXT_LEFT, g_color_text_l);
 	CPUID_ROW_END;
 
+	CPUID_ROW_BEGIN(6, 0.2f);
+	nk_l(ctx, N_(N__TECHNOLOGY), NK_TEXT_LEFT);
+	CPUID_ROW_PUSH((1.0f / 3 - 0.2f));
+	nk_lhc(ctx, NWL_NodeAttrGet(cpu, "Technology"), NK_TEXT_LEFT, g_color_text_l);
+	CPUID_ROW_END;
+
 	nk_layout_row_dynamic(ctx, 0, 1);
 	nk_spacer(ctx);
 

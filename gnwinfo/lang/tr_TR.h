@@ -45,6 +45,7 @@ lang_tr_tr[N__MAX_] =
 	[N__BRAND] = u8"Marka",
 	[N__HYPERVISOR] = u8"Sanallaştırma",
 	[N__CODE_NAME] = u8"Kod Adı",
+	[N__TECHNOLOGY] = u8"Teknoloji",
 	[N__FAMILY] = u8"Aile",
 	[N__MODEL] = u8"Model",
 	[N__STEPPING] = u8"Revizyon",
