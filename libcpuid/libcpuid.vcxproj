@@ -119,6 +119,7 @@
     </Lib>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="..\ryzenadj\ryzenadj.h" />
     <ClInclude Include="amd_code_t.h" />
     <ClInclude Include="asm-bits.h" />
     <ClInclude Include="centaur_code_t.h" />

@@ -9,7 +9,7 @@ extern "C" {
 #endif
 
 #define RYZENADJ_REVISION_VER 0
-#define RYZENADJ_MAJOR_VER 16
+#define RYZENADJ_MAJOR_VER 17
 #define RYZENADJ_MINIOR_VER 0
 
 enum ryzen_family {
@@ -26,7 +26,9 @@ enum ryzen_family {
         FAM_MENDOCINO,
         FAM_PHOENIX,
         FAM_HAWKPOINT,
+        FAM_KRACKANPOINT,
         FAM_STRIXPOINT,
+        FAM_STRIXHALO,
         FAM_END
 };
 
@@ -62,7 +64,7 @@ struct _ryzen_access;
 
 typedef struct _ryzen_access *ryzen_access;
 
-EXP ryzen_access CALL init_ryzenadj(void);
+EXP ryzen_access CALL init_ryzenadj();
 
 EXP void CALL cleanup_ryzenadj(ryzen_access ry);
 
