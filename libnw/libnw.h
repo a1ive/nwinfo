@@ -60,6 +60,7 @@ typedef struct _NWLIB_CONTEXT
 	LPSTR DiskPath;
 	LPSTR NetGuid;
 	LPCSTR ProductPolicy;
+	LPCSTR CpuDump;
 
 #define NW_NET_ACTIVE (1 << 0)
 #define NW_NET_PHYS   (1 << 1)

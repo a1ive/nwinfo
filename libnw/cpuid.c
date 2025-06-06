@@ -261,7 +261,8 @@ PrintCpuInfo(PNODE node, struct cpu_id_t* data)
 	NWL_NodeAttrSetf(node, "SSE Units", 0, "%d bits (%s)",
 		data->x86.sse_size, data->detection_hints[CPU_HINT_SSE_SIZE_AUTH] ? "authoritative" : "non-authoritative");
 	PrintCache(node, data);
-	PrintCpuMsr(node, data);
+	if (!NWLC->CpuDump)
+		PrintCpuMsr(node, data);
 	PrintFeatures(node, data);
 }
 
@@ -278,11 +279,21 @@ PNODE NW_Cpuid(VOID)
 	PNODE node = NWL_NodeAlloc("CPUID", 0);
 	if (NWLC->CpuInfo)
 		NWL_NodeAppendChild(NWLC->NwRoot, node);
+	if (NWLC->Debug)
+		cpuid_set_verbosiness_level(2);
 	cpuid_set_warn_function(libcpuid_warn);
 	cpuid_free_system_id(id);
 	cpuid_free_raw_data_array(raw);
 	NWL_NodeAttrSetf(node, "Total CPUs", NAFLG_FMT_NUMERIC, "%d", cpuid_get_total_cpus());
-	if (cpuid_get_all_raw_data(raw) < 0)
+	if (NWLC->CpuDump)
+	{
+		if (cpuid_deserialize_all_raw_data(raw, NWLC->CpuDump) < 0)
+		{
+			NWL_NodeAppendMultiSz(&NWLC->ErrLog, "Cannot deserialize raw CPU data");
+			goto fail;
+		}
+	}
+	else if (cpuid_get_all_raw_data(raw) < 0)
 	{
 		NWL_NodeAppendMultiSz(&NWLC->ErrLog, "Cannot obtain raw CPU data");
 		goto fail;

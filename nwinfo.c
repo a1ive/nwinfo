@@ -22,7 +22,8 @@ static void nwinfo_help(void)
 		"  --debug          Print debug info to stdout.\n"
 		"  --hide-sensitive Hide sensitive data (MAC & S/N).\n"
 		"  --sys            Print system info.\n"
-		"  --cpu            Print CPUID info.\n"
+		"  --cpu[=FILE]     Print CPUID info.\n"
+		"    FILE           Specify the file name of the CPUID dump.\n"
 		"  --net[=FLAG,...] Print network info.\n"
 		"    GUID           Specify the GUID of the network interface,\n"
 		"                   e.g. '{B16B00B5-CAFE-BEEF-DEAD-001453AD0529}'\n"
@@ -184,8 +185,12 @@ int main(int argc, char* argv[])
 			nwContext.HumanSize = TRUE;
 		else if (_stricmp(argv[i], "--sys") == 0)
 			nwContext.SysInfo = TRUE;
-		else if (_stricmp(argv[i], "--cpu") == 0)
+		else if (_strnicmp(argv[i], "--cpu", 5) == 0)
+		{
+			if (argv[i][5] == '=' && argv[i][6])
+				nwContext.CpuDump = &argv[i][6];
 			nwContext.CpuInfo = TRUE;
+		}
 		else if (_strnicmp(argv[i], "--net", 5) == 0)
 		{
 			NW_ARG_FILTER filter[] =

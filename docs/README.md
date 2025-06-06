@@ -55,8 +55,9 @@ This command exports system, disk, SMBIOS, and network information to `report.js
 
 ### Hardware Details
 
-- --cpu  
+- --cpu[=`FILE`]  
   Print CPUID info.  
+  `FILE` specifies the file name of the CPUID dump.  
 - --net[=`FLAG,...`]  
   Print network info.  
   - `GUID`  
