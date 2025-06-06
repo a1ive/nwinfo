@@ -344,8 +344,10 @@ const struct match_entry_t cpudb_intel[] = {
 	{  6, 14, -1, -1, 78,   2,    -1,    -1, { "Pentium(R) 4###[UY]",      6 }, "Pentium (Skylake)",   "14 nm" },
 	{  6, 14, -1, -1, 78,   2,    -1,    -1, { "Celeron(R) 3###U",         6 }, "Celeron (Skylake)",   "14 nm" },
 	{  6, 14, -1, -1, 78,   2,    -1,    -1, { "Celeron(R) G3###E",        8 }, "Celeron (Skylake)",   "14 nm" },
-	{  6,  5, -1, -1, 85,  -1,    -1,    -1, { "Core(TM) i9-7###X",       10 }, "Core i9 (Skylake-X)", "14 nm" }, /* 10 to 18 cores */
-	{  6,  5, -1, -1, 85,  -1,    -1,    -1, { "Core(TM) i7-7###X",       10 }, "Core i7 (Skylake-X)", "14 nm" }, /* 6 to 8 cores */
+	{  6,  5, -1, -1, 85,  -1,    -1,    -1, { "Core(TM) i9-7###X",       10 }, "Core i9 (Skylake-X)", "14 nm" },
+	{  6,  5, -1, -1, 85,  -1,    -1,    -1, { "Core(TM) i7-7###X",       10 }, "Core i7 (Skylake-X)", "14 nm" }, /* Core i7 7800X + 7820X */
+	{  6,  5, -1, -1, 85,  -1,    -1,    -1, { "Core(TM) i9-9###X",       10 }, "Core i9 (Skylake-X)", "14 nm" },
+	{  6,  5, -1, -1, 85,  -1,    -1,    -1, { "Core(TM) i7-9###X",       10 }, "Core i7 (Skylake-X)", "14 nm" }, /* Core i7 9800X */
 	{  6, 14, -1, -1, 94,  -1,    -1,    -1, { "Xeon(R) W-#1##X",          8 }, "Xeon (Skylake-X)",    "14 nm" },
 	/* Skylake (server) CPUs (2017, 1st Xeon Scalable gen, 14 nm): https://en.wikichip.org/wiki/intel/microarchitectures/skylake_(server) */
 	{  6,  5, -1, -1, 85,  -1,    -1,    -1, { "Xeon(R) D-#1##",          6 }, "Xeon D (Skylake-D)",         "14 nm" },

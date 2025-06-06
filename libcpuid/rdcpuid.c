@@ -62,7 +62,7 @@ static int load_driver(char *cpuid_path)
 # if defined (__linux__) || defined (__gnu_linux__)
 		return !system("modprobe cpuid 2> /dev/null");
 # elif defined (__FreeBSD__) || defined (__DragonFly__)
-		return !system("kldload -n cpuctl 2> /dev/null");
+		return !system("kldload -n cpuid 2> /dev/null");
 # endif
 }
 
