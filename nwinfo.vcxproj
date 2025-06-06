@@ -25,6 +25,7 @@
     <None Include=".github\dependabot.yml" />
     <None Include=".github\workflows\msbuild.yml" />
     <None Include="copy_res.ps1" />
+    <None Include="docs\help.md" />
     <None Include="hw_report.ps1" />
     <None Include="packages.config" />
     <None Include="README.md" />
@@ -37,7 +38,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <Image Include="assets\images\icon.ico" />
+    <Image Include="docs\images\icon.ico" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>

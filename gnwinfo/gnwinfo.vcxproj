@@ -164,7 +164,7 @@
     <ResourceCompile Include="gnwinfo.rc" />
   </ItemGroup>
   <ItemGroup>
-    <Image Include="..\icon.ico" />
+    <Image Include="..\docs\images\icon.ico" />
     <Image Include="icons\battery.png" />
     <Image Include="icons\cd.png" />
     <Image Include="icons\close.png" />

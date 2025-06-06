@@ -51,9 +51,12 @@
     <None Include=".github\dependabot.yml">
       <Filter>GitHub</Filter>
     </None>
+    <None Include="docs\help.md">
+      <Filter>GitHub</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
-    <Image Include="assets\images\icon.ico">
+    <Image Include="docs\images\icon.ico">
       <Filter>Resource Files</Filter>
     </Image>
   </ItemGroup>

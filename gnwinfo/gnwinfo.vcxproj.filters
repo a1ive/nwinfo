@@ -121,9 +121,6 @@
     </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
-    <Image Include="..\icon.ico">
-      <Filter>Resource Files</Filter>
-    </Image>
     <Image Include="icons\cd.png">
       <Filter>Resource Files</Filter>
     </Image>
@@ -200,6 +197,9 @@
       <Filter>Resource Files</Filter>
     </Image>
     <Image Include="icons\gpu.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="..\docs\images\icon.ico">
       <Filter>Resource Files</Filter>
     </Image>
   </ItemGroup>
