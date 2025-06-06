@@ -21,7 +21,7 @@ jobs:
     - name: Create PDF
       uses: BaileyJM02/markdown-to-pdf@v1
       with:
-        input_path: docs/help.md
+        input_path: docs/README.md
         output_dir: build
         images_dir: docs/images
         image_import: ./images
@@ -32,7 +32,7 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: README.pdf
-        path: build/help.pdf
+        path: build/README.pdf
 
   build:
     runs-on: windows-latest

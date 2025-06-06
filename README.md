@@ -23,6 +23,8 @@
   <img src="./docs/images/demo.png">
 </div>
 
+## [CLI Usage](./docs/README.md)
+
 ## Licenses & Credits
 
 This project is licensed under the [Unlicense](https://unlicense.org/) license.
