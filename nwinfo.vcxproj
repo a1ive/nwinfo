@@ -25,7 +25,7 @@
     <None Include=".github\dependabot.yml" />
     <None Include=".github\workflows\msbuild.yml" />
     <None Include="copy_res.ps1" />
-    <None Include="docs\help.md" />
+    <None Include="docs\README.md" />
     <None Include="hw_report.ps1" />
     <None Include="packages.config" />
     <None Include="README.md" />

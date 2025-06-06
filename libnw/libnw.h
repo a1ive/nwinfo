@@ -57,8 +57,8 @@ typedef struct _NWLIB_CONTEXT
 	DWORD AcpiTable;
 	UINT8 SmbiosType;
 	LPCSTR PciClass;
-	LPCSTR DiskPath;
-	LPCSTR NetGuid;
+	LPSTR DiskPath;
+	LPSTR NetGuid;
 	LPCSTR ProductPolicy;
 
 #define NW_NET_ACTIVE (1 << 0)

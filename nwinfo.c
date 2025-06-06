@@ -96,7 +96,7 @@ nwinfo_get_opts(char* arg, UINT64* flag, int count, NW_ARG_FILTER* filter, const
 	int i;
 	int argc;
 	char* p;
-	char* ret = NULL;
+	char* str = NULL;
 	char** argv;
 	size_t len = 0;
 
@@ -120,7 +120,7 @@ nwinfo_get_opts(char* arg, UINT64* flag, int count, NW_ARG_FILTER* filter, const
 	{
 		if (extra && _strnicmp(argv[i], extra, len) == 0)
 		{
-			ret = argv[i];
+			str = argv[i];
 			continue;
 		}
 		for (int j = 0; j < count; j++)
@@ -132,8 +132,10 @@ nwinfo_get_opts(char* arg, UINT64* flag, int count, NW_ARG_FILTER* filter, const
 			}
 		}
 	}
+	if (str)
+		str = _strdup(str);
 	free(argv);
-	return ret;
+	return str;
 }
 
 int main(int argc, char* argv[])
@@ -321,6 +323,10 @@ int main(int argc, char* argv[])
 	}
 	(void)CoInitializeEx(0, COINIT_APARTMENTTHREADED);
 	NW_Print(lpFileName);
+	if (nwContext.NetGuid)
+		free(nwContext.NetGuid);
+	if (nwContext.DiskPath)
+		free(nwContext.DiskPath);
 	NW_Fini();
 	CoUninitialize();
 	return 0;

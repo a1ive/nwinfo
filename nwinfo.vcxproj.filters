@@ -16,6 +16,9 @@
     <Filter Include="GitHub">
       <UniqueIdentifier>{820480c6-ae1f-49c5-b5c5-709b22fe5d7a}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Docs">
+      <UniqueIdentifier>{9cb259c7-b4d0-4af7-a568-1c99adb89ca1}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="nwinfo.c">
@@ -39,9 +42,6 @@
     <None Include="_layouts\default.html">
       <Filter>GitHub</Filter>
     </None>
-    <None Include="README.md">
-      <Filter>GitHub</Filter>
-    </None>
     <None Include="_config.yml">
       <Filter>GitHub</Filter>
     </None>
@@ -51,8 +51,11 @@
     <None Include=".github\dependabot.yml">
       <Filter>GitHub</Filter>
     </None>
-    <None Include="docs\help.md">
+    <None Include="README.md">
       <Filter>GitHub</Filter>
+    </None>
+    <None Include="docs\README.md">
+      <Filter>Docs</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>
