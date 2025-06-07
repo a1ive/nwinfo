@@ -24,7 +24,11 @@ NWL_GetCpuUsage(VOID)
 	PDH_FMT_COUNTERVALUE value = { 0 };
 	if (NWLC->PdhCpuUsage &&
 		NWLC->PdhGetFormattedCounterValue(NWLC->PdhCpuUsage, PDH_FMT_DOUBLE, NULL, &value) == ERROR_SUCCESS)
+	{
+		if (value.doubleValue > 100.0)
+			value.doubleValue = 100.0;
 		return value.doubleValue;
+	}
 
 	double ret = 0.0;
 	static FILETIME old_idle = { 0 };
@@ -41,6 +45,8 @@ NWL_GetCpuUsage(VOID)
 	total = diff_krnl + diff_user;
 	if (total != 0)
 		ret = (100.0 * _abs64(total - diff_idle)) / _abs64(total);
+	if (ret > 100.0)
+		ret = 100.0;
 	old_idle = idle;
 	old_krnl = krnl;
 	old_user = user;
