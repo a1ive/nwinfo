@@ -62,7 +62,7 @@ fail:
 
 static nk_bool
 nk_panel_begin_ex(struct nk_context* ctx, const char* title, enum nk_panel_type panel_type,
-	struct nk_image img_close)
+	struct nk_image img_icon, struct nk_image img_close)
 {
 	struct nk_input* in;
 	struct nk_window* win;
@@ -264,9 +264,11 @@ nk_panel_begin_ex(struct nk_context* ctx, const char* title, enum nk_panel_type 
 			}
 		}
 
-		{/* window header title */
+		{
+			/* window header title and icon */
 			int text_len = nk_strlen(title);
 			struct nk_rect label = { 0,0,0,0 };
+			struct nk_rect icon;
 			float t = font->width(font->userdata, font->height, title, text_len);
 			text.padding = nk_vec2(0, 0);
 
@@ -276,6 +278,15 @@ nk_panel_begin_ex(struct nk_context* ctx, const char* title, enum nk_panel_type 
 			label.h = font->height + 2 * style->window.header.label_padding.y;
 			label.w = t + 2 * style->window.header.spacing.x;
 			label.w = NK_CLAMP(0, label.w, header.x + header.w - label.x);
+
+			if (img_icon.handle.id != 0)
+			{
+				icon.w = icon.h = label.h;
+				icon.x = label.x;
+				icon.y = label.y;
+				nk_draw_image(out, icon, &img_icon, nk_white);
+				label.x += icon.w + style->window.header.padding.x;
+			}
 			nk_widget_text(out, label, (const char*)title, text_len, &text, NK_TEXT_LEFT, font);
 		}
 	}
@@ -315,7 +326,7 @@ nk_panel_begin_ex(struct nk_context* ctx, const char* title, enum nk_panel_type 
 
 nk_bool
 nk_begin_ex(struct nk_context* ctx, const char* title,
-	struct nk_rect bounds, nk_flags flags, struct nk_image img_close)
+	struct nk_rect bounds, nk_flags flags, struct nk_image img_icon, struct nk_image img_close)
 {
 	struct nk_window* win;
 	struct nk_style* style;
@@ -465,7 +476,7 @@ nk_begin_ex(struct nk_context* ctx, const char* title,
 	}
 	win->layout = (struct nk_panel*)nk_create_panel(ctx);
 	ctx->current = win;
-	ret = nk_panel_begin_ex(ctx, title, NK_PANEL_WINDOW, img_close);
+	ret = nk_panel_begin_ex(ctx, title, NK_PANEL_WINDOW, img_icon, img_close);
 	win->layout->offset_x = &win->scrollbar.x;
 	win->layout->offset_y = &win->scrollbar.y;
 	return ret;

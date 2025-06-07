@@ -81,7 +81,7 @@ gnwinfo_draw_display_window(struct nk_context* ctx, float width, float height)
 	if (!nk_begin_ex(ctx, N_(N__DISPLAY),
 		window,
 		NK_WINDOW_BORDER | NK_WINDOW_MOVABLE | NK_WINDOW_SCALABLE | NK_WINDOW_CLOSABLE,
-		GET_PNG(IDR_PNG_CLOSE)))
+		GET_PNG(IDR_PNG_DISPLAY), GET_PNG(IDR_PNG_CLOSE)))
 	{
 		g_ctx.window_flag &= ~GUI_WINDOW_DISPLAY;
 		goto out;

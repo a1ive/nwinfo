@@ -108,7 +108,7 @@ gnwinfo_ctx_init(HINSTANCE inst, HWND wnd, struct nk_context* ctx, float width, 
 
 	nk_begin_ex(ctx, N_(N__LOADING),
 		nk_rect(width * 0.2f, height / 3, width * 0.6f, height / 4),
-		NK_WINDOW_TITLE | NK_WINDOW_BORDER | NK_WINDOW_NO_INPUT, GET_PNG(IDR_PNG_CLOSE));
+		NK_WINDOW_TITLE | NK_WINDOW_BORDER | NK_WINDOW_NO_INPUT, nk_image_id(0), GET_PNG(IDR_PNG_CLOSE));
 	nk_layout_row_dynamic(ctx, 0, 1);
 	nk_spacer(ctx);
 	nk_lhsc(ctx, N_(N__PLS_WAIT), NK_TEXT_CENTERED, g_color_text_d, nk_false, nk_false);

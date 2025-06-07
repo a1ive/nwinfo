@@ -264,7 +264,7 @@ gnwinfo_draw_mm_window(struct nk_context* ctx, float width, float height)
 	if (!nk_begin_ex(ctx, N_(N__MEMORY),
 		nk_rect(width / 8.0f, height / 4.0f, width * 0.75f, height / 2.0f),
 		NK_WINDOW_BORDER | NK_WINDOW_MOVABLE | NK_WINDOW_SCALABLE | NK_WINDOW_CLOSABLE,
-		GET_PNG(IDR_PNG_CLOSE)))
+		GET_PNG(IDR_PNG_MEMORY), GET_PNG(IDR_PNG_CLOSE)))
 	{
 		g_ctx.window_flag &= ~GUI_WINDOW_MM;
 		goto out;
