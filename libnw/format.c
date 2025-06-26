@@ -714,7 +714,6 @@ static INT NWL_NodeToYaml(PNODE node, FILE* file)
 	int atts = NWL_NodeAttrCount(node);
 	int children = NWL_NodeChildCount(node);
 	PNODE child = NULL;
-	CHAR* attVal = NULL;
 
 	if (!node->Parent)
 		fputs("---"NODE_YAML_DELIM_NL, file);
@@ -733,7 +732,6 @@ static INT NWL_NodeToYaml(PNODE node, FILE* file)
 		for (i = 0; i < atts; i++)
 		{
 			PNODE_ATT att = node->Attributes[i].LinkedAttribute;
-			attVal = (att->Value && *att->Value != '\0') ? att->Value : "~";
 
 			fprintcx(file, NODE_YAML_DELIM_INDENT, indent_depth + 1);
 			fprintf(file, "%s: ", att->Key);
@@ -741,21 +739,26 @@ static INT NWL_NodeToYaml(PNODE node, FILE* file)
 			{
 				char* c;
 				fputs("[ ", file);
-				for (c = attVal; *c != '\0'; c += strlen(c) + 1)
+				for (c = att->Value; *c != '\0'; c += strlen(c) + 1)
 				{
-					if (c != attVal)
+					if (c != att->Value)
 						fputs(", ", file);
 					YamlEscapeContent(c, NWLC->NwBuf, NWINFO_BUFSZ);
 					fprintf(file, "\'%s\'", NWLC->NwBuf);
 				}
 				fputs(" ]", file);
 			}
-			else if (att->Flags & NAFLG_FMT_NUMERIC || att->Flags & NAFLG_FMT_BOOLEAN)
-				fputs(attVal, file);
 			else
 			{
-				YamlEscapeContent(attVal, NWLC->NwBuf, NWINFO_BUFSZ);
-				fprintf(file, "\'%s\'", NWLC->NwBuf);
+				CHAR* attVal = (att->Value && *att->Value != '\0') ? att->Value : "~";
+				if (att->Flags & NAFLG_FMT_NUMERIC || att->Flags & NAFLG_FMT_BOOLEAN)
+					fputs(attVal, file);
+				else
+				{
+					attVal = (att->Value && *att->Value != '\0') ? att->Value : "~";
+					YamlEscapeContent(attVal, NWLC->NwBuf, NWINFO_BUFSZ);
+					fprintf(file, "\'%s\'", NWLC->NwBuf);
+				}
 			}
 			fputs(NODE_YAML_DELIM_NL, file);
 		}
