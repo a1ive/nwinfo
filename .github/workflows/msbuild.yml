@@ -41,6 +41,8 @@ jobs:
     steps:
     - name: Run git checkout
       uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
 
     - name: Add MSBuild to PATH
       uses: microsoft/setup-msbuild@v2
@@ -92,12 +94,41 @@ jobs:
     #     args: --best
 
     - name: Create ZIP
-      uses: thedoctor0/zip-release@master
-      with:
-        type: 'zip'
-        filename: 'nwinfo.zip'
-        directory: '.'
-        path: 'nwinfo'
+      run: Compress-Archive -Path nwinfo/* -DestinationPath "nwinfo.zip"
+
+    - name: Generate Release Notes
+      id: generate_notes
+      run: |
+        $changelogLines = New-Object System.Collections.Generic.List[string]
+        if ("${{ github.event_name }}" -eq "push") {
+          Write-Host "Generating changelog from push event payload"
+          # The JSON payload must be piped to ConvertFrom-Json
+          $commits = '${{ toJSON(github.event.commits) }}' | ConvertFrom-Json
+          if ($null -ne $commits) {
+            foreach ($commit in $commits) {
+              $shortSha = $commit.id.Substring(0, 7)
+              # Take only the first line of the commit message
+              $commitMessage = ($commit.message -split "`r?`n")[0]
+              $changelogLines.Add("* $commitMessage ($shortSha) by @$($commit.author.name)")
+            }
+          }
+        }
+        else {
+          Write-Host "Generating changelog for workflow_dispatch event (latest commit)"
+          $latest_commit = git log --pretty=format:'* %s (%h) by @%an' -n 1
+          $changelogLines.Add($latest_commit)
+        }
+
+        $changelogBody = $changelogLines -join "`n"
+        if ([string]::IsNullOrWhiteSpace($changelogBody)) {
+          $changelogBody = "No new commits in this push. Automated build from commit ${{ github.sha }}."
+        }
+
+        # Use a secure way to create a multi-line environment variable
+        $delimiter = "RELEASE_NOTES_$(Get-Random)"
+        "CHANGELOG_BODY<<$delimiter" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+        $changelogBody | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+        "$delimiter" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
 
     - name: Delete old release
       continue-on-error: true
@@ -110,6 +141,10 @@ jobs:
     - name: Release
       working-directory: ${{env.GITHUB_WORKSPACE}}
       run: |
-        gh release create latest nwinfo.zip -t "Development Build" -p
+        $date_version = (Get-Date -Format 'yyyyMMdd') + ".${{ github.run_number }}"
+        gh release create latest "nwinfo.zip" `
+          --prerelease `
+          --title "Build $date_version" `
+          --notes "${{ env.CHANGELOG_BODY }}"
       env:
         GH_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
