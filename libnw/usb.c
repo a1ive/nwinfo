@@ -3,77 +3,196 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <windows.h>
-#include <setupapi.h>
+#include <initguid.h>
+#include <devpkey.h>
+#include <cfgmgr32.h>
 
 #include "libnw.h"
 #include "utils.h"
 
+static WCHAR* GetDeviceStringProperty(DEVINST devInst, const DEVPROPKEY* pKey)
+{
+	DEVPROPTYPE propType;
+	ULONG propSize = 0;
+	CONFIGRET cr = CM_Get_DevNode_PropertyW(devInst, pKey, &propType, NULL, &propSize, 0);
+
+	if (cr != CR_BUFFER_SMALL)
+		return NULL;
+
+	BYTE* buffer = (BYTE*)malloc(propSize);
+	if (!buffer)
+		return NULL;
+
+	cr = CM_Get_DevNode_PropertyW(devInst, pKey, &propType, buffer, &propSize, 0);
+	if (cr != CR_SUCCESS)
+	{
+		free(buffer);
+		return NULL;
+	}
+
+	// Check if it's a string or list of strings before returning
+	if (propType == DEVPROP_TYPE_STRING || propType == DEVPROP_TYPE_STRING_LIST)
+		return (WCHAR*)buffer;
+
+	free(buffer);
+	return NULL;
+}
+
+static WCHAR* GetUsbDiskName(DEVINST usbDevInst)
+{
+	// Check if the service is USBSTOR or UASPStor
+	WCHAR* serviceName = GetDeviceStringProperty(usbDevInst, &DEVPKEY_Device_Service);
+	if (!serviceName)
+		return NULL;
+
+	if (_wcsicmp(serviceName, L"USBSTOR") != 0 && _wcsicmp(serviceName, L"UASPStor") != 0)
+	{
+		free(serviceName);
+		return NULL;
+	}
+	free(serviceName);
+
+	DEVINST childDevice;
+	for (CONFIGRET cr = CM_Get_Child(&childDevice, usbDevInst, 0);
+		cr == CR_SUCCESS;
+		cr = CM_Get_Sibling(&childDevice, childDevice, 0))
+	{
+		WCHAR* className = GetDeviceStringProperty(childDevice, &DEVPKEY_Device_Class);
+		if (className)
+		{
+			if (_wcsicmp(className, L"DiskDrive") == 0)
+			{
+				free(className);
+				return GetDeviceStringProperty(childDevice, &DEVPKEY_NAME);
+			}
+			free(className);
+		}
+	}
+	return NULL;
+}
+
 static void
-ParseHwClass(PNODE nd, CHAR* Ids, DWORD IdsSize, LPCSTR BufferHw)
+ParseHwClass(PNODE nd, CHAR* ids, DWORD idsSize, LPCWSTR compId)
 {
 	// USB\Class_XX&SubClass_XX&Prot_XX
 	// USB\DevClass_XX&SubClass_XX&Prot_XX
-	CHAR HwClass[7] = { 0 };
-	size_t len = strlen(BufferHw);
-	size_t ofs = 0;
-	if (len >= 12 && strncmp(BufferHw, "USB\\Class_", 10) == 0)
-		memcpy(HwClass, &BufferHw[10], 2);
-	else if (len >= 12 + 3 && strncmp(BufferHw, "USB\\DevClass_", 10 + 3) == 0)
+	WCHAR hwClass[7] = { 0 };
+	
+	for (LPCWSTR curId = compId; *curId; curId += wcslen(curId) + 1)
 	{
-		ofs = 3;
-		memcpy(HwClass, &BufferHw[10 + ofs], 2);
+		if (wcsncmp(curId, L"USB\\Class_", 10) == 0)
+		{
+			NWL_NodeAttrSet(nd, "Compatible ID", NWL_Ucs2ToUtf8(curId), 0);
+			LPCWSTR strClass = wcsstr(curId, L"Class_");
+			if (strClass)
+				wcsncpy_s(hwClass, 3, strClass + 6, 2);
+			strClass = wcsstr(curId, L"SubClass_");
+			if (strClass)
+				wcsncpy_s(hwClass + 2, 3, strClass + 9, 2);
+			strClass = wcsstr(curId, L"Prot_");
+			if (strClass)
+				wcsncpy_s(hwClass + 4, 3, strClass + 5, 2);
+			hwClass[6] = L'\0';
+			break;
+		}
 	}
-	else
-		return;
-	if (len >= 24 + ofs && strncmp(&BufferHw[12 + ofs], "&SubClass_", 10) == 0)
+
+	if (hwClass[0])
 	{
-		memcpy(&HwClass[2], &BufferHw[22 + ofs], 2);
-		if (len >= 31 + ofs && strncmp(&BufferHw[24 + ofs], "&Prot_", 6) == 0)
-			memcpy(&HwClass[4], &BufferHw[30 + ofs], 2);
+		LPCSTR u8Class = NWL_Ucs2ToUtf8(hwClass);
+		NWL_NodeAttrSet(nd, "Class Code", u8Class, 0);
+		NWL_FindClass(nd, ids, idsSize, u8Class, 1);
 	}
-	NWL_NodeAttrSet(nd, "Class Code", HwClass, 0);
-	NWL_FindClass(nd, Ids, IdsSize, HwClass, 1);
+}
+
+static void
+GetDeviceInfo(PNODE nusb, CHAR* ids, DWORD idsSize, DEVINST devInst, LPCWSTR instanceId)
+{
+	NWL_NodeAttrSet(nusb, "HWID", NWL_Ucs2ToUtf8(instanceId), 0);
+
+	NWL_ParseHwid(nusb, ids, idsSize, instanceId, 1);
+
+	// Parse hardware class if available
+	WCHAR* compatibleIds = GetDeviceStringProperty(devInst, &DEVPKEY_Device_CompatibleIds);
+	if (compatibleIds)
+	{
+		ParseHwClass(nusb, ids, idsSize, compatibleIds);
+		free(compatibleIds);
+	}
+
+	// Get and print device name using DEVPKEY_NAME
+	WCHAR* name = GetDeviceStringProperty(devInst, &DEVPKEY_NAME);
+	if (name)
+	{
+		NWL_NodeAttrSet(nusb, "Name", NWL_Ucs2ToUtf8(name), 0);
+		free(name);
+	}
+
+	// Check if it's a Mass Storage Device and get disk name
+	WCHAR* diskName = GetUsbDiskName(devInst);
+	if (diskName)
+	{
+		NWL_NodeAttrSet(nusb, "Disk", NWL_Ucs2ToUtf8(diskName), 0);
+		free(diskName);
+	}
+}
+
+static inline PNODE AppendUsbHub(PNODE parent)
+{
+	if (parent->Flags & NFLG_TABLE)
+		return parent; // Already a table, return as is
+	PNODE ret = NWL_NodeGetChild(parent, "USB Hub");
+	if (ret)
+		return ret; // Found existing USB Hub node
+	// Create a new USB Hub node
+	return NWL_NodeAppendNew(parent, "USB Hub", NFLG_TABLE);
+}
+
+static void EnumerateUsbDevices(PNODE parent, CHAR* ids, DWORD idsSize, DEVINST devInst)
+{
+	PNODE nusb = parent;
+	DEVINST childInst;
+	WCHAR* instanceId = GetDeviceStringProperty(devInst, &DEVPKEY_Device_InstanceId);
+	if (instanceId)
+	{
+		if (wcsncmp(instanceId, L"USB\\", 4) == 0)
+		{
+			nusb = NWL_NodeAppendNew(AppendUsbHub(parent), "Device", NFLG_TABLE_ROW);
+			GetDeviceInfo(nusb, ids, idsSize, devInst, instanceId);
+		}
+		free(instanceId);
+	}
+
+	if (CM_Get_Child(&childInst, devInst, 0) == CR_SUCCESS)
+	{
+		EnumerateUsbDevices(nusb, ids, idsSize, childInst);
+		DEVINST siblingInst = childInst;
+		while (CM_Get_Sibling(&siblingInst, siblingInst, 0) == CR_SUCCESS)
+			EnumerateUsbDevices(nusb, ids, idsSize, siblingInst);
+	}
 }
 
 PNODE NW_Usb(VOID)
 {
-	HDEVINFO Info = NULL;
-	DWORD i = 0;
-	SP_DEVINFO_DATA DeviceInfoData = { .cbSize = sizeof(SP_DEVINFO_DATA) };
-	DWORD Flags = DIGCF_PRESENT | DIGCF_ALLCLASSES;
-	CHAR* Ids = NULL;
-	DWORD IdsSize = 0;
+	DEVINST devRoot;
+	CONFIGRET cr;
+	CHAR* ids = NULL;
+	DWORD idsSize = 0;
 	PNODE node = NWL_NodeAlloc("USB", NFLG_TABLE);
 	if (NWLC->UsbInfo)
 		NWL_NodeAppendChild(NWLC->NwRoot, node);
-	Ids = NWL_LoadIdsToMemory(L"usb.ids", &IdsSize);
-	Info = SetupDiGetClassDevsW(NULL, L"USB", NULL, Flags);
-	if (Info == INVALID_HANDLE_VALUE)
+	ids = NWL_LoadIdsToMemory(L"usb.ids", &idsSize);
+
+	cr = CM_Locate_DevNodeW(&devRoot, NULL, CM_LOCATE_DEVNODE_NORMAL);
+	if (cr != CR_SUCCESS)
 	{
-		NWL_NodeAppendMultiSz(&NWLC->ErrLog, "SetupDiGetClassDevs failed");
+		NWL_NodeAppendMultiSz(&NWLC->ErrLog, "CM_Locate_DevNodeW failed");
 		goto fail;
 	}
-	for (i = 0; SetupDiEnumDeviceInfo(Info, i, &DeviceInfoData); i++)
-	{
-		PNODE nusb = NULL;
-		if (!SetupDiGetDeviceRegistryPropertyW(Info, &DeviceInfoData,
-			SPDRP_HARDWAREID, NULL, (PBYTE)NWLC->NwBufW, NWINFO_BUFSZB, NULL))
-			continue;
-		nusb = NWL_NodeAppendNew(node, "Device", NFLG_TABLE_ROW);
-		NWL_NodeAttrSet(nusb, "HWID", NWL_Ucs2ToUtf8(NWLC->NwBufW), 0);
-		NWL_ParseHwid(nusb, Ids, IdsSize, NWLC->NwBufW, 1);
 
-		if (SetupDiGetDeviceRegistryPropertyW(Info, &DeviceInfoData,
-			SPDRP_COMPATIBLEIDS, NULL, (PBYTE)NWLC->NwBufW, NWINFO_BUFSZB, NULL)
-			&& NWLC->NwBufW[0])
-		{
-			LPCSTR BufferHw = NWL_Ucs2ToUtf8(NWLC->NwBufW);
-			NWL_NodeAttrSet(nusb, "Compatiable ID", BufferHw, 0);
-			ParseHwClass(nusb, Ids, IdsSize, BufferHw);
-		}
-	}
-	SetupDiDestroyDeviceInfoList(Info);
+	EnumerateUsbDevices(node, ids, idsSize, devRoot);
+
 fail:
-	free(Ids);
+	free(ids);
 	return node;
 }
