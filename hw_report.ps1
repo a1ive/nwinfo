@@ -181,7 +181,7 @@ try {
 		if ($diskTable.'Path'.StartsWith("\\.\CdRom")) {
 			$diskType = "CD-ROM"
 		}
-		elseif ($diskTable.'SSD' -eq "Yes") {
+		elseif ($diskTable.'SSD' -eq $true) {
 			$diskType = "SSD"
 		}
 		$outputText += "`t`t$($diskTable.'Size') $diskType $($diskTable.'Type')"

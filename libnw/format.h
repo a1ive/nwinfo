@@ -23,6 +23,9 @@
 #define NAFLG_FMT_IPADDR		(NAFLG_FMT_NEED_QUOTE | NAFLG_FMT_STRING)
 #define NAFLG_FMT_GUID			(NAFLG_FMT_NEED_QUOTE | NAFLG_FMT_STRING)
 
+#define NA_BOOL_TRUE			"Y"
+#define NA_BOOL_FALSE			"N"
+
 // Structures
 typedef struct _NODE
 {
@@ -67,7 +70,7 @@ PNODE_ATT
 NWL_NodeAttrSetf(PNODE node, LPCSTR key, INT flags, LPCSTR _Printf_format_string_ format, ...);
 
 #define NWL_NodeAttrSetBool(node, key, value, flags) \
-	NWL_NodeAttrSet(node, key, (value ? "Yes" : "No"), flags | NAFLG_FMT_BOOLEAN)
+	NWL_NodeAttrSet(node, key, (value ? NA_BOOL_TRUE : NA_BOOL_FALSE), flags | NAFLG_FMT_BOOLEAN)
 
 PNODE_ATT NWL_NodeAttrSetMulti(PNODE node, LPCSTR key, LPCSTR value, int flags);
 VOID NWL_NodeAppendMultiSz(LPSTR* lpmszMulti, LPCSTR szNew);

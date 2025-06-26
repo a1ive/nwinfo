@@ -50,10 +50,10 @@ draw_os(struct nk_context* ctx)
 			"%s@%s%s%s%s%s",
 			NWL_NodeAttrGet(g_ctx.system, "Username"),
 			g_ctx.sys_hostname,
-			strcmp(NWL_NodeAttrGet(g_ctx.system, "Safe Mode"), "Yes") == 0 ? " SafeMode" : "",
-			strcmp(NWL_NodeAttrGet(g_ctx.system, "BitLocker Boot"), "Yes") == 0 ? " BitLocker" : "",
-			strcmp(NWL_NodeAttrGet(g_ctx.system, "VHD Boot"), "Yes") == 0 ? " VHD" : "",
-			strcmp(NWL_NodeAttrGet(g_ctx.system, "Fast Startup"), "Yes") == 0 ? " FastStartup" : "");
+			strcmp(NWL_NodeAttrGet(g_ctx.system, "Safe Mode"), NA_BOOL_FALSE) == 0 ? " SafeMode" : "",
+			strcmp(NWL_NodeAttrGet(g_ctx.system, "BitLocker Boot"), NA_BOOL_FALSE) == 0 ? " BitLocker" : "",
+			strcmp(NWL_NodeAttrGet(g_ctx.system, "VHD Boot"), NA_BOOL_FALSE) == 0 ? " VHD" : "",
+			strcmp(NWL_NodeAttrGet(g_ctx.system, "Fast Startup"), NA_BOOL_FALSE) == 0 ? " FastStartup" : "");
 		if (quick_access_button(ctx, GET_PNG(IDR_PNG_EDIT), N_(N__HOSTNAME)))
 			gnwinfo_init_hostname_window(ctx);
 	}
@@ -554,9 +554,9 @@ draw_storage(struct nk_context* ctx)
 		{
 			cdrom = FALSE;
 			id = &path[17];
-			if (strcmp(NWL_NodeAttrGet(disk, "SSD"), "Yes") == 0)
+			if (strcmp(NWL_NodeAttrGet(disk, "SSD"), NA_BOOL_FALSE) == 0)
 				ssd = " SSD";
-			if (strcmp(NWL_NodeAttrGet(disk, "Removable"), "Yes") == 0)
+			if (strcmp(NWL_NodeAttrGet(disk, "Removable"), NA_BOOL_FALSE) == 0)
 				prefix = "RM";
 		}
 		else
@@ -674,7 +674,7 @@ draw_network(struct nk_context* ctx)
 		if (g_ctx.main_flag & MAIN_NET_DETAIL)
 		{
 			nk_layout_row(ctx, NK_DYNAMIC, 0, 2, (float[2]) { 0.64f, 0.36f });
-			strcpy_s(m_buf, MAX_PATH, strcmp(NWL_NodeAttrGet(nw, "DHCP Enabled"), "Yes") == 0 ? " DHCP" : "");
+			strcpy_s(m_buf, MAX_PATH, strcmp(NWL_NodeAttrGet(nw, "DHCP Enabled"), NA_BOOL_FALSE) == 0 ? " DHCP" : "");
 			if (is_active)
 				snprintf(m_buf, MAX_PATH, u8"%s \u21c5 %s / %s",
 					m_buf,

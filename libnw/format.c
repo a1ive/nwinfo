@@ -12,14 +12,21 @@
 // Macros for printing nodes to JSON
 #define NODE_JS_DELIM_NL		"\n"	// New line for JSON output
 #define NODE_JS_DELIM_INDENT	"  "	// Tab token for JSON output
+#define NODE_JS_BOOL_TRUE		"true"	// JSON boolean true
+#define NODE_JS_BOOL_FALSE		"false"	// JSON boolean false
 
 // Macros for printing nodes to YAML
 #define NODE_YAML_DELIM_NL		"\n"	// New line token for YAML output
 #define NODE_YAML_DELIM_INDENT	"    "	// Tab token for YAML output
+// YAML 1.2 only supports "true" and "false" as boolean values
+#define NODE_YAML_BOOL_TRUE		"true"	// YAML boolean true
+#define NODE_YAML_BOOL_FALSE	"false"	// YAML boolean false
 
 // Macros for printing nodes to LUA
 #define NODE_LUA_DELIM_NL		"\n"	// New line token for LUA output
 #define NODE_LUA_DELIM_INDENT	"  "	// Tab token for LUA output
+#define NODE_LUA_BOOL_TRUE		"true"	// LUA boolean true
+#define NODE_LUA_BOOL_FALSE		"false"	// LUA boolean false
 
 static int indent_depth = 0;
 
@@ -669,6 +676,13 @@ static INT NWL_NodeToJson(PNODE node, FILE* file)
 				}
 				else if (att->Flags & NAFLG_FMT_NUMERIC)
 					fputs(att->Value, file);
+				else if (att->Flags & NAFLG_FMT_BOOLEAN)
+				{
+					if (strcmp(att->Value, NA_BOOL_TRUE) == 0)
+						fputs(NODE_JS_BOOL_TRUE, file);
+					else
+						fputs(NODE_JS_BOOL_FALSE, file);
+				}
 				else
 				{
 					JsonEscapeContent(att->Value, NWLC->NwBuf, NWINFO_BUFSZ);
@@ -751,8 +765,15 @@ static INT NWL_NodeToYaml(PNODE node, FILE* file)
 			else
 			{
 				CHAR* attVal = (att->Value && *att->Value != '\0') ? att->Value : "~";
-				if (att->Flags & NAFLG_FMT_NUMERIC || att->Flags & NAFLG_FMT_BOOLEAN)
+				if (att->Flags & NAFLG_FMT_NUMERIC)
 					fputs(attVal, file);
+				else if (att->Flags & NAFLG_FMT_BOOLEAN)
+				{
+					if (strcmp(attVal, NA_BOOL_TRUE) == 0)
+						fputs(NODE_YAML_BOOL_TRUE, file);
+					else
+						fputs(NODE_YAML_BOOL_FALSE, file);
+				}
 				else
 				{
 					attVal = (att->Value && *att->Value != '\0') ? att->Value : "~";
@@ -834,6 +855,13 @@ static INT NWL_NodeToLua(PNODE node, FILE* file)
 						fprintf(file, "\"%s\"", NWLC->NwBuf);
 					}
 					fputs(" }", file);
+				}
+				else if (att->Flags & NAFLG_FMT_BOOLEAN)
+				{
+					if (strcmp(att->Value, NA_BOOL_TRUE) == 0)
+						fputs(NODE_LUA_BOOL_TRUE, file);
+					else
+						fputs(NODE_LUA_BOOL_FALSE, file);
 				}
 				else
 				{
