@@ -119,6 +119,7 @@
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <None Include="..\README.md" />
     <None Include="gnwinfo.ini" />
     <None Include="packages.config" />
   </ItemGroup>

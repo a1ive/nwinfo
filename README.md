@@ -13,7 +13,7 @@
 
 ## Features
 * Obtain detailed information about SMBIOS, CPUID, S.M.A.R.T., PCI, EDID, and more.
-* Support exporting in JSON, YAML, and LUA table formats.
+* Support exporting in JSON, YAML, and HTML formats.
 * Gathers information directly without relying on WMI.
 * Compatible with Windows XP.
 

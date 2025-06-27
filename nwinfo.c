@@ -15,7 +15,7 @@ static void nwinfo_help(void)
 		"OPTIONS:\n"
 		"  --format=FMT     Specify output format.\n"
 		"                   FMT can be 'YAML' (default), 'JSON',\n"
-		"                   'LUA' and 'TREE'.\n"
+		"                   'LUA', 'TREE' and 'HTML'.\n"
 		"  --output=FILE    Write to FILE instead of printing to screen.\n"
 		"  --cp=CODEPAGE    Set the code page of output text.\n"
 		"                   CODEPAGE can be 'ANSI' and 'UTF8'.\n"
@@ -173,6 +173,8 @@ int main(int argc, char* argv[])
 				nwContext.NwFormat = FORMAT_LUA;
 			else if (_stricmp(&argv[i][9], "TREE") == 0)
 				nwContext.NwFormat = FORMAT_TREE;
+			else if (_stricmp(&argv[i][9], "HTML") == 0)
+				nwContext.NwFormat = FORMAT_HTML;
 		}
 		else if (_strnicmp(argv[i], "--cp=", 5) == 0 && argv[i][5])
 		{

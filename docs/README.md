@@ -9,7 +9,7 @@
 
 ## Features
 * Obtain detailed information about SMBIOS, CPUID, S.M.A.R.T., PCI, EDID, and more.
-* Support exporting in JSON, YAML, and LUA table formats.
+* Support exporting in JSON, YAML, and HTML formats.
 * Gathers information directly without relying on WMI.
 * Compatible with Windows XP.
 
@@ -40,7 +40,7 @@ This command exports system, disk, SMBIOS, and network information to `report.js
 
 - --format=`FORMAT`  
   Specify output format.  
-  `FORMAT` can be `YAML` (default), `JSON`, `LUA` and `TREE`.  
+  `FORMAT` can be `YAML` (default), `JSON`, `LUA`, `TREE` and `HTML`.  
 - --output=`FILE`  
   Write to `FILE` instead of printing to screen.  
 - --cp=`CODEPAGE`  

@@ -23,6 +23,7 @@
   <ItemGroup>
     <None Include="packages.config" />
     <None Include="gnwinfo.ini" />
+    <None Include="..\README.md" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="gnwinfo.h">

@@ -127,6 +127,7 @@ typedef struct _NWLIB_CONTEXT
 		FORMAT_JSON,
 		FORMAT_LUA,
 		FORMAT_TREE,
+		FORMAT_HTML,
 	} NwFormat;
 	FILE* NwFile;
 	LPCSTR* NwUnits;
