@@ -172,6 +172,7 @@
     <ClCompile Include="smbus.c" />
     <ClCompile Include="spd.c" />
     <ClCompile Include="sys.c" />
+    <ClCompile Include="table.c" />
     <ClCompile Include="uefi.c" />
     <ClCompile Include="usb.c" />
     <ClCompile Include="utils.c" />

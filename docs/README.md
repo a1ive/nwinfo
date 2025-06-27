@@ -40,7 +40,7 @@ This command exports system, disk, SMBIOS, and network information to `report.js
 
 - --format=`FORMAT`  
   Specify output format.  
-  `FORMAT` can be `YAML` (default), `JSON` and `LUA`.  
+  `FORMAT` can be `YAML` (default), `JSON`, `LUA` and `TREE`.  
 - --output=`FILE`  
   Write to `FILE` instead of printing to screen.  
 - --cp=`CODEPAGE`  

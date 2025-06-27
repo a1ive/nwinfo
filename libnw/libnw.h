@@ -126,6 +126,7 @@ typedef struct _NWLIB_CONTEXT
 		FORMAT_YAML = 0,
 		FORMAT_JSON,
 		FORMAT_LUA,
+		FORMAT_TREE,
 	} NwFormat;
 	FILE* NwFile;
 	LPCSTR* NwUnits;
