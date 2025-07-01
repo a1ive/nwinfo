@@ -140,7 +140,6 @@
     <ClInclude Include="libnw.h" />
     <ClInclude Include="nt.h" />
     <ClInclude Include="smbios.h" />
-    <ClInclude Include="spd.h" />
     <ClInclude Include="utils.h" />
     <ClInclude Include="vbr.h" />
     <ClInclude Include="version.h" />
@@ -169,8 +168,6 @@
     <ClCompile Include="productpolicy.c" />
     <ClCompile Include="smb.c" />
     <ClCompile Include="smbios.c" />
-    <ClCompile Include="smbus.c" />
-    <ClCompile Include="spd.c" />
     <ClCompile Include="sys.c" />
     <ClCompile Include="table.c" />
     <ClCompile Include="uefi.c" />

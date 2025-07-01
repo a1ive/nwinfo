@@ -21,9 +21,6 @@
     <ClInclude Include="format.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="spd.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="libnw.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -81,12 +78,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="smbios.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="smbus.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="spd.c">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="sys.c">

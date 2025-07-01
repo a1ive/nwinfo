@@ -39,9 +39,6 @@ typedef struct _NWLIB_CONTEXT
 	BOOL EdidInfo;
 	BOOL PciInfo;
 	BOOL UsbInfo;
-#ifdef NW_ENABLE_SPD
-	BOOL SpdInfo;
-#endif
 	BOOL BatteryInfo;
 	BOOL UefiInfo;
 	BOOL ShareInfo;
