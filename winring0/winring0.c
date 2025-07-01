@@ -11,48 +11,52 @@
 
 static BOOL load_driver(struct wr0_drv_t* drv)
 {
-	BOOL Ret = FALSE;
-	DWORD Status = 0;
-	BOOL Retry = TRUE;
+	BOOL bServiceCreated = FALSE;
 
 	drv->scManager = OpenSCManagerW(NULL, NULL, SC_MANAGER_ALL_ACCESS);
 	if (drv->scManager == NULL)
 		return FALSE;
-retry:
+
 	drv->scDriver = CreateServiceW(drv->scManager, drv->driver_id, drv->driver_id,
 		SERVICE_ALL_ACCESS, SERVICE_KERNEL_DRIVER, SERVICE_DEMAND_START, SERVICE_ERROR_IGNORE,
 		drv->driver_path, NULL, NULL, NULL, NULL, NULL);
 	if (drv->scDriver == NULL)
 	{
-		drv->scDriver = OpenServiceW(drv->scManager, drv->driver_id, SERVICE_ALL_ACCESS);
-		if (drv->scDriver == NULL)
+		if (GetLastError() == ERROR_SERVICE_EXISTS)
+		{
+			drv->scDriver = OpenServiceW(drv->scManager, drv->driver_id, SERVICE_ALL_ACCESS);
+			if (drv->scDriver == NULL)
+			{
+				CloseServiceHandle(drv->scManager);
+				drv->scManager = NULL;
+				return FALSE;
+			}
+		}
+		else
 		{
 			CloseServiceHandle(drv->scManager);
+			drv->scManager = NULL;
+			return FALSE;
+		}
+	}
+	else
+		bServiceCreated = TRUE;
+
+	if (!StartServiceW(drv->scDriver, 0, NULL))
+	{
+		if (GetLastError() != ERROR_SERVICE_ALREADY_RUNNING)
+		{
+			if (bServiceCreated)
+				DeleteService(drv->scDriver);
+			CloseServiceHandle(drv->scDriver);
+			drv->scDriver = NULL;
+			CloseServiceHandle(drv->scManager);
+			drv->scManager = NULL;
 			return FALSE;
 		}
 	}
 
-	Ret = StartServiceW(drv->scDriver, 0, NULL);
-	if (Ret == FALSE)
-	{
-		Status = GetLastError();
-		if (Status == ERROR_SERVICE_ALREADY_RUNNING)
-			Ret = TRUE;
-		else if (Retry == TRUE)
-		{
-			Retry = FALSE;
-			DeleteService(drv->scDriver);
-			CloseServiceHandle(drv->scDriver);
-			goto retry;
-		}
-		else
-			Ret = FALSE;
-	}
-
-	CloseServiceHandle(drv->scDriver);
-	CloseServiceHandle(drv->scManager);
-
-	return Ret;
+	return TRUE;
 }
 
 typedef BOOL(WINAPI* LPFN_ISWOW64PROCESS) (HANDLE, PBOOL);
@@ -484,9 +488,6 @@ int wr0_driver_close(struct wr0_drv_t* drv)
 	{
 		CloseHandle(drv->hhDriver);
 		drv->hhDriver = NULL;
-		drv->scManager = OpenSCManagerW(NULL, NULL, SC_MANAGER_ALL_ACCESS);
-		if (drv->scManager)
-			drv->scDriver = OpenServiceW(drv->scManager, drv->driver_id, SERVICE_ALL_ACCESS);
 	}
 	if (drv->scDriver)
 	{
