@@ -1635,6 +1635,81 @@ static void ProcMemoryErrInfo64(PNODE tab, void* p)
 	NWL_NodeAttrSetf(tab, "Error Resolution", 0, "0x%08lX", pMemErrInfo->ErrResolution);
 }
 
+static const CHAR*
+pManagementDeviceTypeToStr(UCHAR Type)
+{
+	switch (Type)
+	{
+	case 0x01: return "Other";
+	//case 0x02: return "Unknown";
+	case 0x03: return "LM75";
+	case 0x04: return "LM78";
+	case 0x05: return "LM79";
+	case 0x06: return "LM80";
+	case 0x07: return "LM81";
+	case 0x08: return "ADM9240";
+	case 0x09: return "DS1780";
+	case 0x0a: return "Maxim1617";
+	case 0x0b: return "GL518SM";
+	case 0x0c: return "W83781D";
+	case 0x0d: return "HT82H791";
+	}
+	return "Unknown";
+}
+
+static const CHAR*
+pManagementDeviceAddrTypeToStr(UCHAR Type)
+{
+	switch (Type)
+	{
+	case 0x01: return "Other";
+	//case 0x02: return "Unknown";
+	case 0x03: return "I/O Port";
+	case 0x04: return "Memory";
+	case 0x05: return "SM Bus";
+	}
+	return "Unknown";
+}
+
+static void ProcManagementDevice(PNODE tab, void* p)
+{
+	PManagementDevice pMgmtDev = (PManagementDevice)p;
+	NWL_NodeAttrSet(tab, "Description", "Management Device", 0);
+	if (pMgmtDev->Header.Length < 0x0b) // 2.3
+		return;
+	NWL_NodeAttrSet(tab, "Information", LocateString(p, pMgmtDev->Description), 0);
+	NWL_NodeAttrSet(tab, "Type", pManagementDeviceTypeToStr(pMgmtDev->Type), 0);
+	NWL_NodeAttrSetf(tab, "Address", 0, "%08Xh", pMgmtDev->Address);
+	NWL_NodeAttrSet(tab, "Address Type", pManagementDeviceAddrTypeToStr(pMgmtDev->AddressType), 0);
+}
+
+static void ProcManagementDeviceComponent(PNODE tab, void* p)
+{
+	PManagementDeviceComponent pMgmtComp = (PManagementDeviceComponent)p;
+	NWL_NodeAttrSet(tab, "Description", "Management Device Component", 0);
+	if (pMgmtComp->Header.Length < 0x0b) // 2.3
+		return;
+	NWL_NodeAttrSet(tab, "Information", LocateString(p, pMgmtComp->Description), 0);
+	NWL_NodeAttrSetf(tab, "Management Device Handle", NAFLG_FMT_NUMERIC, "%u", pMgmtComp->DeviceHandle);
+	NWL_NodeAttrSetf(tab, "Component Handle", NAFLG_FMT_NUMERIC, "%u", pMgmtComp->ComponentHandle);
+	NWL_NodeAttrSetf(tab, "Threshold Handle", NAFLG_FMT_NUMERIC, "%u", pMgmtComp->ThresholdHandle);
+}
+
+static void ProcManagementDeviceThreshold(PNODE tab, void* p)
+{
+	PManagementDeviceThreshold pMgmtThres = (PManagementDeviceThreshold)p;
+	NWL_NodeAttrSet(tab, "Description", "Management Device Threshold Data", 0);
+	if (pMgmtThres->Header.Length < 0x10) // 2.3
+		return;
+	NWL_NodeAttrSet(tab, "Information", LocateString(p, pMgmtThres->Description), 0);
+	NWL_NodeAttrSetf(tab, "Lower Threshold (Non-critical)", NAFLG_FMT_NUMERIC, "%u", pMgmtThres->LowerNonCritical);
+	NWL_NodeAttrSetf(tab, "Upper Threshold (Non-critical)", NAFLG_FMT_NUMERIC, "%u", pMgmtThres->UpperNonCritical);
+	NWL_NodeAttrSetf(tab, "Lower Threshold (Critical)", NAFLG_FMT_NUMERIC, "%u", pMgmtThres->LowerCritical);
+	NWL_NodeAttrSetf(tab, "Upper Threshold (Critical)", NAFLG_FMT_NUMERIC, "%u", pMgmtThres->UpperCritical);
+	NWL_NodeAttrSetf(tab, "Lower Threshold (Non-recoverable)", NAFLG_FMT_NUMERIC, "%u", pMgmtThres->LowerNonRecoverable);
+	NWL_NodeAttrSetf(tab, "Upper Threshold (Non-recoverable)", NAFLG_FMT_NUMERIC, "%u", pMgmtThres->UpperNonRecoverable);
+}
+
 static void ProcAdditionalInfo(PNODE tab, void* p)
 {
 	PAdditionalInformation pInfo = (PAdditionalInformation)p;
@@ -1883,6 +1958,15 @@ static void DumpSMBIOS(PNODE node, void* Addr, UINT Len, UINT8 Type)
 			break;
 		case 33:
 			ProcMemoryErrInfo64(tab, pHeader);
+			break;
+		case 34:
+			ProcManagementDevice(tab, pHeader);
+			break;
+		case 35:
+			ProcManagementDeviceComponent(tab, pHeader);
+			break;
+		case 36:
+			ProcManagementDeviceThreshold(tab, pHeader);
 			break;
 		case 40:
 			ProcAdditionalInfo(tab, pHeader);

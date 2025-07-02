@@ -493,6 +493,18 @@ typedef struct _TYPE_35_
 	UINT16 ThresholdHandle;
 } ManagementDeviceComponent, * PManagementDeviceComponent;
 
+typedef struct _TYPE_36_
+{
+	SMBIOSHEADER Header;
+	UINT8 Description;
+	UINT16 LowerNonCritical;
+	UINT16 UpperNonCritical;
+	UINT16 LowerCritical;
+	UINT16 UpperCritical;
+	UINT16 LowerNonRecoverable;
+	UINT16 UpperNonRecoverable;
+} ManagementDeviceThreshold, * PManagementDeviceThreshold;
+
 typedef struct _TYPE_40_
 {
 	SMBIOSHEADER Header;
