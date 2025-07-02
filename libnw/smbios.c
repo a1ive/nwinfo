@@ -1585,13 +1585,39 @@ static void ProcBISEntryPoint(PNODE tab, void* p)
 	NWL_NodeAttrSet(tab, "Description", "Boot Integrity Services Entry Point", 0);
 }
 
+static const CHAR*
+pSysemBootInfoTypeToStr(UCHAR Status)
+{
+	switch (Status)
+	{
+	case 0x00: return "No errors detected";
+	case 0x01: return "No bootable media";
+	case 0x02: return "Normal operating system failed to load";
+	case 0x03: return "Firmware-detected hardware failure";
+	case 0x04: return "Operating system-detected hardware failure";
+	case 0x05: return "User-requested boot";
+	case 0x06: return "System security violation";
+	case 0x07: return "Previously-requested image";
+	case 0x08: return "Watchdog timer expired";
+	}
+	if (Status >= 0x09 && Status <= 0x7F)
+		return "Reserved for future assignment";
+
+	return "Reserved for OEM assignment";
+}
+
 static void ProcSysBootInfo(PNODE tab, void* p)
 {
 	PSysBootInfo pBootInfo = (PSysBootInfo)p;
 	NWL_NodeAttrSet(tab, "Description", "System Boot Information", 0);
 	if (pBootInfo->Header.Length < 0x0b)
 		return;
-	// TODO
+	for (UINT8 i = 0; i < pBootInfo->Header.Length - 10; i++)
+	{
+		CHAR title[] = "Boot Status 255";
+		snprintf(title, sizeof(title), "Boot Status %u", i);
+		NWL_NodeAttrSet(tab, title, pSysemBootInfoTypeToStr(pBootInfo->BootStatus[i]), 0);
+	}
 }
 
 static void ProcMemoryErrInfo64(PNODE tab, void* p)
