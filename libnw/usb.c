@@ -5,43 +5,14 @@
 #include <windows.h>
 #include <initguid.h>
 #include <devpkey.h>
-#include <cfgmgr32.h>
 
 #include "libnw.h"
 #include "utils.h"
 
-static WCHAR* GetDeviceStringProperty(DEVINST devInst, const DEVPROPKEY* pKey)
-{
-	DEVPROPTYPE propType;
-	ULONG propSize = 0;
-	CONFIGRET cr = CM_Get_DevNode_PropertyW(devInst, pKey, &propType, NULL, &propSize, 0);
-
-	if (cr != CR_BUFFER_SMALL)
-		return NULL;
-
-	BYTE* buffer = (BYTE*)malloc(propSize);
-	if (!buffer)
-		return NULL;
-
-	cr = CM_Get_DevNode_PropertyW(devInst, pKey, &propType, buffer, &propSize, 0);
-	if (cr != CR_SUCCESS)
-	{
-		free(buffer);
-		return NULL;
-	}
-
-	// Check if it's a string or list of strings before returning
-	if (propType == DEVPROP_TYPE_STRING || propType == DEVPROP_TYPE_STRING_LIST)
-		return (WCHAR*)buffer;
-
-	free(buffer);
-	return NULL;
-}
-
 static WCHAR* GetUsbDiskName(DEVINST usbDevInst)
 {
 	// Check if the service is USBSTOR or UASPStor
-	WCHAR* serviceName = GetDeviceStringProperty(usbDevInst, &DEVPKEY_Device_Service);
+	WCHAR* serviceName = NWL_GetDevStrProp(usbDevInst, &DEVPKEY_Device_Service);
 	if (!serviceName)
 		return NULL;
 
@@ -57,13 +28,13 @@ static WCHAR* GetUsbDiskName(DEVINST usbDevInst)
 		cr == CR_SUCCESS;
 		cr = CM_Get_Sibling(&childDevice, childDevice, 0))
 	{
-		WCHAR* className = GetDeviceStringProperty(childDevice, &DEVPKEY_Device_Class);
+		WCHAR* className = NWL_GetDevStrProp(childDevice, &DEVPKEY_Device_Class);
 		if (className)
 		{
 			if (_wcsicmp(className, L"DiskDrive") == 0)
 			{
 				free(className);
-				return GetDeviceStringProperty(childDevice, &DEVPKEY_NAME);
+				return NWL_GetDevStrProp(childDevice, &DEVPKEY_NAME);
 			}
 			free(className);
 		}
@@ -113,7 +84,7 @@ GetDeviceInfo(PNODE nusb, CHAR* ids, DWORD idsSize, DEVINST devInst, LPCWSTR ins
 	NWL_ParseHwid(nusb, ids, idsSize, instanceId, 1);
 
 	// Parse hardware class if available
-	WCHAR* compatibleIds = GetDeviceStringProperty(devInst, &DEVPKEY_Device_CompatibleIds);
+	WCHAR* compatibleIds = NWL_GetDevStrProp(devInst, &DEVPKEY_Device_CompatibleIds);
 	if (compatibleIds)
 	{
 		ParseHwClass(nusb, ids, idsSize, compatibleIds);
@@ -121,7 +92,7 @@ GetDeviceInfo(PNODE nusb, CHAR* ids, DWORD idsSize, DEVINST devInst, LPCWSTR ins
 	}
 
 	// Get and print device name using DEVPKEY_NAME
-	WCHAR* name = GetDeviceStringProperty(devInst, &DEVPKEY_NAME);
+	WCHAR* name = NWL_GetDevStrProp(devInst, &DEVPKEY_NAME);
 	if (name)
 	{
 		NWL_NodeAttrSet(nusb, "Name", NWL_Ucs2ToUtf8(name), 0);
@@ -152,7 +123,7 @@ static void EnumerateUsbDevices(PNODE parent, CHAR* ids, DWORD idsSize, DEVINST 
 {
 	PNODE nusb = parent;
 	DEVINST childInst;
-	WCHAR* instanceId = GetDeviceStringProperty(devInst, &DEVPKEY_Device_InstanceId);
+	WCHAR* instanceId = NWL_GetDevStrProp(devInst, &DEVPKEY_Device_InstanceId);
 	if (instanceId)
 	{
 		if (wcsncmp(instanceId, L"USB\\", 4) == 0)

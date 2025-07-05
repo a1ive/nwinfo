@@ -503,6 +503,34 @@ NWL_GetMonitorFromName(LPCWSTR lpDevice)
 	return ctx.hMonitor;
 }
 
+WCHAR* NWL_GetDevStrProp(DEVINST devInst, const DEVPROPKEY* pKey)
+{
+	DEVPROPTYPE propType;
+	ULONG propSize = 0;
+	CONFIGRET cr = CM_Get_DevNode_PropertyW(devInst, pKey, &propType, NULL, &propSize, 0);
+
+	if (cr != CR_BUFFER_SMALL)
+		return NULL;
+
+	BYTE* buffer = (BYTE*)malloc(propSize);
+	if (!buffer)
+		return NULL;
+
+	cr = CM_Get_DevNode_PropertyW(devInst, pKey, &propType, buffer, &propSize, 0);
+	if (cr != CR_SUCCESS)
+	{
+		free(buffer);
+		return NULL;
+	}
+
+	// Check if it's a string or list of strings before returning
+	if (propType == DEVPROP_TYPE_STRING || propType == DEVPROP_TYPE_STRING_LIST)
+		return (WCHAR*)buffer;
+
+	free(buffer);
+	return NULL;
+}
+
 #define SECPERMIN 60
 #define SECPERHOUR (60*SECPERMIN)
 #define SECPERDAY (24*SECPERHOUR)
