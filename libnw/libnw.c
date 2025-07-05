@@ -92,6 +92,8 @@ VOID NW_Print(LPCSTR lpFileName)
 		NW_Gpu();
 	if (NWLC->FontInfo)
 		NW_Font();
+	if (NWLC->DevTree)
+		NW_DevTree();
 	NW_Libinfo();
 	NW_Export(NWLC->NwRoot, NWLC->NwFile);
 }

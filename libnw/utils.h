@@ -3,7 +3,6 @@
 
 #define VC_EXTRALEAN
 #include <windows.h>
-#include <cfgmgr32.h>
 #include "format.h"
 #include "nt.h"
 
@@ -38,7 +37,6 @@ LPCSTR NWL_GuidToStr(UCHAR Guid[16]);
 LPCSTR NWL_WinGuidToStr(BOOL bBracket, GUID* pGuid);
 BOOL NWL_StrToGuid(const CHAR* cchText, GUID* pGuid);
 HMONITOR NWL_GetMonitorFromName(LPCWSTR lpDevice);
-WCHAR* NWL_GetDevStrProp(DEVINST devInst, const DEVPROPKEY* pKey);
 LPCSTR NWL_UnixTimeToStr(INT nix);
 LPCSTR NWL_Ucs2ToUtf8(LPCWSTR src);
 LPCWSTR NWL_Utf8ToUcs2(LPCSTR src);

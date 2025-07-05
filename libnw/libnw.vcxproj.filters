@@ -54,6 +54,9 @@
     <ClInclude Include="vbr.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="devtree.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="acpi.c">
@@ -138,6 +141,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="table.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="devtree.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

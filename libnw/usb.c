@@ -8,6 +8,13 @@
 
 #include "libnw.h"
 #include "utils.h"
+#include "devtree.h"
+
+typedef struct _DEVTREE_CTX
+{
+	CHAR* ids;
+	DWORD idsSize;
+} DEVTREE_CTX;
 
 static WCHAR* GetUsbDiskName(DEVINST usbDevInst)
 {
@@ -77,17 +84,18 @@ ParseHwClass(PNODE nd, CHAR* ids, DWORD idsSize, LPCWSTR compId)
 }
 
 static void
-GetDeviceInfo(PNODE nusb, CHAR* ids, DWORD idsSize, DEVINST devInst, LPCWSTR instanceId)
+GetDeviceInfoUsb(PNODE node, void* data, DEVINST devInst, LPCWSTR instanceId)
 {
-	NWL_NodeAttrSet(nusb, "HWID", NWL_Ucs2ToUtf8(instanceId), 0);
+	DEVTREE_CTX* ctx = (DEVTREE_CTX*)data;
+	NWL_NodeAttrSet(node, "HWID", NWL_Ucs2ToUtf8(instanceId), 0);
 
-	NWL_ParseHwid(nusb, ids, idsSize, instanceId, 1);
+	NWL_ParseHwid(node, ctx->ids, ctx->idsSize, instanceId, 1);
 
 	// Parse hardware class if available
 	WCHAR* compatibleIds = NWL_GetDevStrProp(devInst, &DEVPKEY_Device_CompatibleIds);
 	if (compatibleIds)
 	{
-		ParseHwClass(nusb, ids, idsSize, compatibleIds);
+		ParseHwClass(node, ctx->ids, ctx->idsSize, compatibleIds);
 		free(compatibleIds);
 	}
 
@@ -95,7 +103,7 @@ GetDeviceInfo(PNODE nusb, CHAR* ids, DWORD idsSize, DEVINST devInst, LPCWSTR ins
 	WCHAR* name = NWL_GetDevStrProp(devInst, &DEVPKEY_NAME);
 	if (name)
 	{
-		NWL_NodeAttrSet(nusb, "Name", NWL_Ucs2ToUtf8(name), 0);
+		NWL_NodeAttrSet(node, "Name", NWL_Ucs2ToUtf8(name), 0);
 		free(name);
 	}
 
@@ -103,43 +111,8 @@ GetDeviceInfo(PNODE nusb, CHAR* ids, DWORD idsSize, DEVINST devInst, LPCWSTR ins
 	WCHAR* diskName = GetUsbDiskName(devInst);
 	if (diskName)
 	{
-		NWL_NodeAttrSet(nusb, "Disk", NWL_Ucs2ToUtf8(diskName), 0);
+		NWL_NodeAttrSet(node, "Disk", NWL_Ucs2ToUtf8(diskName), 0);
 		free(diskName);
-	}
-}
-
-static inline PNODE AppendUsbHub(PNODE parent)
-{
-	if (parent->Flags & NFLG_TABLE)
-		return parent; // Already a table, return as is
-	PNODE ret = NWL_NodeGetChild(parent, "USB Hub");
-	if (ret)
-		return ret; // Found existing USB Hub node
-	// Create a new USB Hub node
-	return NWL_NodeAppendNew(parent, "USB Hub", NFLG_TABLE);
-}
-
-static void EnumerateUsbDevices(PNODE parent, CHAR* ids, DWORD idsSize, DEVINST devInst)
-{
-	PNODE nusb = parent;
-	DEVINST childInst;
-	WCHAR* instanceId = NWL_GetDevStrProp(devInst, &DEVPKEY_Device_InstanceId);
-	if (instanceId)
-	{
-		if (wcsncmp(instanceId, L"USB\\", 4) == 0)
-		{
-			nusb = NWL_NodeAppendNew(AppendUsbHub(parent), "Device", NFLG_TABLE_ROW);
-			GetDeviceInfo(nusb, ids, idsSize, devInst, instanceId);
-		}
-		free(instanceId);
-	}
-
-	if (CM_Get_Child(&childInst, devInst, 0) == CR_SUCCESS)
-	{
-		EnumerateUsbDevices(nusb, ids, idsSize, childInst);
-		DEVINST siblingInst = childInst;
-		while (CM_Get_Sibling(&siblingInst, siblingInst, 0) == CR_SUCCESS)
-			EnumerateUsbDevices(nusb, ids, idsSize, siblingInst);
 	}
 }
 
@@ -147,12 +120,23 @@ PNODE NW_Usb(VOID)
 {
 	DEVINST devRoot;
 	CONFIGRET cr;
-	CHAR* ids = NULL;
-	DWORD idsSize = 0;
+	DEVTREE_CTX data =
+	{
+		.ids = NULL,
+		.idsSize = 0,
+	};
+	DEVTREE_ENUM_CTX ctx =
+	{
+		.filter = L"USB\\",
+		.filterLen = 4, // Length of "USB\\"
+		.data = &data,
+		.hub = "USB Hub",
+		.GetDeviceInfo = GetDeviceInfoUsb,
+	};
 	PNODE node = NWL_NodeAlloc("USB", NFLG_TABLE);
 	if (NWLC->UsbInfo)
 		NWL_NodeAppendChild(NWLC->NwRoot, node);
-	ids = NWL_LoadIdsToMemory(L"usb.ids", &idsSize);
+	data.ids = NWL_LoadIdsToMemory(L"usb.ids", &data.idsSize);
 
 	cr = CM_Locate_DevNodeW(&devRoot, NULL, CM_LOCATE_DEVNODE_NORMAL);
 	if (cr != CR_SUCCESS)
@@ -161,9 +145,9 @@ PNODE NW_Usb(VOID)
 		goto fail;
 	}
 
-	EnumerateUsbDevices(node, ids, idsSize, devRoot);
+	NWL_EnumerateDevices(node, &ctx, devRoot);
 
 fail:
-	free(ids);
+	free(data.ids);
 	return node;
 }

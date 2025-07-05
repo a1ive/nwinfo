@@ -80,7 +80,10 @@ static void nwinfo_help(void)
 		"                   Print ProductPolicy.\n"
 		"                   NAME specifies the name of the product policy.\n"
 		"  --gpu            Print GPU usage.\n"
-		"  --font           Print installed fonts.\n");
+		"  --font           Print installed fonts.\n"
+		"  --device[=TYPE]  Print device tree.\n"
+		"                   TYPE specifies the type of the devices,\n"
+		"                   e.g. 'ACPI', 'SWD', 'PCI' or 'USB'.\n");
 }
 
 typedef struct _NW_ARG_FILTER
@@ -309,6 +312,12 @@ int main(int argc, char* argv[])
 			nwContext.GpuInfo = TRUE;
 		else if (_stricmp(argv[i], "--font") == 0)
 			nwContext.FontInfo = TRUE;
+		else if (_strnicmp(argv[i], "--device", 8) == 0)
+		{
+			if (argv[i][8] == '=' && argv[i][9])
+				nwContext.DevTreeFilter = &argv[i][9];
+			nwContext.DevTree = TRUE;
+		}
 		else if (_stricmp(argv[i], "--debug") == 0)
 			nwContext.Debug = TRUE;
 		else if (_stricmp(argv[i], "--hide-sensitive") == 0)

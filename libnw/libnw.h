@@ -47,10 +47,12 @@ typedef struct _NWLIB_CONTEXT
 	BOOL ProductPolicyInfo;
 	BOOL GpuInfo;
 	BOOL FontInfo;
+	BOOL DevTree;
 
 	BOOL Debug;
 	BOOL HideSensitive;
 
+	LPCSTR DevTreeFilter;
 	DWORD AcpiTable;
 	UINT8 SmbiosType;
 	LPCSTR PciClass;
@@ -170,6 +172,7 @@ PNODE NW_PublicIp(VOID);
 PNODE NW_ProductPolicy(VOID);
 PNODE NW_Gpu(VOID);
 PNODE NW_Font(VOID);
+PNODE NW_DevTree(VOID);
 
 VOID NWL_GetUptime(CHAR* szUptime, DWORD dwSize);
 VOID NWL_GetHostname(CHAR* szHostname);

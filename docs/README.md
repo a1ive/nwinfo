@@ -114,6 +114,9 @@ This command exports system, disk, SMBIOS, and network information to `report.js
    Print audio devices.  
  - --gpu  
    Print GPU usage.  
+ - --device[=`TYPE`]  
+   Print device tree.  
+   `TYPE` specifies the type of the devices, e.g. `ACPI`, `SWD`, `PCI` or `USB`.  
 
 ### System Information
 

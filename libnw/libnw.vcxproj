@@ -134,6 +134,7 @@
     <ClInclude Include="..\libcdi\libcdi.h" />
     <ClInclude Include="acpi.h" />
     <ClInclude Include="audio.h" />
+    <ClInclude Include="devtree.h" />
     <ClInclude Include="disk.h" />
     <ClInclude Include="efivars.h" />
     <ClInclude Include="format.h" />
@@ -150,6 +151,7 @@
     <ClCompile Include="audio_nw.c" />
     <ClCompile Include="battery.c" />
     <ClCompile Include="cpuid.c" />
+    <ClCompile Include="devtree.c" />
     <ClCompile Include="disk.c" />
     <ClCompile Include="display.c" />
     <ClCompile Include="efivars.c" />
