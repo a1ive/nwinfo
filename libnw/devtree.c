@@ -39,10 +39,10 @@ WCHAR* NWL_GetDevStrProp(DEVINST devInst, const DEVPROPKEY* pKey)
 }
 
 static void
-GetDeviceInfoDefault(PNODE node, void* data, DEVINST devInst, LPCWSTR instanceId)
+GetDeviceInfoDefault(PNODE node, void* data, DEVINST devInst, LPCWSTR hwIds)
 {
 	(void)data;
-	NWL_NodeAttrSet(node, "HWID", NWL_Ucs2ToUtf8(instanceId), 0);
+	NWL_NodeAttrSet(node, "HWID", NWL_Ucs2ToUtf8(hwIds), 0);
 
 	WCHAR* name = NWL_GetDevStrProp(devInst, &DEVPKEY_NAME);
 	if (name)
@@ -67,16 +67,16 @@ NWL_EnumerateDevices(PNODE parent, DEVTREE_ENUM_CTX* ctx, DEVINST devInst)
 {
 	PNODE node = parent;
 	DEVINST childInst;
-	WCHAR* instanceId = NWL_GetDevStrProp(devInst, &DEVPKEY_Device_InstanceId);
+	WCHAR* hwIds = NWL_GetDevStrProp(devInst, &DEVPKEY_Device_HardwareIds);
 
-	if (instanceId)
+	if (hwIds)
 	{
-		if (ctx->filter[0] == L'\0' || _wcsnicmp(instanceId, ctx->filter, ctx->filterLen) == 0)
+		if (ctx->filter[0] == L'\0' || _wcsnicmp(hwIds, ctx->filter, ctx->filterLen) == 0)
 		{
 			node = NWL_NodeAppendNew(AppendDevices(parent, ctx->hub), "Device", NFLG_TABLE_ROW);
-			ctx->GetDeviceInfo(node, ctx->data, devInst, instanceId);
+			ctx->GetDeviceInfo(node, ctx->data, devInst, hwIds);
 		}
-		free(instanceId);
+		free(hwIds);
 	}
 
 	if (CM_Get_Child(&childInst, devInst, 0) == CR_SUCCESS)

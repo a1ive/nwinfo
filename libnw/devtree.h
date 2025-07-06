@@ -14,7 +14,7 @@ typedef struct _DEVTREE_ENUM_CTX
 	size_t filterLen;
 	const char* hub;
 	void* data;
-	void (*GetDeviceInfo)(PNODE node, void* data, DEVINST devInst, LPCWSTR instanceId);
+	void (*GetDeviceInfo)(PNODE node, void* data, DEVINST devInst, LPCWSTR hwIds);
 } DEVTREE_ENUM_CTX;
 
 WCHAR* NWL_GetDevStrProp(DEVINST devInst, const DEVPROPKEY* pKey);

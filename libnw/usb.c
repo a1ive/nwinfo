@@ -84,12 +84,12 @@ ParseHwClass(PNODE nd, CHAR* ids, DWORD idsSize, LPCWSTR compId)
 }
 
 static void
-GetDeviceInfoUsb(PNODE node, void* data, DEVINST devInst, LPCWSTR instanceId)
+GetDeviceInfoUsb(PNODE node, void* data, DEVINST devInst, LPCWSTR hwIds)
 {
 	DEVTREE_CTX* ctx = (DEVTREE_CTX*)data;
-	NWL_NodeAttrSet(node, "HWID", NWL_Ucs2ToUtf8(instanceId), 0);
+	NWL_NodeAttrSet(node, "HWID", NWL_Ucs2ToUtf8(hwIds), 0);
 
-	NWL_ParseHwid(node, ctx->ids, ctx->idsSize, instanceId, 1);
+	NWL_ParseHwid(node, ctx->ids, ctx->idsSize, hwIds, 1);
 
 	// Parse hardware class if available
 	WCHAR* compatibleIds = NWL_GetDevStrProp(devInst, &DEVPKEY_Device_CompatibleIds);
