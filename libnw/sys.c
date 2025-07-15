@@ -15,83 +15,83 @@
 
 static const CHAR* Win10BuildNumber(DWORD dwBuildNumber)
 {
-	switch (dwBuildNumber)
-	{
-	case 26100U:
-		return "11 24H2";
-	case 22631U:
+	if (dwBuildNumber >= 26200U)
+		return "11 25H2";  // TBA
+	if (dwBuildNumber >= 26100U)
+		return "11 24H2"; // Hudson Valley
+	if (dwBuildNumber >= 22631U)
 		return "11 23H2"; // Sun Valley 3
-	case 22621U:
+	if (dwBuildNumber >= 22621U)
 		return "11 22H2"; // Sun Valley 2
-	case 22000U:
+	if (dwBuildNumber >= 22000U)
 		return "11 21H2"; // Sun Valley
-	case 19045U:
-		return "10 22H2"; // Vibranium 22H2
-	case 19044U:
-		return "10 21H2"; // Vibranium 21H2
-	case 19043U:
-		return "10 21H1"; // Vibranium 21H1
-	case 19042U:
-		return "10 20H2"; // Vibranium 20H2
-	case 19041U:
-		return "10 2004"; // Vibranium 20H1
-	case 18363U:
-		return "10 1909"; // Vanadium 19H2
-	case 18362U:
-		return "10 1903"; // 19H1
-	case 17763U:
-		return "10 1809"; // Redstone 5
-	case 17134U:
-		return "10 1803"; // Redstone 4
-	case 16299U:
-		return "10 1709"; // Redstone 3
-	case 15063U:
-		return "10 1703"; // Redstone 2
-	case 14393U:
-		return "10 1607"; // Redstone
-	case 10586U:
-		return "10 1511"; // Threshold 2
-	case 10240U:
-		return "10 1507"; // Threshold
-	}
+
 	if (dwBuildNumber >= 21344U)
 		return "11";
+
+	if (dwBuildNumber >= 19045U)
+		return "10 22H2"; // Vibranium 22H2
+	if (dwBuildNumber >= 19044U)
+		return "10 21H2"; // Vibranium 21H2
+	if (dwBuildNumber >= 19043U)
+		return "10 21H1"; // Vibranium 21H1
+	if (dwBuildNumber >= 19042U)
+		return "10 20H2"; // Vibranium 20H2
+	if (dwBuildNumber >= 19041U)
+		return "10 2004"; // Vibranium 20H1
+	if (dwBuildNumber >= 18363U)
+		return "10 1909"; // Vanadium 19H2
+	if (dwBuildNumber >= 18362U)
+		return "10 1903"; // 19H1
+	if (dwBuildNumber >= 17763U)
+		return "10 1809"; // Redstone 5
+	if (dwBuildNumber >= 17134U)
+		return "10 1803"; // Redstone 4
+	if (dwBuildNumber >= 16299U)
+		return "10 1709"; // Redstone 3
+	if (dwBuildNumber >= 15063U)
+		return "10 1703"; // Redstone 2
+	if (dwBuildNumber >= 14393U)
+		return "10 1607"; // Redstone
+	if (dwBuildNumber >= 10586U)
+		return "10 1511"; // Threshold 2
+	if (dwBuildNumber >= 10240U)
+		return "10 1507"; // Threshold
+
 	return "10";
 }
 
 static const CHAR* WinServer2016BuildNumber(DWORD dwBuildNumber)
 {
-	switch (dwBuildNumber)
-	{
-	case 26100U:
+	if (dwBuildNumber >= 26100U)
 		return "Server 2025";
-	case 25398U:
-		return "Server, Version 23H2"; // WTF?
-	case 20348U:
-		return "Server 2022";
-	case 19042U:
-		return "Server, version 20H2"; // WTF?
-	case 19041U:
-		return "Server, version 2004"; // WTF?
-	case 18363U:
-		return "Server, version 1909"; // WTF?
-	case 18362U:
-		return "Server, version 1903"; // WTF?
-	case 17763U:
-		return "Server 2019"; // Server, version 1809 ?
-	case 17134U:
-		return "Server, version 1803"; // WTF?
-	case 16299U:
-		return "Server, version 1709"; // WTF?
-	case 14393U:
-		return "Server 2016";
-	}
-	if (dwBuildNumber >= 25871U)
-		return "Server 2025";
-	if (dwBuildNumber >= 19504U)
-		return "Server 2022";
-	if (dwBuildNumber >= 17609U)
-		return "Server 2019";
+
+	if (dwBuildNumber >= 25398U)
+		return "Server, Version 23H2"; // Annual Channel release
+
+	if (dwBuildNumber >= 20348U)
+		return "Server 2022"; // Server 2022 LTSC
+
+	if (dwBuildNumber >= 19042U)
+		return "Server, version 20H2"; // SAC release
+	if (dwBuildNumber >= 19041U)
+		return "Server, version 2004"; // SAC release
+	if (dwBuildNumber >= 18363U)
+		return "Server, version 1909"; // SAC release
+	if (dwBuildNumber >= 18362U)
+		return "Server, version 1903"; // SAC release
+
+	if (dwBuildNumber >= 17763U)
+		return "Server 2019"; // Server, version 1809
+
+	if (dwBuildNumber >= 17134U)
+		return "Server, version 1803"; // SAC release
+	if (dwBuildNumber >= 16299U)
+		return "Server, version 1709"; // SAC release
+
+	if (dwBuildNumber >= 14393U)
+		return "Server 2016"; // Server 2016 LTSC
+
 	return "Server 2016";
 }
 
