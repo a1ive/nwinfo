@@ -17,6 +17,15 @@
 * Gathers information directly without relying on WMI.
 * Compatible with Windows XP.
 
+> [!WARNING]
+>
+> This application uses the `HwRwDrv` / `WinRing0` driver, which is known for security vulnerabilities.
+>
+> *   It may be flagged as malware by your antivirus.
+> *   It can be detected by anti-cheat software, potentially leading to an account ban in online games.
+>
+> If you have any concerns, feel free to delete the driver file. This may disable some program functionality.
+
 ## GUI Preview
 
 <div align="center">
