@@ -9,6 +9,7 @@
 #include "lang/it_IT.h"
 #include "lang/ja_JP.h"
 #include "lang/ko_KR.h"
+#include "lang/pl_PL.h"
 #include "lang/sv_SE.h"
 #include "lang/tr_TR.h"
 #include "lang/zh_CN.h"
@@ -42,6 +43,9 @@ N_(GETTEXT_STR_ID id)
 		break;
 	case 1042: // Korean
 		str = lang_ko_kr[id];
+		break;
+	case 1045: // Polish
+		str = lang_pl_pl[id];
 		break;
 	case 1053: // Swedish
 		str = lang_sv_se[id];
