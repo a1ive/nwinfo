@@ -81,7 +81,7 @@ try {
 	# Execute nwinfo and capture its output as UTF-8
 	Log-Message "Executing nwinfo..."
 	$psi = New-Object System.Diagnostics.ProcessStartInfo
-	$psi.FileName = $programPath
+	$psi.FileName = (Resolve-Path $programPath).Path
 	$psi.Arguments = $programArgs -join " "
 	$psi.RedirectStandardOutput = $true
 	$psi.UseShellExecute = $false
@@ -198,7 +198,7 @@ try {
 			$outputText += "`t`t$($diskTable.'Serial Number')"
 		}
 		if ($null -ne $diskTable.'Health Status') {
-			$outputText += "`t`t$($diskTable.'Temperature (C)')°C $($diskTable.'Health Status')"
+			$outputText += "`t`t$($diskTable.'Temperature (C)')$([char]0xB0)C $($diskTable.'Health Status')"
 		}
 	}
 
