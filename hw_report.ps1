@@ -1,4 +1,4 @@
-﻿#
+#
 # SPDX-License-Identifier: Unlicense
 
 # Set the working directory to the script's location
@@ -14,9 +14,12 @@ if (!([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]
 Add-Type -AssemblyName System.Windows.Forms
 
 # Hide the powershell window: https://stackoverflow.com/a/27992426/1069307
-Add-Type -Name Window -Namespace WinAPI -MemberDefinition '
-	[DllImport("user32.dll")]
-	public static extern bool ShowWindow(int handle, int state);'
+if (-not ("WinAPI.Window" -as [type])) {
+	Add-Type -Name Window -Namespace WinAPI -MemberDefinition @'
+		[DllImport("user32.dll")]
+		public static extern bool ShowWindow(int handle, int state);
+'@
+}
 $handle = (Get-Process -Id $PID).MainWindowHandle
 [WinAPI.Window]::ShowWindow($handle, 0)
 
@@ -75,15 +78,21 @@ try {
 		"--audio"
 		)
 	Log-Message "Defining arguments $programArgs..."
-	# Execute nwinfo and capture its output
+	# Execute nwinfo and capture its output as UTF-8
 	Log-Message "Executing nwinfo..."
-	$processOutput = & $programPath $programArgs
+	$psi = New-Object System.Diagnostics.ProcessStartInfo
+	$psi.FileName = $programPath
+	$psi.Arguments = $programArgs -join " "
+	$psi.RedirectStandardOutput = $true
+	$psi.UseShellExecute = $false
+	$psi.StandardOutputEncoding = [System.Text.Encoding]::UTF8
 
-	# Ensure the output is UTF-8 encoded
-	# [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+	$proc = [System.Diagnostics.Process]::Start($psi)
+	$processOutput = $proc.StandardOutput.ReadToEnd()
+	$proc.WaitForExit()
+
 	Log-Message "Processing nwinfo output..."
-	$utf8Bytes = [System.Text.Encoding]::Default.GetBytes($processOutput)
-	$utf8Json = [System.Text.Encoding]::UTF8.GetString($utf8Bytes)
+	$utf8Json = $processOutput
 
 	# Parse the JSON output into a PowerShell object
 	Log-Message "Parsing JSON..."
