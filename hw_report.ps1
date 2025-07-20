@@ -1,3 +1,4 @@
+#
 # SPDX-License-Identifier: Unlicense
 
 # Set the working directory to the script's location
@@ -63,8 +64,7 @@ try {
 	$mainIcon = [System.Drawing.Icon]::ExtractAssociatedIcon((Resolve-Path $programPath).Path)
 
 	# Define arguments to pass to the nwinfo executable
-	$programArgs = @(
-		"--format=json",
+	$programArgs = @("--format=json",
 		"--cp=utf8",
 		"--human",
 		"--sys",
@@ -76,9 +76,8 @@ try {
 		"--net=phys",
 		"--disk=phys",
 		"--audio"
-	)
+		)
 	Log-Message "Defining arguments $programArgs..."
-
 	# Execute nwinfo and capture its output as UTF-8
 	Log-Message "Executing nwinfo..."
 	$psi = New-Object System.Diagnostics.ProcessStartInfo
@@ -217,6 +216,8 @@ try {
 }
 
 $logForm.Close()
+
+# Write-Output $outputText
 
 # Create a window to display the report
 $mainForm = New-Object System.Windows.Forms.Form
