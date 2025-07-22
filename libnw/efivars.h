@@ -173,6 +173,33 @@ typedef struct _EFI_LOAD_OPTION
 	// UINT8 OptionalData[];
 } EFI_LOAD_OPTION;
 
+typedef struct _EFI_BOOT_KEY_DATA
+{
+	UINT32 Revision : 8;
+	UINT32 ShiftPressed : 1;
+	UINT32 ControlPressed : 1;
+	UINT32 AltPressed : 1;
+	UINT32 LogoPressed : 1;
+	UINT32 MenuPressed : 1;
+	UINT32 SysReqPressed : 1;
+	UINT32 Reserved : 16;
+	UINT32 InputKeyCount : 2;
+} EFI_BOOT_KEY_DATA;
+
+typedef struct _EFI_INPUT_KEY
+{
+	UINT16 ScanCode;
+	CHAR16 UnicodeChar;
+} EFI_INPUT_KEY;
+
+typedef struct _EFI_KEY_OPTION
+{
+	EFI_BOOT_KEY_DATA KeyData;
+	UINT32 BootOptionCrc;
+	UINT16 BootOption;
+	EFI_INPUT_KEY Keys[];
+} EFI_KEY_OPTION;
+
 #pragma pack()
 
 #define END_ENTIRE_DEVICE_PATH_SUBTYPE    0xFF

@@ -120,6 +120,57 @@ out:
 		free(BootOrderStr);
 }
 
+static void PrintKeyOption(PNODE node, EFI_KEY_OPTION* option, DWORD size)
+{
+	char* mod_key = NULL;
+	if (size < sizeof(EFI_KEY_OPTION))
+		return;
+	if (size < sizeof(EFI_KEY_OPTION) + option->KeyData.InputKeyCount * sizeof(EFI_INPUT_KEY))
+		return;
+	NWL_NodeAttrSetf(node, "Revision", NAFLG_FMT_NUMERIC, "%u", (unsigned)option->KeyData.Revision);
+	if (option->KeyData.ControlPressed)
+		NWL_NodeAppendMultiSz(&mod_key, "Ctrl");
+	if (option->KeyData.AltPressed)
+		NWL_NodeAppendMultiSz(&mod_key, "Alt");
+	if (option->KeyData.LogoPressed)
+		NWL_NodeAppendMultiSz(&mod_key, "Logo");
+	if (option->KeyData.MenuPressed)
+		NWL_NodeAppendMultiSz(&mod_key, "Menu");
+	if (option->KeyData.SysReqPressed)
+		NWL_NodeAppendMultiSz(&mod_key, "SysReq");
+	NWL_NodeAttrSetMulti(node, "Modifier Keys", mod_key, 0);
+	free(mod_key);
+	NWL_NodeAttrSetf(node, "Key Count", NAFLG_FMT_NUMERIC, "%u", (unsigned)option->KeyData.InputKeyCount);
+	NWL_NodeAttrSetf(node, "Boot Option", 0, "%04X", option->BootOption);
+	for (DWORD i = 0; i < option->KeyData.InputKeyCount; i++)
+	{
+		char key_name[16];
+		snprintf(key_name, sizeof(key_name), "Key %u", i);
+		PNODE nk = NWL_NodeAppendNew(node, key_name, NFLG_ATTGROUP);
+		NWL_NodeAttrSetf(nk, "Scan Code", 0, "0x%04X", option->Keys[i].ScanCode);
+		NWL_NodeAttrSetf(nk, "Unicode Char", 0, "%lc", option->Keys[i].UnicodeChar);
+	}
+}
+
+static void PrintEfiKeyOption(PNODE node, LPGUID guid, WCHAR* name)
+{
+	PNODE nb = NULL;
+	EFI_KEY_OPTION* option = NULL;
+	DWORD size = 0;
+	if (memcmp(guid, &EFI_GV_GUID, sizeof(GUID)) != 0)
+		return;
+	if (name[0] != L'K' || name[1] != L'e' || name[2] != L'y' ||
+		!iswxdigit(name[3]) || !iswxdigit(name[4]) || !iswxdigit(name[5]) || !iswxdigit(name[6]) ||
+		name[7] != L'\0')
+		return;
+	nb = NWL_NodeAppendNew(node, NWL_Ucs2ToUtf8(name), NFLG_ATTGROUP);
+	option = NWL_GetEfiVarAlloc(name, guid, &size, NULL);
+	if (!option)
+		return;
+	PrintKeyOption(nb, option, size);
+	free(option);
+}
+
 static void PrintLoadOption(PNODE node, EFI_LOAD_OPTION* option, DWORD size)
 {
 	EFI_DEVICE_PATH* dp = NULL;
@@ -203,6 +254,8 @@ static void PrintBootXXXX(PNODE node)
 {
 	PNODE nv = NWL_NodeAppendNew(node, "Boot Menu", 0);
 	EnumEfiVars(nv, PrintEfiBootOption);
+	PNODE nk = NWL_NodeAppendNew(node, "Hot Keys", 0);
+	EnumEfiVars(nk, PrintEfiKeyOption);
 }
 
 static void PrintEfiVars(PNODE node)
