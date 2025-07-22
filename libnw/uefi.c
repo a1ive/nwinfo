@@ -152,25 +152,6 @@ static void PrintKeyOption(PNODE node, EFI_KEY_OPTION* option, DWORD size)
 	}
 }
 
-static void PrintEfiKeyOption(PNODE node, LPGUID guid, WCHAR* name)
-{
-	PNODE nb = NULL;
-	EFI_KEY_OPTION* option = NULL;
-	DWORD size = 0;
-	if (memcmp(guid, &EFI_GV_GUID, sizeof(GUID)) != 0)
-		return;
-	if (name[0] != L'K' || name[1] != L'e' || name[2] != L'y' ||
-		!iswxdigit(name[3]) || !iswxdigit(name[4]) || !iswxdigit(name[5]) || !iswxdigit(name[6]) ||
-		name[7] != L'\0')
-		return;
-	nb = NWL_NodeAppendNew(node, NWL_Ucs2ToUtf8(name), NFLG_ATTGROUP);
-	option = NWL_GetEfiVarAlloc(name, guid, &size, NULL);
-	if (!option)
-		return;
-	PrintKeyOption(nb, option, size);
-	free(option);
-}
-
 static void PrintLoadOption(PNODE node, EFI_LOAD_OPTION* option, DWORD size)
 {
 	EFI_DEVICE_PATH* dp = NULL;
@@ -201,27 +182,69 @@ static void PrintLoadOption(PNODE node, EFI_LOAD_OPTION* option, DWORD size)
 	free(dp_str);
 }
 
-static void PrintEfiBootOption(PNODE node, LPGUID guid, WCHAR* name)
+typedef struct _BOOT_MENU_CTX
 {
-	PNODE nb = NULL;
-	EFI_LOAD_OPTION* option = NULL;
-	DWORD size = 0;
-	if (memcmp(guid, &EFI_GV_GUID, sizeof(GUID)) != 0)
-		return;
-	if (name[0] != L'B' || name[1] != L'o' || name[2] != L'o' || name[3] != L't' ||
-		!iswxdigit(name[4]) || !iswxdigit(name[5]) || !iswxdigit(name[6]) || !iswxdigit(name[7]) ||
-		name[8] != L'\0')
-		return;
-	nb = NWL_NodeAppendNew(node, NWL_Ucs2ToUtf8(name), NFLG_ATTGROUP);
-	option = NWL_GetEfiVarAlloc(name, guid, &size, NULL);
-	if (!option)
-		return;
-	PrintLoadOption(nb, option, size);
-	free(option);
+	PNODE nb;
+	PNODE nd;
+	PNODE nk;
+} BOOT_MENU_CTX;
+
+static inline BOOL
+IsBootEntry(LPCWSTR prefix, LPCWSTR name)
+{
+	const size_t prefix_len = wcslen(prefix);
+	const size_t name_len = wcslen(name);
+	if (name_len != prefix_len + 4)
+		return FALSE;
+	if (_wcsnicmp(prefix, name, prefix_len) != 0)
+		return FALSE;
+	for (int i = 0; i < 4; ++i)
+	{
+		if (!iswxdigit(name[prefix_len + i]))
+			return FALSE;
+	}
+	return TRUE;
 }
 
-static void PrintEfiVarAndSize(PNODE node, LPGUID guid, WCHAR* name)
+static void PrintEfiBootMenu(void* ctx, LPGUID guid, WCHAR* name)
 {
+	BOOT_MENU_CTX* nodes = (BOOT_MENU_CTX*)ctx;
+	DWORD size = 0;
+	PNODE cur = NULL;
+	if (memcmp(guid, &EFI_GV_GUID, sizeof(GUID)) != 0)
+		return;
+	if (IsBootEntry(L"Boot", name))
+	{
+		EFI_LOAD_OPTION* option = NWL_GetEfiVarAlloc(name, guid, &size, NULL);
+		if (!option)
+			return;
+		cur = NWL_NodeAppendNew(nodes->nb, NWL_Ucs2ToUtf8(name), NFLG_ATTGROUP);
+		PrintLoadOption(cur, option, size);
+		free(option);
+	}
+	else if (IsBootEntry(L"Driver", name))
+	{
+		EFI_LOAD_OPTION* option = NWL_GetEfiVarAlloc(name, guid, &size, NULL);
+		if (!option)
+			return;
+		cur = NWL_NodeAppendNew(nodes->nd, NWL_Ucs2ToUtf8(name), NFLG_ATTGROUP);
+		PrintLoadOption(cur, option, size);
+		free(option);
+	}
+	else if (IsBootEntry(L"Key", name))
+	{
+		EFI_KEY_OPTION* option = NWL_GetEfiVarAlloc(name, guid, &size, NULL);
+		if (!option)
+			return;
+		cur = NWL_NodeAppendNew(nodes->nk, NWL_Ucs2ToUtf8(name), NFLG_ATTGROUP);
+		PrintKeyOption(cur, option, size);
+		free(option);
+	}
+}
+
+static void PrintEfiVarAndSize(void* ctx, LPGUID guid, WCHAR* name)
+{
+	PNODE node = (PNODE)ctx;
 	DWORD VarSize = 0;
 	LPCSTR lpszGuid = NWL_WinGuidToStr(TRUE, guid);
 	PNODE ng = NWL_NodeGetChild(node, lpszGuid);
@@ -231,7 +254,7 @@ static void PrintEfiVarAndSize(PNODE node, LPGUID guid, WCHAR* name)
 	NWL_NodeAttrSetf(ng, NWL_Ucs2ToUtf8(name), NAFLG_FMT_NUMERIC, "%lu", VarSize);
 }
 
-static void EnumEfiVars(PNODE node, void (*func)(PNODE node, LPGUID guid, WCHAR* name))
+static void EnumEfiVars(void* ctx, void (*func)(void* ctx, LPGUID guid, WCHAR* name))
 {
 	PVARIABLE_NAME VarNamePtr = NULL;
 	PVARIABLE_NAME p;
@@ -243,19 +266,20 @@ static void EnumEfiVars(PNODE node, void (*func)(PNODE node, LPGUID guid, WCHAR*
 		((LPBYTE)p < (LPBYTE)VarNamePtr + VarNameSize);
 		p = (PVARIABLE_NAME)((LPBYTE)p + p->NextEntryOffset))
 	{
-		func(node, &p->VendorGuid, p->Name);
+		func(ctx, &p->VendorGuid, p->Name);
 		if (p->NextEntryOffset == 0)
 			break;
 	}
 	free(VarNamePtr);
 }
 
-static void PrintBootXXXX(PNODE node)
+static void PrintXXXX(PNODE node)
 {
-	PNODE nv = NWL_NodeAppendNew(node, "Boot Menu", 0);
-	EnumEfiVars(nv, PrintEfiBootOption);
-	PNODE nk = NWL_NodeAppendNew(node, "Hot Keys", 0);
-	EnumEfiVars(nk, PrintEfiKeyOption);
+	BOOT_MENU_CTX ctx = { 0 };
+	ctx.nb = NWL_NodeAppendNew(node, "Boot Menu", 0);
+	ctx.nd = NWL_NodeAppendNew(node, "Driver Menu", 0);
+	ctx.nk = NWL_NodeAppendNew(node, "Hot Keys", 0);
+	EnumEfiVars(&ctx, PrintEfiBootMenu);
 }
 
 static void PrintEfiVars(PNODE node)
@@ -279,6 +303,6 @@ PNODE NW_Uefi(VOID)
 	if (NWLC->UefiFlags & NW_UEFI_VARS)
 		PrintEfiVars(node);
 	if (NWLC->UefiFlags & NW_UEFI_MENU)
-		PrintBootXXXX(node);
+		PrintXXXX(node);
 	return node;
 }
