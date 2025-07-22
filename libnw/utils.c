@@ -191,17 +191,17 @@ NWL_GetSmbios(void)
 	return smBiosData;
 }
 
-static struct acpi_rsdp_v2*
-NWL_GetRsdpHelper(struct acpi_rsdp_v2* ptr, DWORD_PTR addr)
+static ACPI_RSDP_V2*
+NWL_GetRsdpHelper(ACPI_RSDP_V2* ptr, DWORD_PTR addr)
 {
 	UINT32 len;
-	struct acpi_rsdp_v2* ret = NULL;
-	if (ptr->rsdpv1.revision == 0)
-		len = sizeof(struct acpi_rsdp_v1);
-	else if (ptr->length > sizeof(struct acpi_rsdp_v2))
-		len = ptr->length;
+	ACPI_RSDP_V2* ret = NULL;
+	if (ptr->RsdpV1.Revision == 0)
+		len = sizeof(ACPI_RSDP_V1);
+	else if (ptr->Length > sizeof(ACPI_RSDP_V2))
+		len = ptr->Length;
 	else
-		len = sizeof(struct acpi_rsdp_v2);
+		len = sizeof(ACPI_RSDP_V2);
 
 	ret = calloc(1, len);
 	if (!ret)
@@ -214,10 +214,10 @@ NWL_GetRsdpHelper(struct acpi_rsdp_v2* ptr, DWORD_PTR addr)
 	return ret;
 }
 
-struct acpi_rsdp_v2 *
+ACPI_RSDP_V2*
 NWL_GetRsdp(VOID)
 {
-	struct acpi_rsdp_v2* ret = NULL;
+	ACPI_RSDP_V2* ret = NULL;
 	UCHAR* ptr = NULL;
 	UCHAR* bios = NULL;
 	bios = malloc(0x20000);
@@ -229,9 +229,9 @@ NWL_GetRsdp(VOID)
 	for (ptr = bios; ptr < bios + 0x10000; ptr += 16)
 	{
 		if (memcmp(ptr, RSDP_SIGNATURE, RSDP_SIGNATURE_SIZE) == 0
-			&& NWL_AcpiChecksum(ptr, sizeof(struct acpi_rsdp_v1)) == 0)
+			&& NWL_AcpiChecksum(ptr, sizeof(ACPI_RSDP_V1)) == 0)
 		{
-			ret = NWL_GetRsdpHelper((struct acpi_rsdp_v2*)ptr, 0x80000 + (ptr - bios));
+			ret = NWL_GetRsdpHelper((ACPI_RSDP_V2*)ptr, 0x80000 + (ptr - bios));
 			goto out;
 		}
 	}
@@ -241,9 +241,9 @@ NWL_GetRsdp(VOID)
 	for (ptr = bios; ptr < bios + 0x20000; ptr += 16)
 	{
 		if (memcmp(ptr, RSDP_SIGNATURE, RSDP_SIGNATURE_SIZE) == 0
-			&& NWL_AcpiChecksum(ptr, sizeof(struct acpi_rsdp_v1)) == 0)
+			&& NWL_AcpiChecksum(ptr, sizeof(ACPI_RSDP_V1)) == 0)
 		{
-			ret = NWL_GetRsdpHelper((struct acpi_rsdp_v2*)ptr, 0xE0000 + (ptr - bios));
+			ret = NWL_GetRsdpHelper((ACPI_RSDP_V2*)ptr, 0xE0000 + (ptr - bios));
 			goto out;
 		}
 	}
@@ -266,21 +266,21 @@ static PVOID NWL_GetSysAcpi(DWORD TableId)
 	return pFirmwareTableBuffer;
 }
 
-struct acpi_rsdt *
+ACPI_RSDT *
 NWL_GetRsdt(VOID)
 {
-	struct acpi_rsdt tmp;
-	struct acpi_rsdt* ret = NULL;
+	ACPI_RSDT tmp;
+	ACPI_RSDT* ret = NULL;
 	if (!NWLC->NwRsdp)
 		return NWL_GetSysAcpi('TDSR');
-	if (!NWL_ReadMemory(&tmp, NWLC->NwRsdp->rsdpv1.rsdt_addr, sizeof(struct acpi_rsdt)))
+	if (!NWL_ReadMemory(&tmp, NWLC->NwRsdp->RsdpV1.RsdtAddr, sizeof(ACPI_RSDT)))
 		return NWL_GetSysAcpi('TDSR');
-	if (tmp.header.length < sizeof(struct acpi_table_header))
-		tmp.header.length = sizeof(struct acpi_table_header);
-	ret = malloc(tmp.header.length);
+	if (tmp.Header.Length < sizeof(DESC_HEADER))
+		tmp.Header.Length = sizeof(DESC_HEADER);
+	ret = malloc(tmp.Header.Length);
 	if (!ret)
 		return NWL_GetSysAcpi('TDSR');
-	if (!NWL_ReadMemory(ret, NWLC->NwRsdp->rsdpv1.rsdt_addr, tmp.header.length))
+	if (!NWL_ReadMemory(ret, NWLC->NwRsdp->RsdpV1.RsdtAddr, tmp.Header.Length))
 	{
 		free(ret);
 		return NULL;
@@ -288,23 +288,23 @@ NWL_GetRsdt(VOID)
 	return ret;
 }
 
-struct acpi_xsdt *
+ACPI_XSDT *
 NWL_GetXsdt(VOID)
 {
-	struct acpi_xsdt tmp;
-	struct acpi_xsdt* ret = NULL;
+	ACPI_XSDT tmp;
+	ACPI_XSDT* ret = NULL;
 	if (!NWLC->NwRsdp)
 		return NWL_GetSysAcpi('TDSX');
-	if (NWLC->NwRsdp->rsdpv1.revision == 0) // v1
+	if (NWLC->NwRsdp->RsdpV1.Revision == 0) // v1
 		return NULL;
-	if (!NWL_ReadMemory(&tmp, (DWORD_PTR)NWLC->NwRsdp->xsdt_addr, sizeof(struct acpi_xsdt)))
+	if (!NWL_ReadMemory(&tmp, (DWORD_PTR)NWLC->NwRsdp->XsdtAddr, sizeof(ACPI_XSDT)))
 		return NWL_GetSysAcpi('TDSX');
-	if (tmp.header.length < sizeof(struct acpi_table_header))
-		tmp.header.length = sizeof(struct acpi_table_header);
-	ret = malloc(tmp.header.length);
+	if (tmp.Header.Length < sizeof(DESC_HEADER))
+		tmp.Header.Length = sizeof(DESC_HEADER);
+	ret = malloc(tmp.Header.Length);
 	if (!ret)
 		return NWL_GetSysAcpi('TDSX');
-	if (!NWL_ReadMemory(ret, (DWORD_PTR)NWLC->NwRsdp->xsdt_addr, tmp.header.length))
+	if (!NWL_ReadMemory(ret, (DWORD_PTR)NWLC->NwRsdp->XsdtAddr, tmp.Header.Length))
 	{
 		free(ret);
 		return NULL;
@@ -324,17 +324,17 @@ PVOID NWL_GetAcpi(DWORD TableId)
 PVOID NWL_GetAcpiByAddr(DWORD_PTR Addr)
 {
 	PVOID ret;
-	struct acpi_table_header tmp;
+	DESC_HEADER tmp;
 	if (!Addr)
 		return NULL;
-	if (!NWL_ReadMemory(&tmp, Addr, sizeof(struct acpi_table_header)))
+	if (!NWL_ReadMemory(&tmp, Addr, sizeof(DESC_HEADER)))
 		return NULL;
-	if (tmp.length < sizeof(struct acpi_table_header))
-		tmp.length = sizeof(struct acpi_table_header);
-	ret = malloc(tmp.length);
+	if (tmp.Length < sizeof(DESC_HEADER))
+		tmp.Length = sizeof(DESC_HEADER);
+	ret = malloc(tmp.Length);
 	if (!ret)
 		return NULL;
-	if (!NWL_ReadMemory(ret, Addr, tmp.length))
+	if (!NWL_ReadMemory(ret, Addr, tmp.Length))
 	{
 		free(ret);
 		return NULL;

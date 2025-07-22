@@ -7,9 +7,11 @@
 #include "nt.h"
 
 struct RAW_SMBIOS_DATA;
-struct acpi_rsdp_v2;
-struct acpi_rsdt;
-struct acpi_xsdt;
+struct ACPI_RSDP_V2;
+struct ACPI_RSDT;
+struct ACPI_XSDT;
+struct ACPI_FADT;
+struct ACPI_FACS;
 
 BOOL NWL_IsAdmin(void);
 DWORD NWL_ObtainPrivileges(LPWSTR privilege);
@@ -23,9 +25,9 @@ UINT NWL_GetSystemFirmwareTable(DWORD FirmwareTableProviderSignature, DWORD Firm
 	PVOID pFirmwareTableBuffer, DWORD BufferSize);
 
 struct RAW_SMBIOS_DATA* NWL_GetSmbios(void);
-struct acpi_rsdp_v2* NWL_GetRsdp(VOID);
-struct acpi_rsdt* NWL_GetRsdt(VOID);
-struct acpi_xsdt* NWL_GetXsdt(VOID);
+struct ACPI_RSDP_V2* NWL_GetRsdp(VOID);
+struct ACPI_RSDT* NWL_GetRsdt(VOID);
+struct ACPI_XSDT* NWL_GetXsdt(VOID);
 PVOID NWL_GetAcpi(DWORD TableId);
 PVOID NWL_GetAcpiByAddr(DWORD_PTR Addr);
 

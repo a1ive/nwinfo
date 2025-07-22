@@ -18,10 +18,10 @@ extern "C" {
 #define NWINFO_BUFSZW (NWINFO_BUFSZ / sizeof(WCHAR))
 #define NWINFO_BUFSZB (NWINFO_BUFSZW * sizeof(WCHAR))
 
+struct ACPI_RSDP_V2;
+struct ACPI_RSDT;
+struct ACPI_XSDT;
 struct wr0_drv_t;
-struct acpi_rsdp_v2;
-struct acpi_rsdt;
-struct acpi_xsdt;
 struct _CDI_SMART;
 struct cpu_raw_data_array_t;
 struct system_id_t;
@@ -90,9 +90,9 @@ typedef struct _NWLIB_CONTEXT
 	struct cpu_raw_data_array_t* NwCpuRaw;
 	struct system_id_t* NwCpuid;
 
-	struct acpi_rsdp_v2* NwRsdp;
-	struct acpi_rsdt* NwRsdt;
-	struct acpi_xsdt* NwXsdt;
+	struct ACPI_RSDP_V2* NwRsdp;
+	struct ACPI_RSDT* NwRsdt;
+	struct ACPI_XSDT* NwXsdt;
 
 	struct RAW_SMBIOS_DATA* NwSmbios;
 	BOOL NwSmartInit;
