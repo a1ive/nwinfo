@@ -139,6 +139,7 @@ static PNODE PrintTableHeader(PNODE pNode, DESC_HEADER* Hdr)
 	NWL_NodeAttrSetf(tab, "OEM Revision", 0, "0x%lx", Hdr->OemRevision);
 	PrintU8Str(tab, "Creator ID", Hdr->CreatorId, 4);
 	NWL_NodeAttrSetf(tab, "Creator Revision", 0, "0x%x", Hdr->CreatorRevision);
+	NWL_NodeAttrSetRaw(tab, "Base64 Data", Hdr, (size_t)Hdr->Length, 0);
 	return tab;
 }
 

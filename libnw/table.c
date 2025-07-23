@@ -8,6 +8,7 @@
 #include <windows.h>
 #include "libnw.h"
 #include "utils.h"
+#include "base64.h"
 
 PNODE NWL_NodeAlloc(LPCSTR name, INT flags)
 {
@@ -418,4 +419,17 @@ VOID NWL_NodeAppendMultiSz(LPSTR* lpmszMulti, LPCSTR szNew)
 
 	// Repoint
 	*lpmszMulti = mszResult;
+}
+
+PNODE_ATT NWL_NodeAttrSetRaw(PNODE node, LPCSTR key, void* value, size_t len, INT flags)
+{
+	PNODE_ATT att = NULL;
+	char* base64 = NULL;
+	flags |= NAFLG_FMT_BASE64;
+	base64 = NWL_Base64Encode(value, len);
+	if (!base64)
+		NWL_ErrExit(ERROR_OUTOFMEMORY, "Failed to allocate memory in "__FUNCTION__);
+	att = NWL_NodeAttrSet(node, key, base64, flags);
+	free(base64);
+	return att;
 }

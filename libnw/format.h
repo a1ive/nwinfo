@@ -22,6 +22,7 @@
 
 #define NAFLG_FMT_IPADDR		(NAFLG_FMT_NEED_QUOTE | NAFLG_FMT_STRING)
 #define NAFLG_FMT_GUID			(NAFLG_FMT_NEED_QUOTE | NAFLG_FMT_STRING)
+#define NAFLG_FMT_BASE64		(NAFLG_FMT_NEED_QUOTE | NAFLG_FMT_STRING)
 
 #define NA_BOOL_TRUE			"Y"
 #define NA_BOOL_FALSE			"N"
@@ -74,3 +75,5 @@ NWL_NodeAttrSetf(PNODE node, LPCSTR key, INT flags, LPCSTR _Printf_format_string
 
 PNODE_ATT NWL_NodeAttrSetMulti(PNODE node, LPCSTR key, LPCSTR value, int flags);
 VOID NWL_NodeAppendMultiSz(LPSTR* lpmszMulti, LPCSTR szNew);
+
+PNODE_ATT NWL_NodeAttrSetRaw(PNODE node, LPCSTR key, void* value, size_t len, INT flags);
