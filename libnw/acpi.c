@@ -4,6 +4,9 @@
 #include "utils.h"
 #include "acpi.h"
 
+#define ACPI_FIELD_CHK(Hdr, Type, Field) \
+	((Hdr)->Length >= (offsetof(Type, Field) + sizeof(((Type *)0)->Field)))
+
 LPCSTR GetAcpiTableDescription(UINT32 dwSignature)
 {
 	switch (dwSignature)
@@ -123,6 +126,81 @@ PrintU8Str(PNODE pNode, LPCSTR Key, UINT8 *Str, DWORD Len)
 	NWL_NodeAttrSet(pNode, Key, NWLC->NwBuf, 0);
 }
 
+static LPCSTR
+AddrSpaceIdToStr(UINT8 SpaceId)
+{
+	switch (SpaceId)
+	{
+	case 0x00: return "MEM";
+	case 0x01: return "IO";
+	case 0x02: return "CFG";
+	case 0x03: return "EC";
+	case 0x04: return "SMBUS";
+	case 0x05: return "CMOS";
+	case 0x06: return "BAR";
+	case 0x07: return "IPMI";
+	case 0x08: return "GPIO";
+	case 0x09: return "SER";
+	case 0x0A: return "PCC";
+	case 0x7F: return "FFH";
+	}
+	if (SpaceId >= 0xC0 && SpaceId <= 0xFF)
+		return "OEM";
+	return "RSVD";
+}
+
+static LPCSTR
+AddrAccessSizeToStr(UINT8 AccessSize)
+{
+	switch (AccessSize)
+	{
+	case 0x00: return "UNDEF";
+	case 0x01: return "BYTE";
+	case 0x02: return "WORD";
+	case 0x03: return "DWORD";
+	case 0x04: return "QWORD";
+	}
+	return "RSVD";
+}
+
+static void
+PrintGenAddr(PNODE pNode, LPCSTR Key, GEN_ADDR* pAddr)
+{
+	switch (pAddr->AddressSpaceId)
+	{
+	case 2: // PCI Config Space
+	{
+		UINT16 device = (UINT16)((pAddr->Address >> 32) & 0xFFFF);
+		UINT16 function = (UINT16)((pAddr->Address >> 16) & 0xFFFF);
+		UINT16 offset = (UINT16)(pAddr->Address & 0xFFFF);
+		NWL_NodeAttrSetf(pNode, Key, 0, "CFG@S0.B0.D%u.F%u+%04Xh", device, function, offset);
+		break;
+	}
+	case 6: // PCI BAR Target
+	{
+		UINT8 segment = (UINT8)((pAddr->Address >> 56) & 0xFF);
+		UINT8 bus = (UINT8)((pAddr->Address >> 48) & 0xFF);
+		UINT8 device = (UINT8)((pAddr->Address >> 43) & 0x1F);
+		UINT8 function = (UINT8)((pAddr->Address >> 40) & 0x07);
+		UINT8 bar_index = (UINT8)((pAddr->Address >> 37) & 0x07);
+		UINT64 bar_offset = (pAddr->Address & 0x1FFFFFFFFFFULL) * 4;
+		NWL_NodeAttrSetf(pNode, Key, 0, "BAR@S%u.B%u.D%u.F%u-BAR%u+%llXh",
+			segment, bus, device, function, bar_index, bar_offset);
+		break;
+	}
+	default:
+	{
+		NWL_NodeAttrSetf(pNode, Key, 0, "%s@%0xllx,%u,0x%02x,%s",
+			AddrSpaceIdToStr(pAddr->AddressSpaceId),
+			(unsigned long long)pAddr->Address,
+			pAddr->RegisterBitWidth,
+			pAddr->RegisterBitOffset,
+			AddrAccessSizeToStr(pAddr->AccessSize));
+		break;
+	}
+	}
+}
+
 static PNODE PrintTableHeader(PNODE pNode, DESC_HEADER* Hdr)
 {
 	const UINT32 dwSignature = ACPI_SIG(Hdr->Signature[0], Hdr->Signature[1], Hdr->Signature[2], Hdr->Signature[3]);
@@ -139,52 +217,39 @@ static PNODE PrintTableHeader(PNODE pNode, DESC_HEADER* Hdr)
 	NWL_NodeAttrSetf(tab, "OEM Revision", 0, "0x%lx", Hdr->OemRevision);
 	PrintU8Str(tab, "Creator ID", Hdr->CreatorId, 4);
 	NWL_NodeAttrSetf(tab, "Creator Revision", 0, "0x%x", Hdr->CreatorRevision);
-	NWL_NodeAttrSetRaw(tab, "Base64 Data", Hdr, (size_t)Hdr->Length, 0);
+	//NWL_NodeAttrSetRaw(tab, "Base64 Data", Hdr, (size_t)Hdr->Length, 0);
 	return tab;
 }
 
-static void PrintTableInfo(PNODE pNode, DESC_HEADER* Hdr)
-{
-	PNODE tab = PrintTableHeader(pNode, Hdr);
-}
-
-static void
+static PNODE
 PrintXSDT(PNODE pNode, DESC_HEADER* Hdr)
 {
-	UINT32 i, count;
-	PNODE entries;
 	ACPI_XSDT* xsdt = (ACPI_XSDT*)Hdr;
-	PNODE tab = PrintTableHeader(pNode, Hdr);
-
-	count = (xsdt->Header.Length - sizeof(DESC_HEADER)) / sizeof(xsdt->Entry[0]);
-	entries = NWL_NodeAppendNew(tab, "Entries", NFLG_TABLE);
-	for (i = 0; i < count; i++)
+	UINT32 count = (xsdt->Header.Length - sizeof(DESC_HEADER)) / sizeof(xsdt->Entry[0]);
+	PNODE entries = NWL_NodeAppendNew(pNode, "Entries", NFLG_TABLE);
+	for (UINT32 i = 0; i < count; i++)
 	{
 		PNODE entry;
 		CHAR name[5];
-		DESC_HEADER *t = NWL_GetAcpiByAddr((DWORD_PTR)xsdt->Entry[i]);
+		DESC_HEADER* t = NWL_GetAcpiByAddr((DWORD_PTR)xsdt->Entry[i]);
 		if (!t)
 			continue;
 		snprintf(name, 5, "%c%c%c%c",
 			t->Signature[0], t->Signature[1], t->Signature[2], t->Signature[3]);
 		entry = NWL_NodeAppendNew(entries, name, NFLG_TABLE_ROW);
 		NWL_NodeAttrSetf(entry, "Address", 0, "0x%016llx", xsdt->Entry[i]);
-		PrintTableInfo(pNode, t);
 		free(t);
 	}
+	return pNode;
 }
 
-static void
+static PNODE
 PrintRSDT(PNODE pNode, DESC_HEADER* Hdr)
 {
-	UINT32 i, count;
-	PNODE entries;
 	ACPI_RSDT* rsdt = (ACPI_RSDT*)Hdr;
-	PNODE tab = PrintTableHeader(pNode, Hdr);
-
-	count = (rsdt->Header.Length - sizeof(DESC_HEADER)) / sizeof(rsdt->Entry[0]);
-	entries = NWL_NodeAppendNew(tab, "Entries", NFLG_TABLE);
-	for (i = 0; i < count; i++)
+	UINT32 count = (rsdt->Header.Length - sizeof(DESC_HEADER)) / sizeof(rsdt->Entry[0]);
+	PNODE entries = NWL_NodeAppendNew(pNode, "Entries", NFLG_TABLE);
+	for (UINT32 i = 0; i < count; i++)
 	{
 		PNODE entry;
 		CHAR name[5];
@@ -195,13 +260,17 @@ PrintRSDT(PNODE pNode, DESC_HEADER* Hdr)
 			t->Signature[0], t->Signature[1], t->Signature[2], t->Signature[3]);
 		entry = NWL_NodeAppendNew(entries, name, NFLG_TABLE_ROW);
 		NWL_NodeAttrSetf(entry, "Address", 0, "0x%08x", rsdt->Entry[i]);
-		PrintTableInfo(pNode, t);
 		free(t);
 	}
+	return pNode;
 }
 
-static void PrintRSDP(PNODE pNode, ACPI_RSDP_V2* rsdp)
+static PNODE
+PrintRSDP(PNODE pNode, ACPI_RSDP_V2* rsdp)
 {
+	if (NWLC->AcpiTable &&
+		NWLC->AcpiTable != ACPI_SIG('R', 'S', 'D', 'P'))
+		return NULL;
 	PNODE tab = NWL_NodeAppendNew(pNode, "Table", NFLG_TABLE_ROW);
 	PrintU8Str(tab, "Signature", rsdp->RsdpV1.Signature, RSDP_SIGNATURE_SIZE);
 	NWL_NodeAttrSet(tab, "Description", "Root System Description Pointer", 0);
@@ -212,36 +281,231 @@ static void PrintRSDP(PNODE pNode, ACPI_RSDP_V2* rsdp)
 	NWL_NodeAttrSetf(tab, "Revision", 0, "0x%02x", rsdp->RsdpV1.Revision);
 	NWL_NodeAttrSetf(tab, "RSDT Address", 0, "0x%08x", rsdp->RsdpV1.RsdtAddr);
 	if (rsdp->RsdpV1.Revision == 0)
-		return;
+		return tab;
 
 	NWL_NodeAttrSetf(tab, "Length", 0, "0x%x", rsdp->Length);
 	NWL_NodeAttrSetf(tab, "Checksum", 0, "0x%02x", rsdp->Checksum);
 	NWL_NodeAttrSet(tab, "Checksum Status",
 		NWL_AcpiChecksum(rsdp, rsdp->Length) == 0 ? "OK" : "ERR", 0);
 	NWL_NodeAttrSetf(tab, "XSDT Address", 0, "0x%016llx", rsdp->XsdtAddr);
+	return tab;
+}
+
+static PNODE
+PrintBGRT(PNODE pNode, DESC_HEADER* Hdr)
+{
+	ACPI_BGRT* bgrt = (ACPI_BGRT*)Hdr;
+	if (!ACPI_FIELD_CHK(Hdr, ACPI_BGRT, ImageOffsetY))
+		return pNode;
+	NWL_NodeAttrSetf(pNode, "BGRT Version", NAFLG_FMT_NUMERIC, "%u", bgrt->Version);
+	NWL_NodeAttrSet(pNode, "BGRT Status", (bgrt->Status & 0x01) ? "Valid" : "Invalid", 0);
+	NWL_NodeAttrSet(pNode, "Image Type", (bgrt->ImageType == 0) ? "Bitmap" : "Reserved", 0);
+	NWL_NodeAttrSetf(pNode, "Address", 0, "0x%llx", bgrt->ImageAddress);
+	NWL_NodeAttrSetf(pNode, "Offset X", NAFLG_FMT_NUMERIC, "%u", bgrt->ImageOffsetX);
+	NWL_NodeAttrSetf(pNode, "Offset Y", NAFLG_FMT_NUMERIC, "%u", bgrt->ImageOffsetY);
+	return pNode;
+}
+
+static const CHAR*
+PmProfileToStr(UINT8 profile)
+{
+	switch (profile)
+	{
+	case 0: return "Unspecified";
+	case 1: return "Desktop";
+	case 2: return "Mobile";
+	case 3: return "Workstation";
+	case 4: return "Enterprise Server";
+	case 5: return "SOHO Server";
+	case 6: return "Aplliance PC";
+	case 7: return "Performance Server";
+	case 8: return "Tablet";
+	}
+	return "Reserved";
+}
+
+static PNODE
+PrintFADT(PNODE pNode, DESC_HEADER* Hdr)
+{
+	ACPI_FADT* fadt = (ACPI_FADT*)Hdr;
+	if (ACPI_FIELD_CHK(Hdr, ACPI_FADT, FwCtrl))
+		NWL_NodeAttrSetf(pNode, "Firmware Control", 0, "0x%08X", fadt->FwCtrl);
+	if (ACPI_FIELD_CHK(Hdr, ACPI_FADT, DsdtAddr))
+		NWL_NodeAttrSetf(pNode, "DSDT Address", 0, "0x%08X", fadt->DsdtAddr);
+	if (ACPI_FIELD_CHK(Hdr, ACPI_FADT, PreferredPmProfile))
+		NWL_NodeAttrSet(pNode, "PM Profile", PmProfileToStr(fadt->PreferredPmProfile), 0);
+	if (ACPI_FIELD_CHK(Hdr, ACPI_FADT, SciInt))
+		NWL_NodeAttrSetf(pNode, "SCI Interrupt Vector", 0, "0x%04X", fadt->SciInt);
+	if (ACPI_FIELD_CHK(Hdr, ACPI_FADT, SmiCmd))
+		NWL_NodeAttrSetf(pNode, "SMI Command Port", 0, "0x%08X", fadt->SmiCmd);
+	if (ACPI_FIELD_CHK(Hdr, ACPI_FADT, AcpiEnable))
+		NWL_NodeAttrSetf(pNode, "ACPI Enable", 0, "0x%02X", fadt->AcpiEnable);
+	if (ACPI_FIELD_CHK(Hdr, ACPI_FADT, AcpiDisable))
+		NWL_NodeAttrSetf(pNode, "ACPI Disable", 0, "0x%02X", fadt->AcpiDisable);
+	if (ACPI_FIELD_CHK(Hdr, ACPI_FADT, S4BiosReq))
+		NWL_NodeAttrSetf(pNode, "S4 Request", 0, "0x%02X", fadt->S4BiosReq);
+	if (ACPI_FIELD_CHK(Hdr, ACPI_FADT, PstateCnt))
+		NWL_NodeAttrSetf(pNode, "PState Control", 0, "0x%02X", fadt->PstateCnt);
+	if (ACPI_FIELD_CHK(Hdr, ACPI_FADT, Pm1aEvtBlk))
+		NWL_NodeAttrSetf(pNode, "PM1a Event", 0, "0x%08X", fadt->Pm1aEvtBlk);
+	if (ACPI_FIELD_CHK(Hdr, ACPI_FADT, Pm1bEvtBlk))
+		NWL_NodeAttrSetf(pNode, "PM1b Event", 0, "0x%08X", fadt->Pm1bEvtBlk);
+	if (ACPI_FIELD_CHK(Hdr, ACPI_FADT, Pm1aCntBlk))
+		NWL_NodeAttrSetf(pNode, "PM1a Control", 0, "0x%08X", fadt->Pm1aCntBlk);
+	if (ACPI_FIELD_CHK(Hdr, ACPI_FADT, Pm1bCntBlk))
+		NWL_NodeAttrSetf(pNode, "PM1b Control", 0, "0x%08X", fadt->Pm1bCntBlk);
+	if (ACPI_FIELD_CHK(Hdr, ACPI_FADT, Pm2CntBlk))
+		NWL_NodeAttrSetf(pNode, "PM2 Control", 0, "0x%08X", fadt->Pm2CntBlk);
+	if (ACPI_FIELD_CHK(Hdr, ACPI_FADT, PmTmrBlk))
+		NWL_NodeAttrSetf(pNode, "PM Timer", 0, "0x%08X", fadt->PmTmrBlk);
+	if (ACPI_FIELD_CHK(Hdr, ACPI_FADT, Gpe0Blk))
+		NWL_NodeAttrSetf(pNode, "GPE0", 0, "0x%08X", fadt->Gpe0Blk);
+	if (ACPI_FIELD_CHK(Hdr, ACPI_FADT, Gpe1Blk))
+		NWL_NodeAttrSetf(pNode, "GPE1", 0, "0x%08X", fadt->Gpe1Blk);
+	if (ACPI_FIELD_CHK(Hdr, ACPI_FADT, Pm1EvtLen))
+		NWL_NodeAttrSetf(pNode, "PM1 Event Length", 0, "0x%02X", fadt->Pm1EvtLen);
+	if (ACPI_FIELD_CHK(Hdr, ACPI_FADT, Pm1CntLen))
+		NWL_NodeAttrSetf(pNode, "PM1 Control Length", 0, "0x%02X", fadt->Pm1CntLen);
+	if (ACPI_FIELD_CHK(Hdr, ACPI_FADT, Pm2CntLen))
+		NWL_NodeAttrSetf(pNode, "PM2 Control Length", 0, "0x%02X", fadt->Pm2CntLen);
+	if (ACPI_FIELD_CHK(Hdr, ACPI_FADT, PmTmrLen))
+		NWL_NodeAttrSetf(pNode, "PM Timer Length", 0, "0x%02X", fadt->PmTmrLen);
+	if (ACPI_FIELD_CHK(Hdr, ACPI_FADT, Gpe0BlkLen))
+		NWL_NodeAttrSetf(pNode, "GPE0 Block Length", 0, "0x%02X", fadt->Gpe0BlkLen);
+	if (ACPI_FIELD_CHK(Hdr, ACPI_FADT, Gpe1BlkLen))
+		NWL_NodeAttrSetf(pNode, "GPE1 Block Length", 0, "0x%02X", fadt->Gpe1BlkLen);
+	if (ACPI_FIELD_CHK(Hdr, ACPI_FADT, Gpe1Base))
+		NWL_NodeAttrSetf(pNode, "GPE1 Base", 0, "0x%02X", fadt->Gpe1Base);
+	if (ACPI_FIELD_CHK(Hdr, ACPI_FADT, CstCnt))
+		NWL_NodeAttrSetf(pNode, "CST Control", 0, "0x%02X", fadt->CstCnt);
+	if (ACPI_FIELD_CHK(Hdr, ACPI_FADT, PLvl2Lat))
+		NWL_NodeAttrSetf(pNode, "P-LVL2 Latency", 0, "0x%04X", fadt->PLvl2Lat);
+	if (ACPI_FIELD_CHK(Hdr, ACPI_FADT, PLvl3Lat))
+		NWL_NodeAttrSetf(pNode, "P-LVL3 Latency", 0, "0x%04X", fadt->PLvl3Lat);
+	if (ACPI_FIELD_CHK(Hdr, ACPI_FADT, FlushSize))
+		NWL_NodeAttrSetf(pNode, "Flush Size", 0, "0x%04X", fadt->FlushSize);
+	if (ACPI_FIELD_CHK(Hdr, ACPI_FADT, FlushStride))
+		NWL_NodeAttrSetf(pNode, "Flush Stride", 0, "0x%04X", fadt->FlushStride);
+	if (ACPI_FIELD_CHK(Hdr, ACPI_FADT, DutyOffset))
+		NWL_NodeAttrSetf(pNode, "Duty Offset", 0, "0x%02X", fadt->DutyOffset);
+	if (ACPI_FIELD_CHK(Hdr, ACPI_FADT, DutyWidth))
+		NWL_NodeAttrSetf(pNode, "Duty Width", 0, "0x%02X", fadt->DutyWidth);
+	if (ACPI_FIELD_CHK(Hdr, ACPI_FADT, DayAlrm))
+		NWL_NodeAttrSetf(pNode, "Day Alarm", 0, "0x%02X", fadt->DayAlrm);
+	if (ACPI_FIELD_CHK(Hdr, ACPI_FADT, MonAlrm))
+		NWL_NodeAttrSetf(pNode, "Month Alarm", 0, "0x%02X", fadt->MonAlrm);
+	if (ACPI_FIELD_CHK(Hdr, ACPI_FADT, Century))
+		NWL_NodeAttrSetf(pNode, "Century", 0, "0x%02X", fadt->Century);
+	if (ACPI_FIELD_CHK(Hdr, ACPI_FADT, IapcBootArch))
+		NWL_NodeAttrSetf(pNode, "IA-PC Boot Architecture Flags", 0, "0x%04X", fadt->IapcBootArch);
+	if (ACPI_FIELD_CHK(Hdr, ACPI_FADT, Flags))
+		NWL_NodeAttrSetf(pNode, "Flags", 0, "0x%08X", fadt->Flags);
+	if (ACPI_FIELD_CHK(Hdr, ACPI_FADT, ResetReg))
+		PrintGenAddr(pNode, "Reset Register", &fadt->ResetReg);
+	if (ACPI_FIELD_CHK(Hdr, ACPI_FADT, ResetValue))
+		NWL_NodeAttrSetf(pNode, "Reset Value", 0, "0x%02X", fadt->ResetValue);
+	if (ACPI_FIELD_CHK(Hdr, ACPI_FADT, ArmBootArch))
+		NWL_NodeAttrSetf(pNode, "ARM Boot Architecture Flags", 0, "0x%04X", fadt->ArmBootArch);
+	if (ACPI_FIELD_CHK(Hdr, ACPI_FADT, MinorVersion))
+		NWL_NodeAttrSetf(pNode, "FADT Minor Version", 0, "0x%02X", fadt->MinorVersion);
+	if (ACPI_FIELD_CHK(Hdr, ACPI_FADT, XFwCtrl))
+		NWL_NodeAttrSetf(pNode, "X Firmware Control", 0, "0x%016llX", fadt->XFwCtrl);
+	if (ACPI_FIELD_CHK(Hdr, ACPI_FADT, XDsdt))
+		NWL_NodeAttrSetf(pNode, "X DSDT Address", 0, "0x%016llX", fadt->XDsdt);
+	if (ACPI_FIELD_CHK(Hdr, ACPI_FADT, XPm1aEvtBlk))
+		PrintGenAddr(pNode, "X PM1a Event", &fadt->XPm1aEvtBlk);
+	if (ACPI_FIELD_CHK(Hdr, ACPI_FADT, XPm1bEvtBlk))
+		PrintGenAddr(pNode, "X PM1b Event", &fadt->XPm1bEvtBlk);
+	if (ACPI_FIELD_CHK(Hdr, ACPI_FADT, XPm1aCntBlk))
+		PrintGenAddr(pNode, "X PM1a Control", &fadt->XPm1aCntBlk);
+	if (ACPI_FIELD_CHK(Hdr, ACPI_FADT, XPm1bCntBlk))
+		PrintGenAddr(pNode, "X PM1b Control", &fadt->XPm1bCntBlk);
+	if (ACPI_FIELD_CHK(Hdr, ACPI_FADT, XPm2CntBlk))
+		PrintGenAddr(pNode, "X PM2 Control", &fadt->XPm2CntBlk);
+	if (ACPI_FIELD_CHK(Hdr, ACPI_FADT, XPmTmrBlk))
+		PrintGenAddr(pNode, "X PM Timer", &fadt->XPmTmrBlk);
+	if (ACPI_FIELD_CHK(Hdr, ACPI_FADT, XGpe0Blk))
+		PrintGenAddr(pNode, "X GPE0", &fadt->XGpe0Blk);
+	if (ACPI_FIELD_CHK(Hdr, ACPI_FADT, XGpe1Blk))
+		PrintGenAddr(pNode, "X GPE1", &fadt->XGpe1Blk);
+	if (ACPI_FIELD_CHK(Hdr, ACPI_FADT, SleepControlReg))
+		PrintGenAddr(pNode, "Sleep Control Register", &fadt->SleepControlReg);
+	if (ACPI_FIELD_CHK(Hdr, ACPI_FADT, SleepStatusReg))
+		PrintGenAddr(pNode, "Sleep Status Register", &fadt->SleepStatusReg);
+	if (ACPI_FIELD_CHK(Hdr, ACPI_FADT, HypervisorVendorId))
+		NWL_NodeAttrSetf(pNode, "Hypervisor Vendor ID", 0, "0x%016llX", fadt->HypervisorVendorId);
+	return pNode;
+}
+
+static PNODE
+PrintMADT(PNODE pNode, DESC_HEADER* Hdr)
+{
+	ACPI_MADT* madt = (ACPI_MADT*)Hdr;
+	if (!ACPI_FIELD_CHK(Hdr, ACPI_MADT, Flags))
+		return pNode;
+	NWL_NodeAttrSetf(pNode, "Local APIC Address", 0, "%08Xh", madt->LocalApicAddress);
+	NWL_NodeAttrSetBool(pNode, "PC-AT-compatible", madt->Flags & 0x01, 0);
+	// TODO: print interrupt controller structures
+	return pNode;
+}
+
+static PNODE
+PrintTableInfo(PNODE pNode, DESC_HEADER* Hdr)
+{
+	if (NWLC->AcpiTable &&
+		NWLC->AcpiTable != ACPI_SIG(Hdr->Signature[0], Hdr->Signature[1], Hdr->Signature[2], Hdr->Signature[3]))
+		return NULL;
+	if (!Hdr)
+		return NULL;
+	const UINT32 dwSignature = ACPI_SIG(Hdr->Signature[0], Hdr->Signature[1], Hdr->Signature[2], Hdr->Signature[3]);
+	PNODE tab = PrintTableHeader(pNode, Hdr);
+	switch (dwSignature)
+	{
+	case ACPI_SIG('A', 'P', 'I', 'C'): return PrintMADT(tab, Hdr);
+	case ACPI_SIG('B', 'G', 'R', 'T'): return PrintBGRT(tab, Hdr);
+	case ACPI_SIG('F', 'A', 'C', 'P'): return PrintFADT(tab, Hdr);
+	case ACPI_SIG('R', 'S', 'D', 'T'): return PrintRSDT(tab, Hdr);
+	case ACPI_SIG('X', 'S', 'D', 'T'): return PrintXSDT(tab, Hdr);
+	}
+	return tab;
 }
 
 // Reading from physical memory will be flagged by Windows Defender
 PNODE NW_Acpi(VOID)
 {
+	UINT32 i, count;
 	PNODE pNode = NWL_NodeAlloc("ACPI", NFLG_TABLE);
 	if (NWLC->AcpiInfo)
 		NWL_NodeAppendChild(NWLC->NwRoot, pNode);
-	if (NWLC->AcpiTable)
-	{
-		DESC_HEADER* AcpiHdr = NWL_GetAcpi(NWLC->AcpiTable);
-		if (AcpiHdr)
-		{
-			PrintTableInfo(pNode, AcpiHdr);
-			free(AcpiHdr);
-		}
-		return pNode;
-	}
 	if (NWLC->NwRsdp)
 		PrintRSDP(pNode, NWLC->NwRsdp);
 	if (NWLC->NwXsdt)
-		PrintXSDT(pNode, (DESC_HEADER*)NWLC->NwXsdt);
+	{
+		count = (NWLC->NwXsdt->Header.Length - sizeof(DESC_HEADER)) / sizeof(NWLC->NwXsdt->Entry[0]);
+		for (i = 0; i < count; i++)
+		{
+			DESC_HEADER* t = NWL_GetAcpiByAddr((DWORD_PTR)NWLC->NwXsdt->Entry[i]);
+			if (t)
+			{
+				PrintTableInfo(pNode, t);
+				free(t);
+			}
+		}
+	}
 	else if (NWLC->NwRsdt)
-		PrintRSDT(pNode, (DESC_HEADER*)NWLC->NwRsdt);
+	{
+		count = (NWLC->NwRsdt->Header.Length - sizeof(DESC_HEADER)) / sizeof(NWLC->NwRsdt->Entry[0]);
+		for (i = 0; i < count; i++)
+		{
+			DESC_HEADER* t = NWL_GetAcpiByAddr((DWORD_PTR)NWLC->NwRsdt->Entry[i]);
+			if (t)
+			{
+				PrintTableInfo(pNode, t);
+				free(t);
+			}
+		}
+	}
+	PrintTableInfo(pNode, (DESC_HEADER*)NWLC->NwRsdt);
+	PrintTableInfo(pNode, (DESC_HEADER*)NWLC->NwXsdt);
 	return pNode;
 }

@@ -1700,12 +1700,43 @@ typedef struct SDEV_SECURE_RESOURCE_MEMORY_ENTRY
 } SDEV_SECURE_RESOURCE_MEMORY_ENTRY;
 
 // SLIC: Microsoft Software Licensing Table (SLIC)
-typedef struct SLIC
+typedef struct ACPI_SLIC
 {
 	DESC_HEADER Header;
-	UINT8 PubKey[156];
-	UINT8 WindowsMarker[182];
-} SLIC;
+	// Public Key (156 Bytes)
+	// WindowsMarker (182 Bytes)
+} ACPI_SLIC;
+
+typedef struct SLIC_HEADER
+{
+	UINT32 Type; // 0 = Public Key, 1 = Marker
+	UINT32 Length;
+} SLIC_HEADER;
+
+typedef struct SLIC_PUBLIC_KEY
+{
+	SLIC_HEADER Header;
+	UINT8 KeyType;
+	UINT8 Version;
+	UINT16 Reserved;
+	UINT32 Algorithm;
+	UINT8 Magic[4];
+	UINT32 BitLength;
+	UINT32 Exponent;
+	UINT8 Modulus[128];
+} SLIC_PUBLIC_KEY;
+
+typedef struct SLIC_MARKER
+{
+	SLIC_HEADER Header;
+	UINT32 Version;
+	UINT8 OemId[6];
+	UINT8 OemTableId[8];
+	UINT8 WindowsFlag[8];
+	UINT32 SlicVersion;
+	UINT8 Reserved[16];
+	UINT8 Signature[128];
+} SLIC_MARKER;
 
 // SLIT: System Locality Distance Information Table (SLIT)
 typedef struct ACPI_SLIT
