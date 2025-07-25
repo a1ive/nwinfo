@@ -190,7 +190,7 @@ PrintGenAddr(PNODE pNode, LPCSTR Key, GEN_ADDR* pAddr)
 	}
 	default:
 	{
-		NWL_NodeAttrSetf(pNode, Key, 0, "%s@%0xllx,%u,0x%02x,%s",
+		NWL_NodeAttrSetf(pNode, Key, 0, "%s@0x%llx,%u,0x%02x,%s",
 			AddrSpaceIdToStr(pAddr->AddressSpaceId),
 			(unsigned long long)pAddr->Address,
 			pAddr->RegisterBitWidth,
@@ -209,7 +209,7 @@ static PNODE PrintTableHeader(PNODE pNode, DESC_HEADER* Hdr)
 	PrintU8Str(tab, "Signature", Hdr->Signature, 4);
 	NWL_NodeAttrSet(tab, "Description", GetAcpiTableDescription(dwSignature), 0);
 	NWL_NodeAttrSetf(tab, "Revision", 0, "0x%02x", Hdr->Revision);
-	NWL_NodeAttrSetf(tab, "Length", 0, "0x%x", Hdr->Length);
+	NWL_NodeAttrSetf(tab, "Length", NAFLG_FMT_NUMERIC, "%u", Hdr->Length);
 	NWL_NodeAttrSetf(tab, "Checksum", 0, "0x%02x", Hdr->Checksum);
 	NWL_NodeAttrSet(tab, "Checksum Status", NWL_AcpiChecksum(Hdr, Hdr->Length) == 0 ? "OK" : "ERR", 0);
 	PrintU8Str(tab, "OEM ID", Hdr->OemId, 6);
@@ -283,11 +283,42 @@ PrintRSDP(PNODE pNode, ACPI_RSDP_V2* rsdp)
 	if (rsdp->RsdpV1.Revision == 0)
 		return tab;
 
-	NWL_NodeAttrSetf(tab, "Length", 0, "0x%x", rsdp->Length);
+	NWL_NodeAttrSetf(tab, "Length", NAFLG_FMT_NUMERIC, "%u", rsdp->Length);
 	NWL_NodeAttrSetf(tab, "Checksum", 0, "0x%02x", rsdp->Checksum);
 	NWL_NodeAttrSet(tab, "Checksum Status",
 		NWL_AcpiChecksum(rsdp, rsdp->Length) == 0 ? "OK" : "ERR", 0);
 	NWL_NodeAttrSetf(tab, "XSDT Address", 0, "0x%016llx", rsdp->XsdtAddr);
+	return tab;
+}
+
+static PNODE
+PrintFACS(PNODE pNode)
+{
+	if (NWLC->AcpiTable &&
+		NWLC->AcpiTable != ACPI_SIG('F', 'A', 'C', 'S'))
+		return NULL;
+	DWORD dwSize, dwType;
+	ACPI_FACS* facs = NWL_NtGetRegValue(HKEY_LOCAL_MACHINE,
+		L"HARDWARE\\ACPI\\FACS", L"00000000", &dwSize, &dwType);
+	if (!facs)
+		return NULL;
+	if (dwType != REG_BINARY || dwSize < offsetof(ACPI_FACS, HwSignature)
+		|| !ACPI_FIELD_CHK(facs, ACPI_FACS, OspmFlags))
+	{
+		free(facs);
+		return NULL;
+	}
+	PNODE tab = NWL_NodeAppendNew(pNode, "Table", NFLG_TABLE_ROW);
+	PrintU8Str(tab, "Signature", facs->Signature, 4);
+	NWL_NodeAttrSetf(tab, "Length", NAFLG_FMT_NUMERIC, "%u", facs->Length);
+	NWL_NodeAttrSetf(tab, "Hardware Signature", 0, "0x%08X", facs->HwSignature);
+	NWL_NodeAttrSetf(tab, "Firmware Waking Vector", 0, "0x%08X", facs->FwWakingVector);
+	NWL_NodeAttrSetf(tab, "Global Lock", 0, "0x%08X", facs->GlobalLock);
+	NWL_NodeAttrSetBool(tab, "S4BIOS Support", (facs->Flags & 0x01), 0);
+	NWL_NodeAttrSetBool(tab, "64-bit Wake Support", (facs->Flags & 0x02), 0);
+	NWL_NodeAttrSetf(tab, "X Firmware Waking Vector", 0, "0x%016llx", facs->XFwWakingVector);
+	NWL_NodeAttrSetf(tab, "FACS Version", 0, "0x%02X", facs->Version);
+	NWL_NodeAttrSetBool(tab, "OSPM 64-bit Wake", (facs->OspmFlags & 0x01), 0);
 	return tab;
 }
 
@@ -507,5 +538,6 @@ PNODE NW_Acpi(VOID)
 	}
 	PrintTableInfo(pNode, (DESC_HEADER*)NWLC->NwRsdt);
 	PrintTableInfo(pNode, (DESC_HEADER*)NWLC->NwXsdt);
+	PrintFACS(pNode);
 	return pNode;
 }
