@@ -468,6 +468,34 @@ PrintFADT(PNODE pNode, DESC_HEADER* Hdr)
 	return pNode;
 }
 
+static void
+PrintInterruptFlags(PNODE node, UINT16 flags)
+{
+	const CHAR* polarity;
+	const CHAR* trigger;
+
+	// Decode Polarity (Bits 1:0)
+	switch (flags & 0x03)
+	{
+	case 0: polarity = "Conforms to bus spec"; break;
+	case 1: polarity = "Active-high"; break;
+	case 3: polarity = "Active-low"; break;
+	default: polarity = "Reserved"; break;
+	}
+
+	// Decode Trigger Mode (Bits 3:2)
+	switch ((flags >> 2) & 0x03)
+	{
+	case 0: trigger = "Conforms to bus spec"; break;
+	case 1: trigger = "Edge-triggered"; break;
+	case 3: trigger = "Level-triggered"; break;
+	default: trigger = "Reserved"; break;
+	}
+
+	NWL_NodeAttrSet(node, "Polarity", polarity, 0);
+	NWL_NodeAttrSet(node, "Trigger Mode", trigger, 0);
+}
+
 static PNODE
 PrintMADT(PNODE pNode, DESC_HEADER* Hdr)
 {
@@ -476,7 +504,106 @@ PrintMADT(PNODE pNode, DESC_HEADER* Hdr)
 		return pNode;
 	NWL_NodeAttrSetf(pNode, "Local APIC Address", 0, "%08Xh", madt->LocalApicAddress);
 	NWL_NodeAttrSetBool(pNode, "PC-AT-compatible", madt->Flags & 0x01, 0);
-	// TODO: print interrupt controller structures
+	PNODE entries = NWL_NodeAppendNew(pNode, "Interrupt Controller Structures", NFLG_TABLE);
+	APIC_HEADER* SubHdr = (APIC_HEADER*)((UINT8*)madt + sizeof(ACPI_MADT));
+	UINT8* End = (UINT8*)Hdr + Hdr->Length;
+
+	while ((UINT8*)SubHdr < End && SubHdr->Length > 0)
+	{
+		PNODE sub;
+		CHAR t[] = "FF";
+		sprintf_s(t, ARRAYSIZE(t), "%02X", SubHdr->Type);
+		sub = NWL_NodeAppendNew(entries, t, NFLG_TABLE_ROW);
+		switch (SubHdr->Type)
+		{
+		case ACPI_MADT_TYPE_PROCESSOR_LOCAL_APIC:
+		{
+			PROCESSOR_LOCAL_APIC* s = (PROCESSOR_LOCAL_APIC*)SubHdr;
+			NWL_NodeAttrSet(sub, "Type", "Local APIC", 0);
+			NWL_NodeAttrSetf(sub, "ACPI Processor UID", 0, "0x%02X", s->AcpiProcUid);
+			NWL_NodeAttrSetf(sub, "APIC ID", 0, "0x%02X", s->ApicId);
+			NWL_NodeAttrSetBool(sub, "Enabled", (s->Flags & 0x01), 0);
+			NWL_NodeAttrSetBool(sub, "Online Capable", (s->Flags & 2), 0);
+			break;
+		}
+		case ACPI_MADT_TYPE_IO_APIC:
+		{
+			IO_APIC* s = (IO_APIC*)SubHdr;
+			NWL_NodeAttrSet(sub, "Type", "I/O APIC", 0);
+			NWL_NodeAttrSetf(sub, "I/O APIC ID", 0, "0x%02X", s->IoApicId);
+			NWL_NodeAttrSetf(sub, "Address", 0, "0x%08X", s->IoApicAddr);
+			NWL_NodeAttrSetf(sub, "Global Interrupt Base", 0, "0x%08X", s->GlobalSystemInterruptBase);
+			break;
+		}
+		case ACPI_MADT_TYPE_INTERRUPT_SOURCE_OVERRIDE:
+		{
+			INTERRUPT_SOURCE_OVERRIDE* s = (INTERRUPT_SOURCE_OVERRIDE*)SubHdr;
+			NWL_NodeAttrSet(sub, "Type", "Interrupt Source Override", 0);
+			NWL_NodeAttrSetf(sub, "Bus Source", 0, "0x%02X", s->Bus);
+			NWL_NodeAttrSetf(sub, "IRQ Source", 0, "0x%02X", s->Source);
+			NWL_NodeAttrSetf(sub, "Global Interrupt", 0, "0x%08X", s->GlobalSysInt);
+			PrintInterruptFlags(sub, s->Flags);
+			break;
+		}
+		case ACPI_MADT_TYPE_NMI_SOURCE:
+		{
+			NMI_SOURCE* s = (NMI_SOURCE*)SubHdr;
+			NWL_NodeAttrSet(sub, "Type", "NMI Source", 0);
+			NWL_NodeAttrSetf(sub, "Global Interrupt", 0, "0x%08X", s->GlobalSysInt);
+			PrintInterruptFlags(sub, s->Flags);
+			break;
+		}
+		case ACPI_MADT_TYPE_LOCAL_APIC_NMI:
+		{
+			LOCAL_APIC_NMI* s = (LOCAL_APIC_NMI*)SubHdr;
+			NWL_NodeAttrSet(sub, "Type", "Local APIC NMI", 0);
+			NWL_NodeAttrSetf(sub, "ACPI Processor UID", 0, "0x%02X", s->AcpiProcUid);
+			NWL_NodeAttrSetf(sub, "LINT#", 0, "0x%02X", s->LocalApicLint);
+			PrintInterruptFlags(sub, s->Flags);
+			break;
+		}
+		case ACPI_MADT_TYPE_LOCAL_APIC_ADDR_OVERRIDE:
+		{
+			LOCAL_APIC_ADDR_OVERRIDE* s = (LOCAL_APIC_ADDR_OVERRIDE*)SubHdr;
+			NWL_NodeAttrSet(sub, "Type", "Local APIC Address Override", 0);
+			NWL_NodeAttrSetf(sub, "Address", 0, "0x%016llX", s->LocalApicAddr);
+			break;
+		}
+		case ACPI_MADT_TYPE_PROCESSOR_LOCAL_X2APIC:
+		{
+			PROCESSOR_LOCAL_X2APIC* s = (PROCESSOR_LOCAL_X2APIC*)SubHdr;
+			NWL_NodeAttrSet(sub, "Type", "Local x2APIC", 0);
+			NWL_NodeAttrSetf(sub, "x2APIC ID", 0, "0x%08X", s->X2ApicId);
+			NWL_NodeAttrSetf(sub, "ACPI Processor UID", 0, "0x%08X", s->AcpiProcUid);
+			NWL_NodeAttrSetBool(sub, "Enabled", (s->Flags & 0x01), 0);
+			NWL_NodeAttrSetBool(sub, "Online Capable", (s->Flags & 2), 0);
+			break;
+		}
+		case ACPI_MADT_TYPE_LOCAL_X2APIC_NMI:
+		{
+			LOCAL_X2APIC_NMI* s = (LOCAL_X2APIC_NMI*)SubHdr;
+			NWL_NodeAttrSet(sub, "Type", "Local x2APIC NMI", 0);
+			NWL_NodeAttrSetf(sub, "ACPI Processor UID", 0, "0x%08X", s->AcpiProcUid);
+			NWL_NodeAttrSetf(sub, "LINT#", 0, "0x%02X", s->LocalX2ApicLint);
+			PrintInterruptFlags(sub, s->Flags);
+			break;
+		}
+		case ACPI_MADT_TYPE_MULTIPROCESSOR_WAKEUP:
+		{
+			MULTIPROCESSOR_WAKEUP* s = (MULTIPROCESSOR_WAKEUP*)SubHdr;
+			NWL_NodeAttrSet(sub, "Type", "Multiprocessor Wakeup", 0);
+			NWL_NodeAttrSetf(sub, "Mailbox Address", 0, "0x%016llX", s->MailboxAddress);
+			NWL_NodeAttrSetf(sub, "Mailbox Version", 0, "0x%04X", s->MailboxVersion);
+			break;
+		}
+		default:
+			NWL_NodeAttrSetf(sub, "Type", 0, "0x%02X", SubHdr->Type);
+			NWL_NodeAttrSetf(sub, "Length", 0, "%u", SubHdr->Length);
+			break;
+		}
+		SubHdr = (APIC_HEADER*)((UINT8*)SubHdr + SubHdr->Length);
+	}
+
 	return pNode;
 }
 
