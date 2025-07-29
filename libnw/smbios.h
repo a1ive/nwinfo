@@ -505,6 +505,53 @@ typedef struct _TYPE_36_
 	UINT16 UpperNonRecoverable;
 } ManagementDeviceThreshold, * PManagementDeviceThreshold;
 
+typedef struct _TYPE_37_
+{
+	SMBIOSHEADER Header;
+	UINT8 ChannelType; // 01 - Other, 02 - Unknown, 03- Rambud, 04 - SyncLink
+	UINT8 MaxChannelLoad;
+	UINT8 DeviceCount;
+	struct _TYPE_37_DeviceInfo
+	{
+		UINT8 DeviceLoad;
+		UINT16 DeviceHandle;
+	} MemoryDevice[ANYSIZE_ARRAY];
+} MemoryChannel, * PMemoryChannel;
+
+typedef struct _TYPE_38_
+{
+	SMBIOSHEADER Header;
+	UINT8 IfType;
+	UINT8 SpecRevision;
+	UINT8 I2CTargetAddr;
+	UINT8 NVStorageDeviceAddr;
+	UINT64 BaseAddr;
+	union
+	{
+		UINT8 BaseAddrModifier;
+		UINT8 InterruptInfo;
+	} u;
+	UINT8 InterruptNum;
+} IPMIDevice, * PIPMIDevice;
+
+typedef struct _TYPE_39_
+{
+	SMBIOSHEADER Header;
+	UINT8 PowerUnitGroup;
+	UINT8 Location;
+	UINT8 DeviceName;
+	UINT8 Manufacturer;
+	UINT8 SerialNumber;
+	UINT8 AssetTag;
+	UINT8 ModelPartNumber;
+	UINT8 RevisionLevel;
+	UINT16 MaxPowerCapacity;
+	UINT16 PowerSupplyCharacteristics;
+	UINT16 InputVoltageProbeHandle;
+	UINT16 CoolingDeviceHandle;
+	UINT16 InputCurrentProbeHandle;
+} SysPowerSupply, * PSysPowerSupply;
+
 typedef struct _TYPE_40_
 {
 	SMBIOSHEADER Header;
@@ -521,6 +568,13 @@ typedef struct _TYPE_41_
 	UINT8 BusNum;
 	UINT8 DevFunNum;
 } OnBoardDevicesExtInfo, * POnBoardDevicesExtInfo;
+
+typedef struct _TYPE_42_
+{
+	SMBIOSHEADER Header;
+	UINT8 InterfaceType;
+	UINT8 InterfaceTypeSpecificDataLength;
+} MCHostInterface, * PMCHostInterface;
 
 typedef struct _TYPE_43_
 {

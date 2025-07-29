@@ -1710,6 +1710,152 @@ static void ProcManagementDeviceThreshold(PNODE tab, void* p)
 	NWL_NodeAttrSetf(tab, "Upper Threshold (Non-recoverable)", NAFLG_FMT_NUMERIC, "%u", pMgmtThres->UpperNonRecoverable);
 }
 
+static const CHAR*
+pMemoryChannelTypeToStr(UCHAR Type)
+{
+	switch (Type)
+	{
+	case 0x01: return "Other";
+	case 0x03: return "Rambus";
+	case 0x04: return "SyncLink";
+	}
+	return "Unknown";
+}
+
+static void ProcMemoryChannel(PNODE tab, void* p)
+{
+	PMemoryChannel pChan = (PMemoryChannel)p;
+	UINT i;
+	PNODE ndev;
+	NWL_NodeAttrSet(tab, "Description", "Memory Channel", 0);
+	if (pChan->Header.Length < 0x07)
+		return;
+	NWL_NodeAttrSet(tab, "Channel Type", pMemoryChannelTypeToStr(pChan->ChannelType), 0);
+	NWL_NodeAttrSetf(tab, "Max Channel Load", NAFLG_FMT_NUMERIC, "%u", pChan->MaxChannelLoad);
+	NWL_NodeAttrSetf(tab, "Number of Devices", NAFLG_FMT_NUMERIC, "%u", pChan->DeviceCount);
+
+	ndev = NWL_NodeAppendNew(tab, "Devices", NFLG_TABLE);
+	for (i = 0; i < pChan->DeviceCount; i++)
+	{
+		PNODE pNode = NWL_NodeAppendNew(ndev, "Device", NFLG_TABLE_ROW);
+		NWL_NodeAttrSetf(pNode, "Device Load", NAFLG_FMT_NUMERIC, "%u", pChan->MemoryDevice[i].DeviceLoad);
+		NWL_NodeAttrSetf(pNode, "Device Handle", NAFLG_FMT_NUMERIC, "%u", pChan->MemoryDevice[i].DeviceHandle);
+	}
+}
+
+static const CHAR*
+pIPMIInterfaceTypeToStr(UCHAR Type)
+{
+	switch (Type)
+	{
+	case 0x01: return "KCS";
+	case 0x02: return "SMIC";
+	case 0x03: return "BT";
+	case 0x04: return "SSIF";
+	}
+	return "Unknown";
+}
+
+static void ProcIPMIDevice(PNODE tab, void* p)
+{
+	PIPMIDevice pIPMI = (PIPMIDevice)p;
+	NWL_NodeAttrSet(tab, "Description", "IPMI Device Information", 0);
+	if (pIPMI->Header.Length < 0x10)
+		return;
+	NWL_NodeAttrSet(tab, "Interface Type", pIPMIInterfaceTypeToStr(pIPMI->IfType), 0);
+	NWL_NodeAttrSetf(tab, "Specification Revision", 0, "%u.%u", (pIPMI->SpecRevision >> 4) & 0x0f, pIPMI->SpecRevision & 0x0f);
+	NWL_NodeAttrSetf(tab, "I2C Target Address", 0, "%02Xh", pIPMI->I2CTargetAddr);
+	if (pIPMI->NVStorageDeviceAddr != 0xff)
+		NWL_NodeAttrSetf(tab, "NV Storage Device Address", 0, "%02Xh", pIPMI->NVStorageDeviceAddr);
+	NWL_NodeAttrSetf(tab, "Base Address", 0, "%s 0x%llX", (pIPMI->BaseAddr & 1) ? "I/O" : "Memory", pIPMI->BaseAddr & ~1ULL);
+	if (pIPMI->u.InterruptInfo & (1 << 3)) // Interrupt Info specified
+	{
+		NWL_NodeAttrSet(tab, "Interrupt Polarity", (pIPMI->u.InterruptInfo & (1 << 1)) ? "Active High" : "Active Low", 0);
+		NWL_NodeAttrSet(tab, "Interrupt Trigger Mode", (pIPMI->u.InterruptInfo & (1 << 0)) ? "Level" : "Edge", 0);
+	}
+	if (pIPMI->InterruptNum)
+		NWL_NodeAttrSetf(tab, "Interrupt Number", NAFLG_FMT_NUMERIC, "%u", pIPMI->InterruptNum);
+}
+
+static const CHAR*
+pPowerSupplyTypeToStr(UINT16 ch)
+{
+	switch ((ch >> 10) & 0x0f)
+	{
+	case 1: return "Other";
+	case 3: return "Linear";
+	case 4: return "Switching";
+	case 5: return "Battery";
+	case 6: return "UPS";
+	case 7: return "Converter";
+	case 8: return "Regulator";
+	}
+	return "Unknown";
+}
+
+static const CHAR*
+pPowerSupplyStatusToStr(UINT16 ch)
+{
+	switch ((ch >> 7) & 0x07)
+	{
+	case 1: return "Other";
+	case 3: return "OK";
+	case 4: return "Non-critical";
+	case 5: return "Critical";
+	}
+	return "Unknown";
+}
+
+static const CHAR*
+pPowerSupplyInputVoltageToStr(UINT16 ch)
+{
+	switch ((ch >> 3) & 0x0f)
+	{
+	case 1: return "Other";
+	case 3: return "Manual";
+	case 4: return "Auto-switch";
+	case 5: return "Wide range";
+	case 6: return "Not applicable";
+	}
+	return "Unknown";
+}
+
+static void ProcSysPowerSupply(PNODE tab, void* p)
+{
+	PSysPowerSupply pPower = (PSysPowerSupply)p;
+	NWL_NodeAttrSet(tab, "Description", "System Power Supply", 0);
+	if (pPower->Header.Length < 0x10)
+		return;
+
+	NWL_NodeAttrSetf(tab, "Power Unit Group", NAFLG_FMT_NUMERIC, "%u", pPower->PowerUnitGroup);
+	NWL_NodeAttrSet(tab, "Location", LocateString(p, pPower->Location), 0);
+	NWL_NodeAttrSet(tab, "Device Name", LocateString(p, pPower->DeviceName), 0);
+	NWL_NodeAttrSet(tab, "Manufacturer", LocateString(p, pPower->Manufacturer), 0);
+	NWL_NodeAttrSet(tab, "Serial Number", LocateString(p, pPower->SerialNumber), NAFLG_FMT_SENSITIVE);
+	NWL_NodeAttrSet(tab, "Asset Tag", LocateString(p, pPower->AssetTag), 0);
+	NWL_NodeAttrSet(tab, "Model Part Number", LocateString(p, pPower->ModelPartNumber), 0);
+	NWL_NodeAttrSet(tab, "Revision Level", LocateString(p, pPower->RevisionLevel), 0);
+	if (pPower->MaxPowerCapacity != 0x8000)
+		NWL_NodeAttrSetf(tab, "Max Power Capacity (W)", NAFLG_FMT_NUMERIC, "%u", pPower->MaxPowerCapacity);
+
+	if (pPower->Header.Length >= 0x10)
+	{
+		NWL_NodeAttrSet(tab, "Supply Type", pPowerSupplyTypeToStr(pPower->PowerSupplyCharacteristics), 0);
+		NWL_NodeAttrSet(tab, "Status", pPowerSupplyStatusToStr(pPower->PowerSupplyCharacteristics), 0);
+		NWL_NodeAttrSet(tab, "Input Voltage Range", pPowerSupplyInputVoltageToStr(pPower->PowerSupplyCharacteristics), 0);
+		NWL_NodeAttrSetBool(tab, "Unplugged", pPower->PowerSupplyCharacteristics & (1 << 2), 0);
+		NWL_NodeAttrSetBool(tab, "Present", pPower->PowerSupplyCharacteristics & (1 << 1), 0);
+		NWL_NodeAttrSetBool(tab, "Hot-replaceable", pPower->PowerSupplyCharacteristics & (1 << 0), 0);
+	}
+
+	if (pPower->Header.Length >= 0x12)
+		NWL_NodeAttrSetf(tab, "Input Voltage Probe Handle", NAFLG_FMT_NUMERIC, "%u", pPower->InputVoltageProbeHandle);
+	if (pPower->Header.Length >= 0x14)
+		NWL_NodeAttrSetf(tab, "Cooling Device Handle", NAFLG_FMT_NUMERIC, "%u", pPower->CoolingDeviceHandle);
+	if (pPower->Header.Length >= 0x16)
+		NWL_NodeAttrSetf(tab, "Input Current Probe Handle", NAFLG_FMT_NUMERIC, "%u", pPower->InputCurrentProbeHandle);
+}
+
 static void ProcAdditionalInfo(PNODE tab, void* p)
 {
 	PAdditionalInformation pInfo = (PAdditionalInformation)p;
@@ -1757,6 +1903,41 @@ static void ProcOnBoardDevicesExtInfo(PNODE tab, void* p)
 	NWL_NodeAttrSetf(tab, "Bus Number", NAFLG_FMT_NUMERIC, "%u", pDevInfo->BusNum);
 	NWL_NodeAttrSetf(tab, "Device Number", NAFLG_FMT_NUMERIC, "%u", (pDevInfo->DevFunNum & 0xf8) >> 3);
 	NWL_NodeAttrSetf(tab, "Function Number", NAFLG_FMT_NUMERIC, "%u", pDevInfo->DevFunNum & 0x07);
+}
+
+static const CHAR*
+pMCHostInterfaceTypeToStr(UCHAR Type)
+{
+	if (Type <= 0x3F)
+		return "MCTP Host Interface";
+	if (Type == 0x40)
+		return "Network Host Interface";
+	if (Type == 0xF0)
+		return "OEM-defined";
+	return "Reserved";
+}
+
+static const CHAR*
+pMCProtocolTypeToStr(UCHAR Type)
+{
+	switch (Type)
+	{
+	case 0x02: return "IPMI";
+	case 0x03: return "MCTP";
+	case 0x04: return "Redfish over IP";
+	case 0xF0: return "OEM-defined";
+	}
+	return "Reserved";
+}
+
+static void ProcMCHostInterface(PNODE tab, void* p)
+{
+	PMCHostInterface pIf = (PMCHostInterface)p;
+	NWL_NodeAttrSet(tab, "Description", "Management Controller Host Interface", 0);
+	if (pIf->Header.Length < 0x0B)
+		return;
+	NWL_NodeAttrSet(tab, "Interface Type", pMCHostInterfaceTypeToStr(pIf->InterfaceType), 0);
+	// TODO: Parse Interface Type Specific Data
 }
 
 static void ProcTPMDevice(PNODE tab, void* p)
@@ -1968,11 +2149,23 @@ static void DumpSMBIOS(PNODE node, void* Addr, UINT Len, UINT8 Type)
 		case 36:
 			ProcManagementDeviceThreshold(tab, pHeader);
 			break;
+		case 37:
+			ProcMemoryChannel(tab, pHeader);
+			break;
+		case 38:
+			ProcIPMIDevice(tab, pHeader);
+			break;
+		case 39:
+			ProcSysPowerSupply(tab, pHeader);
+			break;
 		case 40:
 			ProcAdditionalInfo(tab, pHeader);
 			break;
 		case 41:
 			ProcOnBoardDevicesExtInfo(tab, pHeader);
+			break;
+		case 42:
+			ProcMCHostInterface(tab, pHeader);
 			break;
 		case 43:
 			ProcTPMDevice(tab, pHeader);
