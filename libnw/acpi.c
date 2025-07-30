@@ -608,6 +608,23 @@ PrintMADT(PNODE pNode, DESC_HEADER* Hdr)
 }
 
 static PNODE
+PrintWPBT(PNODE pNode, DESC_HEADER* Hdr)
+{
+	ACPI_WPBT* wpbt = (ACPI_WPBT*)Hdr;
+	if (!ACPI_FIELD_CHK(Hdr, ACPI_WPBT, CommandLineArgumentsLength))
+		return pNode;
+	if (Hdr->Length < offsetof(ACPI_WPBT, CommandLineArgumentsLength) + wpbt->CommandLineArgumentsLength)
+		return pNode;
+	NWL_NodeAttrSetf(pNode, "Handoff Memory Size", NAFLG_FMT_NUMERIC, "%u", wpbt->HandoffMemorySize);
+	NWL_NodeAttrSetf(pNode, "Handoff Memory Location", 0, "0x%016llX", wpbt->HandoffMemoryLocation);
+	NWL_NodeAttrSetf(pNode, "Content Layout", 0, "%u (%s)", wpbt->ContentLayout, wpbt->ContentLayout == 1 ? "PE" : "Unknown");
+	NWL_NodeAttrSetf(pNode, "Content Type", 0, "%u (%s)", wpbt->ContentType, wpbt->ContentType == 1 ? "Native" : "Unknown");
+	if (wpbt->CommandLineArgumentsLength > 0)
+		NWL_NodeAttrSet(pNode, "Commandline Arguments", NWL_Ucs2ToUtf8(wpbt->CommandLineArguments), NAFLG_FMT_NEED_QUOTE);
+	return pNode;
+}
+
+static PNODE
 PrintTableInfo(PNODE pNode, DESC_HEADER* Hdr)
 {
 	if (NWLC->AcpiTable &&
@@ -623,6 +640,7 @@ PrintTableInfo(PNODE pNode, DESC_HEADER* Hdr)
 	case ACPI_SIG('B', 'G', 'R', 'T'): return PrintBGRT(tab, Hdr);
 	case ACPI_SIG('F', 'A', 'C', 'P'): return PrintFADT(tab, Hdr);
 	case ACPI_SIG('R', 'S', 'D', 'T'): return PrintRSDT(tab, Hdr);
+	case ACPI_SIG('W', 'P', 'B', 'T'): return PrintWPBT(tab, Hdr);
 	case ACPI_SIG('X', 'S', 'D', 'T'): return PrintXSDT(tab, Hdr);
 	}
 	return tab;
