@@ -24,7 +24,9 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#define _XOPEN_SOURCE 500
+ /* freebsd requires _XOPEN_SOURCE 600 for snprintf()
+  * for linux it is enough 500 */
+#define _XOPEN_SOURCE 600
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -48,8 +50,6 @@
 #else
 #define RY_DLL L"ryzenadj.dll"
 #endif
-
-#ifndef RDMSR_UNSUPPORTED_OS
 
 /* Useful links for hackers:
 - AMD MSRs:
@@ -109,7 +109,8 @@
 #define MSR_PSTATE_7           0xC001006B
 #define MSR_PWR_UNIT           0xC0010299
 #define MSR_PKG_ENERGY_STAT    0xC001029B
-static const uint32_t amd_msr[] = {
+static const uint32_t amd_msr[] =
+{
 	MSR_PSTATE_L,
 	MSR_PSTATE_S,
 	MSR_PSTATE_0,
@@ -139,7 +140,8 @@ static const uint32_t amd_msr[] = {
 #define MSR_PKG_POWER_LIMIT    0x610
 #define MSR_PKG_ENERGY_STATUS  0x611
 #define MSR_PLATFORM_INFO      0xCE
-static const uint32_t intel_msr[] = {
+static const uint32_t intel_msr[] =
+{
 	IA32_MPERF,
 	IA32_APERF,
 	IA32_PERF_STATUS,
@@ -156,7 +158,8 @@ static const uint32_t intel_msr[] = {
 	CPU_INVALID_VALUE
 };
 
-struct msr_info_t {
+struct msr_info_t
+{
 	int cpu_clock;
 	bool ryzenadj;
 	struct wr0_drv_t *handle;
@@ -169,13 +172,15 @@ static int perfmsr_measure(struct wr0_drv_t* handle, int msr)
 	int err;
 	uint64_t a, b;
 	uint64_t x, y;
-	err = cpu_rdmsr(handle, msr, &x);
-	if (err) return CPU_INVALID_VALUE;
+	err = WR0_RdMsr(handle, msr, &x);
+	if (err)
+		return CPU_INVALID_VALUE;
 	sys_precise_clock(&a);
 	busy_loop_delay(10);
-	cpu_rdmsr(handle, msr, &y);
+	WR0_RdMsr(handle, msr, &y);
 	sys_precise_clock(&b);
-	if (a >= b || x > y) return CPU_INVALID_VALUE;
+	if (a >= b || x > y)
+		return CPU_INVALID_VALUE;
 	return (int) ((y - x) / (b - a));
 }
 
@@ -190,7 +195,12 @@ static int msr_platform_info_supported(struct msr_info_t *info)
 
 	/* List of microarchitectures that provide both "Maximum Non-Turbo Ratio" and "Maximum Efficiency Ratio" values
 	Please note Silvermont does not report "Maximum Efficiency Ratio" */
-	const struct { int32_t ext_family; int32_t ext_model; } msr_platform_info[] = {
+	const struct
+	{
+		int32_t ext_family;
+		int32_t ext_model;
+	} msr_platform_info[] =
+	{
 		/* Table 2-12. MSRs in Intel Atom Processors Based on Goldmont Microarchitecture */
 		{ 6, 92 },
 		{ 6, 122 },
@@ -270,9 +280,12 @@ static int msr_platform_info_supported(struct msr_info_t *info)
 		{ 0x6, 0x85 },
 	};
 
-	if(info->id->vendor == VENDOR_INTEL) {
-		for(i = 0; i < COUNT_OF(msr_platform_info); i++) {
-			if((info->id->x86.ext_family == msr_platform_info[i].ext_family) && (info->id->x86.ext_model == msr_platform_info[i].ext_model)) {
+	if(info->id->vendor == VENDOR_INTEL)
+	{
+		for(i = 0; i < COUNT_OF(msr_platform_info); i++)
+		{
+			if((info->id->x86.ext_family == msr_platform_info[i].ext_family) && (info->id->x86.ext_model == msr_platform_info[i].ext_model))
+			{
 				debugf(2, "Intel CPU with CPUID signature %02X_%02XH supports MSR_PLATFORM_INFO.\n", info->id->x86.ext_family, info->id->x86.ext_model);
 				supported = 1;
 				return supported;
@@ -295,7 +308,12 @@ static int msr_intel_core_supported(struct msr_info_t *info)
 		return supported;
 
 	/* List of microarchitectures that provide "Core Voltage" values */
-	const struct { int32_t ext_family; int32_t ext_model; } msr_perf_status[] = {
+	const struct
+	{
+		int32_t ext_family;
+		int32_t ext_model;
+	} msr_perf_status[] =
+	{
 		/* Table 2-20. MSRs Supported by Intel Processors Based on Sandy Bridge Microarchitecture */
 		{ 6, 42 },
 		{ 6, 45 },
@@ -360,9 +378,12 @@ static int msr_intel_core_supported(struct msr_info_t *info)
 		{ 0x6, 0x85 },
 	};
 
-	if(info->id->vendor == VENDOR_INTEL) {
-		for(i = 0; i < COUNT_OF(msr_perf_status); i++) {
-			if((info->id->x86.ext_family == msr_perf_status[i].ext_family) && (info->id->x86.ext_model == msr_perf_status[i].ext_model)) {
+	if(info->id->vendor == VENDOR_INTEL)
+	{
+		for(i = 0; i < COUNT_OF(msr_perf_status); i++)
+		{
+			if((info->id->x86.ext_family == msr_perf_status[i].ext_family) && (info->id->x86.ext_model == msr_perf_status[i].ext_model))
+			{
 				debugf(2, "Intel CPU with CPUID signature %02X_%02XH supports MSR_PERF_STATUS.\n", info->id->x86.ext_family, info->id->x86.ext_model);
 				supported = 1;
 				return supported;
@@ -381,7 +402,12 @@ static int get_amd_multipliers(struct msr_info_t *info, uint32_t pstate, double 
 	uint64_t CpuFid, CpuDid, CpuDidLSD;
 
 	/* Constant values needed for 12h family */
-	const struct { uint64_t did; double divisor; } divisor_t[] = {
+	const struct
+	{
+		uint64_t did;
+		double divisor;
+	} divisor_t[] =
+	{
 		{ 0x0,    1   },
 		{ 0x1,    1.5 },
 		{ 0x2,    2   },
@@ -404,7 +430,8 @@ static int get_amd_multipliers(struct msr_info_t *info, uint32_t pstate, double 
 		return 1;
 
 	/* Overview of AMD CPU microarchitectures: https://en.wikipedia.org/wiki/List_of_AMD_CPU_microarchitectures#Nomenclature */
-	switch (info->id->x86.ext_family) {
+	switch (info->id->x86.ext_family)
+	{
 		case 0x12: /* K10 (Llano) / K12 */
 			/* BKDG 12h, page 469
 			MSRC001_00[6B:64][8:4] is CpuFid
@@ -505,7 +532,8 @@ static uint32_t get_amd_last_pstate_addr(struct msr_info_t *info)
 	MSRC001_00[6B:64][63] is PstateEn
 	PstateEn indicates if the rest of the P-state information in the register is valid after a reset */
 	last_addr = MSR_PSTATE_7 + 1;
-	while((reg == 0x0) && (last_addr > MSR_PSTATE_0)) {
+	while((reg == 0x0) && (last_addr > MSR_PSTATE_0))
+	{
 		last_addr--;
 		cpu_rdmsr_range(info->handle, last_addr, 63, 63, &reg);
 	}
@@ -519,7 +547,8 @@ static double get_info_min_multiplier(struct msr_info_t *info)
 	uint32_t addr;
 	uint64_t reg;
 
-	if(msr_platform_info_supported(info)) {
+	if(msr_platform_info_supported(info))
+	{
 		/* Refer links above
 		Table 35-12.  MSRs in Next Generation Intel Atom Processors Based on the Goldmont Microarchitecture
 		Table 35-13.  MSRs in Processors Based on Intel Microarchitecture Code Name Nehalem
@@ -534,7 +563,8 @@ static double get_info_min_multiplier(struct msr_info_t *info)
 		err = cpu_rdmsr_range(info->handle, MSR_PLATFORM_INFO, 47, 40, &reg);
 		if (!err) return (double) reg;
 	}
-	else if(info->id->vendor == VENDOR_AMD || info->id->vendor == VENDOR_HYGON) {
+	else if(info->id->vendor == VENDOR_AMD || info->id->vendor == VENDOR_HYGON)
+	{
 		/* N.B.: Find the last P-state
 		get_amd_last_pstate_addr() returns the last P-state, MSR_PSTATE_0 <= addr <= MSR_PSTATE_7 */
 		addr = get_amd_last_pstate_addr(info);
@@ -551,12 +581,15 @@ static double get_info_cur_multiplier(struct msr_info_t *info)
 	double mult;
 	uint64_t reg;
 
-	if(info->id->vendor == VENDOR_INTEL) {
-		if(!msr_intel_core_supported(info)) {
-			err = cpu_rdmsr(info->handle, MSR_EBL_CR_POWERON, &reg);
+	if(info->id->vendor == VENDOR_INTEL)
+	{
+		if(!msr_intel_core_supported(info))
+		{
+			err = WR0_RdMsr(info->handle, MSR_EBL_CR_POWERON, &reg);
 			if (!err) return (double) ((reg>>22) & 0x1f);
 		}
-		else {
+		else
+		{
 			/* Refer links above
 			Table 35-2.  IA-32 Architectural MSRs (Contd.)
 			IA32_PERF_STATUS[15:0] is Current performance State Value
@@ -565,7 +598,8 @@ static double get_info_cur_multiplier(struct msr_info_t *info)
 			if (!err) return (double) reg;
 		}
 	}
-	else if(info->id->vendor == VENDOR_AMD || info->id->vendor == VENDOR_HYGON) {
+	else if(info->id->vendor == VENDOR_AMD || info->id->vendor == VENDOR_HYGON)
+	{
 		/* Refer links above
 		MSRC001_0063[2:0] is CurPstate */
 		err  = cpu_rdmsr_range(info->handle, MSR_PSTATE_S, 2, 0, &reg);
@@ -582,12 +616,15 @@ static double get_info_max_multiplier(struct msr_info_t *info)
 	double mult;
 	uint64_t reg;
 
-	if(info->id->vendor == VENDOR_INTEL) {
-		if(!msr_intel_core_supported(info)) {
-			err = cpu_rdmsr(info->handle, IA32_PERF_STATUS, &reg);
+	if(info->id->vendor == VENDOR_INTEL)
+	{
+		if(!msr_intel_core_supported(info))
+		{
+			err = WR0_RdMsr(info->handle, IA32_PERF_STATUS, &reg);
 			if (!err) return (double) ((reg >> 40) & 0x1f);
 		}
-		else {
+		else
+		{
 			/* Refer links above
 			Table 35-10.  Specific MSRs Supported by Intel Atom Processor C2000 Series with CPUID Signature 06_4DH
 			Table 35-12.  MSRs in Next Generation Intel Atom Processors Based on the Goldmont Microarchitecture (Contd.)
@@ -607,7 +644,8 @@ static double get_info_max_multiplier(struct msr_info_t *info)
 			if (!err) return (double) reg;
 		}
 	}
-	else if(info->id->vendor == VENDOR_AMD || info->id->vendor == VENDOR_HYGON) {
+	else if(info->id->vendor == VENDOR_AMD || info->id->vendor == VENDOR_HYGON)
+	{
 		/* Refer links above
 		MSRC001_0064 is Pb0
 		Pb0 is the highest-performance boosted P-state */
@@ -693,7 +731,8 @@ static int get_info_temperature(struct msr_info_t *info)
 	int err;
 	uint64_t DigitalReadout, ReadingValid, TemperatureTarget;
 
-	if (info->id->vendor == VENDOR_INTEL && info->id->flags[CPU_FEATURE_INTEL_DTS]) {
+	if (info->id->vendor == VENDOR_INTEL && info->id->flags[CPU_FEATURE_INTEL_DTS])
+	{
 		/* Refer links above
 		Table 35-2.   IA-32 Architectural MSRs
 		IA32_THERM_STATUS[22:16] is Digital Readout
@@ -729,13 +768,13 @@ static int amd_k8_temperature(struct msr_info_t* info)
 		info->id->x86.ext_model != 0x6c &&
 		info->id->x86.ext_model != 0x7c)
 		offset += 21;
-	addr = pci_find_by_id(info->handle, AMD_PCI_VENDOR_ID, AMD_PCI_CONTROL_DEVICE_ID, info->id->index);
+	addr = WR0_FindPciById(info->handle, AMD_PCI_VENDOR_ID, AMD_PCI_CONTROL_DEVICE_ID, info->id->index);
 
 	if (addr == 0xFFFFFFFF)
 		return CPU_INVALID_VALUE;
 
-	pci_conf_write32(info->handle, addr, THERMTRIP_STATUS_REGISTER, 0);
-	value = pci_conf_read32(info->handle, addr, THERMTRIP_STATUS_REGISTER);
+	WR0_WrPciConf32(info->handle, addr, THERMTRIP_STATUS_REGISTER, 0);
+	value = WR0_RdPciConf32(info->handle, addr, THERMTRIP_STATUS_REGISTER);
 	return (int)((value >> 16) & 0xFF) + offset;
 }
 
@@ -814,15 +853,15 @@ static int amd_k10_temperature(struct msr_info_t* info)
 
 	if (smu)
 	{
-		pci_conf_write32(info->handle, 0, NB_PCI_REG_ADDR_ADDR, SMU_REPORTED_TEMP_CTRL_OFFSET);
-		value = pci_conf_read32(info->handle, 0, NB_PCI_REG_DATA_ADDR);
+		WR0_WrPciConf32(info->handle, 0, NB_PCI_REG_ADDR_ADDR, SMU_REPORTED_TEMP_CTRL_OFFSET);
+		value = WR0_RdPciConf32(info->handle, 0, NB_PCI_REG_DATA_ADDR);
 	}
 	else
 	{
-		addr = pci_find_by_id(info->handle, AMD_PCI_VENDOR_ID, did, info->id->index);
+		addr = WR0_FindPciById(info->handle, AMD_PCI_VENDOR_ID, did, info->id->index);
 		if (addr == 0xFFFFFFFF)
 			return CPU_INVALID_VALUE;
-		value = pci_conf_read32(info->handle, addr, 0xA4);
+		value = WR0_RdPciConf32(info->handle, addr, 0xA4);
 	}
 	if ((info->id->x86.ext_family == 0x15 ||
 		info->id->x86.ext_family == 0x16)
@@ -844,8 +883,8 @@ static float amd_17h_temperature(struct msr_info_t* info)
 	uint32_t temperature;
 	float offset = 0.0f;
 
-	pci_conf_write32(info->handle, 0, FAMILY_17H_PCI_CONTROL_REGISTER, F17H_M01H_THM_TCON_CUR_TMP);
-	temperature = pci_conf_read32(info->handle, 0, FAMILY_17H_PCI_CONTROL_REGISTER + 4);
+	WR0_WrPciConf32(info->handle, 0, FAMILY_17H_PCI_CONTROL_REGISTER, F17H_M01H_THM_TCON_CUR_TMP);
+	temperature = WR0_RdPciConf32(info->handle, 0, FAMILY_17H_PCI_CONTROL_REGISTER + 4);
 
 	if (strstr(info->id->brand_str, "1600X") ||
 		strstr(info->id->brand_str, "1700X") ||
@@ -868,7 +907,8 @@ static int get_info_pkg_temperature(struct msr_info_t* info)
 	int err;
 	uint64_t DigitalReadout, TemperatureTarget;
 
-	if (info->id->vendor == VENDOR_INTEL && info->id->flags[CPU_FEATURE_INTEL_PTM]) {
+	if (info->id->vendor == VENDOR_INTEL && info->id->flags[CPU_FEATURE_INTEL_PTM])
+	{
 		err = cpu_rdmsr_range(info->handle, IA32_PKG_THERM_STATUS, 22, 16, &DigitalReadout);
 		err += cpu_rdmsr_range(info->handle, MSR_TEMPERATURE_TARGET, 23, 16, &TemperatureTarget);
 		if (!err) return (int)(TemperatureTarget - DigitalReadout);
@@ -897,7 +937,8 @@ static double get_info_pkg_energy(struct msr_info_t* info)
 	int err;
 	uint64_t TotalEnergyConsumed, EnergyStatusUnits;
 
-	if (info->id->vendor == VENDOR_INTEL) {
+	if (info->id->vendor == VENDOR_INTEL)
+	{
 		err = cpu_rdmsr_range(info->handle, MSR_PKG_ENERGY_STATUS, 31, 0, &TotalEnergyConsumed);
 		err += cpu_rdmsr_range(info->handle, MSR_RAPL_POWER_UNIT, 12, 8, &EnergyStatusUnits);
 		if (!err) return (double) TotalEnergyConsumed / (1ULL << EnergyStatusUnits);
@@ -922,7 +963,8 @@ static double get_info_pkg_pl1(struct msr_info_t* info)
 	int err;
 	uint64_t PowerLimit1, PowerUnits;
 
-	if (info->id->vendor == VENDOR_INTEL) {
+	if (info->id->vendor == VENDOR_INTEL)
+	{
 		err = cpu_rdmsr_range(info->handle, MSR_PKG_POWER_LIMIT, 14, 0, &PowerLimit1);
 		err += cpu_rdmsr_range(info->handle, MSR_RAPL_POWER_UNIT, 3, 0, &PowerUnits);
 		if (!err) return (double)PowerLimit1 / (1ULL << PowerUnits);
@@ -944,7 +986,8 @@ static double get_info_pkg_pl2(struct msr_info_t* info)
 {
 	int err;
 	uint64_t PowerLimit2, PowerUnits;
-	if (info->id->vendor == VENDOR_INTEL) {
+	if (info->id->vendor == VENDOR_INTEL)
+	{
 		err = cpu_rdmsr_range(info->handle, MSR_PKG_POWER_LIMIT, 46, 32, &PowerLimit2);
 		err += cpu_rdmsr_range(info->handle, MSR_RAPL_POWER_UNIT, 3, 0, &PowerUnits);
 		if (!err) return (double)PowerLimit2 / (1ULL << PowerUnits);
@@ -983,7 +1026,8 @@ static double get_info_voltage(struct msr_info_t *info)
 	double VIDStep;
 	uint64_t reg, CpuVid;
 
-	if(msr_intel_core_supported(info)) {
+	if(msr_intel_core_supported(info))
+	{
 		/* Refer links above
 		Table 35-18.  MSRs Supported by Intel Processors based on Intel microarchitecture code name Sandy Bridge (Contd.)
 		MSR_PERF_STATUS[47:32] is Core Voltage
@@ -991,7 +1035,8 @@ static double get_info_voltage(struct msr_info_t *info)
 		err = cpu_rdmsr_range(info->handle, MSR_PERF_STATUS, 47, 32, &reg);
 		if (!err) return (double) reg / (1ULL << 13ULL);
 	}
-	else if(info->id->vendor == VENDOR_AMD || info->id->vendor == VENDOR_HYGON) {
+	else if(info->id->vendor == VENDOR_AMD || info->id->vendor == VENDOR_HYGON)
+	{
 		/* Refer links above
 		MSRC001_00[6B:64][15:9]  is CpuVid (Jaguar and before)
 		MSRC001_00[6B:64][21:14] is CpuVid (Zen)
@@ -1018,7 +1063,8 @@ static double get_info_bus_clock(struct msr_info_t *info)
 	uint32_t addr;
 	uint64_t reg;
 
-	if(msr_platform_info_supported(info)) {
+	if(msr_platform_info_supported(info))
+	{
 		/* Refer links above
 		Table 35-12.  MSRs in Next Generation Intel Atom Processors Based on the Goldmont Microarchitecture
 		Table 35-13.  MSRs in Processors Based on Intel Microarchitecture Code Name Nehalem
@@ -1031,7 +1077,8 @@ static double get_info_bus_clock(struct msr_info_t *info)
 		err = cpu_rdmsr_range(info->handle, MSR_PLATFORM_INFO, 15, 8, &reg);
 		if (!err) return (double) info->cpu_clock / reg;
 	}
-	else if(info->id->vendor == VENDOR_AMD || info->id->vendor == VENDOR_HYGON) {
+	else if(info->id->vendor == VENDOR_AMD || info->id->vendor == VENDOR_HYGON)
+	{
 		/* Refer links above
 		MSRC001_0061[6:4] is PstateMaxVal
 		PstateMaxVal is the the lowest-performance non-boosted P-state */
@@ -1044,8 +1091,38 @@ static double get_info_bus_clock(struct msr_info_t *info)
 	return (double) CPU_INVALID_VALUE / 100;
 }
 
-int cpu_rdmsr_range(struct wr0_drv_t* handle, uint32_t msr_index, uint8_t highbit,
-                    uint8_t lowbit, uint64_t* result)
+static bool set_cpu_affinity(logical_cpu_t logical_cpu)
+{
+	int groups = GetActiveProcessorGroupCount();
+	int total_processors = 0;
+	int group = 0;
+	int number = 0;
+	int found = 0;
+	HANDLE thread = GetCurrentThread();
+	GROUP_AFFINITY group_aff;
+
+	for (int i = 0; i < groups; i++)
+	{
+		int processors = GetActiveProcessorCount(i);
+		if (total_processors + processors > logical_cpu)
+		{
+			group = i;
+			number = logical_cpu - total_processors;
+			found = 1;
+			break;
+		}
+		total_processors += processors;
+	}
+	if (!found)
+		return 0; // logical CPU # too large, does not exist
+
+	memset(&group_aff, 0, sizeof(group_aff));
+	group_aff.Group = (WORD)group;
+	group_aff.Mask = (KAFFINITY)(1ULL << number);
+	return SetThreadGroupAffinity(thread, &group_aff, NULL);
+}
+
+int cpu_rdmsr_range(struct wr0_drv_t* handle, uint32_t msr_index, uint8_t highbit, uint8_t lowbit, uint64_t* result)
 {
 	int err;
 	const uint8_t bits = highbit - lowbit + 1;
@@ -1053,9 +1130,10 @@ int cpu_rdmsr_range(struct wr0_drv_t* handle, uint32_t msr_index, uint8_t highbi
 	if(highbit > 63 || lowbit > highbit)
 		return cpuid_set_error(ERR_INVRANGE);
 
-	err = cpu_rdmsr(handle, msr_index, result);
+	err = WR0_RdMsr(handle, msr_index, result);
 
-	if(!err && bits < 64) {
+	if(!err && bits < 64)
+	{
 		/* Show only part of register */
 		*result >>= lowbit;
 		*result &= (1ULL << bits) - 1;
@@ -1064,7 +1142,7 @@ int cpu_rdmsr_range(struct wr0_drv_t* handle, uint32_t msr_index, uint8_t highbi
 	return err;
 }
 
-int cpu_msrinfo(struct wr0_drv_t* handle, cpu_msrinfo_request_t which)
+int cpu_msrinfo(struct wr0_drv_t* handle, logical_cpu_t cpu, cpu_msrinfo_request_t which)
 {
 	static int err = 0, init = 0;
 	struct cpu_raw_data_t raw;
@@ -1072,13 +1150,15 @@ int cpu_msrinfo(struct wr0_drv_t* handle, cpu_msrinfo_request_t which)
 	static struct internal_id_info_t internal;
 	static struct msr_info_t info = { 0 };
 
-	if (handle == NULL) {
+	if (handle == NULL)
+	{
 		cpuid_set_error(ERR_HANDLE);
 		return CPU_INVALID_VALUE;
 	}
 
 	info.handle = handle;
-	if (!init) {
+	if (!init)
+	{
 		err  = cpuid_get_raw_data(&raw);
 		err += cpu_ident_internal(&raw, &id, &internal);
 		info.cpu_clock = cpu_clock_measure(250, 1);
@@ -1090,39 +1170,59 @@ int cpu_msrinfo(struct wr0_drv_t* handle, cpu_msrinfo_request_t which)
 	if (err)
 		return CPU_INVALID_VALUE;
 
-	switch (which) {
+	// Save AffinityMask
+	GROUP_AFFINITY saved_aff;
+	HANDLE thread = GetCurrentThread();
+	if (!GetThreadGroupAffinity(thread, &saved_aff))
+		return cpuid_set_error(ERR_INVCNB);
+	// Set AffinityMask
+	set_cpu_affinity(cpu);
+
+	int ret = CPU_INVALID_VALUE;
+	switch (which)
+	{
 		case INFO_MPERF:
-			return perfmsr_measure(handle, IA32_MPERF);
+			ret = perfmsr_measure(handle, IA32_MPERF);
+			break;
 		case INFO_APERF:
-			return perfmsr_measure(handle, IA32_APERF);
+			ret = perfmsr_measure(handle, IA32_APERF);
+			break;
 		case INFO_MIN_MULTIPLIER:
-			return (int) (get_info_min_multiplier(&info) * 100);
+			ret = (int) (get_info_min_multiplier(&info) * 100);
+			break;
 		case INFO_CUR_MULTIPLIER:
-			return (int) (get_info_cur_multiplier(&info) * 100);
+			ret = (int) (get_info_cur_multiplier(&info) * 100);
+			break;
 		case INFO_MAX_MULTIPLIER:
-			return (int) (get_info_max_multiplier(&info) * 100);
+			ret = (int) (get_info_max_multiplier(&info) * 100);
+			break;
 		case INFO_TEMPERATURE:
-			return get_info_temperature(&info);
+			ret = get_info_temperature(&info);
+			break;
 		case INFO_PKG_TEMPERATURE:
-			return get_info_pkg_temperature(&info);
-		case INFO_THROTTLING:
-			return CPU_INVALID_VALUE;
+			ret = get_info_pkg_temperature(&info);
+			break;
 		case INFO_VOLTAGE:
-			return (int) (get_info_voltage(&info) * 100);
+			ret = (int) (get_info_voltage(&info) * 100);
+			break;
 		case INFO_PKG_ENERGY:
-			return (int) (get_info_pkg_energy(&info) * 100);
+			ret = (int) (get_info_pkg_energy(&info) * 100);
+			break;
 		case INFO_PKG_POWER:
-			return (int)(get_info_pkg_power(&info) * 100);
+			ret = (int)(get_info_pkg_power(&info) * 100);
+			break;
 		case INFO_PKG_PL1:
-			return (int)(get_info_pkg_pl1(&info) * 100);
+			ret = (int)(get_info_pkg_pl1(&info) * 100);
+			break;
 		case INFO_PKG_PL2:
-			return (int)(get_info_pkg_pl2(&info) * 100);
+			ret = (int)(get_info_pkg_pl2(&info) * 100);
+			break;
 		case INFO_BCLK:
 		case INFO_BUS_CLOCK:
-			return (int) (get_info_bus_clock(&info) * 100);
-		default:
-			return CPU_INVALID_VALUE;
+			ret = (int) (get_info_bus_clock(&info) * 100);
+			break;
 	}
+	// Restore AffinityMask
+	SetThreadGroupAffinity(thread, &saved_aff, NULL);
+	return ret;
 }
-
-#endif // RDMSR_UNSUPPORTED_OS

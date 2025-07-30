@@ -170,19 +170,13 @@ GetMsrData(NWLIB_CPU_INFO* info, struct cpu_id_t* data)
 {
 	logical_cpu_t i;
 	int value = CPU_INVALID_VALUE;
-	bool affinity_saved = FALSE;
 	if (!data->flags[CPU_FEATURE_MSR] || NWLC->NwDrv == NULL)
 		return;
-	affinity_saved = save_cpu_affinity();
 	for (i = 0; i < data->num_logical_cpus; i++)
 	{
-		if (!get_affinity_mask_bit(i, &data->affinity_mask))
-			continue;
-		if (!set_cpu_affinity(i))
-			continue;
-		int min_multi = cpu_msrinfo(NWLC->NwDrv, INFO_MIN_MULTIPLIER);
-		int max_multi = cpu_msrinfo(NWLC->NwDrv, INFO_MAX_MULTIPLIER);
-		int cur_multi = cpu_msrinfo(NWLC->NwDrv, INFO_CUR_MULTIPLIER);
+		int min_multi = cpu_msrinfo(NWLC->NwDrv, i, INFO_MIN_MULTIPLIER);
+		int max_multi = cpu_msrinfo(NWLC->NwDrv, i, INFO_MAX_MULTIPLIER);
+		int cur_multi = cpu_msrinfo(NWLC->NwDrv, i, INFO_CUR_MULTIPLIER);
 		if (min_multi == CPU_INVALID_VALUE)
 			min_multi = 0;
 		if (max_multi == CPU_INVALID_VALUE)
@@ -191,35 +185,33 @@ GetMsrData(NWLIB_CPU_INFO* info, struct cpu_id_t* data)
 			cur_multi = 0;
 		snprintf(info->MsrMulti, NWL_STR_SIZE, "%.1lf (%d - %d)",
 			cur_multi / 100.0, min_multi / 100, max_multi / 100);
-		value = cpu_msrinfo(NWLC->NwDrv, INFO_TEMPERATURE);
+		value = cpu_msrinfo(NWLC->NwDrv, i, INFO_TEMPERATURE);
 		if (value != CPU_INVALID_VALUE && value > 0)
 			info->MsrTemp = value; // Core Temperature
-		value = cpu_msrinfo(NWLC->NwDrv, INFO_PKG_TEMPERATURE);
+		value = cpu_msrinfo(NWLC->NwDrv, i, INFO_PKG_TEMPERATURE);
 		if (value != CPU_INVALID_VALUE && value > 0)
 			info->MsrTemp = value; // Package Temperature
-		value = cpu_msrinfo(NWLC->NwDrv, INFO_VOLTAGE);
+		value = cpu_msrinfo(NWLC->NwDrv, i, INFO_VOLTAGE);
 		if (value != CPU_INVALID_VALUE && value > 0)
 			info->MsrVolt = value / 100.0;
-		value = cpu_msrinfo(NWLC->NwDrv, INFO_PKG_ENERGY);
+		value = cpu_msrinfo(NWLC->NwDrv, i, INFO_PKG_ENERGY);
 		if (value != CPU_INVALID_VALUE && value > info->MsrEnergy)
 		{
 			info->MsrPower = (value - info->MsrEnergy) / 100.0;
 			info->MsrEnergy = value;
 		}
-		value = cpu_msrinfo(NWLC->NwDrv, INFO_BUS_CLOCK);
+		value = cpu_msrinfo(NWLC->NwDrv, i, INFO_BUS_CLOCK);
 		if (value != CPU_INVALID_VALUE && value > 0)
 			info->MsrBus = value / 100.0;
-		value = cpu_msrinfo(NWLC->NwDrv, INFO_PKG_PL1);
+		value = cpu_msrinfo(NWLC->NwDrv, i, INFO_PKG_PL1);
 		if (value != CPU_INVALID_VALUE && value > 0)
 			info->MsrPl1 = value / 100.0;
-		value = cpu_msrinfo(NWLC->NwDrv, INFO_PKG_PL2);
+		value = cpu_msrinfo(NWLC->NwDrv, i, INFO_PKG_PL2);
 		if (value != CPU_INVALID_VALUE && value > 0)
 			info->MsrPl2 = value / 100.0;
 
 		break;
 	}
-	if (affinity_saved)
-		restore_cpu_affinity();
 }
 
 VOID

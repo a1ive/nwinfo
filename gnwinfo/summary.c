@@ -209,9 +209,10 @@ draw_processor(struct nk_context* ctx)
 		snprintf(name, sizeof(name), "CPU%d", i);
 		PNODE cpu = NWL_NodeGetChild(g_ctx.cpuid, name);
 		LPCSTR brand = NWL_NodeAttrGet(cpu, "Brand");
+		LPCSTR purpose = NWL_NodeAttrGet(cpu, "Purpose");
 
 		nk_layout_row(ctx, NK_DYNAMIC, 0, 2, (float[2]) { 0.3f, 0.7f });
-		nk_lhsc(ctx, name, NK_TEXT_LEFT, g_color_text_d, nk_false, nk_true);
+		nk_lhscf(ctx, NK_TEXT_LEFT, g_color_text_d, nk_false, nk_true, "%s-%c", name, toupper(purpose[0]));
 		nk_lhc(ctx, brand, NK_TEXT_LEFT, g_color_text_l);
 
 		if (!(g_ctx.main_flag & MAIN_CPU_DETAIL))

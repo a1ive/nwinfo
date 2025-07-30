@@ -35,14 +35,20 @@
 # include "libcpuid_arm_driver.h"
 # include "rdcpuid.h"
 #endif /* ARM */
-
-
-#include <windows.h>
+#ifdef HAVE_CONFIG_H
+# include "config.h"
+#endif /* HAVE_CONFIG_H */
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 #include <stdbool.h>
 #include <inttypes.h>
+#ifdef HAVE_GETAUXVAL
+# include <sys/auxv.h>
+#endif /* HAVE_GETAUXVAL */
+#ifdef HAVE_ELF_AUX_INFO
+# include <sys/auxv.h>
+#endif /* HAVE_ELF_AUX_INFO */
 
 /* Implementation: */
 
@@ -57,33 +63,113 @@
 INTERNAL_SCOPE int _libcpuid_errno = ERR_OK;
 
 /* get_total_cpus() system specific code: uses OS routines to determine total number of CPUs */
+#ifdef __APPLE__
+#include <unistd.h>
+#include <mach/clock_types.h>
+#include <mach/clock.h>
+#include <mach/mach.h>
+#include <mach/thread_policy.h>
+static int get_total_cpus(void)
+{
+	kern_return_t kr;
+	host_basic_info_data_t basic_info;
+	host_info_t info = (host_info_t)&basic_info;
+	host_flavor_t flavor = HOST_BASIC_INFO;
+	mach_msg_type_number_t count = HOST_BASIC_INFO_COUNT;
+	kr = host_info(mach_host_self(), flavor, info, &count);
+	if (kr != KERN_SUCCESS) return 1;
+	return basic_info.avail_cpus;
+}
+#define GET_TOTAL_CPUS_DEFINED
+
+INTERNAL_SCOPE thread_affinity_policy_data_t saved_affinity;
+
+static bool save_cpu_affinity(void)
+{
+	mach_msg_type_number_t count = THREAD_AFFINITY_POLICY_COUNT;
+	boolean_t get_default = false;
+	return thread_policy_get(mach_thread_self(), THREAD_AFFINITY_POLICY, (thread_policy_t) &saved_affinity, &count, &get_default) == KERN_SUCCESS;
+}
+
+static bool restore_cpu_affinity(void)
+{
+	return thread_policy_set(mach_thread_self(), THREAD_AFFINITY_POLICY, (thread_policy_t) &saved_affinity, THREAD_AFFINITY_POLICY_COUNT) == KERN_SUCCESS;
+}
+#define PRESERVE_CPU_AFFINITY
+
+static bool set_cpu_affinity(logical_cpu_t logical_cpu)
+{
+	thread_affinity_policy_data_t ap;
+	ap.affinity_tag = logical_cpu + 1;
+	/* Note: thread_policy_set() always returns KERN_SUCCESS even if the target logical CPU does not exist
+	   Refer to #178 */
+	if (logical_cpu >= get_total_cpus())
+		return false;
+	return thread_policy_set(mach_thread_self(), THREAD_AFFINITY_POLICY, (thread_policy_t) &ap, THREAD_AFFINITY_POLICY_COUNT) == KERN_SUCCESS;
+}
+#define SET_CPU_AFFINITY
+#endif /* __APPLE__ */
+
+#ifdef _WIN32
+#include <windows.h>
 static int get_total_cpus(void)
 {
 	SYSTEM_INFO system_info;
 	GetSystemInfo(&system_info);
 	return system_info.dwNumberOfProcessors;
 }
+#define GET_TOTAL_CPUS_DEFINED
 
+#if (_WIN32_WINNT >= 0x0601)
 INTERNAL_SCOPE GROUP_AFFINITY savedGroupAffinity;
+#else
+INTERNAL_SCOPE DWORD_PTR savedAffinityMask = 0;
+#endif
 
-bool save_cpu_affinity(void)
+static bool save_cpu_affinity(void)
 {
+#if (_WIN32_WINNT >= 0x0601)
 	HANDLE thread = GetCurrentThread();
 	return GetThreadGroupAffinity(thread, &savedGroupAffinity);
+#else
+/* Credits to https://stackoverflow.com/questions/6601862/query-thread-not-process-processor-affinity#6601917 */
+	HANDLE thread = GetCurrentThread();
+	DWORD_PTR threadAffinityMask = 1;
+	while (threadAffinityMask) {
+		savedAffinityMask = SetThreadAffinityMask(thread, threadAffinityMask);
+		if(savedAffinityMask)
+			return SetThreadAffinityMask(thread, savedAffinityMask);
+		else if (GetLastError() != ERROR_INVALID_PARAMETER)
+			return false;
+
+		threadAffinityMask <<= 1; // try next CPU
+	}
+	return false;
+#endif
 }
 
-bool restore_cpu_affinity(void)
+static bool restore_cpu_affinity(void)
 {
+#if (_WIN32_WINNT >= 0x0601)
 	if (!savedGroupAffinity.Mask)
 		return false;
 
 	HANDLE thread = GetCurrentThread();
 	return SetThreadGroupAffinity(thread, &savedGroupAffinity, NULL);
-}
+#else
+	if (!savedAffinityMask)
+		return false;
 
-bool set_cpu_affinity(logical_cpu_t logical_cpu)
+	HANDLE thread = GetCurrentThread();
+	return SetThreadAffinityMask(thread, savedAffinityMask);
+#endif
+}
+#define PRESERVE_CPU_AFFINITY
+
+static bool set_cpu_affinity(logical_cpu_t logical_cpu)
 {
 /* Credits to https://github.com/PolygonTek/BlueshiftEngine/blob/fbc374cbc391e1147c744649f405a66a27c35d89/Source/Runtime/Private/Platform/Windows/PlatformWinThread.cpp#L27 */
+#if (_WIN32_WINNT >= 0x0601)
 	int groups = GetActiveProcessorGroupCount();
 	int total_processors = 0;
 	int group = 0;
@@ -108,7 +194,274 @@ bool set_cpu_affinity(logical_cpu_t logical_cpu)
 	groupAffinity.Group = (WORD) group;
 	groupAffinity.Mask = (KAFFINITY) (1ULL << number);
 	return SetThreadGroupAffinity(thread, &groupAffinity, NULL);
+#else
+	if (logical_cpu > (sizeof(DWORD_PTR) * 8)) {
+		warnf("set_cpu_affinity for logical CPU %u is not supported in this operating system.\n", logical_cpu);
+		return -1;
+	}
+	HANDLE thread = GetCurrentThread();
+	DWORD_PTR threadAffinityMask = 1ULL << logical_cpu;
+	return SetThreadAffinityMask(thread, threadAffinityMask);
+#endif /* (_WIN32_WINNT >= 0x0601) */
 }
+#define SET_CPU_AFFINITY
+#endif /* _WIN32 */
+
+#ifdef __HAIKU__
+#include <OS.h>
+static int get_total_cpus(void)
+{
+	system_info info;
+	get_system_info(&info);
+	return info.cpu_count;
+}
+#define GET_TOTAL_CPUS_DEFINED
+#endif /* __HAIKU__ */
+
+#if defined linux || defined __linux__ || defined __sun
+#include <sys/sysinfo.h>
+#include <unistd.h>
+
+static int get_total_cpus(void)
+{
+	return sysconf(_SC_NPROCESSORS_ONLN);
+}
+#define GET_TOTAL_CPUS_DEFINED
+#endif /* defined linux || defined __linux__ || defined __sun */
+
+#if defined linux || defined __linux__
+#include <sched.h>
+
+INTERNAL_SCOPE cpu_set_t saved_affinity;
+
+static bool save_cpu_affinity(void)
+{
+	return sched_getaffinity(0, sizeof(saved_affinity), &saved_affinity) == 0;
+}
+
+static bool restore_cpu_affinity(void)
+{
+	return sched_setaffinity(0, sizeof(saved_affinity), &saved_affinity) == 0;
+}
+#define PRESERVE_CPU_AFFINITY
+
+static bool set_cpu_affinity(logical_cpu_t logical_cpu)
+{
+	cpu_set_t cpuset;
+	CPU_ZERO(&cpuset);
+	CPU_SET(logical_cpu, &cpuset);
+	return sched_setaffinity(0, sizeof(cpuset), &cpuset) == 0;
+}
+#define SET_CPU_AFFINITY
+#endif /* defined linux || defined __linux__ */
+
+#if defined sun || defined __sun
+#include <sys/types.h>
+#include <sys/processor.h>
+#include <sys/procset.h>
+
+INTERNAL_SCOPE processorid_t saved_binding = PBIND_NONE;
+
+static bool save_cpu_affinity(void)
+{
+	return processor_bind(P_LWPID, P_MYID, PBIND_QUERY, &saved_binding) == 0;
+}
+
+static bool restore_cpu_affinity(void)
+{
+	return processor_bind(P_LWPID, P_MYID, saved_binding, NULL) == 0;
+}
+#define PRESERVE_CPU_AFFINITY
+
+static bool set_cpu_affinity(logical_cpu_t logical_cpu)
+{
+	if (logical_cpu > (sizeof(processorid_t) * 8)) {
+		warnf("set_cpu_affinity for logical CPU %u is not supported in this operating system.\n", logical_cpu);
+		return -1;
+	}
+	return processor_bind(P_LWPID, P_MYID, logical_cpu, NULL) == 0;
+}
+#define SET_CPU_AFFINITY
+#endif /* defined sun || defined __sun */
+
+#if defined __FreeBSD__ || defined  __DragonFly__ || defined __OpenBSD__ || defined __NetBSD__ || defined __bsdi__ || defined __QNX__
+#include <sys/types.h>
+#include <sys/sysctl.h>
+
+static int get_total_cpus(void)
+{
+#ifdef HW_NCPUONLINE
+	int mib[2] = { CTL_HW, HW_NCPUONLINE };
+#else
+	int mib[2] = { CTL_HW, HW_NCPU };
+#endif
+	int ncpus;
+	size_t len = sizeof(ncpus);
+	if (sysctl(mib, 2, &ncpus, &len, (void *) 0, 0) != 0) return 1;
+	return ncpus;
+}
+#define GET_TOTAL_CPUS_DEFINED
+#endif /* defined __FreeBSD__ || defined  __DragonFly__ || defined __OpenBSD__ || defined __NetBSD__ || defined __bsdi__ || defined __QNX__ */
+
+#if defined __FreeBSD__
+#include <sys/param.h>
+#include <sys/cpuset.h>
+
+INTERNAL_SCOPE cpuset_t saved_affinity;
+
+static bool save_cpu_affinity(void)
+{
+	return cpuset_getaffinity(CPU_LEVEL_WHICH, CPU_WHICH_TID, -1, sizeof(saved_affinity), &saved_affinity) == 0;
+}
+
+static bool restore_cpu_affinity(void)
+{
+	return cpuset_setaffinity(CPU_LEVEL_WHICH, CPU_WHICH_TID, -1, sizeof(saved_affinity), &saved_affinity) == 0;
+}
+#define PRESERVE_CPU_AFFINITY
+
+static bool set_cpu_affinity(logical_cpu_t logical_cpu)
+{
+	cpuset_t cpuset;
+	CPU_ZERO(&cpuset);
+	CPU_SET(logical_cpu, &cpuset);
+	return cpuset_setaffinity(CPU_LEVEL_WHICH, CPU_WHICH_TID, -1, sizeof(cpuset), &cpuset) == 0;
+}
+#define SET_CPU_AFFINITY
+#endif /* defined __FreeBSD__ */
+
+#if defined __DragonFly__
+#include <pthread.h>
+#include <pthread_np.h>
+
+INTERNAL_SCOPE cpuset_t saved_affinity;
+
+static bool save_cpu_affinity(void)
+{
+	return pthread_getaffinity_np(pthread_self(), sizeof(saved_affinity), &saved_affinity) == 0;
+}
+
+static bool restore_cpu_affinity(void)
+{
+	return pthread_setaffinity_np(pthread_self(), sizeof(saved_affinity), &saved_affinity) == 0;
+}
+#define PRESERVE_CPU_AFFINITY
+
+static bool set_cpu_affinity(logical_cpu_t logical_cpu)
+{
+	cpuset_t cpuset;
+	CPU_ZERO(&cpuset);
+	CPU_SET(logical_cpu, &cpuset);
+	return pthread_setaffinity_np(pthread_self(), sizeof(cpuset), &cpuset) == 0;
+}
+#define SET_CPU_AFFINITY
+#endif /* defined __DragonFly__ */
+
+#if defined __NetBSD__
+#include <unistd.h>
+#include <sys/sysctl.h>
+#include <pthread.h>
+#include <sched.h>
+
+INTERNAL_SCOPE cpuset_t *saved_affinity = NULL;
+
+static bool save_cpu_affinity(void)
+{
+	if (!saved_affinity)
+		saved_affinity = cpuset_create();
+
+	return pthread_getaffinity_np(pthread_self(), cpuset_size(saved_affinity), saved_affinity) == 0;
+}
+
+static bool restore_cpu_affinity(void)
+{
+	if (!saved_affinity)
+		return false;
+
+	int ret = pthread_setaffinity_np(pthread_self(), cpuset_size(saved_affinity), saved_affinity) == 0;
+	cpuset_destroy(saved_affinity);
+	saved_affinity = NULL;
+	return ret == 0;
+}
+#define PRESERVE_CPU_AFFINITY
+
+static bool set_cpu_affinity(logical_cpu_t logical_cpu)
+{
+	int result = -1;
+	size_t size = sizeof(result);
+
+	/* Note: pthread_setaffinity_np() always returns 0 even if the target logical CPU does not exist */
+	if (logical_cpu >= get_total_cpus())
+		return false;
+
+	/* Check if user is allowed to control CPU sets: https://man.netbsd.org/secmodel_extensions.9 */
+	if (getuid() != 0) {
+		if (sysctlbyname("security.models.extensions.user_set_cpu_affinity", &result, &size, NULL, 0)) {
+			warnf("failed to get sysctl value for security.models.extensions.user_set_cpu_affinity\n");
+			return false;
+		}
+		else if (result == 0) {
+			warnf("user is not allowed to control the CPU affinity: you may enable \"Non-superuser control of CPU sets\" by setting sysctl security.models.extensions.user_set_cpu_affinity=1\n");
+			return false;
+		}
+	}
+
+	cpuset_t *cpuset = cpuset_create();
+	if (cpuset == NULL) {
+		warnf("failed to create CPU set for logical CPU %u\n", logical_cpu);
+		return false;
+	}
+
+	if (cpuset_set((cpuid_t) logical_cpu, cpuset) < 0) {
+		warnf("failed to set CPU set for logical CPU %u\n", logical_cpu);
+		return false;
+	}
+
+	int ret = pthread_setaffinity_np(pthread_self(), cpuset_size(cpuset), cpuset);
+	cpuset_destroy(cpuset);
+	return ret == 0;
+}
+#define SET_CPU_AFFINITY
+#endif /* defined __NetBSD__ */
+
+#ifndef GET_TOTAL_CPUS_DEFINED
+static int get_total_cpus(void)
+{
+	static int warning_printed = 0;
+	if (!warning_printed) {
+		warning_printed = 1;
+		warnf("Your system is not supported by libcpuid -- don't know how to detect the\n");
+		warnf("total number of CPUs on your system. It will be reported as 1.\n");
+		printf("Please use cpu_id_t.logical_cpus field instead.\n");
+	}
+	return 1;
+}
+#endif /* GET_TOTAL_CPUS_DEFINED */
+
+#ifndef PRESERVE_CPU_AFFINITY
+static bool save_cpu_affinity(void)
+{
+	return false;
+}
+
+static bool restore_cpu_affinity(void)
+{
+	return false;
+}
+#endif /* PRESERVE_CPU_AFFINITY */
+
+#ifndef SET_CPU_AFFINITY
+static bool set_cpu_affinity(logical_cpu_t logical_cpu)
+{
+	UNUSED(logical_cpu);
+	static int warning_printed = 0;
+	if (!warning_printed) {
+		warning_printed = 1;
+		warnf("Your system is not supported by libcpuid -- don't know how to set the CPU affinity.\n");
+	}
+	return false;
+}
+#endif /* SET_CPU_AFFINITY */
 
 int cpuid_set_error(cpu_error_t err)
 {
@@ -143,7 +496,12 @@ static void cpu_id_t_constructor(struct cpu_id_t* id)
 
 static void cpu_raw_data_array_t_constructor(struct cpu_raw_data_array_t* raw_array, bool with_affinity)
 {
+#ifdef SET_CPU_AFFINITY
 	raw_array->with_affinity = with_affinity;
+#else
+	UNUSED(with_affinity);
+	raw_array->with_affinity = false;
+#endif
 	raw_array->num_raw = 0;
 	raw_array->raw = NULL;
 }
@@ -963,6 +1321,15 @@ int cpuid_present(void)
 #if defined(PLATFORM_X86) || defined(PLATFORM_X64)
 	return cpuid_exists_by_eflags();
 #elif defined(PLATFORM_AARCH64)
+# if defined(HAVE_GETAUXVAL) && defined(HWCAP_CPUID) /* Linux */
+	return (getauxval(AT_HWCAP) & HWCAP_CPUID);
+# elif defined(HAVE_ELF_AUX_INFO) && defined(HWCAP_CPUID) /* FreeBSD */
+	unsigned long hwcap = 0;
+	if (elf_aux_info(AT_HWCAP, &hwcap, sizeof(hwcap)) == 0)
+		return ((hwcap & HWCAP_CPUID) != 0);
+# elif !defined(HWCAP_CPUID)
+#  warning HWCAP_CPUID is not defined on this AArch64 system, cpuid_present() will always return 0
+# endif /* HWCAP_CPUID */
 	/* On AArch64, return 0 by default */
 	return 0;
 #else

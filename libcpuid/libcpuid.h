@@ -1960,7 +1960,7 @@ typedef enum {
  * @brief Similar to \ref cpu_rdmsr, but extract a range of bits
  *
  * @param handle - a handle to the MSR reader driver, as created by
- *                 cpu_msr_driver_open
+ *                 WR0_OpenDriver
  * @param msr_index - the numeric ID of the MSR you want to read
  * @param highbit - the high bit in range, must be inferior to 64
  * @param lowbit - the low bit in range, must be equal or superior to 0
@@ -1975,7 +1975,8 @@ int cpu_rdmsr_range(struct wr0_drv_t* handle, uint32_t msr_index, uint8_t highbi
 
 /**
  * @brief Reads extended CPU information from Model-Specific Registers.
- * @param handle - a handle to an open MSR driver, @see cpu_msr_driver_open
+ * @param handle - a handle to an open MSR driver, @see WR0_OpenDriver
+ * @param cpu - the logical CPU number, where the MSR is read.
  * @param which - which info field should be returned. A list of
  *                available information entities is listed in the
  *                cpu_msrinfo_request_t enum.
@@ -1986,7 +1987,7 @@ int cpu_rdmsr_range(struct wr0_drv_t* handle, uint32_t msr_index, uint8_t highbi
  * @note This function is not MT-safe. If you intend to call it from multiple
  *       threads, guard it through a mutex or a similar primitive.
  */
-int cpu_msrinfo(struct wr0_drv_t* handle, cpu_msrinfo_request_t which);
+int cpu_msrinfo(struct wr0_drv_t* handle, logical_cpu_t cpu, cpu_msrinfo_request_t which);
 #define CPU_INVALID_VALUE 0x3fffffff
 
 #ifdef __cplusplus

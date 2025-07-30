@@ -42,16 +42,7 @@
     <ClInclude Include="recog_intel.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="amd_code_t.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="intel_code_t.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="rdtsc.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="centaur_code_t.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="recog_centaur.h">

@@ -30,6 +30,7 @@
 #include "asm-bits.h"
 #include "rdtsc.h"
 
+#ifdef _WIN32
 #include <windows.h>
 void sys_precise_clock(uint64_t *result)
 {
@@ -41,6 +42,17 @@ void sys_precise_clock(uint64_t *result)
 	f = (double) freq.QuadPart;
 	*result = (uint64_t) ( c * 1000000.0 / f );
 }
+#else
+/* assuming Linux, Mac OS or other POSIX */
+#include <sys/time.h>
+void sys_precise_clock(uint64_t *result)
+{
+	struct timeval tv;
+	gettimeofday(&tv, NULL);
+	*result = (uint64_t) tv.tv_sec * (uint64_t) 1000000 +
+	          (uint64_t) tv.tv_usec;
+}
+#endif /* _WIN32 */
 
 /* out = a - b */
 static void mark_t_subtract(struct cpu_mark_t* a, struct cpu_mark_t* b, struct cpu_mark_t *out)
@@ -79,6 +91,7 @@ int cpu_clock_by_mark(struct cpu_mark_t* mark)
 	return (int) result;
 }
 
+#ifdef _WIN32
 int cpu_clock_by_os(void)
 {
 	HKEY key;
@@ -96,6 +109,55 @@ int cpu_clock_by_os(void)
 
 	return (int)result;
 }
+#elif defined(__APPLE__)
+#include <sys/types.h>
+#include <sys/sysctl.h>
+/* Assuming Mac OS X with hw.cpufrequency sysctl */
+int cpu_clock_by_os(void)
+{
+	long long result = -1;
+	size_t size = sizeof(result);
+	if (sysctlbyname("hw.cpufrequency", &result, &size, NULL, 0))
+		return -1;
+	return (int) (result / (long long) 1000000);
+}
+#elif defined(__OpenBSD__)
+/* Assuming OpenBSD with hw.cpuspeed sysctl */
+#include <sys/types.h>
+#include <sys/sysctl.h>
+int cpu_clock_by_os(void)
+{
+	int result = -1;
+	size_t size = sizeof(result);
+	int mib[2] = { CTL_HW, HW_CPUSPEED };
+	if (sysctl(mib, 2, &result, &size, NULL, 0))
+		return -1;
+	return result;
+}
+#else
+/* Assuming Linux with /proc/cpuinfo */
+int cpu_clock_by_os(void)
+{
+	FILE *f;
+	char line[1024], *s;
+	int result;
+
+	f = fopen("/proc/cpuinfo", "rt");
+	if (!f) return -1;
+
+	while (fgets(line, sizeof(line), f)) {
+		if (!strncmp(line, "cpu MHz", 7)) {
+			s = strchr(line, ':');
+			if (s && 1 == sscanf(s, ":%d.", &result)) {
+				fclose(f);
+				return result;
+			}
+		}
+	}
+	fclose(f);
+	return -1;
+}
+#endif /* _WIN32 */
 
 /* Emulate doing useful CPU intensive work */
 static int busy_loop(int amount)
