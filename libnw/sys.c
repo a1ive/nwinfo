@@ -236,19 +236,7 @@ PrintProductKey(PNODE node)
 
 VOID NWL_GetUptime(CHAR* szUptime, DWORD dwSize)
 {
-	UINT64 ullUptime = GetTickCount64();
-	UINT64 ullDays = ullUptime / 1000ULL / 3600ULL / 24ULL;
-	UINT64 ullHours = ullUptime / 1000ULL / 3600ULL - ullDays * 24ULL;
-	UINT64 ullMinutes = ullUptime / 1000ULL / 60ULL - ullDays * 24ULL * 60ULL - ullHours * 60ULL;
-	UINT64 ullSeconds = ullUptime / 1000ULL - ullDays * 24ULL * 3600ULL - ullHours * 3600ULL - ullMinutes * 60ULL;
-	CHAR szDays[32] = "";
-	CHAR szHours[12] = "";
-	szUptime[0] = '\0';
-	if (ullDays)
-		snprintf(szDays, sizeof(szDays), "%llud ", ullDays);
-	if (ullHours)
-		snprintf(szHours, sizeof(szHours), "%lluh ", ullHours);
-	snprintf(szUptime, dwSize, "%s%s%llum %llus", szDays, szHours, ullMinutes, ullSeconds);
+	strcpy_s(szUptime, dwSize, NWL_GetHumanTime(GetTickCount64() / 1000ULL));
 }
 
 VOID NWL_GetHostname(CHAR* szHostname)

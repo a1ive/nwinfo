@@ -78,6 +78,77 @@ LPCSTR NWL_GetHumanSize(UINT64 size, LPCSTR human_sizes[6], UINT64 base)
 	return buf;
 }
 
+LPCSTR NWL_GetHumanTime(UINT64 ullSecond)
+{
+	// 213503982334d 23h 59m 59s
+	static char s_szBuffer[64];
+
+	if (ullSecond == 0)
+		return "Off";
+
+	const UINT64 SECONDS_IN_MINUTE = 60;
+	const UINT64 SECONDS_IN_HOUR = 3600;         // 60 * 60
+	const UINT64 SECONDS_IN_DAY = 86400;         // 24 * 3600
+
+	UINT64 days = ullSecond / SECONDS_IN_DAY;
+	UINT64 remainder = ullSecond % SECONDS_IN_DAY;
+
+	UINT hours = (UINT)(remainder / SECONDS_IN_HOUR);
+	remainder = remainder % SECONDS_IN_HOUR;
+
+	UINT minutes = (UINT)(remainder / SECONDS_IN_MINUTE);
+	UINT seconds = (UINT)(remainder % SECONDS_IN_MINUTE);
+
+	char* pCursor = s_szBuffer;
+	size_t remainingSize = sizeof(s_szBuffer);
+	int writtenChars = 0;
+	BOOL bHasContent = FALSE;
+
+	s_szBuffer[0] = '\0';
+
+	if (days > 0)
+	{
+		writtenChars = sprintf_s(pCursor, remainingSize, "%llud", days);
+		if (writtenChars < 0)
+			return "Error";
+		pCursor += writtenChars;
+		remainingSize -= writtenChars;
+		bHasContent = TRUE;
+	}
+
+	if (hours > 0)
+	{
+		if (bHasContent) { *pCursor++ = ' '; remainingSize--; }
+		writtenChars = sprintf_s(pCursor, remainingSize, "%uh", hours);
+		if (writtenChars < 0)
+			return "Error";
+		pCursor += writtenChars;
+		remainingSize -= writtenChars;
+		bHasContent = TRUE;
+	}
+
+	if (minutes > 0)
+	{
+		if (bHasContent) { *pCursor++ = ' '; remainingSize--; }
+		writtenChars = sprintf_s(pCursor, remainingSize, "%um", minutes);
+		if (writtenChars < 0)
+			return "Error";
+		pCursor += writtenChars;
+		remainingSize -= writtenChars;
+		bHasContent = TRUE;
+	}
+
+	if (seconds > 0)
+	{
+		if (bHasContent) { *pCursor++ = ' '; remainingSize--; }
+		writtenChars = sprintf_s(pCursor, remainingSize, "%us", seconds);
+		if (writtenChars < 0)
+			return "Error";
+	}
+
+	return s_szBuffer;
+}
+
 static UINT32 nt5_htonl(UINT32 x)
 {
 	UCHAR* s = (UCHAR*)&x;

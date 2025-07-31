@@ -7,9 +7,192 @@
 #include <setupapi.h>
 #include <batclass.h>
 #include <devguid.h>
+#include <powrprof.h>
 
 #include "libnw.h"
 #include "utils.h"
+
+static DWORD
+PwrGetActiveScheme(GUID** ActivePolicyGuid)
+{
+	DWORD ret = ERROR_SUCCESS;
+	DWORD (WINAPI* NT6PowerGetActiveScheme)(HKEY, GUID **) = NULL;
+	HMODULE hL = LoadLibraryW(L"powrprof.dll");
+	if (!hL)
+		goto fail;
+	*(FARPROC*)&NT6PowerGetActiveScheme = GetProcAddress(hL, "PowerGetActiveScheme");
+	if (!NT6PowerGetActiveScheme)
+	{
+		FreeLibrary(hL);
+		goto fail;
+	}
+
+	ret = NT6PowerGetActiveScheme(NULL, ActivePolicyGuid);
+	FreeLibrary(hL);
+	return ret;
+
+fail:
+	LPWSTR lpSchemeName = NULL;
+	DWORD dwSize;
+	DWORD dwType;
+
+	*ActivePolicyGuid = (GUID*)LocalAlloc(LPTR, sizeof(GUID));
+	if (*ActivePolicyGuid == NULL)
+		return ERROR_NOT_ENOUGH_MEMORY;
+
+	lpSchemeName = NWL_NtGetRegValue(HKEY_LOCAL_MACHINE,
+		L"SYSTEM\\CurrentControlSet\\Control\\Power\\User\\PowerSchemes", L"ActivePowerScheme", &dwSize, &dwType);
+	if (!lpSchemeName)
+	{
+		LocalFree(*ActivePolicyGuid);
+		return ERROR_FILE_NOT_FOUND;
+	}
+	if (dwType != REG_SZ || wcslen(lpSchemeName) != 36)
+	{
+		LocalFree(*ActivePolicyGuid);
+		free(lpSchemeName);
+		return ERROR_INVALID_DATA;
+	}
+
+	lpSchemeName[8] = 0;
+	(*ActivePolicyGuid)->Data1 = (unsigned long)wcstoul(lpSchemeName, NULL, 16);
+	lpSchemeName[13] = 0;
+	(*ActivePolicyGuid)->Data2 = (unsigned short)wcstoul(lpSchemeName + 9, NULL, 16);
+	lpSchemeName[18] = 0;
+	(*ActivePolicyGuid)->Data3 = (unsigned short)wcstoul(lpSchemeName + 14, NULL, 16);
+	(*ActivePolicyGuid)->Data4[7] = (unsigned char)wcstoul(lpSchemeName + 34, NULL, 16);
+	lpSchemeName[34] = 0;
+	(*ActivePolicyGuid)->Data4[6] = (unsigned char)wcstoul(lpSchemeName + 32, NULL, 16);
+	lpSchemeName[32] = 0;
+	(*ActivePolicyGuid)->Data4[5] = (unsigned char)wcstoul(lpSchemeName + 30, NULL, 16);
+	lpSchemeName[30] = 0;
+	(*ActivePolicyGuid)->Data4[4] = (unsigned char)wcstoul(lpSchemeName + 28, NULL, 16);
+	lpSchemeName[28] = 0;
+	(*ActivePolicyGuid)->Data4[3] = (unsigned char)wcstoul(lpSchemeName + 26, NULL, 16);
+	lpSchemeName[26] = 0;
+	(*ActivePolicyGuid)->Data4[2] = (unsigned char)wcstoul(lpSchemeName + 24, NULL, 16);
+	lpSchemeName[23] = 0;
+	(*ActivePolicyGuid)->Data4[1] = (unsigned char)wcstoul(lpSchemeName + 21, NULL, 16);
+	lpSchemeName[21] = 0;
+	(*ActivePolicyGuid)->Data4[0] = (unsigned char)wcstoul(lpSchemeName + 19, NULL, 16);
+
+	free(lpSchemeName);
+	return ERROR_SUCCESS;
+}
+
+static DWORD
+PwrReadFriendlyName(const GUID* SchemeGuid, const GUID* SubGroupOfPowerSettingsGuid,
+	const GUID* PowerSettingGuid, PUCHAR Buffer, LPDWORD BufferSize)
+{
+	DWORD(WINAPI * Nt6PowerReadName)(HKEY, const GUID*, const GUID*, const GUID*, PUCHAR, LPDWORD) = NULL;
+	HMODULE hL = LoadLibraryW(L"powrprof.dll");
+	if (!hL)
+		return ERROR_FILE_NOT_FOUND;
+	*(FARPROC*)&Nt6PowerReadName = GetProcAddress(hL, "PowerReadFriendlyName");
+	if (!Nt6PowerReadName)
+	{
+		FreeLibrary(hL);
+		return ERROR_PROC_NOT_FOUND;
+	}
+	DWORD ret = Nt6PowerReadName(NULL, SchemeGuid, SubGroupOfPowerSettingsGuid, PowerSettingGuid, Buffer, BufferSize);
+	FreeLibrary(hL);
+	return ret;
+}
+
+static DWORD
+PwrEnumerate(const GUID* SchemeGuid, const GUID* SubGroupOfPowerSettingsGuid,
+	POWER_DATA_ACCESSOR AccessFlags, ULONG Index, UCHAR* Buffer, DWORD* BufferSize)
+{
+	DWORD(WINAPI * Nt6PowerEnumerate)(HKEY, const GUID*, const GUID*, POWER_DATA_ACCESSOR, ULONG, UCHAR*, DWORD*) = NULL;
+	HMODULE hL = LoadLibraryW(L"powrprof.dll");
+	if (!hL)
+		return ERROR_FILE_NOT_FOUND;
+	*(FARPROC*)&Nt6PowerEnumerate = GetProcAddress(hL, "PowerEnumerate");
+	if (!Nt6PowerEnumerate)
+	{
+		FreeLibrary(hL);
+		return ERROR_PROC_NOT_FOUND;
+	}
+	DWORD ret = Nt6PowerEnumerate(NULL, SchemeGuid, SubGroupOfPowerSettingsGuid, AccessFlags, Index, Buffer, BufferSize);
+	FreeLibrary(hL);
+	return ret;
+}
+
+static DWORD
+PwrReadACValue(const GUID* SchemeGuid, const GUID* SubGroupOfPowerSettingsGuid,
+	const GUID* PowerSettingGuid, PULONG Type, LPBYTE Buffer, LPDWORD BufferSize)
+{
+	DWORD(WINAPI * Nt6PowerReadACValue)(HKEY, const GUID*, const GUID*, const GUID*, PULONG, LPBYTE, LPDWORD) = NULL;
+	HMODULE hL = LoadLibraryW(L"powrprof.dll");
+	if (!hL)
+		return ERROR_FILE_NOT_FOUND;
+	*(FARPROC*)&Nt6PowerReadACValue = GetProcAddress(hL, "PowerReadACValue");
+	if (!Nt6PowerReadACValue)
+	{
+		FreeLibrary(hL);
+		return ERROR_PROC_NOT_FOUND;
+	}
+	DWORD ret = Nt6PowerReadACValue(NULL, SchemeGuid, SubGroupOfPowerSettingsGuid, PowerSettingGuid, Type, Buffer, BufferSize);
+	FreeLibrary(hL);
+	return ret;
+}
+
+static DWORD
+PwrReadDCValue(const GUID* SchemeGuid, const GUID* SubGroupOfPowerSettingsGuid,
+	const GUID* PowerSettingGuid, PULONG Type, LPBYTE Buffer, LPDWORD BufferSize)
+{
+	DWORD(WINAPI * Nt6PowerReadDCValue)(HKEY, const GUID*, const GUID*, const GUID*, PULONG, LPBYTE, LPDWORD) = NULL;
+	HMODULE hL = LoadLibraryW(L"powrprof.dll");
+	if (!hL)
+		return ERROR_FILE_NOT_FOUND;
+	*(FARPROC*)&Nt6PowerReadDCValue = GetProcAddress(hL, "PowerReadDCValue");
+	if (!Nt6PowerReadDCValue)
+	{
+		FreeLibrary(hL);
+		return ERROR_PROC_NOT_FOUND;
+	}
+	DWORD ret = Nt6PowerReadDCValue(NULL, SchemeGuid, SubGroupOfPowerSettingsGuid, PowerSettingGuid, Type, Buffer, BufferSize);
+	FreeLibrary(hL);
+	return ret;
+}
+
+static DWORD
+PwrReadACValueIndex(const GUID* SchemeGuid, const GUID* SubGroupOfPowerSettingsGuid,
+	const GUID* PowerSettingGuid, LPDWORD AcValueIndex)
+{
+	DWORD(WINAPI * Nt6PowerReadACValueIndex)(HKEY, const GUID*, const GUID*, const GUID*, LPDWORD) = NULL;
+	HMODULE hL = LoadLibraryW(L"powrprof.dll");
+	if (!hL)
+		return ERROR_FILE_NOT_FOUND;
+	*(FARPROC*)&Nt6PowerReadACValueIndex = GetProcAddress(hL, "PowerReadACValueIndex");
+	if (!Nt6PowerReadACValueIndex)
+	{
+		FreeLibrary(hL);
+		return ERROR_PROC_NOT_FOUND;
+	}
+	DWORD ret = Nt6PowerReadACValueIndex(NULL, SchemeGuid, SubGroupOfPowerSettingsGuid, PowerSettingGuid, AcValueIndex);
+	FreeLibrary(hL);
+	return ret;
+}
+
+static DWORD
+PwrReadDCValueIndex(const GUID* SchemeGuid, const GUID* SubGroupOfPowerSettingsGuid,
+	const GUID* PowerSettingGuid, LPDWORD DcValueIndex)
+{
+	DWORD(WINAPI * Nt6PowerReadDCValueIndex)(HKEY, const GUID*, const GUID*, const GUID*, LPDWORD) = NULL;
+	HMODULE hL = LoadLibraryW(L"powrprof.dll");
+	if (!hL)
+		return ERROR_FILE_NOT_FOUND;
+	*(FARPROC*)&Nt6PowerReadDCValueIndex = GetProcAddress(hL, "PowerReadDCValueIndex");
+	if (!Nt6PowerReadDCValueIndex)
+	{
+		FreeLibrary(hL);
+		return ERROR_PROC_NOT_FOUND;
+	}
+	DWORD ret = Nt6PowerReadDCValueIndex(NULL, SchemeGuid, SubGroupOfPowerSettingsGuid, PowerSettingGuid, DcValueIndex);
+	FreeLibrary(hL);
+	return ret;
+}
 
 static void
 PrintBatteryTime(PNODE node, LPCSTR key, DWORD value)
@@ -238,59 +421,69 @@ PrintBatteryState(PNODE node)
 }
 
 static VOID
+PrintSchemeInfo(PNODE node, GUID* guid, BOOL ac)
+{
+	DWORD dwValue;
+	DWORD (*pfnReadValue)(const GUID *, const GUID *, const GUID *, PULONG, LPBYTE, LPDWORD)
+		= ac ? PwrReadACValue : PwrReadDCValue;
+	DWORD (*pfnReadIndex)(const GUID *, const GUID *, const GUID *, LPDWORD)
+		= ac ? PwrReadACValueIndex : PwrReadDCValueIndex;
+	PNODE ni = NWL_NodeAppendNew(node, ac ? "AC Power Settings" : "DC Power Settings", NFLG_ATTGROUP);
+	if (pfnReadIndex(guid, &GUID_DISK_SUBGROUP, &GUID_DISK_POWERDOWN_TIMEOUT, &dwValue) == ERROR_SUCCESS)
+		NWL_NodeAttrSet(ni, "Disk Poweroff Timeout", NWL_GetHumanTime(dwValue), 0);
+	if (pfnReadIndex(guid, &GUID_VIDEO_SUBGROUP, &GUID_VIDEO_POWERDOWN_TIMEOUT, &dwValue) == ERROR_SUCCESS)
+		NWL_NodeAttrSet(ni, "Screen Timeout", NWL_GetHumanTime(dwValue), 0);
+	if (pfnReadIndex(guid, &GUID_VIDEO_SUBGROUP, &GUID_VIDEO_DIM_TIMEOUT, &dwValue) == ERROR_SUCCESS)
+		NWL_NodeAttrSet(ni, "Dim Timeout", NWL_GetHumanTime(dwValue), 0);
+	if (pfnReadIndex(guid, &GUID_SLEEP_SUBGROUP, &GUID_STANDBY_TIMEOUT, &dwValue) == ERROR_SUCCESS)
+		NWL_NodeAttrSet(ni, "Standby Timeout", NWL_GetHumanTime(dwValue), 0);
+	if (pfnReadIndex(guid, &GUID_SLEEP_SUBGROUP, &GUID_UNATTEND_SLEEP_TIMEOUT, &dwValue) == ERROR_SUCCESS)
+		NWL_NodeAttrSet(ni, "Unattend Sleep Timeout", NWL_GetHumanTime(dwValue), 0);
+	if (pfnReadIndex(guid, &GUID_SLEEP_SUBGROUP, &GUID_HIBERNATE_TIMEOUT, &dwValue) == ERROR_SUCCESS)
+		NWL_NodeAttrSet(ni, "Hibernate Timeout", NWL_GetHumanTime(dwValue), 0);
+}
+
+#define MAX_POWER_SCHEMES 64
+
+static VOID
 PrintPowerScheme(PNODE node)
 {
-	DWORD (WINAPI *Nt6PowerReadName)(HKEY, const GUID*, const GUID*, const GUID*, PUCHAR, LPDWORD) = NULL;
-	HMODULE hL = NULL;
-	LPWSTR lpSchemeName = NULL;
-	DWORD dwSize;
-	DWORD dwType;
-	GUID guid;
+	GUID* activeSchemeGuid = NULL;
 
-	lpSchemeName = NWL_NtGetRegValue(HKEY_LOCAL_MACHINE,
-		L"SYSTEM\\CurrentControlSet\\Control\\Power\\User\\PowerSchemes", L"ActivePowerScheme", &dwSize, &dwType);
-	if (!lpSchemeName)
-		goto fail;
-	if (dwType != REG_SZ || wcslen(lpSchemeName) != 36)
-		goto fail;
+	if (PwrGetActiveScheme(&activeSchemeGuid) == ERROR_SUCCESS && activeSchemeGuid)
+	{
+		DWORD dwSize = NWINFO_BUFSZB;
+		NWL_NodeAttrSet(node, "Active Power Scheme", NWL_WinGuidToStr(TRUE, activeSchemeGuid), NAFLG_FMT_GUID);
+		if (PwrReadFriendlyName(activeSchemeGuid, NULL, NULL, (PUCHAR)NWLC->NwBufW, &dwSize) == ERROR_SUCCESS)
+			NWL_NodeAttrSet(node, "Active Power Scheme Name", NWL_Ucs2ToUtf8(NWLC->NwBufW), 0);
+	}
 
-	NWL_NodeAttrSet(node, "Active Power Scheme", NWL_Ucs2ToUtf8(lpSchemeName), 0);
+	PNODE nps = NWL_NodeAppendNew(node, "Power Schemes", NFLG_TABLE);
+	for (ULONG index = 0; index < MAX_POWER_SCHEMES; ++index)
+	{
+		GUID curGuid;
+		DWORD guidSize = sizeof(GUID);
 
-	lpSchemeName[8] = 0;
-	guid.Data1 = (unsigned long)wcstoul(lpSchemeName, NULL, 16);
-	lpSchemeName[13] = 0;
-	guid.Data2 = (unsigned short)wcstoul(lpSchemeName + 9, NULL, 16);
-	lpSchemeName[18] = 0;
-	guid.Data3 = (unsigned short)wcstoul(lpSchemeName + 14, NULL, 16);
-	guid.Data4[7] = (unsigned char)wcstoul(lpSchemeName + 34, NULL, 16);
-	lpSchemeName[34] = 0;
-	guid.Data4[6] = (unsigned char)wcstoul(lpSchemeName + 32, NULL, 16);
-	lpSchemeName[32] = 0;
-	guid.Data4[5] = (unsigned char)wcstoul(lpSchemeName + 30, NULL, 16);
-	lpSchemeName[30] = 0;
-	guid.Data4[4] = (unsigned char)wcstoul(lpSchemeName + 28, NULL, 16);
-	lpSchemeName[28] = 0;
-	guid.Data4[3] = (unsigned char)wcstoul(lpSchemeName + 26, NULL, 16);
-	lpSchemeName[26] = 0;
-	guid.Data4[2] = (unsigned char)wcstoul(lpSchemeName + 24, NULL, 16);
-	lpSchemeName[23] = 0;
-	guid.Data4[1] = (unsigned char)wcstoul(lpSchemeName + 21, NULL, 16);
-	lpSchemeName[21] = 0;
-	guid.Data4[0] = (unsigned char)wcstoul(lpSchemeName + 19, NULL, 16);
+		if (PwrEnumerate(NULL, NULL, ACCESS_SCHEME, index, (UCHAR*)&curGuid, &guidSize) == ERROR_SUCCESS)
+		{
+			DWORD dwSize = NWINFO_BUFSZB;
+			PNODE nc = NWL_NodeAppendNew(nps, "Power Scheme", NFLG_TABLE_ROW);
+			NWL_NodeAttrSet(nc, "GUID", NWL_WinGuidToStr(TRUE, &curGuid), NAFLG_FMT_GUID);
+			NWL_NodeAttrSetBool(nc, "Active", (activeSchemeGuid && IsEqualGUID(&curGuid, activeSchemeGuid)), 0);
+			if (PwrReadFriendlyName(&curGuid, NULL, NULL, (PUCHAR)NWLC->NwBufW, &dwSize) == ERROR_SUCCESS)
+				NWL_NodeAttrSet(nc, "Name", NWL_Ucs2ToUtf8(NWLC->NwBufW), 0);
+			PrintSchemeInfo(nc, &curGuid, TRUE); // AC Power Settings
+			PrintSchemeInfo(nc, &curGuid, FALSE); // DC Power Settings
+		}
+		else
+		{
+			// ERROR_NO_MORE_ITEMS is the expected end of enumeration
+			break;
+		}
+	}
 
-	hL = LoadLibraryW(L"powrprof.dll");
-	if (!hL)
-		goto fail;
-	*(FARPROC*)&Nt6PowerReadName = GetProcAddress(hL, "PowerReadFriendlyName");
-
-	dwSize = NWINFO_BUFSZB;
-	if (Nt6PowerReadName(NULL, &guid, NULL, NULL, (PUCHAR)NWLC->NwBufW, &dwSize) == ERROR_SUCCESS)
-		NWL_NodeAttrSet(node, "Active Power Scheme Name", NWL_Ucs2ToUtf8(NWLC->NwBufW), 0);
-fail:
-	if (hL)
-		FreeLibrary(hL);
-	if (lpSchemeName)
-		free(lpSchemeName);
+	if (activeSchemeGuid)
+		LocalFree(activeSchemeGuid);
 }
 
 PNODE NW_Battery(VOID)

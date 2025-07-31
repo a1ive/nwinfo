@@ -16,6 +16,7 @@ struct ACPI_FACS;
 BOOL NWL_IsAdmin(void);
 DWORD NWL_ObtainPrivileges(LPWSTR privilege);
 LPCSTR NWL_GetHumanSize(UINT64 size, LPCSTR human_sizes[6], UINT64 base);
+LPCSTR NWL_GetHumanTime(UINT64 ullSecond);
 
 BOOL NWL_ReadMemory(PVOID buffer, DWORD_PTR address, DWORD length);
 
