@@ -421,15 +421,55 @@ VOID NWL_NodeAppendMultiSz(LPSTR* lpmszMulti, LPCSTR szNew)
 	*lpmszMulti = mszResult;
 }
 
-PNODE_ATT NWL_NodeAttrSetRaw(PNODE node, LPCSTR key, void* value, size_t len, INT flags)
+VOID
+NWL_NodeAttrSetRaw(PNODE node, LPCSTR key, void* value, size_t len)
 {
-	PNODE_ATT att = NULL;
-	char* base64 = NULL;
-	flags |= NAFLG_FMT_BASE64;
-	base64 = NWL_Base64Encode(value, len);
-	if (!base64)
-		NWL_ErrExit(ERROR_OUTOFMEMORY, "Failed to allocate memory in "__FUNCTION__);
-	att = NWL_NodeAttrSet(node, key, base64, flags);
-	free(base64);
-	return att;
+	if (value == NULL || len == 0 || len >= UINT32_MAX)
+		return;
+
+	switch (NWLC->BinaryFormat)
+	{
+	case BIN_FMT_BASE64:
+	{
+		char* base64 = NWL_Base64Encode(value, len);
+		if (!base64)
+			NWL_ErrExit(ERROR_OUTOFMEMORY, "Failed to allocate memory in "__FUNCTION__);
+		NWL_NodeAttrSet(node, key, base64, NAFLG_FMT_BASE64);
+		free(base64);
+		return;
+	}
+	case BIN_FMT_HEX:
+	{
+		const char* t = "0123456789ABCDEF";
+		PNODE nhex = NWL_NodeAppendNew(node, key, NFLG_ATTGROUP);
+		for (size_t i = 0; i < len; i += 0x10)
+		{
+			char base[9]; // "00000000"
+			char hex[48]; // "00 11 22 33 44 55 66 77 88 99 AA BB CC DD EE FF"
+			char* ptr = hex;
+			sprintf_s(base, sizeof(base), "%08zX", i);
+			for (UINT16 j = 0; j < 0x10; j++)
+			{
+				if (i + j >= len)
+				{
+					*ptr++ = ' ';
+					*ptr++ = ' ';
+				}
+				else
+				{
+					*ptr++ = t[((unsigned char*)value)[i + j] >> 4];
+					*ptr++ = t[((unsigned char*)value)[i + j] & 0x0F];
+				}
+				if (j < 0x0F)
+					*ptr++ = ' ';
+				*ptr = '\0';
+			}
+			NWL_NodeAttrSet(nhex, base, hex, 0);
+		}
+		return;
+	}
+	case BIN_FMT_NONE:
+	default:
+		return;
+	}
 }

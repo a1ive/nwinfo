@@ -217,7 +217,7 @@ static PNODE PrintTableHeader(PNODE pNode, DESC_HEADER* Hdr)
 	NWL_NodeAttrSetf(tab, "OEM Revision", 0, "0x%lx", Hdr->OemRevision);
 	PrintU8Str(tab, "Creator ID", Hdr->CreatorId, 4);
 	NWL_NodeAttrSetf(tab, "Creator Revision", 0, "0x%x", Hdr->CreatorRevision);
-	//NWL_NodeAttrSetRaw(tab, "Base64 Data", Hdr, (size_t)Hdr->Length, 0);
+	NWL_NodeAttrSetRaw(tab, "Binary Data", Hdr, (size_t)Hdr->Length);
 	return tab;
 }
 
@@ -310,7 +310,9 @@ PrintFACS(PNODE pNode)
 	}
 	PNODE tab = NWL_NodeAppendNew(pNode, "Table", NFLG_TABLE_ROW);
 	PrintU8Str(tab, "Signature", facs->Signature, 4);
+	NWL_NodeAttrSet(tab, "Description", "Firmware ACPI Control Structure", 0);
 	NWL_NodeAttrSetf(tab, "Length", NAFLG_FMT_NUMERIC, "%u", facs->Length);
+	NWL_NodeAttrSetRaw(tab, "Binary Data", facs, (size_t)facs->Length);
 	NWL_NodeAttrSetf(tab, "Hardware Signature", 0, "0x%08X", facs->HwSignature);
 	NWL_NodeAttrSetf(tab, "Firmware Waking Vector", 0, "0x%08X", facs->FwWakingVector);
 	NWL_NodeAttrSetf(tab, "Global Lock", 0, "0x%08X", facs->GlobalLock);

@@ -20,6 +20,8 @@ static void nwinfo_help(void)
 		"  --cp=CODEPAGE    Set the code page of output text.\n"
 		"                   CODEPAGE can be 'ANSI' and 'UTF8'.\n"
 		"  --human          Display numbers in human readable format.\n"
+		"  --bin=FMT        Specify binary format.\n"
+		"                   FMT can be 'NONE' (default), 'BASE64' and 'HEX'.\n"
 		"  --debug          Print debug info to stdout.\n"
 		"  --hide-sensitive Hide sensitive data (MAC & S/N).\n"
 		"  --sys            Print system info.\n"
@@ -149,6 +151,7 @@ int main(int argc, char* argv[])
 	nwContext.HumanSize = FALSE;
 	nwContext.Debug = FALSE;
 	nwContext.HideSensitive = FALSE;
+	nwContext.BinaryFormat = BIN_FMT_NONE;
 	NW_Init(&nwContext);
 	
 	for (int i = 0; i < argc; i++)
@@ -188,6 +191,13 @@ int main(int argc, char* argv[])
 			lpFileName = &argv[i][9];
 		else if (_stricmp(argv[i], "--human") == 0)
 			nwContext.HumanSize = TRUE;
+		else if (_strnicmp(argv[i], "--bin=", 6) == 0 && argv[i][6])
+		{
+			if (_stricmp(&argv[i][6], "BASE64") == 0)
+				nwContext.BinaryFormat = BIN_FMT_BASE64;
+			else if (_stricmp(&argv[i][6], "HEX") == 0)
+				nwContext.BinaryFormat = BIN_FMT_HEX;
+		}
 		else if (_stricmp(argv[i], "--sys") == 0)
 			nwContext.SysInfo = TRUE;
 		else if (_strnicmp(argv[i], "--cpu", 5) == 0)

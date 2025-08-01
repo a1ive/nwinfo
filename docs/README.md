@@ -48,6 +48,9 @@ This command exports system, disk, SMBIOS, and network information to `report.js
   `CODEPAGE` can be `ANSI` and `UTF8`.  
 - --human  
   Display numbers in human readable format.  
+- --bin=`FORMAT`  
+  Specify binary format.  
+  `FORMAT` can be `NONE` (default), `BASE64` and `HEX`.  
 - --debug  
   Print debug info to stdout.  
 - --hide-sensitive  

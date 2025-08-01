@@ -76,4 +76,4 @@ NWL_NodeAttrSetf(PNODE node, LPCSTR key, INT flags, LPCSTR _Printf_format_string
 PNODE_ATT NWL_NodeAttrSetMulti(PNODE node, LPCSTR key, LPCSTR value, int flags);
 VOID NWL_NodeAppendMultiSz(LPSTR* lpmszMulti, LPCSTR szNew);
 
-PNODE_ATT NWL_NodeAttrSetRaw(PNODE node, LPCSTR key, void* value, size_t len, INT flags);
+VOID NWL_NodeAttrSetRaw(PNODE node, LPCSTR key, void* value, size_t len);

@@ -29,6 +29,12 @@ struct system_id_t;
 typedef struct _NWLIB_CONTEXT
 {
 	BOOL HumanSize;
+	enum
+	{
+		BIN_FMT_NONE = 0,
+		BIN_FMT_BASE64,
+		BIN_FMT_HEX,
+	} BinaryFormat;
 
 	BOOL SysInfo;
 	BOOL CpuInfo;
@@ -128,6 +134,7 @@ typedef struct _NWLIB_CONTEXT
 		FORMAT_TREE,
 		FORMAT_HTML,
 	} NwFormat;
+
 	FILE* NwFile;
 	LPCSTR* NwUnits;
 	CHAR* ErrLog;

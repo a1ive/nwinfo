@@ -2036,6 +2036,7 @@ static void DumpSMBIOS(PNODE node, void* Addr, UINT Len, UINT8 Type)
 		NWL_NodeAttrSetf(tab, "Table Type", NAFLG_FMT_NUMERIC, "%u", pHeader->Type);
 		NWL_NodeAttrSetf(tab, "Table Length", NAFLG_FMT_NUMERIC, "%u", pHeader->Length);
 		NWL_NodeAttrSetf(tab, "Table Handle", NAFLG_FMT_NUMERIC, "%u", pHeader->Handle);
+		NWL_NodeAttrSetRaw(tab, "Binary Data", pHeader, (size_t)pHeader->Length);
 		switch (pHeader->Type)
 		{
 		case 0:
