@@ -118,78 +118,67 @@ PwrEnumerate(const GUID* SchemeGuid, const GUID* SubGroupOfPowerSettingsGuid,
 	return ret;
 }
 
+#ifdef NWL_SYS_BUTTON_ACTION
 static DWORD
-PwrReadACValue(const GUID* SchemeGuid, const GUID* SubGroupOfPowerSettingsGuid,
+PwrReadValue(BOOL Ac, const GUID* SchemeGuid, const GUID* SubGroupOfPowerSettingsGuid,
 	const GUID* PowerSettingGuid, PULONG Type, LPBYTE Buffer, LPDWORD BufferSize)
 {
-	DWORD(WINAPI * Nt6PowerReadACValue)(HKEY, const GUID*, const GUID*, const GUID*, PULONG, LPBYTE, LPDWORD) = NULL;
+	DWORD(WINAPI * Nt6PowerReadValue)(HKEY, const GUID*, const GUID*, const GUID*, PULONG, LPBYTE, LPDWORD) = NULL;
 	HMODULE hL = LoadLibraryW(L"powrprof.dll");
+	LPCSTR fnName = Ac ? "PowerReadACValue" : "PowerReadDCValue";
 	if (!hL)
 		return ERROR_FILE_NOT_FOUND;
-	*(FARPROC*)&Nt6PowerReadACValue = GetProcAddress(hL, "PowerReadACValue");
-	if (!Nt6PowerReadACValue)
+	*(FARPROC*)&Nt6PowerReadValue = GetProcAddress(hL, fnName);
+	if (!Nt6PowerReadValue)
 	{
 		FreeLibrary(hL);
 		return ERROR_PROC_NOT_FOUND;
 	}
-	DWORD ret = Nt6PowerReadACValue(NULL, SchemeGuid, SubGroupOfPowerSettingsGuid, PowerSettingGuid, Type, Buffer, BufferSize);
+	DWORD ret = Nt6PowerReadValue(NULL, SchemeGuid, SubGroupOfPowerSettingsGuid, PowerSettingGuid, Type, Buffer, BufferSize);
 	FreeLibrary(hL);
 	return ret;
 }
 
-static DWORD
-PwrReadDCValue(const GUID* SchemeGuid, const GUID* SubGroupOfPowerSettingsGuid,
-	const GUID* PowerSettingGuid, PULONG Type, LPBYTE Buffer, LPDWORD BufferSize)
+static PVOID
+PwrReadValueAlloc(BOOL Ac, const GUID* SchemeGuid, const GUID* SubGroupOfPowerSettingsGuid,
+	const GUID* PowerSettingGuid, PULONG Type, LPDWORD BufferSize)
 {
-	DWORD(WINAPI * Nt6PowerReadDCValue)(HKEY, const GUID*, const GUID*, const GUID*, PULONG, LPBYTE, LPDWORD) = NULL;
-	HMODULE hL = LoadLibraryW(L"powrprof.dll");
-	if (!hL)
-		return ERROR_FILE_NOT_FOUND;
-	*(FARPROC*)&Nt6PowerReadDCValue = GetProcAddress(hL, "PowerReadDCValue");
-	if (!Nt6PowerReadDCValue)
+	PVOID pBuffer = NULL;
+	DWORD dwSize = 0;
+	if (PwrReadValue(Ac, SchemeGuid, SubGroupOfPowerSettingsGuid, PowerSettingGuid, Type, NULL, &dwSize) != ERROR_SUCCESS)
+		return NULL;
+	if (dwSize == 0)
+		return NULL;
+	pBuffer = malloc(dwSize);
+	if (!pBuffer)
+		return NULL;
+	if (PwrReadValue(Ac, SchemeGuid, SubGroupOfPowerSettingsGuid, PowerSettingGuid, Type, (LPBYTE)pBuffer, &dwSize) != ERROR_SUCCESS)
 	{
-		FreeLibrary(hL);
-		return ERROR_PROC_NOT_FOUND;
+		free(pBuffer);
+		return NULL;
 	}
-	DWORD ret = Nt6PowerReadDCValue(NULL, SchemeGuid, SubGroupOfPowerSettingsGuid, PowerSettingGuid, Type, Buffer, BufferSize);
-	FreeLibrary(hL);
-	return ret;
+	if (BufferSize)
+		*BufferSize = dwSize;
+	return pBuffer;
 }
+#endif
 
 static DWORD
-PwrReadACValueIndex(const GUID* SchemeGuid, const GUID* SubGroupOfPowerSettingsGuid,
-	const GUID* PowerSettingGuid, LPDWORD AcValueIndex)
+PwrReadValueIndex(BOOL Ac, const GUID* SchemeGuid, const GUID* SubGroupOfPowerSettingsGuid,
+	const GUID* PowerSettingGuid, LPDWORD ValueIndex)
 {
-	DWORD(WINAPI * Nt6PowerReadACValueIndex)(HKEY, const GUID*, const GUID*, const GUID*, LPDWORD) = NULL;
+	DWORD(WINAPI * Nt6PowerReadValueIndex)(HKEY, const GUID*, const GUID*, const GUID*, LPDWORD) = NULL;
 	HMODULE hL = LoadLibraryW(L"powrprof.dll");
+	LPCSTR fnName = Ac ? "PowerReadACValueIndex" : "PowerReadDCValueIndex";
 	if (!hL)
 		return ERROR_FILE_NOT_FOUND;
-	*(FARPROC*)&Nt6PowerReadACValueIndex = GetProcAddress(hL, "PowerReadACValueIndex");
-	if (!Nt6PowerReadACValueIndex)
+	*(FARPROC*)&Nt6PowerReadValueIndex = GetProcAddress(hL, fnName);
+	if (!Nt6PowerReadValueIndex)
 	{
 		FreeLibrary(hL);
 		return ERROR_PROC_NOT_FOUND;
 	}
-	DWORD ret = Nt6PowerReadACValueIndex(NULL, SchemeGuid, SubGroupOfPowerSettingsGuid, PowerSettingGuid, AcValueIndex);
-	FreeLibrary(hL);
-	return ret;
-}
-
-static DWORD
-PwrReadDCValueIndex(const GUID* SchemeGuid, const GUID* SubGroupOfPowerSettingsGuid,
-	const GUID* PowerSettingGuid, LPDWORD DcValueIndex)
-{
-	DWORD(WINAPI * Nt6PowerReadDCValueIndex)(HKEY, const GUID*, const GUID*, const GUID*, LPDWORD) = NULL;
-	HMODULE hL = LoadLibraryW(L"powrprof.dll");
-	if (!hL)
-		return ERROR_FILE_NOT_FOUND;
-	*(FARPROC*)&Nt6PowerReadDCValueIndex = GetProcAddress(hL, "PowerReadDCValueIndex");
-	if (!Nt6PowerReadDCValueIndex)
-	{
-		FreeLibrary(hL);
-		return ERROR_PROC_NOT_FOUND;
-	}
-	DWORD ret = Nt6PowerReadDCValueIndex(NULL, SchemeGuid, SubGroupOfPowerSettingsGuid, PowerSettingGuid, DcValueIndex);
+	DWORD ret = Nt6PowerReadValueIndex(NULL, SchemeGuid, SubGroupOfPowerSettingsGuid, PowerSettingGuid, ValueIndex);
 	FreeLibrary(hL);
 	return ret;
 }
@@ -420,27 +409,57 @@ PrintBatteryState(PNODE node)
 	SetupDiDestroyDeviceInfoList(hdev);
 }
 
+#ifdef NWL_SYS_BUTTON_ACTION
+static LPCSTR
+GetPowerActionStr(DWORD a)
+{
+	switch (a)
+	{
+	case POWERBUTTON_ACTION_VALUE_NOTHING:
+		return "Nothing";
+	case POWERBUTTON_ACTION_VALUE_SLEEP:
+		return "Sleep";
+	case POWERBUTTON_ACTION_VALUE_HIBERNATE:
+		return "Hibernate";
+	case POWERBUTTON_ACTION_VALUE_SHUTDOWN:
+		return "Shutdown";
+	case POWERBUTTON_ACTION_VALUE_TURN_OFF_THE_DISPLAY:
+		return "Display Off";
+	default:
+		return "Unknown";
+	}
+}
+#endif
+
 static VOID
 PrintSchemeInfo(PNODE node, GUID* guid, BOOL ac)
 {
 	DWORD dwValue;
-	DWORD (*pfnReadValue)(const GUID *, const GUID *, const GUID *, PULONG, LPBYTE, LPDWORD)
-		= ac ? PwrReadACValue : PwrReadDCValue;
-	DWORD (*pfnReadIndex)(const GUID *, const GUID *, const GUID *, LPDWORD)
-		= ac ? PwrReadACValueIndex : PwrReadDCValueIndex;
 	PNODE ni = NWL_NodeAppendNew(node, ac ? "AC Power Settings" : "DC Power Settings", NFLG_ATTGROUP);
-	if (pfnReadIndex(guid, &GUID_DISK_SUBGROUP, &GUID_DISK_POWERDOWN_TIMEOUT, &dwValue) == ERROR_SUCCESS)
+	if (PwrReadValueIndex(ac, guid, &GUID_DISK_SUBGROUP, &GUID_DISK_POWERDOWN_TIMEOUT, &dwValue) == ERROR_SUCCESS)
 		NWL_NodeAttrSet(ni, "Disk Poweroff Timeout", NWL_GetHumanTime(dwValue), 0);
-	if (pfnReadIndex(guid, &GUID_VIDEO_SUBGROUP, &GUID_VIDEO_POWERDOWN_TIMEOUT, &dwValue) == ERROR_SUCCESS)
+	if (PwrReadValueIndex(ac, guid, &GUID_VIDEO_SUBGROUP, &GUID_VIDEO_POWERDOWN_TIMEOUT, &dwValue) == ERROR_SUCCESS)
 		NWL_NodeAttrSet(ni, "Screen Timeout", NWL_GetHumanTime(dwValue), 0);
-	if (pfnReadIndex(guid, &GUID_VIDEO_SUBGROUP, &GUID_VIDEO_DIM_TIMEOUT, &dwValue) == ERROR_SUCCESS)
+	if (PwrReadValueIndex(ac, guid, &GUID_VIDEO_SUBGROUP, &GUID_VIDEO_DIM_TIMEOUT, &dwValue) == ERROR_SUCCESS)
 		NWL_NodeAttrSet(ni, "Dim Timeout", NWL_GetHumanTime(dwValue), 0);
-	if (pfnReadIndex(guid, &GUID_SLEEP_SUBGROUP, &GUID_STANDBY_TIMEOUT, &dwValue) == ERROR_SUCCESS)
+	if (PwrReadValueIndex(ac, guid, &GUID_SLEEP_SUBGROUP, &GUID_STANDBY_TIMEOUT, &dwValue) == ERROR_SUCCESS)
 		NWL_NodeAttrSet(ni, "Standby Timeout", NWL_GetHumanTime(dwValue), 0);
-	if (pfnReadIndex(guid, &GUID_SLEEP_SUBGROUP, &GUID_UNATTEND_SLEEP_TIMEOUT, &dwValue) == ERROR_SUCCESS)
+	if (PwrReadValueIndex(ac, guid, &GUID_SLEEP_SUBGROUP, &GUID_UNATTEND_SLEEP_TIMEOUT, &dwValue) == ERROR_SUCCESS)
 		NWL_NodeAttrSet(ni, "Unattend Sleep Timeout", NWL_GetHumanTime(dwValue), 0);
-	if (pfnReadIndex(guid, &GUID_SLEEP_SUBGROUP, &GUID_HIBERNATE_TIMEOUT, &dwValue) == ERROR_SUCCESS)
+	if (PwrReadValueIndex(ac, guid, &GUID_SLEEP_SUBGROUP, &GUID_HIBERNATE_TIMEOUT, &dwValue) == ERROR_SUCCESS)
 		NWL_NodeAttrSet(ni, "Hibernate Timeout", NWL_GetHumanTime(dwValue), 0);
+#ifdef NWL_SYS_BUTTON_ACTION
+	DWORD dwSize = sizeof(DWORD);
+	if (PwrReadValue(ac, guid, &GUID_SYSTEM_BUTTON_SUBGROUP, &GUID_POWERBUTTON_ACTION, NULL, (LPBYTE)&dwValue, &dwSize) == ERROR_SUCCESS)
+		NWL_NodeAttrSet(ni, "Power Button Action", GetPowerActionStr(dwValue), 0);
+	dwSize = sizeof(DWORD);
+	if (PwrReadValue(ac, guid, &GUID_SYSTEM_BUTTON_SUBGROUP, &GUID_SLEEPBUTTON_ACTION, NULL, (LPBYTE)&dwValue, &dwSize) == ERROR_SUCCESS)
+		NWL_NodeAttrSet(ni, "Sleep Button Action", GetPowerActionStr(dwValue), 0);
+#endif
+	if (PwrReadValueIndex(ac, guid, &GUID_PROCESSOR_SETTINGS_SUBGROUP, &GUID_PROCESSOR_THROTTLE_MINIMUM, &dwValue) == ERROR_SUCCESS)
+		NWL_NodeAttrSetf(ni, "Processor Throttle Min", NAFLG_FMT_NUMERIC, "%lu", dwValue);
+	if (PwrReadValueIndex(ac, guid, &GUID_PROCESSOR_SETTINGS_SUBGROUP, &GUID_PROCESSOR_THROTTLE_MAXIMUM, &dwValue) == ERROR_SUCCESS)
+		NWL_NodeAttrSetf(ni, "Processor Throttle Max", NAFLG_FMT_NUMERIC, "%lu", dwValue);
 }
 
 #define MAX_POWER_SCHEMES 64
