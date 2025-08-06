@@ -73,7 +73,7 @@ jobs:
         powershell -ExecutionPolicy Bypass -File .\copy_res.ps1 -TargetFolder nwinfo
 
     - name: Download README.pdf
-      uses: actions/download-artifact@v4
+      uses: actions/download-artifact@v5
       with:
         name: README.pdf
         path: nwinfo
