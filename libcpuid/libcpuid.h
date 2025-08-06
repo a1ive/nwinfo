@@ -305,6 +305,9 @@ struct cpu_raw_data_t {
 	/** contains results of CPUID for eax = 0x80000000, 0x80000001, ...*/
 	uint32_t ext_cpuid[MAX_EXT_CPUID_LEVEL][NUM_REGS];
 
+	/** contains results of CPUID for eax = 0xC0000000, 0xC0000001, ...*/
+	uint32_t via_cpuid[MAX_VIA_CPUID_LEVEL][NUM_REGS];
+
 	/** when the CPU is intel and it supports deterministic cache
 	    information: this contains the results of CPUID for eax = 4
 	    and ecx = 0, 1, ... */
@@ -952,6 +955,16 @@ typedef enum {
 	CPU_FEATURE_HYPERVISOR, /*!< Hypervisor present (always zero on physical CPUs) */
 	CPU_FEATURE_INTEL_DTS, /*!< Intel Digital Thermal Sensor */
 	CPU_FEATURE_INTEL_PTM, /*!< Intel Package Thermal Management */
+	CPU_FEATURE_SM2, /*!< Zhaoxin SM2 */
+	CPU_FEATURE_XSTORE, /*!< VIA "rng" RNG present (xstore) */
+	CPU_FEATURE_SM3_4, /*!< Zhaoxin SM3 and SM4 */
+	CPU_FEATURE_XCRYPT, /*!< VIA "ace" on-CPU crypto (xcrypt) */
+	CPU_FEATURE_ACE2, /*!< VIA Advanced Cryptography Engine v2 */
+	CPU_FEATURE_PHE, /*!< VIA PadLock Hash Engine */
+	CPU_FEATURE_PMM, /*!< VIA PadLock Montgomery Multiplier */
+	CPU_FEATURE_XRNG2, /*!< VIA XRNG2 */
+	CPU_FEATURE_PHE2, /*!< VIA XSHA384 and XSHA512 */
+	CPU_FEATURE_XMODX, /*!< VIA XMODEXP and MONTMUL2 */
 	/* Arm */
 	CPU_FEATURE_SWAP, /*!< ARM: Swap instructions in the ARM instruction set */
 	CPU_FEATURE_THUMB, /*!< ARM: Thumb instruction set support */

@@ -677,6 +677,10 @@ static int cpuid_serialize_raw_data_internal(struct cpu_raw_data_t* single_raw, 
 					fprintf(f, "ext_cpuid[%d]=%08" PRIx32 " %08" PRIx32 " %08" PRIx32 " %08" PRIx32 "\n", i,
 						raw_ptr->ext_cpuid[i][EAX], raw_ptr->ext_cpuid[i][EBX],
 						raw_ptr->ext_cpuid[i][ECX], raw_ptr->ext_cpuid[i][EDX]);
+				for (i = 0; i < MAX_VIA_CPUID_LEVEL; i++)
+					fprintf(f, "via_cpuid[%d]=%08" PRIx32 " %08" PRIx32 " %08" PRIx32 " %08" PRIx32 "\n", i,
+						raw_ptr->via_cpuid[i][EAX], raw_ptr->via_cpuid[i][EBX],
+						raw_ptr->via_cpuid[i][ECX], raw_ptr->via_cpuid[i][EDX]);
 				for (i = 0; i < MAX_INTELFN4_LEVEL; i++)
 					fprintf(f, "intel_fn4[%d]=%08" PRIx32 " %08" PRIx32 " %08" PRIx32 " %08" PRIx32 "\n", i,
 						raw_ptr->intel_fn4[i][EAX], raw_ptr->intel_fn4[i][EBX],
@@ -829,6 +833,9 @@ static int cpuid_deserialize_raw_data_internal(struct cpu_raw_data_t* single_raw
 			}
 			else if ((sscanf(line, "ext_cpuid[%d]=%" SCNx32 "%" SCNx32 "%" SCNx32 "%" SCNx32, &i, &eax, &ebx, &ecx, &edx) >= 5) && (i >= 0) && (i < MAX_EXT_CPUID_LEVEL)) {
 				RAW_ASSIGN_LINE_X86(raw_ptr->ext_cpuid[i]);
+			}
+			else if ((sscanf(line, "via_cpuid[%d]=%" SCNx32 "%" SCNx32 "%" SCNx32 "%" SCNx32, &i, &eax, &ebx, &ecx, &edx) >= 5) && (i >= 0) && (i < MAX_VIA_CPUID_LEVEL)) {
+				RAW_ASSIGN_LINE_X86(raw_ptr->via_cpuid[i]);
 			}
 			else if ((sscanf(line, "intel_fn4[%d]=%" SCNx32 "%" SCNx32 "%" SCNx32 "%" SCNx32, &i, &eax, &ebx, &ecx, &edx) >= 5) && (i >= 0) && (i < MAX_INTELFN4_LEVEL)) {
 				RAW_ASSIGN_LINE_X86(raw_ptr->intel_fn4[i]);
@@ -1374,10 +1381,12 @@ int cpuid_get_raw_data_core(struct cpu_raw_data_t* data, logical_cpu_t logical_c
 	if (!cpuid_present())
 		return cpuid_set_error(ERR_NO_CPUID);
 
-	for (i = 0; i < 32; i++)
+	for (i = 0; i < MAX_CPUID_LEVEL; i++)
 		cpu_exec_cpuid(i, data->basic_cpuid[i]);
-	for (i = 0; i < 32; i++)
+	for (i = 0; i < MAX_EXT_CPUID_LEVEL; i++)
 		cpu_exec_cpuid(0x80000000 + i, data->ext_cpuid[i]);
+	for (i = 0; i < MAX_VIA_CPUID_LEVEL; i++)
+		cpu_exec_cpuid(0xC0000000 + i, data->via_cpuid[i]);
 	for (i = 0; i < MAX_INTELFN4_LEVEL; i++) {
 		memset(data->intel_fn4[i], 0, sizeof(data->intel_fn4[i]));
 		data->intel_fn4[i][EAX] = 4;
@@ -2082,6 +2091,16 @@ const char* cpu_feature_str(cpu_feature_t feature)
 		{ CPU_FEATURE_HYPERVISOR, "hypervisor" },
 		{ CPU_FEATURE_INTEL_DTS, "intel_dts" },
 		{ CPU_FEATURE_INTEL_PTM, "intel_ptm" },
+		{ CPU_FEATURE_SM2, "sm2" },
+		{ CPU_FEATURE_XSTORE, "xstore" },
+		{ CPU_FEATURE_SM3_4, "sm3/4" },
+		{ CPU_FEATURE_XCRYPT, "ace" },
+		{ CPU_FEATURE_ACE2, "ace2" },
+		{ CPU_FEATURE_PHE, "phe" },
+		{ CPU_FEATURE_PMM, "pmm" },
+		{ CPU_FEATURE_XRNG2, "xrng2" },
+		{ CPU_FEATURE_PHE2, "phe2" },
+		{ CPU_FEATURE_XMODX, "xmodx" },
 		/* Arm */
 		{ CPU_FEATURE_SWAP, "swap" },
 		{ CPU_FEATURE_THUMB, "thumb" },

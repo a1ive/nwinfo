@@ -85,8 +85,29 @@ const struct match_entry_t cpudb_centaur[] = {
 //     F   M   S  EF    EM #cores  L2$    L3$  Pattern                              Codename                         Technology
 };
 
+static void load_centaur_features(struct cpu_raw_data_t* raw, struct cpu_id_t* data)
+{
+	const struct feature_map_t matchtable_edx1[] = {
+		{ 0, CPU_FEATURE_SM2 },
+		{ 2, CPU_FEATURE_XSTORE },
+		{ 4, CPU_FEATURE_SM3_4 },
+		{ 6, CPU_FEATURE_XCRYPT },
+		{ 8, CPU_FEATURE_ACE2 },
+		{ 10, CPU_FEATURE_PHE },
+		{ 12, CPU_FEATURE_PMM },
+		{ 22, CPU_FEATURE_XRNG2 },
+		{ 25, CPU_FEATURE_PHE2 },
+		{ 27, CPU_FEATURE_XMODX },
+	};
+
+	if (raw->basic_cpuid[0][EAX] >= 1) {
+		match_features(matchtable_edx1, COUNT_OF(matchtable_edx1), raw->basic_cpuid[1][EDX], data);
+	}
+}
+
 int cpuid_identify_centaur(struct cpu_raw_data_t* raw, struct cpu_id_t* data, struct internal_id_info_t* internal)
 {
+	load_centaur_features(raw, data);
 	if (raw->basic_cpuid[0][EAX] >= 4)
 		decode_deterministic_cache_info_x86(raw->intel_fn4, MAX_INTELFN4_LEVEL, data, internal);
 	decode_number_of_cores_x86(raw, data);
