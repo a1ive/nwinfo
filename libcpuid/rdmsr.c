@@ -158,6 +158,10 @@ static const uint32_t intel_msr[] =
 	CPU_INVALID_VALUE
 };
 
+/* VIA MSRs addresses */
+#define MSR_VIA_TEMP_F7_NANO 0x1423
+#define MSR_VIA_TEMP_F6_C7   0x1169
+
 struct msr_info_t
 {
 	int cpu_clock;
@@ -749,6 +753,30 @@ static int get_info_temperature(struct msr_info_t *info)
 		err += cpu_rdmsr_range(info->handle, IA32_THERM_STATUS,      31, 31, &ReadingValid);
 		err += cpu_rdmsr_range(info->handle, MSR_TEMPERATURE_TARGET, 23, 16, &TemperatureTarget);
 		if(!err && ReadingValid) return (int) (TemperatureTarget - DigitalReadout);
+	}
+	else if (info->id->vendor == VENDOR_CENTAUR)
+	{
+		uint32_t addr = 0;
+		if (info->id->x86.family == 0x07)
+			addr = MSR_VIA_TEMP_F7_NANO;
+		else if (info->id->x86.family == 0x06)
+		{
+			switch (info->id->x86.model)
+			{
+			case 0x0a:
+			case 0x0d:
+				addr = MSR_VIA_TEMP_F6_C7;
+				break;
+			case 0x0f:
+				addr = MSR_VIA_TEMP_F7_NANO;
+				break;
+			}
+		}
+		if (addr != 0)
+		{
+			err = cpu_rdmsr_range(info->handle, addr, 23, 0, &DigitalReadout);
+			if (!err && DigitalReadout) return (int)(DigitalReadout);
+		}
 	}
 
 	return CPU_INVALID_VALUE;
