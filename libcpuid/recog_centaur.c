@@ -81,7 +81,7 @@ const struct match_entry_t cpudb_centaur[] = {
 	{  7, -1, -1, -1,   59,  -1,    -1,    -1, { "ZHAOXIN KaiXian KX-U6###",   8 }, "Zhaoxin KaiXian (LuJiaZui)",    "16 nm"  }, // KX (U6000)
 	/* Yongfeng (2022, 16 nm) */
 	{  7, -1, -1, -1,   91,  -1,    -1,    -1, { "ZHAOXIN KaisHeng KH-40###",  8 }, "Zhaoxin KaisHeng (Yongfeng)",   "16 nm"  }, // KH (40000)
-	{  7, -1, -1, -1,   91,  -1,    -1,    -1, { "ZHAOXIN KaiXian KX-7###",    8 }, "Zhaoxin KaiXian (Yongfeng)",    "16 nm"  }, // KX (7000)
+	{  7, -1, -1, -1,   91,  -1,    -1,    -1, { "ZHAOXIN KaiXian KX-7###",    8 }, "Zhaoxin KaiXian (ShiJiDaDao)",  "7 nm"   }, // KX (7000)
 //     F   M   S  EF    EM #cores  L2$    L3$  Pattern                              Codename                         Technology
 };
 
