@@ -167,6 +167,27 @@ int WR0_RdMsr(struct wr0_drv_t* driver, uint32_t msr_index, uint64_t* result)
 	return 0;
 }
 
+int WR0_WrMsr(struct wr0_drv_t* driver, uint32_t msr_index, DWORD eax, DWORD edx)
+{
+	DWORD dwBytesReturned = 0;
+	DWORD outBuf;
+	OLS_WRITE_MSR_INPUT inBuf;
+	BOOL Res = FALSE;
+
+	if (!driver)
+		return -1;
+
+	inBuf.Register = msr_index;
+	inBuf.Value.HighPart = edx;
+	inBuf.Value.LowPart = eax;
+
+	Res = DeviceIoControl(driver->hhDriver, IOCTL_OLS_WRITE_MSR,
+		&inBuf, sizeof(inBuf), &outBuf, sizeof(outBuf), &dwBytesReturned, NULL);
+	if (Res == FALSE)
+		return -1;
+	return 0;
+}
+
 uint8_t WR0_RdIo8(struct wr0_drv_t* drv, uint16_t port)
 {
 	if (!drv || !drv->hhDriver || drv->hhDriver == INVALID_HANDLE_VALUE)

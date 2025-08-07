@@ -159,8 +159,10 @@ static const uint32_t intel_msr[] =
 };
 
 /* VIA MSRs addresses */
-#define MSR_VIA_TEMP_F7_NANO 0x1423
 #define MSR_VIA_TEMP_F6_C7   0x1169
+#define MSR_VIA_TEMP_F7_NANO 0x1423
+#define MSR_VIA_INDEX_F7     0x174c
+#define MSR_VIA_TEMP_F7      0x174d
 
 struct msr_info_t
 {
@@ -732,7 +734,6 @@ fail:
 
 static int get_info_temperature(struct msr_info_t *info)
 {
-	int err;
 	uint64_t DigitalReadout, ReadingValid, TemperatureTarget;
 
 	if (info->id->vendor == VENDOR_INTEL && info->id->flags[CPU_FEATURE_INTEL_DTS])
@@ -749,19 +750,32 @@ static int get_info_temperature(struct msr_info_t *info)
 		Table 35-34.  Additional MSRs Common to Intel Xeon Processor D and Intel Xeon Processors E5 v4 Family Based on the Broadwell Microarchitecture
 		Table 35-40.  Selected MSRs Supported by Next Generation Intel Xeon Phi Processors with DisplayFamily_DisplayModel Signature 06_57H
 		MSR_TEMPERATURE_TARGET[23:16] is Temperature Target */
-		err  = cpu_rdmsr_range(info->handle, IA32_THERM_STATUS,      22, 16, &DigitalReadout);
-		err += cpu_rdmsr_range(info->handle, IA32_THERM_STATUS,      31, 31, &ReadingValid);
-		err += cpu_rdmsr_range(info->handle, MSR_TEMPERATURE_TARGET, 23, 16, &TemperatureTarget);
-		if(!err && ReadingValid) return (int) (TemperatureTarget - DigitalReadout);
+		if (cpu_rdmsr_range(info->handle, IA32_THERM_STATUS,      22, 16, &DigitalReadout))
+			goto fail;
+		if (cpu_rdmsr_range(info->handle, IA32_THERM_STATUS, 31, 31, &ReadingValid))
+			goto fail;
+		if (cpu_rdmsr_range(info->handle, MSR_TEMPERATURE_TARGET, 23, 16, &TemperatureTarget))
+			goto fail;
+		if(ReadingValid)
+			return (int) (TemperatureTarget - DigitalReadout);
 	}
 	else if (info->id->vendor == VENDOR_CENTAUR)
 	{
 		uint32_t addr = 0;
-		if (info->id->x86.family == 0x07)
-			addr = MSR_VIA_TEMP_F7_NANO;
-		else if (info->id->x86.family == 0x06)
+		if (info->id->x86.ext_family == 0x07)
 		{
-			switch (info->id->x86.model)
+			switch (info->id->x86.ext_model)
+			{
+			case 0x6b:
+				addr = MSR_VIA_TEMP_F7;
+				break;
+			default:
+				addr = MSR_VIA_TEMP_F7_NANO;
+			}
+		}
+		else if (info->id->x86.ext_family == 0x06)
+		{
+			switch (info->id->x86.ext_model)
 			{
 			case 0x0a:
 			case 0x0d:
@@ -772,13 +786,19 @@ static int get_info_temperature(struct msr_info_t *info)
 				break;
 			}
 		}
-		if (addr != 0)
+		if (addr == 0)
+			goto fail;
+		if (addr == MSR_VIA_TEMP_F7)
 		{
-			err = cpu_rdmsr_range(info->handle, addr, 23, 0, &DigitalReadout);
-			if (!err && DigitalReadout) return (int)(DigitalReadout);
+			if (WR0_WrMsr(info->handle, MSR_VIA_INDEX_F7, 0x19, 0))
+				goto fail;
 		}
+		if (cpu_rdmsr_range(info->handle, addr, 23, 0, &DigitalReadout))
+			goto fail;
+		if (DigitalReadout)
+			return (int)(DigitalReadout);
 	}
-
+fail:
 	return CPU_INVALID_VALUE;
 }
 
@@ -1050,7 +1070,6 @@ fail:
 
 static double get_info_voltage(struct msr_info_t *info)
 {
-	int err;
 	double VIDStep;
 	uint64_t reg, CpuVid;
 
@@ -1060,8 +1079,9 @@ static double get_info_voltage(struct msr_info_t *info)
 		Table 35-18.  MSRs Supported by Intel Processors based on Intel microarchitecture code name Sandy Bridge (Contd.)
 		MSR_PERF_STATUS[47:32] is Core Voltage
 		P-state core voltage can be computed by MSR_PERF_STATUS[37:32] * (float) 1/(2^13). */
-		err = cpu_rdmsr_range(info->handle, MSR_PERF_STATUS, 47, 32, &reg);
-		if (!err) return (double) reg / (1ULL << 13ULL);
+		if (cpu_rdmsr_range(info->handle, MSR_PERF_STATUS, 47, 32, &reg))
+			goto fail;
+		return (double) reg / (1ULL << 13ULL);
 	}
 	else if(info->id->vendor == VENDOR_AMD || info->id->vendor == VENDOR_HYGON)
 	{
@@ -1072,15 +1092,26 @@ static double get_info_voltage(struct msr_info_t *info)
 		BKDG 10h, page 49: voltage = 1.550V - 0.0125V * SviVid (SVI1)
 		BKDG 15h, page 50: Voltage = 1.5500 - 0.00625 * Vid[7:0] (SVI2)
 		SVI2 since Piledriver (Family 15h, 2nd-gen): Models 10h-1Fh Processors */
+		uint8_t RangeH, RangeL;
 		VIDStep = ((info->id->x86.ext_family < 0x15) || ((info->id->x86.ext_family == 0x15) && (info->id->x86.ext_model < 0x10))) ? 0.0125 : 0.00625;
-		err = cpu_rdmsr_range(info->handle, MSR_PSTATE_S, 2, 0, &reg);
-		if(info->id->x86.ext_family < 0x17)
-			err += cpu_rdmsr_range(info->handle, MSR_PSTATE_0 + (uint32_t) reg, 15, 9, &CpuVid);
+		if (cpu_rdmsr_range(info->handle, MSR_PSTATE_S, 2, 0, &reg))
+			goto fail;
+		if (info->id->x86.ext_family < 0x17)
+		{
+			RangeH = 15;
+			RangeL = 9;
+		}
 		else
-			err += cpu_rdmsr_range(info->handle, MSR_PSTATE_0 + (uint32_t) reg, 21, 14, &CpuVid);
-		if (!err && MSR_PSTATE_0 + (uint32_t) reg <= MSR_PSTATE_7) return 1.550 - VIDStep * CpuVid;
+		{
+			RangeH = 21;
+			RangeL = 14;
+		}
+		if (cpu_rdmsr_range(info->handle, MSR_PSTATE_0 + (uint32_t)reg, RangeH, RangeL, &CpuVid))
+			goto fail;
+		if (MSR_PSTATE_0 + (uint32_t) reg <= MSR_PSTATE_7)
+			return 1.550 - VIDStep * CpuVid;
 	}
-
+fail:
 	return (double) CPU_INVALID_VALUE / 100;
 }
 

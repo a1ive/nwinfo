@@ -16,6 +16,7 @@ struct wr0_drv_t
 };
 
 int WR0_RdMsr(struct wr0_drv_t* driver, uint32_t msr_index, uint64_t* result);
+int WR0_WrMsr(struct wr0_drv_t* driver, uint32_t msr_index, DWORD eax, DWORD edx);
 uint8_t WR0_RdIo8(struct wr0_drv_t* drv, uint16_t port);
 uint16_t WR0_RdIo16(struct wr0_drv_t* drv, uint16_t port);
 uint32_t WR0_RdIo32(struct wr0_drv_t* drv, uint16_t port);
