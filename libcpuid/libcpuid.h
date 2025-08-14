@@ -1957,8 +1957,6 @@ typedef enum {
 	                            multiplied by 100. */
 	INFO_PKG_ENERGY,            /*!< The current package energy consumption in Joules,
 	                            multiplied by 100. */
-	INFO_PKG_POWER,             /*!< The current package power in Watts,
-	                            multiplied by 100. */
 	INFO_PKG_PL1,               /*!< The current package power limit #1 in Watts,
 	                            multiplied by 100. */
 	INFO_PKG_PL2,               /*!< The current package power limit #2 in Watts,

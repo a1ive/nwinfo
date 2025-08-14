@@ -57,7 +57,7 @@
     <ClInclude Include="rdcpuid.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\ryzenadj\ryzenadj.h">
+    <ClInclude Include="rdmsr.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -90,6 +90,15 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="rdcpuid.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="hwmon_amd.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="hwmon_centaur.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="hwmon_intel.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

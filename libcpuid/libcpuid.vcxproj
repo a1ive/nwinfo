@@ -120,7 +120,6 @@
     </Lib>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="..\ryzenadj\ryzenadj.h" />
     <ClInclude Include="asm-bits.h" />
     <ClInclude Include="libcpuid.h" />
     <ClInclude Include="libcpuid_arm_driver.h" />
@@ -129,6 +128,7 @@
     <ClInclude Include="libcpuid_types.h" />
     <ClInclude Include="libcpuid_util.h" />
     <ClInclude Include="rdcpuid.h" />
+    <ClInclude Include="rdmsr.h" />
     <ClInclude Include="rdtsc.h" />
     <ClInclude Include="recog_amd.h" />
     <ClInclude Include="recog_arm.h" />
@@ -138,6 +138,9 @@
   <ItemGroup>
     <ClCompile Include="asm-bits.c" />
     <ClCompile Include="cpuid_main.c" />
+    <ClCompile Include="hwmon_amd.c" />
+    <ClCompile Include="hwmon_centaur.c" />
+    <ClCompile Include="hwmon_intel.c" />
     <ClCompile Include="libcpuid_util.c" />
     <ClCompile Include="rdcpuid.c" />
     <ClCompile Include="rdmsr.c" />

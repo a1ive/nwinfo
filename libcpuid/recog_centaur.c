@@ -100,8 +100,8 @@ static void load_centaur_features(struct cpu_raw_data_t* raw, struct cpu_id_t* d
 		{ 27, CPU_FEATURE_XMODX },
 	};
 
-	if (raw->basic_cpuid[0][EAX] >= 1) {
-		match_features(matchtable_edx1, COUNT_OF(matchtable_edx1), raw->basic_cpuid[1][EDX], data);
+	if (raw->via_cpuid[0][EAX] >= 0xC0000001) {
+		match_features(matchtable_edx1, COUNT_OF(matchtable_edx1), raw->via_cpuid[1][EDX], data);
 	}
 }
 

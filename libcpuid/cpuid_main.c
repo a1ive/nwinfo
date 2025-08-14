@@ -1196,6 +1196,7 @@ static bool cpu_ident_id_x86(struct cpu_raw_data_t* raw, struct internal_topolog
 	switch (vendor) {
 		case VENDOR_INTEL:
 		case VENDOR_AMD:
+		case VENDOR_HYGON:
 			is_apic_id_supported = true;
 			break;
 		case VENDOR_UNKNOWN:
@@ -2471,6 +2472,8 @@ void cpuid_get_cpu_list(cpu_vendor_t vendor, struct cpu_list_t* list)
 			make_list_from_string("UMC x86 CPU", list);
 			break;
 		case VENDOR_CENTAUR:
+		case VENDOR_VIA:
+		case VENDOR_ZHAOXIN:
 			cpuid_get_list_centaur(list);
 			break;
 		case VENDOR_RISE:
