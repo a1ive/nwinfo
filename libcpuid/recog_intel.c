@@ -621,17 +621,20 @@ const struct match_entry_t cpudb_intel[] = {
 	//{  6, 14, -1, -1, 174, -1,    -1,    -1, { "Xeon(R) ????",      4 }, "Xeon ??? (Granite Rapids-D)", "Intel 3" },
 
 	/* Lion Cove (P-cores) / Skymont (E-cores) CPUs (2024, Core Ultra Series 2, TSMC N3B): https://en.wikipedia.org/wiki/Arrow_Lake_(microprocessor) */
-	{  6,  6, -1, -1, 198, -1,    -1,    -1, { "Core(TM) Ultra 9 2##",   8 }, "Core Ultra 9 (Arrow Lake-S)", "TSMC N3B" },
-	{  6,  6, -1, -1, 198, -1,    -1,    -1, { "Core(TM) Ultra 7 2##",   8 }, "Core Ultra 7 (Arrow Lake-S)", "TSMC N3B" },
-	{  6,  6, -1, -1, 198, -1,    -1,    -1, { "Core(TM) Ultra 5 2##",   8 }, "Core Ultra 5 (Arrow Lake-S)", "TSMC N3B" },
-	{  6,  6, -1, -1, 181, -1,    -1,    -1, { "Core(TM) Ultra 7 2##U", 10 }, "Core Ultra 7 (Arrow Lake-U)", "TSMC N3B" }, /* Core Ultra 7 255U + Core Ultra 7 265U */
-	{  6,  6, -1, -1, 181, -1,    -1,    -1, { "Core(TM) Ultra 5 2##U", 10 }, "Core Ultra 5 (Arrow Lake-U)", "TSMC N3B" }, /* Core Ultra 5 225U + Core Ultra 7 235U */
-	{  6,  6, -1, -1, 197, -1,    -1,    -1, { "Core(TM) Ultra 9 2##H", 10 }, "Core Ultra 9 (Arrow Lake-H)", "TSMC N3B" }, /* Core Ultra 9 285H */
-	{  6,  6, -1, -1, 197, -1,    -1,    -1, { "Core(TM) Ultra 7 2##H", 10 }, "Core Ultra 7 (Arrow Lake-H)", "TSMC N3B" }, /* Core Ultra 7 255H + Core Ultra 7 265H */
-	{  6,  6, -1, -1, 197, -1,    -1,    -1, { "Core(TM) Ultra 5 2##H", 10 }, "Core Ultra 5 (Arrow Lake-H)", "TSMC N3B" }, /* Core Ultra 5 225H + Core Ultra 7 235H */
-	{  6, 13, -1, -1, 189, -1,    -1,    -1, { "Core(TM) Ultra 9 2##V", 10 }, "Core Ultra 9 (Lunar Lake-V)", "TSMC N3B" },
-	{  6, 13, -1, -1, 189, -1,    -1,    -1, { "Core(TM) Ultra 7 2##V", 10 }, "Core Ultra 7 (Lunar Lake-V)", "TSMC N3B" },
-	{  6, 13, -1, -1, 189, -1,    -1,    -1, { "Core(TM) Ultra 5 2##V", 10 }, "Core Ultra 5 (Lunar Lake-V)", "TSMC N3B" },
+	{  6,  6, -1, -1, 198, -1,    -1,    -1, { "Core(TM) Ultra 9 2##",    8 }, "Core Ultra 9 (Arrow Lake-S)",  "TSMC N3B" },
+	{  6,  6, -1, -1, 198, -1,    -1,    -1, { "Core(TM) Ultra 7 2##",    8 }, "Core Ultra 7 (Arrow Lake-S)",  "TSMC N3B" },
+	{  6,  6, -1, -1, 198, -1,    -1,    -1, { "Core(TM) Ultra 5 2##",    8 }, "Core Ultra 5 (Arrow Lake-S)",  "TSMC N3B" },
+	{  6,  6, -1, -1, 181, -1,    -1,    -1, { "Core(TM) Ultra 7 2##U",  10 }, "Core Ultra 7 (Arrow Lake-U)",  "TSMC N3B" }, /* Core Ultra 7 255U + Core Ultra 7 265U */
+	{  6,  6, -1, -1, 181, -1,    -1,    -1, { "Core(TM) Ultra 5 2##U",  10 }, "Core Ultra 5 (Arrow Lake-U)",  "TSMC N3B" }, /* Core Ultra 5 225U + Core Ultra 5 235U */
+	{  6,  6, -1, -1, 197, -1,    -1,    -1, { "Core(TM) Ultra 9 2##H",  10 }, "Core Ultra 9 (Arrow Lake-H)",  "TSMC N3B" }, /* Core Ultra 9 285H */
+	{  6,  6, -1, -1, 197, -1,    -1,    -1, { "Core(TM) Ultra 7 2##H",  10 }, "Core Ultra 7 (Arrow Lake-H)",  "TSMC N3B" }, /* Core Ultra 7 255H + Core Ultra 7 265H */
+	{  6,  6, -1, -1, 197, -1,    -1,    -1, { "Core(TM) Ultra 5 2##H",  10 }, "Core Ultra 5 (Arrow Lake-H)",  "TSMC N3B" }, /* Core Ultra 5 225H + Core Ultra 5 235H */
+	{  6,  6, -1, -1, 197, -1,    -1,    -1, { "Core(TM) Ultra 9 2##HX", 12 }, "Core Ultra 9 (Arrow Lake-HX)", "TSMC N3B" }, /* Core Ultra 9 275HX + Core Ultra 9 285HX */
+	{  6,  6, -1, -1, 197, -1,    -1,    -1, { "Core(TM) Ultra 7 2##HX", 12 }, "Core Ultra 7 (Arrow Lake-HX)", "TSMC N3B" }, /* Core Ultra 7 255HX + Core Ultra 7 265HX */
+	{  6,  6, -1, -1, 197, -1,    -1,    -1, { "Core(TM) Ultra 5 2##HX", 12 }, "Core Ultra 5 (Arrow Lake-HX)", "TSMC N3B" }, /* Core Ultra 5 235HX + Core Ultra 5 245HX */
+	{  6, 13, -1, -1, 189, -1,    -1,    -1, { "Core(TM) Ultra 9 2##V",  10 }, "Core Ultra 9 (Lunar Lake-V)",  "TSMC N3B" },
+	{  6, 13, -1, -1, 189, -1,    -1,    -1, { "Core(TM) Ultra 7 2##V",  10 }, "Core Ultra 7 (Lunar Lake-V)",  "TSMC N3B" },
+	{  6, 13, -1, -1, 189, -1,    -1,    -1, { "Core(TM) Ultra 5 2##V",  10 }, "Core Ultra 5 (Lunar Lake-V)",  "TSMC N3B" },
 
 	/* Cougar Cove (P-cores) / Darkmont (E-cores and LP E-cores) CPUs (2025, Core Ultra Series 3, Intel 18A): https://en.wikipedia.org/wiki/Panther_Lake_(microprocessor) */
 	// TBA
