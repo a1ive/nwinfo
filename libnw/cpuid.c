@@ -252,6 +252,7 @@ PrintCpuInfo(PNODE node, struct cpu_id_t* data)
 	NWL_NodeAttrSetf(node, "Stepping", 0, "%02Xh", data->x86.stepping);
 	NWL_NodeAttrSetf(node, "Ext.Family", 0, "%02Xh", data->x86.ext_family);
 	NWL_NodeAttrSetf(node, "Ext.Model", 0, "%02Xh", data->x86.ext_model);
+	NWL_NodeAttrSetf(node, "Package Type", 0, "%Xh", data->x86.pkg_type);
 
 	NWL_NodeAttrSetf(node, "Cores", NAFLG_FMT_NUMERIC, "%d", data->num_cores);
 	NWL_NodeAttrSetf(node, "Logical CPUs", NAFLG_FMT_NUMERIC, "%d", data->num_logical_cpus);
@@ -266,7 +267,8 @@ PrintCpuInfo(PNODE node, struct cpu_id_t* data)
 
 static void libcpuid_warn (const char* msg)
 {
-	NWL_NodeAppendMultiSz(&NWLC->ErrLog, msg);
+	if (NWLC->Debug)
+		printf("[CPU] %s", msg);
 }
 
 PNODE NW_Cpuid(VOID)

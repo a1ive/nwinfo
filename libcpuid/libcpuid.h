@@ -517,6 +517,9 @@ struct x86_id_t {
 	 */
 	int32_t ext_model;
 
+	/* CPU package type (0x80000001 EBX[31:28]) */
+	int32_t pkg_type;
+
 	/** SSE execution unit size (64 or 128; -1 if N/A) */
 	int32_t sse_size;
 

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: Unlicense
 
 #include "rdmsr.h"
+#include "ryzen_smu.h"
 
 /*
   AMD BIOS and Kernel Developer's Guide (BKDG)
@@ -422,11 +423,39 @@ fail:
 
 static double get_pkg_pl1(struct msr_info_t* info)
 {
+	float value = 0.0f;
+	ry_handle_t* ry = ryzen_smu_init(info->handle, info->id);
+	if (ry == NULL)
+		goto fail;
+	if (ryzen_smu_init_pm_table(ry) != RYZEN_SMU_OK)
+		goto fail;
+	if (ryzen_smu_update_pm_table(ry) != RYZEN_SMU_OK)
+		goto fail;
+	if (ryzen_smu_get_slow_limit(ry, &value) != RYZEN_SMU_OK)
+		goto fail;
+	return (double)value;
+fail:
+	if (ry != NULL)
+		ryzen_smu_free(ry);
 	return (double)CPU_INVALID_VALUE / 100;
 }
 
 static double get_pkg_pl2(struct msr_info_t* info)
 {
+	float value = 0.0f;
+	ry_handle_t* ry = ryzen_smu_init(info->handle, info->id);
+	if (ry == NULL)
+		goto fail;
+	if (ryzen_smu_init_pm_table(ry) != RYZEN_SMU_OK)
+		goto fail;
+	if (ryzen_smu_update_pm_table(ry) != RYZEN_SMU_OK)
+		goto fail;
+	if (ryzen_smu_get_fast_limit(ry, &value) != RYZEN_SMU_OK)
+		goto fail;
+	return (double)value;
+fail:
+	if (ry != NULL)
+		ryzen_smu_free(ry);
 	return (double)CPU_INVALID_VALUE / 100;
 }
 

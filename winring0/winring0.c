@@ -98,7 +98,7 @@ static BOOL find_driver(struct wr0_drv_t* driver, LPCWSTR name, LPCWSTR id, LPCW
 	return FALSE;
 }
 
-struct wr0_drv_t* wr0_driver_open_real(LPCWSTR name, LPCWSTR id, LPCWSTR obj)
+struct wr0_drv_t* open_driver_real(LPCWSTR name, LPCWSTR id, LPCWSTR obj, int debug)
 {
 	struct wr0_drv_t* drv;
 	BOOL status = FALSE;
@@ -122,31 +122,32 @@ struct wr0_drv_t* wr0_driver_open_real(LPCWSTR name, LPCWSTR id, LPCWSTR obj)
 
 	if (!status)
 		goto fail;
+	drv->debug = debug;
 	return drv;
 fail:
 	free(drv);
 	return NULL;
 }
 
-struct wr0_drv_t* WR0_OpenDriver(void)
+struct wr0_drv_t* WR0_OpenDriver(int debug)
 {
 	struct wr0_drv_t* drv = NULL;
 	if (is_x64())
 	{
-		drv = wr0_driver_open_real(OLS_DRIVER_NAME_X64, OLS_DRIVER_ID, OLS_DRIVER_OBJ);
+		drv = open_driver_real(OLS_DRIVER_NAME_X64, OLS_DRIVER_ID, OLS_DRIVER_OBJ, debug);
 		if (drv)
 			return drv;
-		drv = wr0_driver_open_real(OLS_DRIVER_NAME_WIN7_X64, OLS_DRIVER_ID, OLS_DRIVER_OBJ);
+		drv = open_driver_real(OLS_DRIVER_NAME_WIN7_X64, OLS_DRIVER_ID, OLS_DRIVER_OBJ, debug);
 		if (drv)
 			return drv;
-		drv = wr0_driver_open_real(OLS_ALT_DRIVER_NAME_X64, OLS_ALT_DRIVER_ID, OLS_ALT_DRIVER_OBJ);
+		drv = open_driver_real(OLS_ALT_DRIVER_NAME_X64, OLS_ALT_DRIVER_ID, OLS_ALT_DRIVER_OBJ, debug);
 	}
 	else
 	{
-		drv = wr0_driver_open_real(OLS_DRIVER_NAME, OLS_DRIVER_ID, OLS_DRIVER_OBJ);
+		drv = open_driver_real(OLS_DRIVER_NAME, OLS_DRIVER_ID, OLS_DRIVER_OBJ, debug);
 		if (drv)
 			return drv;
-		drv = wr0_driver_open_real(OLS_ALT_DRIVER_NAME, OLS_ALT_DRIVER_ID, OLS_ALT_DRIVER_OBJ);
+		drv = open_driver_real(OLS_ALT_DRIVER_NAME, OLS_ALT_DRIVER_ID, OLS_ALT_DRIVER_OBJ, debug);
 	}
 	return drv;
 }
