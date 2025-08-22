@@ -134,6 +134,7 @@
     <ClInclude Include="recog_arm.h" />
     <ClInclude Include="recog_centaur.h" />
     <ClInclude Include="recog_intel.h" />
+    <ClInclude Include="ryzen_smu.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="asm-bits.c" />
@@ -149,6 +150,7 @@
     <ClCompile Include="recog_arm.c" />
     <ClCompile Include="recog_centaur.c" />
     <ClCompile Include="recog_intel.c" />
+    <ClCompile Include="ryzen_smu.c" />
   </ItemGroup>
   <ItemGroup>
     <MASM Include="masm-x64.asm">

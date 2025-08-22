@@ -23,14 +23,10 @@ noreturn VOID NWL_ErrExit(INT nExitCode, LPCSTR lpszText)
 VOID NW_Init(PNWLIB_CONTEXT pContext)
 {
 	NWLC = pContext;
-	NWLC->NwFile = stdout;
-	NWLC->AcpiTable = 0;
-	NWLC->SmbiosType = 127;
-	NWLC->DiskPath = NULL;
 	NWL_NtGetVersion(&NWLC->NwOsInfo);
 	GetNativeSystemInfo(&NWLC->NwSi);
 	NWLC->NwRoot = NWL_NodeAlloc("NWinfo", 0);
-	NWLC->NwDrv = WR0_OpenDriver();
+	NWLC->NwDrv = WR0_OpenDriver(NWLC->Debug);
 	NWLC->NwRsdp = NWL_GetRsdp();
 	NWLC->NwRsdt = NWL_GetRsdt();
 	NWLC->NwXsdt = NWL_GetXsdt();

@@ -13,6 +13,7 @@ struct wr0_drv_t
 	SC_HANDLE scDriver;
 	HANDLE hhDriver;
 	int errorcode;
+	int debug;
 };
 
 int WR0_RdMsr(struct wr0_drv_t* driver, uint32_t msr_index, uint64_t* result);
@@ -35,5 +36,5 @@ uint32_t WR0_FindPciById(struct wr0_drv_t* drv, uint16_t vid, uint16_t did, uint
 uint32_t WR0_FindPciByClass(struct wr0_drv_t* drv, uint8_t base, uint8_t sub, uint8_t prog, uint8_t index);
 DWORD WR0_RdMem(struct wr0_drv_t* drv, DWORD_PTR address, PBYTE buffer, DWORD count, DWORD unitSize);
 
-struct wr0_drv_t* WR0_OpenDriver(void);
+struct wr0_drv_t* WR0_OpenDriver(int debug);
 int WR0_CloseDriver(struct wr0_drv_t* drv);

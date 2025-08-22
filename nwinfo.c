@@ -152,7 +152,10 @@ int main(int argc, char* argv[])
 	nwContext.Debug = FALSE;
 	nwContext.HideSensitive = FALSE;
 	nwContext.BinaryFormat = BIN_FMT_NONE;
-	NW_Init(&nwContext);
+	nwContext.NwFile = stdout;
+	nwContext.AcpiTable = 0;
+	nwContext.SmbiosType = 127;
+	nwContext.DiskPath = NULL;
 	
 	for (int i = 0; i < argc; i++)
 	{
@@ -344,6 +347,7 @@ int main(int argc, char* argv[])
 			nwContext.CodePage = CP_ACP;
 	}
 	(void)CoInitializeEx(0, COINIT_APARTMENTTHREADED);
+	NW_Init(&nwContext);
 	NW_Print(lpFileName);
 	if (nwContext.NetGuid)
 		free(nwContext.NetGuid);

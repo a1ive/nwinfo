@@ -267,7 +267,8 @@ PrintCpuInfo(PNODE node, struct cpu_id_t* data)
 
 static void libcpuid_warn (const char* msg)
 {
-	NWL_NodeAppendMultiSz(&NWLC->ErrLog, msg);
+	if (NWLC->Debug)
+		printf("[CPU] %s", msg);
 }
 
 PNODE NW_Cpuid(VOID)
