@@ -243,6 +243,21 @@ fail:
 
 static int get_temperature(struct msr_info_t* info)
 {
+	float value = 0.0f;
+	ry_handle_t* ry = ryzen_smu_init(info->handle, info->id);
+	if (ry == NULL)
+		goto fail;
+	if (ryzen_smu_init_pm_table(ry) != RYZEN_SMU_OK)
+		goto fail;
+	if (ryzen_smu_update_pm_table(ry) != RYZEN_SMU_OK)
+		goto fail;
+	if (ryzen_smu_get_core_temperature(ry, 0, &value) != RYZEN_SMU_OK)
+		goto fail;
+	ryzen_smu_free(ry);
+	return (int)value;
+fail:
+	if (ry != NULL)
+		ryzen_smu_free(ry);
 	return CPU_INVALID_VALUE;
 }
 
@@ -433,6 +448,7 @@ static double get_pkg_pl1(struct msr_info_t* info)
 		goto fail;
 	if (ryzen_smu_get_slow_limit(ry, &value) != RYZEN_SMU_OK)
 		goto fail;
+	ryzen_smu_free(ry);
 	return (double)value;
 fail:
 	if (ry != NULL)
@@ -452,6 +468,7 @@ static double get_pkg_pl2(struct msr_info_t* info)
 		goto fail;
 	if (ryzen_smu_get_fast_limit(ry, &value) != RYZEN_SMU_OK)
 		goto fail;
+	ryzen_smu_free(ry);
 	return (double)value;
 fail:
 	if (ry != NULL)

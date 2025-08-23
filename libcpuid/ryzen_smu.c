@@ -864,6 +864,7 @@ ry_err_t ryzen_smu_update_pm_table(ry_handle_t* handle)
 }
 
 #define OFFSET_INVALID ((size_t)0xFFFFFFFF)
+
 ry_err_t ryzen_smu_get_pm_table_float(ry_handle_t* handle, size_t offset, float* value)
 {
 	if (!handle || !handle->pm_table_buffer)
@@ -907,4 +908,66 @@ ry_err_t ryzen_smu_get_slow_limit(ry_handle_t* handle, float* data)
 ry_err_t ryzen_smu_get_slow_value(ry_handle_t* handle, float* data)
 {
 	return ryzen_smu_get_pm_table_float(handle, 0x14, data);
+}
+
+#define SMU_MAX_CORE 16
+
+ry_err_t ryzen_smu_get_core_temperature(ry_handle_t* handle, uint32_t core, float* data)
+{
+	size_t base_offset = OFFSET_INVALID;
+	uint32_t max_cores = SMU_MAX_CORE;
+
+	switch (handle->pm_table_version)
+	{
+	case 0x240803:
+		base_offset = 0x2CC;
+		break;
+	case 0x240903:
+		base_offset = 0x28C;
+		max_cores = 8;
+		break;
+	case 0x370000:
+	case 0x370001:
+	case 0x370002:
+	case 0x370003:
+	case 0x370004:
+		base_offset = 0x340;
+		break;
+	case 0x370005:
+		base_offset = 0x35C;
+		break;
+	case 0x380804:
+		base_offset = 0x324;
+		break;
+	case 0x380805:
+		base_offset = 0x330;
+		break;
+	case 0x380904:
+		base_offset = 0x2E4;
+		max_cores = 8;
+		break;
+	case 0x380905:
+		base_offset = 0x2F0;
+		max_cores = 8;
+		break;
+	case 0x3F0000:
+		base_offset = 0x258;
+		max_cores = 4;
+		break;
+	case 0x400004:
+	case 0x400005:
+		base_offset = 0x360;
+		break;
+	case 0x5D0008:
+		base_offset = 0xA38;
+		break;
+	case 0x64020C:
+		base_offset = 0xC10;
+		break;
+	}
+
+	if (base_offset == OFFSET_INVALID || core >= max_cores)
+		return RYZEN_SMU_UNSUPPORTED;
+
+	return ryzen_smu_get_pm_table_float(handle, base_offset + (core * sizeof(float)), data);
 }
