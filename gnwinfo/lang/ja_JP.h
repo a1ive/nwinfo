@@ -38,6 +38,7 @@ lang_ja_jp[N__MAX_] =
 	[N__TOTAL] = u8"合計",
 	[N__FEATURES] = u8"拡張命令",
 	[N__MULTIPLIER] = u8"倍率",
+	[N__CORE_SPEED] = u8"コア速度",
 	[N__BUS_CLOCK] = u8"バス速度",
 	[N__TEMPERATURE] = u8"温度",
 	[N__VOLTAGE] = u8"電圧",

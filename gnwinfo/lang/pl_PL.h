@@ -40,6 +40,7 @@ lang_pl_pl[N__MAX_] =
 	[N__FEATURES] = u8"Funkcje",
 	[N__MSR] = u8"MSR",
 	[N__MULTIPLIER] = u8"Mnożnik",
+	[N__CORE_SPEED] = u8"Prędkość rdzenia",
 	[N__BUS_CLOCK] = u8"Zegar magistrali",
 	[N__TEMPERATURE] = u8"Temperatura",
 	[N__VOLTAGE] = u8"Napięcie",

@@ -77,6 +77,8 @@ draw_msr(struct nk_context* ctx, int index, PNODE cpu, LPCSTR brand)
 		nk_lhc(ctx, g_ctx.cpu_info[index].MsrMulti, NK_TEXT_LEFT, g_color_text_l);
 		nk_l(ctx, N_(N__BASE_CLOCK), NK_TEXT_LEFT);
 		nk_lhcf(ctx, NK_TEXT_LEFT, g_color_text_l, "%s MHz", gnwinfo_get_smbios_attr("4", "Current Speed (MHz)", (const PVOID)brand, is_cpu_name_match));
+		nk_l(ctx, N_(N__CORE_SPEED), NK_TEXT_LEFT);
+		nk_lhcf(ctx, NK_TEXT_LEFT, g_color_text_l, "%.2f MHz", g_ctx.cpu_info[index].MsrFreq);
 		nk_l(ctx, N_(N__BUS_CLOCK), NK_TEXT_LEFT);
 		nk_lhcf(ctx, NK_TEXT_LEFT, g_color_text_l, "%.2f MHz", g_ctx.cpu_info[index].MsrBus);
 		nk_l(ctx, N_(N__TEMPERATURE), NK_TEXT_LEFT);

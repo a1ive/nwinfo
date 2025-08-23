@@ -38,6 +38,7 @@ lang_tr_tr[N__MAX_] =
 	[N__TOTAL] = u8"Toplam",
 	[N__FEATURES] = u8"Özellikler",
 	[N__MULTIPLIER] = u8"Çarpan",
+	[N__CORE_SPEED] = u8"Çekirdek Hızı",
 	[N__BUS_CLOCK] = u8"Veri yolu",
 	[N__TEMPERATURE] = u8"Sıcaklık",
 	[N__VOLTAGE] = u8"Voltaj",

@@ -38,6 +38,7 @@ lang_sv_se[N__MAX_] =
 	[N__TOTAL] = u8"Totalt",
 	[N__FEATURES] = u8"Funktioner",
 	[N__MULTIPLIER] = u8"Multiplikator",
+	[N__CORE_SPEED] = u8"Kärnhastighet",
 	[N__BUS_CLOCK] = u8"Bussklocka",
 	[N__TEMPERATURE] = u8"Temperatur",
 	[N__VOLTAGE] = u8"Spänning",

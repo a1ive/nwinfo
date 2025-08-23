@@ -40,6 +40,7 @@ lang_en_us[N__MAX_] =
 	[N__FEATURES] = u8"Features",
 	[N__MSR] = u8"MSR",
 	[N__MULTIPLIER] = u8"Multiplier",
+	[N__CORE_SPEED] = u8"Core Speed",
 	[N__BUS_CLOCK] = u8"Bus Clock",
 	[N__TEMPERATURE] = u8"Temperature",
 	[N__VOLTAGE] = u8"Voltage",

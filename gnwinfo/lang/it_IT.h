@@ -40,6 +40,7 @@ lang_it_it[N__MAX_] =
 	[N__FEATURES] = u8"Funzionalità",
 	//[N__MSR],
 	[N__MULTIPLIER] = u8"Moltiplicatore",
+	[N__CORE_SPEED] = u8"Velocità core",
 	[N__BUS_CLOCK] = u8"Clock bus",
 	[N__TEMPERATURE] = u8"Temperatura",
 	[N__VOLTAGE] = u8"Voltaggio",

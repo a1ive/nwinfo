@@ -220,6 +220,7 @@ typedef struct _NWLIB_CPU_INFO
 	CHAR MsrMulti[NWL_STR_SIZE];
 	int MsrTemp;
 	double MsrVolt;
+	double MsrFreq;
 	double MsrBus;
 	int MsrEnergy;
 	double MsrPower;

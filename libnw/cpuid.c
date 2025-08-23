@@ -202,7 +202,10 @@ GetMsrData(NWLIB_CPU_INFO* info, struct cpu_id_t* data)
 		}
 		value = cpu_msrinfo(NWLC->NwDrv, i, INFO_BUS_CLOCK);
 		if (value != CPU_INVALID_VALUE && value > 0)
+		{
 			info->MsrBus = value / 100.0;
+			info->MsrFreq = info->MsrBus * cur_multi / 100.0;
+		}
 		value = cpu_msrinfo(NWLC->NwDrv, i, INFO_PKG_PL1);
 		if (value != CPU_INVALID_VALUE && value > 0)
 			info->MsrPl1 = value / 100.0;

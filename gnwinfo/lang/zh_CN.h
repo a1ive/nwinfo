@@ -38,6 +38,7 @@ lang_zh_cn[N__MAX_] =
 	[N__TOTAL] = u8"总计",
 	[N__FEATURES] = u8"特性",
 	[N__MULTIPLIER] = u8"倍频",
+	[N__CORE_SPEED] = u8"核心频率",
 	[N__BUS_CLOCK] = u8"总线时钟",
 	[N__TEMPERATURE] = u8"温度",
 	[N__VOLTAGE] = u8"电压",
