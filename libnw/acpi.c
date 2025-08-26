@@ -629,12 +629,11 @@ PrintWPBT(PNODE pNode, DESC_HEADER* Hdr)
 static PNODE
 PrintTableInfo(PNODE pNode, DESC_HEADER* Hdr)
 {
-	if (NWLC->AcpiTable &&
-		NWLC->AcpiTable != ACPI_SIG(Hdr->Signature[0], Hdr->Signature[1], Hdr->Signature[2], Hdr->Signature[3]))
-		return NULL;
 	if (!Hdr)
 		return NULL;
 	const UINT32 dwSignature = ACPI_SIG(Hdr->Signature[0], Hdr->Signature[1], Hdr->Signature[2], Hdr->Signature[3]);
+	if (NWLC->AcpiTable && NWLC->AcpiTable != dwSignature)
+		return NULL;
 	PNODE tab = PrintTableHeader(pNode, Hdr);
 	switch (dwSignature)
 	{
