@@ -308,9 +308,9 @@ static ry_err_t get_mailbox_addr(ry_handle_t* handle)
 		handle->rsmu_rsp_addr = 0x3B10A80;
 		handle->rsmu_args_addr = 0x3B10A88;
 		// no hsmp
-		handle->mp1_cmd_addr = 0x3b10928;
-		handle->mp1_rsp_addr = 0x3b10978;
-		handle->mp1_args_addr = 0x3b10998;
+		handle->mp1_cmd_addr = 0x3B10928;
+		handle->mp1_rsp_addr = 0x3B10978;
+		handle->mp1_args_addr = 0x3B10998;
 		handle->if_version = IF_VERSION_13;
 		break;
 	default:
@@ -715,6 +715,7 @@ static size_t get_pm_table_size_from_version(ry_handle_t* handle, uint32_t versi
 	case 0x620105: return 0x724;  // CODENAME_GRANITERIDGE
 	case 0x620205: return 0x994;  // CODENAME_GRANITERIDGE
 	case 0x64020C: return 0xE50;
+	case 0x650005: return 0x1000; // CODENAME_KRACKANPOINT ??
 	}
 	return 0x2000;
 }
