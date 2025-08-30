@@ -53,20 +53,109 @@ NWL_GetCpuUsage(VOID)
 	return ret;
 }
 
+static PSYSTEM_PROCESSOR_PERFORMANCE_DISTRIBUTION
+GetProcessorPerfDist(size_t* pCount)
+{
+	ULONG len = 0;
+	NTSTATUS rc = NWL_NtQuerySystemInformation(SystemProcessorPerformanceDistribution, NULL, 0, &len);
+	if (len == 0)
+		return NULL;
+	PSYSTEM_PROCESSOR_PERFORMANCE_DISTRIBUTION ppd = (PSYSTEM_PROCESSOR_PERFORMANCE_DISTRIBUTION)malloc(len);
+	if (!ppd)
+		return NULL;
+	rc = NWL_NtQuerySystemInformation(SystemProcessorPerformanceDistribution, ppd, len, &len);
+	if (!NT_SUCCESS(rc))
+	{
+		free(ppd);
+		return NULL;
+	}
+	if (pCount)
+		*pCount = ppd->ProcessorCount;
+	return ppd;
+}
+
 DWORD
 NWL_GetCpuFreq(VOID)
 {
-	DWORD ret = 0;
-	DWORD freq = 0;
 	PDH_FMT_COUNTERVALUE value = { 0 };
-	NWL_GetRegDwordValue(HKEY_LOCAL_MACHINE, L"HARDWARE\\DESCRIPTION\\System\\CentralProcessor\\0", L"~MHz", &ret);
 	if (NWLC->PdhCpuBaseFreq &&
 		NWLC->PdhGetFormattedCounterValue(NWLC->PdhCpuBaseFreq, PDH_FMT_LONG, NULL, &value) == ERROR_SUCCESS)
-		freq = (DWORD)value.longValue;
-	if (NWLC->PdhCpuFreq &&
-		NWLC->PdhGetFormattedCounterValue(NWLC->PdhCpuFreq, PDH_FMT_DOUBLE, NULL, &value) == ERROR_SUCCESS)
-		ret = (DWORD)(value.doubleValue * 0.01 * freq);
-	return ret;
+	{
+		DWORD freq = (DWORD)value.longValue;
+		if (NWLC->PdhCpuFreq &&
+			NWLC->PdhGetFormattedCounterValue(NWLC->PdhCpuFreq, PDH_FMT_DOUBLE, NULL, &value) == ERROR_SUCCESS)
+			return (DWORD)(value.doubleValue * 0.01 * freq);
+	}
+
+	static PSYSTEM_PROCESSOR_PERFORMANCE_DISTRIBUTION saved_ppd = NULL;
+	PSYSTEM_PROCESSOR_PERFORMANCE_DISTRIBUTION cur_ppd = NULL;
+
+	size_t cpu_count = 0;
+	PPROCESSOR_POWER_INFORMATION ppi = NWL_NtPowerInformation(&cpu_count);
+	if (cpu_count == 0 || ppi == NULL)
+		goto fail;
+
+	if (NWLC->NwOsInfo.dwMajorVersion < 10)
+	{
+		ULONG sum = 0;
+		for (size_t i = 0; i < cpu_count; i++)
+			sum += ppi[i].CurrentMhz;
+		free(ppi);
+		return (DWORD) (sum / cpu_count);
+	}
+
+	if (!saved_ppd)
+		saved_ppd = GetProcessorPerfDist(NULL);
+	if (!saved_ppd)
+		goto fail;
+	cur_ppd = GetProcessorPerfDist(NULL);
+	if (!cur_ppd)
+		goto fail;
+	if (cur_ppd->ProcessorCount != saved_ppd->ProcessorCount ||
+		cur_ppd->ProcessorCount < cpu_count)
+		goto fail;
+
+	ULONGLONG total_hits_delta = 0;
+	ULONGLONG total_freq_contrib = 0;
+	for (size_t i = 0; i < cur_ppd->ProcessorCount; i++)
+	{
+		PSYSTEM_PROCESSOR_PERFORMANCE_STATE_DISTRIBUTION cur_state =
+			(PSYSTEM_PROCESSOR_PERFORMANCE_STATE_DISTRIBUTION)((BYTE*)cur_ppd + cur_ppd->Offsets[i]);
+		PSYSTEM_PROCESSOR_PERFORMANCE_STATE_DISTRIBUTION saved_state =
+			(PSYSTEM_PROCESSOR_PERFORMANCE_STATE_DISTRIBUTION)((BYTE*)saved_ppd + saved_ppd->Offsets[i]);
+		if (cur_state->StateCount != saved_state->StateCount)
+			continue;
+		ULONG max_mhz = ppi[i].MaxMhz;
+		if (max_mhz == 0)
+			max_mhz = ppi[0].MaxMhz;
+		for (ULONG j = 0; j < cur_state->StateCount; j++)
+		{
+			ULONGLONG hits_delta = cur_state->States[j].Hits - saved_state->States[j].Hits;
+			total_hits_delta += hits_delta;
+			total_freq_contrib += hits_delta * cur_state->States[j].PercentFrequency * max_mhz;
+		}
+	}
+
+	free(ppi);
+	free(saved_ppd);
+	saved_ppd = cur_ppd;
+
+	if (total_hits_delta == 0)
+		return 0;
+	return (DWORD)(total_freq_contrib / total_hits_delta / 100);
+
+fail:
+	if (saved_ppd)
+	{
+		free(saved_ppd);
+		saved_ppd = NULL;
+	}
+	if (cur_ppd)
+		free(cur_ppd);
+
+	DWORD reg_freq = 0;
+	NWL_GetRegDwordValue(HKEY_LOCAL_MACHINE, L"HARDWARE\\DESCRIPTION\\System\\CentralProcessor\\0", L"~MHz", &reg_freq);
+	return reg_freq;
 }
 
 static LPCSTR

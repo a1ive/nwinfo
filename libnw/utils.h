@@ -54,6 +54,7 @@ BOOL NWL_NtQuerySystemInformation(SYSTEM_INFORMATION_CLASS SystemInformationClas
 BOOL NWL_NtSetSystemInformation(SYSTEM_INFORMATION_CLASS SystemInformationClass,
 	PVOID SystemInformation, ULONG SystemInformationLength);
 VOID NWL_NtGetVersion(LPOSVERSIONINFOEXW osInfo);
+PPROCESSOR_POWER_INFORMATION NWL_NtPowerInformation(size_t* szCount);
 
 VOID NWL_FindId(PNODE nd, CHAR* Ids, DWORD IdsSize, CONST CHAR* v, CONST CHAR* d, CONST CHAR* s, INT usb);
 BOOL NWL_ParseHwid(PNODE nd, CHAR* Ids, DWORD IdsSize, LPCWSTR Hwid, INT usb);

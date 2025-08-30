@@ -192,3 +192,43 @@ VOID NWL_NtGetVersion(LPOSVERSIONINFOEXW osInfo)
 		RtlGetVersion(osInfo);
 	}
 }
+
+PPROCESSOR_POWER_INFORMATION NWL_NtPowerInformation(size_t* szCount)
+{
+	SYSTEM_INFO sysInfo;
+	GetSystemInfo(&sysInfo);
+	*szCount = sysInfo.dwNumberOfProcessors;
+	PPROCESSOR_POWER_INFORMATION ppInfo = (PPROCESSOR_POWER_INFORMATION)calloc(*szCount, sizeof(PROCESSOR_POWER_INFORMATION));
+	if (!ppInfo)
+		return NULL;
+	NTSTATUS(WINAPI * OsNtPowerInformation)(POWER_INFORMATION_LEVEL, PVOID, ULONG, PVOID, ULONG) = NULL;
+	HMODULE hModule = GetModuleHandleW(L"ntdll");
+	if (!hModule)
+		goto try_powerprof;
+	*(FARPROC*)&OsNtPowerInformation = GetProcAddress(hModule, "NtPowerInformation");
+	if (!OsNtPowerInformation)
+		goto try_powerprof;
+	// ProcessorInformation = 11
+	if (NT_SUCCESS(OsNtPowerInformation(11, NULL, 0, ppInfo, (ULONG)(sizeof(PROCESSOR_POWER_INFORMATION) * (*szCount)))))
+		return ppInfo;
+
+try_powerprof:
+	hModule = LoadLibraryW(L"powrprof.dll");
+	if (!hModule)
+		goto fail;
+	*(FARPROC*)&OsNtPowerInformation = GetProcAddress(hModule, "CallNtPowerInformation");
+	if (!OsNtPowerInformation)
+	{
+		FreeLibrary(hModule);
+		goto fail;
+	}
+	if (NT_SUCCESS(OsNtPowerInformation(11, NULL, 0, ppInfo, (ULONG)(sizeof(PROCESSOR_POWER_INFORMATION) * (*szCount)))))
+	{
+		FreeLibrary(hModule);
+		return ppInfo;
+	}
+	FreeLibrary(hModule);
+fail:
+	free(ppInfo);
+	return NULL;
+}
