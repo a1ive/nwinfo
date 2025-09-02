@@ -655,15 +655,12 @@ static void DecodeEstablishedTimings(const BYTE* edid, PNODE node)
 	}
 }
 
-static void DecodeEdid(const BYTE* edidData, DWORD edidSize,  PNODE nm, CHAR* ids, DWORD idsSize)
+static void DecodeEdid(const BYTE* edidData, DWORD edidSize,  PNODE nm, CHAR* ids, DWORD idsSize, const WCHAR* hwId)
 {
 	struct MONITOR_INFO mi = { 0 };
 	// An EDID block must be at least 128 bytes.
 	if (edidSize < 128)
-	{
-		NWL_NodeAppendMultiSz(&NWLC->ErrLog, "Invalid EDID size");
 		return;
-	}
 
 	// Verify checksum of the base block. The sum of all 128 bytes must be a multiple of 256.
 	BYTE checksum = 0;
@@ -701,6 +698,7 @@ static void DecodeEdid(const BYTE* edidData, DWORD edidSize,  PNODE nm, CHAR* id
 	mi.Height = 10ULL * edidData[22];
 	snprintf(mi.Serial, sizeof(mi.Serial), "%08X", serialNumber);
 
+	NWL_NodeAttrSet(nm, "HWID", NWL_Ucs2ToUtf8(hwId), 0);
 	NWL_NodeAttrSetf(nm, "ID", 0, "%s%04X", vendorId, productCode);
 	NWL_GetPnpManufacturer(nm, ids, idsSize, vendorId);
 	NWL_NodeAttrSetf(nm, "EDID Version", 0, "%d.%d", edidMajor, edidMinor);
@@ -773,46 +771,85 @@ static void DecodeEdid(const BYTE* edidData, DWORD edidSize,  PNODE nm, CHAR* id
 	// Note: Parsing of extension blocks (e.g., CTA-861) is not implemented here.
 }
 
-static void
-GetEdid(PNODE node, HDEVINFO devInfo, PSP_DEVINFO_DATA devInfoData, CHAR* ids, DWORD idsSize, DWORD index)
+static BOOL
+GetMonitorEdid(HDEVINFO hDevInfo, int idxMonitor, BYTE** edidData, DWORD* edidSize, WCHAR** hwId)
 {
-	HKEY hDevRegKey;
-	LSTATUS lRet;
-	UCHAR* edidData = NWLC->NwBuf;
-	DWORD edidSize;
+	*edidData = NULL;
+	*edidSize = 0;
+	*hwId = NULL;
 
-	if (!SetupDiGetDeviceRegistryPropertyW(devInfo, devInfoData,
-		SPDRP_HARDWAREID, NULL, (PBYTE)NWLC->NwBufW, NWINFO_BUFSZB, NULL))
-		return;
+	BOOL rc = FALSE;
+	SP_DEVINFO_DATA devInfoData;
+	devInfoData.cbSize = sizeof(devInfoData);
 
-	if (NWLC->NwOsInfo.dwMajorVersion <= 5)
+	// Enumerate the monitor devices.
+	if (!SetupDiEnumDeviceInfo(hDevInfo, idxMonitor, &devInfoData))
+		goto fail;
+	rc = TRUE;
+
+	// Get Hardware ID for the monitor
+	DWORD hwidSize = 0;
+	SetupDiGetDeviceRegistryPropertyW(hDevInfo, &devInfoData, SPDRP_HARDWAREID, NULL, NULL, 0, &hwidSize);
+	if (hwidSize > 0)
 	{
-		// Windows XP: prevent duplicate entries
-		static WCHAR savedHwid[32] = { 0 };
-		if (index && wcscmp(savedHwid, NWLC->NwBufW) == 0)
-			return;
-		wcscpy_s(savedHwid, 32, NWLC->NwBufW);
+		*hwId = (WCHAR*)malloc(hwidSize);
+		if (*hwId)
+		{
+			if (!SetupDiGetDeviceRegistryPropertyW(hDevInfo, &devInfoData, SPDRP_HARDWAREID, NULL, (PBYTE)*hwId, hwidSize, NULL))
+			{
+				free(*hwId);
+				*hwId = NULL;
+			}
+		}
 	}
 
-	PNODE nm = NWL_NodeAppendNew(node, "Monitor", NFLG_TABLE_ROW);
-	NWL_NodeAttrSet(nm, "HWID", NWL_Ucs2ToUtf8(NWLC->NwBufW), 0);
-
-	hDevRegKey = SetupDiOpenDevRegKey(devInfo, devInfoData,
-		DICS_FLAG_GLOBAL, 0, DIREG_DEV, KEY_ALL_ACCESS);
-
-	if (!hDevRegKey)
+	// Windows XP: prevent duplicate entries
+	if (NWLC->NwOsInfo.dwMajorVersion <= 5 && *hwId)
 	{
-		NWL_NodeAppendMultiSz(&NWLC->ErrLog, "SetupDiOpenDevRegKey failed");
-		return;
+		static WCHAR cachedHwId[32] = { 0 };
+		if (idxMonitor && wcscmp(cachedHwId, *hwId) == 0)
+			goto fail;
+		wcscpy_s(cachedHwId, ARRAYSIZE(cachedHwId), *hwId);
 	}
-	edidSize = NWINFO_BUFSZ;
-	ZeroMemory(edidData, edidSize);
-	lRet = RegGetValueW(hDevRegKey, NULL, L"EDID", RRF_RT_REG_BINARY, NULL, edidData, &edidSize);
-	if (lRet == ERROR_SUCCESS || lRet == ERROR_MORE_DATA)
-	{
-		DecodeEdid(edidData, edidSize, nm, ids, idsSize);
-	}
-	RegCloseKey(hDevRegKey);
+
+	// Open the device's registry key.
+	HKEY devRegKey = SetupDiOpenDevRegKey(hDevInfo, &devInfoData, DICS_FLAG_GLOBAL, 0, DIREG_DEV, KEY_READ);
+	if (devRegKey == INVALID_HANDLE_VALUE)
+		goto fail;
+
+	// Query for the size of the EDID data.
+	DWORD dwType;
+	DWORD dwSize = 0;
+	if (RegQueryValueExW(devRegKey, L"EDID", NULL, &dwType, NULL, &dwSize) != ERROR_SUCCESS)
+		goto fail;
+
+	// Allocate a buffer and query the actual EDID data.
+	*edidData = (BYTE*)malloc(dwSize);
+	if (!*edidData)
+		goto fail;
+
+	LSTATUS lResult = RegQueryValueExW(devRegKey, L"EDID", NULL, &dwType, *edidData, &dwSize);
+
+	RegCloseKey(devRegKey);
+
+	if (lResult != ERROR_SUCCESS)
+		goto fail;
+
+	if (dwType != REG_BINARY || dwSize < 128)
+		goto fail;
+
+	*edidSize = dwSize;
+	return rc;
+
+fail:
+	if (*edidData)
+		free(*edidData);
+	*edidData = NULL;
+	*edidSize = 0;
+	if (*hwId)
+		free(*hwId);
+	*hwId = NULL;
+	return rc;
 }
 
 static VOID
@@ -872,27 +909,38 @@ NWL_GetCurDisplay(HWND wnd, NWLIB_CUR_DISPLAY* info)
 PNODE NW_Edid(VOID)
 {
 	PNODE node = NWL_NodeAlloc("Display", NFLG_TABLE);
-	HDEVINFO hdevInfo = NULL;
 	DWORD i = 0;
-	SP_DEVINFO_DATA devInfoData = { .cbSize = sizeof(SP_DEVINFO_DATA) };
-	DWORD dwFlags = DIGCF_PRESENT | DIGCF_DEVICEINTERFACE;
 	CHAR* ids = NULL;
 	DWORD idsSize = 0;
+	HDEVINFO hDevInfo = NULL;
 	if (NWLC->EdidInfo)
 		NWL_NodeAppendChild(NWLC->NwRoot, node);
 
-	hdevInfo = SetupDiGetClassDevsW(&GUID_DEVINTERFACE_MONITOR, NULL, NULL, dwFlags);
-	if (hdevInfo == INVALID_HANDLE_VALUE)
+	hDevInfo = SetupDiGetClassDevsW(&GUID_DEVINTERFACE_MONITOR, NULL, NULL, DIGCF_PRESENT | DIGCF_DEVICEINTERFACE);
+	if (hDevInfo == INVALID_HANDLE_VALUE)
 	{
 		NWL_NodeAppendMultiSz(&NWLC->ErrLog, "SetupDiGetClassDevs failed");
 		goto disp;
 	}
+
 	ids = NWL_LoadIdsToMemory(L"pnp.ids", &idsSize);
-	for (i = 0; SetupDiEnumDeviceInfo(hdevInfo, i, &devInfoData); i++)
+	for (i = 0; ; i++)
 	{
-		GetEdid(node, hdevInfo, &devInfoData, ids, idsSize, i);
+		BYTE* edidData = NULL;
+		DWORD edidSize = 0;
+		WCHAR* hwId = NULL;
+
+		if (!GetMonitorEdid(hDevInfo, i, &edidData, &edidSize, &hwId))
+			break;
+		if (!edidData)
+			continue;
+		PNODE nm = NWL_NodeAppendNew(node, "Monitor", NFLG_TABLE_ROW);
+		DecodeEdid(edidData, edidSize, nm, ids, idsSize, hwId);
+		NWL_NodeAttrSetRaw(nm, "Binary Data", edidData, (size_t)edidSize);
+		free(edidData);
+		free(hwId);
 	}
-	SetupDiDestroyDeviceInfoList(hdevInfo);
+	SetupDiDestroyDeviceInfoList(hDevInfo);
 	free(ids);
 disp:
 	EnumDisp(node);
