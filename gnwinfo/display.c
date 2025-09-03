@@ -32,9 +32,12 @@ draw_monitors(struct nk_context* ctx)
 		draw_key_value(ctx, mon, "Manufacturer");
 		draw_key_value(ctx, mon, "Serial Number");
 		draw_key_value(ctx, mon, "Date");
+		draw_key_value(ctx, mon, "EDID Version");
 		draw_key_value(ctx, mon, "Display Name");
 		draw_key_value(ctx, mon, "Max Resolution");
 		draw_key_value(ctx, mon, "Max Refresh Rate (Hz)");
+		draw_key_value(ctx, mon, "Gamma");
+		draw_key_value(ctx, mon, "Aspect Ratio");
 		draw_key_value(ctx, mon, "Width (cm)");
 		draw_key_value(ctx, mon, "Height (cm)");
 		draw_key_value(ctx, mon, "Diagonal (in)");
