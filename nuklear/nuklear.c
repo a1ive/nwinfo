@@ -618,8 +618,14 @@ nk_lhsc(struct nk_context* ctx, const char* str,
 	text.text = color;
 	nk_widget_text(&win->buffer, bounds, str, text_len, &text, alignment, style->font);
 
-	if (hover && nk_input_is_mouse_hovering_rect(&ctx->input, bounds))
-		nk_hover_colored(ctx, str, text_len, color);
+	if (nk_input_is_mouse_hovering_rect(&ctx->input, bounds))
+	{
+		if (hover)
+			nk_hover_colored(ctx, str, text_len, color);
+
+		if (nk_input_is_key_pressed(&ctx->input, NK_KEY_COPY))
+			ctx->clip.copy(ctx->clip.userdata, str, text_len);
+	}
 }
 
 static CHAR m_lhscfv_buf[MAX_PATH + 1];
