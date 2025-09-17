@@ -302,8 +302,8 @@ static ry_err_t get_mailbox_addr(ry_handle_t* handle)
 		handle->if_version = IF_VERSION_13;
 		break;
 	case CODENAME_STRIXPOINT:
-	case CODENAME_STRIXHALO: // ?
-	case CODENAME_KRACKANPOINT: // ?
+	case CODENAME_STRIXHALO:
+	case CODENAME_KRACKANPOINT:
 		handle->rsmu_cmd_addr = 0x3B10A20;
 		handle->rsmu_rsp_addr = 0x3B10A80;
 		handle->rsmu_args_addr = 0x3B10A88;
@@ -493,7 +493,7 @@ static ry_err_t get_pm_table_base(ry_handle_t* handle, uint64_t* addr)
 	case CODENAME_HAWKPOINT:
 	case CODENAME_STRIXPOINT:
 	case CODENAME_STRIXHALO:
-	case CODENAME_KRACKANPOINT: // ?
+	case CODENAME_KRACKANPOINT:
 	case CODENAME_VANGOGH: // ?
 	case CODENAME_MENDOCINO: // ?
 		fn[0] = 0x66;
@@ -710,12 +710,26 @@ static size_t get_pm_table_size_from_version(ry_handle_t* handle, uint32_t versi
 	case 0x5C0303: return 0xDA8;  // CODENAME_STORMPEAK
 	case 0x5C0402: return 0x974;  // CODENAME_STORMPEAK
 	case 0x5C0403: return 0x980;  // CODENAME_STORMPEAK
-	case 0x5D0008:
-	case 0x5D0009: return 0xD54;  // CODENAME_STRIXPOINT
+	case 0x5D0008: return 0xD54;  // CODENAME_STRIXPOINT
+	case 0x5D0009: return 0xD58;  // CODENAME_STRIXPOINT
 	case 0x620105: return 0x724;  // CODENAME_GRANITERIDGE
 	case 0x620205: return 0x994;  // CODENAME_GRANITERIDGE
-	case 0x64020C: return 0xE50;
-	case 0x650005: return 0x1000; // CODENAME_KRACKANPOINT ??
+	case 0x621101:
+	case 0x621102: return 0x724;  // CODENAME_GRANITERIDGE
+	case 0x621201:
+	case 0x621202: return 0x994;  // CODENAME_GRANITERIDGE
+	case 0x640107: return 0xDC0;  // CODENAME_STRIXHALO
+	case 0x640108: return 0xDC4;  // CODENAME_STRIXHALO
+	case 0x640109:
+	case 0x64010A: return 0xDD4;  // CODENAME_STRIXHALO
+	case 0x64010C: return 0xDDC;  // CODENAME_STRIXHALO
+	case 0x640207: return 0x100C; // CODENAME_STRIXHALO
+	case 0x640208: return 0x1010; // CODENAME_STRIXHALO
+	case 0x640209:
+	case 0x64020A: return 0x1020; // CODENAME_STRIXHALO
+	case 0x64020C: return 0x1028; // CODENAME_STRIXHALO
+	case 0x650004: return 0xB74;  // CODENAME_KRACKANPOINT
+	case 0x650005: return 0xB78;  // CODENAME_KRACKANPOINT
 	}
 	return 0x2000;
 }
