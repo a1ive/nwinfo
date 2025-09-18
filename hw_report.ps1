@@ -120,15 +120,16 @@ try {
 	$outputText += "OS:"
 	$systemTable = $parsedJson.'System'
 	$outputText += "`t$($systemTable.'Os')"
-	$outputText += "`t`t$($systemTable.'Build Number')"
+	$outputText += "`t`t$($systemTable.'Build Number') $($systemTable.'UBR')"
 	$outputText += "`t`t$($systemTable.'Edition') $($systemTable.'Processor Architecture')"
+	$outputText += "`t`t$($systemTable.'Username') $($systemTable.'Computer Name')"
 
 	$outputText += "CPU:"
 	$cpuTable = $parsedJson.'CPUID'.'CPU0'
 	$outputText += "`t$($cpuTable.'Brand')"
 	$outputText += "`t`t$($cpuTable.'Code Name')"
 	$outputText += "`t`t$($cpuTable.'Cores') cores $($cpuTable.'Logical CPUs') threads"
-	$outputText += "`t`t$($cpuTable.'Temperature (C)')°C"
+	$outputText += "`t`t$($cpuTable.'Temperature (C)')$([char]0xB0)C $($cpuTable.'Core Voltage (V)')V"
 	if ($null -ne $dmiTable[4]) {
 		$outputText += "`t`t$($dmiTable[4][0].'Socket Designation') socket"
 	}
@@ -174,7 +175,7 @@ try {
 	}
 	foreach ($displayTable in $parsedJson.'Display') {
 		if ($null -ne $displayTable.'Manufacturer') {
-			$outputText += "`t$($displayTable.'Manufacturer') $($displayTable.'ID') ($($displayTable.'Max Resolution')@$($displayTable.'Max Refresh Rate (Hz)')) $($displayTable.'Diagonal (in)')'"
+			$outputText += "`t$($displayTable.'Manufacturer') $($displayTable.'ID') ($($displayTable.'Max Resolution')@$($displayTable.'Max Refresh Rate (Hz)')Hz) $($displayTable.'Diagonal (in)')'"
 		}
 	}
 
