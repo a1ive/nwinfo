@@ -1,37 +1,24 @@
-//-----------------------------------------------------------------------------
-//     Author : hiyohiyo
-//       Mail : hiyohiyo@crystalmark.info
-//        Web : http://openlibsys.org/
-//    License : The modified BSD license
-//
-//                     Copyright 2007-2008 OpenLibSys.org. All rights reserved.
-//-----------------------------------------------------------------------------
-
+// SPDX-License-Identifier: Unlicense
 #pragma once
 
 #include <windows.h>
 
-//-----------------------------------------------------------------------------
-//
-// The Device type codes form 32768 to 65535 are for customer use.
-//
-//-----------------------------------------------------------------------------
-
+// WinRing0 & HwrwDrv
 #define OLS_TYPE 40000
 
 // HwRwDrv.sys
-#define OLS_DRIVER_ID							L"HwRwDrv"
-#define OLS_DRIVER_NAME							L"HwRwDrv.sys"
-#define OLS_DRIVER_NAME_X64						L"HwRwDrvx64.sys"
-#define OLS_DRIVER_NAME_WIN7_X64				L"HwRwDrvWin7x64.sys"
-#define OLS_DRIVER_OBJ							L"\\\\.\\HwRwDrv"
-// WinRing0.sys
-#define OLS_ALT_DRIVER_ID						L"WinRing0_1_2_0"
-#define OLS_ALT_DRIVER_NAME						L"WinRing0.sys"
-#define OLS_ALT_DRIVER_NAME_X64					L"WinRing0x64.sys"
-#define OLS_ALT_DRIVER_OBJ						L"\\\\.\\WinRing0_1_2_0"
+#define HWRWDRV_ID							L"HwRwDrv"
+#define HWRWDRV_NAME						L"HwRwDrv.sys"
+#define HWRWDRV_NAME_X64					L"HwRwDrvx64.sys"
+#define HWRWDRV_OBJ							L"\\\\.\\HwRwDrv"
 
-// The IOCTL function codes from 0x800 to 0xFFF are for customer use.
+// WinRing0.sys
+#define WINRING0_ID							L"WinRing0_1_2_0"
+#define WINRING0_NAME						L"WinRing0.sys"
+#define WINRING0_NAME_X64					L"WinRing0x64.sys"
+#define WINRING0_OBJ						L"\\\\.\\WinRing0_1_2_0"
+
+// WinRing0 & HwrwDrv
 #define IOCTL_OLS_GET_DRIVER_VERSION \
 	CTL_CODE(OLS_TYPE, 0x800, METHOD_BUFFERED, FILE_ANY_ACCESS)
 
@@ -103,44 +90,82 @@
 
 #pragma pack(push,4)
 
-typedef struct  _OLS_WRITE_MSR_INPUT {
-	ULONG		Register;
-	ULARGE_INTEGER	Value;
-}   OLS_WRITE_MSR_INPUT;
+typedef struct _OLS_WRITE_MSR_INPUT
+{
+	ULONG Register;
+	ULARGE_INTEGER Value;
+} OLS_WRITE_MSR_INPUT;
 
-typedef struct  _OLS_WRITE_IO_PORT_INPUT {
-	ULONG	PortNumber;
-	union {
-		ULONG   LongData;
-		USHORT  ShortData;
-		UCHAR   CharData;
+typedef struct _OLS_WRITE_IO_PORT_INPUT
+{
+	ULONG PortNumber;
+	union
+	{
+		ULONG LongData;
+		USHORT ShortData;
+		UCHAR CharData;
 	};
-}   OLS_WRITE_IO_PORT_INPUT;
+} OLS_WRITE_IO_PORT_INPUT;
 
-typedef struct  _OLS_READ_PCI_CONFIG_INPUT {
+typedef struct _OLS_READ_PCI_CONFIG_INPUT
+{
 	ULONG PciAddress;
 	ULONG PciOffset;
-}   OLS_READ_PCI_CONFIG_INPUT;
+} OLS_READ_PCI_CONFIG_INPUT;
 
-typedef struct  _OLS_WRITE_PCI_CONFIG_INPUT {
+typedef struct _OLS_WRITE_PCI_CONFIG_INPUT
+{
 	ULONG PciAddress;
 	ULONG PciOffset;
 	UCHAR Data[1];
-}   OLS_WRITE_PCI_CONFIG_INPUT;
+} OLS_WRITE_PCI_CONFIG_INPUT;
 
 typedef LARGE_INTEGER PHYSICAL_ADDRESS;
 
-typedef struct  _OLS_READ_MEMORY_INPUT {
+typedef struct _OLS_READ_MEMORY_INPUT
+{
 	PHYSICAL_ADDRESS Address;
 	ULONG UnitSize;
 	ULONG Count;
-}   OLS_READ_MEMORY_INPUT;
+} OLS_READ_MEMORY_INPUT;
 
-typedef struct  _OLS_WRITE_MEMORY_INPUT {
+typedef struct _OLS_WRITE_MEMORY_INPUT
+{
 	PHYSICAL_ADDRESS Address;
 	ULONG UnitSize;
 	ULONG Count;
 	UCHAR Data[1];
-}   OLS_WRITE_MEMORY_INPUT;
+} OLS_WRITE_MEMORY_INPUT;
+
+#pragma pack(pop)
+
+// PawnIO
+#define PIO_TYPE 41394
+
+// PawnIO.sys
+#define PAWNIO_ID							L"PawnIO"
+#define PAWNIO_NAME							L"PawnIO.sys" // PawnIO.sys for x86 is not provided
+#define PAWNIO_NAME_X64						L"PawnIOx64.sys"
+#define PAWNIO_OBJ							L"\\\\.\\PawnIO"
+
+// PawnIO
+#define IOCTL_PIO_GET_REFCOUNT \
+	CTL_CODE(PIO_TYPE, 0x801, METHOD_BUFFERED, FILE_ANY_ACCESS)
+
+#define IOCTL_PIO_LOAD_BINARY \
+	CTL_CODE(PIO_TYPE, 0x821, METHOD_BUFFERED, FILE_ANY_ACCESS)
+
+#define IOCTL_PIO_EXECUTE_FN \
+	CTL_CODE(PIO_TYPE, 0x841, METHOD_BUFFERED, FILE_ANY_ACCESS)
+
+#define PIO_FN_NAME_LEN 32
+
+#pragma pack(push,1)
+
+typedef struct _PIO_EXEC_INPUT
+{
+	CHAR Fn[PIO_FN_NAME_LEN];
+	ULONG64 Params[0];
+} PIO_EXEC_INPUT;
 
 #pragma pack(pop)

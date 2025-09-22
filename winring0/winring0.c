@@ -6,8 +6,9 @@
 #include <winioctl.h>
 #include <winerror.h>
 #include <pathcch.h>
+#include <winternl.h>
 #include "winring0.h"
-#include "winring0_def.h"
+#include "winring0_priv.h"
 
 static BOOL load_driver(struct wr0_drv_t* drv)
 {
@@ -98,7 +99,8 @@ static BOOL find_driver(struct wr0_drv_t* driver, LPCWSTR name, LPCWSTR id, LPCW
 	return FALSE;
 }
 
-struct wr0_drv_t* open_driver_real(LPCWSTR name, LPCWSTR id, LPCWSTR obj, int debug)
+static struct wr0_drv_t*
+open_driver_real(LPCWSTR name, LPCWSTR id, enum wr0_driver_type t, LPCWSTR obj, int debug)
 {
 	struct wr0_drv_t* drv;
 	BOOL status = FALSE;
@@ -122,6 +124,7 @@ struct wr0_drv_t* open_driver_real(LPCWSTR name, LPCWSTR id, LPCWSTR obj, int de
 
 	if (!status)
 		goto fail;
+	drv->driver_type = t;
 	drv->debug = debug;
 	return drv;
 fail:
@@ -134,64 +137,65 @@ struct wr0_drv_t* WR0_OpenDriver(int debug)
 	struct wr0_drv_t* drv = NULL;
 	if (is_x64())
 	{
-		drv = open_driver_real(OLS_DRIVER_NAME_X64, OLS_DRIVER_ID, OLS_DRIVER_OBJ, debug);
+		drv = open_driver_real(PAWNIO_NAME_X64, PAWNIO_ID, WR0_DRIVER_PAWNIO, PAWNIO_OBJ, debug);
 		if (drv)
 			return drv;
-		drv = open_driver_real(OLS_DRIVER_NAME_WIN7_X64, OLS_DRIVER_ID, OLS_DRIVER_OBJ, debug);
+		drv = open_driver_real(HWRWDRV_NAME_X64, HWRWDRV_ID, WR0_DRIVER_HWRWDRV, HWRWDRV_OBJ, debug);
 		if (drv)
 			return drv;
-		drv = open_driver_real(OLS_ALT_DRIVER_NAME_X64, OLS_ALT_DRIVER_ID, OLS_ALT_DRIVER_OBJ, debug);
+		drv = open_driver_real(WINRING0_NAME_X64, WINRING0_ID, WR0_DRIVER_WINRING0, WINRING0_OBJ, debug);
 	}
 	else
 	{
-		drv = open_driver_real(OLS_DRIVER_NAME, OLS_DRIVER_ID, OLS_DRIVER_OBJ, debug);
+		drv = open_driver_real(HWRWDRV_NAME, HWRWDRV_ID, WR0_DRIVER_HWRWDRV, HWRWDRV_OBJ, debug);
 		if (drv)
 			return drv;
-		drv = open_driver_real(OLS_ALT_DRIVER_NAME, OLS_ALT_DRIVER_ID, OLS_ALT_DRIVER_OBJ, debug);
+		drv = open_driver_real(WINRING0_NAME, WINRING0_ID, WR0_DRIVER_WINRING0, WINRING0_OBJ, debug);
 	}
 	return drv;
 }
 
-int WR0_RdMsr(struct wr0_drv_t* driver, uint32_t msr_index, uint64_t* result)
+int WR0_RdMsr(struct wr0_drv_t* drv, uint32_t msr_index, uint64_t* result)
 {
 	DWORD dwBytesReturned;
-	UINT64 MsrData = 0;
-	BOOL Res = FALSE;
+	UINT64 msrData = 0;
+	BOOL bRes = FALSE;
 
-	if (!driver)
+	if (!drv || !drv->hhDriver || drv->hhDriver == INVALID_HANDLE_VALUE || drv->driver_type == WR0_DRIVER_PAWNIO)
 		return -1;
-	Res = DeviceIoControl(driver->hhDriver, IOCTL_OLS_READ_MSR,
-		&msr_index, sizeof(msr_index), &MsrData, sizeof(MsrData), &dwBytesReturned, NULL);
-	if (Res == FALSE)
+
+	bRes = DeviceIoControl(drv->hhDriver, IOCTL_OLS_READ_MSR,
+		&msr_index, sizeof(msr_index), &msrData, sizeof(msrData), &dwBytesReturned, NULL);
+	if (bRes == FALSE)
 		return -1;
-	*result = MsrData;
+	*result = msrData;
 	return 0;
 }
 
-int WR0_WrMsr(struct wr0_drv_t* driver, uint32_t msr_index, DWORD eax, DWORD edx)
+int WR0_WrMsr(struct wr0_drv_t* drv, uint32_t msr_index, DWORD eax, DWORD edx)
 {
 	DWORD dwBytesReturned = 0;
 	DWORD outBuf;
 	OLS_WRITE_MSR_INPUT inBuf;
-	BOOL Res = FALSE;
+	BOOL bRes = FALSE;
 
-	if (!driver)
+	if (!drv || !drv->hhDriver || drv->hhDriver == INVALID_HANDLE_VALUE || drv->driver_type == WR0_DRIVER_PAWNIO)
 		return -1;
 
 	inBuf.Register = msr_index;
 	inBuf.Value.HighPart = edx;
 	inBuf.Value.LowPart = eax;
 
-	Res = DeviceIoControl(driver->hhDriver, IOCTL_OLS_WRITE_MSR,
+	bRes = DeviceIoControl(drv->hhDriver, IOCTL_OLS_WRITE_MSR,
 		&inBuf, sizeof(inBuf), &outBuf, sizeof(outBuf), &dwBytesReturned, NULL);
-	if (Res == FALSE)
+	if (bRes == FALSE)
 		return -1;
 	return 0;
 }
 
 uint8_t WR0_RdIo8(struct wr0_drv_t* drv, uint16_t port)
 {
-	if (!drv || !drv->hhDriver || drv->hhDriver == INVALID_HANDLE_VALUE)
+	if (!drv || !drv->hhDriver || drv->hhDriver == INVALID_HANDLE_VALUE || drv->driver_type == WR0_DRIVER_PAWNIO)
 		return 0;
 
 	DWORD	returnedLength = 0;
@@ -206,7 +210,7 @@ uint8_t WR0_RdIo8(struct wr0_drv_t* drv, uint16_t port)
 
 uint16_t WR0_RdIo16(struct wr0_drv_t* drv, uint16_t port)
 {
-	if (!drv || !drv->hhDriver || drv->hhDriver == INVALID_HANDLE_VALUE)
+	if (!drv || !drv->hhDriver || drv->hhDriver == INVALID_HANDLE_VALUE || drv->driver_type == WR0_DRIVER_PAWNIO)
 		return 0;
 
 	DWORD	returnedLength = 0;
@@ -221,7 +225,7 @@ uint16_t WR0_RdIo16(struct wr0_drv_t* drv, uint16_t port)
 
 uint32_t WR0_RdIo32(struct wr0_drv_t* drv, uint16_t port)
 {
-	if (!drv || !drv->hhDriver || drv->hhDriver == INVALID_HANDLE_VALUE)
+	if (!drv || !drv->hhDriver || drv->hhDriver == INVALID_HANDLE_VALUE || drv->driver_type == WR0_DRIVER_PAWNIO)
 		return 0;
 
 	DWORD	returnedLength = 0;
@@ -237,7 +241,7 @@ uint32_t WR0_RdIo32(struct wr0_drv_t* drv, uint16_t port)
 
 void WR0_WrIo8(struct wr0_drv_t* drv, uint16_t port, uint8_t value)
 {
-	if (!drv || !drv->hhDriver || drv->hhDriver == INVALID_HANDLE_VALUE)
+	if (!drv || !drv->hhDriver || drv->hhDriver == INVALID_HANDLE_VALUE || drv->driver_type == WR0_DRIVER_PAWNIO)
 		return;
 
 	DWORD	returnedLength = 0;
@@ -255,7 +259,7 @@ void WR0_WrIo8(struct wr0_drv_t* drv, uint16_t port, uint8_t value)
 
 void WR0_WrIo16(struct wr0_drv_t* drv, uint16_t port, uint16_t value)
 {
-	if (!drv || !drv->hhDriver || drv->hhDriver == INVALID_HANDLE_VALUE)
+	if (!drv || !drv->hhDriver || drv->hhDriver == INVALID_HANDLE_VALUE || drv->driver_type == WR0_DRIVER_PAWNIO)
 		return;
 
 	DWORD	returnedLength = 0;
@@ -273,7 +277,7 @@ void WR0_WrIo16(struct wr0_drv_t* drv, uint16_t port, uint16_t value)
 
 void WR0_WrIo32(struct wr0_drv_t* drv, uint16_t port, uint32_t value)
 {
-	if (!drv || !drv->hhDriver || drv->hhDriver == INVALID_HANDLE_VALUE)
+	if (!drv || !drv->hhDriver || drv->hhDriver == INVALID_HANDLE_VALUE || drv->driver_type == WR0_DRIVER_PAWNIO)
 		return;
 
 	DWORD	returnedLength = 0;
@@ -291,7 +295,7 @@ void WR0_WrIo32(struct wr0_drv_t* drv, uint16_t port, uint32_t value)
 
 int WR0_RdPciConf(struct wr0_drv_t* drv, uint32_t addr, uint32_t reg, void* value, uint32_t size)
 {
-	if (!drv || !drv->hhDriver || drv->hhDriver == INVALID_HANDLE_VALUE
+	if (!drv || !drv->hhDriver || drv->hhDriver == INVALID_HANDLE_VALUE || drv->driver_type == WR0_DRIVER_PAWNIO
 		|| !value || (size == 2 && (reg & 1) != 0) || (size == 4 && (reg & 3) != 0))
 		return -1;
 
@@ -336,7 +340,7 @@ uint32_t WR0_RdPciConf32(struct wr0_drv_t* drv, uint32_t addr, uint32_t reg)
 
 int WR0_WrPciConf(struct wr0_drv_t* drv, uint32_t addr, uint32_t reg, void* value, uint32_t size)
 {
-	if (!drv || !drv->hhDriver || drv->hhDriver == INVALID_HANDLE_VALUE
+	if (!drv || !drv->hhDriver || drv->hhDriver == INVALID_HANDLE_VALUE || drv->driver_type == WR0_DRIVER_PAWNIO
 		|| !value || (size == 2 && (reg & 1) != 0) || (size == 4 && (reg & 3) != 0))
 		return -1;
 
@@ -380,21 +384,22 @@ uint32_t WR0_FindPciById(struct wr0_drv_t* drv, uint16_t vid, uint16_t did, uint
 {
 	uint32_t addr = 0xFFFFFFFF;
 	uint64_t id = 0;
-	BOOL multi_func_flag = FALSE;
+	BOOL mfFlag = FALSE;
 	uint8_t type = 0;
 	uint8_t count = 0;
 
-	if (!drv || !drv->hhDriver || drv->hhDriver == INVALID_HANDLE_VALUE || vid == 0xFFFF)
+	if (!drv || !drv->hhDriver || drv->hhDriver == INVALID_HANDLE_VALUE || drv->driver_type == WR0_DRIVER_PAWNIO
+		|| vid == 0xFFFF)
 		return addr;
 
 	for (uint8_t bus = 0; bus <= 7; bus++)
 	{
 		for (uint8_t dev = 0; dev < 32; dev++)
 		{
-			multi_func_flag = FALSE;
+			mfFlag = FALSE;
 			for (uint8_t func = 0; func < 8; func++)
 			{
-				if (!multi_func_flag && func > 0)
+				if (!mfFlag && func > 0)
 					break;
 				addr = PciBusDevFunc(bus, dev, func);
 				if (WR0_RdPciConf(drv, addr, 0, &id, sizeof(id)) == 0)
@@ -404,7 +409,7 @@ uint32_t WR0_FindPciById(struct wr0_drv_t* drv, uint16_t vid, uint16_t did, uint
 						&& WR0_RdPciConf(drv, addr, 0x0E, &type, sizeof(type)) == 0)
 					{
 						if (type & 0x80)
-							multi_func_flag = TRUE;
+							mfFlag = TRUE;
 					}
 					if (id == (vid | (((uint32_t)did) << 16)))
 					{
@@ -427,20 +432,20 @@ uint32_t WR0_FindPciByClass(struct wr0_drv_t* drv, uint8_t base, uint8_t sub, ui
 	uint32_t count = 0;
 	uint32_t addr = 0xFFFFFFFF;
 	uint32_t conf[3] = { 0 };
-	BOOL multi_func_flag = FALSE;
+	BOOL mfFlag = FALSE;
 	uint8_t type = 0;
 
-	if (!drv || !drv->hhDriver || drv->hhDriver == INVALID_HANDLE_VALUE)
+	if (!drv || !drv->hhDriver || drv->hhDriver == INVALID_HANDLE_VALUE || drv->driver_type == WR0_DRIVER_PAWNIO)
 		return addr;
 
 	for (bus = 0; bus <= 7; bus++)
 	{
 		for (dev = 0; dev < 32; dev++)
 		{
-			multi_func_flag = FALSE;
+			mfFlag = FALSE;
 			for (func = 0; func < 8; func++)
 			{
-				if (multi_func_flag == FALSE && func > 0)
+				if (mfFlag == FALSE && func > 0)
 					break;
 				addr = PciBusDevFunc(bus, dev, func);
 				if (WR0_RdPciConf(drv, addr, 0, conf, sizeof(conf)) == 0)
@@ -450,7 +455,7 @@ uint32_t WR0_FindPciByClass(struct wr0_drv_t* drv, uint8_t base, uint8_t sub, ui
 						&& WR0_RdPciConf(drv, addr, 0x0E, &type, sizeof(type)) == 0)
 					{
 						if (type & 0x80)
-							multi_func_flag = TRUE;
+							mfFlag = TRUE;
 					}
 					if ((conf[2] & 0xFFFFFF00) ==
 						(((DWORD)base << 24) | ((DWORD)sub << 16) | ((DWORD)prog << 8)))
@@ -471,7 +476,8 @@ uint32_t WR0_FindPciByClass(struct wr0_drv_t* drv, uint8_t base, uint8_t sub, ui
 DWORD WR0_RdMem(struct wr0_drv_t* drv,
 	DWORD_PTR address, PBYTE buffer, DWORD count, DWORD unitSize)
 {
-	if (!drv || !drv->hhDriver || drv->hhDriver == INVALID_HANDLE_VALUE || !buffer)
+	if (!drv || !drv->hhDriver || drv->hhDriver == INVALID_HANDLE_VALUE || drv->driver_type == WR0_DRIVER_PAWNIO
+		|| !buffer)
 		return 0;
 
 	DWORD	returnedLength = 0;
@@ -498,6 +504,64 @@ DWORD WR0_RdMem(struct wr0_drv_t* drv,
 
 	if (result && returnedLength == size)
 		return count * unitSize;
+	return 0;
+}
+
+int WR0_LoadPawn(struct wr0_drv_t* drv, PVOID blob, DWORD size)
+{
+	BOOL bRes = FALSE;
+
+	if (!drv || !drv->hhDriver || drv->hhDriver == INVALID_HANDLE_VALUE || drv->driver_type != WR0_DRIVER_PAWNIO)
+		return -1;
+	bRes = DeviceIoControl(drv->hhDriver, IOCTL_PIO_LOAD_BINARY, blob, size, NULL, 0, NULL, NULL);
+	if (bRes == FALSE)
+		return -1;
+	return 0;
+}
+
+int WR0_ExecPawn(struct wr0_drv_t* drv, LPCSTR fn,
+	const ULONG64* in, SIZE_T in_size,
+	PULONG64 out, SIZE_T out_size,
+	PSIZE_T return_size)
+{
+	PIO_EXEC_INPUT* inBuf;
+	DWORD inBufSize;
+	DWORD returnedLength;
+	BOOL bRes;
+
+	*return_size = 0;
+
+	if (!drv || !drv->hhDriver || drv->hhDriver == INVALID_HANDLE_VALUE || drv->driver_type != WR0_DRIVER_PAWNIO)
+		return -1;
+
+	if (in_size > 0 && in != NULL)
+		inBufSize = (DWORD)(sizeof(PIO_EXEC_INPUT) + in_size * sizeof(ULONG64));
+	else
+		return 0;
+
+	inBuf = calloc(1, inBufSize);
+	if (inBuf == NULL)
+		return -1;
+
+	strcpy_s(inBuf->Fn, PIO_FN_NAME_LEN, fn);
+
+	memcpy(inBuf->Params, in, in_size * sizeof(ULONG64));
+
+	bRes = DeviceIoControl(drv->hhDriver,
+		IOCTL_PIO_EXECUTE_FN,
+		inBuf,
+		inBufSize,
+		out,
+		(DWORD)(out_size * sizeof(*out)),
+		&returnedLength,
+		NULL);
+
+	free(inBuf);
+
+	if (bRes == FALSE)
+		return -1;
+
+	*return_size = returnedLength / sizeof(*out);
 	return 0;
 }
 

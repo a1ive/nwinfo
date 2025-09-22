@@ -22,7 +22,7 @@
     <ClInclude Include="winring0.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="winring0_def.h">
+    <ClInclude Include="winring0_priv.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

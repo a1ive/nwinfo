@@ -125,7 +125,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="winring0.h" />
-    <ClInclude Include="winring0_def.h" />
+    <ClInclude Include="winring0_priv.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="winring0.c" />
