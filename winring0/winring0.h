@@ -46,8 +46,10 @@ uint32_t WR0_FindPciById(struct wr0_drv_t* drv, uint16_t vid, uint16_t did, uint
 uint32_t WR0_FindPciByClass(struct wr0_drv_t* drv, uint8_t base, uint8_t sub, uint8_t prog, uint8_t index);
 DWORD WR0_RdMem(struct wr0_drv_t* drv, DWORD_PTR address, PBYTE buffer, DWORD count, DWORD unitSize);
 
+#ifdef ENABLE_PAWNIO
 int WR0_LoadPawn(struct wr0_drv_t* drv, PVOID blob, DWORD size);
 int WR0_ExecPawn(struct wr0_drv_t* drv, LPCSTR fn, const ULONG64* in, SIZE_T in_size, PULONG64 out, SIZE_T out_size, PSIZE_T return_size);
+#endif
 
 struct wr0_drv_t* WR0_OpenDriver(int debug);
 int WR0_CloseDriver(struct wr0_drv_t* drv);

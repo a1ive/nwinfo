@@ -137,9 +137,11 @@ struct wr0_drv_t* WR0_OpenDriver(int debug)
 	struct wr0_drv_t* drv = NULL;
 	if (is_x64())
 	{
+#ifdef ENABLE_PAWNIO
 		drv = open_driver_real(PAWNIO_NAME_X64, PAWNIO_ID, WR0_DRIVER_PAWNIO, PAWNIO_OBJ, debug);
 		if (drv)
 			return drv;
+#endif
 		drv = open_driver_real(HWRWDRV_NAME_X64, HWRWDRV_ID, WR0_DRIVER_HWRWDRV, HWRWDRV_OBJ, debug);
 		if (drv)
 			return drv;
@@ -160,11 +162,24 @@ int WR0_RdMsr(struct wr0_drv_t* drv, uint32_t msr_index, uint64_t* result)
 	DWORD dwBytesReturned;
 	UINT64 msrData = 0;
 	BOOL bRes = FALSE;
+	DWORD ctlCode;
 
-	if (!drv || !drv->hhDriver || drv->hhDriver == INVALID_HANDLE_VALUE || drv->driver_type == WR0_DRIVER_PAWNIO)
+	if (!drv || !drv->hhDriver || drv->hhDriver == INVALID_HANDLE_VALUE)
 		return -1;
 
-	bRes = DeviceIoControl(drv->hhDriver, IOCTL_OLS_READ_MSR,
+	switch (drv->driver_type)
+	{
+	case WR0_DRIVER_WINRING0:
+		ctlCode = IOCTL_OLS_READ_MSR;
+		break;
+	case WR0_DRIVER_HWRWDRV:
+		ctlCode = IOCTL_HRD_READ_MSR;
+		break;
+	default:
+		return -1;
+	}
+
+	bRes = DeviceIoControl(drv->hhDriver, ctlCode,
 		&msr_index, sizeof(msr_index), &msrData, sizeof(msrData), &dwBytesReturned, NULL);
 	if (bRes == FALSE)
 		return -1;
@@ -178,15 +193,28 @@ int WR0_WrMsr(struct wr0_drv_t* drv, uint32_t msr_index, DWORD eax, DWORD edx)
 	DWORD outBuf;
 	OLS_WRITE_MSR_INPUT inBuf;
 	BOOL bRes = FALSE;
+	DWORD ctlCode;
 
-	if (!drv || !drv->hhDriver || drv->hhDriver == INVALID_HANDLE_VALUE || drv->driver_type == WR0_DRIVER_PAWNIO)
+	if (!drv || !drv->hhDriver || drv->hhDriver == INVALID_HANDLE_VALUE)
 		return -1;
+
+	switch (drv->driver_type)
+	{
+	case WR0_DRIVER_WINRING0:
+		ctlCode = IOCTL_OLS_WRITE_MSR;
+		break;
+	case WR0_DRIVER_HWRWDRV:
+		ctlCode = IOCTL_HRD_WRITE_MSR;
+		break;
+	default:
+		return -1;
+	}
 
 	inBuf.Register = msr_index;
 	inBuf.Value.HighPart = edx;
 	inBuf.Value.LowPart = eax;
 
-	bRes = DeviceIoControl(drv->hhDriver, IOCTL_OLS_WRITE_MSR,
+	bRes = DeviceIoControl(drv->hhDriver, ctlCode,
 		&inBuf, sizeof(inBuf), &outBuf, sizeof(outBuf), &dwBytesReturned, NULL);
 	if (bRes == FALSE)
 		return -1;
@@ -195,14 +223,27 @@ int WR0_WrMsr(struct wr0_drv_t* drv, uint32_t msr_index, DWORD eax, DWORD edx)
 
 uint8_t WR0_RdIo8(struct wr0_drv_t* drv, uint16_t port)
 {
-	if (!drv || !drv->hhDriver || drv->hhDriver == INVALID_HANDLE_VALUE || drv->driver_type == WR0_DRIVER_PAWNIO)
+	DWORD returnedLength = 0;
+	BOOL result = FALSE;
+	WORD value = 0;
+	DWORD ctlCode;
+
+	if (!drv || !drv->hhDriver || drv->hhDriver == INVALID_HANDLE_VALUE)
 		return 0;
 
-	DWORD	returnedLength = 0;
-	BOOL	result = FALSE;
-	WORD	value = 0;
+	switch (drv->driver_type)
+	{
+	case WR0_DRIVER_WINRING0:
+		ctlCode = IOCTL_OLS_READ_IO_PORT_BYTE;
+		break;
+	case WR0_DRIVER_HWRWDRV:
+		ctlCode = IOCTL_HRD_READ_IO_PORT_BYTE;
+		break;
+	default:
+		return 0;
+	}
 
-	result = DeviceIoControl(drv->hhDriver, IOCTL_OLS_READ_IO_PORT_BYTE,
+	result = DeviceIoControl(drv->hhDriver, ctlCode,
 		&port, sizeof(port), &value, sizeof(value), &returnedLength, NULL);
 
 	return (uint8_t)value;
@@ -210,14 +251,27 @@ uint8_t WR0_RdIo8(struct wr0_drv_t* drv, uint16_t port)
 
 uint16_t WR0_RdIo16(struct wr0_drv_t* drv, uint16_t port)
 {
-	if (!drv || !drv->hhDriver || drv->hhDriver == INVALID_HANDLE_VALUE || drv->driver_type == WR0_DRIVER_PAWNIO)
+	DWORD returnedLength = 0;
+	BOOL result = FALSE;
+	WORD value = 0;
+	DWORD ctlCode;
+
+	if (!drv || !drv->hhDriver || drv->hhDriver == INVALID_HANDLE_VALUE)
 		return 0;
 
-	DWORD	returnedLength = 0;
-	BOOL	result = FALSE;
-	WORD	value = 0;
+	switch (drv->driver_type)
+	{
+	case WR0_DRIVER_WINRING0:
+		ctlCode = IOCTL_OLS_READ_IO_PORT_WORD;
+		break;
+	case WR0_DRIVER_HWRWDRV:
+		ctlCode = IOCTL_HRD_READ_IO_PORT_WORD;
+		break;
+	default:
+		return 0;
+	}
 
-	result = DeviceIoControl(drv->hhDriver, IOCTL_OLS_READ_IO_PORT_WORD,
+	result = DeviceIoControl(drv->hhDriver, ctlCode,
 		&port, sizeof(port), &value, sizeof(value), &returnedLength, NULL);
 
 	return value;
@@ -225,15 +279,28 @@ uint16_t WR0_RdIo16(struct wr0_drv_t* drv, uint16_t port)
 
 uint32_t WR0_RdIo32(struct wr0_drv_t* drv, uint16_t port)
 {
-	if (!drv || !drv->hhDriver || drv->hhDriver == INVALID_HANDLE_VALUE || drv->driver_type == WR0_DRIVER_PAWNIO)
+	DWORD returnedLength = 0;
+	BOOL result = FALSE;
+	DWORD port4 = port;
+	DWORD value = 0;
+	DWORD ctlCode;
+
+	if (!drv || !drv->hhDriver || drv->hhDriver == INVALID_HANDLE_VALUE)
 		return 0;
 
-	DWORD	returnedLength = 0;
-	BOOL	result = FALSE;
-	DWORD	port4 = port;
-	DWORD	value = 0;
+	switch (drv->driver_type)
+	{
+	case WR0_DRIVER_WINRING0:
+		ctlCode = IOCTL_OLS_READ_IO_PORT_DWORD;
+		break;
+	case WR0_DRIVER_HWRWDRV:
+		ctlCode = IOCTL_HRD_READ_IO_PORT_DWORD;
+		break;
+	default:
+		return 0;
+	}
 
-	result = DeviceIoControl(drv->hhDriver, IOCTL_OLS_READ_IO_PORT_DWORD,
+	result = DeviceIoControl(drv->hhDriver, ctlCode,
 		&port4, sizeof(port4), &value, sizeof(value), &returnedLength, NULL);
 
 	return value;
@@ -241,72 +308,124 @@ uint32_t WR0_RdIo32(struct wr0_drv_t* drv, uint16_t port)
 
 void WR0_WrIo8(struct wr0_drv_t* drv, uint16_t port, uint8_t value)
 {
-	if (!drv || !drv->hhDriver || drv->hhDriver == INVALID_HANDLE_VALUE || drv->driver_type == WR0_DRIVER_PAWNIO)
+	DWORD returnedLength = 0;
+	BOOL result = FALSE;
+	DWORD length = 0;
+	OLS_WRITE_IO_PORT_INPUT inBuf = { 0 };
+	DWORD ctlCode;
+
+	if (!drv || !drv->hhDriver || drv->hhDriver == INVALID_HANDLE_VALUE)
 		return;
 
-	DWORD	returnedLength = 0;
-	BOOL	result = FALSE;
-	DWORD   length = 0;
-	OLS_WRITE_IO_PORT_INPUT inBuf = { 0 };
+	switch (drv->driver_type)
+	{
+	case WR0_DRIVER_WINRING0:
+		ctlCode = IOCTL_OLS_WRITE_IO_PORT_BYTE;
+		break;
+	case WR0_DRIVER_HWRWDRV:
+		ctlCode = IOCTL_HRD_WRITE_IO_PORT_BYTE;
+		break;
+	default:
+		return;
+	}
 
 	inBuf.CharData = value;
 	inBuf.PortNumber = port;
 	length = offsetof(OLS_WRITE_IO_PORT_INPUT, CharData) + sizeof(inBuf.CharData);
 
-	result = DeviceIoControl(drv->hhDriver, IOCTL_OLS_WRITE_IO_PORT_BYTE,
+	result = DeviceIoControl(drv->hhDriver, ctlCode,
 		&inBuf, length, NULL, 0, &returnedLength, NULL);
 }
 
 void WR0_WrIo16(struct wr0_drv_t* drv, uint16_t port, uint16_t value)
 {
-	if (!drv || !drv->hhDriver || drv->hhDriver == INVALID_HANDLE_VALUE || drv->driver_type == WR0_DRIVER_PAWNIO)
+	DWORD returnedLength = 0;
+	BOOL result = FALSE;
+	DWORD length = 0;
+	OLS_WRITE_IO_PORT_INPUT inBuf = { 0 };
+	DWORD ctlCode;
+
+	if (!drv || !drv->hhDriver || drv->hhDriver == INVALID_HANDLE_VALUE)
 		return;
 
-	DWORD	returnedLength = 0;
-	BOOL	result = FALSE;
-	DWORD   length = 0;
-	OLS_WRITE_IO_PORT_INPUT inBuf = { 0 };
+	switch (drv->driver_type)
+	{
+	case WR0_DRIVER_WINRING0:
+		ctlCode = IOCTL_OLS_WRITE_IO_PORT_WORD;
+		break;
+	case WR0_DRIVER_HWRWDRV:
+		ctlCode = IOCTL_HRD_WRITE_IO_PORT_WORD;
+		break;
+	default:
+		return;
+	}
 
 	inBuf.ShortData = value;
 	inBuf.PortNumber = port;
 	length = offsetof(OLS_WRITE_IO_PORT_INPUT, CharData) + sizeof(inBuf.ShortData);
 
-	result = DeviceIoControl(drv->hhDriver, IOCTL_OLS_WRITE_IO_PORT_WORD,
+	result = DeviceIoControl(drv->hhDriver, ctlCode,
 		&inBuf, length, NULL, 0, &returnedLength, NULL);
 }
 
 void WR0_WrIo32(struct wr0_drv_t* drv, uint16_t port, uint32_t value)
 {
-	if (!drv || !drv->hhDriver || drv->hhDriver == INVALID_HANDLE_VALUE || drv->driver_type == WR0_DRIVER_PAWNIO)
+	DWORD returnedLength = 0;
+	BOOL result = FALSE;
+	DWORD length = 0;
+	OLS_WRITE_IO_PORT_INPUT inBuf = { 0 };
+	DWORD ctlCode;
+
+	if (!drv || !drv->hhDriver || drv->hhDriver == INVALID_HANDLE_VALUE)
 		return;
 
-	DWORD	returnedLength = 0;
-	BOOL	result = FALSE;
-	DWORD   length = 0;
-	OLS_WRITE_IO_PORT_INPUT inBuf = { 0 };
+	switch (drv->driver_type)
+	{
+	case WR0_DRIVER_WINRING0:
+		ctlCode = IOCTL_OLS_WRITE_IO_PORT_DWORD;
+		break;
+	case WR0_DRIVER_HWRWDRV:
+		ctlCode = IOCTL_HRD_WRITE_IO_PORT_DWORD;
+		break;
+	default:
+		return;
+	}
 
 	inBuf.LongData = value;
 	inBuf.PortNumber = port;
 	length = offsetof(OLS_WRITE_IO_PORT_INPUT, CharData) + sizeof(inBuf.LongData);
 
-	result = DeviceIoControl(drv->hhDriver, IOCTL_OLS_WRITE_IO_PORT_DWORD,
+	result = DeviceIoControl(drv->hhDriver, ctlCode,
 		&inBuf, length, NULL, 0, &returnedLength, NULL);
 }
 
 int WR0_RdPciConf(struct wr0_drv_t* drv, uint32_t addr, uint32_t reg, void* value, uint32_t size)
 {
-	if (!drv || !drv->hhDriver || drv->hhDriver == INVALID_HANDLE_VALUE || drv->driver_type == WR0_DRIVER_PAWNIO
-		|| !value || (size == 2 && (reg & 1) != 0) || (size == 4 && (reg & 3) != 0))
-		return -1;
-
 	DWORD returnedLength = 0;
 	BOOL result = FALSE;
 	OLS_READ_PCI_CONFIG_INPUT inBuf = { 0 };
+	DWORD ctlCode;
+
+	if (!drv || !drv->hhDriver || drv->hhDriver == INVALID_HANDLE_VALUE
+		|| !value || (size == 2 && (reg & 1) != 0) || (size == 4 && (reg & 3) != 0))
+		return -1;
+
+	switch (drv->driver_type)
+	{
+	case WR0_DRIVER_WINRING0:
+		ctlCode = IOCTL_OLS_READ_PCI_CONFIG;
+		break;
+	case WR0_DRIVER_HWRWDRV:
+		ctlCode = IOCTL_HRD_READ_PCI_CONFIG;
+		break;
+	default:
+		return -1;
+	}
 
 	inBuf.PciAddress = addr;
 	inBuf.PciOffset = reg;
 
-	result = DeviceIoControl(drv->hhDriver, IOCTL_OLS_READ_PCI_CONFIG,
+	result = DeviceIoControl(drv->hhDriver, ctlCode,
 		&inBuf, sizeof(inBuf), value, size, &returnedLength, NULL);
 
 	if (result)
@@ -340,14 +459,27 @@ uint32_t WR0_RdPciConf32(struct wr0_drv_t* drv, uint32_t addr, uint32_t reg)
 
 int WR0_WrPciConf(struct wr0_drv_t* drv, uint32_t addr, uint32_t reg, void* value, uint32_t size)
 {
-	if (!drv || !drv->hhDriver || drv->hhDriver == INVALID_HANDLE_VALUE || drv->driver_type == WR0_DRIVER_PAWNIO
-		|| !value || (size == 2 && (reg & 1) != 0) || (size == 4 && (reg & 3) != 0))
-		return -1;
-
 	DWORD returnedLength = 0;
 	BOOL result = FALSE;
 	int inputSize = 0;
 	OLS_WRITE_PCI_CONFIG_INPUT* inBuf;
+	DWORD ctlCode;
+
+	if (!drv || !drv->hhDriver || drv->hhDriver == INVALID_HANDLE_VALUE
+		|| !value || (size == 2 && (reg & 1) != 0) || (size == 4 && (reg & 3) != 0))
+		return -1;
+
+	switch (drv->driver_type)
+	{
+	case WR0_DRIVER_WINRING0:
+		ctlCode = IOCTL_OLS_WRITE_PCI_CONFIG;
+		break;
+	case WR0_DRIVER_HWRWDRV:
+		ctlCode = IOCTL_HRD_WRITE_PCI_CONFIG;
+		break;
+	default:
+		return -1;
+	}
 
 	inputSize = offsetof(OLS_WRITE_PCI_CONFIG_INPUT, Data) + size;
 	inBuf = (OLS_WRITE_PCI_CONFIG_INPUT*)malloc(inputSize);
@@ -356,7 +488,7 @@ int WR0_WrPciConf(struct wr0_drv_t* drv, uint32_t addr, uint32_t reg, void* valu
 	memcpy(inBuf->Data, value, size);
 	inBuf->PciAddress = addr;
 	inBuf->PciOffset = reg;
-	result = DeviceIoControl(drv->hhDriver, IOCTL_OLS_WRITE_PCI_CONFIG,
+	result = DeviceIoControl(drv->hhDriver, ctlCode,
 		inBuf, inputSize, NULL, 0, &returnedLength, NULL);
 	free(inBuf);
 
@@ -476,14 +608,27 @@ uint32_t WR0_FindPciByClass(struct wr0_drv_t* drv, uint8_t base, uint8_t sub, ui
 DWORD WR0_RdMem(struct wr0_drv_t* drv,
 	DWORD_PTR address, PBYTE buffer, DWORD count, DWORD unitSize)
 {
-	if (!drv || !drv->hhDriver || drv->hhDriver == INVALID_HANDLE_VALUE || drv->driver_type == WR0_DRIVER_PAWNIO
+	DWORD returnedLength = 0;
+	BOOL result = FALSE;
+	DWORD size = 0;
+	OLS_READ_MEMORY_INPUT inBuf;
+	DWORD ctlCode;
+
+	if (!drv || !drv->hhDriver || drv->hhDriver == INVALID_HANDLE_VALUE
 		|| !buffer)
 		return 0;
 
-	DWORD	returnedLength = 0;
-	BOOL	result = FALSE;
-	DWORD	size = 0;
-	OLS_READ_MEMORY_INPUT inBuf;
+	switch (drv->driver_type)
+	{
+	case WR0_DRIVER_WINRING0:
+		ctlCode = IOCTL_OLS_READ_MEMORY;
+		break;
+	case WR0_DRIVER_HWRWDRV:
+		ctlCode = IOCTL_HRD_READ_MEMORY;
+		break;
+	default:
+		return 0;
+	}
 
 	if (sizeof(DWORD_PTR) == 4)
 	{
@@ -499,13 +644,15 @@ DWORD WR0_RdMem(struct wr0_drv_t* drv,
 	inBuf.Count = count;
 	size = inBuf.UnitSize * inBuf.Count;
 
-	result = DeviceIoControl(drv->hhDriver, IOCTL_OLS_READ_MEMORY,
+	result = DeviceIoControl(drv->hhDriver, ctlCode,
 		&inBuf, sizeof(OLS_READ_MEMORY_INPUT), buffer, size, &returnedLength, NULL);
 
 	if (result && returnedLength == size)
 		return count * unitSize;
 	return 0;
 }
+
+#ifdef ENABLE_PAWNIO
 
 int WR0_LoadPawn(struct wr0_drv_t* drv, PVOID blob, DWORD size)
 {
@@ -564,6 +711,8 @@ int WR0_ExecPawn(struct wr0_drv_t* drv, LPCSTR fn,
 	*return_size = returnedLength / sizeof(*out);
 	return 0;
 }
+
+#endif
 
 int WR0_CloseDriver(struct wr0_drv_t* drv)
 {
