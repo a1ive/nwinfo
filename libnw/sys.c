@@ -470,6 +470,33 @@ static void PrintBootInfo(PNODE node)
 		NWL_NodeAttrSetBool(node, "VHD Boot", bVhdBoot, 0);
 }
 
+// Code Integrity
+static void PrintCiInfo(PNODE node)
+{
+	SYSTEM_CODEINTEGRITY_INFORMATION sci = { .Length = sizeof(SYSTEM_CODEINTEGRITY_INFORMATION) };
+	if (NWLC->NwOsInfo.dwMajorVersion < 6)
+		return;
+	if (!NWL_NtQuerySystemInformation(SystemCodeIntegrityInformation, &sci, sizeof(sci), NULL))
+		return;
+	NWL_NodeAttrSetBool(node, "Code Integrity", sci.CodeIntegrityOptions & CI_OPTION_ENABLED, 0);
+	NWL_NodeAttrSetBool(node, "Test Signing", sci.CodeIntegrityOptions & CI_OPTION_TESTSIGN, 0);
+
+	NWL_NodeAttrSetBool(node, "UMCI", sci.CodeIntegrityOptions & CI_OPTION_UMCI_ENABLED, 0);
+	NWL_NodeAttrSetBool(node, "UMCI Audit Mode", sci.CodeIntegrityOptions & CI_OPTION_UMCI_AUDITMODE_ENABLED, 0);
+	NWL_NodeAttrSetBool(node, "UMCI Exclusion Paths", sci.CodeIntegrityOptions & CI_OPTION_UMCI_EXCLUSIONPATHS_ENABLED, 0);
+	NWL_NodeAttrSetBool(node, "CI Test Build", sci.CodeIntegrityOptions & CI_OPTION_TEST_BUILD, 0);
+	NWL_NodeAttrSetBool(node, "CI Pre-production Build", sci.CodeIntegrityOptions & CI_OPTION_PREPRODUCTION_BUILD, 0);
+
+	NWL_NodeAttrSetBool(node, "CI Debug Mode", sci.CodeIntegrityOptions & CI_OPTION_DEBUGMODE_ENABLED, 0);
+
+	NWL_NodeAttrSetBool(node, "CI Flight Build", sci.CodeIntegrityOptions & CI_OPTION_FLIGHT_BUILD, 0);
+	NWL_NodeAttrSetBool(node, "CI Flight Signing", sci.CodeIntegrityOptions & CI_OPTION_FLIGHTING_ENABLED, 0);
+	NWL_NodeAttrSetBool(node, "HVCI KMCI", sci.CodeIntegrityOptions & CI_OPTION_HVCI_KMCI_ENABLED, 0);
+	NWL_NodeAttrSetBool(node, "HVCI KMCI Audit Mode", sci.CodeIntegrityOptions & CI_OPTION_HVCI_KMCI_AUDITMODE_ENABLED, 0);
+	NWL_NodeAttrSetBool(node, "HVCI KMCI Strict Mode", sci.CodeIntegrityOptions & CI_OPTION_HVCI_KMCI_STRICTMODE_ENABLED, 0);
+	NWL_NodeAttrSetBool(node, "HVCI KMCI IUM", sci.CodeIntegrityOptions & CI_OPTION_HVCI_IUM_ENABLED, 0);
+}
+
 PNODE NW_System(VOID)
 {
 	PNODE node = NWL_NodeAlloc("System", 0);
@@ -482,6 +509,7 @@ PNODE NW_System(VOID)
 	PrintBootInfo(node);
 	NWL_NodeAttrSet(node, "Firmware", NWL_IsEfi() ? "UEFI" : "Legacy BIOS", 0);
 	PrintTpmInfo(node);
+	PrintCiInfo(node);
 	PrintMemInfo(node);
 	return node;
 }

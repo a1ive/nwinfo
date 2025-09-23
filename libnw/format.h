@@ -71,7 +71,7 @@ PNODE_ATT
 NWL_NodeAttrSetf(PNODE node, LPCSTR key, INT flags, LPCSTR _Printf_format_string_ format, ...);
 
 #define NWL_NodeAttrSetBool(node, key, value, flags) \
-	NWL_NodeAttrSet(node, key, (value ? NA_BOOL_TRUE : NA_BOOL_FALSE), flags | NAFLG_FMT_BOOLEAN)
+	NWL_NodeAttrSet((node), (key), ((value) ? NA_BOOL_TRUE : NA_BOOL_FALSE), (flags) | NAFLG_FMT_BOOLEAN)
 
 PNODE_ATT NWL_NodeAttrSetMulti(PNODE node, LPCSTR key, LPCSTR value, int flags);
 VOID NWL_NodeAppendMultiSz(LPSTR* lpmszMulti, LPCSTR szNew);
