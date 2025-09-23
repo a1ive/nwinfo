@@ -10,6 +10,52 @@
 #include "winring0.h"
 #include "winring0_priv.h"
 
+static UINT32 get_driver_version(LPCWSTR name)
+{
+	DWORD dwHandle = 0;
+	DWORD dwVersionInfoSize = 0;
+	LPVOID pVersionInfo = NULL;
+	UINT32 resultVersion = 0;
+	WCHAR wchPath[MAX_PATH] = { 0 };
+
+	GetModuleFileNameW(NULL, wchPath, MAX_PATH);
+
+	PathCchRemoveFileSpec(wchPath, MAX_PATH);
+	PathCchAppend(wchPath, MAX_PATH, name);
+
+	dwVersionInfoSize = GetFileVersionInfoSizeW(wchPath, &dwHandle);
+	if (dwVersionInfoSize == 0)
+		return 0;
+
+	pVersionInfo = HeapAlloc(GetProcessHeap(), 0, dwVersionInfoSize);
+	if (pVersionInfo == NULL)
+		return 0;
+
+	if (!GetFileVersionInfoW(wchPath, 0, dwVersionInfoSize, pVersionInfo))
+		goto out;
+
+	VS_FIXEDFILEINFO* pFileInfo = NULL;
+	UINT uiFileInfoSize = 0;
+	if (!VerQueryValueW(pVersionInfo, L"\\", (LPVOID*)&pFileInfo, &uiFileInfoSize))
+		goto out;
+	if (!pFileInfo)
+		goto out;
+
+	WORD major = HIWORD(pFileInfo->dwFileVersionMS);
+	WORD minor = LOWORD(pFileInfo->dwFileVersionMS);
+	WORD build = HIWORD(pFileInfo->dwFileVersionLS);
+	WORD revision = LOWORD(pFileInfo->dwFileVersionLS);
+
+	resultVersion = ((major & 0xFF) << 24) |
+		((minor & 0xFF) << 16) |
+		((build & 0xFF) << 8) |
+		(revision & 0xFF);
+
+out:
+	HeapFree(GetProcessHeap(), 0, pVersionInfo);
+	return resultVersion;
+}
+
 static BOOL load_driver(struct wr0_drv_t* drv)
 {
 	BOOL bServiceCreated = FALSE;
@@ -132,9 +178,12 @@ fail:
 	return NULL;
 }
 
+#define HWRWDRV_MIN_VER 0x01000601
+
 struct wr0_drv_t* WR0_OpenDriver(int debug)
 {
 	struct wr0_drv_t* drv = NULL;
+	DWORD ver = 0;
 	if (is_x64())
 	{
 #ifdef ENABLE_PAWNIO
@@ -142,14 +191,22 @@ struct wr0_drv_t* WR0_OpenDriver(int debug)
 		if (drv)
 			return drv;
 #endif
-		drv = open_driver_real(HWRWDRV_NAME_X64, HWRWDRV_ID, WR0_DRIVER_HWRWDRV, HWRWDRV_OBJ, debug);
+		ver = get_driver_version(HWRWDRV_NAME_X64);
+		if (ver >= HWRWDRV_MIN_VER)
+			drv = open_driver_real(HWRWDRV_NAME_X64, HWRWDRV_ID, WR0_DRIVER_HWRWDRV, HWRWDRV_OBJ, debug);
+		else
+			drv = open_driver_real(HWRWDRV_NAME_X64, HWRWDRV_ID, WR0_DRIVER_WINRING0, HWRWDRV_OBJ, debug);
 		if (drv)
 			return drv;
 		drv = open_driver_real(WINRING0_NAME_X64, WINRING0_ID, WR0_DRIVER_WINRING0, WINRING0_OBJ, debug);
 	}
 	else
 	{
-		drv = open_driver_real(HWRWDRV_NAME, HWRWDRV_ID, WR0_DRIVER_HWRWDRV, HWRWDRV_OBJ, debug);
+		ver = get_driver_version(HWRWDRV_NAME);
+		if (ver >= HWRWDRV_MIN_VER)
+			drv = open_driver_real(HWRWDRV_NAME, HWRWDRV_ID, WR0_DRIVER_HWRWDRV, HWRWDRV_OBJ, debug);
+		else
+			drv = open_driver_real(HWRWDRV_NAME, HWRWDRV_ID, WR0_DRIVER_WINRING0, HWRWDRV_OBJ, debug);
 		if (drv)
 			return drv;
 		drv = open_driver_real(WINRING0_NAME, WINRING0_ID, WR0_DRIVER_WINRING0, WINRING0_OBJ, debug);
