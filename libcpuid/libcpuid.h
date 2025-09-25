@@ -1952,17 +1952,20 @@ typedef enum {
 	INFO_THROTTLING,           /*!< 1 if the current logical processor is
                                     throttling. 0 if it is running normally. */
 	INFO_VOLTAGE,              /*!< The current core voltage in Volt,
-	                            multiplied by 100. */
-	INFO_PKG_ENERGY,            /*!< The current package energy consumption in Joules,
-	                            multiplied by 100. */
-	INFO_PKG_PL1,               /*!< The current package power limit #1 in Watts,
-	                            multiplied by 100. */
-	INFO_PKG_PL2,               /*!< The current package power limit #2 in Watts,
-	                            multiplied by 100. */
+	                                multiplied by 100. */
+	INFO_PKG_ENERGY,           /*!< The current package energy consumption in Joules,
+	                                multiplied by 100. */
+	INFO_PKG_PL1,              /*!< The current package power limit #1 in Watts,
+	                                multiplied by 100. */
+	INFO_PKG_PL2,              /*!< The current package power limit #2 in Watts,
+	                                multiplied by 100. */
 	INFO_BCLK,                 /*!< See \ref INFO_BUS_CLOCK. */
 	INFO_BUS_CLOCK,            /*!< The main bus clock in MHz,
-	                            e.g., FSB/QPI/DMI/HT base clock,
-	                            multiplied by 100. */
+	                                e.g., FSB/QPI/DMI/HT base clock,
+	                                multiplied by 100. */
+	INFO_IGPU_TEMPERATURE,     /*!< The current integrated GPU temperature in Celsius. */
+	INFO_IGPU_ENERGY,          /*!< The current integrated GPU energy consumption in Joules,
+	                                multiplied by 100. */
 } cpu_msrinfo_request_t;
 
 /**

@@ -986,3 +986,39 @@ ry_err_t ryzen_smu_get_core_temperature(ry_handle_t* handle, uint32_t core, floa
 
 	return ryzen_smu_get_pm_table_float(handle, base_offset + (core * sizeof(float)), data);
 }
+
+ry_err_t ryzen_smu_get_apu_temperature(ry_handle_t* handle, float* data)
+{
+	size_t offset = OFFSET_INVALID;
+
+	switch (handle->pm_table_version)
+	{
+	case 0x370000:
+	case 0x370001:
+	case 0x370002:
+	case 0x370003:
+	case 0x370004:
+	case 0x370005:
+	case 0x3F0000:
+	case 0x400001:
+	case 0x400002:
+	case 0x400003:
+	case 0x400004:
+	case 0x400005:
+	case 0x450004:
+	case 0x450005:
+	case 0x4C0006:
+	case 0x4C0007:
+	case 0x4C0008:
+	case 0x4C0009:
+	case 0x5D0008:
+	case 0x64020c:
+		offset = 0x5C;
+		break;
+	}
+
+	if (offset == OFFSET_INVALID)
+		return RYZEN_SMU_UNSUPPORTED;
+
+	return ryzen_smu_get_pm_table_float(handle, offset, data);
+}

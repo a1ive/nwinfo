@@ -91,6 +91,16 @@ static double get_bus_clock(struct msr_info_t* info)
 	return (double)CPU_INVALID_VALUE / 100;
 }
 
+static int get_igpu_temperature(struct msr_info_t* info)
+{
+	return CPU_INVALID_VALUE;
+}
+
+static double get_igpu_energy(struct msr_info_t* info)
+{
+	return (double)CPU_INVALID_VALUE / 100;
+}
+
 struct msr_fn_t msr_fn_centaur =
 {
 	.get_min_multiplier = get_min_multiplier,
@@ -103,4 +113,6 @@ struct msr_fn_t msr_fn_centaur =
 	.get_pkg_pl2 = get_pkg_pl2,
 	.get_voltage = get_voltage,
 	.get_bus_clock = get_bus_clock,
+	.get_igpu_temperature = get_igpu_temperature,
+	.get_igpu_energy = get_igpu_energy,
 };

@@ -18,6 +18,8 @@
 #define MSR_RAPL_POWER_UNIT    0x606
 #define MSR_PKG_POWER_LIMIT    0x610
 #define MSR_PKG_ENERGY_STATUS  0x611
+#define MSR_PP0_ENERGY_STATUS  0x639
+#define MSR_PP1_ENERGY_STATUS  0x641
 #define MSR_PLATFORM_INFO      0xCE
 
 static double get_min_multiplier(struct msr_info_t* info)
@@ -198,6 +200,23 @@ fail:
 	return (double)CPU_INVALID_VALUE / 100;
 }
 
+static int get_igpu_temperature(struct msr_info_t* info)
+{
+	return CPU_INVALID_VALUE;
+}
+
+static double get_igpu_energy(struct msr_info_t* info)
+{
+	uint64_t total_energy, energy_units;
+	if (cpu_rdmsr_range(info->handle, MSR_PP1_ENERGY_STATUS, 31, 0, &total_energy))
+		goto fail;
+	if (cpu_rdmsr_range(info->handle, MSR_RAPL_POWER_UNIT, 12, 8, &energy_units))
+		goto fail;
+	return (double)total_energy / (1ULL << energy_units);
+fail:
+	return (double)CPU_INVALID_VALUE / 100;
+}
+
 struct msr_fn_t msr_fn_intel =
 {
 	.get_min_multiplier = get_min_multiplier,
@@ -210,4 +229,6 @@ struct msr_fn_t msr_fn_intel =
 	.get_pkg_pl2 = get_pkg_pl2,
 	.get_voltage = get_voltage,
 	.get_bus_clock = get_bus_clock,
+	.get_igpu_temperature = get_igpu_temperature,
+	.get_igpu_energy = get_igpu_energy,
 };

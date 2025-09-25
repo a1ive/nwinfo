@@ -91,7 +91,12 @@ draw_msr(struct nk_context* ctx, int index, PNODE cpu, LPCSTR brand)
 		nk_lhcf(ctx, NK_TEXT_LEFT, g_color_text_l, "%.2f W", g_ctx.cpu_info[index].MsrPl1);
 		nk_l(ctx, N_(N__PL2), NK_TEXT_LEFT);
 		nk_lhcf(ctx, NK_TEXT_LEFT, g_color_text_l, "%.2f W", g_ctx.cpu_info[index].MsrPl2);
-
+#ifdef ENABLE_IGPU_MONITOR
+		nk_l(ctx, N_(N__IGPU_TEMPERATURE), NK_TEXT_LEFT);
+		nk_lhcf(ctx, NK_TEXT_LEFT, g_color_text_l, u8"%d \u2103", g_ctx.cpu_info[index].GpuTemp);
+		nk_l(ctx, N_(N__IGPU_POWER), NK_TEXT_LEFT);
+		nk_lhcf(ctx, NK_TEXT_LEFT, g_color_text_l, "%.2f W", g_ctx.cpu_info[index].GpuPower);
+#endif
 		nk_group_end(ctx);
 	}
 }

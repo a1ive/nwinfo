@@ -24,6 +24,8 @@ struct msr_fn_t
 	double (*get_pkg_pl2)(struct msr_info_t* info);
 	double (*get_voltage)(struct msr_info_t* info);
 	double (*get_bus_clock)(struct msr_info_t* info);
+	int (*get_igpu_temperature)(struct msr_info_t* info);
+	double (*get_igpu_energy)(struct msr_info_t* info);
 };
 
 extern struct msr_fn_t msr_fn_intel;

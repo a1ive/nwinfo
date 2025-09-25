@@ -197,6 +197,12 @@ int cpu_msrinfo(struct wr0_drv_t* handle, logical_cpu_t cpu, cpu_msrinfo_request
 		case INFO_BUS_CLOCK:
 			ret = (int) (fn->get_bus_clock(&info) * 100);
 			break;
+		case INFO_IGPU_TEMPERATURE:
+			ret = fn->get_igpu_temperature(&info);
+			break;
+		case INFO_IGPU_ENERGY:
+			ret = (int) (fn->get_igpu_energy(&info) * 100);
+			break;
 	}
 	// Restore AffinityMask
 	SetThreadGroupAffinity(thread, &saved_aff, NULL);

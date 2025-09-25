@@ -156,3 +156,5 @@ ry_err_t ryzen_smu_get_slow_limit(ry_handle_t* handle, float* data);
 ry_err_t ryzen_smu_get_slow_value(ry_handle_t* handle, float* data);
 
 ry_err_t ryzen_smu_get_core_temperature(ry_handle_t* handle, uint32_t core, float* data);
+
+ry_err_t ryzen_smu_get_apu_temperature(ry_handle_t* handle, float* data);

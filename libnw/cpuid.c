@@ -301,7 +301,17 @@ GetMsrData(NWLIB_CPU_INFO* info, struct cpu_id_t* data)
 		value = cpu_msrinfo(NWLC->NwDrv, i, INFO_PKG_PL2);
 		if (value != CPU_INVALID_VALUE && value > 0)
 			info->MsrPl2 = value / 100.0;
-
+#ifdef ENABLE_IGPU_MONITOR
+		value = cpu_msrinfo(NWLC->NwDrv, i, INFO_IGPU_TEMPERATURE);
+		if (value != CPU_INVALID_VALUE && value > 0)
+			info->GpuTemp = value;
+		value = cpu_msrinfo(NWLC->NwDrv, i, INFO_IGPU_ENERGY);
+		if (value != CPU_INVALID_VALUE && value > info->GpuEnergy)
+		{
+			info->GpuPower = (value - info->GpuEnergy) / 100.0;
+			info->GpuEnergy = value;
+		}
+#endif
 		break;
 	}
 }

@@ -226,6 +226,9 @@ typedef struct _NWLIB_CPU_INFO
 	double MsrPower;
 	double MsrPl1;
 	double MsrPl2;
+	int GpuTemp;
+	int GpuEnergy;
+	double GpuPower;
 }NWLIB_CPU_INFO;
 VOID NWL_GetCpuMsr(int count, NWLIB_CPU_INFO* info);
 

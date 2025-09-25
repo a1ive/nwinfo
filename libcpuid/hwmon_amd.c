@@ -534,6 +534,31 @@ fail:
 	return (double)CPU_INVALID_VALUE / 100;
 }
 
+static int get_igpu_temperature(struct msr_info_t* info)
+{
+	float value = 0.0f;
+	ry_handle_t* ry = ryzen_smu_init(info->handle, info->id);
+	if (ry == NULL)
+		goto fail;
+	if (ryzen_smu_init_pm_table(ry) != RYZEN_SMU_OK)
+		goto fail;
+	if (ryzen_smu_update_pm_table(ry) != RYZEN_SMU_OK)
+		goto fail;
+	if (ryzen_smu_get_apu_temperature(ry, &value) != RYZEN_SMU_OK)
+		goto fail;
+	ryzen_smu_free(ry);
+	return (int)value;
+fail:
+	if (ry != NULL)
+		ryzen_smu_free(ry);
+	return CPU_INVALID_VALUE;
+}
+
+static double get_igpu_energy(struct msr_info_t* info)
+{
+	return (double)CPU_INVALID_VALUE / 100;
+}
+
 struct msr_fn_t msr_fn_amd =
 {
 	.get_min_multiplier = get_min_multiplier,
@@ -546,4 +571,6 @@ struct msr_fn_t msr_fn_amd =
 	.get_pkg_pl2 = get_pkg_pl2,
 	.get_voltage = get_voltage,
 	.get_bus_clock = get_bus_clock,
+	.get_igpu_temperature = get_igpu_temperature,
+	.get_igpu_energy = get_igpu_energy,
 };
