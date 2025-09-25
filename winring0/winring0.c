@@ -178,6 +178,63 @@ fail:
 	return NULL;
 }
 
+static int load_pawnio(struct pio_mod_t* mod, LPCWSTR name, int debug)
+{
+	WCHAR path[MAX_PATH] = { 0 };
+	HANDLE hFile = INVALID_HANDLE_VALUE;
+
+	mod->blob = NULL;
+	mod->size = 0;
+	mod->hd = INVALID_HANDLE_VALUE;
+
+	GetModuleFileNameW(NULL, path, MAX_PATH);
+	PathCchRemoveFileSpec(path, MAX_PATH);
+	PathCchAppend(path, MAX_PATH, name);
+
+	hFile = CreateFileW(path, GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING, 0, NULL);
+	if (hFile == INVALID_HANDLE_VALUE)
+		goto fail;
+	mod->size = GetFileSize(hFile, NULL);
+	if (mod->size == INVALID_FILE_SIZE || mod->size == 0)
+		goto fail;
+	mod->blob = malloc(mod->size);
+	if (mod->blob == NULL)
+		goto fail;
+	if (!ReadFile(hFile, mod->blob, mod->size, &mod->size, NULL) || mod->size == 0)
+		goto fail;
+
+	if (debug)
+		printf("[PIO] Load file OK %ls\n", name);
+
+	mod->hd = CreateFileW(PAWNIO_OBJ,
+		GENERIC_WRITE | GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE,
+		NULL, OPEN_EXISTING, 0, NULL);
+	if (mod->hd == INVALID_HANDLE_VALUE)
+		goto fail;
+	if (!DeviceIoControl(mod->hd, IOCTL_PIO_LOAD_BINARY, mod->blob, mod->size, NULL, 0, NULL, NULL))
+		goto fail;
+
+	CloseHandle(hFile);
+
+	if (debug)
+		printf("[PIO] Load blob OK %ls size=%lu\n", name, mod->size);
+	return 0;
+
+fail:
+	if (hFile && hFile != INVALID_HANDLE_VALUE)
+		CloseHandle(hFile);
+	if (mod->blob)
+		free(mod->blob);
+	if (mod->hd && mod->hd != INVALID_HANDLE_VALUE)
+		CloseHandle(mod->hd);
+	mod->blob = NULL;
+	mod->size = 0;
+	mod->hd = INVALID_HANDLE_VALUE;
+	if (debug)
+		printf("[PIO] Load blob FAIL %ls\n", name);
+	return -1;
+}
+
 #define HWRWDRV_MIN_VER 0x01000601
 
 struct wr0_drv_t* WR0_OpenDriver(int debug)
@@ -186,11 +243,18 @@ struct wr0_drv_t* WR0_OpenDriver(int debug)
 	DWORD ver = 0;
 	if (is_x64())
 	{
-#ifdef ENABLE_PAWNIO
+
 		drv = open_driver_real(PAWNIO_NAME_X64, PAWNIO_ID, WR0_DRIVER_PAWNIO, PAWNIO_OBJ, debug);
 		if (drv)
+		{
+			load_pawnio(&drv->pio_amd0f, L"AMDFamily0F.bin", debug);
+			load_pawnio(&drv->pio_amd10, L"AMDFamily10.bin", debug);
+			load_pawnio(&drv->pio_amd17, L"AMDFamily17.bin", debug);
+			load_pawnio(&drv->pio_intel, L"IntelMSR.bin", debug);
+			load_pawnio(&drv->pio_rysmu, L"RyzenSMU.bin", debug);
 			return drv;
-#endif
+		}
+
 		ver = get_driver_version(HWRWDRV_NAME_X64);
 		if (ver >= HWRWDRV_MIN_VER)
 			drv = open_driver_real(HWRWDRV_NAME_X64, HWRWDRV_ID, WR0_DRIVER_HWRWDRV, HWRWDRV_OBJ, debug);
@@ -709,21 +773,7 @@ DWORD WR0_RdMem(struct wr0_drv_t* drv,
 	return 0;
 }
 
-#ifdef ENABLE_PAWNIO
-
-int WR0_LoadPawn(struct wr0_drv_t* drv, PVOID blob, DWORD size)
-{
-	BOOL bRes = FALSE;
-
-	if (!drv || !drv->hhDriver || drv->hhDriver == INVALID_HANDLE_VALUE || drv->driver_type != WR0_DRIVER_PAWNIO)
-		return -1;
-	bRes = DeviceIoControl(drv->hhDriver, IOCTL_PIO_LOAD_BINARY, blob, size, NULL, 0, NULL, NULL);
-	if (bRes == FALSE)
-		return -1;
-	return 0;
-}
-
-int WR0_ExecPawn(struct wr0_drv_t* drv, LPCSTR fn,
+int WR0_ExecPawn(struct wr0_drv_t* drv, struct pio_mod_t* mod, LPCSTR fn,
 	const ULONG64* in, SIZE_T in_size,
 	PULONG64 out, SIZE_T out_size,
 	PSIZE_T return_size)
@@ -733,9 +783,10 @@ int WR0_ExecPawn(struct wr0_drv_t* drv, LPCSTR fn,
 	DWORD returnedLength;
 	BOOL bRes;
 
-	*return_size = 0;
+	if (return_size)
+		*return_size = 0;
 
-	if (!drv || !drv->hhDriver || drv->hhDriver == INVALID_HANDLE_VALUE || drv->driver_type != WR0_DRIVER_PAWNIO)
+	if (!mod->hd || mod->hd == INVALID_HANDLE_VALUE)
 		return -1;
 
 	if (in_size > 0 && in != NULL)
@@ -751,7 +802,7 @@ int WR0_ExecPawn(struct wr0_drv_t* drv, LPCSTR fn,
 
 	memcpy(inBuf->Params, in, in_size * sizeof(ULONG64));
 
-	bRes = DeviceIoControl(drv->hhDriver,
+	bRes = DeviceIoControl(mod->hd,
 		IOCTL_PIO_EXECUTE_FN,
 		inBuf,
 		inBufSize,
@@ -762,20 +813,48 @@ int WR0_ExecPawn(struct wr0_drv_t* drv, LPCSTR fn,
 
 	free(inBuf);
 
+	if (drv->debug)
+	{
+		printf("[PIO] Exec %s %s", bRes ? "OK" : "FAIL", fn);
+		for (SIZE_T i = 0; i < in_size; i++)
+			printf(" in[%zu]=%llxh", i, in[i]);
+		for (SIZE_T i = 0; i < out_size; i++)
+			printf(" out[%zu]=%llxh", i, out[i]);
+		printf(" ret=%lu\n", returnedLength);
+	}
+
 	if (bRes == FALSE)
 		return -1;
 
-	*return_size = returnedLength / sizeof(*out);
+	if (return_size)
+		*return_size = returnedLength / sizeof(*out);
 	return 0;
 }
 
-#endif
+static void unload_pawnio(struct pio_mod_t* mod)
+{
+	if (mod->blob)
+		free(mod->blob);
+	if (mod->hd && mod->hd != INVALID_HANDLE_VALUE)
+		CloseHandle(mod->hd);
+	mod->blob = NULL;
+	mod->size = 0;
+	mod->hd = INVALID_HANDLE_VALUE;
+}
 
 int WR0_CloseDriver(struct wr0_drv_t* drv)
 {
 	SERVICE_STATUS srvStatus = { 0 };
 	if (drv == NULL)
 		return 0;
+	if (drv->driver_type == WR0_DRIVER_PAWNIO)
+	{
+		unload_pawnio(&drv->pio_amd0f);
+		unload_pawnio(&drv->pio_amd10);
+		unload_pawnio(&drv->pio_amd17);
+		unload_pawnio(&drv->pio_intel);
+		unload_pawnio(&drv->pio_rysmu);
+	}
 	if (drv->hhDriver && drv->hhDriver != INVALID_HANDLE_VALUE)
 	{
 		CloseHandle(drv->hhDriver);

@@ -22,12 +22,39 @@
 #define MSR_PP1_ENERGY_STATUS  0x641
 #define MSR_PLATFORM_INFO      0xCE
 
+static inline int
+read_intel_msr(struct wr0_drv_t* handle, uint32_t msr_index, uint8_t highbit, uint8_t lowbit, uint64_t* result)
+{
+	if (handle->driver_type != WR0_DRIVER_PAWNIO)
+		return cpu_rdmsr_range(handle, msr_index, highbit, lowbit, result);
+
+	int err;
+	const uint8_t bits = highbit - lowbit + 1;
+	ULONG64 in = msr_index;
+	ULONG64 out = 0;
+
+	if (highbit > 63 || lowbit > highbit)
+		return cpuid_set_error(ERR_INVRANGE);
+
+	err = WR0_ExecPawn(handle, &handle->pio_intel, "ioctl_read_msr", &in, 1, &out, 1, NULL);
+
+	if (!err && bits < 64)
+	{
+		/* Show only part of register */
+		out >>= lowbit;
+		out &= (1ULL << bits) - 1;
+		*result = out;
+	}
+
+	return err;
+}
+
 static double get_min_multiplier(struct msr_info_t* info)
 {
 	uint64_t reg;
 	if (info->id->x86.ext_family < 6)
 		goto fail;
-	if (cpu_rdmsr_range(info->handle, MSR_PLATFORM_INFO, 47, 40, &reg))
+	if (read_intel_msr(info->handle, MSR_PLATFORM_INFO, 47, 40, &reg))
 		goto fail;
 	return (double)reg;
 fail:
@@ -39,11 +66,11 @@ static double get_cur_multiplier(struct msr_info_t* info)
 	uint64_t reg;
 	if (info->id->x86.ext_family < 6)
 		goto fail;
-	if (cpu_rdmsr_range(info->handle, MSR_IA32_PERF_STATUS, 15, 8, &reg))
+	if (read_intel_msr(info->handle, MSR_IA32_PERF_STATUS, 15, 8, &reg))
 		goto fail;
 	return (double)reg;
 fail:
-	if (!WR0_RdMsr(info->handle, MSR_IA32_EBL_CR_POWERON, &reg))
+	if (!read_intel_msr(info->handle, MSR_IA32_EBL_CR_POWERON, 63, 0, &reg))
 		return (double)((reg >> 22) & 0x1f);
 	return (double)CPU_INVALID_VALUE / 100;
 }
@@ -69,12 +96,12 @@ static double get_max_multiplier(struct msr_info_t* info)
 	uint64_t reg;
 	if (info->id->x86.ext_family < 6)
 		goto fail;
-	if (cpu_rdmsr_range(info->handle, MSR_TURBO_RATIO_LIMIT, 7, 0, &reg))
+	if (read_intel_msr(info->handle, MSR_TURBO_RATIO_LIMIT, 7, 0, &reg))
 		goto fail;
 	return (double)reg;
 
 fail:
-	if (!WR0_RdMsr(info->handle, MSR_IA32_PERF_STATUS, &reg))
+	if (!read_intel_msr(info->handle, MSR_IA32_PERF_STATUS, 63, 0, &reg))
 		return (double)((reg >> 40) & 0x1f);
 	return (double)CPU_INVALID_VALUE / 100;
 }
@@ -98,11 +125,11 @@ static int get_temperature(struct msr_info_t* info)
 		Table 35-40.  Selected MSRs Supported by Next Generation Intel Xeon Phi Processors with DisplayFamily_DisplayModel Signature 06_57H
 		MSR_IA32_TEMPERATURE_TARGET[23:16] is Temperature Target
 	*/
-	if (cpu_rdmsr_range(info->handle, MSR_IA32_THERM_STATUS, 22, 16, &delta))
+	if (read_intel_msr(info->handle, MSR_IA32_THERM_STATUS, 22, 16, &delta))
 		goto fail;
-	if (cpu_rdmsr_range(info->handle, MSR_IA32_THERM_STATUS, 31, 31, &read_valid))
+	if (read_intel_msr(info->handle, MSR_IA32_THERM_STATUS, 31, 31, &read_valid))
 		goto fail;
-	if (cpu_rdmsr_range(info->handle, MSR_IA32_TEMPERATURE_TARGET, 23, 16, &tj))
+	if (read_intel_msr(info->handle, MSR_IA32_TEMPERATURE_TARGET, 23, 16, &tj))
 		goto fail;
 	if (read_valid)
 		return (int)(tj - delta);
@@ -116,9 +143,9 @@ static int get_pkg_temperature(struct msr_info_t* info)
 	uint64_t delta, tj;
 	if (!info->id->flags[CPU_FEATURE_INTEL_PTM])
 		goto fail;
-	if (cpu_rdmsr_range(info->handle, MSR_IA32_PACKAGE_THERM_STATUS, 22, 16, &delta))
+	if (read_intel_msr(info->handle, MSR_IA32_PACKAGE_THERM_STATUS, 22, 16, &delta))
 		goto fail;
-	if (cpu_rdmsr_range(info->handle, MSR_IA32_TEMPERATURE_TARGET, 23, 16, &tj))
+	if (read_intel_msr(info->handle, MSR_IA32_TEMPERATURE_TARGET, 23, 16, &tj))
 		goto fail;
 	return (int)(tj - delta);
 fail:
@@ -128,9 +155,9 @@ fail:
 static double get_pkg_energy(struct msr_info_t* info)
 {
 	uint64_t total_energy, energy_units;
-	if (cpu_rdmsr_range(info->handle, MSR_PKG_ENERGY_STATUS, 31, 0, &total_energy))
+	if (read_intel_msr(info->handle, MSR_PKG_ENERGY_STATUS, 31, 0, &total_energy))
 		goto fail;
-	if (cpu_rdmsr_range(info->handle, MSR_RAPL_POWER_UNIT, 12, 8, &energy_units))
+	if (read_intel_msr(info->handle, MSR_RAPL_POWER_UNIT, 12, 8, &energy_units))
 		goto fail;
 	return (double)total_energy / (1ULL << energy_units);
 fail:
@@ -140,9 +167,9 @@ fail:
 static double get_pkg_pl1(struct msr_info_t* info)
 {
 	uint64_t pl, pu;
-	if (cpu_rdmsr_range(info->handle, MSR_PKG_POWER_LIMIT, 14, 0, &pl))
+	if (read_intel_msr(info->handle, MSR_PKG_POWER_LIMIT, 14, 0, &pl))
 		goto fail;
-	if (cpu_rdmsr_range(info->handle, MSR_RAPL_POWER_UNIT, 3, 0, &pu))
+	if (read_intel_msr(info->handle, MSR_RAPL_POWER_UNIT, 3, 0, &pu))
 		goto fail;
 	return (double)pl / (1ULL << pu);
 fail:
@@ -152,9 +179,9 @@ fail:
 static double get_pkg_pl2(struct msr_info_t* info)
 {
 	uint64_t pl, pu;
-	if (cpu_rdmsr_range(info->handle, MSR_PKG_POWER_LIMIT, 46, 32, &pl))
+	if (read_intel_msr(info->handle, MSR_PKG_POWER_LIMIT, 46, 32, &pl))
 		goto fail;
-	if (cpu_rdmsr_range(info->handle, MSR_RAPL_POWER_UNIT, 3, 0, &pu))
+	if (read_intel_msr(info->handle, MSR_RAPL_POWER_UNIT, 3, 0, &pu))
 		goto fail;
 	return (double)pl / (1ULL << pu);
 fail:
@@ -171,7 +198,7 @@ static double get_voltage(struct msr_info_t* info)
 	uint64_t reg;
 	if (info->id->x86.ext_family < 6)
 		goto fail;
-	if (cpu_rdmsr_range(info->handle, MSR_IA32_PERF_STATUS, 47, 32, &reg))
+	if (read_intel_msr(info->handle, MSR_IA32_PERF_STATUS, 47, 32, &reg))
 		goto fail;
 	return (double)reg / (1ULL << 13ULL);
 fail:
@@ -193,7 +220,7 @@ static double get_bus_clock(struct msr_info_t* info)
 	uint64_t reg;
 	if (info->id->x86.ext_family < 6)
 		goto fail;
-	if (cpu_rdmsr_range(info->handle, MSR_PLATFORM_INFO, 15, 8, &reg))
+	if (read_intel_msr(info->handle, MSR_PLATFORM_INFO, 15, 8, &reg))
 		goto fail;
 	return (double)info->cpu_clock / reg;
 fail:
@@ -208,9 +235,9 @@ static int get_igpu_temperature(struct msr_info_t* info)
 static double get_igpu_energy(struct msr_info_t* info)
 {
 	uint64_t total_energy, energy_units;
-	if (cpu_rdmsr_range(info->handle, MSR_PP1_ENERGY_STATUS, 31, 0, &total_energy))
+	if (read_intel_msr(info->handle, MSR_PP1_ENERGY_STATUS, 31, 0, &total_energy))
 		goto fail;
-	if (cpu_rdmsr_range(info->handle, MSR_RAPL_POWER_UNIT, 12, 8, &energy_units))
+	if (read_intel_msr(info->handle, MSR_RAPL_POWER_UNIT, 12, 8, &energy_units))
 		goto fail;
 	return (double)total_energy / (1ULL << energy_units);
 fail:
