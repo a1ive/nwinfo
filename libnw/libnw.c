@@ -26,6 +26,7 @@ VOID NW_Init(PNWLIB_CONTEXT pContext)
 	NWL_NtGetVersion(&NWLC->NwOsInfo);
 	GetNativeSystemInfo(&NWLC->NwSi);
 	NWLC->NwRoot = NWL_NodeAlloc("NWinfo", 0);
+	WR0_OpenMutexes();
 	NWLC->NwDrv = WR0_OpenDriver(NWLC->Debug);
 	NWLC->NwRsdp = NWL_GetRsdp();
 	NWLC->NwRsdt = NWL_GetRsdt();
@@ -111,8 +112,8 @@ VOID NW_Fini(VOID)
 	free(NWLC->NwCpuid);
 	cpuid_free_raw_data_array(NWLC->NwCpuRaw);
 	free(NWLC->NwCpuRaw);
-	if (NWLC->NwDrv)
-		WR0_CloseDriver(NWLC->NwDrv);
+	WR0_CloseDriver(NWLC->NwDrv);
+	WR0_CloseMutexes();
 	if (NWLC->NwRoot)
 		NWL_NodeFree(NWLC->NwRoot, 1);
 	if (NWLC->NwFile && NWLC->NwFile != stdout)

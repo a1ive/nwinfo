@@ -128,6 +128,7 @@
     <ClInclude Include="winring0_priv.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="mutexes.c" />
     <ClCompile Include="winring0.c" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

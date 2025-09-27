@@ -63,3 +63,8 @@ int WR0_ExecPawn(struct wr0_drv_t* drv, struct pio_mod_t* mod, LPCSTR fn, const 
 
 struct wr0_drv_t* WR0_OpenDriver(int debug);
 int WR0_CloseDriver(struct wr0_drv_t* drv);
+
+void WR0_OpenMutexes(void);
+void WR0_CloseMutexes(void);
+BOOL WR0_WaitPciBus(DWORD timeout);
+void WR0_ReleasePciBus(void);
