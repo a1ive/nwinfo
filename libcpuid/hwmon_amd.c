@@ -169,6 +169,13 @@ static int get_amd_multipliers(struct msr_info_t* info, uint32_t pstate, double*
 		err += cpu_rdmsr_range(info->handle, pstate, 7, 0, &cpu_fid);
 		*multiplier = ((double)cpu_fid / cpu_did) * 2;
 		break;
+	case 0x1A: /* Zen 5 */
+		/* PPR for AMD Family 1Ah Model 02h C1, pages 235
+		MSRC001_006[4...B][11:0]  is cpu_fid
+		CoreCOF is Core::X86::Msr::PStateDef[CpuFid[11:0]] *5 */
+		err = cpu_rdmsr_range(info->handle, pstate, 11, 0, &cpu_fid);
+		*multiplier = ((double)cpu_fid) * 0.05;
+		break;
 	default:
 		warnf("get_amd_multipliers(): unsupported CPU extended family: %xh\n", info->id->x86.ext_family);
 		err = 1;
