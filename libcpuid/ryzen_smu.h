@@ -87,6 +87,8 @@ typedef union
 
 struct wr0_drv_t;
 
+#define SMU_TABLE_MAX_SIZE 0x2000
+
 typedef struct
 {
 	int debug;
@@ -97,7 +99,11 @@ typedef struct
 	uint64_t pm_table_base_addr;
 	uint32_t pm_table_version;
 	size_t pm_table_size;
-	void* pm_table_buffer;
+	union
+	{
+		uint8_t pm_table_buffer[SMU_TABLE_MAX_SIZE];
+		uint64_t pm_table_buffer_u64[SMU_TABLE_MAX_SIZE / 8];
+	};
 
 	struct wr0_drv_t* drv_handle;
 

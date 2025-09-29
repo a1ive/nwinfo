@@ -55,6 +55,43 @@
 #define MSR_PWR_UNIT           0xC0010299
 #define MSR_PKG_ENERGY_STAT    0xC001029B
 
+static inline int
+read_amd_msr(struct msr_info_t* info, uint32_t msr_index, uint8_t highbit, uint8_t lowbit, uint64_t* result)
+{
+	if (info->handle->driver_type != WR0_DRIVER_PAWNIO)
+		return cpu_rdmsr_range(info->handle, msr_index, highbit, lowbit, result);
+
+	int err;
+	const uint8_t bits = highbit - lowbit + 1;
+	ULONG64 in = msr_index;
+	ULONG64 out = 0;
+	struct pio_mod_t* pio = NULL;
+
+	if (highbit > 63 || lowbit > highbit)
+		return cpuid_set_error(ERR_INVRANGE);
+
+	if (info->id->x86.ext_family == 0x0f)
+		pio = &info->handle->pio_amd0f;
+	else if (info->id->x86.ext_family >= 0x10 && info->id->x86.ext_family <= 0x16)
+		pio = &info->handle->pio_amd10;
+	else if (info->id->x86.ext_family >= 0x17 && info->id->x86.ext_family <= 0x1A)
+		pio = &info->handle->pio_amd17;
+	else
+		return cpuid_set_error(ERR_CPU_UNKN);
+
+	err = WR0_ExecPawn(info->handle, pio, "ioctl_read_msr", &in, 1, &out, 1, NULL);
+
+	if (!err && bits < 64)
+	{
+		/* Show only part of register */
+		out >>= lowbit;
+		out &= (1ULL << bits) - 1;
+		*result = out;
+	}
+
+	return err;
+}
+
 static int get_amd_multipliers(struct msr_info_t* info, uint32_t pstate, double* multiplier)
 {
 	int i, err;
@@ -97,8 +134,8 @@ static int get_amd_multipliers(struct msr_info_t* info, uint32_t pstate, double*
 		MSRC001_00[6B:64][3:0] is cpu_did
 		CPU COF is (100MHz * (cpu_fid + 10h) / (divisor specified by cpu_did))
 		Note: This family contains only APUs */
-		err = cpu_rdmsr_range(info->handle, pstate, 8, 4, &cpu_fid);
-		err += cpu_rdmsr_range(info->handle, pstate, 3, 0, &cpu_did);
+		err = read_amd_msr(info, pstate, 8, 4, &cpu_fid);
+		err += read_amd_msr(info, pstate, 3, 0, &cpu_did);
 		i = 0;
 		while (i < num_dids && divisor_t[i].did != cpu_did)
 			i++;
@@ -115,8 +152,8 @@ static int get_amd_multipliers(struct msr_info_t* info, uint32_t pstate, double*
 		Divisor is (CpuDidMSD + (cpu_did_lsd * 0.25) + 1)
 		CPU COF is (main PLL frequency specified by D18F3xD4[MainPllOpFreqId]) / (core clock divisor specified by CpuDidMSD and cpu_did_lsd)
 		Note: This family contains only APUs */
-		err = cpu_rdmsr_range(info->handle, pstate, 8, 4, &cpu_did);
-		err += cpu_rdmsr_range(info->handle, pstate, 3, 0, &cpu_did_lsd);
+		err = read_amd_msr(info, pstate, 8, 4, &cpu_did);
+		err += read_amd_msr(info, pstate, 3, 0, &cpu_did_lsd);
 		*multiplier = (double)(((info->cpu_clock + 5LL) / 100 + magic_constant) / (cpu_did + cpu_did_lsd * 0.25 + 1));
 		break;
 	case 0x10: /* K10 */
@@ -146,8 +183,8 @@ static int get_amd_multipliers(struct msr_info_t* info, uint32_t pstate, double*
 		MSRC001_00[6B:64][5:0] is cpu_fid
 		CoreCOF is (100 * (MSRC001_00[6B:64][cpu_fid] + 10h) / (2^MSRC001_00[6B:64][cpu_did]))
 		Note: This family contains only APUs */
-		err = cpu_rdmsr_range(info->handle, pstate, 8, 6, &cpu_did);
-		err += cpu_rdmsr_range(info->handle, pstate, 5, 0, &cpu_fid);
+		err = read_amd_msr(info, pstate, 8, 6, &cpu_did);
+		err += read_amd_msr(info, pstate, 5, 0, &cpu_fid);
 		*multiplier = ((double)(cpu_fid + magic_constant) / (1ull << cpu_did)) / divisor;
 		break;
 	case 0x17: /* Zen / Zen+ / Zen 2 */
@@ -165,15 +202,15 @@ static int get_amd_multipliers(struct msr_info_t* info, uint32_t pstate, double*
 		MSRC001_006[4...B][13:8] is CpuDfsId
 		MSRC001_006[4...B][7:0]  is cpu_fid
 		CoreCOF is (Core::X86::Msr::PStateDef[cpu_fid[7:0]]/Core::X86::Msr::PStateDef[CpuDfsId]) *200 */
-		err = cpu_rdmsr_range(info->handle, pstate, 13, 8, &cpu_did);
-		err += cpu_rdmsr_range(info->handle, pstate, 7, 0, &cpu_fid);
+		err = read_amd_msr(info, pstate, 13, 8, &cpu_did);
+		err += read_amd_msr(info, pstate, 7, 0, &cpu_fid);
 		*multiplier = ((double)cpu_fid / cpu_did) * 2;
 		break;
 	case 0x1A: /* Zen 5 */
 		/* PPR for AMD Family 1Ah Model 02h C1, pages 235
 		MSRC001_006[4...B][11:0]  is cpu_fid
 		CoreCOF is Core::X86::Msr::PStateDef[CpuFid[11:0]] *5 */
-		err = cpu_rdmsr_range(info->handle, pstate, 11, 0, &cpu_fid);
+		err = read_amd_msr(info, pstate, 11, 0, &cpu_fid);
 		*multiplier = ((double)cpu_fid) * 0.05;
 		break;
 	default:
@@ -196,7 +233,7 @@ static uint32_t get_amd_last_pstate_addr(struct msr_info_t* info)
 	while ((reg == 0x0) && (last_addr > MSR_PSTATE_0))
 	{
 		last_addr--;
-		cpu_rdmsr_range(info->handle, last_addr, 63, 63, &reg);
+		read_amd_msr(info, last_addr, 63, 63, &reg);
 	}
 	return last_addr;
 }
@@ -223,7 +260,7 @@ static double get_cur_multiplier(struct msr_info_t* info)
 	/* Refer links above
 		MSRC001_0063[2:0] is CurPstate
 	*/
-	if (cpu_rdmsr_range(info->handle, MSR_PSTATE_S, 2, 0, &reg))
+	if (read_amd_msr(info, MSR_PSTATE_S, 2, 0, &reg))
 		goto fail;
 	if (get_amd_multipliers(info, MSR_PSTATE_0 + (uint32_t)reg, &mult))
 		goto fail;
@@ -396,8 +433,18 @@ static float amd_17h_temperature(struct msr_info_t* info)
 	uint32_t temperature;
 	float offset = 0.0f;
 
-	WR0_WrPciConf32(info->handle, 0, FAMILY_17H_PCI_CONTROL_REGISTER, F17H_M01H_THM_TCON_CUR_TMP);
-	temperature = WR0_RdPciConf32(info->handle, 0, FAMILY_17H_PCI_CONTROL_REGISTER + 4);
+	if (info->handle->driver_type != WR0_DRIVER_PAWNIO)
+	{
+		WR0_WrPciConf32(info->handle, 0, FAMILY_17H_PCI_CONTROL_REGISTER, F17H_M01H_THM_TCON_CUR_TMP);
+		temperature = WR0_RdPciConf32(info->handle, 0, FAMILY_17H_PCI_CONTROL_REGISTER + 4);
+	}
+	else
+	{
+		ULONG64 in = F17H_M01H_THM_TCON_CUR_TMP;
+		ULONG64 out = 0;
+		WR0_ExecPawn(info->handle, &info->handle->pio_amd17, "ioctl_read_smn", &in, 1, &out, 1, NULL);
+		temperature = (uint32_t)out;
+	}
 
 	if (strstr(info->id->brand_str, "1600X") ||
 		strstr(info->id->brand_str, "1700X") ||
@@ -417,13 +464,16 @@ static float amd_17h_temperature(struct msr_info_t* info)
 
 static int get_pkg_temperature(struct msr_info_t* info)
 {
+	int ret = CPU_INVALID_VALUE;
+	WR0_WaitPciBus(10);
 	if (info->id->x86.ext_family >= 0x17)
-		return (int)amd_17h_temperature(info);
+		ret = (int)amd_17h_temperature(info);
 	else if (info->id->x86.ext_family > 0x0F)
-		return amd_k10_temperature(info);
+		ret = amd_k10_temperature(info);
 	else if (info->id->x86.ext_family == 0x0F)
-		return amd_k8_temperature(info);
-	return CPU_INVALID_VALUE;
+		ret = amd_k8_temperature(info);
+	WR0_ReleasePciBus();
+	return ret;
 }
 
 static double get_pkg_energy(struct msr_info_t* info)
@@ -434,9 +484,9 @@ static double get_pkg_energy(struct msr_info_t* info)
 	// 19h: Zen 3 / Zen 3+ / Zen 4
 	if (info->id->x86.ext_family < 0x17)
 		goto fail;
-	if (cpu_rdmsr_range(info->handle, MSR_PKG_ENERGY_STAT, 31, 0, &total_energy))
+	if (read_amd_msr(info, MSR_PKG_ENERGY_STAT, 31, 0, &total_energy))
 		goto fail;
-	if (cpu_rdmsr_range(info->handle, MSR_PWR_UNIT, 12, 8, &energy_units))
+	if (read_amd_msr(info, MSR_PWR_UNIT, 12, 8, &energy_units))
 		goto fail;
 	return (double)total_energy / (1ULL << energy_units);
 fail:
@@ -497,7 +547,7 @@ static double get_voltage(struct msr_info_t* info)
 	uint64_t reg, vid;
 	uint8_t range_h, range_l;
 
-	if (cpu_rdmsr_range(info->handle, MSR_PSTATE_S, 2, 0, &reg))
+	if (read_amd_msr(info, MSR_PSTATE_S, 2, 0, &reg))
 		goto fail;
 	if (info->id->x86.ext_family < 0x15
 		|| ((info->id->x86.ext_family == 0x15) && (info->id->x86.ext_model < 0x10)))
@@ -515,7 +565,7 @@ static double get_voltage(struct msr_info_t* info)
 		range_h = 21;
 		range_l = 14;
 	}
-	if (cpu_rdmsr_range(info->handle, MSR_PSTATE_0 + (uint32_t)reg, range_h, range_l, &vid))
+	if (read_amd_msr(info, MSR_PSTATE_0 + (uint32_t)reg, range_h, range_l, &vid))
 		goto fail;
 	if (MSR_PSTATE_0 + (uint32_t)reg <= MSR_PSTATE_7)
 		return 1.550 - vid_step * vid;
@@ -532,7 +582,7 @@ static double get_bus_clock(struct msr_info_t* info)
 	double mult;
 	uint64_t reg;
 	uint32_t addr = get_amd_last_pstate_addr(info);
-	if (cpu_rdmsr_range(info->handle, MSR_PSTATE_L, 6, 4, &reg))
+	if (read_amd_msr(info, MSR_PSTATE_L, 6, 4, &reg))
 		goto fail;
 	if (get_amd_multipliers(info, addr - (uint32_t)reg, &mult))
 		goto fail;

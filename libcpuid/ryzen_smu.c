@@ -760,7 +760,7 @@ static size_t get_pm_table_size_from_version(ry_handle_t* handle, uint32_t versi
 	case 0x650004: return 0xB74;  // CODENAME_KRACKANPOINT
 	case 0x650005: return 0xB78;  // CODENAME_KRACKANPOINT
 	}
-	return 0x2000;
+	return SMU_TABLE_MAX_SIZE;
 }
 
 static ry_err_t transfer_table_to_dram(ry_handle_t* handle)
@@ -839,6 +839,20 @@ ry_handle_t* ryzen_smu_init(struct wr0_drv_t* drv_handle, struct cpu_id_t* id)
 	handle->drv_handle = drv_handle;
 	handle->debug = drv_handle->debug;
 
+	if (drv_handle->driver_type == WR0_DRIVER_PAWNIO)
+	{
+		ULONG64 out[2] = { 0 };
+		if (WR0_ExecPawn(drv_handle, &drv_handle->pio_rysmu, "ioctl_resolve_pm_table", NULL, 0, out, 2, NULL))
+			goto fail;
+		if (out[0] == 0 || out[1] == 0)
+			goto fail;
+		handle->smu_version = (uint32_t)out[0];
+		handle->pm_table_base_addr = (uint64_t)out[1];
+		SMU_DEBUG("SMU Version %Xh", handle->smu_version);
+		SMU_DEBUG("PM Table Base: %llX", (unsigned long long)handle->pm_table_base_addr);
+		return handle;
+	}
+
 	if (get_codename(handle, id) != RYZEN_SMU_OK)
 		goto fail;
 
@@ -862,13 +876,14 @@ void ryzen_smu_free(ry_handle_t* handle)
 {
 	if (!handle)
 		return;
-	if (handle->pm_table_buffer)
-		free(handle->pm_table_buffer);
 	free(handle);
 }
 
 ry_err_t ryzen_smu_init_pm_table(ry_handle_t* handle)
 {
+	if (handle->drv_handle->driver_type == WR0_DRIVER_PAWNIO)
+		return RYZEN_SMU_OK;
+
 	if (handle->rsmu_cmd_addr == 0)
 		return RYZEN_SMU_UNSUPPORTED;
 
@@ -887,20 +902,25 @@ ry_err_t ryzen_smu_init_pm_table(ry_handle_t* handle)
 	handle->pm_table_size = get_pm_table_size_from_version(handle, handle->pm_table_version);
 	SMU_DEBUG("PM Table Size: %zu", handle->pm_table_size);
 
-	if (handle->pm_table_buffer)
-		free(handle->pm_table_buffer);
-
-	handle->pm_table_buffer = calloc(1, handle->pm_table_size);
-	if (!handle->pm_table_buffer)
-		return RYZEN_SMU_MAPPING_ERROR;
+	ZeroMemory(&handle->pm_table_buffer, sizeof(handle->pm_table_buffer));
 
 	return RYZEN_SMU_OK;
 }
 
 ry_err_t ryzen_smu_update_pm_table(ry_handle_t* handle)
 {
-	if (!handle->pm_table_base_addr || !handle->pm_table_buffer)
+	if (!handle->pm_table_base_addr)
 		return RYZEN_SMU_UNSUPPORTED;
+
+	if (handle->drv_handle->driver_type == WR0_DRIVER_PAWNIO)
+	{
+		if (WR0_ExecPawn(handle->drv_handle, &handle->drv_handle->pio_rysmu, "ioctl_update_pm_table", NULL, 0, NULL, 0, NULL))
+			return RYZEN_SMU_DRIVER_ERROR;
+		if (WR0_ExecPawn(handle->drv_handle, &handle->drv_handle->pio_rysmu, "ioctl_read_pm_table",
+			NULL, 0, handle->pm_table_buffer_u64, SMU_TABLE_MAX_SIZE / 8, NULL))
+			return RYZEN_SMU_DRIVER_ERROR;
+		return RYZEN_SMU_OK;
+	}
 
 	ry_err_t rc = transfer_table_to_dram(handle);
 	if (rc != RYZEN_SMU_OK)
@@ -917,13 +937,13 @@ ry_err_t ryzen_smu_update_pm_table(ry_handle_t* handle)
 
 ry_err_t ryzen_smu_get_pm_table_float(ry_handle_t* handle, size_t offset, float* value)
 {
-	if (!handle || !handle->pm_table_buffer)
+	if (!handle)
 		return RYZEN_SMU_NOT_INITIALIZED;
 	if (offset == OFFSET_INVALID)
 		return RYZEN_SMU_UNSUPPORTED;
 	if (offset + sizeof(float) > handle->pm_table_size)
 		return RYZEN_SMU_INVALID_ARGUMENT;
-	memcpy(value, (uint8_t*)handle->pm_table_buffer + offset, sizeof(float));
+	memcpy(value, handle->pm_table_buffer + offset, sizeof(float));
 	SMU_DEBUG("Get PM Table Float at offset 0x%zX, value %.2f", offset, *value);
 	return RYZEN_SMU_OK;
 }
