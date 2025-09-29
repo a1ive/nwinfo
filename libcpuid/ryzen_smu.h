@@ -25,61 +25,44 @@ typedef enum
 typedef enum
 {
 	CODENAME_UNKNOWN = 0,
-
-	// Zen / Zen+ (Family 17h)
 	CODENAME_SUMMITRIDGE,
+	CODENAME_WHITEHAVEN,
 	CODENAME_NAPLES,
-	CODENAME_PINNACLERIDGE,
-	CODENAME_THREADRIPPER,
-	CODENAME_COLFAX,
 	CODENAME_RAVENRIDGE,
+	CODENAME_RAVENRIDGE2, // DALI
+	CODENAME_PINNACLERIDGE,
+	CODENAME_COLFAX,
 	CODENAME_PICASSO,
-	CODENAME_RAVENRIDGE2,
-	CODENAME_DALI,
-
-	// Zen 2 (Family 17h)
+	CODENAME_FIREFLIGHT,
 	CODENAME_MATISSE,
 	CODENAME_CASTLEPEAK,
+	CODENAME_ROME,
+	CODENAME_DALI,
 	CODENAME_RENOIR,
-	CODENAME_LUCIENNE,
 	CODENAME_VANGOGH,
-	CODENAME_MENDOCINO,
-
-	// Zen 3 / Zen 3+ (Family 19h)
 	CODENAME_VERMEER,
+	CODENAME_CHAGALL,
 	CODENAME_MILAN,
 	CODENAME_CEZANNE,
-	CODENAME_CHAGALL,
 	CODENAME_REMBRANDT,
-
-	// Zen 4 (Family 19h)
+	CODENAME_LUCIENNE,
 	CODENAME_RAPHAEL,
 	CODENAME_PHOENIX,
-	CODENAME_HAWKPOINT,
-	CODENAME_DRAGONRANGE,
-
-	// Zen 5 (Family 1Ah)
-	CODENAME_GRANITERIDGE,
-	CODENAME_STRIXPOINT,
-	CODENAME_STRIXHALO,
-	CODENAME_FIRERANGE,
-	CODENAME_KRACKANPOINT,
-
-	// Server/HEDT specific
+	CODENAME_PHOENIX2,
+	CODENAME_MENDOCINO,
+	CODENAME_GENOA,
 	CODENAME_STORMPEAK,
-
+	CODENAME_DRAGONRANGE,
+	CODENAME_MERO,
+	CODENAME_HAWKPOINT,
+	CODENAME_STRIXPOINT,
+	CODENAME_GRANITERIDGE,
+	CODENAME_KRACKANPOINT,
+	CODENAME_STRIXHALO,
+	CODENAME_TURIN,
+	CODENAME_BERGAMO,
 	CODENAME_COUNT,
 } ry_codename_t;
-
-typedef enum
-{
-	IF_VERSION_9 = 9,
-	IF_VERSION_10 = 10,
-	IF_VERSION_11 = 11,
-	IF_VERSION_12 = 12,
-	IF_VERSION_13 = 13,
-	IF_VERSION_UNKNOWN,
-} ry_ifver_t;
 
 typedef enum
 {
@@ -108,7 +91,6 @@ typedef struct
 {
 	int debug;
 	ry_codename_t codename;
-	ry_ifver_t if_version;
 	uint32_t smu_version;
 	uint32_t pci_id;
 
@@ -121,15 +103,15 @@ typedef struct
 
 	uint32_t rsmu_cmd_addr;
 	uint32_t rsmu_rsp_addr;
-	uint32_t rsmu_args_addr;
+	uint32_t rsmu_arg_addr;
 
 	uint32_t mp1_cmd_addr;
 	uint32_t mp1_rsp_addr;
-	uint32_t mp1_args_addr;
+	uint32_t mp1_arg_addr;
 
 	uint32_t hsmp_cmd_addr;
 	uint32_t hsmp_rsp_addr;
-	uint32_t hsmp_args_addr;
+	uint32_t hsmp_arg_addr;
 
 } ry_handle_t;
 

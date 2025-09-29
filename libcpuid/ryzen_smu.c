@@ -43,35 +43,41 @@ static const char* get_codename_str(ry_codename_t codename)
 	switch (codename)
 	{
 	case CODENAME_SUMMITRIDGE: return "Summit Ridge";
+	case CODENAME_WHITEHAVEN: return "ThreadRipper";
 	case CODENAME_NAPLES: return "Naples";
-	case CODENAME_PINNACLERIDGE: return "Pinnacle Ridge";
-	case CODENAME_THREADRIPPER: return "ThreadRipper";
-	case CODENAME_COLFAX: return "Colfax";
 	case CODENAME_RAVENRIDGE: return "Raven Ridge";
-	case CODENAME_PICASSO: return "Picasso";
 	case CODENAME_RAVENRIDGE2: return "Raven Ridge 2";
-	case CODENAME_DALI: return "Dali";
+	case CODENAME_PINNACLERIDGE: return "Pinnacle Ridge";
+	case CODENAME_COLFAX: return "Colfax";
+	case CODENAME_PICASSO: return "Picasso";
+	case CODENAME_FIREFLIGHT: return "Fire Flight";
 	case CODENAME_MATISSE: return "Matisse";
 	case CODENAME_CASTLEPEAK: return "Castle Peak";
+	case CODENAME_ROME: return "Rome";
+	case CODENAME_DALI: return "Dali";
 	case CODENAME_RENOIR: return "Renoir";
-	case CODENAME_LUCIENNE: return "Lucienne";
-	case CODENAME_VANGOGH: return "Van Gogh";
-	case CODENAME_MENDOCINO: return "Mendocino";
+	case CODENAME_VANGOGH: return "VanGogh";
 	case CODENAME_VERMEER: return "Vermeer";
+	case CODENAME_CHAGALL: return "Chagall";
 	case CODENAME_MILAN: return "Milan";
 	case CODENAME_CEZANNE: return "Cezanne";
-	case CODENAME_CHAGALL: return "Chagall";
 	case CODENAME_REMBRANDT: return "Rembrandt";
+	case CODENAME_LUCIENNE: return "Lucienne";
 	case CODENAME_RAPHAEL: return "Raphael";
 	case CODENAME_PHOENIX: return "Phoenix";
-	case CODENAME_HAWKPOINT: return "Hawk Point";
-	case CODENAME_DRAGONRANGE: return "Dragon Range";
-	case CODENAME_GRANITERIDGE: return "Granite Ridge";
-	case CODENAME_STRIXPOINT: return "Strix Point";
-	case CODENAME_STRIXHALO: return "Strix Halo";
-	case CODENAME_FIRERANGE: return "Fire Range";
-	case CODENAME_KRACKANPOINT: return "Krackan Point";
+	case CODENAME_PHOENIX2: return "Phoenix 2";
+	case CODENAME_MENDOCINO: return "Mendocino";
+	case CODENAME_GENOA: return "Genoa";
 	case CODENAME_STORMPEAK: return "Storm Peak";
+	case CODENAME_DRAGONRANGE: return "Dragon Range";
+	case CODENAME_MERO: return "Mero";
+	case CODENAME_HAWKPOINT: return "Hawk Point";
+	case CODENAME_STRIXPOINT: return "Strix Point";
+	case CODENAME_GRANITERIDGE: return "Granite Ridge";
+	case CODENAME_KRACKANPOINT: return "Krackan Point";
+	case CODENAME_STRIXHALO: return "Strix Halo";
+	case CODENAME_TURIN: return "Turin";
+	case CODENAME_BERGAMO: return "Bergamo";
 	default: return "Unknown";
 	}
 }
@@ -110,15 +116,15 @@ static ry_err_t get_codename(ry_handle_t* handle, struct cpu_id_t* id)
 		switch (id->x86.ext_model)
 		{
 		case 0x01:
-			if (id->x86.pkg_type == 7)
-				handle->codename = CODENAME_THREADRIPPER;
-			else if (id->x86.pkg_type == 4)
+			if (id->x86.pkg_type == 4)
 				handle->codename = CODENAME_NAPLES;
+			else if (id->x86.pkg_type == 7)
+				handle->codename = CODENAME_WHITEHAVEN;
 			else
 				handle->codename = CODENAME_SUMMITRIDGE;
 			break;
 		case 0x08:
-			if (id->x86.pkg_type == 7 || id->x86.pkg_type == 4)
+			if (id->x86.pkg_type == 4 || id->x86.pkg_type == 7)
 				handle->codename = CODENAME_COLFAX;
 			else
 				handle->codename = CODENAME_PINNACLERIDGE;
@@ -136,7 +142,13 @@ static ry_err_t get_codename(ry_handle_t* handle, struct cpu_id_t* id)
 			handle->codename = CODENAME_DALI;
 			break;
 		case 0x31:
-			handle->codename = CODENAME_CASTLEPEAK;
+			if (id->x86.pkg_type == 7)
+				handle->codename = CODENAME_CASTLEPEAK;
+			else
+				handle->codename = CODENAME_ROME;
+			break;
+		case 0x50:
+			handle->codename = CODENAME_FIREFLIGHT;
 			break;
 		case 0x60:
 			handle->codename = CODENAME_RENOIR;
@@ -151,6 +163,9 @@ static ry_err_t get_codename(ry_handle_t* handle, struct cpu_id_t* id)
 		case 0x91:
 			handle->codename = CODENAME_VANGOGH;
 			break;
+		case 0x98:
+			handle->codename = CODENAME_MERO;
+			break;
 		case 0xA0:
 			handle->codename = CODENAME_MENDOCINO;
 			break;
@@ -164,6 +179,9 @@ static ry_err_t get_codename(ry_handle_t* handle, struct cpu_id_t* id)
 			break;
 		case 0x08:
 			handle->codename = CODENAME_CHAGALL;
+			break;
+		case 0x11:
+			handle->codename = CODENAME_GENOA;
 			break;
 		case 0x18:
 			handle->codename = CODENAME_STORMPEAK;
@@ -180,14 +198,19 @@ static ry_err_t get_codename(ry_handle_t* handle, struct cpu_id_t* id)
 			handle->codename = CODENAME_CEZANNE;
 			break;
 		case 0x61:
-			handle->codename = CODENAME_RAPHAEL;
-			// CODENAME_DRAGONRANGE ??
+			if (id->x86.pkg_type == 1)
+				handle->codename = CODENAME_DRAGONRANGE;
+			else
+				handle->codename = CODENAME_RAPHAEL;
 			break;
 		case 0x74:
-		case 0x78:
+		case 0x75:
 			handle->codename = CODENAME_PHOENIX;
 			break;
-		case 0x75:
+		case 0x78:
+			handle->codename = CODENAME_PHOENIX2;
+			break;
+		case 0x7C:
 			handle->codename = CODENAME_HAWKPOINT;
 			break;
 		}
@@ -195,19 +218,24 @@ static ry_err_t get_codename(ry_handle_t* handle, struct cpu_id_t* id)
 	case 0x1A: // Zen5
 		switch (id->x86.ext_model)
 		{
+		case 0x10:
+			handle->codename = CODENAME_TURIN;
+			break;
 		case 0x20:
 		case 0x24:
 			handle->codename = CODENAME_STRIXPOINT;
 			break;
 		case 0x44:
 			handle->codename = CODENAME_GRANITERIDGE;
-			// CODENAME_FIRERANGE ??
 			break;
 		case 0x60:
 			handle->codename = CODENAME_KRACKANPOINT;
 			break;
 		case 0x70:
 			handle->codename = CODENAME_STRIXHALO;
+			break;
+		case 0xA0:
+			handle->codename = CODENAME_BERGAMO;
 			break;
 		}
 		break;
@@ -230,96 +258,94 @@ static ry_err_t get_mailbox_addr(ry_handle_t* handle)
 	case CODENAME_SUMMITRIDGE:
 	case CODENAME_NAPLES:
 	case CODENAME_PINNACLERIDGE:
-	case CODENAME_THREADRIPPER:
+	case CODENAME_WHITEHAVEN:
 	case CODENAME_COLFAX:
 		handle->rsmu_cmd_addr = 0x3B1051C;
 		handle->rsmu_rsp_addr = 0x3B10568;
-		handle->rsmu_args_addr = 0x3B10590;
-		// no hsmp
+		handle->rsmu_arg_addr = 0x3B10590;
 		handle->mp1_cmd_addr = 0x3B10528;
 		handle->mp1_rsp_addr = 0x3B10564;
-		handle->mp1_args_addr = 0x3B10598;
-		handle->if_version = IF_VERSION_9;
+		handle->mp1_arg_addr = 0x3B10598;
 		break;
 	case CODENAME_RAVENRIDGE:
+	case CODENAME_FIREFLIGHT:
 	case CODENAME_PICASSO:
 	case CODENAME_RAVENRIDGE2:
 	case CODENAME_DALI:
-		handle->rsmu_cmd_addr = 0x3B10A20;
-		handle->rsmu_rsp_addr = 0x3B10A80;
-		handle->rsmu_args_addr = 0x3B10A88;
-		// no hsmp
-		handle->mp1_cmd_addr = 0x3B10528;
-		handle->mp1_rsp_addr = 0x3B10564;
-		handle->mp1_args_addr = 0x3B10998;
-		handle->if_version = IF_VERSION_10;
-		break;
-	case CODENAME_MATISSE:
-	case CODENAME_CASTLEPEAK:
-	case CODENAME_VERMEER:
-	case CODENAME_MILAN:
-	case CODENAME_CHAGALL:
-	case CODENAME_RAPHAEL:
-	case CODENAME_GRANITERIDGE:
-	case CODENAME_STORMPEAK:
-	case CODENAME_DRAGONRANGE: // ?
-	case CODENAME_FIRERANGE: // ?
-		handle->rsmu_cmd_addr = 0x3B10524;
-		handle->rsmu_rsp_addr = 0x3B10570;
-		handle->rsmu_args_addr = 0x3B10A40;
-		handle->hsmp_cmd_addr = 0x3B10534;
-		handle->hsmp_rsp_addr = 0x3B10980;
-		handle->hsmp_args_addr = 0x3B109E0;
-		handle->mp1_cmd_addr = 0x3B10530;
-		handle->mp1_rsp_addr = 0x3B1057C;
-		handle->mp1_args_addr = 0x3B109C4;
-		handle->if_version = IF_VERSION_11;
-		break;
 	case CODENAME_RENOIR:
 	case CODENAME_LUCIENNE:
 	case CODENAME_CEZANNE:
 		handle->rsmu_cmd_addr = 0x3B10A20;
 		handle->rsmu_rsp_addr = 0x3B10A80;
-		handle->rsmu_args_addr = 0x3B10A88;
-		// no hsmp
+		handle->rsmu_arg_addr = 0x3B10A88;
 		handle->mp1_cmd_addr = 0x3B10528;
 		handle->mp1_rsp_addr = 0x3B10564;
-		handle->mp1_args_addr = 0x3B10998;
-		handle->if_version = IF_VERSION_12;
+		handle->mp1_arg_addr = 0x3B10998;
 		break;
+	case CODENAME_MATISSE:
+	case CODENAME_CASTLEPEAK:
+	case CODENAME_ROME: // ?
+	case CODENAME_VERMEER:
+	case CODENAME_MILAN:
+	case CODENAME_CHAGALL:
+	case CODENAME_RAPHAEL:
+	case CODENAME_GENOA:
+	case CODENAME_STORMPEAK:
+	case CODENAME_DRAGONRANGE:
+		handle->rsmu_cmd_addr = 0x3B10524;
+		handle->rsmu_rsp_addr = 0x3B10570;
+		handle->rsmu_arg_addr = 0x3B10A40;
+		handle->hsmp_cmd_addr = 0x3B10534;
+		handle->hsmp_rsp_addr = 0x3B10980;
+		handle->hsmp_arg_addr = 0x3B109E0;
+		handle->mp1_cmd_addr = 0x3B10530;
+		handle->mp1_rsp_addr = 0x3B1057C;
+		handle->mp1_arg_addr = 0x3B109C4;
+		break;
+	case CODENAME_GRANITERIDGE:
+	case CODENAME_TURIN:
+	case CODENAME_BERGAMO:
+		handle->rsmu_cmd_addr = 0x3B10524;
+		handle->rsmu_rsp_addr = 0x3B10570;
+		handle->rsmu_arg_addr = 0x3B10A40;
+		handle->hsmp_cmd_addr = 0x3B10934;
+		handle->hsmp_rsp_addr = 0x3B10980;
+		handle->hsmp_arg_addr = 0x3B109E0;
+		handle->mp1_cmd_addr = 0x3B10530;
+		handle->mp1_rsp_addr = 0x3B1057C;
+		handle->mp1_arg_addr = 0x3B109C4;
+		break;
+	case CODENAME_MERO: // ?
 	case CODENAME_VANGOGH: // ?
 	case CODENAME_REMBRANDT:
 	case CODENAME_PHOENIX:
+	case CODENAME_PHOENIX2:
 	case CODENAME_HAWKPOINT:
 	case CODENAME_MENDOCINO: // ?
 		handle->rsmu_cmd_addr = 0x3B10A20;
 		handle->rsmu_rsp_addr = 0x3B10A80;
-		handle->rsmu_args_addr = 0x3B10A88;
-		// no hsmp
+		handle->rsmu_arg_addr = 0x3B10A88;
 		handle->mp1_cmd_addr = 0x3B10528;
 		handle->mp1_rsp_addr = 0x3B10578;
-		handle->mp1_args_addr = 0x3B10998;
-		handle->if_version = IF_VERSION_13;
+		handle->mp1_arg_addr = 0x3B10998;
 		break;
 	case CODENAME_STRIXPOINT:
 	case CODENAME_STRIXHALO:
 	case CODENAME_KRACKANPOINT:
 		handle->rsmu_cmd_addr = 0x3B10A20;
 		handle->rsmu_rsp_addr = 0x3B10A80;
-		handle->rsmu_args_addr = 0x3B10A88;
-		// no hsmp
+		handle->rsmu_arg_addr = 0x3B10A88;
 		handle->mp1_cmd_addr = 0x3B10928;
 		handle->mp1_rsp_addr = 0x3B10978;
-		handle->mp1_args_addr = 0x3B10998;
-		handle->if_version = IF_VERSION_13;
+		handle->mp1_arg_addr = 0x3B10998;
 		break;
 	default:
 		return RYZEN_SMU_CPU_NOT_SUPPORTED;
 	}
 	SMU_DEBUG("RSMU(%X,%X,%X), MP1(%X,%X,%X), HSMP(%X,%X,%X)",
-		handle->rsmu_cmd_addr, handle->rsmu_rsp_addr, handle->rsmu_args_addr,
-		handle->mp1_cmd_addr, handle->mp1_rsp_addr, handle->mp1_args_addr,
-		handle->hsmp_cmd_addr, handle->hsmp_rsp_addr, handle->hsmp_args_addr);
+		handle->rsmu_cmd_addr, handle->rsmu_rsp_addr, handle->rsmu_arg_addr,
+		handle->mp1_cmd_addr, handle->mp1_rsp_addr, handle->mp1_arg_addr,
+		handle->hsmp_cmd_addr, handle->hsmp_rsp_addr, handle->hsmp_arg_addr);
 	return RYZEN_SMU_OK;
 }
 
@@ -358,19 +384,19 @@ static ry_err_t send_command(ry_handle_t* handle, ry_mailbox_t mailbox, uint32_t
 	case MAILBOX_TYPE_RSMU:
 		cmd_addr = handle->rsmu_cmd_addr;
 		rsp_addr = handle->rsmu_rsp_addr;
-		args_addr = handle->rsmu_args_addr;
+		args_addr = handle->rsmu_arg_addr;
 		mb_type_str = "RSMU";
 		break;
 	case MAILBOX_TYPE_MP1:
 		cmd_addr = handle->mp1_cmd_addr;
 		rsp_addr = handle->mp1_rsp_addr;
-		args_addr = handle->mp1_args_addr;
+		args_addr = handle->mp1_arg_addr;
 		mb_type_str = "MP1";
 		break;
 	case MAILBOX_TYPE_HSMP:
 		cmd_addr = handle->hsmp_cmd_addr;
 		rsp_addr = handle->hsmp_rsp_addr;
-		args_addr = handle->hsmp_args_addr;
+		args_addr = handle->hsmp_arg_addr;
 		mb_type_str = "HSMP";
 		break;
 	default:
@@ -468,12 +494,13 @@ static ry_err_t get_pm_table_base(ry_handle_t* handle, uint64_t* addr)
 	{
 	case CODENAME_NAPLES:
 	case CODENAME_SUMMITRIDGE:
-	case CODENAME_THREADRIPPER:
+	case CODENAME_WHITEHAVEN:
 		fn[0] = 0xa;
 		goto base_addr_class_1;
 	case CODENAME_VERMEER:
 	case CODENAME_MATISSE:
 	case CODENAME_CASTLEPEAK:
+	case CODENAME_ROME:
 	case CODENAME_MILAN:
 	case CODENAME_CHAGALL:
 		fn[0] = 0x06;
@@ -481,8 +508,10 @@ static ry_err_t get_pm_table_base(ry_handle_t* handle, uint64_t* addr)
 	case CODENAME_RAPHAEL:
 	case CODENAME_GRANITERIDGE:
 	case CODENAME_STORMPEAK:
-	case CODENAME_DRAGONRANGE: // ?
-	case CODENAME_FIRERANGE: // ?
+	case CODENAME_DRAGONRANGE:
+	case CODENAME_GENOA:
+	case CODENAME_TURIN:
+	case CODENAME_BERGAMO:
 		fn[0] = 0x04;
 		goto base_addr_class_1;
 	case CODENAME_RENOIR:
@@ -490,12 +519,14 @@ static ry_err_t get_pm_table_base(ry_handle_t* handle, uint64_t* addr)
 	case CODENAME_CEZANNE:
 	case CODENAME_REMBRANDT:
 	case CODENAME_PHOENIX:
+	case CODENAME_PHOENIX2:
 	case CODENAME_HAWKPOINT:
 	case CODENAME_STRIXPOINT:
 	case CODENAME_STRIXHALO:
 	case CODENAME_KRACKANPOINT:
 	case CODENAME_VANGOGH: // ?
 	case CODENAME_MENDOCINO: // ?
+	case CODENAME_MERO: // ?
 		fn[0] = 0x66;
 		goto base_addr_class_1;
 
@@ -509,6 +540,7 @@ static ry_err_t get_pm_table_base(ry_handle_t* handle, uint64_t* addr)
 	case CODENAME_PICASSO:
 	case CODENAME_RAVENRIDGE:
 	case CODENAME_RAVENRIDGE2:
+	case CODENAME_FIREFLIGHT: // ?
 		fn[0] = 0x0a;
 		fn[1] = 0x3d;
 		fn[2] = 0x0b;
@@ -579,10 +611,11 @@ static ry_err_t get_pm_table_version(ry_handle_t* handle, uint32_t* version)
 
 	switch (handle->codename)
 	{
-	case CODENAME_DALI: // ?
+	case CODENAME_DALI:
 	case CODENAME_PICASSO:
 	case CODENAME_RAVENRIDGE:
 	case CODENAME_RAVENRIDGE2: // ?
+	case CODENAME_FIREFLIGHT:
 		fn = 0x0C;
 		break;
 	case CODENAME_VERMEER:
@@ -590,13 +623,16 @@ static ry_err_t get_pm_table_version(ry_handle_t* handle, uint32_t* version)
 	case CODENAME_CASTLEPEAK:
 	case CODENAME_MILAN:
 	case CODENAME_CHAGALL:
+	case CODENAME_ROME:
 		fn = 0x08;
 		break;
 	case CODENAME_RAPHAEL:
+	case CODENAME_GENOA:
 	case CODENAME_GRANITERIDGE:
+	case CODENAME_BERGAMO:
+	case CODENAME_TURIN:
 	case CODENAME_STORMPEAK:
-	case CODENAME_DRAGONRANGE: // ?
-	case CODENAME_FIRERANGE: // ?
+	case CODENAME_DRAGONRANGE:
 		fn = 0x05;
 		break;
 	case CODENAME_RENOIR:
@@ -604,12 +640,14 @@ static ry_err_t get_pm_table_version(ry_handle_t* handle, uint32_t* version)
 	case CODENAME_CEZANNE:
 	case CODENAME_REMBRANDT:
 	case CODENAME_PHOENIX:
+	case CODENAME_PHOENIX2:
 	case CODENAME_HAWKPOINT:
 	case CODENAME_STRIXPOINT:
 	case CODENAME_STRIXHALO:
 	case CODENAME_KRACKANPOINT:
+	case CODENAME_MERO: // ?
 	case CODENAME_VANGOGH: // ?
-	case CODENAME_MENDOCINO: // ?
+	case CODENAME_MENDOCINO:
 		fn = 0x06;
 		break;
 	default:
@@ -627,25 +665,15 @@ static ry_err_t get_pm_table_version(ry_handle_t* handle, uint32_t* version)
 
 static size_t get_pm_table_size_from_version(ry_handle_t* handle, uint32_t version)
 {
-	switch (handle->codename)
-	{
-	case CODENAME_PICASSO:
-	case CODENAME_RAVENRIDGE:
-	case CODENAME_RAVENRIDGE2:
-		// These codenames have two PM tables, a larger (primary) one and a smaller
-		// one. The size is always fixed to 0x608 and 0xA4 bytes each.
-		return 0x608 + 0xA4;
-	}
 	switch (version)
 	{
-	case 0x000400: return 0x948;  // CODENAME_RAPHAEL ??
-	case 0x1E0001: return 0x568;
+	case 0x1E0001: return 0x570;
 	case 0x1E0002: return 0x580;
-	case 0x1E0003: return 0x578;
+	case 0x1E0003:
 	case 0x1E0004:
 	case 0x1E0005:
 	case 0x1E000A:
-	case 0x1E0101: return 0x608;
+	case 0x1E0101: return 0x610;
 	case 0x240003: return 0x18AC; // CODENAME_CASTLEPEAK, CODENAME_MATISSE
 	case 0x240503: return 0xD7C;  // CODENAME_CASTLEPEAK, CODENAME_MATISSE
 	case 0x240603: return 0xAB0;  // CODENAME_CASTLEPEAK, CODENAME_MATISSE
@@ -654,15 +682,16 @@ static size_t get_pm_table_size_from_version(ry_handle_t* handle, uint32_t versi
 	case 0x240803: return 0x7E4;  // CODENAME_CASTLEPEAK, CODENAME_MATISSE
 	case 0x240902: return 0x514;  // CODENAME_CASTLEPEAK, CODENAME_MATISSE
 	case 0x240903: return 0x518;  // CODENAME_CASTLEPEAK, CODENAME_MATISSE
+	case 0x260001: return 0x610;  // CODENAME_FIREFLIGHT
 	case 0x2D0008: return 0x1AB0; // CODENAME_MILAN
 	case 0x2D0803: return 0x894;  // CODENAME_VERMEER, CODENAME_CHAGALL
-	case 0x2D0903: return 0x594;  // CODENAME_VERMEER, CODENAME_CHAGALL
-	case 0x370000: return 0x794;  // CODENAME_RENOIR, CODENAME_LUCIENNE
-	case 0x370001: return 0x884;  // CODENAME_RENOIR, CODENAME_LUCIENNE
-	case 0x370002: return 0x88C;  // CODENAME_RENOIR, CODENAME_LUCIENNE
+	case 0x2D0903: return 0x7E4;  // CODENAME_VERMEER, CODENAME_CHAGALL
+	case 0x370000: return 0x79C;  // CODENAME_RENOIR, CODENAME_LUCIENNE
+	case 0x370001: return 0x88C;  // CODENAME_RENOIR, CODENAME_LUCIENNE
+	case 0x370002: return 0x894;  // CODENAME_RENOIR, CODENAME_LUCIENNE
 	case 0x370003:
-	case 0x370004: return 0x8AC;  // CODENAME_RENOIR, CODENAME_LUCIENNE
-	case 0x370005: return 0x8C8;  // CODENAME_RENOIR, CODENAME_LUCIENNE
+	case 0x370004: return 0x8B4;  // CODENAME_RENOIR, CODENAME_LUCIENNE
+	case 0x370005: return 0x8D0;  // CODENAME_RENOIR, CODENAME_LUCIENNE
 	case 0x380005: return 0x1BB0; // CODENAME_VERMEER, CODENAME_CHAGALL
 	case 0x380505: return 0xF30;  // CODENAME_VERMEER, CODENAME_CHAGALL
 	case 0x380605: return 0xC10;  // CODENAME_VERMEER, CODENAME_CHAGALL
@@ -743,15 +772,18 @@ static ry_err_t transfer_table_to_dram(ry_handle_t* handle)
 	switch (handle->codename)
 	{
 	case CODENAME_RAPHAEL:
+	case CODENAME_GENOA:
 	case CODENAME_GRANITERIDGE:
+	case CODENAME_BERGAMO:
+	case CODENAME_TURIN:
 	case CODENAME_STORMPEAK:
-	case CODENAME_DRAGONRANGE: // ?
-	case CODENAME_FIRERANGE: // ?
+	case CODENAME_DRAGONRANGE:
 		fn = 0x03;
 		break;
 	case CODENAME_VERMEER:
 	case CODENAME_MATISSE:
 	case CODENAME_CASTLEPEAK:
+	case CODENAME_ROME:
 	case CODENAME_MILAN:
 	case CODENAME_CHAGALL:
 		fn = 0x05;
@@ -763,26 +795,29 @@ static ry_err_t transfer_table_to_dram(ry_handle_t* handle)
 	case CODENAME_LUCIENNE:
 	case CODENAME_REMBRANDT:
 	case CODENAME_PHOENIX:
+	case CODENAME_PHOENIX2:
 	case CODENAME_HAWKPOINT:
 	case CODENAME_STRIXPOINT:
 	case CODENAME_STRIXHALO:
 	case CODENAME_KRACKANPOINT:
+	case CODENAME_MERO:
 	case CODENAME_VANGOGH: // ?
-	case CODENAME_MENDOCINO: // ?
+	case CODENAME_MENDOCINO:
 		args.u32.arg0 = 3;
 		fn = 0x65;
 		break;
 	case CODENAME_SUMMITRIDGE:
-	case CODENAME_THREADRIPPER:
+	case CODENAME_WHITEHAVEN:
 	case CODENAME_NAPLES:
 		fn = 0x0a;
 		break;
 	case CODENAME_COLFAX:
 	case CODENAME_PINNACLERIDGE:
 	case CODENAME_PICASSO:
+	case CODENAME_FIREFLIGHT:
 	case CODENAME_RAVENRIDGE:
 	case CODENAME_RAVENRIDGE2:
-	case CODENAME_DALI: // ?
+	case CODENAME_DALI:
 		args.u32.arg0 = 3;
 		fn = 0x3d;
 		break;
