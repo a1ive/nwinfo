@@ -140,15 +140,6 @@
 #define OLS_ERROR_PCI_WRITE_CONFIG		(0xE0000003L)
 #define OLS_ERROR_PCI_READ_CONFIG		(0xE0000004L)
 
-// Bus Number, Device Number and Function Number to PCI Device Address
-#define PciBusDevFunc(Bus, Dev, Func)	((Bus&0xFF)<<8) | ((Dev&0x1F)<<3) | (Func&7)
-// PCI Device Address to Bus Number
-#define PciGetBus(address)				((address>>8) & 0xFF)
-// PCI Device Address to Device Number
-#define PciGetDev(address)				((address>>3) & 0x1F)
-// PCI Device Address to Function Number
-#define PciGetFunc(address)				(address&7)
-
 #pragma pack(push,4)
 
 typedef struct _OLS_WRITE_MSR_INPUT

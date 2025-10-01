@@ -39,6 +39,15 @@ struct wr0_drv_t
 	struct pio_mod_t pio_rysmu;
 };
 
+// Bus Number, Device Number and Function Number to PCI Device Address
+#define PciBusDevFunc(Bus, Dev, Func)	((Bus&0xFF)<<8) | ((Dev&0x1F)<<3) | (Func&7)
+// PCI Device Address to Bus Number
+#define PciGetBus(address)				((address>>8) & 0xFF)
+// PCI Device Address to Device Number
+#define PciGetDev(address)				((address>>3) & 0x1F)
+// PCI Device Address to Function Number
+#define PciGetFunc(address)				(address&7)
+
 int WR0_RdMsr(struct wr0_drv_t* drv, uint32_t msr_index, uint64_t* result);
 int WR0_WrMsr(struct wr0_drv_t* drv, uint32_t msr_index, DWORD eax, DWORD edx);
 uint8_t WR0_RdIo8(struct wr0_drv_t* drv, uint16_t port);
@@ -58,6 +67,7 @@ void WR0_WrPciConf32(struct wr0_drv_t* drv, uint32_t addr, uint32_t reg, uint32_
 uint32_t WR0_FindPciById(struct wr0_drv_t* drv, uint16_t vid, uint16_t did, uint8_t index);
 uint32_t WR0_FindPciByClass(struct wr0_drv_t* drv, uint8_t base, uint8_t sub, uint8_t prog, uint8_t index);
 DWORD WR0_RdMem(struct wr0_drv_t* drv, DWORD_PTR address, PBYTE buffer, DWORD count, DWORD unitSize);
+DWORD WR0_WrMem(struct wr0_drv_t* drv, DWORD_PTR address, PBYTE buffer, DWORD count, DWORD unitSize);
 
 int WR0_ExecPawn(struct wr0_drv_t* drv, struct pio_mod_t* mod, LPCSTR fn, const ULONG64* in, SIZE_T in_size, PULONG64 out, SIZE_T out_size, PSIZE_T return_size);
 
@@ -68,3 +78,5 @@ void WR0_OpenMutexes(void);
 void WR0_CloseMutexes(void);
 BOOL WR0_WaitPciBus(DWORD timeout);
 void WR0_ReleasePciBus(void);
+BOOL WR0_WaitSmBus(DWORD timeout);
+void WR0_ReleaseSmBus(void);

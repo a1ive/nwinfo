@@ -60,6 +60,9 @@
     <ClInclude Include="base64.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="smbus.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="acpi.c">
@@ -150,6 +153,21 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="base64.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="smbus.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="smbus_pch.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="smbus_piix4.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="spd.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="smbus_fch.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

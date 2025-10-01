@@ -45,6 +45,7 @@ typedef struct _NWLIB_CONTEXT
 	BOOL EdidInfo;
 	BOOL PciInfo;
 	BOOL UsbInfo;
+	BOOL SpdInfo;
 	BOOL BatteryInfo;
 	BOOL UefiInfo;
 	BOOL ShareInfo;

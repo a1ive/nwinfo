@@ -664,7 +664,7 @@ uint32_t WR0_FindPciById(struct wr0_drv_t* drv, uint16_t vid, uint16_t did, uint
 						if (type & 0x80)
 							mfFlag = TRUE;
 					}
-					if (id == (vid | (((uint32_t)did) << 16)))
+					if ((id & 0xFFFFFFFF) == (vid | (((uint32_t)did) << 16)))
 					{
 						if (count == index)
 							return addr;
@@ -769,6 +769,58 @@ DWORD WR0_RdMem(struct wr0_drv_t* drv,
 		&inBuf, sizeof(OLS_READ_MEMORY_INPUT), buffer, size, &returnedLength, NULL);
 
 	if (result && returnedLength == size)
+		return count * unitSize;
+	return 0;
+}
+
+DWORD WR0_WrMem(struct wr0_drv_t* drv, DWORD_PTR address, PBYTE buffer, DWORD count, DWORD unitSize)
+{
+	DWORD	returnedLength = 0;
+	BOOL	result = FALSE;
+	DWORD	size = 0;
+	OLS_WRITE_MEMORY_INPUT* inBuf;
+	DWORD ctlCode;
+
+	if (!drv || !drv->hhDriver || drv->hhDriver == INVALID_HANDLE_VALUE
+		|| !buffer)
+		return 0;
+
+	switch (drv->driver_type)
+	{
+	case WR0_DRIVER_WINRING0:
+		ctlCode = IOCTL_OLS_WRITE_MEMORY;
+		break;
+	case WR0_DRIVER_HWRWDRV:
+		ctlCode = IOCTL_HRD_WRITE_MEMORY;
+		break;
+	default:
+		return 0;
+	}
+
+	size = offsetof(OLS_WRITE_MEMORY_INPUT, Data) + count * unitSize;
+	inBuf = (OLS_WRITE_MEMORY_INPUT*)malloc(size);
+	if (inBuf == NULL)
+		return 0;
+
+	if (sizeof(DWORD_PTR) == 4)
+	{
+		inBuf->Address.HighPart = 0;
+		inBuf->Address.LowPart = (DWORD)address;
+	}
+	else
+	{
+		inBuf->Address.QuadPart = address;
+	}
+
+	inBuf->UnitSize = unitSize;
+	inBuf->Count = count;
+	memcpy(&inBuf->Data, buffer, count * unitSize);
+
+	result = DeviceIoControl(drv->hhDriver, ctlCode,
+		inBuf, size, NULL, 0, &returnedLength, NULL);
+
+	free(inBuf);
+	if (result)
 		return count * unitSize;
 	return 0;
 }
