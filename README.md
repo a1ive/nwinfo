@@ -1,4 +1,4 @@
-<br />
+﻿<br />
 <div align="center">
   <img src="./docs/images/icon.ico">
   <h2 align="center">NWinfo</h2>
@@ -17,22 +17,27 @@
 * Gathers information directly without relying on WMI.
 * Compatible with Windows XP.
 
-> [!WARNING]
->
-> This application uses the `HwRwDrv` / `WinRing0` driver, which is known for security vulnerabilities.
->
-> *   It may be flagged as malware by your antivirus.
-> *   It can be detected by anti-cheat software, potentially leading to an account ban in online games.
->
-> If you have any concerns, feel free to delete the driver file. This may disable some program functionality.
-
 ## GUI Preview
 
 <div align="center">
   <img src="./docs/images/demo.png">
 </div>
 
-## [CLI Usage](./docs/README.md)
+## CLI Usage
+
+For details, see [CLI (nwinfo)](./docs/README.md#cli-nwinfo) in the documentation.
+
+## Supported Drivers
+
+This project searches for and loads drivers from the same directory in the following order: **PawnIO -> HwRwDrv -> WinRing0**.
+
+| Driver     | Author | License | Notes |
+|------------|--------|---------|-------|
+| [PawnIO](https://github.com/namazso/PawnIO) | namazso | GPL v2 | Safe to use, but some hardware information may be unavailable. |
+| [HwRwDrv](https://hwrwdrv.phpnet.us/?i=1) | Faintsnow | Closed source | May be flagged as a virus by antivirus software and detected by anti-cheat systems. |
+| [WinRing0](http://openlibsys.org/) | hiyohiyo | BSD | Listed as a vulnerable driver by Microsoft, detected as a virus, and triggers anti-cheat software. |
+
+**Note:** The program can still run normally even if all drivers are removed, but some hardware information may not be accessible.
 
 ## Licenses & Credits
 

@@ -59,25 +59,52 @@ jobs:
         msbuild /m /p:Configuration=Release /p:platform=x64 ${{env.SOLUTION_FILE_PATH}}
         msbuild /m /p:Configuration=Release /p:platform=x86 ${{env.SOLUTION_FILE_PATH}}
 
-    - name: Copy files
-      working-directory: ${{env.GITHUB_WORKSPACE}}
-      run: |
-        md nwinfo
-        move x64\Release\nwinfo.exe nwinfo\nwinfox64.exe
-        move x64\Release\gnwinfo.exe nwinfo\gnwinfox64.exe
-        move Win32\Release\nwinfo.exe nwinfo\nwinfo.exe
-        move Win32\Release\gnwinfo.exe nwinfo\gnwinfo.exe
-        copy gnwinfo\gnwinfo.ini nwinfo\gnwinfo.ini
-        powershell -ExecutionPolicy Bypass -File .\copy_res.ps1 -TargetFolder nwinfo
-
     - name: Download README.pdf
       uses: actions/download-artifact@v5
       with:
         name: README.pdf
-        path: nwinfo
+        path: .
 
-    - name: Create ZIP
-      run: Compress-Archive -Path nwinfo/* -DestinationPath "nwinfo.zip"
+    - name: Prepare Packages
+      shell: pwsh
+      run: |
+        function Create-NwinfoPackage {
+            param(
+                [Parameter(Mandatory=$true)]
+                [string]$Flavor,
+                
+                [Parameter(Mandatory=$true)]
+                [string]$ReadmePath
+            )
+
+            $TargetFolder = "nwinfo_$($Flavor)"
+            Write-Host "Creating package for flavor '$($Flavor)' in folder '$($TargetFolder)'" -ForegroundColor Green
+
+            New-Item -ItemType Directory -Path $TargetFolder -Force | Out-Null
+
+            Copy-Item -Path "x64\Release\nwinfo.exe" -Destination "$($TargetFolder)\nwinfox64.exe"
+            Copy-Item -Path "x64\Release\gnwinfo.exe" -Destination "$($TargetFolder)\gnwinfox64.exe"
+            Copy-Item -Path "Win32\Release\nwinfo.exe" -Destination "$($TargetFolder)\nwinfo.exe"
+            Copy-Item -Path "Win32\Release\gnwinfo.exe" -Destination "$($TargetFolder)\gnwinfo.exe"
+            Copy-Item -Path "gnwinfo\gnwinfo.ini" -Destination "$($TargetFolder)\gnwinfo.ini"
+
+            .\copy_res.ps1 -TargetFolder $TargetFolder -Flavor $Flavor
+
+            if (Test-Path $ReadmePath) {
+                Copy-Item -Path $ReadmePath -Destination $TargetFolder
+            }
+            else {
+                Write-Warning "README.pdf not found at path: $ReadmePath"
+            }
+        }
+
+        Create-NwinfoPackage -Flavor "hwrwdrv" -ReadmePath ".\README.pdf"
+        Create-NwinfoPackage -Flavor "pawnio" -ReadmePath ".\README.pdf"
+        
+    - name: Create ZIPs
+      run: |
+        Compress-Archive -Path "nwinfo_hwrwdrv\*" -DestinationPath "nwinfo.zip" -Force
+        Compress-Archive -Path "nwinfo_pawnio\*" -DestinationPath "nwinfo_pawnio.zip" -Force
 
     - name: Generate Release Notes
       env:
@@ -121,7 +148,7 @@ jobs:
       working-directory: ${{env.GITHUB_WORKSPACE}}
       run: |
         $date_version = (Get-Date -Format 'yyyyMMdd') + ".${{ github.run_number }}"
-        gh release create latest "nwinfo.zip" `
+        gh release create latest "nwinfo.zip" "nwinfo_pawnio.zip" `
           --prerelease `
           --title "Build $date_version" `
           --notes-file "release_notes.txt"

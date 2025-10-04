@@ -1,4 +1,4 @@
-<br />
+﻿<br />
 <div align="center">
   <img src="./images/icon.ico">
   <h2 align="center">NWinfo</h2>
@@ -143,29 +143,20 @@ This command exports system, disk, SMBIOS, and network information to `report.js
 
 ## Notes
 
-### Windows 11
-If the driver cannot be loaded properly, modify the following registry keys:
-```
-Windows Registry Editor Version 5.00
-
-[HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\DeviceGuard\Scenarios\HypervisorEnforcedCodeIntegrity]
-"Enabled"=dword:0000000
-
-[HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\DeviceGuard]
-"EnableVirtualizationBasedSecurity"=dword:00000000
-
-[HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\DeviceGuard\Scenarios\SystemGuard]
-"Enabled"=dword:00000000
-
-[HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\CI\Config]
-"VulnerableDriverBlocklistEnable"=dword:00000000
-```
-
-### Windows 7
-For earlier versions of Windows 7, the driver may not work properly and requires a SHA1-signed certificate.
-
 ### Windows XP
 This project is compatible with Windows XP using [YY-Thunks](https://github.com/Chuyu-Team/YY-Thunks), but it may not retrieve some hardware information.
+
+## Supported Drivers
+
+This project searches for and loads drivers from the same directory in the following order: **PawnIO -> HwRwDrv -> WinRing0**.
+
+| Driver     | Author | License | Notes |
+|------------|--------|---------|-------|
+| [PawnIO](https://github.com/namazso/PawnIO) | namazso | GPL v2 | Safe to use, but some hardware information may be unavailable. |
+| [HwRwDrv](https://hwrwdrv.phpnet.us/?i=1) | Faintsnow | Closed source | May be flagged as a virus by antivirus software and detected by anti-cheat systems. |
+| [WinRing0](http://openlibsys.org/) | hiyohiyo | BSD | Listed as a vulnerable driver by Microsoft, detected as a virus, and triggers anti-cheat software. |
+
+**Note:** The program can still run normally even if all drivers are removed, but some hardware information may not be accessible.
 
 <div style="page-break-after: always;"></div>
 
