@@ -3,6 +3,7 @@
 
 #define VC_EXTRALEAN
 #include <windows.h>
+#include <cfgmgr32.h>
 #include "format.h"
 #include "nt.h"
 

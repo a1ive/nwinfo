@@ -16,37 +16,30 @@ typedef struct _DEVTREE_CTX
 	DWORD idsSize;
 } DEVTREE_CTX;
 
-static WCHAR* GetUsbDiskName(DEVINST usbDevInst)
+static void SetUsbDiskName(PNODE node, DEVINST usbDevInst)
 {
+	CHAR buf[DEVTREE_MAX_STR_LEN];
 	// Check if the service is USBSTOR or UASPStor
-	WCHAR* serviceName = NWL_GetDevStrProp(usbDevInst, &DEVPKEY_Device_Service);
-	if (!serviceName)
-		return NULL;
+	if (!NWL_SetDevPropString(buf, DEVTREE_MAX_STR_LEN, usbDevInst, &DEVPKEY_Device_Service))
+		return;
 
-	if (_wcsicmp(serviceName, L"USBSTOR") != 0 && _wcsicmp(serviceName, L"UASPStor") != 0)
-	{
-		free(serviceName);
-		return NULL;
-	}
-	free(serviceName);
+	if (_stricmp(buf, "USBSTOR") != 0 && _stricmp(buf, "UASPStor") != 0)
+		return;
 
 	DEVINST childDevice;
 	for (CONFIGRET cr = CM_Get_Child(&childDevice, usbDevInst, 0);
 		cr == CR_SUCCESS;
 		cr = CM_Get_Sibling(&childDevice, childDevice, 0))
 	{
-		WCHAR* className = NWL_GetDevStrProp(childDevice, &DEVPKEY_Device_Class);
-		if (className)
+		if (NWL_SetDevPropString(buf, DEVTREE_MAX_STR_LEN, childDevice, &DEVPKEY_Device_Class))
 		{
-			if (_wcsicmp(className, L"DiskDrive") == 0)
+			if (_stricmp(buf, "DiskDrive") == 0)
 			{
-				free(className);
-				return NWL_GetDevStrProp(childDevice, &DEVPKEY_NAME);
+				NWL_SetDevPropString(buf, DEVTREE_MAX_STR_LEN, childDevice, &DEVPKEY_NAME);
+				NWL_NodeAttrSet(node, "Disk", buf, 0);
 			}
-			free(className);
 		}
 	}
-	return NULL;
 }
 
 static void
@@ -84,36 +77,24 @@ ParseHwClass(PNODE nd, CHAR* ids, DWORD idsSize, LPCWSTR compId)
 }
 
 static void
-GetDeviceInfoUsb(PNODE node, void* data, DEVINST devInst, LPCWSTR hwIds)
+GetDeviceInfoUsb(PNODE node, void* data, DEVINST devInst, LPCSTR hwIds)
 {
+	CHAR buf[DEVTREE_MAX_STR_LEN];
 	DEVTREE_CTX* ctx = (DEVTREE_CTX*)data;
-	NWL_NodeAttrSet(node, "HWID", NWL_Ucs2ToUtf8(hwIds), 0);
+	NWL_NodeAttrSet(node, "HWID", hwIds, 0);
 
-	NWL_ParseHwid(node, ctx->ids, ctx->idsSize, hwIds, 1);
+	NWL_ParseHwid(node, ctx->ids, ctx->idsSize, NWL_Utf8ToUcs2(hwIds), 1);
 
 	// Parse hardware class if available
-	WCHAR* compatibleIds = NWL_GetDevStrProp(devInst, &DEVPKEY_Device_CompatibleIds);
-	if (compatibleIds)
-	{
-		ParseHwClass(node, ctx->ids, ctx->idsSize, compatibleIds);
-		free(compatibleIds);
-	}
+	if (NWL_SetDevPropString(buf, DEVTREE_MAX_STR_LEN, devInst, &DEVPKEY_Device_CompatibleIds))
+		ParseHwClass(node, ctx->ids, ctx->idsSize, NWL_Utf8ToUcs2(buf));
 
 	// Get and print device name using DEVPKEY_NAME
-	WCHAR* name = NWL_GetDevStrProp(devInst, &DEVPKEY_NAME);
-	if (name)
-	{
-		NWL_NodeAttrSet(node, "Name", NWL_Ucs2ToUtf8(name), 0);
-		free(name);
-	}
+	if (NWL_SetDevPropString(buf, DEVTREE_MAX_STR_LEN, devInst, &DEVPKEY_NAME))
+		NWL_NodeAttrSet(node, "Name", buf, 0);
 
 	// Check if it's a Mass Storage Device and get disk name
-	WCHAR* diskName = GetUsbDiskName(devInst);
-	if (diskName)
-	{
-		NWL_NodeAttrSet(node, "Disk", NWL_Ucs2ToUtf8(diskName), 0);
-		free(diskName);
-	}
+	SetUsbDiskName(node, devInst);
 }
 
 PNODE NW_Usb(VOID)
@@ -127,7 +108,7 @@ PNODE NW_Usb(VOID)
 	};
 	DEVTREE_ENUM_CTX ctx =
 	{
-		.filter = L"USB\\",
+		.filter = "USB\\",
 		.filterLen = 4, // Length of "USB\\"
 		.data = &data,
 		.hub = "USB Hub",

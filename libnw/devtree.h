@@ -8,16 +8,19 @@
 
 //typedef void* DEVTREE_CTX;
 
+#define DEVTREE_MAX_STR_LEN MAX_PATH
+
 typedef struct _DEVTREE_ENUM_CTX
 {
-	WCHAR filter[32];
+	CHAR filter[DEVTREE_MAX_STR_LEN];
 	size_t filterLen;
 	const char* hub;
 	void* data;
-	void (*GetDeviceInfo)(PNODE node, void* data, DEVINST devInst, LPCWSTR hwIds);
+	void (*GetDeviceInfo)(PNODE node, void* data, DEVINST devInst, LPCSTR hwIds);
 } DEVTREE_ENUM_CTX;
 
-WCHAR* NWL_GetDevStrProp(DEVINST devInst, const DEVPROPKEY* pKey);
+BOOL NWL_SetDevPropString(CHAR* strBuf, size_t strSize, DEVINST devHandle, const DEVPROPKEY* devProperty);
+CONFIGRET NWL_CMGetDevIfProp(LPCWSTR pszDevIf, CONST DEVPROPKEY* propKey, DEVPROPTYPE* propType, PBYTE propBuf, PULONG propBufSize, ULONG ulFlags);
 
 void
 NWL_EnumerateDevices(PNODE parent, DEVTREE_ENUM_CTX* ctx, DEVINST devInst);

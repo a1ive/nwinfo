@@ -3,15 +3,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <windows.h>
-#include <setupapi.h>
-#include <cfgmgr32.h>
+#include <devpkey.h>
 #include <pdhmsg.h>
 
 #include "libnw.h"
 #include "utils.h"
-
-static CONFIGRET (WINAPI *OsCMGetDeviceInterfaceProperty)
-	(LPCWSTR pszDeviceInterface, CONST DEVPROPKEY* PropertyKey, DEVPROPTYPE* PropertyType, PBYTE PropertyBuffer, PULONG PropertyBufferSize, ULONG ulFlags);
+#include "devtree.h"
 
 static UINT64
 GetRegValue(HKEY hKey, LPCWSTR lpszName)
@@ -48,49 +45,6 @@ GetGpuInstalledMemory(DEVINST devHandle)
 }
 
 static void
-SetDevicePropertyString(CHAR* strBuf, size_t strSize, DEVINST devHandle, const DEVPROPKEY* devProperty)
-{
-	ULONG bufferSize = NWINFO_BUFSZ;
-	DEVPROPTYPE propertyType;
-
-	propertyType = DEVPROP_TYPE_EMPTY;
-
-	if (CM_Get_DevNode_PropertyW(devHandle, devProperty, &propertyType,
-		(PBYTE)NWLC->NwBuf, &bufferSize, 0) != CR_SUCCESS)
-		return;
-
-	switch (propertyType)
-	{
-	case DEVPROP_TYPE_STRING:
-	case DEVPROP_TYPE_STRING_LIST: // TODO: add multi sz support
-		strcpy_s(strBuf, strSize, NWL_Ucs2ToUtf8(NWLC->NwBufW));
-		break;
-	case DEVPROP_TYPE_FILETIME:
-	{
-		SYSTEMTIME sysTime = { 0 };
-		FileTimeToSystemTime((PFILETIME)NWLC->NwBuf, &sysTime);
-		snprintf(strBuf, strSize, "%5u-%02u-%02u %02u:%02u%02u",
-			sysTime.wYear, sysTime.wMonth, sysTime.wDay, sysTime.wHour, sysTime.wMinute, sysTime.wSecond);
-	}
-		break;
-	case DEVPROP_TYPE_UINT32:
-	{
-		UINT32 u;
-		memcpy(&u, NWLC->NwBuf, sizeof(UINT32));
-		snprintf(strBuf, strSize, "%u", u);
-	}
-		break;
-	case DEVPROP_TYPE_UINT64:
-	{
-		UINT64 u;
-		memcpy(&u, NWLC->NwBuf, sizeof(UINT64));
-		snprintf(strBuf, strSize, "%llu", u);
-	}
-		break;
-	}
-}
-
-static void
 FillGpuInfo(NWLIB_GPU_DEV* info, LPCWSTR devIf)
 {
 	DEVPROPTYPE devicePropertyType;
@@ -98,22 +52,7 @@ FillGpuInfo(NWLIB_GPU_DEV* info, LPCWSTR devIf)
 	ULONG deviceInstanceIdLength = MAX_DEVICE_ID_LEN;
 	WCHAR deviceInstanceId[MAX_DEVICE_ID_LEN];
 
-	DEVPROPKEY devpkeyInstanceId = { {0x78c34fc8, 0x104a, 0x4aca,
-		{0x9e, 0xa4, 0x52, 0x4d, 0x52, 0x99, 0x6e, 0x57} }, 256 };
-	DEVPROPKEY devpKeyHardwareIds = { {0xa45c254e, 0xdf1c, 0x4efd,
-		{0x80, 0x20, 0x67, 0xd1, 0x46, 0xa8, 0x50, 0xe0} }, 3 };
-	DEVPROPKEY devpkeyDesc = { {0xa45c254e, 0xdf1c, 0x4efd,
-		{0x80, 0x20, 0x67, 0xd1, 0x46, 0xa8, 0x50, 0xe0} },2 };
-	DEVPROPKEY devpkeyManufacturer = { {0xa45c254e, 0xdf1c, 0x4efd,
-		{0x80, 0x20, 0x67, 0xd1, 0x46, 0xa8, 0x50, 0xe0} }, 13 };
-	DEVPROPKEY devpkeyDriverDate = { { 0xa8b865dd, 0x2e3d, 0x4094,
-		{0xad, 0x97, 0xe5, 0x93, 0xa7, 0x0c, 0x75, 0xd6} }, 2 };
-	DEVPROPKEY devpkeyDriverVersion = { { 0xa8b865dd, 0x2e3d, 0x4094,
-		{0xad, 0x97, 0xe5, 0x93, 0xa7, 0x0c, 0x75, 0xd6} }, 3 };
-	DEVPROPKEY devpkeyLocationInfo = { { 0xa45c254e, 0xdf1c, 0x4efd,
-		{0x80, 0x20, 0x67, 0xd1, 0x46, 0xa8, 0x50, 0xe0} }, 15 };
-
-	if (OsCMGetDeviceInterfaceProperty(devIf, &devpkeyInstanceId, &devicePropertyType,
+	if (NWL_CMGetDevIfProp(devIf, &DEVPKEY_Device_InstanceId, &devicePropertyType,
 		(PBYTE)deviceInstanceId, &deviceInstanceIdLength, 0) != CR_SUCCESS)
 		return;
 	if (CM_Locate_DevNodeW(&deviceInstanceHandle, deviceInstanceId, CM_LOCATE_DEVNODE_NORMAL) != CR_SUCCESS)
@@ -122,12 +61,12 @@ FillGpuInfo(NWLIB_GPU_DEV* info, LPCWSTR devIf)
 	info->driver = TRUE;
 	snprintf(info->gpu_if, NWL_STR_SIZE, "%s", NWL_Ucs2ToUtf8(devIf));
 
-	SetDevicePropertyString(info->gpu_hwid, NWL_STR_SIZE, deviceInstanceHandle, &devpKeyHardwareIds);
-	SetDevicePropertyString(info->gpu_device, NWL_STR_SIZE, deviceInstanceHandle, &devpkeyDesc);
-	SetDevicePropertyString(info->gpu_vendor, NWL_STR_SIZE, deviceInstanceHandle, &devpkeyManufacturer);
-	SetDevicePropertyString(info->gpu_driver_date, NWL_STR_SIZE, deviceInstanceHandle, &devpkeyDriverDate);
-	SetDevicePropertyString(info->gpu_driver_ver, NWL_STR_SIZE, deviceInstanceHandle, &devpkeyDriverVersion);
-	SetDevicePropertyString(info->gpu_location, NWL_STR_SIZE, deviceInstanceHandle, &devpkeyLocationInfo);
+	NWL_SetDevPropString(info->gpu_hwid, NWL_STR_SIZE, deviceInstanceHandle, &DEVPKEY_Device_HardwareIds);
+	NWL_SetDevPropString(info->gpu_device, NWL_STR_SIZE, deviceInstanceHandle, &DEVPKEY_Device_DeviceDesc);
+	NWL_SetDevPropString(info->gpu_vendor, NWL_STR_SIZE, deviceInstanceHandle, &DEVPKEY_Device_Manufacturer);
+	NWL_SetDevPropString(info->gpu_driver_date, NWL_STR_SIZE, deviceInstanceHandle, &DEVPKEY_Device_DriverDate);
+	NWL_SetDevPropString(info->gpu_driver_ver, NWL_STR_SIZE, deviceInstanceHandle, &DEVPKEY_Device_DriverVersion);
+	NWL_SetDevPropString(info->gpu_location, NWL_STR_SIZE, deviceInstanceHandle, &DEVPKEY_Device_LocationInfo);
 
 	info->gpu_mem_size = GetGpuInstalledMemory(deviceInstanceHandle);
 }
@@ -152,15 +91,9 @@ GetGpuDev(NWLIB_GPU_DEV* dev, int count, PUINT64 ram)
 	ULONG deviceInterfaceListLength = 0;
 	GUID guidDisplayDevice = { 0x1CA05180, 0xA699, 0x450A,
 		{ 0x9A, 0x0C, 0xDE, 0x4F, 0xBE, 0x3D, 0xDD, 0x89 } };
-	HMODULE hDll = LoadLibraryW(L"cfgmgr32.dll");
 
 	*ram = 0;
 
-	if (hDll == NULL)
-		goto fail;
-	*(FARPROC*)&OsCMGetDeviceInterfaceProperty = GetProcAddress(hDll, "CM_Get_Device_Interface_PropertyW");
-	if (OsCMGetDeviceInterfaceProperty == NULL)
-		goto fail;
 	if (CM_Get_Device_Interface_List_SizeW(&deviceInterfaceListLength,
 		&guidDisplayDevice, NULL,
 		CM_GET_DEVICE_INTERFACE_LIST_PRESENT) != CR_SUCCESS)
@@ -200,9 +133,6 @@ GetGpuDev(NWLIB_GPU_DEV* dev, int count, PUINT64 ram)
 fail:
 	if (deviceInterfaceList)
 		free(deviceInterfaceList);
-	OsCMGetDeviceInterfaceProperty = NULL;
-	if (hDll)
-		FreeLibrary(hDll);
 	return ret;
 }
 

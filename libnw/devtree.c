@@ -10,46 +10,101 @@
 #include "utils.h"
 #include "devtree.h"
 
-WCHAR* NWL_GetDevStrProp(DEVINST devInst, const DEVPROPKEY* pKey)
+BOOL
+NWL_SetDevPropString(CHAR* strBuf, size_t strSize, DEVINST devHandle, const DEVPROPKEY* devProperty)
 {
-	DEVPROPTYPE propType;
-	ULONG propSize = 0;
-	CONFIGRET cr = CM_Get_DevNode_PropertyW(devInst, pKey, &propType, NULL, &propSize, 0);
+	ULONG bufferSize = NWINFO_BUFSZ;
+	DEVPROPTYPE propertyType;
 
-	if (cr != CR_BUFFER_SMALL)
-		return NULL;
+	propertyType = DEVPROP_TYPE_EMPTY;
 
-	BYTE* buffer = (BYTE*)malloc(propSize);
-	if (!buffer)
-		return NULL;
+	if (CM_Get_DevNode_PropertyW(devHandle, devProperty, &propertyType,
+		(PBYTE)NWLC->NwBuf, &bufferSize, 0) != CR_SUCCESS)
+		return FALSE;
 
-	cr = CM_Get_DevNode_PropertyW(devInst, pKey, &propType, buffer, &propSize, 0);
-	if (cr != CR_SUCCESS)
+	ZeroMemory(strBuf, strSize);
+
+	switch (propertyType)
 	{
-		free(buffer);
-		return NULL;
+	case DEVPROP_TYPE_STRING:
+	case DEVPROP_TYPE_STRING_LIST: // TODO: add multi sz support
+		strcpy_s(strBuf, strSize, NWL_Ucs2ToUtf8(NWLC->NwBufW));
+		break;
+	case DEVPROP_TYPE_FILETIME:
+	{
+		SYSTEMTIME sysTime = { 0 };
+		FileTimeToSystemTime((PFILETIME)NWLC->NwBuf, &sysTime);
+		snprintf(strBuf, strSize, "%5u-%02u-%02u %02u:%02u%02u",
+			sysTime.wYear, sysTime.wMonth, sysTime.wDay, sysTime.wHour, sysTime.wMinute, sysTime.wSecond);
 	}
+		break;
+	case DEVPROP_TYPE_UINT32:
+	{
+		UINT32 u;
+		memcpy(&u, NWLC->NwBuf, sizeof(UINT32));
+		snprintf(strBuf, strSize, "%u", u);
+	}
+		break;
+	case DEVPROP_TYPE_UINT64:
+	{
+		UINT64 u;
+		memcpy(&u, NWLC->NwBuf, sizeof(UINT64));
+		snprintf(strBuf, strSize, "%llu", u);
+	}
+		break;
+	default:
+		return FALSE;
+	}
+	return TRUE;
+}
 
-	// Check if it's a string or list of strings before returning
-	if (propType == DEVPROP_TYPE_STRING || propType == DEVPROP_TYPE_STRING_LIST)
-		return (WCHAR*)buffer;
-
-	free(buffer);
-	return NULL;
+CONFIGRET
+NWL_CMGetDevIfProp(LPCWSTR pszDevIf, CONST DEVPROPKEY* propKey, DEVPROPTYPE* propType, PBYTE propBuf, PULONG propBufSize, ULONG ulFlags)
+{
+	CONFIGRET rc = CR_FAILURE;
+	CONFIGRET(WINAPI * OsCMGetDeviceInterfaceProperty) (LPCWSTR, CONST DEVPROPKEY*, DEVPROPTYPE*, PBYTE, PULONG, ULONG) = NULL;
+	HMODULE hDll = LoadLibraryW(L"cfgmgr32.dll");
+	if (hDll == NULL)
+		return CR_FAILURE;
+	*(FARPROC*)&OsCMGetDeviceInterfaceProperty = GetProcAddress(hDll, "CM_Get_Device_Interface_PropertyW");
+	if (OsCMGetDeviceInterfaceProperty == NULL)
+		goto fail;
+	rc = OsCMGetDeviceInterfaceProperty(pszDevIf, propKey, propType, propBuf, propBufSize, ulFlags);
+fail:
+	if (hDll)
+		FreeLibrary(hDll);
+	return rc;
 }
 
 static void
-GetDeviceInfoDefault(PNODE node, void* data, DEVINST devInst, LPCWSTR hwIds)
+GetDeviceInfoDefault(PNODE node, void* data, DEVINST devInst, LPCSTR hwIds)
 {
 	(void)data;
-	NWL_NodeAttrSet(node, "HWID", NWL_Ucs2ToUtf8(hwIds), 0);
+	NWL_NodeAttrSet(node, "HWID", hwIds, 0);
 
-	WCHAR* name = NWL_GetDevStrProp(devInst, &DEVPKEY_NAME);
-	if (name)
-	{
-		NWL_NodeAttrSet(node, "Name", NWL_Ucs2ToUtf8(name), 0);
-		free(name);
-	}
+	CHAR buf[DEVTREE_MAX_STR_LEN];
+
+	if (NWL_SetDevPropString(buf, DEVTREE_MAX_STR_LEN, devInst, &DEVPKEY_NAME))
+		NWL_NodeAttrSet(node, "Name", buf, 0);
+
+	if (NWL_SetDevPropString(buf, DEVTREE_MAX_STR_LEN, devInst, &DEVPKEY_Device_Class))
+		NWL_NodeAttrSet(node, "Device Class", buf, 0);
+
+	if (NWL_SetDevPropString(buf, DEVTREE_MAX_STR_LEN, devInst, &DEVPKEY_Device_Manufacturer))
+		NWL_NodeAttrSet(node, "Manufacturer", buf, 0);
+
+	if (NWL_SetDevPropString(buf, DEVTREE_MAX_STR_LEN, devInst, &DEVPKEY_Device_Service))
+		NWL_NodeAttrSet(node, "Service Name", buf, 0);
+
+	if (NWL_SetDevPropString(buf, DEVTREE_MAX_STR_LEN, devInst, &DEVPKEY_Device_DriverDate))
+		NWL_NodeAttrSet(node, "Driver Date", buf, 0);
+
+	if (NWL_SetDevPropString(buf, DEVTREE_MAX_STR_LEN, devInst, &DEVPKEY_Device_DriverVersion))
+		NWL_NodeAttrSet(node, "Driver Version", buf, 0);
+
+	if (NWL_SetDevPropString(buf, DEVTREE_MAX_STR_LEN, devInst, &DEVPKEY_Device_LocationInfo))
+		NWL_NodeAttrSet(node, "Location", buf, 0);
+
 }
 
 static PNODE AppendDevices(PNODE parent, const char* hub)
@@ -67,16 +122,15 @@ NWL_EnumerateDevices(PNODE parent, DEVTREE_ENUM_CTX* ctx, DEVINST devInst)
 {
 	PNODE node = parent;
 	DEVINST childInst;
-	WCHAR* hwIds = NWL_GetDevStrProp(devInst, &DEVPKEY_Device_HardwareIds);
+	CHAR hwIds[DEVTREE_MAX_STR_LEN];
 
-	if (hwIds)
+	if (NWL_SetDevPropString(hwIds, DEVTREE_MAX_STR_LEN, devInst, &DEVPKEY_Device_HardwareIds))
 	{
-		if (ctx->filter[0] == L'\0' || _wcsnicmp(hwIds, ctx->filter, ctx->filterLen) == 0)
+		if (ctx->filter[0] == L'\0' || _strnicmp(hwIds, ctx->filter, ctx->filterLen) == 0)
 		{
 			node = NWL_NodeAppendNew(AppendDevices(parent, ctx->hub), "Device", NFLG_TABLE_ROW);
 			ctx->GetDeviceInfo(node, ctx->data, devInst, hwIds);
 		}
-		free(hwIds);
 	}
 
 	if (CM_Get_Child(&childInst, devInst, 0) == CR_SUCCESS)
@@ -92,7 +146,7 @@ PNODE NW_DevTree(VOID)
 {
 	DEVTREE_ENUM_CTX ctx =
 	{
-		.filter = L"\0",
+		.filter = "\0",
 		.data = NULL,
 		.hub = "Devices",
 		.GetDeviceInfo = GetDeviceInfoDefault,
@@ -105,8 +159,8 @@ PNODE NW_DevTree(VOID)
 
 	if (NWLC->DevTreeFilter)
 	{
-		wcscpy_s(ctx.filter, 32, NWL_Utf8ToUcs2(NWLC->DevTreeFilter));
-		ctx.filterLen = wcslen(ctx.filter);
+		strcpy_s(ctx.filter, DEVTREE_MAX_STR_LEN, NWLC->DevTreeFilter);
+		ctx.filterLen = strlen(ctx.filter);
 	}
 
 	cr = CM_Locate_DevNodeW(&devRoot, NULL, CM_LOCATE_DEVNODE_NORMAL);
