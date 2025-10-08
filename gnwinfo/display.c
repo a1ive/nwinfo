@@ -54,6 +54,7 @@ draw_gpu_attr(struct nk_context* ctx, LPCSTR str, LPCSTR attr)
 static VOID
 draw_gpu(struct nk_context* ctx)
 {
+#if 0
 	int i;
 	for (i = 0; i < g_ctx.gpu_info.DeviceCount; i++)
 	{
@@ -73,6 +74,7 @@ draw_gpu(struct nk_context* ctx)
 				NWL_GetHumanSize(g_ctx.gpu_info.Device[i].gpu_mem_size, NWLC->NwUnits, 1024));
 		}
 	}
+#endif
 }
 
 VOID

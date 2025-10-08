@@ -324,16 +324,18 @@ draw_display(struct nk_context* ctx)
 	nk_lhcf(ctx, NK_TEXT_LEFT, g_color_text_l,
 		"%ldx%ld %u DPI (%u%%)",
 		g_ctx.cur_display.Width, g_ctx.cur_display.Height, g_ctx.cur_display.Dpi, g_ctx.cur_display.Scale);
+#if 0
 	if (g_ctx.gpu_info.Usage3D > 0.0f || g_ctx.gpu_info.UsageDedicated > 0.0f)
 		nk_lhcf(ctx, NK_TEXT_LEFT, g_color_text_l,
 			"GPU 3D %.1f%% RAM %.1f%%",
 			g_ctx.gpu_info.Usage3D,
 			g_ctx.gpu_info.UsageDedicated);
 	else
+#endif
 		nk_spacer(ctx);
 	if (quick_access_button(ctx, GET_PNG(IDR_PNG_MONITOR), N_(N__DISPLAY)))
 		g_ctx.window_flag |= GUI_WINDOW_DISPLAY;
-
+#if 0
 	for (i = 0; i < g_ctx.gpu_info.DeviceCount; i++)
 	{
 		if (g_ctx.gpu_info.Device[i].driver)
@@ -353,6 +355,7 @@ draw_display(struct nk_context* ctx)
 			nk_lhc(ctx, g_ctx.gpu_info.Device[i].gpu_device, NK_TEXT_LEFT, g_color_text_l);
 		}
 	}
+#endif
 	for (i = 0; g_ctx.edid->Children[i].LinkedNode; i++)
 	{
 		PNODE mon = g_ctx.edid->Children[i].LinkedNode;

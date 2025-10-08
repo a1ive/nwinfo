@@ -140,6 +140,10 @@
     <ClInclude Include="disk.h" />
     <ClInclude Include="efivars.h" />
     <ClInclude Include="format.h" />
+    <ClInclude Include="gpu\adl.h" />
+    <ClInclude Include="gpu\gpu.h" />
+    <ClInclude Include="gpu\igcl.h" />
+    <ClInclude Include="gpu\nvapi.h" />
     <ClInclude Include="libnw.h" />
     <ClInclude Include="nt.h" />
     <ClInclude Include="smbios.h" />
@@ -161,6 +165,12 @@
     <ClCompile Include="font.c" />
     <ClCompile Include="format.c" />
     <ClCompile Include="gpu.c" />
+    <ClCompile Include="gpu\adl.c" />
+    <ClCompile Include="gpu\amd_gpu.c" />
+    <ClCompile Include="gpu\igcl.cpp" />
+    <ClCompile Include="gpu\intel_gpu.c" />
+    <ClCompile Include="gpu\nvapi.c" />
+    <ClCompile Include="gpu\nvidia_gpu.c" />
     <ClCompile Include="ids.c" />
     <ClCompile Include="iplookup.c" />
     <ClCompile Include="libcdi.c" />

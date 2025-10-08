@@ -120,8 +120,6 @@ typedef struct _NWLIB_CONTEXT
 	PDH_HCOUNTER PdhCpuBaseFreq;
 	PDH_HCOUNTER PdhNetRecv;
 	PDH_HCOUNTER PdhNetSend;
-	PDH_HCOUNTER PdhGpuUsage;
-	PDH_HCOUNTER PdhGpuCurMem;
 
 	struct wr0_drv_t* NwDrv;
 	UINT CodePage;
@@ -251,46 +249,6 @@ typedef struct _NWLIB_CUR_DISPLAY
 	UINT Scale;
 } NWLIB_CUR_DISPLAY;
 VOID NWL_GetCurDisplay(HWND wnd, NWLIB_CUR_DISPLAY* info);
-
-typedef struct _NWLIB_GPU_DEV
-{
-	BOOL driver;
-	CHAR gpu_if[NWL_STR_SIZE];
-	CHAR gpu_hwid[NWL_STR_SIZE];
-	CHAR gpu_device[NWL_STR_SIZE];
-	CHAR gpu_vendor[NWL_STR_SIZE];
-	CHAR gpu_driver_date[NWL_STR_SIZE];
-	CHAR gpu_driver_ver[NWL_STR_SIZE];
-	CHAR gpu_location[NWL_STR_SIZE];
-	UINT64 gpu_mem_size;
-} NWLIB_GPU_DEV;
-
-#define NWL_GPU_MAX_COUNT 8
-
-typedef struct _NWLIB_GPU_INFO
-{
-	int DeviceCount;
-	NWLIB_GPU_DEV Device[NWL_GPU_MAX_COUNT];
-	double Usage3D;
-	double UsageCopy;
-	double UsageCompute0;
-	double UsageCompute1;
-#if 0
-	double UsageHighPriority3D;
-	double UsageHighPriorityCompute;
-	double UsageTrueAudio0;
-	double UsageTrueAudio1;
-	double UsageVideoCodec0;
-	double UsageVideoJPEG;
-	double UsageTimer0;
-	double UsageSecurity1;
-#endif
-	double UsageDedicated;
-	UINT64 DedicatedTotal;
-	UINT64 DedicatedInUse;
-} NWLIB_GPU_INFO, * PNWLIB_GPU_INFO;
-
-VOID NWL_GetGpuInfo(PNWLIB_GPU_INFO info);
 
 #define NWL_Debugf(...) \
 	do \

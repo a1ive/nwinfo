@@ -48,10 +48,6 @@ NWL_PdhInit(VOID)
 		NWLC->PdhNetSend = NULL;
 	if (NWLC->PdhAddCounterW(NWLC->Pdh, L"\\Network Interface(*)\\Bytes Received/sec", 0, &NWLC->PdhNetRecv) != ERROR_SUCCESS)
 		NWLC->PdhNetRecv = NULL;
-	if (NWLC->PdhAddCounterW(NWLC->Pdh, L"\\GPU Engine(*)\\Utilization Percentage", 0, &NWLC->PdhGpuUsage) != ERROR_SUCCESS)
-		NWLC->PdhGpuUsage = NULL;
-	if (NWLC->PdhAddCounterW(NWLC->Pdh, L"\\GPU Adapter Memory(*)\\Dedicated Usage", 0, &NWLC->PdhGpuCurMem) != ERROR_SUCCESS)
-		NWLC->PdhGpuCurMem = NULL;
 	NWLC->PdhCollectQueryData(NWLC->Pdh);
 	return;
 fail:

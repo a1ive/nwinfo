@@ -16,6 +16,9 @@
     <Filter Include="libcdi">
       <UniqueIdentifier>{ca9692a5-7f79-45b7-aae0-0ae4142f2cf1}</UniqueIdentifier>
     </Filter>
+    <Filter Include="gpu">
+      <UniqueIdentifier>{1ebe1d0c-d19f-4fd4-919c-15185739e04a}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="format.h">
@@ -59,6 +62,18 @@
     </ClInclude>
     <ClInclude Include="base64.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="gpu\gpu.h">
+      <Filter>gpu</Filter>
+    </ClInclude>
+    <ClInclude Include="gpu\igcl.h">
+      <Filter>gpu</Filter>
+    </ClInclude>
+    <ClInclude Include="gpu\adl.h">
+      <Filter>gpu</Filter>
+    </ClInclude>
+    <ClInclude Include="gpu\nvapi.h">
+      <Filter>gpu</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -151,6 +166,24 @@
     </ClCompile>
     <ClCompile Include="base64.c">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="gpu\igcl.cpp">
+      <Filter>gpu</Filter>
+    </ClCompile>
+    <ClCompile Include="gpu\intel_gpu.c">
+      <Filter>gpu</Filter>
+    </ClCompile>
+    <ClCompile Include="gpu\amd_gpu.c">
+      <Filter>gpu</Filter>
+    </ClCompile>
+    <ClCompile Include="gpu\adl.c">
+      <Filter>gpu</Filter>
+    </ClCompile>
+    <ClCompile Include="gpu\nvidia_gpu.c">
+      <Filter>gpu</Filter>
+    </ClCompile>
+    <ClCompile Include="gpu\nvapi.c">
+      <Filter>gpu</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

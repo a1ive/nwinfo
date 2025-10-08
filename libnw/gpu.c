@@ -4,182 +4,102 @@
 #include <stdlib.h>
 #include <windows.h>
 #include <devpkey.h>
-#include <pdhmsg.h>
 
 #include "libnw.h"
 #include "utils.h"
 #include "devtree.h"
+#include "gpu/gpu.h"
 
-static UINT64
-GetRegValue(HKEY hKey, LPCWSTR lpszName)
+extern NWLIB_GPU_DRV gpu_drv_intel;
+extern NWLIB_GPU_DRV gpu_drv_amd;
+extern NWLIB_GPU_DRV gpu_drv_nvidia;
+
+VOID NWL_InitGpu(PNWLIB_GPU_INFO info)
 {
-	UINT64 ullValue = 0;
-	BYTE rawData[sizeof(UINT64)];
-	DWORD dwType = REG_BINARY;
-	DWORD dwSize = sizeof(rawData);
-	RegQueryValueExW(hKey, lpszName, NULL, &dwType, rawData, &dwSize);
-	// Intel GPU devices incorrectly create the key with type REG_BINARY.
-	if (dwType == REG_DWORD || (dwType == REG_BINARY && dwSize == sizeof(DWORD)))
-		ullValue = *(PDWORD)rawData;
-	else if (dwType == REG_QWORD || (dwType == REG_BINARY && dwSize == sizeof(UINT64)))
-		ullValue = *(PUINT64)rawData;
-	return ullValue;
-}
+	ZeroMemory(info, sizeof(NWLIB_GPU_INFO));
+	info->Driver[NWLIB_GPU_DRV_INTEL] = &gpu_drv_intel;
+	info->Driver[NWLIB_GPU_DRV_AMD] = &gpu_drv_amd;
+	info->Driver[NWLIB_GPU_DRV_NVIDIA] = &gpu_drv_nvidia;
 
-static UINT64
-GetGpuInstalledMemory(DEVINST devHandle)
-{
-	UINT64 installedMemory = 0;
-	HKEY keyHandle;
+	for (int i = 0; i < NWLIB_GPU_DRV_COUNT; i++)
+		info->Driver[i]->Data = info->Driver[i]->Init();
 
-	if (CM_Open_DevInst_Key(devHandle, KEY_READ, 0,
-		RegDisposition_OpenExisting, &keyHandle, CM_REGISTRY_SOFTWARE) == CR_SUCCESS)
-	{
-		installedMemory = GetRegValue(keyHandle, L"HardwareInformation.qwMemorySize");
-		if (installedMemory == 0)
-			installedMemory = GetRegValue(keyHandle, L"HardwareInformation.MemorySize");
-		RegCloseKey(keyHandle);
-	}
-
-	return installedMemory;
-}
-
-static void
-FillGpuInfo(NWLIB_GPU_DEV* info, LPCWSTR devIf)
-{
-	DEVPROPTYPE devicePropertyType;
-	DEVINST deviceInstanceHandle;
-	ULONG deviceInstanceIdLength = MAX_DEVICE_ID_LEN;
-	WCHAR deviceInstanceId[MAX_DEVICE_ID_LEN];
-
-	if (NWL_CMGetDevIfProp(devIf, &DEVPKEY_Device_InstanceId, &devicePropertyType,
-		(PBYTE)deviceInstanceId, &deviceInstanceIdLength, 0) != CR_SUCCESS)
-		return;
-	if (CM_Locate_DevNodeW(&deviceInstanceHandle, deviceInstanceId, CM_LOCATE_DEVNODE_NORMAL) != CR_SUCCESS)
-		return;
-
-	info->driver = TRUE;
-	snprintf(info->gpu_if, NWL_STR_SIZE, "%s", NWL_Ucs2ToUtf8(devIf));
-
-	NWL_SetDevPropString(info->gpu_hwid, NWL_STR_SIZE, deviceInstanceHandle, &DEVPKEY_Device_HardwareIds);
-	NWL_SetDevPropString(info->gpu_device, NWL_STR_SIZE, deviceInstanceHandle, &DEVPKEY_Device_DeviceDesc);
-	NWL_SetDevPropString(info->gpu_vendor, NWL_STR_SIZE, deviceInstanceHandle, &DEVPKEY_Device_Manufacturer);
-	NWL_SetDevPropString(info->gpu_driver_date, NWL_STR_SIZE, deviceInstanceHandle, &DEVPKEY_Device_DriverDate);
-	NWL_SetDevPropString(info->gpu_driver_ver, NWL_STR_SIZE, deviceInstanceHandle, &DEVPKEY_Device_DriverVersion);
-	NWL_SetDevPropString(info->gpu_location, NWL_STR_SIZE, deviceInstanceHandle, &DEVPKEY_Device_LocationInfo);
-
-	info->gpu_mem_size = GetGpuInstalledMemory(deviceInstanceHandle);
-}
-
-static inline BOOL
-CompareHwid(LPCSTR hwid, NWLIB_GPU_DEV* info, int count)
-{
-	for (int i = 0; i < count && info[i].driver; i++)
-	{
-		if (_stricmp(hwid, info[i].gpu_hwid) == 0)
-			return TRUE;
-	}
-	return FALSE;
-}
-
-static int
-GetGpuDev(NWLIB_GPU_DEV* dev, int count, PUINT64 ram)
-{
-	int ret = 0;
-	PWSTR deviceInterfaceList = NULL;
-	PWSTR p;
-	ULONG deviceInterfaceListLength = 0;
-	GUID guidDisplayDevice = { 0x1CA05180, 0xA699, 0x450A,
-		{ 0x9A, 0x0C, 0xDE, 0x4F, 0xBE, 0x3D, 0xDD, 0x89 } };
-
-	*ram = 0;
-
-	if (CM_Get_Device_Interface_List_SizeW(&deviceInterfaceListLength,
-		&guidDisplayDevice, NULL,
-		CM_GET_DEVICE_INTERFACE_LIST_PRESENT) != CR_SUCCESS)
-		goto fail;
-	deviceInterfaceList = calloc(deviceInterfaceListLength, sizeof(WCHAR));
-	if (deviceInterfaceList == NULL)
-		goto fail;
-	if (CM_Get_Device_Interface_ListW(&guidDisplayDevice, NULL,
-		deviceInterfaceList, deviceInterfaceListLength,
-		CM_GET_DEVICE_INTERFACE_LIST_PRESENT) != CR_SUCCESS)
-		goto fail;
-
-	for (ret = 0, p = deviceInterfaceList;
-		ret < count && p < deviceInterfaceList + deviceInterfaceListLength;
-		p += wcslen(p) + 1)
-	{
-		if (_wcsnicmp(p, L"\\\\?\\PCI#VEN_", 12) != 0)
-			continue;
-		FillGpuInfo(&dev[ret], p);
-		*ram += dev[ret].gpu_mem_size;
-		ret++;
-	}
-
-	PNODE pciList = NWL_EnumPci(NWL_NodeAlloc("PCI", NFLG_TABLE), "03");
-	for (size_t i = 0; ret < count && pciList->Children[i].LinkedNode; i++)
-	{
-		PNODE pci = pciList->Children[i].LinkedNode;
-		LPCSTR hwid = NWL_NodeAttrGet(pci, "HWID");
-		if (CompareHwid(hwid, dev, count))
-			continue;
-		strcpy_s(dev[ret].gpu_hwid, NWL_STR_SIZE, hwid);
-		strcpy_s(dev[ret].gpu_device, NWL_STR_SIZE, NWL_NodeAttrGet(pci, "Device"));
-		strcpy_s(dev[ret].gpu_vendor, NWL_STR_SIZE, NWL_NodeAttrGet(pci, "Vendor"));
-		ret++;
-	}
-
-fail:
-	if (deviceInterfaceList)
-		free(deviceInterfaceList);
-	return ret;
+	info->Initialized = 1;
+	NWL_GetGpuInfo(info);
 }
 
 VOID NWL_GetGpuInfo(PNWLIB_GPU_INFO info)
 {
-	ZeroMemory(info, sizeof(NWLIB_GPU_INFO));
-	info->DeviceCount = GetGpuDev(info->Device, NWL_GPU_MAX_COUNT, &info->DedicatedTotal);
-	if (NWLC->PdhGpuUsage)
+	if (!info->Initialized)
+		return;
+	info->DeviceCount = 0;
+	for (int i = 0; i < NWLIB_GPU_DRV_COUNT; i++)
 	{
-		info->Usage3D = NWL_GetPdhSum(NWLC->PdhGpuUsage, PDH_FMT_DOUBLE, L"engtype_3D").doubleValue;
-		info->UsageCopy = NWL_GetPdhSum(NWLC->PdhGpuUsage, PDH_FMT_DOUBLE, L"engtype_Copy").doubleValue;
-		info->UsageCompute0 = NWL_GetPdhSum(NWLC->PdhGpuUsage, PDH_FMT_DOUBLE, L"engtype_Compute 0").doubleValue;
-		info->UsageCompute1 = NWL_GetPdhSum(NWLC->PdhGpuUsage, PDH_FMT_DOUBLE, L"engtype_Compute 1").doubleValue;
+		if (info->DeviceCount >= NWL_GPU_MAX_COUNT)
+			break;
+		if (info->Driver[i]->Data == NULL)
+			continue;
+		uint32_t info_cnt = NWL_GPU_MAX_COUNT - info->DeviceCount;
+		uint32_t dev_count = info->Driver[i]->GetInfo(info->Driver[i]->Data, &info->Device[info->DeviceCount], info_cnt);
+		info->DeviceCount += dev_count;
 	}
-	if (NWLC->PdhGpuCurMem)
-		info->DedicatedInUse = NWL_GetPdhSum(NWLC->PdhGpuCurMem, PDH_FMT_LARGE, NULL).largeValue;
-	if (info->DedicatedTotal > 0)
-		info->UsageDedicated = (double)info->DedicatedInUse / (double)info->DedicatedTotal * 100.0f;
-	if (info->UsageDedicated > 100.0f)
-		info->UsageDedicated = 100.0f;
+}
+
+VOID NWL_FreeGpu(PNWLIB_GPU_INFO info)
+{
+	if (!info->Initialized)
+		return;
+	for (int i = 0; i < NWLIB_GPU_DRV_COUNT; i++)
+		info->Driver[i]->Free(info->Driver[i]->Data);
+	ZeroMemory(info, sizeof(NWLIB_GPU_INFO));
+}
+
+void GPU_DBG(LPCSTR drv, LPCSTR _Printf_format_string_ format, ...)
+{
+	if (!NWLC->Debug)
+		return;
+	va_list args;
+	va_start(args, format);
+	printf("[%s] ", drv);
+	vprintf(format, args);
+	va_end(args);
+	printf("\n");
 }
 
 PNODE NW_Gpu(VOID)
 {
 	NWLIB_GPU_INFO info;
+	NWL_InitGpu(&info);
 
 	PNODE node = NWL_NodeAlloc("GPU", NFLG_TABLE);
 	if (NWLC->GpuInfo)
 		NWL_NodeAppendChild(NWLC->NwRoot, node);
 
 	NWL_GetGpuInfo(&info);
-	for (int i = 0; i < info.DeviceCount; i++)
+	for (uint32_t i = 0; i < info.DeviceCount; i++)
 	{
 		PNODE gpu = NWL_NodeAppendNew(node, "Device", NFLG_TABLE_ROW);
-		NWL_NodeAttrSet(gpu, "HWID", info.Device[i].gpu_hwid, 0);
-		NWL_NodeAttrSet(gpu, "Device", info.Device[i].gpu_device, 0);
-		NWL_NodeAttrSet(gpu, "Vendor", info.Device[i].gpu_vendor, 0);
-		if (info.Device[i].driver)
-		{
-			NWL_NodeAttrSet(gpu, "Interface", info.Device[i].gpu_if, 0);
-			NWL_NodeAttrSet(gpu, "Driver Date", info.Device[i].gpu_driver_date, 0);
-			NWL_NodeAttrSet(gpu, "Driver Version", info.Device[i].gpu_driver_ver, 0);
-			NWL_NodeAttrSet(gpu, "Location", info.Device[i].gpu_location, 0);
-			NWL_NodeAttrSet(gpu, "Memory Size",
-				NWL_GetHumanSize(info.Device[i].gpu_mem_size, NWLC->NwUnits, 1024), NAFLG_FMT_HUMAN_SIZE);
-		}
+		//NWL_NodeAttrSet(gpu, "HWID", info.Device[i].HwId, 0);
+		NWL_NodeAttrSet(gpu, "Device", info.Device[i].Name, 0);
+		NWL_NodeAttrSetf(gpu, "Location", NAFLG_FMT_NEED_QUOTE, "Bus %u, Device %u, Function %u",
+			info.Device[i].PciBus, info.Device[i].PciDevice, info.Device[i].PciFunction);
+
+		NWL_NodeAttrSetf(gpu, "GPU Utilization", 0, "%.1f%%", info.Device[i].UsagePercent);
+		NWL_NodeAttrSetf(gpu, "Temperature (C)", NAFLG_FMT_NUMERIC, "%.1f", info.Device[i].Temperature);
+		NWL_NodeAttrSet(gpu, "Total Memory", NWL_GetHumanSize(info.Device[i].TotalMemory, NWLC->NwUnits, 1024), NAFLG_FMT_HUMAN_SIZE);
+		NWL_NodeAttrSet(gpu, "Free Memory", NWL_GetHumanSize(info.Device[i].FreeMemory, NWLC->NwUnits, 1024), NAFLG_FMT_HUMAN_SIZE);
+		
+		uint64_t percent = 0;
+		if (info.Device[i].TotalMemory > 0 && info.Device[i].FreeMemory < info.Device[i].TotalMemory)
+			percent = (info.Device[i].TotalMemory - info.Device[i].FreeMemory) * 100ULL / info.Device[i].TotalMemory;
+		NWL_NodeAttrSetf(gpu, "Memory Usage", 0, "%u%%", (unsigned)percent);
+
+		NWL_NodeAttrSetf(gpu, "Power (W)", NAFLG_FMT_NUMERIC, "%.1f", info.Device[i].Power);
+		NWL_NodeAttrSetf(gpu, "Frequency (MHz)", NAFLG_FMT_NUMERIC, "%.1f", info.Device[i].Frequency);
+		NWL_NodeAttrSetf(gpu, "Voltage (V)", NAFLG_FMT_NUMERIC, "%.2f", info.Device[i].Voltage);
+		NWL_NodeAttrSetf(gpu, "Fan Speed (RPM)", NAFLG_FMT_NUMERIC, "%llu", (unsigned long long)info.Device[i].FanSpeed);
 	}
 
+	NWL_FreeGpu(&info);
 	return node;
 }
