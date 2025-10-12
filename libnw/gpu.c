@@ -26,6 +26,9 @@ VOID NWL_InitGpu(PNWLIB_GPU_INFO info)
 
 	info->Initialized = 1;
 	NWL_GetGpuInfo(info);
+
+	// TODO: Get GPU vendor/device from pci.ids
+	info->PciList = NWL_EnumPci(NWL_NodeAlloc("PCI", NFLG_TABLE), "03");
 }
 
 VOID NWL_GetGpuInfo(PNWLIB_GPU_INFO info)
@@ -51,6 +54,7 @@ VOID NWL_FreeGpu(PNWLIB_GPU_INFO info)
 		return;
 	for (int i = 0; i < NWLIB_GPU_DRV_COUNT; i++)
 		info->Driver[i]->Free(info->Driver[i]->Data);
+	NWL_NodeFree(info->PciList, 1);
 	ZeroMemory(info, sizeof(NWLIB_GPU_INFO));
 }
 
@@ -89,10 +93,7 @@ PNODE NW_Gpu(VOID)
 		NWL_NodeAttrSet(gpu, "Total Memory", NWL_GetHumanSize(info.Device[i].TotalMemory, NWLC->NwUnits, 1024), NAFLG_FMT_HUMAN_SIZE);
 		NWL_NodeAttrSet(gpu, "Free Memory", NWL_GetHumanSize(info.Device[i].FreeMemory, NWLC->NwUnits, 1024), NAFLG_FMT_HUMAN_SIZE);
 		
-		uint64_t percent = 0;
-		if (info.Device[i].TotalMemory > 0 && info.Device[i].FreeMemory < info.Device[i].TotalMemory)
-			percent = (info.Device[i].TotalMemory - info.Device[i].FreeMemory) * 100ULL / info.Device[i].TotalMemory;
-		NWL_NodeAttrSetf(gpu, "Memory Usage", 0, "%u%%", (unsigned)percent);
+		NWL_NodeAttrSetf(gpu, "Memory Usage", 0, "%u%%", (unsigned)info.Device[i].MemoryPercent);
 
 		NWL_NodeAttrSetf(gpu, "Power (W)", NAFLG_FMT_NUMERIC, "%.1f", info.Device[i].Power);
 		NWL_NodeAttrSetf(gpu, "Frequency (MHz)", NAFLG_FMT_NUMERIC, "%.1f", info.Device[i].Frequency);

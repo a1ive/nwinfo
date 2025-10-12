@@ -171,7 +171,7 @@ try {
 
 	$outputText += "Graphics:"
 	foreach ($gpuTable in $parsedJson.'GPU') {
-		$outputText += "`t$($gpuTable.'Memory Size') $($gpuTable.'Device')"
+		$outputText += "`t$($gpuTable.'Total Memory') $($gpuTable.'Device')"
 	}
 	foreach ($displayTable in $parsedJson.'Display') {
 		if ($null -ne $displayTable.'Manufacturer') {

@@ -305,10 +305,10 @@ static uint32_t nv_gpu_get(void* data, NWLIB_GPU_DEV* dev, uint32_t dev_count)
 		count++;
 
 		strcpy_s(info->Name, MAX_GPU_STR, ctx->List[i].Name);
-		info->VendorId = (uint16_t)ctx->List[i].VendorId;
-		info->DeviceId = (uint16_t)ctx->List[i].ExtDeviceId;
-		info->Subsys = (uint16_t)ctx->List[i].Subsys;
-		info->RevId = (uint16_t)ctx->List[i].RevId;
+		info->VendorId = (uint32_t)ctx->List[i].VendorId;
+		info->DeviceId = (uint32_t)ctx->List[i].ExtDeviceId;
+		info->Subsys = (uint32_t)ctx->List[i].Subsys;
+		info->RevId = (uint32_t)ctx->List[i].RevId;
 		info->PciBus = (uint32_t)ctx->List[i].BusId;
 		info->PciDevice = (uint32_t)ctx->List[i].SlotId;
 		info->PciFunction = 0; // ?
@@ -323,6 +323,8 @@ static uint32_t nv_gpu_get(void* data, NWLIB_GPU_DEV* dev, uint32_t dev_count)
 			info->TotalMemory = ctx->List[i].Mem.dedicatedVideoMemory;
 			info->FreeMemory = ctx->List[i].Mem.curAvailableDedicatedVideoMemory;
 		}
+		if (info->FreeMemory < info->TotalMemory)
+			info->MemoryPercent = 100ULL - 100ULL * info->FreeMemory / info->TotalMemory;
 
 		info->UsagePercent = (double)get_usage_percent(ctx->GpuHandle[i], &ctx->List[i].Pstates, &ctx->List[i].Usages);
 

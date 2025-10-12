@@ -91,6 +91,9 @@ window_proc(HWND wnd, UINT msg, WPARAM wparam, LPARAM lparam)
 		gnwinfo_ctx_update(IDT_TIMER_POWER);
 		break;
 	case WM_DISPLAYCHANGE:
+		NWL_FreeGpu(&g_ctx.gpu_info);
+		NWL_InitGpu(&g_ctx.gpu_info);
+
 		gnwinfo_ctx_update(IDT_TIMER_DISPLAY);
 		if (g_bginfo)
 		{

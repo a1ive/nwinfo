@@ -319,43 +319,47 @@ draw_display(struct nk_context* ctx)
 {
 	INT i;
 
-	nk_layout_row(ctx, NK_DYNAMIC, 0, 4, (float[4]) { 0.3f, 0.4f, 0.3f - g_ctx.gui_ratio, g_ctx.gui_ratio });
+	nk_layout_row(ctx, NK_DYNAMIC, 0, 3, (float[3]) { 0.3f, 0.7f - g_ctx.gui_ratio, g_ctx.gui_ratio });
 	nk_image_label(ctx, GET_PNG(IDR_PNG_DISPLAY), N_(N__DISPLAY), NK_TEXT_LEFT, g_color_text_d);
 	nk_lhcf(ctx, NK_TEXT_LEFT, g_color_text_l,
 		"%ldx%ld %u DPI (%u%%)",
 		g_ctx.cur_display.Width, g_ctx.cur_display.Height, g_ctx.cur_display.Dpi, g_ctx.cur_display.Scale);
-#if 0
-	if (g_ctx.gpu_info.Usage3D > 0.0f || g_ctx.gpu_info.UsageDedicated > 0.0f)
-		nk_lhcf(ctx, NK_TEXT_LEFT, g_color_text_l,
-			"GPU 3D %.1f%% RAM %.1f%%",
-			g_ctx.gpu_info.Usage3D,
-			g_ctx.gpu_info.UsageDedicated);
-	else
-#endif
-		nk_spacer(ctx);
 	if (quick_access_button(ctx, GET_PNG(IDR_PNG_MONITOR), N_(N__DISPLAY)))
 		g_ctx.window_flag |= GUI_WINDOW_DISPLAY;
-#if 0
-	for (i = 0; i < g_ctx.gpu_info.DeviceCount; i++)
+
+	if (g_ctx.gpu_info.DeviceCount > 0)
 	{
-		if (g_ctx.gpu_info.Device[i].driver)
+		for (i = 0; i < (INT)g_ctx.gpu_info.DeviceCount; i++)
 		{
+			NWLIB_GPU_DEV* gpu = &g_ctx.gpu_info.Device[i];
 			CHAR name[32];
 			snprintf(name, sizeof(name), "GPU%d", i);
 			nk_layout_row(ctx, NK_DYNAMIC, 0, 3, (float[3]) { 0.3f, 0.4f, 0.3f });
+
 			nk_lhsc(ctx, name, NK_TEXT_LEFT, g_color_text_d, nk_false, nk_true);
-			nk_lhc(ctx, g_ctx.gpu_info.Device[i].gpu_device, NK_TEXT_LEFT, g_color_text_l);
-			nk_lhc(ctx, NWL_GetHumanSize(g_ctx.gpu_info.Device[i].gpu_mem_size, NWLC->NwUnits, 1024),
-				NK_TEXT_LEFT, g_color_text_l);
-		}
-		else
-		{
-			nk_layout_row(ctx, NK_DYNAMIC, 0, 2, (float[2]) { 0.3f, 0.7f });
-			nk_lhsc(ctx, g_ctx.gpu_info.Device[i].gpu_vendor, NK_TEXT_LEFT, g_color_text_d, nk_true, nk_true);
-			nk_lhc(ctx, g_ctx.gpu_info.Device[i].gpu_device, NK_TEXT_LEFT, g_color_text_l);
+			nk_lhc(ctx, gpu->Name, NK_TEXT_LEFT, g_color_text_l);
+			nk_lhcf(ctx, NK_TEXT_LEFT, g_color_text_l, "%s (%u%%)",
+				NWL_GetHumanSize(gpu->TotalMemory, NWLC->NwUnits, 1024), (unsigned)gpu->MemoryPercent);
+
+			nk_spacer(ctx);
+			nk_lhcf(ctx, NK_TEXT_LEFT, g_color_text_l,
+				u8"%.1f%% %.1fW %.1fMHz %.1fV %lluRPM",
+				gpu->UsagePercent, gpu->Power, gpu->Frequency, gpu->Voltage, gpu->FanSpeed);
+			nk_lhcf(ctx, NK_TEXT_LEFT,
+				gnwinfo_get_color(gpu->Temperature, 50.0, 85.0),
+				u8"%.1f"TEMP_CELSIUS_SYMBOL, gpu->Temperature);
 		}
 	}
-#endif
+	else
+	{
+		for (i = 0; g_ctx.gpu_info.PciList->Children[i].LinkedNode; i++)
+		{
+			PNODE gpu = g_ctx.gpu_info.PciList->Children[i].LinkedNode;
+			nk_layout_row(ctx, NK_DYNAMIC, 0, 2, (float[2]) { 0.3f, 0.7f });
+			nk_lhsc(ctx, NWL_NodeAttrGet(gpu, "Vendor"), NK_TEXT_LEFT, g_color_text_d, nk_true, nk_true);
+			nk_lhc(ctx, NWL_NodeAttrGet(gpu, "Device"), NK_TEXT_LEFT, g_color_text_l);
+		}
+	}
 	for (i = 0; g_ctx.edid->Children[i].LinkedNode; i++)
 	{
 		PNODE mon = g_ctx.edid->Children[i].LinkedNode;

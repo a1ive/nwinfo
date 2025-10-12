@@ -15,8 +15,7 @@ draw_key_value(struct nk_context* ctx, PNODE node, LPCSTR key)
 static VOID
 draw_monitors(struct nk_context* ctx)
 {
-	INT i;
-	for (i = 0; g_ctx.edid->Children[i].LinkedNode; i++)
+	for (INT i = 0; g_ctx.edid->Children[i].LinkedNode; i++)
 	{
 		PNODE mon = g_ctx.edid->Children[i].LinkedNode;
 		LPCSTR id = NWL_NodeAttrGet(mon, "ID");
@@ -44,37 +43,27 @@ draw_monitors(struct nk_context* ctx)
 	}
 }
 
-static inline VOID
-draw_gpu_attr(struct nk_context* ctx, LPCSTR str, LPCSTR attr)
-{
-	nk_lhsc(ctx, str, NK_TEXT_LEFT, g_color_text_d, nk_false, nk_true);
-	nk_lhc(ctx, attr, NK_TEXT_RIGHT, g_color_text_l);
-}
-
 static VOID
 draw_gpu(struct nk_context* ctx)
 {
-#if 0
-	int i;
-	for (i = 0; i < g_ctx.gpu_info.DeviceCount; i++)
+	PNODE pci03 = g_ctx.gpu_info.PciList;
+	for (INT i = 0; pci03->Children[i].LinkedNode; i++)
 	{
+		PNODE gpu = pci03->Children[i].LinkedNode;
 		nk_layout_row_dynamic(ctx, 0, 1);
-		nk_image_label(ctx, GET_PNG(IDR_PNG_GPU), g_ctx.gpu_info.Device[i].gpu_hwid, NK_TEXT_LEFT, g_color_text_l);
+		nk_image_label(ctx, GET_PNG(IDR_PNG_GPU), NWL_NodeAttrGet(gpu, "HWID"), NK_TEXT_LEFT, g_color_text_l);
 
 		nk_layout_row(ctx, NK_DYNAMIC, 0, 2, (float[2]) { 0.3f, 0.7f });
 
-		draw_gpu_attr(ctx, "Vendor", g_ctx.gpu_info.Device[i].gpu_vendor);
-		draw_gpu_attr(ctx, "Device", g_ctx.gpu_info.Device[i].gpu_device);
-		if (g_ctx.gpu_info.Device[i].driver)
+		for (INT j = 0; gpu->Attributes[j].LinkedAttribute; j++)
 		{
-			draw_gpu_attr(ctx, "Driver Date", g_ctx.gpu_info.Device[i].gpu_driver_date);
-			draw_gpu_attr(ctx, "Driver Version", g_ctx.gpu_info.Device[i].gpu_driver_ver);
-			draw_gpu_attr(ctx, "Location Info", g_ctx.gpu_info.Device[i].gpu_location);
-			draw_gpu_attr(ctx, "Memory Size",
-				NWL_GetHumanSize(g_ctx.gpu_info.Device[i].gpu_mem_size, NWLC->NwUnits, 1024));
+			NODE_ATT* att = gpu->Attributes[j].LinkedAttribute;
+			if (strcmp(att->Key, "HWID") == 0)
+				continue;
+			nk_lhsc(ctx, att->Key, NK_TEXT_LEFT, g_color_text_d, nk_false, nk_true);
+			nk_lhc(ctx, att->Value, NK_TEXT_RIGHT, g_color_text_l);
 		}
 	}
-#endif
 }
 
 VOID

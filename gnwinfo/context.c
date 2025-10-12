@@ -55,7 +55,7 @@ gnwinfo_ctx_update(WPARAM wparam)
 		g_ctx.cpu_freq = NWL_GetCpuFreq();
 		NWL_GetCpuMsr(g_ctx.cpu_count, g_ctx.cpu_info);
 		NWL_GetCurDisplay(g_ctx.wnd, &g_ctx.cur_display);
-		//NWL_GetGpuInfo(&g_ctx.gpu_info);
+		NWL_GetGpuInfo(&g_ctx.gpu_info);
 		if (g_ctx.audio)
 		{
 			free(g_ctx.audio);
@@ -159,6 +159,8 @@ gnwinfo_ctx_init(HINSTANCE inst, HWND wnd, struct nk_context* ctx, float width, 
 	else
 		g_ctx.cpu_info = NULL;
 
+	NWL_InitGpu(&g_ctx.gpu_info);
+
 	NWL_GetHostname(g_ctx.sys_hostname);
 
 	gnwinfo_ctx_update(IDT_TIMER_1S);
@@ -182,6 +184,8 @@ gnwinfo_ctx_exit(void)
 
 	if (g_ctx.cpu_info)
 		free(g_ctx.cpu_info);
+
+	NWL_FreeGpu(&g_ctx.gpu_info);
 
 	if (g_ctx.audio)
 		free(g_ctx.audio);

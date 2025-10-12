@@ -208,6 +208,8 @@ static uint32_t igcl_gpu_get(void* data, NWLIB_GPU_DEV* dev, uint32_t dev_count)
 				info->FreeMemory += state.free;
 				info->TotalMemory += state.size;
 			}
+			if (info->FreeMemory < info->TotalMemory)
+				info->MemoryPercent = 100ULL - 100ULL * info->FreeMemory / info->TotalMemory;
 		}
 	}
 

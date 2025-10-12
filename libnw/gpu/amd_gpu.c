@@ -16,9 +16,9 @@ typedef struct ADL_GPU_INFO
 	AdapterInfo* AdapterInfo;
 	ADLGcnInfo GcnInfo;
 
-	uint16_t DeviceId;
-	uint16_t Subsys;
-	uint16_t RevId;
+	uint32_t DeviceId;
+	uint32_t Subsys;
+	uint32_t RevId;
 
 	int OdSupported;
 	int OdApiLevel;
@@ -183,7 +183,10 @@ get_gpu_mem(void* adl, int adapter, ADL_GPU_INFO* gpu, NWLIB_GPU_DEV* info)
 
 	uint64_t used_mem = ((uint64_t)gpu->VRamUsed) * 1024 * 1024;
 	if (used_mem < info->TotalMemory)
+	{
 		info->FreeMemory = info->TotalMemory - used_mem;
+		info->MemoryPercent = used_mem * 100ULL / info->TotalMemory;
+	}
 }
 
 static void adl_gpu_free(void* data)
@@ -285,19 +288,19 @@ static void* adl_gpu_init(void)
 		if (id_start)
 		{
 			id_start += sizeof("&DEV_") - 1;
-			gpu->DeviceId = (int)strtol(id_start, NULL, 16);
+			gpu->DeviceId = (uint32_t)strtol(id_start, NULL, 16);
 		}
 		id_start = strstr(adapter->strUDID, "&SUBSYS_");
 		if (id_start)
 		{
 			id_start += sizeof("&SUBSYS_") - 1;
-			gpu->Subsys = (int)strtol(id_start, NULL, 16);
+			gpu->Subsys = (uint32_t)strtol(id_start, NULL, 16);
 		}
 		id_start = strstr(adapter->strUDID, "&REV_");
 		if (id_start)
 		{
 			id_start += sizeof("&REV_") - 1;
-			gpu->RevId = (int)strtol(id_start, NULL, 16);
+			gpu->RevId = (uint32_t)strtol(id_start, NULL, 16);
 		}
 
 		GPU_DBG(ATIADL, "Initializing GPU [%d] PMLog", i);
@@ -346,7 +349,7 @@ static uint32_t adl_gpu_get(void* data, NWLIB_GPU_DEV* dev, uint32_t dev_count)
 		count++;
 
 		strcpy_s(info->Name, MAX_GPU_STR, gpu->AdapterInfo->strAdapterName);
-		info->VendorId = (uint16_t)gpu->AdapterInfo->iVendorID;
+		info->VendorId = (uint32_t)gpu->AdapterInfo->iVendorID;
 		info->DeviceId = gpu->DeviceId;
 		info->Subsys = gpu->Subsys;
 		info->RevId = gpu->RevId;

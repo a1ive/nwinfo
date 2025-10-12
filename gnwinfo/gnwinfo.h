@@ -24,6 +24,7 @@
 #include <nuklear_gdip.h>
 
 #include <libnw.h>
+#include <gpu/gpu.h>
 
 #include "resource.h"
 
@@ -147,7 +148,7 @@ typedef struct _GNW_CONTEXT
 	NWLIB_MEM_INFO mem_status;
 
 	NWLIB_CUR_DISPLAY cur_display;
-	//NWLIB_GPU_INFO gpu_info;
+	NWLIB_GPU_INFO gpu_info;
 
 	UINT audio_count;
 	NWLIB_AUDIO_DEV* audio;

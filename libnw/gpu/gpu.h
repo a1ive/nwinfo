@@ -8,16 +8,17 @@
 typedef struct _NWLIB_GPU_DEV
 {
 	char Name[MAX_GPU_STR];
-	char HwId[MAX_GPU_STR];
-	uint16_t VendorId;
-	uint16_t DeviceId;
-	uint16_t Subsys;
-	uint16_t RevId;
+	//char HwId[MAX_GPU_STR];
+	uint32_t VendorId;
+	uint32_t DeviceId;
+	uint32_t Subsys;
+	uint32_t RevId;
 	uint32_t PciBus;
 	uint32_t PciDevice;
 	uint32_t PciFunction;
 	uint64_t TotalMemory;
 	uint64_t FreeMemory;
+	uint64_t MemoryPercent;
 	double UsageCounter;
 	double UsagePercent;
 	double Energy;
@@ -47,12 +48,15 @@ enum _NWLIB_GPU_DRV_TYPE
 	NWLIB_GPU_DRV_COUNT
 };
 
+typedef struct _NODE NODE, * PNODE;
+
 typedef struct _NWLIB_GPU_INFO
 {
 	int Initialized;
 	uint32_t DeviceCount;
 	NWLIB_GPU_DEV Device[NWL_GPU_MAX_COUNT];
 	NWLIB_GPU_DRV* Driver[NWLIB_GPU_DRV_COUNT];
+	PNODE PciList;
 } NWLIB_GPU_INFO, * PNWLIB_GPU_INFO;
 
 VOID NWL_InitGpu(PNWLIB_GPU_INFO info);
