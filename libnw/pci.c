@@ -49,6 +49,20 @@ PNODE NWL_EnumPci(PNODE pNode, LPCSTR pciClass)
 		}
 		npci = NWL_NodeAppendNew(pNode, "Device", NFLG_TABLE_ROW);
 		NWL_NodeAttrSet(npci, "HWID", NWL_Ucs2ToUtf8(NWLC->NwBufW), 0);
+		if (SetupDiGetDeviceRegistryPropertyW(Info, &DeviceInfoData,
+			SPDRP_DEVICEDESC, NULL, (PBYTE)NWLC->NwBufW, NWINFO_BUFSZB, NULL))
+		{
+			NWL_NodeAttrSet(npci, "Description", NWL_Ucs2ToUtf8(NWLC->NwBufW), 0);
+		}
+
+		ULONG BusNum = 0, DevFunc = 0;
+		SetupDiGetDeviceRegistryPropertyW(Info, &DeviceInfoData,
+			SPDRP_BUSNUMBER, NULL, (PBYTE)&BusNum, sizeof(BusNum), NULL);
+		SetupDiGetDeviceRegistryPropertyW(Info, &DeviceInfoData,
+			SPDRP_ADDRESS, NULL, (PBYTE)&DevFunc, sizeof(DevFunc), NULL);
+		NWL_NodeAttrSetf(npci, "Location", NAFLG_FMT_NEED_QUOTE, "Bus %u, Device %u, Function %u",
+			BusNum & 0xFF, DevFunc >> 16, DevFunc & 0xFFFF);
+
 		NWL_NodeAttrSet(npci, "Class Code", HwClass, 0);
 		NWL_FindClass(npci, Ids, IdsSize, HwClass, 0);
 		NWL_ParseHwid(npci, Ids, IdsSize, NWLC->NwBufW, 0);
