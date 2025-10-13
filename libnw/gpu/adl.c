@@ -16,6 +16,7 @@ typedef int (*ADL2_OVERDRIVE5_FANSPEED_GET)(void*, int, int, ADLFanSpeedValue*);
 typedef int (*ADL2_OVERDRIVE5_CURRENTACTIVITY_GET)(void*, int, ADLPMActivity*);
 typedef int (*ADL2_OVERDRIVE6_CAPABILITIES_GET)(void*, int, ADLOD6Capabilities*);
 typedef int (*ADL2_OVERDRIVE6_CURRENTPOWER_GET)(void*, int, ADLODNCurrentPowerType, int*);
+typedef int (*ADL2_OVERDRIVE6_CURRENTSTATUS_GET)(void*, int, ADLOD6CurrentStatus*);
 typedef int (*ADL2_OVERDRIVEN_TEMPERATURE_GET)(void*, int, int, int*);
 typedef int (*ADL2_OVERDRIVEN_PERFORMANCESTATUS_GET)(void*, int, ADLODNPerformanceStatus*);
 typedef int (*ADL2_ADAPTER_DEDICATEDVRAMUSAGE_GET)(void*, int, int*);
@@ -168,6 +169,16 @@ int ADL2_Overdrive6_CurrentPower_Get(void* pContext, int iAdapterIndex, ADLODNCu
 	if (!pfn)
 		return ADL_ERR_NOT_SUPPORTED;
 	return pfn(pContext, iAdapterIndex, powerType, lpCurrentValue);
+}
+
+int ADL2_Overdrive6_CurrentStatus_Get(void* pContext, int iAdapterIndex, ADLOD6CurrentStatus* lpCurrentStatus)
+{
+	if (!g_DLL)
+		return ADL_ERR;
+	ADL2_OVERDRIVE6_CURRENTSTATUS_GET pfn = (ADL2_OVERDRIVE6_CURRENTSTATUS_GET)GetProcAddress(g_DLL, "ADL2_Overdrive6_CurrentStatus_Get");
+	if (!pfn)
+		return ADL_ERR_NOT_SUPPORTED;
+	return pfn(pContext, iAdapterIndex, lpCurrentStatus);
 }
 
 int ADL2_OverdriveN_Temperature_Get(void* pContext, int iAdapterIndex, int iTemperatureType, int* lpTemperature)

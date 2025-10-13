@@ -26,8 +26,15 @@ typedef struct ADL_GPU_INFO
 	int PMLogStarted;
 	unsigned int PMLogDevice; // PMLog device handle
 	ADLPMLogSupportInfo PMLogSupportInfo;
+	ADLPMLogStartInput PMLogStartInput;
 	ADLPMLogStartOutput PMLogStartOutput;
-	ADLODNPerformanceStatus ODNPerf;
+	ADLODNPerformanceStatus OdnPerf;
+	ADLOD6Capabilities Od6Caps;
+	ADLOD6CurrentStatus Od6Status;
+	ADLODParameters Od5Params;
+	ADLTemperature Od5Temp;
+	ADLPMActivity Od5Activity;
+	ADLFanSpeedValue Od5Fan;
 
 	int VRamUsed; // MB
 	ADLMemoryInfoX4 MemX4;
@@ -63,12 +70,15 @@ is_pmlog_supported(const ADL_GPU_INFO* gpu, ADL_PMLOG_SENSORS sensor_type)
 }
 
 static bool
-getAdlSensor(ADL_GPU_INFO* gpu, const ADLPMLogData* pmlog_data, const ADLPMLogDataOutput* od8_log,
-	ADL_PMLOG_SENSORS sensor_type, float* out_value, float factor)
+get_adl_sensor(ADL_GPU_INFO* gpu, const ADLPMLogData* pmlog_data, const ADLPMLogDataOutput* od8_log,
+	ADL_PMLOG_SENSORS sensor_type, double* out_value, double factor)
 {
-	int i = (int)sensor_type;
 	bool support_pmlog = is_pmlog_supported(gpu, sensor_type);
-	bool support_od8 = gpu->Od8LogExists && i < ADL_PMLOG_MAX_SENSORS && od8_log->sensors[i].supported != 0;
+	bool support_od8 = false;
+	if (gpu->Od8LogExists
+		&& sensor_type < ADL_PMLOG_MAX_SENSORS && sensor_type >= 0
+		&& od8_log->sensors[sensor_type].supported)
+		support_od8 = true;
 
 	GPU_DBG(ATIADL, "%s sensor type %d PMLog %d OD8 %d", gpu->AdapterInfo->strAdapterName, sensor_type, support_pmlog, support_od8);
 
@@ -76,13 +86,13 @@ getAdlSensor(ADL_GPU_INFO* gpu, const ADLPMLogData* pmlog_data, const ADLPMLogDa
 	{
 		if (pmlog_data && pmlog_data->ulLastUpdated != 0)
 		{
-			for (int k = 0; k < ADL_PMLOG_MAX_SENSORS * 2 - 1; k += 2)
+			for (int k = 0; k < ADL_PMLOG_MAX_SENSORS; k++)
 			{
 				if (pmlog_data->ulValues[k][0] == ADL_SENSOR_MAXTYPES)
 					break;
-				if (pmlog_data->ulValues[k][0] == i)
+				if (pmlog_data->ulValues[k][0] == sensor_type)
 				{
-					*out_value = (float)pmlog_data->ulValues[k][1] * factor;
+					*out_value = (double)pmlog_data->ulValues[k][1] * factor;
 					return true;
 				}
 			}
@@ -91,7 +101,7 @@ getAdlSensor(ADL_GPU_INFO* gpu, const ADLPMLogData* pmlog_data, const ADLPMLogDa
 
 	if (support_od8)
 	{
-		*out_value = (float)od8_log->sensors[i].value * factor;
+		*out_value = (double)od8_log->sensors[sensor_type].value * factor;
 		return true;
 	}
 
@@ -108,17 +118,15 @@ init_pmlog(ADL_CTX* ctx, ADL_GPU_INFO* gpu, int adapter_index)
 	if (ADL2_Adapter_PMLog_Support_Get(ctx->AdlHandle, adapter_index, &gpu->PMLogSupportInfo) != ADL_OK)
 		goto fail;
 
-	ADLPMLogStartInput start_input;
-	memset(&start_input, 0, sizeof(ADLPMLogStartInput));
-	start_input.ulSampleRate = 1000;
-	int k = 0;
-	while (k < ADL_PMLOG_MAX_SENSORS && gpu->PMLogSupportInfo.usSensors[k] != ADL_SENSOR_MAXTYPES)
+	memset(&gpu->PMLogStartInput, 0, sizeof(ADLPMLogStartInput));
+	gpu->PMLogStartInput.ulSampleRate = 1000;
+	for (int k = 0; k < ADL_PMLOG_MAX_SENSORS; k++)
 	{
-		start_input.usSensors[k] = gpu->PMLogSupportInfo.usSensors[k];
-		k++;
+		gpu->PMLogStartInput.usSensors[k] = gpu->PMLogSupportInfo.usSensors[k];
+		if (gpu->PMLogSupportInfo.usSensors[k] == ADL_SENSOR_MAXTYPES)
+			break;
 	}
-	start_input.usSensors[k] = (unsigned short)ADL_SENSOR_MAXTYPES;
-	if (ADL2_Adapter_PMLog_Start(ctx->AdlHandle, adapter_index, &start_input, &gpu->PMLogStartOutput, gpu->PMLogDevice) == ADL_OK)
+	if (ADL2_Adapter_PMLog_Start(ctx->AdlHandle, adapter_index, &gpu->PMLogStartInput, &gpu->PMLogStartOutput, gpu->PMLogDevice) == ADL_OK)
 	{
 		gpu->PMLogStarted = 1;
 		GPU_DBG(ATIADL, "PMLog started");
@@ -139,20 +147,19 @@ get_overdrive_version(ADL_CTX* ctx, ADL_GPU_INFO* gpu, int adapter_index)
 	gpu->OdSupported = ADL_FALSE;
 
 	if (ADL2_Overdrive_Caps(ctx->AdlHandle, adapter_index, &gpu->OdSupported, &enabled, &gpu->OdApiLevel) == ADL_OK)
-	{
 		return;
-	}
 
-	ADLOD6Capabilities caps6 = { 0 };
-	if (ADL2_Overdrive6_Capabilities_Get(ctx->AdlHandle, adapter_index, &caps6) == ADL_OK && caps6.iCapabilities > 0)
+	if (ADL2_Overdrive6_Capabilities_Get(ctx->AdlHandle, adapter_index, &gpu->Od6Caps) == ADL_OK
+		&& gpu->Od6Caps.iCapabilities > 0)
 	{
 		gpu->OdSupported = 1;
 		gpu->OdApiLevel = 6;
 		return;
 	}
 
-	ADLODParameters params5 = { .iSize = sizeof(ADLODParameters) };
-	if (ADL2_Overdrive5_ODParameters_Get(ctx->AdlHandle, adapter_index, &params5) == ADL_OK && params5.iActivityReportingSupported > 0)
+	gpu->Od5Params.iSize = sizeof(ADLODParameters);
+	if (ADL2_Overdrive5_ODParameters_Get(ctx->AdlHandle, adapter_index, &gpu->Od5Params) == ADL_OK
+		&& gpu->Od5Params.iActivityReportingSupported > 0)
 	{
 		gpu->OdSupported = 1;
 		gpu->OdApiLevel = 5;
@@ -362,24 +369,25 @@ static uint32_t adl_gpu_get(void* data, NWLIB_GPU_DEV* dev, uint32_t dev_count)
 		if (gpu->OdApiLevel >= 5)
 		{
 			// Core temperature
-			ADLTemperature temp_od5 = { .iSize = sizeof(ADLTemperature) };
-			if (ADL2_Overdrive5_Temperature_Get(ctx->AdlHandle, adapter_index, 0, &temp_od5) == ADL_OK)
-				info->Temperature = (double)temp_od5.iTemperature * 0.001f;
+			gpu->Od5Temp.iSize = sizeof(ADLTemperature);
+			if (ADL2_Overdrive5_Temperature_Get(ctx->AdlHandle, adapter_index, 0, &gpu->Od5Temp) == ADL_OK)
+				info->Temperature = (double)gpu->Od5Temp.iTemperature * 0.001f;
 			// Core Voltage
-			ADLPMActivity activity = { .iSize = sizeof(ADLPMActivity) };
-			if (ADL2_Overdrive5_CurrentActivity_Get(ctx->AdlHandle, adapter_index, &activity) == ADL_OK)
+			gpu->Od5Activity.iSize = sizeof(ADLPMActivity);
+			if (ADL2_Overdrive5_CurrentActivity_Get(ctx->AdlHandle, adapter_index, &gpu->Od5Activity) == ADL_OK)
 			{
-				if (activity.iVddc > 0)
-					info->Voltage = (double)activity.iVddc * 0.001f;
-				if (activity.iActivityPercent > 0)
-					info->UsagePercent = activity.iActivityPercent;
+				if (gpu->Od5Activity.iVddc > 0)
+					info->Voltage = (double)gpu->Od5Activity.iVddc * 0.001f;
+				if (gpu->Od5Activity.iActivityPercent > 0)
+					info->UsagePercent = (double)gpu->Od5Activity.iActivityPercent;
 			}
 			// Fan speed RPM
-			ADLFanSpeedValue fan_rpm_val = { .iSize = sizeof(ADLFanSpeedValue), .iSpeedType = ADL_DL_FANCTRL_SPEED_TYPE_RPM };
-			if (ADL2_Overdrive5_FanSpeed_Get(ctx->AdlHandle, adapter_index, 0, &fan_rpm_val) == ADL_OK)
+			gpu->Od5Fan.iSize = sizeof(ADLFanSpeedValue);
+			gpu->Od5Fan.iSpeedType = ADL_DL_FANCTRL_SPEED_TYPE_RPM;
+			if (ADL2_Overdrive5_FanSpeed_Get(ctx->AdlHandle, adapter_index, 0, &gpu->Od5Fan) == ADL_OK)
 			{
-				if (fan_rpm_val.iFanSpeed > 0)
-					info->FanSpeed = (uint64_t)fan_rpm_val.iFanSpeed;
+				if (gpu->Od5Fan.iFanSpeed > 0)
+					info->FanSpeed = (uint64_t)gpu->Od5Fan.iFanSpeed;
 			}
 		}
 
@@ -388,6 +396,11 @@ static uint32_t adl_gpu_get(void* data, NWLIB_GPU_DEV* dev, uint32_t dev_count)
 			int val_d = 0;
 			if (ADL2_Overdrive6_CurrentPower_Get(ctx->AdlHandle, adapter_index, ODN_GPU_TOTAL_POWER, &val_d) == ADL_OK)
 				info->Power = (double)(val_d >> 8);
+			if (ADL2_Overdrive6_CurrentStatus_Get(ctx->AdlHandle, adapter_index, &gpu->Od6Status) == ADL_OK)
+			{
+				if (gpu->Od6Status.iActivityPercent > 0)
+					info->UsagePercent = (double)gpu->Od6Status.iActivityPercent;
+			}
 		}
 
 		if (gpu->OdApiLevel >= 7)
@@ -400,14 +413,14 @@ static uint32_t adl_gpu_get(void* data, NWLIB_GPU_DEV* dev, uint32_t dev_count)
 				&& val_d >= -256000 && val_d <= 256000)
 				info->Temperature = (float)val_d;
 
-			if (ADL2_OverdriveN_PerformanceStatus_Get(ctx->AdlHandle, adapter_index, &gpu->ODNPerf))
+			if (ADL2_OverdriveN_PerformanceStatus_Get(ctx->AdlHandle, adapter_index, &gpu->OdnPerf))
 			{
-				if (gpu->ODNPerf.iVDDC > 0)
-					info->Voltage = (double)gpu->ODNPerf.iVDDC * 0.001f;
-				if (gpu->ODNPerf.iGPUActivityPercent > 0)
-					info->UsagePercent = (double)gpu->ODNPerf.iGPUActivityPercent;
-				if (gpu->ODNPerf.iGFXClock > 0)
-					info->Frequency = (double)gpu->ODNPerf.iGFXClock * 0.01f;
+				if (gpu->OdnPerf.iVDDC > 0)
+					info->Voltage = (double)gpu->OdnPerf.iVDDC * 0.001f;
+				if (gpu->OdnPerf.iGPUActivityPercent > 0)
+					info->UsagePercent = (double)gpu->OdnPerf.iGPUActivityPercent;
+				if (gpu->OdnPerf.iGFXClock > 0)
+					info->Frequency = (double)gpu->OdnPerf.iGFXClock * 0.01f;
 			}
 		}
 
@@ -419,38 +432,42 @@ static uint32_t adl_gpu_get(void* data, NWLIB_GPU_DEV* dev, uint32_t dev_count)
 			ADLPMLogData* pmlog_data = NULL;
 			if (gpu->PMLogStarted)
 				pmlog_data = (ADLPMLogData*)gpu->PMLogStartOutput.pLoggingAddress;
-			float val_f;
 
-			if (getAdlSensor(gpu, pmlog_data, &od8_log, ADL_PMLOG_TEMPERATURE_EDGE, &val_f, 1.0f))
-				info->Temperature = (double)val_f;
-			else if (getAdlSensor(gpu, pmlog_data, &od8_log, ADL_PMLOG_TEMPERATURE_HOTSPOT, &val_f, 1.0f))
-				info->Temperature = (double)val_f;
-			else if (getAdlSensor(gpu, pmlog_data, &od8_log, ADL_PMLOG_TEMPERATURE_VRSOC, &val_f, 1.0f))
-				info->Temperature = (double)val_f;
-			else if (getAdlSensor(gpu, pmlog_data, &od8_log, ADL_PMLOG_TEMPERATURE_SOC, &val_f, 1.0f))
-				info->Temperature = (double)val_f;
+			double val_f;
 
-			if (getAdlSensor(gpu, pmlog_data, &od8_log, ADL_PMLOG_FAN_RPM, &val_f, 1.0f))
+			if (get_adl_sensor(gpu, pmlog_data, &od8_log, ADL_PMLOG_TEMPERATURE_EDGE, &val_f, 1.0))
+				info->Temperature = val_f;
+			else if (get_adl_sensor(gpu, pmlog_data, &od8_log, ADL_PMLOG_TEMPERATURE_HOTSPOT, &val_f, 1.0))
+				info->Temperature = val_f;
+			else if (get_adl_sensor(gpu, pmlog_data, &od8_log, ADL_PMLOG_TEMPERATURE_VRSOC, &val_f, 1.0))
+				info->Temperature = val_f;
+			else if (get_adl_sensor(gpu, pmlog_data, &od8_log, ADL_PMLOG_TEMPERATURE_SOC, &val_f, 1.0))
+				info->Temperature = val_f;
+
+			if (get_adl_sensor(gpu, pmlog_data, &od8_log, ADL_PMLOG_FAN_RPM, &val_f, 1.0))
 				info->FanSpeed = (uint64_t)val_f;
 
-			if (getAdlSensor(gpu, pmlog_data, &od8_log, ADL_PMLOG_GFX_VOLTAGE, &val_f, 0.001f))
-				info->Voltage = (double)val_f;
-			else if (getAdlSensor(gpu, pmlog_data, &od8_log, ADL_PMLOG_SOC_VOLTAGE, &val_f, 0.001f))
-				info->Voltage = (double)val_f;
+			if (get_adl_sensor(gpu, pmlog_data, &od8_log, ADL_PMLOG_GFX_VOLTAGE, &val_f, 0.001))
+				info->Voltage = val_f;
+			else if (get_adl_sensor(gpu, pmlog_data, &od8_log, ADL_PMLOG_SOC_VOLTAGE, &val_f, 0.001))
+				info->Voltage = val_f;
 
-			if (getAdlSensor(gpu, pmlog_data, &od8_log, ADL_PMLOG_BOARD_POWER, &val_f, 1.0f))
-				info->Power = (double)val_f;
-			else if (getAdlSensor(gpu, pmlog_data, &od8_log, ADL_PMLOG_GFX_POWER, &val_f, 1.0f))
-				info->Power = (double)val_f;
-			else if (getAdlSensor(gpu, pmlog_data, &od8_log, ADL_PMLOG_ASIC_POWER, &val_f, 1.0f))
-				info->Power = (double)val_f;
-			else if (getAdlSensor(gpu, pmlog_data, &od8_log, ADL_PMLOG_SSPAIRED_ASICPOWER, &val_f, 1.0f))
-				info->Power = (double)val_f;
-			else if (getAdlSensor(gpu, pmlog_data, &od8_log, ADL_PMLOG_SOC_POWER, &val_f, 1.0f))
-				info->Power = (double)val_f;
+			if (get_adl_sensor(gpu, pmlog_data, &od8_log, ADL_PMLOG_BOARD_POWER, &val_f, 1.0))
+				info->Power = val_f;
+			else if (get_adl_sensor(gpu, pmlog_data, &od8_log, ADL_PMLOG_GFX_POWER, &val_f, 1.0))
+				info->Power = val_f;
+			else if (get_adl_sensor(gpu, pmlog_data, &od8_log, ADL_PMLOG_ASIC_POWER, &val_f, 1.0))
+				info->Power = val_f;
+			else if (get_adl_sensor(gpu, pmlog_data, &od8_log, ADL_PMLOG_SSPAIRED_ASICPOWER, &val_f, 1.0))
+				info->Power = val_f;
+			else if (get_adl_sensor(gpu, pmlog_data, &od8_log, ADL_PMLOG_SOC_POWER, &val_f, 1.0))
+				info->Power = val_f;
 
-			if (getAdlSensor(gpu, pmlog_data, &od8_log, ADL_PMLOG_CLK_GFXCLK, &val_f, 1.0f))
-				info->Frequency = (double)val_f;
+			if (get_adl_sensor(gpu, pmlog_data, &od8_log, ADL_PMLOG_CLK_GFXCLK, &val_f, 1.0))
+				info->Frequency = val_f;
+
+			if (get_adl_sensor(gpu, pmlog_data, &od8_log, ADL_PMLOG_INFO_ACTIVITY_GFX, &val_f, 1.0))
+				info->UsagePercent = val_f;
 		}
 	}
 

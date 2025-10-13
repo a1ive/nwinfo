@@ -320,6 +320,30 @@ typedef struct ADLOD6Capabilities
 	int     iExtMask;
 } ADLOD6Capabilities;
 
+typedef struct ADLOD6CurrentStatus
+{
+	/// Current engine clock in 10 KHz.
+	int     iEngineClock;
+	/// Current memory clock in 10 KHz.
+	int     iMemoryClock;
+	/// Current GPU activity in percent.  This
+	/// indicates how "busy" the GPU is.
+	int     iActivityPercent;
+	/// Not used.  Reserved for future use.
+	int     iCurrentPerformanceLevel;
+	/// Current PCI-E bus speed
+	int     iCurrentBusSpeed;
+	/// Current PCI-E bus # of lanes
+	int     iCurrentBusLanes;
+	/// Maximum possible PCI-E bus # of lanes
+	int     iMaximumBusLanes;
+
+	/// Value for future extension
+	int     iExtValue;
+	/// Mask for future extension
+	int     iExtMask;
+} ADLOD6CurrentStatus;
+
 typedef enum ADLODNCurrentPowerType
 {
 	ODN_GPU_TOTAL_POWER = 0,
@@ -549,6 +573,7 @@ int ADL2_Overdrive5_FanSpeed_Get(void* pContext, int iAdapterIndex, int iThermal
 int ADL2_Overdrive5_CurrentActivity_Get(void* pContext, int iAdapterIndex, ADLPMActivity* lpActivity);
 int ADL2_Overdrive6_Capabilities_Get(void* pContext, int iAdapterIndex, ADLOD6Capabilities* lpODCapabilities);
 int ADL2_Overdrive6_CurrentPower_Get(void* pContext, int iAdapterIndex, ADLODNCurrentPowerType powerType, int* lpCurrentValue);
+int ADL2_Overdrive6_CurrentStatus_Get(void* pContext, int iAdapterIndex, ADLOD6CurrentStatus* lpCurrentStatus);
 int ADL2_OverdriveN_Temperature_Get(void* pContext, int iAdapterIndex, int iTemperatureType, int* lpTemperature);
 int ADL2_OverdriveN_PerformanceStatus_Get(void* pContext, int iAdapterIndex, ADLODNPerformanceStatus* lpOdPerformanceStatus);
 int ADL2_Adapter_DedicatedVRAMUsage_Get(void* pContext, int iAdapterIndex, int* lpVRAMUsageInMB);
