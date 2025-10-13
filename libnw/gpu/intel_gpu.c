@@ -127,7 +127,7 @@ static uint32_t igcl_gpu_get(void* data, NWLIB_GPU_DEV* dev, uint32_t dev_count)
 	{
 		if (count >= dev_count)
 			break;
-		if (ctx->List[count].Valid == FALSE)
+		if (ctx->List[i].Valid == FALSE)
 			continue;
 
 		NWLIB_GPU_DEV* info = &dev[count];
