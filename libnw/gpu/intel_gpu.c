@@ -35,7 +35,7 @@ struct INTEL_GPU_CTX
 	struct INTEL_GPU_DATA* List;
 };
 
-static void* igcl_gpu_init(void)
+static void* igcl_gpu_init(PNWLIB_GPU_INFO info)
 {
 	struct INTEL_GPU_CTX* ctx = calloc(1, sizeof(struct INTEL_GPU_CTX));
 	if (ctx == NULL)

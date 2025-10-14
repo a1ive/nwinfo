@@ -167,6 +167,7 @@
     <ClCompile Include="gpu.c" />
     <ClCompile Include="gpu\adl.c" />
     <ClCompile Include="gpu\amd_gpu.c" />
+    <ClCompile Include="gpu\d3d_gpu.c" />
     <ClCompile Include="gpu\igcl.cpp" />
     <ClCompile Include="gpu\intel_gpu.c" />
     <ClCompile Include="gpu\nvapi.c" />

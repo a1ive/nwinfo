@@ -5,6 +5,8 @@
 
 #define MAX_GPU_STR 256
 
+typedef struct _NWLIB_GPU_INFO NWLIB_GPU_INFO, * PNWLIB_GPU_INFO;
+
 typedef struct _NWLIB_GPU_DEV
 {
 	char Name[MAX_GPU_STR];
@@ -32,7 +34,7 @@ typedef struct _NWLIB_GPU_DEV
 typedef struct _NWLIB_GPU_DRV
 {
 	const char* Name;
-	void* (*Init)(void);
+	void* (*Init)(PNWLIB_GPU_INFO info);
 	uint32_t(*GetInfo)(void* data, NWLIB_GPU_DEV* dev, uint32_t dev_count);
 	void (*Free)(void* data);
 	void* Data;
@@ -45,6 +47,7 @@ enum _NWLIB_GPU_DRV_TYPE
 	NWLIB_GPU_DRV_INTEL = 0,
 	NWLIB_GPU_DRV_AMD,
 	NWLIB_GPU_DRV_NVIDIA,
+	NWLIB_GPU_DRV_DXGI,
 	NWLIB_GPU_DRV_COUNT
 };
 

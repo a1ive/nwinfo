@@ -13,6 +13,7 @@
 extern NWLIB_GPU_DRV gpu_drv_intel;
 extern NWLIB_GPU_DRV gpu_drv_amd;
 extern NWLIB_GPU_DRV gpu_drv_nvidia;
+extern NWLIB_GPU_DRV gpu_drv_dxgi;
 
 VOID NWL_InitGpu(PNWLIB_GPU_INFO info)
 {
@@ -20,12 +21,21 @@ VOID NWL_InitGpu(PNWLIB_GPU_INFO info)
 	info->Driver[NWLIB_GPU_DRV_INTEL] = &gpu_drv_intel;
 	info->Driver[NWLIB_GPU_DRV_AMD] = &gpu_drv_amd;
 	info->Driver[NWLIB_GPU_DRV_NVIDIA] = &gpu_drv_nvidia;
+	info->Driver[NWLIB_GPU_DRV_DXGI] = &gpu_drv_dxgi;
 
 	for (int i = 0; i < NWLIB_GPU_DRV_COUNT; i++)
-		info->Driver[i]->Data = info->Driver[i]->Init();
+	{
+		if (info->DeviceCount >= NWL_GPU_MAX_COUNT)
+			break;
+		info->Driver[i]->Data = info->Driver[i]->Init(info);
+		if (info->Driver[i]->Data == NULL)
+			continue;
+		uint32_t info_cnt = NWL_GPU_MAX_COUNT - info->DeviceCount;
+		uint32_t dev_count = info->Driver[i]->GetInfo(info->Driver[i]->Data, &info->Device[info->DeviceCount], info_cnt);
+		info->DeviceCount += dev_count;
+	}
 
 	info->Initialized = 1;
-	NWL_GetGpuInfo(info);
 
 	// TODO: Get GPU vendor/device from pci.ids
 	info->PciList = NWL_EnumPci(NWL_NodeAlloc("PCI", NFLG_TABLE), "03");

@@ -50,7 +50,7 @@ struct NV_GPU_CTX
 	struct NV_GPU_DATA* List;
 };
 
-static void* nv_gpu_init(void)
+static void* nv_gpu_init(PNWLIB_GPU_INFO info)
 {
 	struct NV_GPU_CTX* ctx = calloc(1, sizeof(struct NV_GPU_CTX));
 	if (ctx == NULL)

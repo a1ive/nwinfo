@@ -219,7 +219,7 @@ static void adl_gpu_free(void* data)
 	free(ctx);
 }
 
-static void* adl_gpu_init(void)
+static void* adl_gpu_init(PNWLIB_GPU_INFO info)
 {
 	ADL_CTX* ctx = calloc(1, sizeof(ADL_CTX));
 	if (ctx == NULL)
@@ -380,6 +380,8 @@ static uint32_t adl_gpu_get(void* data, NWLIB_GPU_DEV* dev, uint32_t dev_count)
 					info->Voltage = (double)gpu->Od5Activity.iVddc * 0.001f;
 				if (gpu->Od5Activity.iActivityPercent > 0)
 					info->UsagePercent = (double)gpu->Od5Activity.iActivityPercent;
+				if (gpu->Od5Activity.iEngineClock > 0)
+					info->Frequency = (double)gpu->Od5Activity.iEngineClock * 0.01; // 10 kHz ?
 			}
 			// Fan speed RPM
 			gpu->Od5Fan.iSize = sizeof(ADLFanSpeedValue);
@@ -400,6 +402,8 @@ static uint32_t adl_gpu_get(void* data, NWLIB_GPU_DEV* dev, uint32_t dev_count)
 			{
 				if (gpu->Od6Status.iActivityPercent > 0)
 					info->UsagePercent = (double)gpu->Od6Status.iActivityPercent;
+				if (gpu->Od6Status.iEngineClock > 0)
+					info->Frequency = (double)gpu->Od6Status.iEngineClock * 0.01;
 			}
 		}
 
