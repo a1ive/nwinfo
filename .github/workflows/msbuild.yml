@@ -99,12 +99,10 @@ jobs:
         }
 
         Create-NwinfoPackage -Flavor "hwrwdrv" -ReadmePath ".\README.pdf"
-        Create-NwinfoPackage -Flavor "pawnio" -ReadmePath ".\README.pdf"
         
     - name: Create ZIPs
       run: |
         Compress-Archive -Path "nwinfo_hwrwdrv\*" -DestinationPath "nwinfo.zip" -Force
-        Compress-Archive -Path "nwinfo_pawnio\*" -DestinationPath "nwinfo_pawnio.zip" -Force
 
     - name: Generate Release Notes
       env:
@@ -148,7 +146,7 @@ jobs:
       working-directory: ${{env.GITHUB_WORKSPACE}}
       run: |
         $date_version = (Get-Date -Format 'yyyyMMdd') + ".${{ github.run_number }}"
-        gh release create latest "nwinfo.zip" "nwinfo_pawnio.zip" `
+        gh release create latest "nwinfo.zip" `
           --prerelease `
           --title "Build $date_version" `
           --notes-file "release_notes.txt"
