@@ -36,10 +36,6 @@ NWL_GetNetTraffic(NWLIB_NET_TRAFFIC* info, BOOL bit)
 	old_recv = total_recv;
 	old_send = total_send;
 
-	if (NWLC->PdhNetRecv)
-		diff_recv = NWL_GetPdhSum(NWLC->PdhNetRecv, PDH_FMT_LARGE, NULL).largeValue;
-	if (NWLC->PdhNetSend)
-		diff_send = NWL_GetPdhSum(NWLC->PdhNetSend, PDH_FMT_LARGE, NULL).largeValue;
 	if (bit)
 	{
 		memcpy(info->StrRecv, NWL_GetHumanSize(diff_recv * 8, bit_units, 1000), NWL_STR_SIZE);

@@ -214,10 +214,7 @@ gnwinfo_draw_settings_window(struct nk_context* ctx, float width, float height)
 	nk_checkbox_label(ctx, N_(N__BACKGROUND_INFO), &g_ctx.gui_bginfo);
 	nk_spacer(ctx);
 	nk_checkbox_flags_label(ctx, N_(N__NO_QUICK_ACCESS), &g_ctx.main_flag, MAIN_NO_QUICK);
-#ifdef NWLIB_ENABLE_PDH
-	nk_spacer(ctx);
-	nk_checkbox_flags_label(ctx, N_(N__ENABLE_PDH), &g_ctx.main_flag, MAIN_NO_PDH);
-#endif
+
 	nk_spacer(ctx);
 	nk_checkbox_label(ctx, N_(N__SHOW_SENSITIVE_DATA), &g_ctx.lib.HideSensitive);
 	nk_spacer(ctx);

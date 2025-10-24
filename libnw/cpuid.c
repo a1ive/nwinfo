@@ -21,15 +21,6 @@ CpuCompareFileTime(const FILETIME* time1, const FILETIME* time2)
 double
 NWL_GetCpuUsage(VOID)
 {
-	PDH_FMT_COUNTERVALUE value = { 0 };
-	if (NWLC->PdhCpuUsage &&
-		NWLC->PdhGetFormattedCounterValue(NWLC->PdhCpuUsage, PDH_FMT_DOUBLE, NULL, &value) == ERROR_SUCCESS)
-	{
-		if (value.doubleValue > 100.0)
-			value.doubleValue = 100.0;
-		return value.doubleValue;
-	}
-
 	double ret = 0.0;
 	static FILETIME old_idle = { 0 };
 	static FILETIME old_krnl = { 0 };
@@ -77,16 +68,6 @@ GetProcessorPerfDist(size_t* pCount)
 DWORD
 NWL_GetCpuFreq(VOID)
 {
-	PDH_FMT_COUNTERVALUE value = { 0 };
-	if (NWLC->PdhCpuBaseFreq &&
-		NWLC->PdhGetFormattedCounterValue(NWLC->PdhCpuBaseFreq, PDH_FMT_LONG, NULL, &value) == ERROR_SUCCESS)
-	{
-		DWORD freq = (DWORD)value.longValue;
-		if (NWLC->PdhCpuFreq &&
-			NWLC->PdhGetFormattedCounterValue(NWLC->PdhCpuFreq, PDH_FMT_DOUBLE, NULL, &value) == ERROR_SUCCESS)
-			return (DWORD)(value.doubleValue * 0.01 * freq);
-	}
-
 	static PSYSTEM_PROCESSOR_PERFORMANCE_DISTRIBUTION saved_ppd = NULL;
 	PSYSTEM_PROCESSOR_PERFORMANCE_DISTRIBUTION cur_ppd = NULL;
 

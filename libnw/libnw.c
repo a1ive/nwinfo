@@ -45,8 +45,6 @@ VOID NW_Init(PNWLIB_CONTEXT pContext)
 		NWL_NodeAppendMultiSz(&NWLC->ErrLog, "Administrator required");
 	if (NWL_ObtainPrivileges(SE_SYSTEM_ENVIRONMENT_NAME) != ERROR_SUCCESS)
 		NWL_NodeAppendMultiSz(&NWLC->ErrLog, "SeSystemEnvironmentPrivilege required");
-
-	NWL_PdhInit();
 }
 
 VOID NW_Print(LPCSTR lpFileName)
@@ -97,7 +95,6 @@ VOID NW_Print(LPCSTR lpFileName)
 
 VOID NW_Fini(VOID)
 {
-	NWL_PdhFini();
 	if (NWLC->NwRsdp)
 		free(NWLC->NwRsdp);
 	if (NWLC->NwRsdt)

@@ -6,8 +6,6 @@
 #include <windows.h>
 #include <stdnoreturn.h>
 
-#include <pdh.h>
-
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -106,21 +104,6 @@ typedef struct _NWLIB_CONTEXT
 	struct _CDI_SMART* NwSmart;
 	UINT64 NwSmartFlags;
 
-	BOOL EnablePdh;
-	HMODULE PdhDll;
-	PDH_STATUS(WINAPI* PdhOpenQueryW)(LPCWSTR, DWORD_PTR, PDH_HQUERY*);
-	PDH_STATUS(WINAPI* PdhAddCounterW)(PDH_HQUERY, LPCWSTR, DWORD_PTR, PDH_HCOUNTER*);
-	PDH_STATUS(WINAPI* PdhCollectQueryData)(PDH_HQUERY);
-	PDH_STATUS(WINAPI* PdhGetFormattedCounterValue)(PDH_HCOUNTER, DWORD, LPDWORD, PPDH_FMT_COUNTERVALUE);
-	PDH_STATUS(WINAPI* PdhGetFormattedCounterArrayW)(PDH_HCOUNTER, DWORD, LPDWORD, LPDWORD, PPDH_FMT_COUNTERVALUE_ITEM_W);
-	PDH_STATUS(WINAPI* PdhCloseQuery)(PDH_HQUERY);
-	PDH_HQUERY Pdh;
-	PDH_HCOUNTER PdhCpuUsage;
-	PDH_HCOUNTER PdhCpuFreq;
-	PDH_HCOUNTER PdhCpuBaseFreq;
-	PDH_HCOUNTER PdhNetRecv;
-	PDH_HCOUNTER PdhNetSend;
-
 	struct wr0_drv_t* NwDrv;
 	UINT CodePage;
 	struct _NODE* NwRoot;
@@ -150,11 +133,6 @@ VOID NW_Init(PNWLIB_CONTEXT pContext);
 VOID NW_Export(PNODE node, FILE* file);
 VOID NW_Print(LPCSTR lpFileName);
 VOID NW_Fini(VOID);
-
-VOID NWL_PdhInit(VOID);
-VOID NWL_PdhUpdate(VOID);
-VOID NWL_PdhFini(VOID);
-PDH_FMT_COUNTERVALUE NWL_GetPdhSum(PDH_HCOUNTER counter, DWORD fmt, LPCWSTR suffix);
 
 noreturn VOID NWL_ErrExit(INT nExitCode, LPCSTR lpszText);
 
