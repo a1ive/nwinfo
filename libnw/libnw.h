@@ -198,6 +198,7 @@ typedef struct _NWLIB_CPU_INFO
 	double MsrVolt;
 	double MsrFreq;
 	double MsrBus;
+	ULONGLONG Ticks;
 	int MsrEnergy;
 	double MsrPower;
 	double MsrPl1;

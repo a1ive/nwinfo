@@ -264,12 +264,19 @@ GetMsrData(NWLIB_CPU_INFO* info, struct cpu_id_t* data)
 		value = cpu_msrinfo(NWLC->NwDrv, i, INFO_VOLTAGE);
 		if (value != CPU_INVALID_VALUE && value > 0)
 			info->MsrVolt = value / 100.0;
+		ULONGLONG ticks = GetTickCount64();
 		value = cpu_msrinfo(NWLC->NwDrv, i, INFO_PKG_ENERGY);
 		if (value != CPU_INVALID_VALUE && value > info->MsrEnergy)
 		{
-			info->MsrPower = (value - info->MsrEnergy) / 100.0;
+			if (ticks > info->Ticks)
+			{
+				ULONGLONG delta_ticks = ticks - info->Ticks; // in milliseconds
+				double delta_energy = (double)(value - info->MsrEnergy); // in Joules, multiplied by 100
+				info->MsrPower = delta_energy / (double)delta_ticks * 10.0; // in Watts
+			}
 			info->MsrEnergy = value;
 		}
+		info->Ticks = ticks;
 		value = cpu_msrinfo(NWLC->NwDrv, i, INFO_BUS_CLOCK);
 		if (value != CPU_INVALID_VALUE && value > 0)
 		{
@@ -316,7 +323,8 @@ PrintCpuMsr(PNODE node, struct cpu_id_t* data)
 	NWL_NodeAttrSetf(node, "Temperature (C)", NAFLG_FMT_NUMERIC, "%d", info.MsrTemp);
 	NWL_NodeAttrSetf(node, "Core Voltage (V)", NAFLG_FMT_NUMERIC, "%.2lf", info.MsrVolt);
 	NWL_NodeAttrSetf(node, "Bus Clock (MHz)", NAFLG_FMT_NUMERIC, "%.2lf", info.MsrBus);
-	NWL_NodeAttrSetf(node, "Energy (J)", NAFLG_FMT_NUMERIC, "%.2lf", info.MsrPower);
+	NWL_NodeAttrSetf(node, "Energy (J)", NAFLG_FMT_NUMERIC, "%.2lf", info.MsrEnergy / 100.0);
+	NWL_NodeAttrSetf(node, "Power (W)", NAFLG_FMT_NUMERIC, "%.2lf", info.MsrPower);
 	NWL_NodeAttrSetf(node, "PL1 (W)", NAFLG_FMT_NUMERIC, "%.2lf", info.MsrPl1);
 	NWL_NodeAttrSetf(node, "PL2 (W)", NAFLG_FMT_NUMERIC, "%.2lf", info.MsrPl2);
 }
