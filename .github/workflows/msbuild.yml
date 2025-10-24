@@ -60,7 +60,7 @@ jobs:
         msbuild /m /p:Configuration=Release /p:platform=x86 ${{env.SOLUTION_FILE_PATH}}
 
     - name: Download README.pdf
-      uses: actions/download-artifact@v5
+      uses: actions/download-artifact@v6
       with:
         name: README.pdf
         path: .
