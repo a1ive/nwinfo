@@ -330,8 +330,9 @@ const struct match_entry_t cpudb_amd[] = {
 	{ 15, -1, -1, 23,   24,  -1,    -1,    -1, { "Ryzen 3 3###",           6 }, "Ryzen 3 (Picasso)",              "GF 12LP" },
 	{ 15, -1, -1, 23,   24,  -1,    -1,    -1, { "Athlon",                 2 }, "Athlon (Picasso)",               "GF 12LP" },
 	/* Zen 2 (2019) => https://en.wikichip.org/wiki/amd/microarchitectures/zen_2 */
-	{ 15, -1, -1, 23,   49,  -1,    -1,    -1, { "EPYC 7##2",              4 }, "EPYC (Rome)",                    "TSMC N7FF" },
-	{ 15, -1, -1, 23,   49,  -1,    -1,    -1, { "Threadripper 3###",      4 }, "Threadripper (Castle Peak)",     "TSMC N7FF" },
+	{ 15, -1, -1, 23,   49,  -1,    -1,    -1, { "EPYC 7##2",                4 }, "EPYC (Rome)",                    "TSMC N7FF" },
+	{ 15, -1, -1, 23,   49,  -1,    -1,    -1, { "Threadripper PRO 3###WX", 10 }, "Threadripper PRO (Castle Peak)", "TSMC N7FF" },
+	{ 15, -1, -1, 23,   49,  -1,    -1,    -1, { "Threadripper 3###X",       6 }, "Threadripper (Castle Peak)",     "TSMC N7FF" },
 	{ 15, -1, -1, 23,  113,  -1,    -1,    -1, { "Ryzen 9 3###",           6 }, "Ryzen 9 (Matisse)",              "TSMC N7FF" },
 	{ 15, -1, -1, 23,  113,  -1,    -1,    -1, { "Ryzen 7 3###",           6 }, "Ryzen 7 (Matisse)",              "TSMC N7FF" },
 	{ 15, -1, -1, 23,  113,  -1,    -1,    -1, { "Ryzen 5 3###",           6 }, "Ryzen 5 (Matisse)",              "TSMC N7FF" },
@@ -357,8 +358,8 @@ const struct match_entry_t cpudb_amd[] = {
 
 	/* Family 19h */
 	/* Zen 3 (2020) => https://en.wikichip.org/wiki/amd/microarchitectures/zen_3 */
-	{ 15, -1, -1, 25,    1,  -1,    -1,    -1, { "EPYC 7##3",              4 }, "EPYC (Milan)",                   "TSMC N7FF" },
-	{ 15, -1, -1, 25,    8,  -1,    -1,    -1, { "Threadripper 5###",      4 }, "Threadripper (Chagall)",         "TSMC N7FF" },
+	{ 15, -1, -1, 25,    1,  -1,    -1,    -1, { "EPYC 7##3",                4 }, "EPYC (Milan)",                 "TSMC N7FF" },
+	{ 15, -1, -1, 25,    8,  -1,    -1,    -1, { "Threadripper PRO 5###WX", 10 }, "Threadripper PRO (Chagall)",   "TSMC N7FF" },
 	{ 15, -1, -1, 25,   33,  -1,    -1,    -1, { "Ryzen 9 5###",           6 }, "Ryzen 9 (Vermeer)",              "TSMC N7FF" },
 	{ 15, -1, -1, 25,   33,  -1,    -1,    -1, { "Ryzen 7 5###",           6 }, "Ryzen 7 (Vermeer)",              "TSMC N7FF" },
 	{ 15, -1, -1, 25,   33,  -1,    -1,    -1, { "Ryzen 5 5###",           6 }, "Ryzen 5 (Vermeer)",              "TSMC N7FF" },
@@ -379,8 +380,9 @@ const struct match_entry_t cpudb_amd[] = {
 	{ 15, -1, -1, 25,   68,  -1,    -1,    -1, { "Ryzen 5 7###",           6 }, "Ryzen 5 (Rembrandt-R)",          "TSMC N6"  },
 	{ 15, -1, -1, 25,   68,  -1,    -1,    -1, { "Ryzen 3 7###",           6 }, "Ryzen 3 (Rembrandt-R)",          "TSMC N6"  },
 	/* Zen 4 (2022) => https://en.wikichip.org/wiki/amd/microarchitectures/zen_4 */
-	{ 15, -1, -1, 25,   17,  -1,    -1,    -1, { "EPYC 9##4",              4 }, "EPYC (Genoa)",                   "TSMC N5"  },
-	{ 15, -1, -1, 25,   24,  -1,    -1,    -1, { "Threadripper 7###",      4 }, "Threadripper (Storm Peak)",      "TSMC N5"  },
+	{ 15, -1, -1, 25,   17,  -1,    -1,    -1, { "EPYC 9##4",                4 }, "EPYC (Genoa)",                   "TSMC N5"  },
+	{ 15, -1, -1, 25,   24,  -1,    -1,    -1, { "Threadripper PRO 7###WX", 10 }, "Threadripper PRO (Storm Peak)",  "TSMC N5"  },
+	{ 15, -1, -1, 25,   24,  -1,    -1,    -1, { "Threadripper 7###X",       6 }, "Threadripper (Storm Peak)",      "TSMC N5"  },
 	/*  => Raphael (7000 series, Zen 4/RDNA2 based) */
 	{ 15, -1,  2, 25,   97,  -1,    -1,    -1, { "Ryzen 9 7###",           6 }, "Ryzen 9 (Raphael)",              "TSMC N5"  },
 	{ 15, -1,  2, 25,   97,  -1,    -1,    -1, { "Ryzen 7 7###",           6 }, "Ryzen 7 (Raphael)",              "TSMC N5"  },
@@ -414,8 +416,10 @@ const struct match_entry_t cpudb_amd[] = {
 	{ 15, -1, -1, 25,  117,  -1,    -1,    -1, { "Ryzen 5 8###U",          8 }, "Ryzen 5 (Hawk Point)",           "TSMC N4"  },
 	{ 15, -1, -1, 25,  117,  -1,    -1,    -1, { "Ryzen 3 8###U",          8 }, "Ryzen 3 (Hawk Point)",           "TSMC N4"  },
 	/* Zen 5 (2024) => https://en.wikichip.org/wiki/amd/microarchitectures/zen_5 */
-	{ 15, -1, -1, 26,    2,  -1,    -1,    -1, { "EPYC 9##5",              4 }, "EPYC (Turin)",                   "TSMC N4X" },
-	{ 15, -1, -1, 26,   17,  -1,    -1,    -1, { "EPYC 9##5",              4 }, "EPYC (Turin Dense)",             "TSMC N3E" },
+	{ 15, -1, -1, 26,    2,  -1,    -1,    -1, { "EPYC 9##5",                4 }, "EPYC (Turin)",                    "TSMC N4X" },
+	{ 15, -1, -1, 26,   17,  -1,    -1,    -1, { "EPYC 9##5",                4 }, "EPYC (Turin Dense)",              "TSMC N3E" },
+	{ 15, -1, -1, 26,    8,  -1,    -1,    -1, { "Threadripper PRO 9###WX", 10 }, "Threadripper PRO (Shimada Peak)", "TSMC N4"  },
+	{ 15, -1, -1, 26,    8,  -1,    -1,    -1, { "Threadripper 9###X",       6 }, "Threadripper (Shimada Peak)",     "TSMC N4"  },
 	/*  => Granite Ridge (9000 series, Zen 5 based) */
 	{ 15, -1, -1, 26,   68,  -1,    -1,    -1, { "Ryzen 9 9###",           6 }, "Ryzen 9 (Granite Ridge)",        "TSMC N4"  },
 	{ 15, -1, -1, 26,   68,  -1,    -1,    -1, { "Ryzen 7 9###",           6 }, "Ryzen 7 (Granite Ridge)",        "TSMC N4"  },
