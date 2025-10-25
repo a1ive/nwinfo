@@ -26,7 +26,7 @@ typedef enum
 {
 	CODENAME_UNKNOWN = 0,
 	CODENAME_SUMMITRIDGE,
-	CODENAME_WHITEHAVEN,
+	CODENAME_THREADRIPPER,
 	CODENAME_NAPLES,
 	CODENAME_RAVENRIDGE,
 	CODENAME_RAVENRIDGE2, // DALI
@@ -58,18 +58,14 @@ typedef enum
 	CODENAME_STRIXPOINT,
 	CODENAME_GRANITERIDGE,
 	CODENAME_KRACKANPOINT,
+	CODENAME_KRACKANPOINT2,
 	CODENAME_STRIXHALO,
 	CODENAME_TURIN,
+	CODENAME_SHIMADAPEAK,
+	CODENAME_TURIND,
 	CODENAME_BERGAMO,
 	CODENAME_COUNT,
 } ry_codename_t;
-
-typedef enum
-{
-	MAILBOX_TYPE_RSMU,
-	MAILBOX_TYPE_MP1,
-	MAILBOX_TYPE_HSMP,
-} ry_mailbox_t;
 
 typedef union
 {
@@ -110,15 +106,6 @@ typedef struct
 	uint32_t rsmu_cmd_addr;
 	uint32_t rsmu_rsp_addr;
 	uint32_t rsmu_arg_addr;
-
-	uint32_t mp1_cmd_addr;
-	uint32_t mp1_rsp_addr;
-	uint32_t mp1_arg_addr;
-
-	uint32_t hsmp_cmd_addr;
-	uint32_t hsmp_rsp_addr;
-	uint32_t hsmp_arg_addr;
-
 } ry_handle_t;
 
 ry_handle_t* ryzen_smu_init(struct wr0_drv_t* drv_handle, struct cpu_id_t* id);

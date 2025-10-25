@@ -43,7 +43,7 @@ static const char* get_codename_str(ry_codename_t codename)
 	switch (codename)
 	{
 	case CODENAME_SUMMITRIDGE: return "Summit Ridge";
-	case CODENAME_WHITEHAVEN: return "ThreadRipper";
+	case CODENAME_THREADRIPPER: return "ThreadRipper";
 	case CODENAME_NAPLES: return "Naples";
 	case CODENAME_RAVENRIDGE: return "Raven Ridge";
 	case CODENAME_RAVENRIDGE2: return "Raven Ridge 2";
@@ -75,8 +75,11 @@ static const char* get_codename_str(ry_codename_t codename)
 	case CODENAME_STRIXPOINT: return "Strix Point";
 	case CODENAME_GRANITERIDGE: return "Granite Ridge";
 	case CODENAME_KRACKANPOINT: return "Krackan Point";
+	case CODENAME_KRACKANPOINT2: return "Krackan Point 2";
 	case CODENAME_STRIXHALO: return "Strix Halo";
 	case CODENAME_TURIN: return "Turin";
+	case CODENAME_TURIND: return "Turin D";
+	case CODENAME_SHIMADAPEAK: return "Shimada Peak";
 	case CODENAME_BERGAMO: return "Bergamo";
 	default: return "Unknown";
 	}
@@ -116,15 +119,15 @@ static ry_err_t get_codename(ry_handle_t* handle, struct cpu_id_t* id)
 		switch (id->x86.ext_model)
 		{
 		case 0x01:
-			if (id->x86.pkg_type == 4)
+			if (id->x86.pkg_type == 3)
 				handle->codename = CODENAME_NAPLES;
 			else if (id->x86.pkg_type == 7)
-				handle->codename = CODENAME_WHITEHAVEN;
+				handle->codename = CODENAME_THREADRIPPER;
 			else
 				handle->codename = CODENAME_SUMMITRIDGE;
 			break;
 		case 0x08:
-			if (id->x86.pkg_type == 4 || id->x86.pkg_type == 7)
+			if (id->x86.pkg_type == 3 || id->x86.pkg_type == 7)
 				handle->codename = CODENAME_COLFAX;
 			else
 				handle->codename = CODENAME_PINNACLERIDGE;
@@ -133,7 +136,7 @@ static ry_err_t get_codename(ry_handle_t* handle, struct cpu_id_t* id)
 			handle->codename = CODENAME_RAVENRIDGE;
 			break;
 		case 0x18:
-			if (id->x86.pkg_type == 2)
+			if (id->x86.pkg_type == 7)
 				handle->codename = CODENAME_RAVENRIDGE2;
 			else
 				handle->codename = CODENAME_PICASSO;
@@ -174,6 +177,7 @@ static ry_err_t get_codename(ry_handle_t* handle, struct cpu_id_t* id)
 	case 0x19: // Zen3, Zen3+, Zen4
 		switch (id->x86.ext_model)
 		{
+		case 0x00:
 		case 0x01:
 			handle->codename = CODENAME_MILAN;
 			break;
@@ -218,8 +222,14 @@ static ry_err_t get_codename(ry_handle_t* handle, struct cpu_id_t* id)
 	case 0x1A: // Zen5
 		switch (id->x86.ext_model)
 		{
-		case 0x10:
+		case 0x02:
 			handle->codename = CODENAME_TURIN;
+			break;
+		case 0x08:
+			handle->codename = CODENAME_SHIMADAPEAK;
+			break;
+		case 0x11:
+			handle->codename = CODENAME_TURIND;
 			break;
 		case 0x20:
 		case 0x24:
@@ -230,6 +240,9 @@ static ry_err_t get_codename(ry_handle_t* handle, struct cpu_id_t* id)
 			break;
 		case 0x60:
 			handle->codename = CODENAME_KRACKANPOINT;
+			break;
+		case 0x68:
+			handle->codename = CODENAME_KRACKANPOINT2;
 			break;
 		case 0x70:
 			handle->codename = CODENAME_STRIXHALO;
@@ -251,101 +264,68 @@ static ry_err_t get_codename(ry_handle_t* handle, struct cpu_id_t* id)
 	return RYZEN_SMU_OK;
 }
 
-static ry_err_t get_mailbox_addr(ry_handle_t* handle)
+static ry_err_t get_rsmu_addr(ry_handle_t* handle)
 {
 	switch (handle->codename)
 	{
-	case CODENAME_SUMMITRIDGE:
-	case CODENAME_NAPLES:
-	case CODENAME_PINNACLERIDGE:
-	case CODENAME_WHITEHAVEN:
-	case CODENAME_COLFAX:
-		handle->rsmu_cmd_addr = 0x3B1051C;
-		handle->rsmu_rsp_addr = 0x3B10568;
-		handle->rsmu_arg_addr = 0x3B10590;
-		handle->mp1_cmd_addr = 0x3B10528;
-		handle->mp1_rsp_addr = 0x3B10564;
-		handle->mp1_arg_addr = 0x3B10598;
-		break;
-	case CODENAME_RAVENRIDGE:
-	case CODENAME_FIREFLIGHT:
-	case CODENAME_PICASSO:
-	case CODENAME_RAVENRIDGE2:
-	case CODENAME_DALI:
-	case CODENAME_RENOIR:
-	case CODENAME_LUCIENNE:
-	case CODENAME_CEZANNE:
-		handle->rsmu_cmd_addr = 0x3B10A20;
-		handle->rsmu_rsp_addr = 0x3B10A80;
-		handle->rsmu_arg_addr = 0x3B10A88;
-		handle->mp1_cmd_addr = 0x3B10528;
-		handle->mp1_rsp_addr = 0x3B10564;
-		handle->mp1_arg_addr = 0x3B10998;
-		break;
 	case CODENAME_MATISSE:
 	case CODENAME_CASTLEPEAK:
-	case CODENAME_ROME: // ?
 	case CODENAME_VERMEER:
 	case CODENAME_MILAN:
-	case CODENAME_CHAGALL:
 	case CODENAME_RAPHAEL:
+	case CODENAME_GRANITERIDGE:
+	case CODENAME_ROME:
+	case CODENAME_CHAGALL:
 	case CODENAME_GENOA:
 	case CODENAME_STORMPEAK:
 	case CODENAME_DRAGONRANGE:
-		handle->rsmu_cmd_addr = 0x3B10524;
-		handle->rsmu_rsp_addr = 0x3B10570;
-		handle->rsmu_arg_addr = 0x3B10A40;
-		handle->hsmp_cmd_addr = 0x3B10534;
-		handle->hsmp_rsp_addr = 0x3B10980;
-		handle->hsmp_arg_addr = 0x3B109E0;
-		handle->mp1_cmd_addr = 0x3B10530;
-		handle->mp1_rsp_addr = 0x3B1057C;
-		handle->mp1_arg_addr = 0x3B109C4;
-		break;
-	case CODENAME_GRANITERIDGE:
 	case CODENAME_TURIN:
+	case CODENAME_TURIND:
 	case CODENAME_BERGAMO:
 		handle->rsmu_cmd_addr = 0x3B10524;
 		handle->rsmu_rsp_addr = 0x3B10570;
 		handle->rsmu_arg_addr = 0x3B10A40;
-		handle->hsmp_cmd_addr = 0x3B10934;
-		handle->hsmp_rsp_addr = 0x3B10980;
-		handle->hsmp_arg_addr = 0x3B109E0;
-		handle->mp1_cmd_addr = 0x3B10530;
-		handle->mp1_rsp_addr = 0x3B1057C;
-		handle->mp1_arg_addr = 0x3B109C4;
 		break;
-	case CODENAME_MERO: // ?
-	case CODENAME_VANGOGH: // ?
+	case CODENAME_COLFAX:
+	case CODENAME_THREADRIPPER:
+	case CODENAME_SUMMITRIDGE:
+	case CODENAME_PINNACLERIDGE:
+	case CODENAME_NAPLES:
+		handle->rsmu_cmd_addr = 0x3B1051C;
+		handle->rsmu_rsp_addr = 0x3B10568;
+		handle->rsmu_arg_addr = 0x3B10590;
+		break;
+	case CODENAME_RENOIR:
+	case CODENAME_PICASSO:
+	case CODENAME_RAVENRIDGE:
+	case CODENAME_RAVENRIDGE2:
 	case CODENAME_REMBRANDT:
+	case CODENAME_VANGOGH:
+	case CODENAME_CEZANNE:
+	case CODENAME_DALI:
+	case CODENAME_FIREFLIGHT:
+	case CODENAME_LUCIENNE:
 	case CODENAME_PHOENIX:
 	case CODENAME_PHOENIX2:
+	case CODENAME_MENDOCINO:
+	case CODENAME_MERO:
 	case CODENAME_HAWKPOINT:
-	case CODENAME_MENDOCINO: // ?
-		handle->rsmu_cmd_addr = 0x3B10A20;
-		handle->rsmu_rsp_addr = 0x3B10A80;
-		handle->rsmu_arg_addr = 0x3B10A88;
-		handle->mp1_cmd_addr = 0x3B10528;
-		handle->mp1_rsp_addr = 0x3B10578;
-		handle->mp1_arg_addr = 0x3B10998;
-		break;
 	case CODENAME_STRIXPOINT:
 	case CODENAME_STRIXHALO:
 	case CODENAME_KRACKANPOINT:
 		handle->rsmu_cmd_addr = 0x3B10A20;
 		handle->rsmu_rsp_addr = 0x3B10A80;
 		handle->rsmu_arg_addr = 0x3B10A88;
-		handle->mp1_cmd_addr = 0x3B10928;
-		handle->mp1_rsp_addr = 0x3B10978;
-		handle->mp1_arg_addr = 0x3B10998;
+		break;
+	case CODENAME_SHIMADAPEAK:
+		handle->rsmu_cmd_addr = 0x3B10924;
+		handle->rsmu_rsp_addr = 0x3B10970;
+		handle->rsmu_arg_addr = 0x3B10A40;
 		break;
 	default:
 		return RYZEN_SMU_CPU_NOT_SUPPORTED;
 	}
-	SMU_DEBUG("RSMU(%X,%X,%X), MP1(%X,%X,%X), HSMP(%X,%X,%X)",
-		handle->rsmu_cmd_addr, handle->rsmu_rsp_addr, handle->rsmu_arg_addr,
-		handle->mp1_cmd_addr, handle->mp1_rsp_addr, handle->mp1_arg_addr,
-		handle->hsmp_cmd_addr, handle->hsmp_rsp_addr, handle->hsmp_arg_addr);
+	SMU_DEBUG("RSMU(%X,%X,%X)", handle->rsmu_cmd_addr, handle->rsmu_rsp_addr, handle->rsmu_arg_addr);
 	return RYZEN_SMU_OK;
 }
 
@@ -371,47 +351,21 @@ static ry_err_t write_smn(ry_handle_t* handle, uint32_t address, uint32_t value)
 	return RYZEN_SMU_OK;
 }
 
-static ry_err_t send_command(ry_handle_t* handle, ry_mailbox_t mailbox, uint32_t fn, ry_args_t* args)
+static ry_err_t send_command(ry_handle_t* handle, uint32_t fn, ry_args_t* args)
 {
 	int i;
 	ry_err_t rc;
-	uint32_t cmd_addr, rsp_addr, args_addr;
 	uint32_t response;
-	const char* mb_type_str = "ERR";
 
-	switch (mailbox)
-	{
-	case MAILBOX_TYPE_RSMU:
-		cmd_addr = handle->rsmu_cmd_addr;
-		rsp_addr = handle->rsmu_rsp_addr;
-		args_addr = handle->rsmu_arg_addr;
-		mb_type_str = "RSMU";
-		break;
-	case MAILBOX_TYPE_MP1:
-		cmd_addr = handle->mp1_cmd_addr;
-		rsp_addr = handle->mp1_rsp_addr;
-		args_addr = handle->mp1_arg_addr;
-		mb_type_str = "MP1";
-		break;
-	case MAILBOX_TYPE_HSMP:
-		cmd_addr = handle->hsmp_cmd_addr;
-		rsp_addr = handle->hsmp_rsp_addr;
-		args_addr = handle->hsmp_arg_addr;
-		mb_type_str = "HSMP";
-		break;
-	default:
-		return RYZEN_SMU_INVALID_ARGUMENT;
-	}
-
-	if (cmd_addr == 0)
+	if (handle->rsmu_cmd_addr == 0)
 		return RYZEN_SMU_UNSUPPORTED;
 
-	SMU_DEBUG("Send %s Fn %Xh", mb_type_str, fn);
+	SMU_DEBUG("Send RSMU Fn %Xh", fn);
 
 	// Wait until the RSP register is non-zero.
 	for (i = 0, response = 0; i < SMU_COMMAND_MAX_RETRIES; i++)
 	{
-		rc = read_smn(handle, rsp_addr, &response);
+		rc = read_smn(handle, handle->rsmu_rsp_addr, &response);
 		if (rc != RYZEN_SMU_OK)
 		{
 			SMU_DEBUG("Failed to read RSP register: %s", get_ry_err_str(rc));
@@ -425,23 +379,23 @@ static ry_err_t send_command(ry_handle_t* handle, ry_mailbox_t mailbox, uint32_t
 		return RYZEN_SMU_CMD_TIMEOUT;
 
 	// Write zero to the RSP register
-	write_smn(handle, rsp_addr, 0);
+	write_smn(handle, handle->rsmu_rsp_addr, 0);
 
 	// Write the arguments into the argument registers
 	for (int i = 0; i < SMU_MAX_ARGS; i++)
 	{
-		rc = write_smn(handle, args_addr + (i * 4), args->args[i]);
+		rc = write_smn(handle, handle->rsmu_arg_addr + (i * 4), args->args[i]);
 		if (rc != RYZEN_SMU_OK)
 			return rc;
 	}
 
 	// Write the message Id into the Message ID register
-	write_smn(handle, cmd_addr, fn);
+	write_smn(handle, handle->rsmu_cmd_addr, fn);
 
 	// Wait until the Response register is non-zero.
 	for (i = 0, response = 0; i < SMU_COMMAND_MAX_RETRIES; i++)
 	{
-		rc = read_smn(handle, rsp_addr, &response);
+		rc = read_smn(handle, handle->rsmu_rsp_addr, &response);
 		if (rc != RYZEN_SMU_OK)
 			return rc;
 		if (response != 0)
@@ -454,7 +408,7 @@ static ry_err_t send_command(ry_handle_t* handle, ry_mailbox_t mailbox, uint32_t
 	// Read the response value
 	for (int i = 0; i < SMU_MAX_ARGS; i++)
 	{
-		rc = read_smn(handle, args_addr + (i * 4), &args->args[i]);
+		rc = read_smn(handle, handle->rsmu_arg_addr + (i * 4), &args->args[i]);
 		if (rc != RYZEN_SMU_OK)
 			return rc;
 	}
@@ -474,8 +428,7 @@ static ry_err_t get_smu_version(ry_handle_t* handle)
 {
 	ry_args_t args;
 	init_smu_args(&args, 1);
-	// OP 0x02 is consistent with all platforms
-	ry_err_t rc = send_command(handle, MAILBOX_TYPE_MP1, 0x02, &args);
+	ry_err_t rc = send_command(handle, 0x02, &args);
 	if (rc != RYZEN_SMU_OK)
 		return rc;
 	handle->smu_version = args.u32.arg0;
@@ -488,64 +441,60 @@ static ry_err_t get_pm_table_base(ry_handle_t* handle, uint64_t* addr)
 	ry_args_t args;
 	ry_err_t rc;
 	uint32_t fn[3];
-	uint32_t low_part, high_part;
 
 	switch (handle->codename)
 	{
-	case CODENAME_NAPLES:
-	case CODENAME_SUMMITRIDGE:
-	case CODENAME_WHITEHAVEN:
-		fn[0] = 0xa;
-		goto base_addr_class_1;
-	case CODENAME_VERMEER:
-	case CODENAME_MATISSE:
-	case CODENAME_CASTLEPEAK:
-	case CODENAME_ROME:
-	case CODENAME_MILAN:
-	case CODENAME_CHAGALL:
-		fn[0] = 0x06;
-		goto base_addr_class_1;
 	case CODENAME_RAPHAEL:
-	case CODENAME_GRANITERIDGE:
+	case CODENAME_GENOA:
 	case CODENAME_STORMPEAK:
 	case CODENAME_DRAGONRANGE:
-	case CODENAME_GENOA:
-	case CODENAME_TURIN:
+	case CODENAME_GRANITERIDGE:
 	case CODENAME_BERGAMO:
+	case CODENAME_TURIN:
+	case CODENAME_TURIND:
+	case CODENAME_SHIMADAPEAK:
 		fn[0] = 0x04;
 		goto base_addr_class_1;
+	case CODENAME_MATISSE:
+	case CODENAME_VERMEER:
+	case CODENAME_CASTLEPEAK:
+	case CODENAME_ROME:
+	case CODENAME_CHAGALL:
+	case CODENAME_MILAN:
+		fn[0] = 0x06;
+		goto base_addr_class_1;
 	case CODENAME_RENOIR:
-	case CODENAME_LUCIENNE:
-	case CODENAME_CEZANNE:
 	case CODENAME_REMBRANDT:
+	case CODENAME_CEZANNE:
+	case CODENAME_MERO:
+	case CODENAME_VANGOGH:
 	case CODENAME_PHOENIX:
 	case CODENAME_PHOENIX2:
 	case CODENAME_HAWKPOINT:
-	case CODENAME_STRIXPOINT:
+	case CODENAME_MENDOCINO:
 	case CODENAME_STRIXHALO:
+	case CODENAME_STRIXPOINT:
 	case CODENAME_KRACKANPOINT:
-	case CODENAME_VANGOGH: // ?
-	case CODENAME_MENDOCINO: // ?
-	case CODENAME_MERO: // ?
+	case CODENAME_LUCIENNE:
 		fn[0] = 0x66;
 		goto base_addr_class_1;
-
 	case CODENAME_COLFAX:
 	case CODENAME_PINNACLERIDGE:
+	case CODENAME_SUMMITRIDGE:
+	case CODENAME_NAPLES:
+	case CODENAME_THREADRIPPER:
 		fn[0] = 0x0b;
 		fn[1] = 0x0c;
 		goto base_addr_class_2;
-
 	case CODENAME_DALI:
 	case CODENAME_PICASSO:
 	case CODENAME_RAVENRIDGE:
 	case CODENAME_RAVENRIDGE2:
-	case CODENAME_FIREFLIGHT: // ?
+	case CODENAME_FIREFLIGHT:
 		fn[0] = 0x0a;
 		fn[1] = 0x3d;
 		fn[2] = 0x0b;
 		goto base_addr_class_3;
-
 	default:
 		return RYZEN_SMU_UNSUPPORTED;
 	}
@@ -553,7 +502,7 @@ static ry_err_t get_pm_table_base(ry_handle_t* handle, uint64_t* addr)
 base_addr_class_1:
 	init_smu_args(&args, 1);
 	args.u32.arg1 = 1;
-	rc = send_command(handle, MAILBOX_TYPE_RSMU, fn[0], &args);
+	rc = send_command(handle, fn[0], &args);
 	if (rc != RYZEN_SMU_OK)
 		return rc;
 	*addr = ((uint64_t)args.u32.arg1 << 32) | args.u32.arg0;
@@ -562,11 +511,11 @@ base_addr_class_1:
 
 base_addr_class_2:
 	init_smu_args(&args, 0);
-	rc = send_command(handle, MAILBOX_TYPE_RSMU, fn[0], &args);
+	rc = send_command(handle, fn[0], &args);
 	if (rc != RYZEN_SMU_OK)
 		return rc;
 	init_smu_args(&args, 0);
-	rc = send_command(handle, MAILBOX_TYPE_RSMU, fn[1], &args);
+	rc = send_command(handle, fn[1], &args);
 	if (rc != RYZEN_SMU_OK)
 		return rc;
 	*addr = (uint64_t)args.u32.arg0;
@@ -575,30 +524,14 @@ base_addr_class_2:
 
 base_addr_class_3:
 	init_smu_args(&args, 3);
-	rc = send_command(handle, MAILBOX_TYPE_RSMU, fn[0], &args);
+	rc = send_command(handle, fn[0], &args);
 	if (rc != RYZEN_SMU_OK)
 		return rc;
 	init_smu_args(&args, 3);
-	rc = send_command(handle, MAILBOX_TYPE_RSMU, fn[2], &args);
+	rc = send_command(handle, fn[2], &args);
 	if (rc != RYZEN_SMU_OK)
 		return rc;
-	low_part = args.u32.arg0;
-
-	init_smu_args(&args, 3);
-	rc = send_command(handle, MAILBOX_TYPE_RSMU, fn[1], &args);
-	if (rc != RYZEN_SMU_OK)
-		return rc;
-	init_smu_args(&args, 5);
-	rc = send_command(handle, MAILBOX_TYPE_RSMU, fn[0], &args);
-	if (rc != RYZEN_SMU_OK)
-		return rc;
-	init_smu_args(&args, 5);
-	rc = send_command(handle, MAILBOX_TYPE_RSMU, fn[2], &args);
-	if (rc != RYZEN_SMU_OK)
-		return rc;
-	high_part = args.u32.arg0;
-
-	*addr = ((uint64_t)high_part << 32) | low_part;
+	*addr = (uint64_t)args.u32.arg0;
 	SMU_DEBUG("PM Table Base: %llX", (unsigned long long)addr);
 	return RYZEN_SMU_OK;
 }
@@ -611,51 +544,61 @@ static ry_err_t get_pm_table_version(ry_handle_t* handle, uint32_t* version)
 
 	switch (handle->codename)
 	{
+	case CODENAME_SUMMITRIDGE:
+	case CODENAME_NAPLES:
+	case CODENAME_PINNACLERIDGE:
+	case CODENAME_COLFAX:
+	case CODENAME_THREADRIPPER:
+		fn = 0x0d;
+		break;
 	case CODENAME_DALI:
 	case CODENAME_PICASSO:
 	case CODENAME_RAVENRIDGE:
-	case CODENAME_RAVENRIDGE2: // ?
+	case CODENAME_RAVENRIDGE2:
 	case CODENAME_FIREFLIGHT:
 		fn = 0x0C;
 		break;
-	case CODENAME_VERMEER:
 	case CODENAME_MATISSE:
+	case CODENAME_VERMEER:
 	case CODENAME_CASTLEPEAK:
-	case CODENAME_MILAN:
-	case CODENAME_CHAGALL:
 	case CODENAME_ROME:
+	case CODENAME_CHAGALL:
+	case CODENAME_MILAN:
 		fn = 0x08;
 		break;
-	case CODENAME_RAPHAEL:
-	case CODENAME_GENOA:
-	case CODENAME_GRANITERIDGE:
-	case CODENAME_BERGAMO:
-	case CODENAME_TURIN:
-	case CODENAME_STORMPEAK:
-	case CODENAME_DRAGONRANGE:
-		fn = 0x05;
-		break;
 	case CODENAME_RENOIR:
-	case CODENAME_LUCIENNE:
-	case CODENAME_CEZANNE:
 	case CODENAME_REMBRANDT:
+	case CODENAME_CEZANNE:
+	case CODENAME_MERO:
+	case CODENAME_VANGOGH:
 	case CODENAME_PHOENIX:
 	case CODENAME_PHOENIX2:
 	case CODENAME_HAWKPOINT:
-	case CODENAME_STRIXPOINT:
-	case CODENAME_STRIXHALO:
-	case CODENAME_KRACKANPOINT:
-	case CODENAME_MERO: // ?
-	case CODENAME_VANGOGH: // ?
 	case CODENAME_MENDOCINO:
+	case CODENAME_STRIXHALO:
+	case CODENAME_STRIXPOINT:
+	case CODENAME_KRACKANPOINT:
+	case CODENAME_LUCIENNE:
 		fn = 0x06;
 		break;
+	case CODENAME_RAPHAEL:
+	case CODENAME_GENOA:
+	case CODENAME_STORMPEAK:
+	case CODENAME_DRAGONRANGE:
+	case CODENAME_GRANITERIDGE:
+	case CODENAME_BERGAMO:
+	case CODENAME_TURIN:
+	case CODENAME_TURIND:
+	case CODENAME_SHIMADAPEAK:
+		fn = 0x05;
+		break;
+	
 	default:
 		return RYZEN_SMU_UNSUPPORTED;
 	}
 
 	init_smu_args(&args, 0);
-	rc = send_command(handle, MAILBOX_TYPE_RSMU, fn, &args);
+	rc = send_command(handle, fn, &args);
 	if (rc != RYZEN_SMU_OK)
 		return rc;
 	*version = args.u32.arg0;
@@ -771,60 +714,60 @@ static ry_err_t transfer_table_to_dram(ry_handle_t* handle)
 	init_smu_args(&args, 0);
 	switch (handle->codename)
 	{
+	case CODENAME_SUMMITRIDGE:
+	case CODENAME_NAPLES:
+	case CODENAME_PINNACLERIDGE:
+	case CODENAME_COLFAX:
+	case CODENAME_THREADRIPPER:
+		fn = 0x0a;
+		break;
 	case CODENAME_RAPHAEL:
 	case CODENAME_GENOA:
+	case CODENAME_STORMPEAK:
+	case CODENAME_DRAGONRANGE:
 	case CODENAME_GRANITERIDGE:
 	case CODENAME_BERGAMO:
 	case CODENAME_TURIN:
-	case CODENAME_STORMPEAK:
-	case CODENAME_DRAGONRANGE:
+	case CODENAME_TURIND:
+	case CODENAME_SHIMADAPEAK:
 		fn = 0x03;
 		break;
-	case CODENAME_VERMEER:
 	case CODENAME_MATISSE:
+	case CODENAME_VERMEER:
 	case CODENAME_CASTLEPEAK:
 	case CODENAME_ROME:
-	case CODENAME_MILAN:
 	case CODENAME_CHAGALL:
+	case CODENAME_MILAN:
 		fn = 0x05;
 		break;
-	case CODENAME_CEZANNE:
-		fn = 0x65;
-		break;
 	case CODENAME_RENOIR:
-	case CODENAME_LUCIENNE:
 	case CODENAME_REMBRANDT:
+	case CODENAME_CEZANNE:
+	case CODENAME_MERO:
+	case CODENAME_VANGOGH:
 	case CODENAME_PHOENIX:
 	case CODENAME_PHOENIX2:
 	case CODENAME_HAWKPOINT:
-	case CODENAME_STRIXPOINT:
-	case CODENAME_STRIXHALO:
-	case CODENAME_KRACKANPOINT:
-	case CODENAME_MERO:
-	case CODENAME_VANGOGH: // ?
 	case CODENAME_MENDOCINO:
+	case CODENAME_STRIXHALO:
+	case CODENAME_STRIXPOINT:
+	case CODENAME_KRACKANPOINT:
+	case CODENAME_LUCIENNE:
 		args.u32.arg0 = 3;
 		fn = 0x65;
 		break;
-	case CODENAME_SUMMITRIDGE:
-	case CODENAME_WHITEHAVEN:
-	case CODENAME_NAPLES:
-		fn = 0x0a;
-		break;
-	case CODENAME_COLFAX:
-	case CODENAME_PINNACLERIDGE:
+	case CODENAME_DALI:
 	case CODENAME_PICASSO:
-	case CODENAME_FIREFLIGHT:
 	case CODENAME_RAVENRIDGE:
 	case CODENAME_RAVENRIDGE2:
-	case CODENAME_DALI:
+	case CODENAME_FIREFLIGHT:
 		args.u32.arg0 = 3;
 		fn = 0x3d;
 		break;
 	default:
 		return RYZEN_SMU_UNSUPPORTED;
 	}
-	return send_command(handle, MAILBOX_TYPE_RSMU, fn, &args);
+	return send_command(handle, fn, &args);
 }
 
 ry_handle_t* ryzen_smu_init(struct wr0_drv_t* drv_handle, struct cpu_id_t* id)
@@ -860,7 +803,7 @@ ry_handle_t* ryzen_smu_init(struct wr0_drv_t* drv_handle, struct cpu_id_t* id)
 	if ((handle->pci_id & 0xFFFF) != 0x1022)
 		goto fail;
 
-	if (get_mailbox_addr(handle) != RYZEN_SMU_OK)
+	if (get_rsmu_addr(handle) != RYZEN_SMU_OK)
 		goto fail;
 
 	if (get_smu_version(handle) != RYZEN_SMU_OK)
