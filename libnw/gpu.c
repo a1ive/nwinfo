@@ -97,6 +97,8 @@ PNODE NW_Gpu(VOID)
 		NWL_NodeAttrSet(gpu, "Device", info.Device[i].Name, 0);
 		NWL_NodeAttrSetf(gpu, "Location", NAFLG_FMT_NEED_QUOTE, "Bus %u, Device %u, Function %u",
 			info.Device[i].PciBus, info.Device[i].PciDevice, info.Device[i].PciFunction);
+		NWL_NodeAttrSetf(gpu, "PnP ID", 0, "PCI\\VEN_%04X&DEV_%04X&SUBSYS_%08X&REV_%02X",
+			info.Device[i].VendorId, info.Device[i].DeviceId, info.Device[i].Subsys, info.Device[i].RevId);
 
 		NWL_NodeAttrSetf(gpu, "GPU Utilization", 0, "%.1f%%", info.Device[i].UsagePercent);
 		NWL_NodeAttrSetf(gpu, "Temperature (C)", NAFLG_FMT_NUMERIC, "%.1f", info.Device[i].Temperature);

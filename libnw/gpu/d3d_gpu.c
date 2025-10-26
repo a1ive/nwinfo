@@ -6,8 +6,11 @@
 #include <stdbool.h>
 #include <windows.h>
 #include <d3dkmthk.h>
+#include <dxgi.h>
 #include "gpu.h"
 #include "../utils.h"
+
+#pragma comment(lib, "dxguid.lib")
 
 #define GDID3D "D3DKMT"
 
@@ -74,6 +77,49 @@ is_duplicated_gpu(PNWLIB_GPU_INFO info, D3DKMT_ADAPTERADDRESS* bdf, D3DKMT_DEVIC
 	return FALSE;
 }
 
+static void
+get_ids_from_dxgi(LUID* luid, D3DKMT_DEVICE_IDS* ids)
+{
+	HMODULE dxgi;
+	HRESULT(WINAPI * pfn_create_factory)(REFIID, void**);
+	IDXGIFactory* factory;
+	IDXGIAdapter* adapter;
+
+	dxgi = LoadLibraryW(L"dxgi.dll");
+	if (dxgi == NULL)
+		return;
+	pfn_create_factory = (void*)GetProcAddress(dxgi, "CreateDXGIFactory");
+	if (pfn_create_factory == NULL)
+		goto fail;
+	if (FAILED(pfn_create_factory(&IID_IDXGIFactory, (void**)&factory)))
+		goto fail;
+
+	for (UINT i = 0; ; i++)
+	{
+		DXGI_ADAPTER_DESC desc;
+		if (FAILED(factory->lpVtbl->EnumAdapters(factory, i, &adapter)))
+			break;
+		HRESULT hr = adapter->lpVtbl->GetDesc(adapter, &desc);
+		adapter->lpVtbl->Release(adapter);
+		if (FAILED(hr))
+			continue;
+		if (memcmp(luid, &desc.AdapterLuid, sizeof(LUID)) == 0)
+		{
+			GPU_DBG(GDID3D, "Found adapter in DXGI adapter %u", i);
+			ids->VendorID = desc.VendorId;
+			ids->DeviceID = desc.DeviceId;
+			ids->SubSystemID = desc.SubSysId;
+			ids->RevisionID = desc.Revision;
+			break;
+		}
+	}
+	factory->lpVtbl->Release(factory);
+
+fail:
+	if (dxgi)
+		FreeLibrary(dxgi);
+}
+
 static void* d3d_gpu_init(PNWLIB_GPU_INFO info)
 {
 	struct D3D_GPU_CTX* ctx = calloc(1, sizeof(struct D3D_GPU_CTX));
@@ -124,30 +170,28 @@ static void* d3d_gpu_init(PNWLIB_GPU_INFO info)
 		ctx->Result = query_adapter_info(ctx, gpu, KMTQAITYPE_ADAPTERADDRESS, &gpu->Bdf, sizeof(D3DKMT_ADAPTERADDRESS));
 		if (!NT_SUCCESS(ctx->Result))
 			continue;
-		if (gpu->Bdf.BusNumber == 0xFFFFFFFF)
-			continue;
+
 		GPU_DBG(GDID3D, "BDF %u:%u:%u", gpu->Bdf.BusNumber, gpu->Bdf.DeviceNumber, gpu->Bdf.FunctionNumber);
 
-		// TODO: KMTQAITYPE_PHYSICALADAPTERDEVICEIDS requires Windows 10 or later
-		//       Fallback to DXGI on Windows 7/8/8.1
-		query_adapter_info(ctx, gpu, KMTQAITYPE_PHYSICALADAPTERDEVICEIDS, &gpu->DeviceIds, sizeof(D3DKMT_QUERY_DEVICE_IDS));
-#if 0
+		// KMTQAITYPE_PHYSICALADAPTERDEVICEIDS requires Windows 10 or later
+		ctx->Result = query_adapter_info(ctx, gpu, KMTQAITYPE_PHYSICALADAPTERDEVICEIDS, &gpu->DeviceIds, sizeof(D3DKMT_QUERY_DEVICE_IDS));
+		if (!NT_SUCCESS(ctx->Result))
+			get_ids_from_dxgi(&gpu->OpenAdapter.AdapterLuid, &gpu->DeviceIds.DeviceIds);
+
 		if (gpu->DeviceIds.DeviceIds.VendorID == 0x1414)
 		{
 			GPU_DBG(GDID3D, "Skipping Microsoft Device %s", gpu->Name);
 			continue;
 		}
-#endif
 
 		// KMTQAITYPE_ADAPTERTYPE requires Windows 8 or later
 		query_adapter_info(ctx, gpu, KMTQAITYPE_ADAPTERTYPE, &gpu->AdapterType, sizeof(D3DKMT_ADAPTERTYPE));
-#if 0
 		if (gpu->AdapterType.SoftwareDevice)
 		{
 			GPU_DBG(GDID3D, "Skipping software adapter %s", gpu->Name);
 			continue;
 		}
-#endif
+
 		if (is_duplicated_gpu(info, &gpu->Bdf, &gpu->DeviceIds.DeviceIds))
 		{
 			GPU_DBG(GDID3D, "Skipping duplicated adapter [%04X-%04X SUBSYS %08X REV %02X ] %s",
