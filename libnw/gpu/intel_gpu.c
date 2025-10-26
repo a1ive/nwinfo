@@ -70,35 +70,37 @@ static void* igcl_gpu_init(PNWLIB_GPU_INFO info)
 
 	for (uint32_t i = 0; i < ctx->AdapterCount; i++)
 	{
-		ctx->List[i].Props.pDeviceID = &ctx->List[i].Luid;
-		ctx->List[i].Props.Size = sizeof(ctl_device_adapter_properties_t);
-		ctx->List[i].Props.device_id_size = sizeof(LUID);
-		ctx->List[i].Props.Version = 2;
-		ctx->Result = ctlGetDeviceProperties(ctx->Devices[i], &ctx->List[i].Props);
+		struct INTEL_GPU_DATA* gpu = &ctx->List[i];
+		gpu->Props.pDeviceID = &gpu->Luid;
+		gpu->Props.Size = sizeof(ctl_device_adapter_properties_t);
+		gpu->Props.device_id_size = sizeof(LUID);
+		gpu->Props.Version = 2;
+		ctx->Result = ctlGetDeviceProperties(ctx->Devices[i], &gpu->Props);
 		GPU_DBG(IGCL, "GetDeviceProperties [%u] %X", i, ctx->Result);
 		if (ctx->Result != CTL_RESULT_SUCCESS)
 			continue;
 
-		if (ctx->List[i].Props.device_type != CTL_DEVICE_TYPE_GRAPHICS
-			|| ctx->List[i].Props.pci_vendor_id != 0x8086)
+		if (gpu->Props.device_type != CTL_DEVICE_TYPE_GRAPHICS
+			|| gpu->Props.pci_vendor_id != 0x8086)
 		{
-			GPU_DBG(IGCL, "Skip [%u] TYPE %u VID %04X", i, ctx->List[i].Props.device_type, ctx->List[i].Props.pci_vendor_id);
+			GPU_DBG(IGCL, "Skip [%u] TYPE %u VID %04X", i, gpu->Props.device_type, gpu->Props.pci_vendor_id);
 			continue;
 		}
 
-		ctx->List[i].Valid = TRUE;
-		GPU_DBG(IGCL, "Found Intel GPU %s (%04X-%04X)",
-			ctx->List[i].Props.name, ctx->List[i].Props.pci_vendor_id, ctx->List[i].Props.pci_device_id);
+		gpu->Valid = TRUE;
+		GPU_DBG(IGCL, "Found Intel GPU %s (%04X-%04X %04X%04X %02X)",
+			gpu->Props.name, gpu->Props.pci_vendor_id, gpu->Props.pci_device_id,
+			gpu->Props.pci_subsys_id, gpu->Props.pci_subsys_vendor_id, gpu->Props.rev_id);
 
-		ctx->List[i].Pci.Size = sizeof(ctl_pci_properties_t);
-		ctx->Result = ctlPciGetProperties(ctx->Devices[i], &ctx->List[i].Pci);
+		gpu->Pci.Size = sizeof(ctl_pci_properties_t);
+		ctx->Result = ctlPciGetProperties(ctx->Devices[i], &gpu->Pci);
 		GPU_DBG(IGCL, "BDF %u:%u:%u",
-			ctx->List[i].Pci.address.bus, ctx->List[i].Pci.address.device, ctx->List[i].Pci.address.function);
+			gpu->Pci.address.bus, gpu->Pci.address.device, gpu->Pci.address.function);
 
-		ctx->Result = ctlEnumMemoryModules(ctx->Devices[i], &ctx->List[i].MemoryCount, NULL);
-		GPU_DBG(IGCL, "%u memory handle(s)", ctx->List[i].MemoryCount);
-		if (ctx->List[i].MemoryCount > MAX_MEM_HANDLE)
-			ctx->List[i].MemoryCount = MAX_MEM_HANDLE;
+		ctx->Result = ctlEnumMemoryModules(ctx->Devices[i], &gpu->MemoryCount, NULL);
+		GPU_DBG(IGCL, "%u memory handle(s)", gpu->MemoryCount);
+		if (gpu->MemoryCount > MAX_MEM_HANDLE)
+			gpu->MemoryCount = MAX_MEM_HANDLE;
 	}
 	return ctx;
 
@@ -127,20 +129,21 @@ static uint32_t igcl_gpu_get(void* data, NWLIB_GPU_DEV* dev, uint32_t dev_count)
 	{
 		if (count >= dev_count)
 			break;
-		if (ctx->List[i].Valid == FALSE)
+		struct INTEL_GPU_DATA* gpu = &ctx->List[i];
+		if (gpu->Valid == FALSE)
 			continue;
 
 		NWLIB_GPU_DEV* info = &dev[count];
 		count++;
 
-		strcpy_s(info->Name, MAX_GPU_STR, ctx->List[i].Props.name);
-		info->VendorId = ctx->List[i].Props.pci_vendor_id;
-		info->DeviceId = ctx->List[i].Props.pci_device_id;
-		info->Subsys = ctx->List[i].Props.pci_subsys_id;
-		info->RevId = ctx->List[i].Props.rev_id;
-		info->PciBus = ctx->List[i].Pci.address.bus;
-		info->PciDevice = ctx->List[i].Pci.address.device;
-		info->PciFunction = ctx->List[i].Pci.address.function;
+		strcpy_s(info->Name, MAX_GPU_STR, gpu->Props.name);
+		info->VendorId = gpu->Props.pci_vendor_id;
+		info->DeviceId = gpu->Props.pci_device_id;
+		info->Subsys = (((uint32_t)gpu->Props.pci_subsys_id) << 16) | gpu->Props.pci_subsys_vendor_id;
+		info->RevId = gpu->Props.rev_id;
+		info->PciBus = gpu->Pci.address.bus;
+		info->PciDevice = gpu->Pci.address.device;
+		info->PciFunction = gpu->Pci.address.function;
 
 		ctx->Result = ctlPowerTelemetryGet(ctx->Devices[i], &ctx->Pt);
 		if (ctx->Result != CTL_RESULT_SUCCESS)
@@ -151,7 +154,7 @@ static uint32_t igcl_gpu_get(void* data, NWLIB_GPU_DEV* dev, uint32_t dev_count)
 		else if (ctx->Pt.gpuVrTemp.bSupported)
 			info->Temperature = ctx->Pt.gpuVrTemp.value.datadouble;
 
-		double time_stamp = ctx->List[i].TimeStamp;
+		double time_stamp = gpu->TimeStamp;
 		double energy_counter = info->Energy;
 		double usage_counter = info->UsageCounter;
 		if (ctx->Pt.timeStamp.bSupported)
@@ -162,7 +165,7 @@ static uint32_t igcl_gpu_get(void* data, NWLIB_GPU_DEV* dev, uint32_t dev_count)
 			energy_counter = ctx->Pt.gpuEnergyCounter.value.datadouble;
 		if (ctx->Pt.globalActivityCounter.bSupported)
 			usage_counter = ctx->Pt.globalActivityCounter.value.datadouble;
-		double time_diff = time_stamp - ctx->List[i].TimeStamp;
+		double time_diff = time_stamp - gpu->TimeStamp;
 		double energy_diff = energy_counter - info->Energy;
 		double usage_diff = usage_counter - info->UsageCounter;
 		if (time_diff > 0.0)
@@ -172,7 +175,7 @@ static uint32_t igcl_gpu_get(void* data, NWLIB_GPU_DEV* dev, uint32_t dev_count)
 			if (usage_diff > 0.0)
 				info->UsagePercent = usage_diff / time_diff * 100.0;
 		}
-		ctx->List[i].TimeStamp = time_stamp;
+		gpu->TimeStamp = time_stamp;
 		info->Energy = energy_counter;
 		info->UsageCounter = usage_counter;
 
@@ -182,7 +185,7 @@ static uint32_t igcl_gpu_get(void* data, NWLIB_GPU_DEV* dev, uint32_t dev_count)
 		if (ctx->Pt.gpuCurrentClockFrequency.bSupported)
 			info->Frequency = ctx->Pt.gpuCurrentClockFrequency.value.datadouble;
 		else
-			info->Frequency = ctx->List[i].Props.Frequency;
+			info->Frequency = gpu->Props.Frequency;
 
 		for (int j = 0; j < CTL_FAN_COUNT; j++)
 		{
@@ -193,16 +196,16 @@ static uint32_t igcl_gpu_get(void* data, NWLIB_GPU_DEV* dev, uint32_t dev_count)
 			}
 		}
 
-		ctx->Result = ctlEnumMemoryModules(ctx->Devices[i], &ctx->List[i].MemoryCount, ctx->List[i].Memory);
+		ctx->Result = ctlEnumMemoryModules(ctx->Devices[i], &gpu->MemoryCount, gpu->Memory);
 		if (ctx->Result == CTL_RESULT_SUCCESS)
 		{
 			ctl_mem_state_t state = { 0 };
 			state.Size = sizeof(ctl_mem_state_t);
 			info->TotalMemory = 0;
 			info->FreeMemory = 0;
-			for (uint32_t j = 0; j < ctx->List[i].MemoryCount; j++)
+			for (uint32_t j = 0; j < gpu->MemoryCount; j++)
 			{
-				ctx->Result = ctlMemoryGetState(ctx->List[i].Memory[j], &state);
+				ctx->Result = ctlMemoryGetState(gpu->Memory[j], &state);
 				if (ctx->Result != CTL_RESULT_SUCCESS)
 					continue;
 				info->FreeMemory += state.free;

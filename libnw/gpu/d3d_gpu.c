@@ -177,6 +177,13 @@ static void* d3d_gpu_init(PNWLIB_GPU_INFO info)
 		ctx->Result = query_adapter_info(ctx, gpu, KMTQAITYPE_PHYSICALADAPTERDEVICEIDS, &gpu->DeviceIds, sizeof(D3DKMT_QUERY_DEVICE_IDS));
 		if (!NT_SUCCESS(ctx->Result))
 			get_ids_from_dxgi(&gpu->OpenAdapter.AdapterLuid, &gpu->DeviceIds.DeviceIds);
+		else
+		{
+			gpu->DeviceIds.DeviceIds.SubSystemID <<= 16;
+			gpu->DeviceIds.DeviceIds.SubSystemID |= gpu->DeviceIds.DeviceIds.SubVendorID;
+		}
+		GPU_DBG(GDID3D, "Device ID [%04X-%04X SUBSYS %08X REV %02X ]", gpu->DeviceIds.DeviceIds.VendorID,
+			gpu->DeviceIds.DeviceIds.DeviceID, gpu->DeviceIds.DeviceIds.SubSystemID, gpu->DeviceIds.DeviceIds.RevisionID);
 
 		if (gpu->DeviceIds.DeviceIds.VendorID == 0x1414)
 		{
