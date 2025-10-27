@@ -223,7 +223,7 @@ fail:
 	return NULL;
 }
 
-static uint32_t dxgi_gpu_get(void* data, NWLIB_GPU_DEV* dev, uint32_t dev_count)
+static uint32_t d3d_gpu_get(void* data, NWLIB_GPU_DEV* dev, uint32_t dev_count)
 {
 	uint32_t count = 0;
 	struct D3D_GPU_CTX* ctx = data;
@@ -265,7 +265,7 @@ static uint32_t dxgi_gpu_get(void* data, NWLIB_GPU_DEV* dev, uint32_t dev_count)
 	return count;
 }
 
-static void dxgi_gpu_free(void* data)
+static void d3d_gpu_free(void* data)
 {
 	struct D3D_GPU_CTX* ctx = data;
 	if (ctx == NULL)
@@ -280,10 +280,10 @@ static void dxgi_gpu_free(void* data)
 	free(ctx);
 }
 
-NWLIB_GPU_DRV gpu_drv_dxgi =
+NWLIB_GPU_DRV gpu_drv_d3d =
 {
 	.Name = GDID3D,
 	.Init = d3d_gpu_init,
-	.GetInfo = dxgi_gpu_get,
-	.Free = dxgi_gpu_free,
+	.GetInfo = d3d_gpu_get,
+	.Free = d3d_gpu_free,
 };
