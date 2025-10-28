@@ -11,7 +11,6 @@
 * Obtain detailed information about SMBIOS, CPUID, S.M.A.R.T., PCI, EDID, and more.
 * Support exporting in JSON, YAML, and HTML formats.
 * Gathers information directly without relying on WMI.
-* Compatible with Windows XP.
 
 ## Download
 
@@ -28,13 +27,27 @@ You can download the latest version of the binary from [GitHub Releases](https:/
 .\nwinfo.exe OPTIONS
 ```
 
-### Example Command
+### Example Commands
 
-```txt
-.\nwinfo.exe --format=json --output=report.json --cp=UTF8 --sys --disk --smbios --net
+```bat
+.\nwinfo.exe --format=json --output=report.json --cp=UTF8 --sys --disk
 ```
 
-This command exports system, disk, SMBIOS, and network information to `report.json` in JSON format.
+Exports system and disk information to `report.json` in JSON format.
+
+```bat
+.\nwinfo.exe --pci=03
+```
+
+Prints information about all PCI devices in the class code `03` (Display Controllers).
+
+```bat
+.\nwinfo.exe --format=html --output=report.html --net=active,phys,ipv4
+```
+
+Exports active physical network interfaces with IPv4 addresses to `report.html` in HTML format.
+
+<div style="page-break-after: always;"></div>
 
 ### General Options
 
@@ -60,6 +73,8 @@ This command exports system, disk, SMBIOS, and network information to `report.js
 
 - --cpu[=`FILE`]  
   Print CPUID info.  
+  Driver is required to access sensors (e.g. temperature).  
+  Intel, AMD and VIA/Zhaoxin CPUs are supported.  
   `FILE` specifies the file name of the CPUID dump.  
 - --net[=`FLAG,...`]  
   Print network info.  
@@ -74,6 +89,7 @@ This command exports system, disk, SMBIOS, and network information to `report.js
     `IPV6`   Show IPv6 addresses only.  
 - --acpi[=`SGN`]  
   Print ACPI info.  
+  Driver is required to access some ACPI tables.  
   `SGN` specifies the signature of the ACPI table, e.g. `FACP` (Fixed ACPI Description Table).  
 - --smbios[=`TYPE`]  
   Print SMBIOS info.  
@@ -116,7 +132,9 @@ This command exports system, disk, SMBIOS, and network information to `report.js
  - --audio  
    Print audio devices.  
  - --gpu  
-   Print GPU usage.  
+   Print GPU utilization and sensors (e.g. temperature).  
+   GPU drivers are required to access these info.  
+   nVidia (NVAPI), AMD (ADL2) and Intel (IGCL) are supported.  
  - --device[=`TYPE`]  
    Print device tree.  
    `TYPE` specifies the type of the devices, e.g. `ACPI`, `SWD`, `PCI` or `USB`.  
@@ -148,7 +166,7 @@ This project is compatible with Windows XP using [YY-Thunks](https://github.com/
 
 ## Supported Drivers
 
-This project searches for and loads drivers from the same directory in the following order: **PawnIO -> HwRwDrv -> WinRing0**.
+This project searches for and loads drivers in the following order: **HwRwDrv -> WinRing0 -> PawnIO**.
 
 | Driver     | Author | License | Notes |
 |------------|--------|---------|-------|
@@ -166,10 +184,10 @@ This project is licensed under the [Unlicense](https://unlicense.org/) license.
 
 * [libcpuid](https://libcpuid.sourceforge.net)
 * [SysInv](https://github.com/cavaliercoder/sysinv)
-* [DumpSMBIOS](https://github.com/KunYi/DumpSMBIOS)
 * [CrystalDiskInfo](https://github.com/hiyohiyo/CrystalDiskInfo)
 * [Nuklear](https://github.com/Immediate-Mode-UI/Nuklear)
 * [hwdata](https://github.com/vcrhonek/hwdata)
 * [Linux USB](http://www.linux-usb.org)
 * [The PCI ID Repository](https://pci-ids.ucw.cz)
-* [RyzenAdj](https://github.com/FlyGoat/RyzenAdj)
+* [edid-decode](https://git.linuxtv.org/v4l-utils.git/tree/utils/edid-decode)
+* [PawnIO](https://pawnio.eu/)

@@ -15,7 +15,6 @@
 * Obtain detailed information about SMBIOS, CPUID, S.M.A.R.T., PCI, EDID, and more.
 * Support exporting in JSON, YAML, and HTML formats.
 * Gathers information directly without relying on WMI.
-* Compatible with Windows XP.
 
 ## GUI Preview
 
@@ -29,7 +28,7 @@ For details, see [CLI (nwinfo)](./docs/README.md#cli-nwinfo) in the documentatio
 
 ## Supported Drivers
 
-This project searches for and loads drivers from the same directory in the following order: **PawnIO -> HwRwDrv -> WinRing0**.
+This project searches for and loads drivers in the following order: **HwRwDrv -> WinRing0 -> PawnIO**.
 
 | Driver     | Author | License | Notes |
 |------------|--------|---------|-------|
@@ -45,10 +44,10 @@ This project is licensed under the [Unlicense](https://unlicense.org/) license.
 
 * [libcpuid](https://libcpuid.sourceforge.net)
 * [SysInv](https://github.com/cavaliercoder/sysinv)
-* [DumpSMBIOS](https://github.com/KunYi/DumpSMBIOS)
 * [CrystalDiskInfo](https://github.com/hiyohiyo/CrystalDiskInfo)
 * [Nuklear](https://github.com/Immediate-Mode-UI/Nuklear)
 * [hwdata](https://github.com/vcrhonek/hwdata)
 * [Linux USB](http://www.linux-usb.org)
 * [The PCI ID Repository](https://pci-ids.ucw.cz)
-* [RyzenAdj](https://github.com/FlyGoat/RyzenAdj)
+* [edid-decode](https://git.linuxtv.org/v4l-utils.git/tree/utils/edid-decode)
+* [PawnIO](https://pawnio.eu/)
