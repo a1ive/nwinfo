@@ -7,6 +7,7 @@
 #include <winerror.h>
 #include <pathcch.h>
 #include <winternl.h>
+#include <shlobj.h>
 #include "winring0.h"
 #include "winring0_priv.h"
 
@@ -127,10 +128,20 @@ static BOOL find_driver(struct wr0_drv_t* driver, LPCWSTR name, LPCWSTR id, LPCW
 {
 	HANDLE hFile = INVALID_HANDLE_VALUE;
 
-	GetModuleFileNameW(NULL, driver->driver_path, MAX_PATH);
+	if (wcscmp(id, PAWNIO_ID) == 0)
+	{
+		// Program Files\\PawnIO\\PawnIO.sys
+		SHGetFolderPathW(NULL, CSIDL_PROGRAM_FILES, NULL, 0, driver->driver_path);
+		PathCchAppend(driver->driver_path, MAX_PATH, PAWNIO_ID);
+		PathCchAppend(driver->driver_path, MAX_PATH, name);
+	}
+	else
+	{
+		GetModuleFileNameW(NULL, driver->driver_path, MAX_PATH);
+		PathCchRemoveFileSpec(driver->driver_path, MAX_PATH);
+		PathCchAppend(driver->driver_path, MAX_PATH, name);
+	}
 
-	PathCchRemoveFileSpec(driver->driver_path, MAX_PATH);
-	PathCchAppend(driver->driver_path, MAX_PATH, name);
 	hFile = CreateFileW(driver->driver_path, GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING, 0, NULL);
 	if (hFile != INVALID_HANDLE_VALUE)
 	{
@@ -243,8 +254,17 @@ struct wr0_drv_t* WR0_OpenDriver(int debug)
 	DWORD ver = 0;
 	if (is_x64())
 	{
-
-		drv = open_driver_real(PAWNIO_NAME_X64, PAWNIO_ID, WR0_DRIVER_PAWNIO, PAWNIO_OBJ, debug);
+		ver = get_driver_version(HWRWDRV_NAME_X64);
+		if (ver >= HWRWDRV_MIN_VER)
+			drv = open_driver_real(HWRWDRV_NAME_X64, HWRWDRV_ID, WR0_DRIVER_HWRWDRV, HWRWDRV_OBJ, debug);
+		else
+			drv = open_driver_real(HWRWDRV_NAME_X64, HWRWDRV_ID, WR0_DRIVER_WINRING0, HWRWDRV_OBJ, debug);
+		if (drv)
+			return drv;
+		drv = open_driver_real(WINRING0_NAME_X64, WINRING0_ID, WR0_DRIVER_WINRING0, WINRING0_OBJ, debug);
+		if (drv)
+			return drv;
+		drv = open_driver_real(PAWNIO_NAME, PAWNIO_ID, WR0_DRIVER_PAWNIO, PAWNIO_OBJ, debug);
 		if (drv)
 		{
 			load_pawnio(&drv->pio_amd0f, L"AMDFamily0F.bin", debug);
@@ -254,15 +274,6 @@ struct wr0_drv_t* WR0_OpenDriver(int debug)
 			load_pawnio(&drv->pio_rysmu, L"RyzenSMU.bin", debug);
 			return drv;
 		}
-
-		ver = get_driver_version(HWRWDRV_NAME_X64);
-		if (ver >= HWRWDRV_MIN_VER)
-			drv = open_driver_real(HWRWDRV_NAME_X64, HWRWDRV_ID, WR0_DRIVER_HWRWDRV, HWRWDRV_OBJ, debug);
-		else
-			drv = open_driver_real(HWRWDRV_NAME_X64, HWRWDRV_ID, WR0_DRIVER_WINRING0, HWRWDRV_OBJ, debug);
-		if (drv)
-			return drv;
-		drv = open_driver_real(WINRING0_NAME_X64, WINRING0_ID, WR0_DRIVER_WINRING0, WINRING0_OBJ, debug);
 	}
 	else
 	{

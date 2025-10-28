@@ -206,7 +206,6 @@ typedef struct _OLS_WRITE_MEMORY_INPUT
 // PawnIO.sys
 #define PAWNIO_ID							L"PawnIO"
 #define PAWNIO_NAME							L"PawnIO.sys" // PawnIO.sys for x86 is not provided
-#define PAWNIO_NAME_X64						L"PawnIOx64.sys"
 #define PAWNIO_OBJ							L"\\\\.\\PawnIO"
 
 // PawnIO
