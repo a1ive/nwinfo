@@ -124,11 +124,13 @@
     <None Include="README.md" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="shmem.h" />
     <ClInclude Include="winring0.h" />
     <ClInclude Include="winring0_priv.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="mutexes.c" />
+    <ClCompile Include="shmem.c" />
     <ClCompile Include="winring0.c" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

@@ -185,6 +185,9 @@
     <ClCompile Include="gpu\d3d_gpu.c">
       <Filter>gpu</Filter>
     </ClCompile>
+    <ClCompile Include="gpu\gpuz_shm.c">
+      <Filter>gpu</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
