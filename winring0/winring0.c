@@ -61,6 +61,9 @@ static BOOL load_driver(struct wr0_drv_t* drv)
 {
 	BOOL bServiceCreated = FALSE;
 
+	if (drv->driver_type == WR0_DRIVER_PAWNIO)
+		return TRUE;
+
 	drv->scManager = OpenSCManagerW(NULL, NULL, SC_MANAGER_ALL_ACCESS);
 	if (drv->scManager == NULL)
 		return FALSE;
@@ -858,6 +861,7 @@ int WR0_CloseDriver(struct wr0_drv_t* drv)
 	SERVICE_STATUS srvStatus = { 0 };
 	if (drv == NULL)
 		return 0;
+
 	if (drv->driver_type == WR0_DRIVER_PAWNIO)
 	{
 		unload_pawnio(&drv->pio_amd0f);
@@ -865,7 +869,10 @@ int WR0_CloseDriver(struct wr0_drv_t* drv)
 		unload_pawnio(&drv->pio_amd17);
 		unload_pawnio(&drv->pio_intel);
 		unload_pawnio(&drv->pio_rysmu);
+		free(drv);
+		return 0;
 	}
+
 	if (drv->hhDriver && drv->hhDriver != INVALID_HANDLE_VALUE)
 	{
 		CloseHandle(drv->hhDriver);
