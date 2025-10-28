@@ -82,6 +82,8 @@ gnwinfo_ctx_update(WPARAM wparam)
 		g_ctx.smb = NW_NetShare();
 		break;
 	case IDT_TIMER_DISPLAY:
+		NWL_FreeGpu(&g_ctx.gpu_info);
+		NWL_InitGpu(&g_ctx.gpu_info);
 		if (g_ctx.edid)
 			NWL_NodeFree(g_ctx.edid, 1);
 		g_ctx.edid = NW_Edid();
@@ -157,14 +159,12 @@ gnwinfo_ctx_init(HINSTANCE inst, HWND wnd, struct nk_context* ctx, float width, 
 	else
 		g_ctx.cpu_info = NULL;
 
-	NWL_InitGpu(&g_ctx.gpu_info);
-
 	NWL_GetHostname(g_ctx.sys_hostname);
 
+	gnwinfo_ctx_update(IDT_TIMER_DISPLAY);
 	gnwinfo_ctx_update(IDT_TIMER_1S);
 	gnwinfo_ctx_update(IDT_TIMER_1M);
 	gnwinfo_ctx_update(IDT_TIMER_DISK);
-	gnwinfo_ctx_update(IDT_TIMER_DISPLAY);
 	gnwinfo_ctx_update(IDT_TIMER_SMB);
 
 	for (WORD i = 0; i < sizeof(g_ctx.image) / sizeof(g_ctx.image[0]); i++)

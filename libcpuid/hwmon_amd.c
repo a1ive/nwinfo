@@ -288,6 +288,7 @@ fail:
 static int get_temperature(struct msr_info_t* info)
 {
 	float value = 0.0f;
+	WR0_WaitPciBus(500);
 	ry_handle_t* ry = ryzen_smu_init(info->handle, info->id);
 	if (ry == NULL)
 		goto fail;
@@ -298,10 +299,12 @@ static int get_temperature(struct msr_info_t* info)
 	if (ryzen_smu_get_core_temperature(ry, 0, &value) != RYZEN_SMU_OK)
 		goto fail;
 	ryzen_smu_free(ry);
+	WR0_ReleasePciBus();
 	return (int)value;
 fail:
 	if (ry != NULL)
 		ryzen_smu_free(ry);
+	WR0_ReleasePciBus();
 	return CPU_INVALID_VALUE;
 }
 
@@ -496,6 +499,7 @@ fail:
 static double get_pkg_pl1(struct msr_info_t* info)
 {
 	float value = 0.0f;
+	WR0_WaitPciBus(500);
 	ry_handle_t* ry = ryzen_smu_init(info->handle, info->id);
 	if (ry == NULL)
 		goto fail;
@@ -506,16 +510,19 @@ static double get_pkg_pl1(struct msr_info_t* info)
 	if (ryzen_smu_get_slow_limit(ry, &value) != RYZEN_SMU_OK)
 		goto fail;
 	ryzen_smu_free(ry);
+	WR0_ReleasePciBus();
 	return (double)value;
 fail:
 	if (ry != NULL)
 		ryzen_smu_free(ry);
+	WR0_ReleasePciBus();
 	return (double)CPU_INVALID_VALUE / 100;
 }
 
 static double get_pkg_pl2(struct msr_info_t* info)
 {
 	float value = 0.0f;
+	WR0_WaitPciBus(500);
 	ry_handle_t* ry = ryzen_smu_init(info->handle, info->id);
 	if (ry == NULL)
 		goto fail;
@@ -526,10 +533,12 @@ static double get_pkg_pl2(struct msr_info_t* info)
 	if (ryzen_smu_get_fast_limit(ry, &value) != RYZEN_SMU_OK)
 		goto fail;
 	ryzen_smu_free(ry);
+	WR0_ReleasePciBus();
 	return (double)value;
 fail:
 	if (ry != NULL)
 		ryzen_smu_free(ry);
+	WR0_ReleasePciBus();
 	return (double)CPU_INVALID_VALUE / 100;
 }
 
@@ -594,6 +603,7 @@ fail:
 static int get_igpu_temperature(struct msr_info_t* info)
 {
 	float value = 0.0f;
+	WR0_WaitPciBus(500);
 	ry_handle_t* ry = ryzen_smu_init(info->handle, info->id);
 	if (ry == NULL)
 		goto fail;
@@ -604,10 +614,12 @@ static int get_igpu_temperature(struct msr_info_t* info)
 	if (ryzen_smu_get_apu_temperature(ry, &value) != RYZEN_SMU_OK)
 		goto fail;
 	ryzen_smu_free(ry);
+	WR0_ReleasePciBus();
 	return (int)value;
 fail:
 	if (ry != NULL)
 		ryzen_smu_free(ry);
+	WR0_ReleasePciBus();
 	return CPU_INVALID_VALUE;
 }
 
