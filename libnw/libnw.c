@@ -27,6 +27,15 @@ VOID NW_Init(PNWLIB_CONTEXT pContext)
 	GetNativeSystemInfo(&NWLC->NwSi);
 	NWLC->NwRoot = NWL_NodeAlloc("NWinfo", 0);
 	WR0_OpenMutexes();
+
+	NWLC->ErrLog = NULL;
+	if (NWL_IsAdmin() != TRUE)
+		NWL_NodeAppendMultiSz(&NWLC->ErrLog, "Administrator required");
+	if (NWL_ObtainPrivileges(SE_SYSTEM_ENVIRONMENT_NAME) != ERROR_SUCCESS)
+		NWL_NodeAppendMultiSz(&NWLC->ErrLog, "SeSystemEnvironmentPrivilege required");
+	if (NWL_ObtainPrivileges(SE_LOAD_DRIVER_NAME) != ERROR_SUCCESS)
+		NWL_NodeAppendMultiSz(&NWLC->ErrLog, "SeLoadDriverPrivilege required");
+
 	NWLC->NwDrv = WR0_OpenDriver(NWLC->Debug);
 	NWLC->NwRsdp = NWL_GetRsdp();
 	NWLC->NwRsdt = NWL_GetRsdt();
@@ -40,11 +49,6 @@ VOID NW_Init(PNWLIB_CONTEXT pContext)
 		NWL_ErrExit(ERROR_OUTOFMEMORY, "Cannot allocate memory");
 	NWLC->NwSmartInit = FALSE;
 	NWLC->NwUnits = NWL_HS_BYTE;
-	NWLC->ErrLog = NULL;
-	if (NWL_IsAdmin() != TRUE)
-		NWL_NodeAppendMultiSz(&NWLC->ErrLog, "Administrator required");
-	if (NWL_ObtainPrivileges(SE_SYSTEM_ENVIRONMENT_NAME) != ERROR_SUCCESS)
-		NWL_NodeAppendMultiSz(&NWLC->ErrLog, "SeSystemEnvironmentPrivilege required");
 }
 
 VOID NW_Print(LPCSTR lpFileName)
