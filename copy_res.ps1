@@ -2,44 +2,25 @@
 
 param (
 	[Parameter(Mandatory=$true, HelpMessage="Target folder path")]
-	[string]$TargetFolder,
-
-	[Parameter(Mandatory=$true, HelpMessage="The build flavor. Can be 'hwrwdrv', 'pawnio' or 'winring0'")]
-	[ValidateSet("hwrwdrv", "pawnio", "winring0")]
-	[string]$Flavor
+	[string]$TargetFolder
 )
 
 # Define the list of files to copy or download
 $FilesToCopy = @(
 	# Common files for all flavors
 	"LICENSE",
+	"README.pdf",
 	"hw_report.ps1",
-	"libnw\jep106.ids"
+	"libnw\jep106.ids",
+	"gnwinfo\gnwinfo.ini",
+	"winring0\HwRwDrv.sys",
+	"winring0\HwRwDrvx64.sys",
+	"winring0\pawn\AMDFamily0F.bin",
+	"winring0\pawn\AMDFamily10.bin",
+	"winring0\pawn\AMDFamily17.bin",
+	"winring0\pawn\IntelMSR.bin",
+	"winring0\pawn\RyzenSMU.bin"
 )
-
-# Add flavor-specific files
-if ($Flavor -eq "hwrwdrv") {
-	$FilesToCopy += @(
-		"winring0\HwRwDrv.sys",
-		"winring0\HwRwDrvx64.sys"
-	)
-}
-elseif ($Flavor -eq "pawnio") {
-	$FilesToCopy += @(
-		"winring0\PawnIOx64.sys",
-		"winring0\pawn\AMDFamily0F.bin",
-		"winring0\pawn\AMDFamily10.bin",
-		"winring0\pawn\AMDFamily17.bin",
-		"winring0\pawn\IntelMSR.bin",
-		"winring0\pawn\RyzenSMU.bin"
-	)
-}
-elseif ($Flavor -eq "winring0") {
-	$FilesToCopy += @(
-		"winring0\WinRing0.sys",
-		"winring0\WinRing0x64.sys"
-	)
-}
 
 $FilesToDownload = @(
 	"https://raw.githubusercontent.com/pciutils/pciids/master/pci.ids",

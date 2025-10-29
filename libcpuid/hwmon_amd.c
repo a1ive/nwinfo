@@ -406,8 +406,13 @@ static int amd_k10_temperature(struct msr_info_t* info)
 
 	if (smu)
 	{
-		WR0_WrPciConf32(info->handle, 0, NB_PCI_REG_ADDR_ADDR, SMU_REPORTED_TEMP_CTRL_OFFSET);
-		value = WR0_RdPciConf32(info->handle, 0, NB_PCI_REG_DATA_ADDR);
+		if (info->handle->driver_type == WR0_DRIVER_CPUZ161)
+			value = WR0_RdAmdSmn(info->handle, 0, 1, SMU_REPORTED_TEMP_CTRL_OFFSET);
+		else
+		{
+			WR0_WrPciConf32(info->handle, 0, NB_PCI_REG_ADDR_ADDR, SMU_REPORTED_TEMP_CTRL_OFFSET);
+			value = WR0_RdPciConf32(info->handle, 0, NB_PCI_REG_DATA_ADDR);
+		}
 	}
 	else
 	{
@@ -436,17 +441,21 @@ static float amd_17h_temperature(struct msr_info_t* info)
 	uint32_t temperature;
 	float offset = 0.0f;
 
-	if (info->handle->driver_type != WR0_DRIVER_PAWNIO)
+	if (info->handle->driver_type == WR0_DRIVER_CPUZ161)
 	{
-		WR0_WrPciConf32(info->handle, 0, FAMILY_17H_PCI_CONTROL_REGISTER, F17H_M01H_THM_TCON_CUR_TMP);
-		temperature = WR0_RdPciConf32(info->handle, 0, FAMILY_17H_PCI_CONTROL_REGISTER + 4);
+		temperature = WR0_RdAmdSmn(info->handle, 0, 3, F17H_M01H_THM_TCON_CUR_TMP);
 	}
-	else
+	else if (info->handle->driver_type == WR0_DRIVER_PAWNIO)
 	{
 		ULONG64 in = F17H_M01H_THM_TCON_CUR_TMP;
 		ULONG64 out = 0;
 		WR0_ExecPawn(info->handle, &info->handle->pio_amd17, "ioctl_read_smn", &in, 1, &out, 1, NULL);
 		temperature = (uint32_t)out;
+	}
+	else
+	{
+		WR0_WrPciConf32(info->handle, 0, FAMILY_17H_PCI_CONTROL_REGISTER, F17H_M01H_THM_TCON_CUR_TMP);
+		temperature = WR0_RdPciConf32(info->handle, 0, FAMILY_17H_PCI_CONTROL_REGISTER + 4);
 	}
 
 	if (strstr(info->id->brand_str, "1600X") ||

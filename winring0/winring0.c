@@ -257,6 +257,9 @@ struct wr0_drv_t* WR0_OpenDriver(int debug)
 	DWORD ver = 0;
 	if (is_x64())
 	{
+		drv = open_driver_real(CPUZDRV_NAME_X64, CPUZDRV_ID, WR0_DRIVER_CPUZ161, CPUZDRV_OBJ, debug);
+		if (drv)
+			return drv;
 		ver = get_driver_version(HWRWDRV_NAME_X64);
 		if (ver >= HWRWDRV_MIN_VER)
 			drv = open_driver_real(HWRWDRV_NAME_X64, HWRWDRV_ID, WR0_DRIVER_HWRWDRV, HWRWDRV_OBJ, debug);
@@ -280,6 +283,9 @@ struct wr0_drv_t* WR0_OpenDriver(int debug)
 	}
 	else
 	{
+		drv = open_driver_real(CPUZDRV_NAME, CPUZDRV_ID, WR0_DRIVER_CPUZ161, CPUZDRV_OBJ, debug);
+		if (drv)
+			return drv;
 		ver = get_driver_version(HWRWDRV_NAME);
 		if (ver >= HWRWDRV_MIN_VER)
 			drv = open_driver_real(HWRWDRV_NAME, HWRWDRV_ID, WR0_DRIVER_HWRWDRV, HWRWDRV_OBJ, debug);
@@ -309,6 +315,9 @@ int WR0_RdMsr(struct wr0_drv_t* drv, uint32_t msr_index, uint64_t* result)
 		break;
 	case WR0_DRIVER_HWRWDRV:
 		ctlCode = IOCTL_HRD_READ_MSR;
+		break;
+	case WR0_DRIVER_CPUZ161:
+		ctlCode = IOCTL_CPUZ_READ_MSR;
 		break;
 	default:
 		return -1;
@@ -340,6 +349,9 @@ int WR0_WrMsr(struct wr0_drv_t* drv, uint32_t msr_index, DWORD eax, DWORD edx)
 		break;
 	case WR0_DRIVER_HWRWDRV:
 		ctlCode = IOCTL_HRD_WRITE_MSR;
+		break;
+	case WR0_DRIVER_CPUZ161:
+		ctlCode = IOCTL_CPUZ_WRITE_MSR;
 		break;
 	default:
 		return -1;
@@ -374,6 +386,9 @@ uint8_t WR0_RdIo8(struct wr0_drv_t* drv, uint16_t port)
 	case WR0_DRIVER_HWRWDRV:
 		ctlCode = IOCTL_HRD_READ_IO_PORT_BYTE;
 		break;
+	case WR0_DRIVER_CPUZ161:
+		ctlCode = IOCTL_CPUZ_READ_IO_PORT_BYTE;
+		break;
 	default:
 		return 0;
 	}
@@ -401,6 +416,9 @@ uint16_t WR0_RdIo16(struct wr0_drv_t* drv, uint16_t port)
 		break;
 	case WR0_DRIVER_HWRWDRV:
 		ctlCode = IOCTL_HRD_READ_IO_PORT_WORD;
+		break;
+	case WR0_DRIVER_CPUZ161:
+		ctlCode = IOCTL_CPUZ_READ_IO_PORT_WORD;
 		break;
 	default:
 		return 0;
@@ -431,6 +449,9 @@ uint32_t WR0_RdIo32(struct wr0_drv_t* drv, uint16_t port)
 	case WR0_DRIVER_HWRWDRV:
 		ctlCode = IOCTL_HRD_READ_IO_PORT_DWORD;
 		break;
+	case WR0_DRIVER_CPUZ161:
+		ctlCode = IOCTL_CPUZ_READ_IO_PORT_DWORD;
+		break;
 	default:
 		return 0;
 	}
@@ -459,6 +480,9 @@ void WR0_WrIo8(struct wr0_drv_t* drv, uint16_t port, uint8_t value)
 		break;
 	case WR0_DRIVER_HWRWDRV:
 		ctlCode = IOCTL_HRD_WRITE_IO_PORT_BYTE;
+		break;
+	case WR0_DRIVER_CPUZ161:
+		ctlCode = IOCTL_CPUZ_WRITE_IO_PORT_BYTE;
 		break;
 	default:
 		return;
@@ -491,6 +515,9 @@ void WR0_WrIo16(struct wr0_drv_t* drv, uint16_t port, uint16_t value)
 	case WR0_DRIVER_HWRWDRV:
 		ctlCode = IOCTL_HRD_WRITE_IO_PORT_WORD;
 		break;
+	case WR0_DRIVER_CPUZ161:
+		ctlCode = IOCTL_CPUZ_WRITE_IO_PORT_WORD;
+		break;
 	default:
 		return;
 	}
@@ -521,6 +548,9 @@ void WR0_WrIo32(struct wr0_drv_t* drv, uint16_t port, uint32_t value)
 		break;
 	case WR0_DRIVER_HWRWDRV:
 		ctlCode = IOCTL_HRD_WRITE_IO_PORT_DWORD;
+		break;
+	case WR0_DRIVER_CPUZ161:
+		ctlCode = IOCTL_CPUZ_WRITE_IO_PORT_DWORD;
 		break;
 	default:
 		return;
@@ -785,6 +815,28 @@ DWORD WR0_RdMem(struct wr0_drv_t* drv,
 	if (result && returnedLength == size)
 		return count * unitSize;
 	return 0;
+}
+
+DWORD WR0_RdAmdSmn(struct wr0_drv_t* drv, DWORD bdf, DWORD smn, DWORD reg)
+{
+	DWORD returnedLength = 0;
+	BOOL result = FALSE;
+	DWORD inBuf[3];
+	DWORD value = 0;
+
+	if (!drv || !drv->hhDriver || drv->hhDriver == INVALID_HANDLE_VALUE || drv->driver_type != WR0_DRIVER_CPUZ161)
+		return 0;
+
+	inBuf[0] = bdf;
+	inBuf[1] = smn;
+	inBuf[2] = reg;
+
+	result = DeviceIoControl(drv->hhDriver, IOCTL_CPUZ_READ_AMD_SMN,
+		inBuf, sizeof(inBuf), &value, sizeof(value), &returnedLength, NULL);
+	if (drv->debug)
+		printf("[SMN] Read AMD SMN reg=%08xh %d value=%08xh\n", reg, result, value);
+
+	return value;
 }
 
 int WR0_ExecPawn(struct wr0_drv_t* drv, struct pio_mod_t* mod, LPCSTR fn,

@@ -166,13 +166,14 @@ This project is compatible with Windows XP using [YY-Thunks](https://github.com/
 
 ## Supported Drivers
 
-This project searches for and loads drivers in the following order: **HwRwDrv -> WinRing0 -> PawnIO**.
+This project searches for and loads drivers in the following order: **CPUZ161 -> HwRwDrv -> WinRing0 -> PawnIO**.
 
 | Driver     | Author | License | Notes |
 |------------|--------|---------|-------|
 | [PawnIO](https://github.com/namazso/PawnIO) | namazso | GPL v2 | Safe to use, but some hardware information may be unavailable. |
 | [HwRwDrv](https://hwrwdrv.phpnet.us/?i=1) | Faintsnow | Closed source | May be flagged as a virus by antivirus software and detected by anti-cheat systems. |
 | [WinRing0](http://openlibsys.org/) | hiyohiyo | BSD | Listed as a vulnerable driver by Microsoft, detected as a virus, and triggers anti-cheat software. |
+| [CPUZ161](https://www.cpuid.com/softwares/cpu-z.html) | CPUID | Closed source | Safe to use, not provided in the releases. |
 
 **Note:** The program can still run normally even if all drivers are removed, but some hardware information may not be accessible.
 
