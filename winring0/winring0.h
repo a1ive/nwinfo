@@ -8,7 +8,7 @@ enum wr0_driver_type
 {
 	WR0_DRIVER_NONE = 0,
 	WR0_DRIVER_WINRING0,
-	WR0_DRIVER_HWRWDRV,
+	WR0_DRIVER_HWIO,
 	WR0_DRIVER_CPUZ161,
 	WR0_DRIVER_PAWNIO,
 };
@@ -58,8 +58,10 @@ void WR0_WrPciConf16(struct wr0_drv_t* drv, uint32_t addr, uint32_t reg, uint16_
 void WR0_WrPciConf32(struct wr0_drv_t* drv, uint32_t addr, uint32_t reg, uint32_t value);
 uint32_t WR0_FindPciById(struct wr0_drv_t* drv, uint16_t vid, uint16_t did, uint8_t index);
 uint32_t WR0_FindPciByClass(struct wr0_drv_t* drv, uint8_t base, uint8_t sub, uint8_t prog, uint8_t index);
+int WR0_RdMmIo(struct wr0_drv_t* drv, uint64_t addr, void* value, uint32_t size);
 DWORD WR0_RdMem(struct wr0_drv_t* drv, DWORD_PTR address, PBYTE buffer, DWORD count, DWORD unitSize);
 DWORD WR0_RdAmdSmn(struct wr0_drv_t* drv, DWORD bdf, DWORD smn, DWORD reg);
+int WR0_SendSmuCmd(struct wr0_drv_t* drv, uint32_t cmd, uint32_t rsp, uint32_t arg, uint32_t fn, uint32_t args[6]);
 
 int WR0_ExecPawn(struct wr0_drv_t* drv, struct pio_mod_t* mod, LPCSTR fn, const ULONG64* in, SIZE_T in_size, PULONG64 out, SIZE_T out_size, PSIZE_T return_size);
 

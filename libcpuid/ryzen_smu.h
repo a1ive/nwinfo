@@ -83,7 +83,7 @@ typedef union
 
 struct wr0_drv_t;
 
-#define SMU_TABLE_MAX_SIZE 0x2000
+#define SMU_TABLE_MAX_SIZE 0x1000
 
 typedef struct
 {

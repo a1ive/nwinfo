@@ -435,6 +435,7 @@ static int amd_k10_temperature(struct msr_info_t* info)
 #define F17H_M01H_THM_TCON_CUR_TMP          0x00059800
 #define F17H_TEMP_OFFSET_FLAG               0x80000
 #define FAMILY_17H_PCI_CONTROL_REGISTER     0x60
+#define FAMILY_17H_PCI_DATA_REGISTER        0x64
 
 static float amd_17h_temperature(struct msr_info_t* info)
 {
@@ -455,7 +456,7 @@ static float amd_17h_temperature(struct msr_info_t* info)
 	else
 	{
 		WR0_WrPciConf32(info->handle, 0, FAMILY_17H_PCI_CONTROL_REGISTER, F17H_M01H_THM_TCON_CUR_TMP);
-		temperature = WR0_RdPciConf32(info->handle, 0, FAMILY_17H_PCI_CONTROL_REGISTER + 4);
+		temperature = WR0_RdPciConf32(info->handle, 0, FAMILY_17H_PCI_DATA_REGISTER);
 	}
 
 	if (strstr(info->id->brand_str, "1600X") ||

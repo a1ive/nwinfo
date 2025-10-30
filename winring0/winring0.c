@@ -11,52 +11,6 @@
 #include "winring0.h"
 #include "winring0_priv.h"
 
-static UINT32 get_driver_version(LPCWSTR name)
-{
-	DWORD dwHandle = 0;
-	DWORD dwVersionInfoSize = 0;
-	LPVOID pVersionInfo = NULL;
-	UINT32 resultVersion = 0;
-	WCHAR wchPath[MAX_PATH] = { 0 };
-
-	GetModuleFileNameW(NULL, wchPath, MAX_PATH);
-
-	PathCchRemoveFileSpec(wchPath, MAX_PATH);
-	PathCchAppend(wchPath, MAX_PATH, name);
-
-	dwVersionInfoSize = GetFileVersionInfoSizeW(wchPath, &dwHandle);
-	if (dwVersionInfoSize == 0)
-		return 0;
-
-	pVersionInfo = HeapAlloc(GetProcessHeap(), 0, dwVersionInfoSize);
-	if (pVersionInfo == NULL)
-		return 0;
-
-	if (!GetFileVersionInfoW(wchPath, 0, dwVersionInfoSize, pVersionInfo))
-		goto out;
-
-	VS_FIXEDFILEINFO* pFileInfo = NULL;
-	UINT uiFileInfoSize = 0;
-	if (!VerQueryValueW(pVersionInfo, L"\\", (LPVOID*)&pFileInfo, &uiFileInfoSize))
-		goto out;
-	if (!pFileInfo)
-		goto out;
-
-	WORD major = HIWORD(pFileInfo->dwFileVersionMS);
-	WORD minor = LOWORD(pFileInfo->dwFileVersionMS);
-	WORD build = HIWORD(pFileInfo->dwFileVersionLS);
-	WORD revision = LOWORD(pFileInfo->dwFileVersionLS);
-
-	resultVersion = ((major & 0xFF) << 24) |
-		((minor & 0xFF) << 16) |
-		((build & 0xFF) << 8) |
-		(revision & 0xFF);
-
-out:
-	HeapFree(GetProcessHeap(), 0, pVersionInfo);
-	return resultVersion;
-}
-
 static BOOL load_driver(struct wr0_drv_t* drv)
 {
 	BOOL bServiceCreated = FALSE;
@@ -260,11 +214,10 @@ struct wr0_drv_t* WR0_OpenDriver(int debug)
 		drv = open_driver_real(CPUZDRV_NAME_X64, CPUZDRV_ID, WR0_DRIVER_CPUZ161, CPUZDRV_OBJ, debug);
 		if (drv)
 			return drv;
-		ver = get_driver_version(HWRWDRV_NAME_X64);
-		if (ver >= HWRWDRV_MIN_VER)
-			drv = open_driver_real(HWRWDRV_NAME_X64, HWRWDRV_ID, WR0_DRIVER_HWRWDRV, HWRWDRV_OBJ, debug);
-		else
-			drv = open_driver_real(HWRWDRV_NAME_X64, HWRWDRV_ID, WR0_DRIVER_WINRING0, HWRWDRV_OBJ, debug);
+		drv = open_driver_real(HWIODRV_NAME_X64, HWIODRV_ID, WR0_DRIVER_HWIO, HWIODRV_OBJ, debug);
+		if (drv)
+			return drv;
+		drv = open_driver_real(HWRWDRV_NAME_X64, HWRWDRV_ID, WR0_DRIVER_WINRING0, HWRWDRV_OBJ, debug);
 		if (drv)
 			return drv;
 		drv = open_driver_real(WINRING0_NAME_X64, WINRING0_ID, WR0_DRIVER_WINRING0, WINRING0_OBJ, debug);
@@ -286,11 +239,10 @@ struct wr0_drv_t* WR0_OpenDriver(int debug)
 		drv = open_driver_real(CPUZDRV_NAME, CPUZDRV_ID, WR0_DRIVER_CPUZ161, CPUZDRV_OBJ, debug);
 		if (drv)
 			return drv;
-		ver = get_driver_version(HWRWDRV_NAME);
-		if (ver >= HWRWDRV_MIN_VER)
-			drv = open_driver_real(HWRWDRV_NAME, HWRWDRV_ID, WR0_DRIVER_HWRWDRV, HWRWDRV_OBJ, debug);
-		else
-			drv = open_driver_real(HWRWDRV_NAME, HWRWDRV_ID, WR0_DRIVER_WINRING0, HWRWDRV_OBJ, debug);
+		drv = open_driver_real(HWIODRV_NAME, HWIODRV_ID, WR0_DRIVER_HWIO, HWIODRV_OBJ, debug);
+		if (drv)
+			return drv;
+		drv = open_driver_real(HWRWDRV_NAME, HWRWDRV_ID, WR0_DRIVER_WINRING0, HWRWDRV_OBJ, debug);
 		if (drv)
 			return drv;
 		drv = open_driver_real(WINRING0_NAME, WINRING0_ID, WR0_DRIVER_WINRING0, WINRING0_OBJ, debug);
@@ -313,11 +265,11 @@ int WR0_RdMsr(struct wr0_drv_t* drv, uint32_t msr_index, uint64_t* result)
 	case WR0_DRIVER_WINRING0:
 		ctlCode = IOCTL_OLS_READ_MSR;
 		break;
-	case WR0_DRIVER_HWRWDRV:
-		ctlCode = IOCTL_HRD_READ_MSR;
-		break;
 	case WR0_DRIVER_CPUZ161:
 		ctlCode = IOCTL_CPUZ_READ_MSR;
+		break;
+	case WR0_DRIVER_HWIO:
+		ctlCode = IOCTL_HIO_READ_MSR;
 		break;
 	default:
 		return -1;
@@ -347,11 +299,11 @@ int WR0_WrMsr(struct wr0_drv_t* drv, uint32_t msr_index, DWORD eax, DWORD edx)
 	case WR0_DRIVER_WINRING0:
 		ctlCode = IOCTL_OLS_WRITE_MSR;
 		break;
-	case WR0_DRIVER_HWRWDRV:
-		ctlCode = IOCTL_HRD_WRITE_MSR;
-		break;
 	case WR0_DRIVER_CPUZ161:
 		ctlCode = IOCTL_CPUZ_WRITE_MSR;
+		break;
+	case WR0_DRIVER_HWIO:
+		ctlCode = IOCTL_HIO_WRITE_MSR;
 		break;
 	default:
 		return -1;
@@ -383,11 +335,11 @@ uint8_t WR0_RdIo8(struct wr0_drv_t* drv, uint16_t port)
 	case WR0_DRIVER_WINRING0:
 		ctlCode = IOCTL_OLS_READ_IO_PORT_BYTE;
 		break;
-	case WR0_DRIVER_HWRWDRV:
-		ctlCode = IOCTL_HRD_READ_IO_PORT_BYTE;
-		break;
 	case WR0_DRIVER_CPUZ161:
 		ctlCode = IOCTL_CPUZ_READ_IO_PORT_BYTE;
+		break;
+	case WR0_DRIVER_HWIO:
+		ctlCode = IOCTL_HIO_READ_IO_PORT;
 		break;
 	default:
 		return 0;
@@ -414,11 +366,11 @@ uint16_t WR0_RdIo16(struct wr0_drv_t* drv, uint16_t port)
 	case WR0_DRIVER_WINRING0:
 		ctlCode = IOCTL_OLS_READ_IO_PORT_WORD;
 		break;
-	case WR0_DRIVER_HWRWDRV:
-		ctlCode = IOCTL_HRD_READ_IO_PORT_WORD;
-		break;
 	case WR0_DRIVER_CPUZ161:
 		ctlCode = IOCTL_CPUZ_READ_IO_PORT_WORD;
+		break;
+	case WR0_DRIVER_HWIO:
+		ctlCode = IOCTL_HIO_READ_IO_PORT;
 		break;
 	default:
 		return 0;
@@ -446,11 +398,11 @@ uint32_t WR0_RdIo32(struct wr0_drv_t* drv, uint16_t port)
 	case WR0_DRIVER_WINRING0:
 		ctlCode = IOCTL_OLS_READ_IO_PORT_DWORD;
 		break;
-	case WR0_DRIVER_HWRWDRV:
-		ctlCode = IOCTL_HRD_READ_IO_PORT_DWORD;
-		break;
 	case WR0_DRIVER_CPUZ161:
 		ctlCode = IOCTL_CPUZ_READ_IO_PORT_DWORD;
+		break;
+	case WR0_DRIVER_HWIO:
+		ctlCode = IOCTL_HIO_READ_IO_PORT;
 		break;
 	default:
 		return 0;
@@ -478,11 +430,11 @@ void WR0_WrIo8(struct wr0_drv_t* drv, uint16_t port, uint8_t value)
 	case WR0_DRIVER_WINRING0:
 		ctlCode = IOCTL_OLS_WRITE_IO_PORT_BYTE;
 		break;
-	case WR0_DRIVER_HWRWDRV:
-		ctlCode = IOCTL_HRD_WRITE_IO_PORT_BYTE;
-		break;
 	case WR0_DRIVER_CPUZ161:
 		ctlCode = IOCTL_CPUZ_WRITE_IO_PORT_BYTE;
+		break;
+	case WR0_DRIVER_HWIO:
+		ctlCode = IOCTL_HIO_WRITE_IO_PORT;
 		break;
 	default:
 		return;
@@ -512,11 +464,11 @@ void WR0_WrIo16(struct wr0_drv_t* drv, uint16_t port, uint16_t value)
 	case WR0_DRIVER_WINRING0:
 		ctlCode = IOCTL_OLS_WRITE_IO_PORT_WORD;
 		break;
-	case WR0_DRIVER_HWRWDRV:
-		ctlCode = IOCTL_HRD_WRITE_IO_PORT_WORD;
-		break;
 	case WR0_DRIVER_CPUZ161:
 		ctlCode = IOCTL_CPUZ_WRITE_IO_PORT_WORD;
+		break;
+	case WR0_DRIVER_HWIO:
+		ctlCode = IOCTL_HIO_WRITE_IO_PORT;
 		break;
 	default:
 		return;
@@ -546,11 +498,11 @@ void WR0_WrIo32(struct wr0_drv_t* drv, uint16_t port, uint32_t value)
 	case WR0_DRIVER_WINRING0:
 		ctlCode = IOCTL_OLS_WRITE_IO_PORT_DWORD;
 		break;
-	case WR0_DRIVER_HWRWDRV:
-		ctlCode = IOCTL_HRD_WRITE_IO_PORT_DWORD;
-		break;
 	case WR0_DRIVER_CPUZ161:
 		ctlCode = IOCTL_CPUZ_WRITE_IO_PORT_DWORD;
+		break;
+	case WR0_DRIVER_HWIO:
+		ctlCode = IOCTL_HIO_WRITE_IO_PORT;
 		break;
 	default:
 		return;
@@ -568,8 +520,6 @@ int WR0_RdPciConf(struct wr0_drv_t* drv, uint32_t addr, uint32_t reg, void* valu
 {
 	DWORD returnedLength = 0;
 	BOOL result = FALSE;
-	OLS_READ_PCI_CONFIG_INPUT inBuf = { 0 };
-	DWORD ctlCode;
 
 	if (!drv || !drv->hhDriver || drv->hhDriver == INVALID_HANDLE_VALUE
 		|| !value || (size == 2 && (reg & 1) != 0) || (size == 4 && (reg & 3) != 0))
@@ -577,25 +527,44 @@ int WR0_RdPciConf(struct wr0_drv_t* drv, uint32_t addr, uint32_t reg, void* valu
 
 	switch (drv->driver_type)
 	{
-	case WR0_DRIVER_WINRING0:
-		ctlCode = IOCTL_OLS_READ_PCI_CONFIG;
+	case WR0_DRIVER_HWIO:
+	{
+		OLS_READ_PCI_CONFIG_INPUT inBuf = { 0 };
+		inBuf.PciAddress = addr;
+		inBuf.PciOffset = reg;
+		result = DeviceIoControl(drv->hhDriver, IOCTL_HIO_READ_PCI_CONFIG,
+			&inBuf, sizeof(inBuf), value, size, &returnedLength, NULL);
+	}
 		break;
-	case WR0_DRIVER_HWRWDRV:
-		ctlCode = IOCTL_HRD_READ_PCI_CONFIG;
+	case WR0_DRIVER_WINRING0:
+	{
+		OLS_READ_PCI_CONFIG_INPUT inBuf = { 0 };
+		inBuf.PciAddress = addr;
+		inBuf.PciOffset = reg;
+		result = DeviceIoControl(drv->hhDriver, IOCTL_OLS_READ_PCI_CONFIG,
+			&inBuf, sizeof(inBuf), value, size, &returnedLength, NULL);
+	}
+		break;
+	case WR0_DRIVER_CPUZ161:
+	{
+		CPUZ_READ_PCI_CONFIG_INPUT inBuf = { 0 };
+		CPUZ_READ_PCI_CONFIG_OUTPUT outBuf = { 0 };
+		inBuf.Bus = PciGetBus(addr);
+		inBuf.Device = PciGetDev(addr);
+		inBuf.Function = PciGetFunc(addr);
+		inBuf.Offset = reg;
+		inBuf.Length = size;
+		result = DeviceIoControl(drv->hhDriver, IOCTL_CPUZ_READ_PCI_CONFIG,
+			&inBuf, sizeof(inBuf), &outBuf, sizeof(outBuf), &returnedLength, NULL);
+		if (result)
+			memcpy(value, outBuf.DataByte, size);
+	}
 		break;
 	default:
 		return -1;
 	}
 
-	inBuf.PciAddress = addr;
-	inBuf.PciOffset = reg;
-
-	result = DeviceIoControl(drv->hhDriver, ctlCode,
-		&inBuf, sizeof(inBuf), value, size, &returnedLength, NULL);
-
-	if (result)
-		return 0;
-	return -2;
+	return result ? 0 : -2;
 }
 
 uint8_t WR0_RdPciConf8(struct wr0_drv_t* drv, uint32_t addr, uint32_t reg)
@@ -639,8 +608,8 @@ int WR0_WrPciConf(struct wr0_drv_t* drv, uint32_t addr, uint32_t reg, void* valu
 	case WR0_DRIVER_WINRING0:
 		ctlCode = IOCTL_OLS_WRITE_PCI_CONFIG;
 		break;
-	case WR0_DRIVER_HWRWDRV:
-		ctlCode = IOCTL_HRD_WRITE_PCI_CONFIG;
+	case WR0_DRIVER_HWIO:
+		ctlCode = IOCTL_HIO_WRITE_PCI_CONFIG;
 		break;
 	default:
 		return -1;
@@ -770,53 +739,84 @@ uint32_t WR0_FindPciByClass(struct wr0_drv_t* drv, uint8_t base, uint8_t sub, ui
 	return 0xFFFFFFFF;
 }
 
+int WR0_RdMmIo(struct wr0_drv_t* drv, uint64_t addr, void* value, uint32_t size)
+{
+	DWORD returnedLength = 0;
+	BOOL result = TRUE;
+	DWORD length = 0;
+
+	if (!drv || !drv->hhDriver || drv->hhDriver == INVALID_HANDLE_VALUE)
+		return -1;
+
+	switch (drv->driver_type)
+	{
+	case WR0_DRIVER_HWIO:
+		result = DeviceIoControl(drv->hhDriver, IOCTL_HIO_READ_MMIO,
+			&addr, sizeof(uint64_t), value, size, &returnedLength, NULL);
+		break;
+	case WR0_DRIVER_WINRING0:
+	default:
+		returnedLength = WR0_RdMem(drv, (DWORD_PTR)addr, (PBYTE)value, 1, size);
+		break;
+	}
+
+	if (result && returnedLength == size)
+		return 0;
+	return -2;
+}
+
 DWORD WR0_RdMem(struct wr0_drv_t* drv,
 	DWORD_PTR address, PBYTE buffer, DWORD count, DWORD unitSize)
 {
 	DWORD returnedLength = 0;
 	BOOL result = FALSE;
-	DWORD size = 0;
-	OLS_READ_MEMORY_INPUT inBuf;
-	DWORD ctlCode;
+	DWORD size = count * unitSize;
 
 	if (!drv || !drv->hhDriver || drv->hhDriver == INVALID_HANDLE_VALUE
-		|| !buffer)
+		|| !buffer || count == 0)
 		return 0;
 
 	switch (drv->driver_type)
 	{
 	case WR0_DRIVER_WINRING0:
-		ctlCode = IOCTL_OLS_READ_MEMORY;
+	{
+		OLS_READ_MEMORY_INPUT inBuf;
+		inBuf.Address.QuadPart = address;
+		inBuf.UnitSize = unitSize;
+		inBuf.Count = count;
+		result = DeviceIoControl(drv->hhDriver, IOCTL_OLS_READ_MEMORY,
+			&inBuf, sizeof(OLS_READ_MEMORY_INPUT), buffer, size, &returnedLength, NULL);
+	}
 		break;
-	case WR0_DRIVER_HWRWDRV:
-		ctlCode = IOCTL_HRD_READ_MEMORY;
+	case WR0_DRIVER_CPUZ161:
+	{
+		DWORD inBuf[3];
+		CPUZ_READ_MEMORY_OUTPUT* outBuf = malloc(sizeof(CPUZ_READ_MEMORY_OUTPUT) + size);
+		if (!outBuf)
+			return 0;
+		inBuf[0] = (DWORD)(address >> 32);
+		inBuf[1] = (DWORD)(address & 0xFFFFFFFF);
+		inBuf[2] = size;
+		result = DeviceIoControl(drv->hhDriver, IOCTL_CPUZ_READ_MEMORY,
+			inBuf, sizeof(inBuf), outBuf, sizeof(CPUZ_READ_MEMORY_OUTPUT) + size, &returnedLength, NULL);
+		memcpy(buffer, outBuf->Data, size);
+		free(outBuf);
+		returnedLength = size;
+	}
 		break;
 	default:
 		return 0;
 	}
-
-	if (sizeof(DWORD_PTR) == 4)
-	{
-		inBuf.Address.HighPart = 0;
-		inBuf.Address.LowPart = (DWORD)address;
-	}
-	else
-	{
-		inBuf.Address.QuadPart = address;
-	}
-
-	inBuf.UnitSize = unitSize;
-	inBuf.Count = count;
-	size = inBuf.UnitSize * inBuf.Count;
-
-	result = DeviceIoControl(drv->hhDriver, ctlCode,
-		&inBuf, sizeof(OLS_READ_MEMORY_INPUT), buffer, size, &returnedLength, NULL);
 
 	if (result && returnedLength == size)
 		return count * unitSize;
 	return 0;
 }
 
+
+// smn=1 -> 0xB8/0xBC AMD 15h Temperature
+// smn=2 -> 0xC4/0xC8 Zen SMU
+// smn=3 -> 0x60/0x64 Zen Temperature
 DWORD WR0_RdAmdSmn(struct wr0_drv_t* drv, DWORD bdf, DWORD smn, DWORD reg)
 {
 	DWORD returnedLength = 0;
@@ -837,6 +837,37 @@ DWORD WR0_RdAmdSmn(struct wr0_drv_t* drv, DWORD bdf, DWORD smn, DWORD reg)
 		printf("[SMN] Read AMD SMN reg=%08xh %d value=%08xh\n", reg, result, value);
 
 	return value;
+}
+
+int
+WR0_SendSmuCmd(struct wr0_drv_t* drv, uint32_t cmd, uint32_t rsp, uint32_t arg, uint32_t fn, uint32_t args[6])
+{
+	DWORD returnedLength = 0;
+	BOOL result = FALSE;
+	uint32_t inBuf[17] = { 0 };
+	uint32_t outBuf[7] = { 0 };
+
+	if (!drv || !drv->hhDriver || drv->hhDriver == INVALID_HANDLE_VALUE || drv->driver_type != WR0_DRIVER_CPUZ161)
+		return -1;
+
+	inBuf[0] = 0; // BDF
+	inBuf[1] = 2; // Zen SMU
+	inBuf[2] = fn;
+	inBuf[3] = cmd;
+	inBuf[4] = rsp;
+	for (uint32_t i = 0; i < 6; i++)
+	{
+		inBuf[5 + i] = arg + i * 4;
+		inBuf[11 + i] = args[i];
+	}
+	result = DeviceIoControl(drv->hhDriver, IOCTL_CPUZ_SEND_SMN_CMD,
+		inBuf, sizeof(inBuf), outBuf, sizeof(outBuf), &returnedLength, NULL);
+	if (drv->debug)
+		printf("[SMU] Send SMU fn=%08xh %d -> %u\n", fn, result, outBuf[0]);
+	memcpy(args, &outBuf[1], 6 * sizeof(uint32_t));
+	if (result && outBuf[0] == 1)
+		return 0;
+	return -2;
 }
 
 int WR0_ExecPawn(struct wr0_drv_t* drv, struct pio_mod_t* mod, LPCSTR fn,

@@ -362,6 +362,15 @@ static ry_err_t send_command(ry_handle_t* handle, uint32_t fn, ry_args_t* args)
 
 	SMU_DEBUG("Send RSMU Fn %Xh", fn);
 
+	if (handle->drv_handle->driver_type == WR0_DRIVER_CPUZ161)
+	{
+		int err = WR0_SendSmuCmd(handle->drv_handle, handle->rsmu_cmd_addr,
+			handle->rsmu_rsp_addr, handle->rsmu_arg_addr, fn, args->args);
+		if (err != 0)
+			return RYZEN_SMU_DRIVER_ERROR;
+		return RYZEN_SMU_OK;
+	}
+
 	// Wait until the RSP register is non-zero.
 	for (i = 0, response = 0; i < SMU_COMMAND_MAX_RETRIES; i++)
 	{
@@ -617,7 +626,7 @@ static size_t get_pm_table_size_from_version(ry_handle_t* handle, uint32_t versi
 	case 0x1E0005:
 	case 0x1E000A:
 	case 0x1E0101: return 0x610;
-	case 0x240003: return 0x18AC; // CODENAME_CASTLEPEAK, CODENAME_MATISSE
+	//case 0x240003: return 0x18AC; // CODENAME_CASTLEPEAK, CODENAME_MATISSE
 	case 0x240503: return 0xD7C;  // CODENAME_CASTLEPEAK, CODENAME_MATISSE
 	case 0x240603: return 0xAB0;  // CODENAME_CASTLEPEAK, CODENAME_MATISSE
 	case 0x240703: return 0x7E4;  // CODENAME_CASTLEPEAK, CODENAME_MATISSE
@@ -626,7 +635,7 @@ static size_t get_pm_table_size_from_version(ry_handle_t* handle, uint32_t versi
 	case 0x240902: return 0x514;  // CODENAME_CASTLEPEAK, CODENAME_MATISSE
 	case 0x240903: return 0x518;  // CODENAME_CASTLEPEAK, CODENAME_MATISSE
 	case 0x260001: return 0x610;  // CODENAME_FIREFLIGHT
-	case 0x2D0008: return 0x1AB0; // CODENAME_MILAN
+	//case 0x2D0008: return 0x1AB0; // CODENAME_MILAN
 	case 0x2D0803: return 0x894;  // CODENAME_VERMEER, CODENAME_CHAGALL
 	case 0x2D0903: return 0x7E4;  // CODENAME_VERMEER, CODENAME_CHAGALL
 	case 0x370000: return 0x79C;  // CODENAME_RENOIR, CODENAME_LUCIENNE
@@ -635,7 +644,7 @@ static size_t get_pm_table_size_from_version(ry_handle_t* handle, uint32_t versi
 	case 0x370003:
 	case 0x370004: return 0x8B4;  // CODENAME_RENOIR, CODENAME_LUCIENNE
 	case 0x370005: return 0x8D0;  // CODENAME_RENOIR, CODENAME_LUCIENNE
-	case 0x380005: return 0x1BB0; // CODENAME_VERMEER, CODENAME_CHAGALL
+	//case 0x380005: return 0x1BB0; // CODENAME_VERMEER, CODENAME_CHAGALL
 	case 0x380505: return 0xF30;  // CODENAME_VERMEER, CODENAME_CHAGALL
 	case 0x380605: return 0xC10;  // CODENAME_VERMEER, CODENAME_CHAGALL
 	case 0x380705: return 0x8F0;  // CODENAME_VERMEER, CODENAME_CHAGALL
@@ -672,12 +681,12 @@ static size_t get_pm_table_size_from_version(ry_handle_t* handle, uint32_t versi
 	case 0x540105: return 0x6B4;  // CODENAME_RAPHAEL
 	case 0x540108: return 0x6BC;  // CODENAME_RAPHAEL
 	case 0x540208: return 0x8D0;  // CODENAME_RAPHAEL
-	case 0x5C0002: return 0x1E3C; // CODENAME_STORMPEAK
-	case 0x5C0003: return 0x1E48; // CODENAME_STORMPEAK
-	case 0x5C0102: return 0x1A14; // CODENAME_STORMPEAK
-	case 0x5C0103: return 0x1A20; // CODENAME_STORMPEAK
-	case 0x5C0202: return 0x15EC; // CODENAME_STORMPEAK
-	case 0x5C0203: return 0x15F8; // CODENAME_STORMPEAK
+	//case 0x5C0002: return 0x1E3C; // CODENAME_STORMPEAK
+	//case 0x5C0003: return 0x1E48; // CODENAME_STORMPEAK
+	//case 0x5C0102: return 0x1A14; // CODENAME_STORMPEAK
+	//case 0x5C0103: return 0x1A20; // CODENAME_STORMPEAK
+	//case 0x5C0202: return 0x15EC; // CODENAME_STORMPEAK
+	//case 0x5C0203: return 0x15F8; // CODENAME_STORMPEAK
 	case 0x5C0302: return 0xD9C;  // CODENAME_STORMPEAK
 	case 0x5C0303: return 0xDA8;  // CODENAME_STORMPEAK
 	case 0x5C0402: return 0x974;  // CODENAME_STORMPEAK
@@ -695,11 +704,11 @@ static size_t get_pm_table_size_from_version(ry_handle_t* handle, uint32_t versi
 	case 0x640109:
 	case 0x64010A: return 0xDD4;  // CODENAME_STRIXHALO
 	case 0x64010C: return 0xDDC;  // CODENAME_STRIXHALO
-	case 0x640207: return 0x100C; // CODENAME_STRIXHALO
-	case 0x640208: return 0x1010; // CODENAME_STRIXHALO
+	//case 0x640207: return 0x100C; // CODENAME_STRIXHALO
+	//case 0x640208: return 0x1010; // CODENAME_STRIXHALO
 	case 0x640209:
-	case 0x64020A: return 0x1020; // CODENAME_STRIXHALO
-	case 0x64020C: return 0x1028; // CODENAME_STRIXHALO
+	//case 0x64020A: return 0x1020; // CODENAME_STRIXHALO
+	//case 0x64020C: return 0x1028; // CODENAME_STRIXHALO
 	case 0x650004: return 0xB74;  // CODENAME_KRACKANPOINT
 	case 0x650005: return 0xB78;  // CODENAME_KRACKANPOINT
 	}
@@ -869,10 +878,6 @@ ry_err_t ryzen_smu_update_pm_table(ry_handle_t* handle)
 	if (rc != RYZEN_SMU_OK)
 		return rc;
 
-	if (WR0_RdMem(handle->drv_handle, (DWORD_PTR)handle->pm_table_base_addr, handle->pm_table_buffer, (DWORD)handle->pm_table_size, 1)
-		!= handle->pm_table_size)
-		return RYZEN_SMU_DRIVER_ERROR;
-
 	return RYZEN_SMU_OK;
 }
 
@@ -886,7 +891,10 @@ ry_err_t ryzen_smu_get_pm_table_float(ry_handle_t* handle, size_t offset, float*
 		return RYZEN_SMU_UNSUPPORTED;
 	if (offset + sizeof(float) > handle->pm_table_size)
 		return RYZEN_SMU_INVALID_ARGUMENT;
-	memcpy(value, handle->pm_table_buffer + offset, sizeof(float));
+	if (handle->drv_handle->driver_type == WR0_DRIVER_PAWNIO)
+		memcpy(value, handle->pm_table_buffer + offset, sizeof(float));
+	else
+		WR0_RdMmIo(handle->drv_handle, handle->pm_table_base_addr + offset, value, sizeof(float));
 	SMU_DEBUG("Get PM Table Float at offset 0x%zX, value %.2f", offset, *value);
 	return RYZEN_SMU_OK;
 }
