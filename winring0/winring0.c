@@ -794,7 +794,11 @@ DWORD WR0_RdMem(struct wr0_drv_t* drv,
 		CPUZ_READ_MEMORY_OUTPUT* outBuf = malloc(sizeof(CPUZ_READ_MEMORY_OUTPUT) + size);
 		if (!outBuf)
 			return 0;
-		inBuf[0] = (DWORD)(address >> 32);
+#ifdef _WIN64
+		inBuf[0] = (DWORD)(address >> 32U);
+#else
+		inBuf[0] = 0;
+#endif
 		inBuf[1] = (DWORD)(address & 0xFFFFFFFF);
 		inBuf[2] = size;
 		result = DeviceIoControl(drv->hhDriver, IOCTL_CPUZ_READ_MEMORY,
