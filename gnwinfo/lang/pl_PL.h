@@ -152,5 +152,6 @@ lang_pl_pl[N__MAX_] =
 	[N__BASE_CLOCK] = u8"Zegar bazowy",
 	[N__HIDE_DISK_SPACE_BAR] = u8"Ukryj pasek przestrzeni dysku",
 	[N__FREE] = u8"Wolne",
-	[N__CLOSE] = u8"Zamknij"
+	[N__CLOSE] = u8"Zamknij",
+	[N__INSTALL_PAWNIO] = u8"Zainstaluj PawnIO",
 };

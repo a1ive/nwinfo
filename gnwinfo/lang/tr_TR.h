@@ -147,5 +147,6 @@ lang_tr_tr[N__MAX_] =
 	[N__BASE_CLOCK] = u8"Temel Saat Hızı",
 	[N__HIDE_DISK_SPACE_BAR] = u8"Disk Alanı Çubuğunu Gizle",
 	[N__FREE] = u8"Ücretsiz sürüm",
-	[N__CLOSE] = u8"Çıkış"
+	[N__CLOSE] = u8"Çıkış",
+	[N__INSTALL_PAWNIO] = u8"PawnIO'yu Yükle",
 };

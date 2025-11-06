@@ -148,5 +148,6 @@ lang_zh_tw[N__MAX_] =
 	[N__BASE_CLOCK] = u8"基本頻率",
 	[N__HIDE_DISK_SPACE_BAR] = u8"隱藏磁碟空間條",
 	[N__FREE] = u8"空閒",
-	[N__CLOSE] = u8"關閉"
+	[N__CLOSE] = u8"關閉",
+	[N__INSTALL_PAWNIO] = u8"安裝 PawnIO",
 };

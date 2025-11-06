@@ -81,6 +81,47 @@ static BOOL is_x64(void)
 #endif
 }
 
+BOOL
+WR0_CheckPawnIO(void)
+{
+#ifdef _WIN64
+	WCHAR path[MAX_PATH];
+	// Program Files\\PawnIO\\PawnIO.sys
+	SHGetFolderPathW(NULL, CSIDL_PROGRAM_FILES, NULL, 0, path);
+	PathCchAppend(path, MAX_PATH, L"PawnIO\\" PAWNIO_NAME);
+	HANDLE hFile = CreateFileW(path, GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING, 0, NULL);
+	if (hFile != INVALID_HANDLE_VALUE)
+	{
+		CloseHandle(hFile);
+		return TRUE;
+	}
+#endif
+	return FALSE;
+}
+
+#define PAWNIO_SETUP_EXE L"PawnIOSetup.exe"
+#define PAWNIO_SETUP_CMD PAWNIO_SETUP_EXE L" -install -silent"
+
+BOOL
+WR0_InstallPawnIO(void)
+{
+#ifdef _WIN64
+	WCHAR path[MAX_PATH];
+	WCHAR cmdline[] = PAWNIO_SETUP_CMD;
+	STARTUPINFOW si = { .cb = sizeof(STARTUPINFOW) };
+	PROCESS_INFORMATION pi = { 0 };
+	GetModuleFileNameW(NULL, path, MAX_PATH);
+	PathCchRemoveFileSpec(path, MAX_PATH);
+	PathCchAppend(path, MAX_PATH, PAWNIO_SETUP_EXE);
+	if (!CreateProcessW(path, cmdline, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi))
+		return FALSE;
+	WaitForSingleObject(pi.hProcess, INFINITE);
+	CloseHandle(pi.hProcess);
+	CloseHandle(pi.hThread);
+#endif
+	return WR0_CheckPawnIO();
+}
+
 static BOOL find_driver(struct wr0_drv_t* driver, LPCWSTR name, LPCWSTR id, LPCWSTR obj)
 {
 	HANDLE hFile = INVALID_HANDLE_VALUE;

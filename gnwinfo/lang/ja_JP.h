@@ -89,5 +89,6 @@ lang_ja_jp[N__MAX_] =
 	[N__SLOTS] = u8"スロット",
 	[N__SOCKET] = u8"ソケット",
 	[N__FREE] = u8"空き容量",
-	[N__CLOSE] = u8"閉じる"
+	[N__CLOSE] = u8"閉じる",
+	[N__INSTALL_PAWNIO] = u8"PawnIOをインストール",
 };

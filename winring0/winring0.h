@@ -40,6 +40,9 @@ struct wr0_drv_t
 	struct pio_mod_t pio_rysmu;
 };
 
+BOOL WR0_CheckPawnIO(void);
+BOOL WR0_InstallPawnIO(void);
+
 int WR0_RdMsr(struct wr0_drv_t* drv, uint32_t msr_index, uint64_t* result);
 int WR0_WrMsr(struct wr0_drv_t* drv, uint32_t msr_index, DWORD eax, DWORD edx);
 uint8_t WR0_RdIo8(struct wr0_drv_t* drv, uint16_t port);

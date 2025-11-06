@@ -146,5 +146,6 @@ lang_sv_se[N__MAX_] =
 	[N__BASE_CLOCK] = u8"Basklocka",
 	[N__HIDE_DISK_SPACE_BAR] = u8"Dölj diskutrymmesfältet",
 	[N__FREE] = u8"Ledigt",
-	[N__CLOSE] = u8"Stäng"
+	[N__CLOSE] = u8"Stäng",
+	[N__INSTALL_PAWNIO] = u8"Installera PawnIO",
 };
