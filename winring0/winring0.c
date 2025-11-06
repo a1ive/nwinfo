@@ -886,10 +886,7 @@ int WR0_ExecPawn(struct wr0_drv_t* drv, struct pio_mod_t* mod, LPCSTR fn,
 	if (!mod->hd || mod->hd == INVALID_HANDLE_VALUE)
 		return -1;
 
-	if (in_size > 0 && in != NULL)
-		inBufSize = (DWORD)(sizeof(PIO_EXEC_INPUT) + in_size * sizeof(ULONG64));
-	else
-		return 0;
+	inBufSize = (DWORD)(sizeof(PIO_EXEC_INPUT) + in_size * sizeof(ULONG64));
 
 	inBuf = calloc(1, inBufSize);
 	if (inBuf == NULL)
@@ -897,7 +894,8 @@ int WR0_ExecPawn(struct wr0_drv_t* drv, struct pio_mod_t* mod, LPCSTR fn,
 
 	strcpy_s(inBuf->Fn, PIO_FN_NAME_LEN, fn);
 
-	memcpy(inBuf->Params, in, in_size * sizeof(ULONG64));
+	if (in)
+		memcpy(inBuf->Params, in, in_size * sizeof(ULONG64));
 
 	bRes = DeviceIoControl(mod->hd,
 		IOCTL_PIO_EXECUTE_FN,
@@ -913,9 +911,9 @@ int WR0_ExecPawn(struct wr0_drv_t* drv, struct pio_mod_t* mod, LPCSTR fn,
 	if (drv->debug)
 	{
 		printf("[PIO] Exec %s %s", bRes ? "OK" : "FAIL", fn);
-		for (SIZE_T i = 0; i < in_size; i++)
+		for (SIZE_T i = 0; in && i < min(in_size, 4); i++)
 			printf(" in[%zu]=%llxh", i, in[i]);
-		for (SIZE_T i = 0; i < out_size; i++)
+		for (SIZE_T i = 0; out && i < min(out_size,4); i++)
 			printf(" out[%zu]=%llxh", i, out[i]);
 		printf(" ret=%lu\n", returnedLength);
 	}

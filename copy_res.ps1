@@ -15,6 +15,7 @@ $FilesToCopy = @(
 	"gnwinfo\gnwinfo.ini",
 	"winring0\HwRwDrv.sys",
 	"winring0\HwRwDrvx64.sys",
+	"winring0\PawnIOSetup.exe",
 	"winring0\pawn\AMDFamily0F.bin",
 	"winring0\pawn\AMDFamily10.bin",
 	"winring0\pawn\AMDFamily17.bin",

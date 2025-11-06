@@ -322,13 +322,27 @@ static int amd_k8_temperature(struct msr_info_t* info)
 		info->id->x86.ext_model != 0x6c &&
 		info->id->x86.ext_model != 0x7c)
 		offset += 21;
-	addr = WR0_FindPciById(info->handle, AMD_PCI_VENDOR_ID, AMD_PCI_CONTROL_DEVICE_ID, info->id->index);
 
-	if (addr == 0xFFFFFFFF)
-		return CPU_INVALID_VALUE;
+	if (info->handle->driver_type != WR0_DRIVER_PAWNIO)
+	{
+		addr = WR0_FindPciById(info->handle, AMD_PCI_VENDOR_ID, AMD_PCI_CONTROL_DEVICE_ID, info->id->index);
 
-	WR0_WrPciConf32(info->handle, addr, THERMTRIP_STATUS_REGISTER, 0);
-	value = WR0_RdPciConf32(info->handle, addr, THERMTRIP_STATUS_REGISTER);
+		if (addr == 0xFFFFFFFF)
+			return CPU_INVALID_VALUE;
+
+		WR0_WrPciConf32(info->handle, addr, THERMTRIP_STATUS_REGISTER, 0);
+		value = WR0_RdPciConf32(info->handle, addr, THERMTRIP_STATUS_REGISTER);
+	}
+	else
+	{
+		struct pio_mod_t* pio = &info->handle->pio_amd0f;
+		ULONG64 in[2] = { 0, 0 }; // cpu index, core index
+		ULONG64 out;
+		if (WR0_ExecPawn(info->handle, pio, "ioctl_get_thermtrip", in, 2, &out, 1, NULL))
+			return CPU_INVALID_VALUE;
+		value = (uint32_t)out;
+	}
+	
 	return (int)((value >> 16) & 0xFF) + offset;
 }
 
@@ -408,6 +422,14 @@ static int amd_k10_temperature(struct msr_info_t* info)
 	{
 		if (info->handle->driver_type == WR0_DRIVER_CPUZ161)
 			value = WR0_RdAmdSmn(info->handle, 0, 1, SMU_REPORTED_TEMP_CTRL_OFFSET);
+		else if (info->handle->driver_type == WR0_DRIVER_PAWNIO)
+		{
+			struct pio_mod_t* pio = &info->handle->pio_amd10;
+			ULONG64 in = SMU_REPORTED_TEMP_CTRL_OFFSET;
+			ULONG64 out;
+			if (WR0_ExecPawn(info->handle, pio, "ioctl_read_smu", &in, 1, &out, 1, NULL) == 0)
+				value = (uint32_t)out;
+		}
 		else
 		{
 			WR0_WrPciConf32(info->handle, 0, NB_PCI_REG_ADDR_ADDR, SMU_REPORTED_TEMP_CTRL_OFFSET);
@@ -416,10 +438,21 @@ static int amd_k10_temperature(struct msr_info_t* info)
 	}
 	else
 	{
-		addr = WR0_FindPciById(info->handle, AMD_PCI_VENDOR_ID, did, info->id->index);
-		if (addr == 0xFFFFFFFF)
-			return CPU_INVALID_VALUE;
-		value = WR0_RdPciConf32(info->handle, addr, 0xA4);
+		if (info->handle->driver_type == WR0_DRIVER_PAWNIO)
+		{
+			struct pio_mod_t* pio = &info->handle->pio_amd10;
+			ULONG64 in[2] = { 0, 0xA4 }; // cpu index, offset
+			ULONG64 out;
+			if (WR0_ExecPawn(info->handle, pio, "ioctl_read_miscctl", in, 2, &out, 1, NULL) == 0)
+				value = (uint32_t)out;
+		}
+		else
+		{
+			addr = WR0_FindPciById(info->handle, AMD_PCI_VENDOR_ID, did, info->id->index);
+			if (addr == 0xFFFFFFFF)
+				return CPU_INVALID_VALUE;
+			value = WR0_RdPciConf32(info->handle, addr, 0xA4);
+		}
 	}
 	if ((info->id->x86.ext_family == 0x15 ||
 		info->id->x86.ext_family == 0x16)
