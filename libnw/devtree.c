@@ -5,10 +5,86 @@
 #include <windows.h>
 #include <initguid.h>
 #include <devpkey.h>
+#include <devpropdef.h>
 
 #include "libnw.h"
 #include "utils.h"
 #include "devtree.h"
+
+static CONFIGRET
+GetDevNodeProperty(DEVINST devHandle, const DEVPROPKEY* devProperty, DEVPROPTYPE* propertyType)
+{
+	ULONG ulRegType;
+	ULONG cmDrpProp = (ULONG)-1;
+	ULONG bufferSize = NWINFO_BUFSZ;
+	CONFIGRET cr;
+	HKEY hKey;
+
+	if (NWLC->NwOsInfo.dwMajorVersion >= 6 &&
+		CM_Get_DevNode_PropertyW(devHandle, devProperty, propertyType, (PBYTE)NWLC->NwBuf, &bufferSize, 0) == CR_SUCCESS)
+		return CR_SUCCESS;
+
+	if (IsEqualDevPropKey(*devProperty, DEVPKEY_Device_HardwareIds))
+	{
+		cr = CM_Get_DevNode_Registry_PropertyW(devHandle, CM_DRP_HARDWAREID, &ulRegType, (PBYTE)NWLC->NwBuf, &bufferSize, 0);
+		*propertyType = DEVPROP_TYPE_STRING_LIST;
+	}
+	else if (IsEqualDevPropKey(*devProperty, DEVPKEY_Device_CompatibleIds))
+	{
+		cr = CM_Get_DevNode_Registry_PropertyW(devHandle, CM_DRP_COMPATIBLEIDS, &ulRegType, (PBYTE)NWLC->NwBuf, &bufferSize, 0);
+		*propertyType = DEVPROP_TYPE_STRING_LIST;
+	}
+	else if (IsEqualDevPropKey(*devProperty, DEVPKEY_NAME))
+	{
+		cr = CM_Get_DevNode_Registry_PropertyW(devHandle, CM_DRP_DEVICEDESC, &ulRegType, (PBYTE)NWLC->NwBuf, &bufferSize, 0);
+		*propertyType = DEVPROP_TYPE_STRING;
+	}
+	else if (IsEqualDevPropKey(*devProperty, DEVPKEY_Device_Class))
+	{
+		cr = CM_Get_DevNode_Registry_PropertyW(devHandle, CM_DRP_CLASS, &ulRegType, (PBYTE)NWLC->NwBuf, &bufferSize, 0);
+		*propertyType = DEVPROP_TYPE_STRING;
+	}
+	else if (IsEqualDevPropKey(*devProperty, DEVPKEY_Device_Manufacturer))
+	{
+		cr = CM_Get_DevNode_Registry_PropertyW(devHandle, CM_DRP_MFG, &ulRegType, (PBYTE)NWLC->NwBuf, &bufferSize, 0);
+		*propertyType = DEVPROP_TYPE_STRING;
+	}
+	else if (IsEqualDevPropKey(*devProperty, DEVPKEY_Device_Service))
+	{
+		cr = CM_Get_DevNode_Registry_PropertyW(devHandle, CM_DRP_SERVICE, &ulRegType, (PBYTE)NWLC->NwBuf, &bufferSize, 0);
+		*propertyType = DEVPROP_TYPE_STRING;
+	}
+	else if (IsEqualDevPropKey(*devProperty, DEVPKEY_Device_LocationInfo))
+	{
+		cr = CM_Get_DevNode_Registry_PropertyW(devHandle, CM_DRP_LOCATION_INFORMATION, &ulRegType, (PBYTE)NWLC->NwBuf, &bufferSize, 0);
+		*propertyType = DEVPROP_TYPE_STRING;
+	}
+	else if (IsEqualDevPropKey(*devProperty, DEVPKEY_Device_DriverVersion))
+	{
+		cr = CM_Open_DevNode_Key(devHandle, KEY_READ, 0, RegDisposition_OpenExisting, &hKey, CM_REGISTRY_SOFTWARE);
+		if (cr != CR_SUCCESS)
+			goto out;
+		if (RegQueryValueExW(hKey, L"DriverVersion", NULL, &ulRegType, (PBYTE)NWLC->NwBuf, &bufferSize) != ERROR_SUCCESS)
+			cr = CR_FAILURE;
+		*propertyType = DEVPROP_TYPE_STRING;
+		RegCloseKey(hKey);
+	}
+	else if (IsEqualDevPropKey(*devProperty, DEVPKEY_Device_DriverDate))
+	{
+		cr = CM_Open_DevNode_Key(devHandle, KEY_READ, 0, RegDisposition_OpenExisting, &hKey, CM_REGISTRY_SOFTWARE);
+		if (cr != CR_SUCCESS)
+			goto out;
+		if (RegQueryValueExW(hKey, L"DriverDateData", NULL, &ulRegType, (PBYTE)NWLC->NwBuf, &bufferSize) != ERROR_SUCCESS)
+			cr = CR_FAILURE;
+		*propertyType = DEVPROP_TYPE_FILETIME;
+		RegCloseKey(hKey);
+	}
+	else
+		return CR_NO_SUCH_VALUE;
+
+out:
+	return cr;
+}
 
 BOOL
 NWL_SetDevPropString(CHAR* strBuf, size_t strSize, DEVINST devHandle, const DEVPROPKEY* devProperty)
@@ -18,8 +94,7 @@ NWL_SetDevPropString(CHAR* strBuf, size_t strSize, DEVINST devHandle, const DEVP
 
 	propertyType = DEVPROP_TYPE_EMPTY;
 
-	if (CM_Get_DevNode_PropertyW(devHandle, devProperty, &propertyType,
-		(PBYTE)NWLC->NwBuf, &bufferSize, 0) != CR_SUCCESS)
+	if (GetDevNodeProperty(devHandle, devProperty, &propertyType) != CR_SUCCESS)
 		return FALSE;
 
 	ZeroMemory(strBuf, strSize);
