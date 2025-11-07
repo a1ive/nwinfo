@@ -12,75 +12,94 @@
 #include "devtree.h"
 
 static CONFIGRET
-GetDevNodeProperty(DEVINST devHandle, const DEVPROPKEY* devProperty, DEVPROPTYPE* propertyType)
+GetDevNodeProperty(DEVINST devInst, const DEVPROPKEY* pKey, DEVPROPTYPE* propType, PBYTE propBuffer, PULONG propSize)
 {
 	ULONG ulRegType;
-	ULONG cmDrpProp = (ULONG)-1;
-	ULONG bufferSize = NWINFO_BUFSZ;
-	CONFIGRET cr;
+	CONFIGRET cr = CR_NO_SUCH_VALUE;
 	HKEY hKey;
 
-	if (NWLC->NwOsInfo.dwMajorVersion >= 6 &&
-		CM_Get_DevNode_PropertyW(devHandle, devProperty, propertyType, (PBYTE)NWLC->NwBuf, &bufferSize, 0) == CR_SUCCESS)
-		return CR_SUCCESS;
+	if (NWLC->NwOsInfo.dwMajorVersion >= 6)
+	{
+		cr = CM_Get_DevNode_PropertyW(devInst, pKey, propType, propBuffer, propSize, 0);
+		if (cr == CR_SUCCESS || cr == CR_BUFFER_SMALL)
+			return cr;
+	}
 
-	if (IsEqualDevPropKey(*devProperty, DEVPKEY_Device_HardwareIds))
+	if (IsEqualDevPropKey(*pKey, DEVPKEY_Device_HardwareIds))
 	{
-		cr = CM_Get_DevNode_Registry_PropertyW(devHandle, CM_DRP_HARDWAREID, &ulRegType, (PBYTE)NWLC->NwBuf, &bufferSize, 0);
-		*propertyType = DEVPROP_TYPE_STRING_LIST;
+		cr = CM_Get_DevNode_Registry_PropertyW(devInst, CM_DRP_HARDWAREID, &ulRegType, propBuffer, propSize, 0);
+		*propType = DEVPROP_TYPE_STRING_LIST;
 	}
-	else if (IsEqualDevPropKey(*devProperty, DEVPKEY_Device_CompatibleIds))
+	else if (IsEqualDevPropKey(*pKey, DEVPKEY_Device_CompatibleIds))
 	{
-		cr = CM_Get_DevNode_Registry_PropertyW(devHandle, CM_DRP_COMPATIBLEIDS, &ulRegType, (PBYTE)NWLC->NwBuf, &bufferSize, 0);
-		*propertyType = DEVPROP_TYPE_STRING_LIST;
+		cr = CM_Get_DevNode_Registry_PropertyW(devInst, CM_DRP_COMPATIBLEIDS, &ulRegType, propBuffer, propSize, 0);
+		*propType = DEVPROP_TYPE_STRING_LIST;
 	}
-	else if (IsEqualDevPropKey(*devProperty, DEVPKEY_NAME))
+	else if (IsEqualDevPropKey(*pKey, DEVPKEY_NAME))
 	{
-		cr = CM_Get_DevNode_Registry_PropertyW(devHandle, CM_DRP_DEVICEDESC, &ulRegType, (PBYTE)NWLC->NwBuf, &bufferSize, 0);
-		*propertyType = DEVPROP_TYPE_STRING;
+		cr = CM_Get_DevNode_Registry_PropertyW(devInst, CM_DRP_DEVICEDESC, &ulRegType, propBuffer, propSize, 0);
+		*propType = DEVPROP_TYPE_STRING;
 	}
-	else if (IsEqualDevPropKey(*devProperty, DEVPKEY_Device_Class))
+	else if (IsEqualDevPropKey(*pKey, DEVPKEY_Device_Class))
 	{
-		cr = CM_Get_DevNode_Registry_PropertyW(devHandle, CM_DRP_CLASS, &ulRegType, (PBYTE)NWLC->NwBuf, &bufferSize, 0);
-		*propertyType = DEVPROP_TYPE_STRING;
+		cr = CM_Get_DevNode_Registry_PropertyW(devInst, CM_DRP_CLASS, &ulRegType, propBuffer, propSize, 0);
+		*propType = DEVPROP_TYPE_STRING;
 	}
-	else if (IsEqualDevPropKey(*devProperty, DEVPKEY_Device_Manufacturer))
+	else if (IsEqualDevPropKey(*pKey, DEVPKEY_Device_Manufacturer))
 	{
-		cr = CM_Get_DevNode_Registry_PropertyW(devHandle, CM_DRP_MFG, &ulRegType, (PBYTE)NWLC->NwBuf, &bufferSize, 0);
-		*propertyType = DEVPROP_TYPE_STRING;
+		cr = CM_Get_DevNode_Registry_PropertyW(devInst, CM_DRP_MFG, &ulRegType, propBuffer, propSize, 0);
+		*propType = DEVPROP_TYPE_STRING;
 	}
-	else if (IsEqualDevPropKey(*devProperty, DEVPKEY_Device_Service))
+	else if (IsEqualDevPropKey(*pKey, DEVPKEY_Device_Service))
 	{
-		cr = CM_Get_DevNode_Registry_PropertyW(devHandle, CM_DRP_SERVICE, &ulRegType, (PBYTE)NWLC->NwBuf, &bufferSize, 0);
-		*propertyType = DEVPROP_TYPE_STRING;
+		cr = CM_Get_DevNode_Registry_PropertyW(devInst, CM_DRP_SERVICE, &ulRegType, propBuffer, propSize, 0);
+		*propType = DEVPROP_TYPE_STRING;
 	}
-	else if (IsEqualDevPropKey(*devProperty, DEVPKEY_Device_LocationInfo))
+	else if (IsEqualDevPropKey(*pKey, DEVPKEY_Device_LocationInfo))
 	{
-		cr = CM_Get_DevNode_Registry_PropertyW(devHandle, CM_DRP_LOCATION_INFORMATION, &ulRegType, (PBYTE)NWLC->NwBuf, &bufferSize, 0);
-		*propertyType = DEVPROP_TYPE_STRING;
+		cr = CM_Get_DevNode_Registry_PropertyW(devInst, CM_DRP_LOCATION_INFORMATION, &ulRegType, propBuffer, propSize, 0);
+		*propType = DEVPROP_TYPE_STRING;
 	}
-	else if (IsEqualDevPropKey(*devProperty, DEVPKEY_Device_DriverVersion))
+	else if (IsEqualDevPropKey(*pKey, DEVPKEY_Device_DriverVersion))
 	{
-		cr = CM_Open_DevNode_Key(devHandle, KEY_READ, 0, RegDisposition_OpenExisting, &hKey, CM_REGISTRY_SOFTWARE);
+		cr = CM_Open_DevNode_Key(devInst, KEY_READ, 0, RegDisposition_OpenExisting, &hKey, CM_REGISTRY_SOFTWARE);
 		if (cr != CR_SUCCESS)
 			goto out;
-		if (RegQueryValueExW(hKey, L"DriverVersion", NULL, &ulRegType, (PBYTE)NWLC->NwBuf, &bufferSize) != ERROR_SUCCESS)
+		LSTATUS lst = RegGetValueW(hKey, NULL, L"DriverVersion", RRF_RT_REG_SZ, NULL, propBuffer, propSize);
+		switch (lst)
+		{
+		case ERROR_SUCCESS:
+			cr = CR_SUCCESS;
+			break;
+		case ERROR_MORE_DATA:
+			cr = CR_BUFFER_SMALL;
+			break;
+		default:
 			cr = CR_FAILURE;
-		*propertyType = DEVPROP_TYPE_STRING;
+		}
+		*propType = DEVPROP_TYPE_STRING;
 		RegCloseKey(hKey);
 	}
-	else if (IsEqualDevPropKey(*devProperty, DEVPKEY_Device_DriverDate))
+	else if (IsEqualDevPropKey(*pKey, DEVPKEY_Device_DriverDate))
 	{
-		cr = CM_Open_DevNode_Key(devHandle, KEY_READ, 0, RegDisposition_OpenExisting, &hKey, CM_REGISTRY_SOFTWARE);
+		cr = CM_Open_DevNode_Key(devInst, KEY_READ, 0, RegDisposition_OpenExisting, &hKey, CM_REGISTRY_SOFTWARE);
 		if (cr != CR_SUCCESS)
 			goto out;
-		if (RegQueryValueExW(hKey, L"DriverDateData", NULL, &ulRegType, (PBYTE)NWLC->NwBuf, &bufferSize) != ERROR_SUCCESS)
+		LSTATUS lst = RegGetValueW(hKey, NULL, L"DriverDateData", RRF_RT_REG_BINARY, NULL, propBuffer, propSize);
+		switch (lst)
+		{
+		case ERROR_SUCCESS:
+			cr = CR_SUCCESS;
+			break;
+		case ERROR_MORE_DATA:
+			cr = CR_BUFFER_SMALL;
+			break;
+		default:
 			cr = CR_FAILURE;
-		*propertyType = DEVPROP_TYPE_FILETIME;
+		}
+		*propType = DEVPROP_TYPE_FILETIME;
 		RegCloseKey(hKey);
 	}
-	else
-		return CR_NO_SUCH_VALUE;
 
 out:
 	return cr;
@@ -89,12 +108,17 @@ out:
 BOOL
 NWL_SetDevPropString(CHAR* strBuf, size_t strSize, DEVINST devHandle, const DEVPROPKEY* devProperty)
 {
-	ULONG bufferSize = NWINFO_BUFSZ;
+	ULONG bufferSize = 0;
 	DEVPROPTYPE propertyType;
 
 	propertyType = DEVPROP_TYPE_EMPTY;
 
-	if (GetDevNodeProperty(devHandle, devProperty, &propertyType) != CR_SUCCESS)
+	if (GetDevNodeProperty(devHandle, devProperty, &propertyType, NULL, &bufferSize) != CR_BUFFER_SMALL)
+		return FALSE;
+	if (bufferSize >= NWINFO_BUFSZ)
+		return FALSE;
+	ZeroMemory(NWLC->NwBuf, NWINFO_BUFSZ);
+	if (GetDevNodeProperty(devHandle, devProperty, &propertyType, (PBYTE)NWLC->NwBuf, &bufferSize) != CR_SUCCESS)
 		return FALSE;
 
 	ZeroMemory(strBuf, strSize);
