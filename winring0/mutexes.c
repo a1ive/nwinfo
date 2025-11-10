@@ -6,6 +6,7 @@
 #include "winring0.h"
 
 static HANDLE mutex_pci = NULL;
+static HANDLE mutex_smbus = NULL;
 
 static HANDLE open_mutex(LPCWSTR name)
 {
@@ -41,12 +42,15 @@ static BOOL wait_mutex(HANDLE mutex, DWORD timeout)
 void WR0_OpenMutexes(void)
 {
 	mutex_pci = open_mutex(L"Global\\Access_PCI");
+	mutex_smbus = open_mutex(L"Global\\Access_SMBUS.HTP.Method");
 }
 
 void WR0_CloseMutexes(void)
 {
 	if (mutex_pci != NULL)
 		CloseHandle(mutex_pci);
+	if (mutex_smbus != NULL)
+		CloseHandle(mutex_smbus);
 }
 
 BOOL WR0_WaitPciBus(DWORD timeout)
@@ -58,4 +62,15 @@ void WR0_ReleasePciBus(void)
 {
 	if (mutex_pci != NULL)
 		ReleaseMutex(mutex_pci);
+}
+
+BOOL WR0_WaitSmBus(DWORD timeout)
+{
+	return wait_mutex(mutex_smbus, timeout);
+}
+
+void WR0_ReleaseSmBus(void)
+{
+	if (mutex_smbus != NULL)
+		ReleaseMutex(mutex_smbus);
 }

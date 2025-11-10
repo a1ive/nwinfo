@@ -75,3 +75,5 @@ void WR0_OpenMutexes(void);
 void WR0_CloseMutexes(void);
 BOOL WR0_WaitPciBus(DWORD timeout);
 void WR0_ReleasePciBus(void);
+BOOL WR0_WaitSmBus(DWORD timeout);
+void WR0_ReleaseSmBus(void);
