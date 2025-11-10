@@ -68,6 +68,9 @@
     <ClInclude Include="lang\pl_PL.h">
       <Filter>Lang</Filter>
     </ClInclude>
+    <ClInclude Include="lang\pt_BR.h">
+      <Filter>Lang</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="gnwinfo.c">

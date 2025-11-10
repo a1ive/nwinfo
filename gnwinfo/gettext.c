@@ -10,6 +10,7 @@
 #include "lang/ja_JP.h"
 #include "lang/ko_KR.h"
 #include "lang/pl_PL.h"
+#include "lang/pt_BR.h"
 #include "lang/sv_SE.h"
 #include "lang/tr_TR.h"
 #include "lang/zh_CN.h"
@@ -23,7 +24,7 @@ N_(GETTEXT_STR_ID id)
 {
 	if (g_lang_id == 0)
 		g_lang_id = GetUserDefaultUILanguage();
-	if (id >= N__MAX_)
+	if (id < 0 || id >= N__MAX_)
 		return INVALID_N_ID;
 
 	const char* str = NULL;
@@ -46,6 +47,9 @@ N_(GETTEXT_STR_ID id)
 		break;
 	case 1045: // Polish
 		str = lang_pl_pl[id];
+		break;
+	case 1046: // Portuguese - Brazil
+		str = lang_pt_br[id];
 		break;
 	case 1053: // Swedish
 		str = lang_sv_se[id];
