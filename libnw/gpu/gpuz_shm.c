@@ -172,6 +172,8 @@ static uint32_t gpuz_shm_get(void* data, NWLIB_GPU_DEV* dev, uint32_t dev_count)
 			ctx->Device->Frequency = rec->value;
 		else if (ctx->Device->Temperature == 0.0 && wcscmp(rec->name, L"GPU Temperature") == 0)
 			ctx->Device->Temperature = get_gpuz_temperature(rec);
+		else if (ctx->Device->Temperature == 0.0 && wcscmp(rec->name, L"Hot Spot") == 0)
+			ctx->Device->Temperature = get_gpuz_temperature(rec);
 		else if (ctx->Device->FanSpeed == 0 && wcscmp(rec->name, L"Fan Speed (RPM)") == 0)
 			ctx->Device->FanSpeed = (uint64_t)rec->value;
 		else if (wcscmp(rec->name, L"GPU Load") == 0)
@@ -183,6 +185,8 @@ static uint32_t gpuz_shm_get(void* data, NWLIB_GPU_DEV* dev, uint32_t dev_count)
 		else if (ctx->Device->Power == 0.0 && wcscmp(rec->name, L"GPU Power Draw") == 0)
 			ctx->Device->Power = rec->value;
 		else if (ctx->Device->Power == 0.0 && wcscmp(rec->name, L"GPU Chip Power Draw") == 0)
+			ctx->Device->Power = rec->value;
+		else if (ctx->Device->Power == 0.0 && wcscmp(rec->name, L"Board Power Draw") == 0)
 			ctx->Device->Power = rec->value;
 		else if (ctx->Device->Voltage == 0.0 && wcscmp(rec->name, L"GPU Voltage") == 0)
 			ctx->Device->Voltage = rec->value;
