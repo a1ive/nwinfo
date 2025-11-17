@@ -20,7 +20,9 @@ $FilesToCopy = @(
 	"winring0\pawn\AMDFamily10.bin",
 	"winring0\pawn\AMDFamily17.bin",
 	"winring0\pawn\IntelMSR.bin",
-	"winring0\pawn\RyzenSMU.bin"
+	"winring0\pawn\RyzenSMU.bin",
+	"winring0\pawn\SmbusI801.bin",
+	"winring0\pawn\SmbusPIIX4.bin"
 )
 
 $FilesToDownload = @(

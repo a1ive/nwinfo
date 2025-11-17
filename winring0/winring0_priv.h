@@ -90,15 +90,6 @@
 #define OLS_ERROR_PCI_WRITE_CONFIG		(0xE0000003L)
 #define OLS_ERROR_PCI_READ_CONFIG		(0xE0000004L)
 
-// Bus Number, Device Number and Function Number to PCI Device Address
-#define PciBusDevFunc(Bus, Dev, Func)	((Bus&0xFF)<<8) | ((Dev&0x1F)<<3) | (Func&7)
-// PCI Device Address to Bus Number
-#define PciGetBus(address)				((address>>8) & 0xFF)
-// PCI Device Address to Device Number
-#define PciGetDev(address)				((address>>3) & 0x1F)
-// PCI Device Address to Function Number
-#define PciGetFunc(address)				(address&7)
-
 #pragma pack(push,4)
 
 typedef struct _OLS_WRITE_MSR_INPUT
@@ -128,7 +119,7 @@ typedef struct _OLS_WRITE_PCI_CONFIG_INPUT
 {
 	ULONG PciAddress;
 	ULONG PciOffset;
-	UCHAR Data[1];
+	UCHAR Data[4];
 } OLS_WRITE_PCI_CONFIG_INPUT;
 
 typedef LARGE_INTEGER PHYSICAL_ADDRESS;
@@ -199,8 +190,16 @@ typedef struct _CPUZ_READ_MEMORY_OUTPUT
 
 typedef struct _CPUZ_READ_PCI_CONFIG_INPUT
 {
-	DWORD Bus;
-	DWORD Device;
+	union
+	{
+		DWORD Bus;
+		DWORD RetVal;
+	};
+	union
+	{
+		DWORD Device;
+		UINT8 RetData[4];
+	};
 	DWORD Function;
 	DWORD Offset;
 	DWORD Length;
@@ -209,17 +208,10 @@ typedef struct _CPUZ_READ_PCI_CONFIG_INPUT
 typedef struct _CPUZ_READ_PCI_CONFIG_OUTPUT
 {
 	DWORD Length;
-	union
-	{
-		UINT8 DataByte[8];
-		UINT16 DataWord[4];
-		UINT32 DataDword[2];
-		UINT64 DataQword;
-	};
+	UINT8 Data[4];
 } CPUZ_READ_PCI_CONFIG_OUTPUT;
 
 #pragma pack(pop)
-
 
 // 0x9C402440
 #define IOCTL_CPUZ_READ_MSR 0x9C402440

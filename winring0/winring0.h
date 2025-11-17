@@ -38,7 +38,18 @@ struct wr0_drv_t
 	struct pio_mod_t pio_amd17;
 	struct pio_mod_t pio_intel;
 	struct pio_mod_t pio_rysmu;
+	struct pio_mod_t pio_smi801;
+	struct pio_mod_t pio_smpiix4;
 };
+
+// Bus Number, Device Number and Function Number to PCI Device Address
+#define PciBusDevFunc(Bus, Dev, Func)	((Bus&0xFF)<<8) | ((Dev&0x1F)<<3) | (Func&7)
+// PCI Device Address to Bus Number
+#define PciGetBus(address)				((address>>8) & 0xFF)
+// PCI Device Address to Device Number
+#define PciGetDev(address)				((address>>3) & 0x1F)
+// PCI Device Address to Function Number
+#define PciGetFunc(address)				(address&7)
 
 BOOL WR0_CheckPawnIO(void);
 BOOL WR0_InstallPawnIO(void);
@@ -70,6 +81,8 @@ int WR0_ExecPawn(struct wr0_drv_t* drv, struct pio_mod_t* mod, LPCSTR fn, const 
 
 struct wr0_drv_t* WR0_OpenDriver(int debug);
 int WR0_CloseDriver(struct wr0_drv_t* drv);
+
+void WR0_MicroSleep(unsigned int usec);
 
 void WR0_OpenMutexes(void);
 void WR0_CloseMutexes(void);

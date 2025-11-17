@@ -39,6 +39,21 @@ static BOOL wait_mutex(HANDLE mutex, DWORD timeout)
 	}
 }
 
+void WR0_MicroSleep(unsigned int usec)
+{
+	HANDLE timer;
+	LARGE_INTEGER ft;
+
+	ft.QuadPart = -(10 * (__int64)usec);
+
+	timer = CreateWaitableTimerW(NULL, TRUE, NULL);
+	if (!timer)
+		return;
+	SetWaitableTimer(timer, &ft, 0, NULL, NULL, 0);
+	WaitForSingleObject(timer, INFINITE);
+	CloseHandle(timer);
+}
+
 void WR0_OpenMutexes(void)
 {
 	mutex_pci = open_mutex(L"Global\\Access_PCI");

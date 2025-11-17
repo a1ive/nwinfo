@@ -75,6 +75,8 @@ VOID NW_Print(LPCSTR lpFileName)
 		NW_System();
 	if (NWLC->UsbInfo)
 		NW_Usb();
+	if (NWLC->SpdInfo)
+		NW_Spd();
 	if (NWLC->BatteryInfo)
 		NW_Battery();
 	if (NWLC->UefiInfo)

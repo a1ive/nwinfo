@@ -272,6 +272,8 @@ struct wr0_drv_t* WR0_OpenDriver(int debug)
 			load_pawnio(&drv->pio_amd17, L"AMDFamily17.bin", debug);
 			load_pawnio(&drv->pio_intel, L"IntelMSR.bin", debug);
 			load_pawnio(&drv->pio_rysmu, L"RyzenSMU.bin", debug);
+			load_pawnio(&drv->pio_smi801, L"SmbusI801.bin", debug);
+			load_pawnio(&drv->pio_smpiix4, L"SmbusPIIX4.bin", debug);
 			return drv;
 		}
 	}
@@ -562,7 +564,7 @@ int WR0_RdPciConf(struct wr0_drv_t* drv, uint32_t addr, uint32_t reg, void* valu
 	DWORD returnedLength = 0;
 	BOOL result = FALSE;
 
-	if (!drv || !drv->hhDriver || drv->hhDriver == INVALID_HANDLE_VALUE
+	if (!drv || !drv->hhDriver || drv->hhDriver == INVALID_HANDLE_VALUE || addr == 0xFFFFFFFF
 		|| !value || (size == 2 && (reg & 1) != 0) || (size == 4 && (reg & 3) != 0))
 		return -1;
 
@@ -571,7 +573,7 @@ int WR0_RdPciConf(struct wr0_drv_t* drv, uint32_t addr, uint32_t reg, void* valu
 	case WR0_DRIVER_HWIO:
 	{
 		OLS_READ_PCI_CONFIG_INPUT inBuf = { 0 };
-		inBuf.PciAddress = addr;
+		inBuf.PciAddress = (PciGetBus(addr)) | (PciGetDev(addr) << 8) | (PciGetFunc(addr) << 16);
 		inBuf.PciOffset = reg;
 		result = DeviceIoControl(drv->hhDriver, IOCTL_HIO_READ_PCI_CONFIG,
 			&inBuf, sizeof(inBuf), value, size, &returnedLength, NULL);
@@ -589,16 +591,14 @@ int WR0_RdPciConf(struct wr0_drv_t* drv, uint32_t addr, uint32_t reg, void* valu
 	case WR0_DRIVER_CPUZ161:
 	{
 		CPUZ_READ_PCI_CONFIG_INPUT inBuf = { 0 };
-		CPUZ_READ_PCI_CONFIG_OUTPUT outBuf = { 0 };
 		inBuf.Bus = PciGetBus(addr);
 		inBuf.Device = PciGetDev(addr);
 		inBuf.Function = PciGetFunc(addr);
 		inBuf.Offset = reg;
 		inBuf.Length = size;
 		result = DeviceIoControl(drv->hhDriver, IOCTL_CPUZ_READ_PCI_CONFIG,
-			&inBuf, sizeof(inBuf), &outBuf, sizeof(outBuf), &returnedLength, NULL);
-		if (result)
-			memcpy(value, outBuf.DataByte, size);
+			&inBuf, sizeof(inBuf), &inBuf, sizeof(DWORD) + size, &returnedLength, NULL);
+		memcpy(value, inBuf.RetData, size);
 	}
 		break;
 	default:
@@ -636,40 +636,40 @@ int WR0_WrPciConf(struct wr0_drv_t* drv, uint32_t addr, uint32_t reg, void* valu
 {
 	DWORD returnedLength = 0;
 	BOOL result = FALSE;
-	int inputSize = 0;
-	OLS_WRITE_PCI_CONFIG_INPUT* inBuf;
-	DWORD ctlCode;
 
-	if (!drv || !drv->hhDriver || drv->hhDriver == INVALID_HANDLE_VALUE
+	if (!drv || !drv->hhDriver || drv->hhDriver == INVALID_HANDLE_VALUE || addr == 0xFFFFFFFF
 		|| !value || (size == 2 && (reg & 1) != 0) || (size == 4 && (reg & 3) != 0))
 		return -1;
 
 	switch (drv->driver_type)
 	{
 	case WR0_DRIVER_WINRING0:
-		ctlCode = IOCTL_OLS_WRITE_PCI_CONFIG;
+	{
+		DWORD inSize = offsetof(OLS_WRITE_PCI_CONFIG_INPUT, Data) + size;
+		OLS_WRITE_PCI_CONFIG_INPUT inBuf = { 0 };
+		inBuf.PciAddress = addr;
+		inBuf.PciOffset = reg;
+		memcpy(inBuf.Data, value, size);
+		result = DeviceIoControl(drv->hhDriver, IOCTL_OLS_WRITE_PCI_CONFIG,
+			&inBuf, inSize, NULL, 0, &returnedLength, NULL);
+	}
 		break;
 	case WR0_DRIVER_HWIO:
-		ctlCode = IOCTL_HIO_WRITE_PCI_CONFIG;
+	{
+		DWORD inSize = offsetof(OLS_WRITE_PCI_CONFIG_INPUT, Data) + size;
+		OLS_WRITE_PCI_CONFIG_INPUT inBuf = { 0 };
+		inBuf.PciAddress = (PciGetBus(addr)) | (PciGetDev(addr) << 8) | (PciGetFunc(addr) << 16);
+		inBuf.PciOffset = reg;
+		memcpy(inBuf.Data, value, size);
+		result = DeviceIoControl(drv->hhDriver, IOCTL_HIO_WRITE_PCI_CONFIG,
+			&inBuf, inSize, NULL, 0, &returnedLength, NULL);
+	}
 		break;
 	default:
 		return -1;
 	}
 
-	inputSize = offsetof(OLS_WRITE_PCI_CONFIG_INPUT, Data) + size;
-	inBuf = (OLS_WRITE_PCI_CONFIG_INPUT*)malloc(inputSize);
-	if (inBuf == NULL)
-		return -1;
-	memcpy(inBuf->Data, value, size);
-	inBuf->PciAddress = addr;
-	inBuf->PciOffset = reg;
-	result = DeviceIoControl(drv->hhDriver, ctlCode,
-		inBuf, inputSize, NULL, 0, &returnedLength, NULL);
-	free(inBuf);
-
-	if (result)
-		return 0;
-	return -2;
+	return result ? 0 : -2;
 }
 
 void WR0_WrPciConf8(struct wr0_drv_t* drv, uint32_t addr, uint32_t reg, uint8_t value)
@@ -995,6 +995,8 @@ int WR0_CloseDriver(struct wr0_drv_t* drv)
 		unload_pawnio(&drv->pio_amd17);
 		unload_pawnio(&drv->pio_intel);
 		unload_pawnio(&drv->pio_rysmu);
+		unload_pawnio(&drv->pio_smi801);
+		unload_pawnio(&drv->pio_smpiix4);
 		free(drv);
 		return 0;
 	}

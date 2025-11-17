@@ -19,6 +19,9 @@
     <Filter Include="gpu">
       <UniqueIdentifier>{1ebe1d0c-d19f-4fd4-919c-15185739e04a}</UniqueIdentifier>
     </Filter>
+    <Filter Include="smbus">
+      <UniqueIdentifier>{9056a76d-211d-428b-927a-280c77c83348}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="format.h">
@@ -74,6 +77,9 @@
     </ClInclude>
     <ClInclude Include="gpu\nvapi.h">
       <Filter>gpu</Filter>
+    </ClInclude>
+    <ClInclude Include="smbus.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -187,6 +193,18 @@
     </ClCompile>
     <ClCompile Include="gpu\gpuz_shm.c">
       <Filter>gpu</Filter>
+    </ClCompile>
+    <ClCompile Include="smbus.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="smbus\smbus_i801.c">
+      <Filter>smbus</Filter>
+    </ClCompile>
+    <ClCompile Include="spd.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="smbus\smbus_piix4.c">
+      <Filter>smbus</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
