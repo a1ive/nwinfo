@@ -120,9 +120,11 @@ Exports active physical network interfaces with IPv4 addresses to `report.html` 
 - --pci[=`CLASS`]  
   Print PCI info.  
   `CLASS` specifies the class code of pci devices, e.g. `0C05` (SMBus).  
-- --spd  
+- --spd[=`FILE`]  
   Print DIMM SPD info.  
+  Driver is required to access SPD data.  
   :warning: This option may damage the hardware.
+  `FILE` specifies the file name of the SPD dump.  
 - --usb  
   Print USB info.  
 - --battery  

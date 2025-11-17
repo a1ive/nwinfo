@@ -981,6 +981,92 @@ GetSpdTypeStr(UINT8 t)
 	return "UNKNOWN";
 }
 
+void
+ParseSpd(PNODE node, int id, CHAR* ids, DWORD idsSize, UINT8 rawSpd[SPD_MAX_SIZE])
+{
+	PNODE nspd = NWL_NodeAppendNew(node, "Slot", NFLG_TABLE_ROW);
+	NWL_NodeAttrSetf(nspd, "ID", NAFLG_FMT_NUMERIC, "%d", id);
+	NWL_NodeAttrSet(nspd, "Memory Type", GetSpdTypeStr(rawSpd[SPD_MEMORY_TYPE_OFFSET]), 0);
+
+	switch (rawSpd[SPD_MEMORY_TYPE_OFFSET])
+	{
+	case MEM_TYPE_SDRAM:
+		PrintSDR(nspd, rawSpd, ids, idsSize);
+		NWL_NodeAttrSetRaw(nspd, "Binary Data", rawSpd, 128);
+		break;
+	case MEM_TYPE_DDR:
+		PrintDDR1(nspd, rawSpd, ids, idsSize);
+		NWL_NodeAttrSetRaw(nspd, "Binary Data", rawSpd, 128);
+		break;
+	case MEM_TYPE_DDR2:
+	case MEM_TYPE_DDR2_FB:
+	case MEM_TYPE_DDR2_FB_P:
+		PrintDDR2(nspd, rawSpd, ids, idsSize);
+		NWL_NodeAttrSetRaw(nspd, "Binary Data", rawSpd, 256);
+		break;
+	case MEM_TYPE_DDR3:
+	case MEM_TYPE_LPDDR3:
+		PrintDDR3(nspd, rawSpd, ids, idsSize);
+		NWL_NodeAttrSetRaw(nspd, "Binary Data", rawSpd, 256);
+		break;
+	case MEM_TYPE_DDR4:
+	case MEM_TYPE_DDR4E:
+	case MEM_TYPE_LPDDR4:
+	case MEM_TYPE_LPDDR4X:
+		PrintDDR4(nspd, rawSpd, ids, idsSize);
+		NWL_NodeAttrSetRaw(nspd, "Binary Data", rawSpd, 512);
+		break;
+	case MEM_TYPE_DDR5:
+	case MEM_TYPE_LPDDR5:
+	case MEM_TYPE_LPDDR5X:
+		PrintDDR5(nspd, rawSpd, ids, idsSize);
+		NWL_NodeAttrSetRaw(nspd, "Binary Data", rawSpd, 1024);
+		break;
+	case MEM_TYPE_FPM_DRAM:
+	case MEM_TYPE_EDO:
+	case MEM_TYPE_PNEDO:
+	case MEM_TYPE_ROM:
+	case MEM_TYPE_SGRAM:
+		// Unsupported
+		NWL_NodeAttrSetRaw(nspd, "Binary Data", rawSpd, 128);
+		break;
+	default:
+		// Unsupported
+		NWL_NodeAttrSetRaw(nspd, "Binary Data", rawSpd, 256);
+		break;
+	}
+}
+
+void LoadSpdDump(LPCSTR path, UINT8 rawSpd[SPD_MAX_SIZE])
+{
+	memset(rawSpd, 0xFF, SPD_MAX_SIZE);
+
+	HANDLE hFile = CreateFileA(path, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+	if (hFile == NULL || hFile == INVALID_HANDLE_VALUE)
+	{
+		snprintf(NWLC->NwBuf, NWINFO_BUFSZ, "%s open failed", path);
+		NWL_NodeAppendMultiSz(&NWLC->ErrLog, NWLC->NwBuf);
+		return;
+	}
+	DWORD dwSize = GetFileSize(hFile, NULL);
+	if (dwSize == INVALID_FILE_SIZE || dwSize == 0)
+	{
+		snprintf(NWLC->NwBuf, NWINFO_BUFSZ, "Bad file %s", path);
+		NWL_NodeAppendMultiSz(&NWLC->ErrLog, NWLC->NwBuf);
+		CloseHandle(hFile);
+		return;
+	}
+	if (dwSize > SPD_MAX_SIZE)
+		dwSize = SPD_MAX_SIZE;
+	BOOL bRet = ReadFile(hFile, rawSpd, dwSize, &dwSize, NULL);
+	if (bRet == FALSE)
+	{
+		snprintf(NWLC->NwBuf, NWINFO_BUFSZ, "%s read error", path);
+		NWL_NodeAppendMultiSz(&NWLC->ErrLog, NWLC->NwBuf);
+	}
+	CloseHandle(hFile);
+}
+
 PNODE NW_Spd(VOID)
 {
 	int i = 0;
@@ -990,72 +1076,30 @@ PNODE NW_Spd(VOID)
 	PNODE node = NWL_NodeAlloc("SPD", NFLG_TABLE);
 	if (NWLC->SpdInfo)
 		NWL_NodeAppendChild(NWLC->NwRoot, node);
+	ids = NWL_LoadIdsToMemory(L"jep106.ids", &idsSize);
+
+	if (NWLC->SpdDump)
+	{
+		LoadSpdDump(NWLC->SpdDump, rawSpd);
+		ParseSpd(node, 0, ids, idsSize, rawSpd);
+		goto out;
+	}
 
 	smbus_t* ctx = SM_Init(NWLC->NwDrv);
 	if (!ctx)
-		return node;
+		goto out;
 
-	ids = NWL_LoadIdsToMemory(L"jep106.ids", &idsSize);
 	UINT64 tStart = GetTickCount64();
 	for (i = 0; i < SPD_MAX_SLOT; i++)
 	{
 		if (SM_GetSpd(ctx, i, rawSpd) != SM_OK)
 			continue;
-
-		PNODE nspd = NWL_NodeAppendNew(node, "Slot", NFLG_TABLE_ROW);
-		NWL_NodeAttrSetf(nspd, "ID", NAFLG_FMT_NUMERIC, "%d", i);
-		NWL_NodeAttrSet(nspd, "Memory Type", GetSpdTypeStr(rawSpd[SPD_MEMORY_TYPE_OFFSET]), 0);
-
-		switch (rawSpd[SPD_MEMORY_TYPE_OFFSET])
-		{
-		case MEM_TYPE_SDRAM:
-			PrintSDR(nspd, rawSpd, ids, idsSize);
-			NWL_NodeAttrSetRaw(nspd, "Binary Data", rawSpd, 128);
-			break;
-		case MEM_TYPE_DDR:
-			PrintDDR1(nspd, rawSpd, ids, idsSize);
-			NWL_NodeAttrSetRaw(nspd, "Binary Data", rawSpd, 128);
-			break;
-		case MEM_TYPE_DDR2:
-		case MEM_TYPE_DDR2_FB:
-		case MEM_TYPE_DDR2_FB_P:
-			PrintDDR2(nspd, rawSpd, ids, idsSize);
-			NWL_NodeAttrSetRaw(nspd, "Binary Data", rawSpd, 256);
-			break;
-		case MEM_TYPE_DDR3:
-		case MEM_TYPE_LPDDR3:
-			PrintDDR3(nspd, rawSpd, ids, idsSize);
-			NWL_NodeAttrSetRaw(nspd, "Binary Data", rawSpd, 256);
-			break;
-		case MEM_TYPE_DDR4:
-		case MEM_TYPE_DDR4E:
-		case MEM_TYPE_LPDDR4:
-		case MEM_TYPE_LPDDR4X:
-			PrintDDR4(nspd, rawSpd, ids, idsSize);
-			NWL_NodeAttrSetRaw(nspd, "Binary Data", rawSpd, 512);
-			break;
-		case MEM_TYPE_DDR5:
-		case MEM_TYPE_LPDDR5:
-		case MEM_TYPE_LPDDR5X:
-			PrintDDR5(nspd, rawSpd, ids, idsSize);
-			NWL_NodeAttrSetRaw(nspd, "Binary Data", rawSpd, 1024);
-			break;
-		case MEM_TYPE_FPM_DRAM:
-		case MEM_TYPE_EDO:
-		case MEM_TYPE_PNEDO:
-		case MEM_TYPE_ROM:
-		case MEM_TYPE_SGRAM:
-			// Unsupported
-			NWL_NodeAttrSetRaw(nspd, "Binary Data", rawSpd, 128);
-			break;
-		default:
-			// Unsupported
-			NWL_NodeAttrSetRaw(nspd, "Binary Data", rawSpd, 256);
-			break;
-		}
+		ParseSpd(node, i, ids, idsSize, rawSpd);
 	}
 	SMBUS_DBG("Time: %llu", GetTickCount64() - tStart);
 	SM_Free(ctx);
+
+out:
 	free(ids);
 	return node;
 }
