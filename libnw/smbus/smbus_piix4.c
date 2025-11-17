@@ -76,9 +76,7 @@
 
 #define SMBUS_LEN_SENTINEL (I2C_SMBUS_BLOCK_MAX + 1)
 
-// A 32 byte block process at 10MHz is 32.5ms, 64ms should be plenty
-#define MAX_TIMEOUT 64
-#define MAX_RETRIES 256
+#define MAX_RETRIES 500
 
 #define SMBHSTSTS_HOST_BUSY     (1 << 0)
 #define SMBHSTSTS_INTR          (1 << 1)
@@ -347,35 +345,20 @@ static inline int PIIX4CheckBusy(smbus_t* ctx)
 	return SM_ERR_TIMEOUT;
 }
 
-static int PIIX4Transaction(smbus_t* ctx, uint32_t size)
+static int PIIX4Transaction(smbus_t* ctx)
 {
 	uint8_t hststs = 0;
-#if 0
-	uint8_t timing = WR0_RdIo8(ctx->drv, SMBTIMING);
-	uint8_t hstcnt = WR0_RdIo8(ctx->drv, SMBHSTCNT);
-	WR0_WrIo8(ctx->drv, SMBHSTCNT, hstcnt | SMBHSTCNT_START);
-	ULONGLONG deadline = GetTickCount64() + MAX_TIMEOUT;
-	if (piix4_quirks.sw_csb5_delay)
-		WR0_MicroSleep(2000);
-	WR0_MicroSleep(((10 + (9 * size)) * timing * 4) / 66);
-	do
-	{
-		WR0_MicroSleep((timing * 4) / 66);
-		hststs = WR0_RdIo8(ctx->drv, SMBHSTSTS);
-	} while ((GetTickCount64() < deadline) && (hststs & 0x01));
-#else
 	uint8_t hstcnt = WR0_RdIo8(ctx->drv, SMBHSTCNT);
 	WR0_WrIo8(ctx->drv, SMBHSTCNT, hstcnt | SMBHSTCNT_START);
 	if (piix4_quirks.sw_csb5_delay)
 		WR0_MicroSleep(2000);
 	for (int i = 0; i < MAX_RETRIES; i++)
 	{
-		WR0_MicroSleep(250);
 		hststs = WR0_RdIo8(ctx->drv, SMBHSTSTS);
 		if (!(hststs & SMBHSTSTS_HOST_BUSY))
 			break;
+		WR0_MicroSleep(10);
 	}
-#endif
 
 	if (hststs & SMBHSTSTS_HOST_BUSY)
 		return SM_ERR_TIMEOUT;
@@ -394,7 +377,6 @@ static int
 PIIX4SimpleTransaction(smbus_t* ctx, uint8_t addr, uint8_t hstcmd, uint8_t read_write, uint8_t protocol, union i2c_smbus_data* data)
 {
 	uint8_t xact;
-	uint32_t size = protocol;
 
 	int rc = PIIX4CheckBusy(ctx);
 	if (rc != SM_OK)
@@ -423,7 +405,6 @@ PIIX4SimpleTransaction(smbus_t* ctx, uint8_t addr, uint8_t hstcmd, uint8_t read_
 			WR0_WrIo8(ctx->drv, SMBHSTDAT0, data->u8data);
 		WR0_WrIo8(ctx->drv, SMBHSTCMD, hstcmd);
 		xact = PIIX4_BYTE_DATA;
-		size += read_write;
 		break;
 	}
 	case I2C_SMBUS_WORD_DATA:
@@ -436,7 +417,6 @@ PIIX4SimpleTransaction(smbus_t* ctx, uint8_t addr, uint8_t hstcmd, uint8_t read_
 		}
 		WR0_WrIo8(ctx->drv, SMBHSTCMD, hstcmd);
 		xact = PIIX4_WORD_DATA;
-		size += read_write;
 		break;
 	}
 	default:
@@ -445,7 +425,7 @@ PIIX4SimpleTransaction(smbus_t* ctx, uint8_t addr, uint8_t hstcmd, uint8_t read_
 
 	WR0_WrIo8(ctx->drv, SMBHSTCNT, (xact & 0x1C) + (ENABLE_INT9 & 1));
 
-	rc = PIIX4Transaction(ctx, size);
+	rc = PIIX4Transaction(ctx);
 	if (rc != SM_OK)
 		return rc;
 
@@ -474,7 +454,6 @@ PIIX4BlockTransaction(smbus_t* ctx, uint8_t addr, uint8_t hstcmd, uint8_t read_w
 		return SM_ERR_PARAM;
 
 	uint8_t xact;
-	uint32_t size = 2 + read_write;
 	int rc = PIIX4CheckBusy(ctx);
 	if (rc != SM_OK)
 		return rc;
@@ -487,7 +466,6 @@ PIIX4BlockTransaction(smbus_t* ctx, uint8_t addr, uint8_t hstcmd, uint8_t read_w
 		WR0_WrIo8(ctx->drv, SMBHSTCMD, hstcmd);
 		if (read_write == I2C_SMBUS_WRITE)
 		{
-			size += data->block[0];
 			WR0_WrIo8(ctx->drv, SMBHSTDAT0, data->block[0]);
 			WR0_RdIo8(ctx->drv, SMBHSTCNT);
 			for (uint8_t i = 1; i <= data->block[0]; i++)
@@ -502,7 +480,7 @@ PIIX4BlockTransaction(smbus_t* ctx, uint8_t addr, uint8_t hstcmd, uint8_t read_w
 
 	WR0_WrIo8(ctx->drv, SMBHSTCNT, (xact & 0x1C) + (ENABLE_INT9 & 1));
 
-	rc = PIIX4Transaction(ctx, size);
+	rc = PIIX4Transaction(ctx);
 	if (rc != SM_OK)
 		return rc;
 

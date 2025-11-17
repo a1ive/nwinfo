@@ -991,15 +991,15 @@ PNODE NW_Spd(VOID)
 	if (NWLC->SpdInfo)
 		NWL_NodeAppendChild(NWLC->NwRoot, node);
 
-	smbus_t* smbus = SM_Init(NWLC->NwDrv);
-	if (!smbus)
+	smbus_t* ctx = SM_Init(NWLC->NwDrv);
+	if (!ctx)
 		return node;
 
 	ids = NWL_LoadIdsToMemory(L"jep106.ids", &idsSize);
-
+	UINT64 tStart = GetTickCount64();
 	for (i = 0; i < SPD_MAX_SLOT; i++)
 	{
-		if (SM_GetSpd(smbus, i, rawSpd) != SM_OK)
+		if (SM_GetSpd(ctx, i, rawSpd) != SM_OK)
 			continue;
 
 		PNODE nspd = NWL_NodeAppendNew(node, "Slot", NFLG_TABLE_ROW);
@@ -1054,7 +1054,8 @@ PNODE NW_Spd(VOID)
 			break;
 		}
 	}
-	SM_Free(smbus);
+	SMBUS_DBG("Time: %llu", GetTickCount64() - tStart);
+	SM_Free(ctx);
 	free(ids);
 	return node;
 }

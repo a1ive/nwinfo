@@ -1,6 +1,7 @@
-// SPDX-License-Identifier: Unlicense
+﻿// SPDX-License-Identifier: Unlicense
 
 #include "smbus.h"
+#include "libnw.h"
 #include <stdlib.h>
 #include <stdio.h>
 
@@ -243,6 +244,33 @@ DDR5_ReadByteAt(smbus_t* ctx, uint8_t slave_addr, uint16_t address, uint8_t* val
 	return SM_ReadByteData(ctx, slave_addr, offset, value);
 }
 
+static const uint16_t
+SPD_INDEX_DDR3[] =
+{
+	0,1,2,3,4,6,7,8,12,16,18,20,21,22,23,32,34,35,36,37,
+	117,118,120,121,122,123,124,125,128,129,130,131,132,133,134,135,136,137,138,139,140,141,142,143,144,145,
+	176,177,180,181,186,187,191,192,194,195,196,221,
+};
+
+static const uint16_t
+SPD_INDEX_DDR4[] =
+{
+	0,1,2,3,4,6,12,13,14,18,24,25,26,27,28,29,
+	121,122,123,125,
+	320,321,323,324,325,326,327,328,329,330,331,332,333,334,335,336,337,338,339,340,341,342,343,344,345,346,347,348,
+	384,385,393,396,401,402,403,404,405,406,427,428,429,430,431,
+};
+
+static const uint16_t
+SPD_INDEX_DDR5[] =
+{
+	0,1,2,3,4,6,8,10,15,20,21,30,31,32,33,34,35,36,37,38,39,
+	234,235,
+	512,513,515,516,517,518,519,520,521,522,523,524,525,526,527,528,529,530,531,532,533,534,535,536,537,538,539,540,
+	640,641,
+	709,710,717,718,719,720,721,722,723,724,725,773,774,781,782,783,784,785,786,787,788,789,790,
+};
+
 int SM_GetSpd(smbus_t* ctx, uint8_t dimm_index, uint8_t data[SPD_MAX_SIZE])
 {
 	int result = SM_OK;
@@ -276,31 +304,90 @@ int SM_GetSpd(smbus_t* ctx, uint8_t dimm_index, uint8_t data[SPD_MAX_SIZE])
 	case MEM_TYPE_DDR4E:
 	case MEM_TYPE_LPDDR4:
 	case MEM_TYPE_LPDDR4X:
-		for (uint16_t i = 0; i < 512; i++)
+		if (NWLC->BinaryFormat == BIN_FMT_NONE)
 		{
-			result = DDR4_ReadByteAt(ctx, slave_addr, i, &data[i]);
-			if (result != SM_OK)
+			for (uint16_t i = 0; i < ARRAYSIZE(SPD_INDEX_DDR4); i++)
 			{
-				SMBUS_DBG("Failed to read addr %u for DDR4 SPD on DIMM %u", i, dimm_index);
-				goto fail;
+				uint16_t off = SPD_INDEX_DDR4[i];
+				result = DDR4_ReadByteAt(ctx, slave_addr, off, &data[off]);
+				if (result != SM_OK)
+				{
+					SMBUS_DBG("Failed to read addr %u for DDR4 SPD on DIMM %u", off, dimm_index);
+					goto fail;
+				}
+			}
+		}
+		else
+		{
+			for (uint16_t i = 0; i < 512; i++)
+			{
+				result = DDR4_ReadByteAt(ctx, slave_addr, i, &data[i]);
+				if (result != SM_OK)
+				{
+					SMBUS_DBG("Failed to read addr %u for DDR4 SPD on DIMM %u", i, dimm_index);
+					goto fail;
+				}
 			}
 		}
 		DDR4_SetPage(ctx, slave_addr, 0);
 		break;
-
 	case MEM_TYPE_DDR5:
 	case MEM_TYPE_LPDDR5:
 	case MEM_TYPE_LPDDR5X:
-		for (uint16_t i = 0; i < 1024; i++)
+		if (NWLC->BinaryFormat == BIN_FMT_NONE)
 		{
-			result = DDR5_ReadByteAt(ctx, slave_addr, i, &data[i]);
-			if (result != SM_OK)
+			for (uint16_t i = 0; i < ARRAYSIZE(SPD_INDEX_DDR5); i++)
 			{
-				SMBUS_DBG("Failed to read addr %u for DDR5 SPD on DIMM %u", i, dimm_index);
-				goto fail;
+				uint16_t off = SPD_INDEX_DDR5[i];
+				result = DDR5_ReadByteAt(ctx, slave_addr, off, &data[off]);
+				if (result != SM_OK)
+				{
+					SMBUS_DBG("Failed to read addr %u for DDR5 SPD on DIMM %u", off, dimm_index);
+					goto fail;
+				}
+			}
+		}
+		else
+		{
+			for (uint16_t i = 0; i < 1024; i++)
+			{
+				result = DDR5_ReadByteAt(ctx, slave_addr, i, &data[i]);
+				if (result != SM_OK)
+				{
+					SMBUS_DBG("Failed to read addr %u for DDR5 SPD on DIMM %u", i, dimm_index);
+					goto fail;
+				}
 			}
 		}
 		DDR5_SetPage(ctx, slave_addr, 0);
+		break;
+	case MEM_TYPE_DDR3:
+	case MEM_TYPE_LPDDR3:
+		if (NWLC->BinaryFormat == BIN_FMT_NONE)
+		{
+			for (uint16_t i = 0; i < ARRAYSIZE(SPD_INDEX_DDR3); i++)
+			{
+				uint16_t off = SPD_INDEX_DDR3[i];
+				result = SM_ReadByteData(ctx, slave_addr, (uint8_t)off, &data[off]);
+				if (result != SM_OK)
+				{
+					SMBUS_DBG("Failed to read addr %u for DDR3 SPD on DIMM %u", off, dimm_index);
+					goto fail;
+				}
+			}
+		}
+		else
+		{
+			for (uint16_t i = 0; i < 256; i++)
+			{
+				result = SM_ReadByteData(ctx, slave_addr, (uint8_t)i, &data[i]);
+				if (result != SM_OK)
+				{
+					SMBUS_DBG("Failed to read addr %u for DDR3 SPD on DIMM %u", i, dimm_index);
+					goto fail;
+				}
+			}
+		}
 		break;
 	case MEM_TYPE_FPM_DRAM:
 	case MEM_TYPE_EDO:
@@ -314,7 +401,7 @@ int SM_GetSpd(smbus_t* ctx, uint8_t dimm_index, uint8_t data[SPD_MAX_SIZE])
 			result = SM_ReadByteData(ctx, slave_addr, (uint8_t)i, &data[i]);
 			if (result != SM_OK)
 			{
-				SMBUS_DBG("Failed to read addr %u for DDR SPD on DIMM %u", i, dimm_index);
+				SMBUS_DBG("Failed to read addr %u for Legacy RAM SPD on DIMM %u", i, dimm_index);
 				goto fail;
 			}
 		}
@@ -322,8 +409,6 @@ int SM_GetSpd(smbus_t* ctx, uint8_t dimm_index, uint8_t data[SPD_MAX_SIZE])
 	case MEM_TYPE_DDR2:
 	case MEM_TYPE_DDR2_FB:
 	case MEM_TYPE_DDR2_FB_P:
-	case MEM_TYPE_DDR3:
-	case MEM_TYPE_LPDDR3:
 	default:
 		for (uint16_t i = 0; i < 256; i++)
 		{

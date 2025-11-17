@@ -69,9 +69,7 @@
 
 #define SMBUS_LEN_SENTINEL (I2C_SMBUS_BLOCK_MAX + 1)
 
-// A 32 byte block process at 10MHz is 62.3ms, 80ms should be plenty
-#define MAX_TIMEOUT 80
-#define MAX_RETRIES 320
+#define MAX_RETRIES 500
 
 static const struct
 {
@@ -265,21 +263,14 @@ static int I801InUse(smbus_t* ctx, bool in_use)
 {
 	if (in_use)
 	{
-		uint8_t hststs = WR0_RdIo8(ctx->drv, SMBHSTSTS);
-#if 0
-		ULONGLONG deadline = GetTickCount64() + MAX_TIMEOUT;
-		while ((hststs & SMBHSTSTS_INUSE_STS) && (GetTickCount64() < deadline))
+		uint8_t hststs = 0;
+		for (int i = 0; i < MAX_RETRIES; i++)
 		{
-			WR0_MicroSleep(250);
 			hststs = WR0_RdIo8(ctx->drv, SMBHSTSTS);
+			if (!(hststs & SMBHSTSTS_INUSE_STS))
+				break;
+			WR0_MicroSleep(10);
 		}
-#else
-		for (int i = 0; i < MAX_RETRIES && (hststs & SMBHSTSTS_INUSE_STS); i++)
-		{
-			WR0_MicroSleep(250);
-			hststs = WR0_RdIo8(ctx->drv, SMBHSTSTS);
-		}
-#endif
 		if (hststs & SMBHSTSTS_INUSE_STS)
 			return SM_ERR_TIMEOUT;
 	}
@@ -301,26 +292,10 @@ static inline void I801Kill(smbus_t* ctx)
 		SMBUS_DBG("Failed terminating the transaction");
 }
 
-static int I801WaitIntr(smbus_t* ctx, uint8_t* hststs, uint32_t size)
+static int I801WaitIntr(smbus_t* ctx, uint8_t* hststs)
 {
-#if 0
-	ULONGLONG deadline = GetTickCount64() + MAX_TIMEOUT;
-	WR0_MicroSleep((10 + (9 * size)) * 10);
-	do
-	{
-		WR0_MicroSleep(10);
-		*hststs = WR0_RdIo8(ctx->drv, SMBHSTSTS);
-		*hststs &= STATUS_ERROR_FLAGS | SMBHSTSTS_INTR;
-		if (*hststs && !(*hststs & SMBHSTSTS_HOST_BUSY))
-		{
-			*hststs &= STATUS_ERROR_FLAGS;
-			return SM_OK;
-		}
-	} while (((*hststs & SMBHSTSTS_HOST_BUSY) || !(*hststs & (STATUS_ERROR_FLAGS | SMBHSTSTS_INTR))) && (GetTickCount64() < deadline));
-#else
 	for (int i = 0; i < MAX_RETRIES; i++)
 	{
-		WR0_MicroSleep(250);
 		*hststs = WR0_RdIo8(ctx->drv, SMBHSTSTS);
 		*hststs &= STATUS_ERROR_FLAGS | SMBHSTSTS_INTR;
 		if (*hststs && !(*hststs & SMBHSTSTS_HOST_BUSY))
@@ -328,20 +303,20 @@ static int I801WaitIntr(smbus_t* ctx, uint8_t* hststs, uint32_t size)
 			*hststs &= STATUS_ERROR_FLAGS;
 			return SM_OK;
 		}
+		WR0_MicroSleep(10);
 	}
-#endif
 	if ((*hststs & SMBHSTSTS_HOST_BUSY) || !(*hststs & (STATUS_ERROR_FLAGS | SMBHSTSTS_INTR)))
 		return SM_ERR_TIMEOUT;
 	*hststs &= (STATUS_ERROR_FLAGS | SMBHSTSTS_INTR);
 	return SM_OK;
 }
 
-static int I801Transaction(smbus_t* ctx, uint8_t xact, uint8_t* hststs, uint32_t size)
+static int I801Transaction(smbus_t* ctx, uint8_t xact, uint8_t* hststs)
 {
 	uint8_t old_hstcnt = WR0_RdIo8(ctx->drv, SMBHSTCNT);
 	WR0_WrIo8(ctx->drv, SMBHSTCNT, old_hstcnt & (~SMBHSTCNT_INTREN));
 	WR0_WrIo8(ctx->drv, SMBHSTCNT, xact | SMBHSTCNT_START);
-	int rc = I801WaitIntr(ctx, hststs, size);
+	int rc = I801WaitIntr(ctx, hststs);
 	WR0_WrIo8(ctx->drv, SMBHSTCNT, old_hstcnt);
 	return rc;
 }
@@ -355,7 +330,6 @@ static int
 I801SimpleTransaction(smbus_t* ctx, uint8_t addr, uint8_t hstcmd, uint8_t read_write, uint8_t protocol, union i2c_smbus_data* data, uint8_t* hststs)
 {
 	uint8_t xact;
-	uint32_t size = protocol;
 	switch (protocol)
 	{
 	case I2C_SMBUS_QUICK:
@@ -379,7 +353,6 @@ I801SimpleTransaction(smbus_t* ctx, uint8_t addr, uint8_t hstcmd, uint8_t read_w
 			WR0_WrIo8(ctx->drv, SMBHSTDAT0, data->u8data);
 		WR0_WrIo8(ctx->drv, SMBHSTCMD, hstcmd);
 		xact = I801_BYTE_DATA;
-		size += read_write;
 		break;
 	}
 	case I2C_SMBUS_WORD_DATA:
@@ -392,7 +365,6 @@ I801SimpleTransaction(smbus_t* ctx, uint8_t addr, uint8_t hstcmd, uint8_t read_w
 		}
 		WR0_WrIo8(ctx->drv, SMBHSTCMD, hstcmd);
 		xact = I801_WORD_DATA;
-		size += read_write;
 		break;
 	}
 	case I2C_SMBUS_PROC_CALL:
@@ -409,7 +381,7 @@ I801SimpleTransaction(smbus_t* ctx, uint8_t addr, uint8_t hstcmd, uint8_t read_w
 		return SM_ERR_PARAM;
 	}
 
-	int rc = I801Transaction(ctx, xact, hststs, size);
+	int rc = I801Transaction(ctx, xact, hststs);
 	if (rc != SM_OK)
 		return rc;
 	if (!*hststs && read_write != I2C_SMBUS_WRITE)
@@ -433,7 +405,6 @@ I801SimpleTransaction(smbus_t* ctx, uint8_t addr, uint8_t hstcmd, uint8_t read_w
 static int I801BlockTransactionByBlock(smbus_t* ctx, uint8_t read_write, uint8_t protocol, union i2c_smbus_data* data, uint8_t* hststs)
 {
 	uint8_t xact, len, auxctl;
-	uint32_t size = 2 + read_write;
 	*hststs = 0;
 
 	switch (protocol)
@@ -453,14 +424,13 @@ static int I801BlockTransactionByBlock(smbus_t* ctx, uint8_t read_write, uint8_t
 	if (read_write == I2C_SMBUS_WRITE)
 	{
 		len = data->block[0];
-		size += len;
 		WR0_WrIo8(ctx->drv, SMBHSTDAT0, len);
 		WR0_RdIo8(ctx->drv, SMBHSTCNT);
 		for (uint8_t i = 1; i <= len; i++)
 			WR0_WrIo8(ctx->drv, SMBBLKDAT, data->block[i]);
 	}
 
-	int rc = I801Transaction(ctx, xact, hststs, size);
+	int rc = I801Transaction(ctx, xact, hststs);
 	if (rc != SM_OK)
 		goto out;
 	if (*hststs)
