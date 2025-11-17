@@ -45,6 +45,7 @@
  * - List of AMD processors with 3D graphics: https://en.wikipedia.org/wiki/List_of_AMD_processors_with_3D_graphics
  * - List of AMD Ryzen processors: https://en.wikipedia.org/wiki/List_of_AMD_Ryzen_processors
  * - List of AMD Epyc processors: https://en.wikipedia.org/wiki/Epyc#List_of_Epyc_processors
+ * - Processor Specifications: https://www.amd.com/en/products/specifications/processors.html
  */
 const struct match_entry_t cpudb_amd[] = {
 //     F   M   S  EF    EM #cores  L2$    L3$  Pattern                          Codename                          Technology
@@ -310,11 +311,17 @@ const struct match_entry_t cpudb_amd[] = {
 	/* Zen (2017) => https://en.wikichip.org/wiki/amd/microarchitectures/zen */
 	{ 15, -1, -1, 23,    1,  -1,    -1,    -1, { "EPYC 7##1",              4 }, "EPYC (Naples)",                  "GF 14LP" },
 	{ 15, -1, -1, 23,    1,  -1,    -1,    -1, { "Threadripper 1###",      4 }, "Threadripper (Whitehaven)",      "GF 14LP" },
+	{ 15, -1, -1, 23,    1,  -1,    -1,    -1, { "Ryzen 7 PRO 1###",       8 }, "Ryzen 7 PRO (Summit Ridge)",     "GF 14LP" },
 	{ 15, -1, -1, 23,    1,  -1,    -1,    -1, { "Ryzen 7 1###",           6 }, "Ryzen 7 (Summit Ridge)",         "GF 14LP" },
+	{ 15, -1, -1, 23,    1,  -1,    -1,    -1, { "Ryzen 5 PRO 1###",       8 }, "Ryzen 5 PRO (Summit Ridge)",     "GF 14LP" },
 	{ 15, -1, -1, 23,    1,  -1,    -1,    -1, { "Ryzen 5 1###",           6 }, "Ryzen 5 (Summit Ridge)",         "GF 14LP" },
+	{ 15, -1, -1, 23,    1,  -1,    -1,    -1, { "Ryzen 3 PRO 1###",       8 }, "Ryzen 3 PRO (Summit Ridge)",     "GF 14LP" },
 	{ 15, -1, -1, 23,    1,  -1,    -1,    -1, { "Ryzen 3 1###",           6 }, "Ryzen 3 (Summit Ridge)",         "GF 14LP" },
+	{ 15, -1, -1, 23,   17,  -1,    -1,    -1, { "Ryzen PRO 7 2###",       8 }, "Ryzen 7 PRO (Raven Ridge)",      "GF 14LP" },
 	{ 15, -1, -1, 23,   17,  -1,    -1,    -1, { "Ryzen 7 2###",           6 }, "Ryzen 7 (Raven Ridge)",          "GF 14LP" },
+	{ 15, -1, -1, 23,   17,  -1,    -1,    -1, { "Ryzen PRO 5 2###",       8 }, "Ryzen 5 PRO (Raven Ridge)",      "GF 14LP" },
 	{ 15, -1, -1, 23,   17,  -1,    -1,    -1, { "Ryzen 5 2###",           6 }, "Ryzen 5 (Raven Ridge)",          "GF 14LP" },
+	{ 15, -1, -1, 23,   17,  -1,    -1,    -1, { "Ryzen PRO 3 2###",       8 }, "Ryzen 3 PRO (Raven Ridge)",      "GF 14LP" },
 	{ 15, -1, -1, 23,   17,  -1,    -1,    -1, { "Ryzen 3 2###",           6 }, "Ryzen 3 (Raven Ridge)",          "GF 14LP" },
 	{ 15, -1, -1, 23,   17,  -1,    -1,    -1, { "Athlon",                 2 }, "Athlon (Raven Ridge)",           "GF 14LP" },
 	{ 15, -1, -1, 23,   32,  -1,    -1,    -1, { "Ryzen 3 3###",           6 }, "Ryzen 3 (Dali)",                 "GF 14LP" },
@@ -322,24 +329,38 @@ const struct match_entry_t cpudb_amd[] = {
 	{ 15, -1,  1, 23,   32,  -1,    -1,    -1, { "",                       0 }, "Dali",                           "GF 14LP" }, /* AMD 3020e */
 	/* Zen+ (2018) => https://en.wikichip.org/wiki/amd/microarchitectures/zen%2B */
 	{ 15, -1, -1, 23,    8,  -1,    -1,    -1, { "Threadripper 2###",      4 }, "Threadripper (Colfax)",          "GF 12LP" },
+	{ 15, -1, -1, 23,    8,  -1,    -1,    -1, { "Ryzen 7 PRO 2###",       8 }, "Ryzen 7 PRO (Pinnacle Ridge)",   "GF 12LP" },
 	{ 15, -1, -1, 23,    8,  -1,    -1,    -1, { "Ryzen 7 2###",           6 }, "Ryzen 7 (Pinnacle Ridge)",       "GF 12LP" },
+	{ 15, -1, -1, 23,    8,  -1,    -1,    -1, { "Ryzen 5 PRO 2###",       8 }, "Ryzen 5 PRO (Pinnacle Ridge)",   "GF 12LP" },
 	{ 15, -1, -1, 23,    8,  -1,    -1,    -1, { "Ryzen 5 2###",           6 }, "Ryzen 5 (Pinnacle Ridge)",       "GF 12LP" },
+	{ 15, -1, -1, 23,    8,  -1,    -1,    -1, { "Ryzen 3 PRO 2###",       8 }, "Ryzen 3 PRO (Pinnacle Ridge)",   "GF 12LP" },
 	{ 15, -1, -1, 23,    8,  -1,    -1,    -1, { "Ryzen 3 2###",           6 }, "Ryzen 3 (Pinnacle Ridge)",       "GF 12LP" },
+	{ 15, -1, -1, 23,   24,  -1,    -1,    -1, { "Ryzen 7 PRO 3###",       8 }, "Ryzen 7 PRO (Picasso)",          "GF 12LP" },
 	{ 15, -1, -1, 23,   24,  -1,    -1,    -1, { "Ryzen 7 3###",           6 }, "Ryzen 7 (Picasso)",              "GF 12LP" },
+	{ 15, -1, -1, 23,   24,  -1,    -1,    -1, { "Ryzen 5 PRO 3###",       8 }, "Ryzen 5 PRO (Picasso)",          "GF 12LP" },
 	{ 15, -1, -1, 23,   24,  -1,    -1,    -1, { "Ryzen 5 3###",           6 }, "Ryzen 5 (Picasso)",              "GF 12LP" },
+	{ 15, -1, -1, 23,   24,  -1,    -1,    -1, { "Ryzen 3 PRO 3###",       8 }, "Ryzen 3 PRO (Picasso)",          "GF 12LP" },
 	{ 15, -1, -1, 23,   24,  -1,    -1,    -1, { "Ryzen 3 3###",           6 }, "Ryzen 3 (Picasso)",              "GF 12LP" },
 	{ 15, -1, -1, 23,   24,  -1,    -1,    -1, { "Athlon",                 2 }, "Athlon (Picasso)",               "GF 12LP" },
 	/* Zen 2 (2019) => https://en.wikichip.org/wiki/amd/microarchitectures/zen_2 */
 	{ 15, -1, -1, 23,   49,  -1,    -1,    -1, { "EPYC 7##2",                4 }, "EPYC (Rome)",                    "TSMC N7FF" },
 	{ 15, -1, -1, 23,   49,  -1,    -1,    -1, { "Threadripper PRO 3###WX", 10 }, "Threadripper PRO (Castle Peak)", "TSMC N7FF" },
 	{ 15, -1, -1, 23,   49,  -1,    -1,    -1, { "Threadripper 3###X",       6 }, "Threadripper (Castle Peak)",     "TSMC N7FF" },
+	{ 15, -1, -1, 23,  113,  -1,    -1,    -1, { "Ryzen 9 PRO 3###",       8 }, "Ryzen 9 PRO (Matisse)",          "TSMC N7FF" },
 	{ 15, -1, -1, 23,  113,  -1,    -1,    -1, { "Ryzen 9 3###",           6 }, "Ryzen 9 (Matisse)",              "TSMC N7FF" },
+	{ 15, -1, -1, 23,  113,  -1,    -1,    -1, { "Ryzen 7 PRO 3###",       8 }, "Ryzen 7 PRO (Matisse)",          "TSMC N7FF" },
 	{ 15, -1, -1, 23,  113,  -1,    -1,    -1, { "Ryzen 7 3###",           6 }, "Ryzen 7 (Matisse)",              "TSMC N7FF" },
+	{ 15, -1, -1, 23,  113,  -1,    -1,    -1, { "Ryzen 5 PRO 3###",       8 }, "Ryzen 5 PRO (Matisse)",          "TSMC N7FF" },
 	{ 15, -1, -1, 23,  113,  -1,    -1,    -1, { "Ryzen 5 3###",           6 }, "Ryzen 5 (Matisse)",              "TSMC N7FF" },
+	{ 15, -1, -1, 23,  113,  -1,    -1,    -1, { "Ryzen 3 PRO 3###",       8 }, "Ryzen 3 PRO (Matisse)",          "TSMC N7FF" },
 	{ 15, -1, -1, 23,  113,  -1,    -1,    -1, { "Ryzen 3 3###",           6 }, "Ryzen 3 (Matisse)",              "TSMC N7FF" },
+	{ 15, -1, -1, 23,   96,  -1,    -1,    -1, { "Ryzen 9 PRO 4###",       8 }, "Ryzen 9 PRO (Renoir)",           "TSMC N7FF" },
 	{ 15, -1, -1, 23,   96,  -1,    -1,    -1, { "Ryzen 9 4###",           6 }, "Ryzen 9 (Renoir)",               "TSMC N7FF" },
+	{ 15, -1, -1, 23,   96,  -1,    -1,    -1, { "Ryzen 7 PRO 4###",       8 }, "Ryzen 7 PRO (Renoir)",           "TSMC N7FF" },
 	{ 15, -1, -1, 23,   96,  -1,    -1,    -1, { "Ryzen 7 4###",           6 }, "Ryzen 7 (Renoir)",               "TSMC N7FF" },
+	{ 15, -1, -1, 23,   96,  -1,    -1,    -1, { "Ryzen 5 PRO 4###",       8 }, "Ryzen 5 PRO (Renoir)",           "TSMC N7FF" },
 	{ 15, -1, -1, 23,   96,  -1,    -1,    -1, { "Ryzen 5 4###",           6 }, "Ryzen 5 (Renoir)",               "TSMC N7FF" },
+	{ 15, -1, -1, 23,   96,  -1,    -1,    -1, { "Ryzen 3 PRO 4###",       8 }, "Ryzen 3 PRO (Renoir)",           "TSMC N7FF" },
 	{ 15, -1, -1, 23,   96,  -1,    -1,    -1, { "Ryzen 3 4###",           6 }, "Ryzen 3 (Renoir)",               "TSMC N7FF" },
 	{ 15, -1, -1, 23,  104,  -1,    -1,    -1, { "Ryzen 7 5###",           6 }, "Ryzen 7 (Lucienne)",             "TSMC N7FF" },
 	{ 15, -1, -1, 23,  104,  -1,    -1,    -1, { "Ryzen 5 5###",           6 }, "Ryzen 5 (Lucienne)",             "TSMC N7FF" },
@@ -360,21 +381,34 @@ const struct match_entry_t cpudb_amd[] = {
 	/* Zen 3 (2020) => https://en.wikichip.org/wiki/amd/microarchitectures/zen_3 */
 	{ 15, -1, -1, 25,    1,  -1,    -1,    -1, { "EPYC 7##3",                4 }, "EPYC (Milan)",                 "TSMC N7FF" },
 	{ 15, -1, -1, 25,    8,  -1,    -1,    -1, { "Threadripper PRO 5###WX", 10 }, "Threadripper PRO (Chagall)",   "TSMC N7FF" },
+	{ 15, -1, -1, 25,   33,  -1,    -1,    -1, { "Ryzen 9 PRO 5###",       8 }, "Ryzen 9 PRO (Vermeer)",          "TSMC N7FF" },
 	{ 15, -1, -1, 25,   33,  -1,    -1,    -1, { "Ryzen 9 5###",           6 }, "Ryzen 9 (Vermeer)",              "TSMC N7FF" },
+	{ 15, -1, -1, 25,   33,  -1,    -1,    -1, { "Ryzen 7 PRO 5###",       8 }, "Ryzen 7 PRO (Vermeer)",          "TSMC N7FF" },
 	{ 15, -1, -1, 25,   33,  -1,    -1,    -1, { "Ryzen 7 5###",           6 }, "Ryzen 7 (Vermeer)",              "TSMC N7FF" },
+	{ 15, -1, -1, 25,   33,  -1,    -1,    -1, { "Ryzen 5 PRO 5###",       8 }, "Ryzen 5 PRO (Vermeer)",          "TSMC N7FF" },
 	{ 15, -1, -1, 25,   33,  -1,    -1,    -1, { "Ryzen 5 5###",           6 }, "Ryzen 5 (Vermeer)",              "TSMC N7FF" },
+	{ 15, -1, -1, 25,   33,  -1,    -1,    -1, { "Ryzen 3 PRO 5###",       8 }, "Ryzen 3 PRO (Vermeer)",          "TSMC N7FF" },
 	{ 15, -1, -1, 25,   33,  -1,    -1,    -1, { "Ryzen 3 5###",           6 }, "Ryzen 3 (Vermeer)",              "TSMC N7FF" },
+	{ 15, -1, -1, 25,   80,  -1,    -1,    -1, { "Ryzen 9 PRO 5##0[HU]",  10 }, "Ryzen 9 PRO (Cezanne)",          "TSMC N7FF" },
 	{ 15, -1, -1, 25,   80,  -1,    -1,    -1, { "Ryzen 9 5##0[HU]",       8 }, "Ryzen 9 (Cezanne)",              "TSMC N7FF" },
+	{ 15, -1, -1, 25,   80,  -1,    -1,    -1, { "Ryzen 7 PRO 5##0[HU]",  10 }, "Ryzen 7 PRO (Cezanne)",          "TSMC N7FF" },
 	{ 15, -1, -1, 25,   80,  -1,    -1,    -1, { "Ryzen 7 5##0[HU]",       8 }, "Ryzen 7 (Cezanne)",              "TSMC N7FF" },
+	{ 15, -1, -1, 25,   80,  -1,    -1,    -1, { "Ryzen 5 PRO 5##0[HU]",  10 }, "Ryzen 5 PRO (Cezanne)",          "TSMC N7FF" },
 	{ 15, -1, -1, 25,   80,  -1,    -1,    -1, { "Ryzen 5 5##0[HU]",       8 }, "Ryzen 5 (Cezanne)",              "TSMC N7FF" },
+	{ 15, -1, -1, 25,   80,  -1,    -1,    -1, { "Ryzen 3 PRO 5##0[HU]",  10 }, "Ryzen 3 PRO (Cezanne)",          "TSMC N7FF" },
 	{ 15, -1, -1, 25,   80,  -1,    -1,    -1, { "Ryzen 3 5##0[HU]",       8 }, "Ryzen 3 (Cezanne)",              "TSMC N7FF" },
 	{ 15, -1, -1, 25,   80,  -1,    -1,    -1, { "Ryzen 7 5##5U",          8 }, "Ryzen 7 (Barceló)",              "TSMC N7FF" }, /* Ryzen 7 5825U */
 	{ 15, -1, -1, 25,   80,  -1,    -1,    -1, { "Ryzen 5 5##5U",          8 }, "Ryzen 5 (Barceló)",              "TSMC N7FF" }, /* Ryzen 5 5625U */
+	{ 15, -1, -1, 25,   80,  -1,    -1,    -1, { "Ryzen 3 PRO 5##5U",     10 }, "Ryzen 3 PRO (Barceló)",          "TSMC N7FF" }, /* Ryzen 3 PRO 5475U */
 	{ 15, -1, -1, 25,   80,  -1,    -1,    -1, { "Ryzen 3 5##5C",          8 }, "Ryzen 3 (Barceló)",              "TSMC N7FF" }, /* Ryzen 3 5125C */
 	/* Zen 3+ (2022) */
+	{ 15, -1, -1, 25,   68,  -1,    -1,    -1, { "Ryzen 9 PRO 6###",       8 }, "Ryzen 9 PRO (Rembrandt)",        "TSMC N6"  },
 	{ 15, -1, -1, 25,   68,  -1,    -1,    -1, { "Ryzen 9 6###",           6 }, "Ryzen 9 (Rembrandt)",            "TSMC N6"  },
+	{ 15, -1, -1, 25,   68,  -1,    -1,    -1, { "Ryzen 7 PRO 6###",       8 }, "Ryzen 7 PRO (Rembrandt)",        "TSMC N6"  },
 	{ 15, -1, -1, 25,   68,  -1,    -1,    -1, { "Ryzen 7 6###",           6 }, "Ryzen 7 (Rembrandt)",            "TSMC N6"  },
+	{ 15, -1, -1, 25,   68,  -1,    -1,    -1, { "Ryzen 5 PRO 6###",       8 }, "Ryzen 5 PRO (Rembrandt)",        "TSMC N6"  },
 	{ 15, -1, -1, 25,   68,  -1,    -1,    -1, { "Ryzen 5 6###",           6 }, "Ryzen 5 (Rembrandt)",            "TSMC N6"  },
+	{ 15, -1, -1, 25,   68,  -1,    -1,    -1, { "Ryzen 3 PRO 6###",       8 }, "Ryzen 3 PRO (Rembrandt)",        "TSMC N6"  },
 	{ 15, -1, -1, 25,   68,  -1,    -1,    -1, { "Ryzen 3 6###",           6 }, "Ryzen 3 (Rembrandt)",            "TSMC N6"  },
 	{ 15, -1, -1, 25,   68,  -1,    -1,    -1, { "Ryzen 7 7###",           6 }, "Ryzen 7 (Rembrandt-R)",          "TSMC N6"  },
 	{ 15, -1, -1, 25,   68,  -1,    -1,    -1, { "Ryzen 5 7###",           6 }, "Ryzen 5 (Rembrandt-R)",          "TSMC N6"  },
@@ -393,46 +427,63 @@ const struct match_entry_t cpudb_amd[] = {
 	{ 15, -1, -1, 25,   97,  -1,    -1,    -1, { "Ryzen 7 7###H",          8 }, "Ryzen 7 (Dragon Range)",         "TSMC N5"  },
 	{ 15, -1, -1, 25,   97,  -1,    -1,    -1, { "Ryzen 5 7###H",          8 }, "Ryzen 5 (Dragon Range)",         "TSMC N5"  },
 	/*  => Phoenix (7040 series, Zen 4/RDNA3/XDNA based) */
-	{ 15, -1, -1, 25,  116,  -1,    -1,    -1, { "Ryzen 9 7###H",          8 }, "Ryzen 9 (Phoenix)",              "TSMC N4"  },
-	{ 15, -1, -1, 25,  116,  -1,    -1,    -1, { "Ryzen 7 7###H",          8 }, "Ryzen 7 (Phoenix)",              "TSMC N4"  },
-	{ 15, -1, -1, 25,  116,  -1,    -1,    -1, { "Ryzen 7 7###U",          8 }, "Ryzen 7 (Phoenix)",              "TSMC N4"  },
-	{ 15, -1, -1, 25,  116,  -1,    -1,    -1, { "Ryzen 5 7###H",          8 }, "Ryzen 5 (Phoenix)",              "TSMC N4"  },
-	{ 15, -1, -1, 25,  116,  -1,    -1,    -1, { "Ryzen 5 7###U",          8 }, "Ryzen 5 (Phoenix)",              "TSMC N4"  },
-	{ 15, -1, -1, 25,  116,  -1,    -1,    -1, { "Ryzen 3 7###U",          8 }, "Ryzen 3 (Phoenix)",              "TSMC N4"  },
+	{ 15, -1, -1, 25,  116,  -1,    -1,    -1, { "Ryzen 9 PRO 7###[HU]",  10 }, "Ryzen 9 PRO (Phoenix)",          "TSMC N4"  },
+	{ 15, -1, -1, 25,  116,  -1,    -1,    -1, { "Ryzen 9 7###[HU]",       8 }, "Ryzen 9 (Phoenix)",              "TSMC N4"  },
+	{ 15, -1, -1, 25,  116,  -1,    -1,    -1, { "Ryzen 7 PRO 7###[HU]",  10 }, "Ryzen 7 PRO (Phoenix)",          "TSMC N4"  },
+	{ 15, -1, -1, 25,  116,  -1,    -1,    -1, { "Ryzen 7 7###[HU]",       8 }, "Ryzen 7 (Phoenix)",              "TSMC N4"  },
+	{ 15, -1, -1, 25,  116,  -1,    -1,    -1, { "Ryzen 5 PRO 7###[HU]",  10 }, "Ryzen 5 PRO (Phoenix)",          "TSMC N4"  },
+	{ 15, -1, -1, 25,  116,  -1,    -1,    -1, { "Ryzen 5 7###[HU]",       8 }, "Ryzen 5 (Phoenix)",              "TSMC N4"  },
+	{ 15, -1, -1, 25,  116,  -1,    -1,    -1, { "Ryzen 3 PRO 7###[HU]",  10 }, "Ryzen 3 PRO (Phoenix)",          "TSMC N4"  },
+	{ 15, -1, -1, 25,  116,  -1,    -1,    -1, { "Ryzen 3 7###[HU]",       8 }, "Ryzen 3 (Phoenix)",              "TSMC N4"  },
 	{ 15, -1, -1, 25,  116,  -1,    -1,    -1, { "Ryzen Z1",               4 }, "Ryzen Z1 (Phoenix)",             "TSMC N4"  },
 	/*  => Phoenix (8000 series, Zen 4 based) */
 	{ 15, -1, -1, 25,  117,  -1,    -1,    -1, { "Ryzen 7 8###F",          8 }, "Ryzen 7 (Phoenix)",              "TSMC N4"  },
 	{ 15, -1, -1, 25,  117,  -1,    -1,    -1, { "Ryzen 5 8###F",          8 }, "Ryzen 5 (Phoenix)",              "TSMC N4"  },
 	/*  => Phoenix (8000 series with Radeon Graphics, Zen 4/RDNA3/XDNA based) */
+	{ 15, -1, -1, 25,  117,  -1,    -1,    -1, { "Ryzen 9 PRO 8###G",     10 }, "Ryzen 9 PRO (Phoenix)",          "TSMC N4"  },
 	{ 15, -1, -1, 25,  117,  -1,    -1,    -1, { "Ryzen 9 8###G",          8 }, "Ryzen 9 (Phoenix)",              "TSMC N4"  },
+	{ 15, -1, -1, 25,  117,  -1,    -1,    -1, { "Ryzen 7 PRO 8###G",     10 }, "Ryzen 7 PRO (Phoenix)",          "TSMC N4"  },
 	{ 15, -1, -1, 25,  117,  -1,    -1,    -1, { "Ryzen 7 8###G",          8 }, "Ryzen 7 (Phoenix)",              "TSMC N4"  },
+	{ 15, -1, -1, 25,  117,  -1,    -1,    -1, { "Ryzen 5 PRO 8###G",     10 }, "Ryzen 5 PRO (Phoenix)",          "TSMC N4"  },
 	{ 15, -1, -1, 25,  117,  -1,    -1,    -1, { "Ryzen 5 8###G",          8 }, "Ryzen 5 (Phoenix)",              "TSMC N4"  },
+	{ 15, -1, -1, 25,  117,  -1,    -1,    -1, { "Ryzen 3 PRO 8###G",     10 }, "Ryzen 3 PRO (Phoenix)",          "TSMC N4"  },
 	{ 15, -1, -1, 25,  117,  -1,    -1,    -1, { "Ryzen 3 8###G",          8 }, "Ryzen 3 (Phoenix)",              "TSMC N4"  },
 	/*  => Hawk Point (8040 series, Zen 4/RDNA3/XDNA based) */
-	{ 15, -1, -1, 25,  117,  -1,    -1,    -1, { "Ryzen 9 8###H",          8 }, "Ryzen 9 (Hawk Point)",           "TSMC N4"  },
-	{ 15, -1, -1, 25,  117,  -1,    -1,    -1, { "Ryzen 7 8###H",          8 }, "Ryzen 7 (Hawk Point)",           "TSMC N4"  },
-	{ 15, -1, -1, 25,  117,  -1,    -1,    -1, { "Ryzen 7 8###U",          8 }, "Ryzen 7 (Hawk Point)",           "TSMC N4"  },
-	{ 15, -1, -1, 25,  117,  -1,    -1,    -1, { "Ryzen 5 8###H",          8 }, "Ryzen 5 (Hawk Point)",           "TSMC N4"  },
-	{ 15, -1, -1, 25,  117,  -1,    -1,    -1, { "Ryzen 5 8###U",          8 }, "Ryzen 5 (Hawk Point)",           "TSMC N4"  },
-	{ 15, -1, -1, 25,  117,  -1,    -1,    -1, { "Ryzen 3 8###U",          8 }, "Ryzen 3 (Hawk Point)",           "TSMC N4"  },
+	{ 15, -1, -1, 25,  117,  -1,    -1,    -1, { "Ryzen 9 PRO 8###[HU]",     10 }, "Ryzen 9 PRO (Hawk Point)",       "TSMC N4"  },
+	{ 15, -1, -1, 25,  117,  -1,    -1,    -1, { "Ryzen 9 8###[HU]",          8 }, "Ryzen 9 (Hawk Point)",           "TSMC N4"  },
+	{ 15, -1, -1, 25,  117,  -1,    -1,    -1, { "Ryzen 7 PRO 8###[HU]",     10 }, "Ryzen 7 PRO (Hawk Point)",       "TSMC N4"  },
+	{ 15, -1, -1, 25,  117,  -1,    -1,    -1, { "Ryzen 7 8###[HU]",          8 }, "Ryzen 7 (Hawk Point)",           "TSMC N4"  },
+	{ 15, -1, -1, 25,  117,  -1,    -1,    -1, { "Ryzen 5 PRO 8###[HU]",     10 }, "Ryzen 5 PRO (Hawk Point)",       "TSMC N4"  },
+	{ 15, -1, -1, 25,  117,  -1,    -1,    -1, { "Ryzen 5 8###[HU]",          8 }, "Ryzen 5 (Hawk Point)",           "TSMC N4"  },
+	{ 15, -1, -1, 25,  117,  -1,    -1,    -1, { "Ryzen 3 PRO 8###[HU]",     10 }, "Ryzen 3 PRO (Hawk Point)",       "TSMC N4"  },
+	{ 15, -1, -1, 25,  117,  -1,    -1,    -1, { "Ryzen 3 8###[HU]",          8 }, "Ryzen 3 (Hawk Point)",           "TSMC N4"  },
 	/* Zen 5 (2024) => https://en.wikichip.org/wiki/amd/microarchitectures/zen_5 */
 	{ 15, -1, -1, 26,    2,  -1,    -1,    -1, { "EPYC 9##5",                4 }, "EPYC (Turin)",                    "TSMC N4X" },
 	{ 15, -1, -1, 26,   17,  -1,    -1,    -1, { "EPYC 9##5",                4 }, "EPYC (Turin Dense)",              "TSMC N3E" },
 	{ 15, -1, -1, 26,    8,  -1,    -1,    -1, { "Threadripper PRO 9###WX", 10 }, "Threadripper PRO (Shimada Peak)", "TSMC N4"  },
 	{ 15, -1, -1, 26,    8,  -1,    -1,    -1, { "Threadripper 9###X",       6 }, "Threadripper (Shimada Peak)",     "TSMC N4"  },
 	/*  => Granite Ridge (9000 series, Zen 5 based) */
+	{ 15, -1, -1, 26,   68,  -1,    -1,    -1, { "Ryzen 9 PRO 9###",       8 }, "Ryzen 9 PRO (Granite Ridge)",    "TSMC N4"  },
 	{ 15, -1, -1, 26,   68,  -1,    -1,    -1, { "Ryzen 9 9###",           6 }, "Ryzen 9 (Granite Ridge)",        "TSMC N4"  },
+	{ 15, -1, -1, 26,   68,  -1,    -1,    -1, { "Ryzen 7 PRO 9###",       8 }, "Ryzen 7 PRO (Granite Ridge)",    "TSMC N4"  },
 	{ 15, -1, -1, 26,   68,  -1,    -1,    -1, { "Ryzen 7 9###",           6 }, "Ryzen 7 (Granite Ridge)",        "TSMC N4"  },
+	{ 15, -1, -1, 26,   68,  -1,    -1,    -1, { "Ryzen 5 PRO 9###",       8 }, "Ryzen 5 PRO (Granite Ridge)",    "TSMC N4"  },
 	{ 15, -1, -1, 26,   68,  -1,    -1,    -1, { "Ryzen 5 9###",           6 }, "Ryzen 5 (Granite Ridge)",        "TSMC N4"  },
+	{ 15, -1, -1, 26,   68,  -1,    -1,    -1, { "Ryzen 3 PRO 9###",       8 }, "Ryzen 3 PRO (Granite Ridge)",    "TSMC N4"  },
 	{ 15, -1, -1, 26,   68,  -1,    -1,    -1, { "Ryzen 3 9###",           6 }, "Ryzen 3 (Granite Ridge)",        "TSMC N4"  },
 	/*  => Strix Point and Krackan Point (Zen 5/RDNA3.5/XDNA2 based) */
+	{ 15, -1, -1, 26,   36,  -1,    -1,    -1, { "Ryzen AI 9 HX PRO",     10 }, "Ryzen AI 9 PRO (Strix Point)",   "TSMC N4P" },
 	{ 15, -1, -1, 26,   36,  -1,    -1,    -1, { "Ryzen AI 9",             6 }, "Ryzen AI 9 (Strix Point)",       "TSMC N4P" },
-	{ 15, -1, -1, 26,   36,  -1,    -1,    -1, { "Ryzen AI 7",             6 }, "Ryzen AI 7 (Strix Point)",       "TSMC N4P" }, /* Ryzen AI 7 PRO 360 */
-	{ 15, -1, -1, 26,   96,  -1,    -1,    -1, { "Ryzen AI 7",             6 }, "Ryzen AI 7 (Krackan Point)",     "TSMC N4P" }, /* Ryzen AI 7 (PRO) 350 */
-	{ 15, -1, -1, 26,   96,  -1,    -1,    -1, { "Ryzen AI 5",             6 }, "Ryzen AI 5 (Krackan Point)",     "TSMC N4P" }, /* Ryzen AI 5 (PRO) 340 */
+	{ 15, -1, -1, 26,   36,  -1,    -1,    -1, { "Ryzen AI 7 PRO",         8 }, "Ryzen AI 7 PRO (Strix Point)",   "TSMC N4P" }, /* Ryzen AI 7 PRO 360 */
+	{ 15, -1, -1, 26,   96,  -1,    -1,    -1, { "Ryzen AI 7 PRO",         8 }, "Ryzen AI 7 PRO (Krackan Point)", "TSMC N4P" }, /* Ryzen AI 7 PRO 350 */
+	{ 15, -1, -1, 26,   96,  -1,    -1,    -1, { "Ryzen AI 7",             6 }, "Ryzen AI 7 (Krackan Point)",     "TSMC N4P" }, /* Ryzen AI 7 350 */
+	{ 15, -1, -1, 26,   96,  -1,    -1,    -1, { "Ryzen AI 5 PRO",         8 }, "Ryzen AI 5 PRO (Krackan Point)", "TSMC N4P" }, /* Ryzen AI 5 PRO 340 */
+	{ 15, -1, -1, 26,   96,  -1,    -1,    -1, { "Ryzen AI 5",             6 }, "Ryzen AI 5 (Krackan Point)",     "TSMC N4P" }, /* Ryzen AI 5 340 */
 	/* => Strix Halo (Zen 5/RDNA3.5/XDNA2 based) */
-	{ 15, -1, -1, 26,  112,  -1,    -1,    -1, { "Ryzen AI MAX+",          8 }, "Ryzen AI MAX+ (Strix Halo)",     "TSMC N4P" }, /* Ryzen AI MAX+ (PRO) 395 */
-	{ 15, -1, -1, 26,  112,  -1,    -1,    -1, { "Ryzen AI MAX",           6 }, "Ryzen AI MAX (Strix Halo)",      "TSMC N4P" },
+	{ 15, -1, -1, 26,  112,  -1,    -1,    -1, { "Ryzen AI MAX+ PRO",      10 }, "Ryzen AI MAX+ PRO (Strix Halo)", "TSMC N4P" }, /* Ryzen AI MAX+ PRO 395 */
+	{ 15, -1, -1, 26,  112,  -1,    -1,    -1, { "Ryzen AI MAX+",          8 }, "Ryzen AI MAX+ (Strix Halo)",      "TSMC N4P" }, /* Ryzen AI MAX+ 395 */
+	{ 15, -1, -1, 26,  112,  -1,    -1,    -1, { "Ryzen AI MAX PRO",       8 }, "Ryzen AI MAX PRO (Strix Halo)",   "TSMC N4P" },
+	{ 15, -1, -1, 26,  112,  -1,    -1,    -1, { "Ryzen AI MAX",           6 }, "Ryzen AI MAX (Strix Halo)",       "TSMC N4P" },
 //     F   M   S  EF    EM #cores  L2$    L3$  Pattern                          Codename                          Technology
 };
 
