@@ -367,8 +367,7 @@ uint8_t WR0_RdIo8(struct wr0_drv_t* drv, uint16_t port)
 {
 	DWORD returnedLength = 0;
 	BOOL result = FALSE;
-	WORD value = 0;
-	DWORD ctlCode;
+	uint8_t value = 0;
 
 	if (!drv || !drv->hhDriver || drv->hhDriver == INVALID_HANDLE_VALUE)
 		return 0;
@@ -376,30 +375,43 @@ uint8_t WR0_RdIo8(struct wr0_drv_t* drv, uint16_t port)
 	switch (drv->driver_type)
 	{
 	case WR0_DRIVER_WINRING0:
-		ctlCode = IOCTL_OLS_READ_IO_PORT_BYTE;
+	{
+		WORD outBuf = 0;
+		result = DeviceIoControl(drv->hhDriver, IOCTL_OLS_READ_IO_PORT_BYTE,
+			&port, sizeof(port), &outBuf, sizeof(outBuf), &returnedLength, NULL);
+		value = (uint8_t)outBuf;
+	}
 		break;
 	case WR0_DRIVER_CPUZ161:
-		ctlCode = IOCTL_CPUZ_READ_IO_PORT_BYTE;
+	{
+		UINT64 inBuf = port;
+		DWORD outBuf[2] = { 0 };
+		result = DeviceIoControl(drv->hhDriver, IOCTL_CPUZ_READ_IO_PORT_BYTE,
+			&inBuf, sizeof(inBuf), outBuf, sizeof(outBuf), &returnedLength, NULL);
+		value = (uint8_t)outBuf[0];
+	}
 		break;
 	case WR0_DRIVER_HWIO:
-		ctlCode = IOCTL_HIO_READ_IO_PORT;
+	{
+		WORD outBuf = 0;
+		result = DeviceIoControl(drv->hhDriver, IOCTL_HIO_READ_IO_PORT,
+			&port, sizeof(port), &outBuf, sizeof(outBuf), &returnedLength, NULL);
+		value = (uint8_t)outBuf;
+	}
 		break;
 	default:
 		return 0;
 	}
-
-	result = DeviceIoControl(drv->hhDriver, ctlCode,
-		&port, sizeof(port), &value, sizeof(value), &returnedLength, NULL);
-
-	return (uint8_t)value;
+	if (!result && drv->debug)
+		printf("[IO] Read 8 @%u Failed\n", port);
+	return value;
 }
 
 uint16_t WR0_RdIo16(struct wr0_drv_t* drv, uint16_t port)
 {
 	DWORD returnedLength = 0;
 	BOOL result = FALSE;
-	WORD value = 0;
-	DWORD ctlCode;
+	uint16_t value = 0;
 
 	if (!drv || !drv->hhDriver || drv->hhDriver == INVALID_HANDLE_VALUE)
 		return 0;
@@ -407,21 +419,31 @@ uint16_t WR0_RdIo16(struct wr0_drv_t* drv, uint16_t port)
 	switch (drv->driver_type)
 	{
 	case WR0_DRIVER_WINRING0:
-		ctlCode = IOCTL_OLS_READ_IO_PORT_WORD;
+	{
+		result = DeviceIoControl(drv->hhDriver, IOCTL_OLS_READ_IO_PORT_WORD,
+			&port, sizeof(port), &value, sizeof(value), &returnedLength, NULL);
+	}
 		break;
 	case WR0_DRIVER_CPUZ161:
-		ctlCode = IOCTL_CPUZ_READ_IO_PORT_WORD;
+	{
+		UINT64 inBuf = port;
+		DWORD outBuf[2] = { 0 };
+		result = DeviceIoControl(drv->hhDriver, IOCTL_CPUZ_READ_IO_PORT_WORD,
+			&inBuf, sizeof(inBuf), outBuf, sizeof(outBuf), &returnedLength, NULL);
+		value = (uint16_t)outBuf[0];
+	}
 		break;
 	case WR0_DRIVER_HWIO:
-		ctlCode = IOCTL_HIO_READ_IO_PORT;
+	{
+		result = DeviceIoControl(drv->hhDriver, IOCTL_HIO_READ_IO_PORT,
+			&port, sizeof(port), &value, sizeof(value), &returnedLength, NULL);
+	}
 		break;
 	default:
 		return 0;
 	}
-
-	result = DeviceIoControl(drv->hhDriver, ctlCode,
-		&port, sizeof(port), &value, sizeof(value), &returnedLength, NULL);
-
+	if (!result && drv->debug)
+		printf("[IO] Read 16 @%u Failed\n", port);
 	return value;
 }
 
@@ -429,9 +451,7 @@ uint32_t WR0_RdIo32(struct wr0_drv_t* drv, uint16_t port)
 {
 	DWORD returnedLength = 0;
 	BOOL result = FALSE;
-	DWORD port4 = port;
-	DWORD value = 0;
-	DWORD ctlCode;
+	uint32_t value = 0;
 
 	if (!drv || !drv->hhDriver || drv->hhDriver == INVALID_HANDLE_VALUE)
 		return 0;
@@ -439,21 +459,33 @@ uint32_t WR0_RdIo32(struct wr0_drv_t* drv, uint16_t port)
 	switch (drv->driver_type)
 	{
 	case WR0_DRIVER_WINRING0:
-		ctlCode = IOCTL_OLS_READ_IO_PORT_DWORD;
+	{
+		DWORD inBuf = port;
+		result = DeviceIoControl(drv->hhDriver, IOCTL_OLS_READ_IO_PORT_DWORD,
+			&inBuf, sizeof(inBuf), &value, sizeof(value), &returnedLength, NULL);
+	}
 		break;
 	case WR0_DRIVER_CPUZ161:
-		ctlCode = IOCTL_CPUZ_READ_IO_PORT_DWORD;
+	{
+		UINT64 inBuf = port;
+		DWORD outBuf[2] = { 0 };
+		result = DeviceIoControl(drv->hhDriver, IOCTL_CPUZ_READ_IO_PORT_DWORD,
+			&inBuf, sizeof(inBuf), outBuf, sizeof(outBuf), &returnedLength, NULL);
+		value = (uint32_t)outBuf[0];
+	}
 		break;
 	case WR0_DRIVER_HWIO:
-		ctlCode = IOCTL_HIO_READ_IO_PORT;
+	{
+		DWORD inBuf = port;
+		result = DeviceIoControl(drv->hhDriver, IOCTL_HIO_READ_IO_PORT,
+			&inBuf, sizeof(inBuf), &value, sizeof(value), &returnedLength, NULL);
+	}
 		break;
 	default:
 		return 0;
 	}
-
-	result = DeviceIoControl(drv->hhDriver, ctlCode,
-		&port4, sizeof(port4), &value, sizeof(value), &returnedLength, NULL);
-
+	if (!result && drv->debug)
+		printf("[IO] Read 32 @%u Failed\n", port);
 	return value;
 }
 
@@ -462,8 +494,6 @@ void WR0_WrIo8(struct wr0_drv_t* drv, uint16_t port, uint8_t value)
 	DWORD returnedLength = 0;
 	BOOL result = FALSE;
 	DWORD length = 0;
-	OLS_WRITE_IO_PORT_INPUT inBuf = { 0 };
-	DWORD ctlCode;
 
 	if (!drv || !drv->hhDriver || drv->hhDriver == INVALID_HANDLE_VALUE)
 		return;
@@ -471,24 +501,41 @@ void WR0_WrIo8(struct wr0_drv_t* drv, uint16_t port, uint8_t value)
 	switch (drv->driver_type)
 	{
 	case WR0_DRIVER_WINRING0:
-		ctlCode = IOCTL_OLS_WRITE_IO_PORT_BYTE;
+	{
+		OLS_WRITE_IO_PORT_INPUT inBuf = { 0 };
+		inBuf.CharData = value;
+		inBuf.PortNumber = port;
+		length = offsetof(OLS_WRITE_IO_PORT_INPUT, CharData) + sizeof(inBuf.CharData);
+		result = DeviceIoControl(drv->hhDriver, IOCTL_OLS_WRITE_IO_PORT_BYTE,
+			&inBuf, length, NULL, 0, &returnedLength, NULL);
+	}
 		break;
 	case WR0_DRIVER_CPUZ161:
-		ctlCode = IOCTL_CPUZ_WRITE_IO_PORT_BYTE;
+	{
+		OLS_WRITE_IO_PORT_INPUT inBuf = { 0 };
+		UINT64 outBuf;
+		inBuf.CharData = value;
+		inBuf.PortNumber = port;
+		length = sizeof(inBuf);
+		result = DeviceIoControl(drv->hhDriver, IOCTL_CPUZ_WRITE_IO_PORT_BYTE,
+			&inBuf, length, &outBuf, sizeof(outBuf), &returnedLength, NULL);
+	}
 		break;
 	case WR0_DRIVER_HWIO:
-		ctlCode = IOCTL_HIO_WRITE_IO_PORT;
+	{
+		OLS_WRITE_IO_PORT_INPUT inBuf = { 0 };
+		inBuf.CharData = value;
+		inBuf.PortNumber = port;
+		length = offsetof(OLS_WRITE_IO_PORT_INPUT, CharData) + sizeof(inBuf.CharData);
+		result = DeviceIoControl(drv->hhDriver, IOCTL_HIO_WRITE_IO_PORT,
+			&inBuf, length, NULL, 0, &returnedLength, NULL);
+	}
 		break;
 	default:
 		return;
 	}
-
-	inBuf.CharData = value;
-	inBuf.PortNumber = port;
-	length = offsetof(OLS_WRITE_IO_PORT_INPUT, CharData) + sizeof(inBuf.CharData);
-
-	result = DeviceIoControl(drv->hhDriver, ctlCode,
-		&inBuf, length, NULL, 0, &returnedLength, NULL);
+	if (!result && drv->debug)
+		printf("[IO] Write 8 @%u->%02X Failed\n", port, value);
 }
 
 void WR0_WrIo16(struct wr0_drv_t* drv, uint16_t port, uint16_t value)
@@ -496,8 +543,6 @@ void WR0_WrIo16(struct wr0_drv_t* drv, uint16_t port, uint16_t value)
 	DWORD returnedLength = 0;
 	BOOL result = FALSE;
 	DWORD length = 0;
-	OLS_WRITE_IO_PORT_INPUT inBuf = { 0 };
-	DWORD ctlCode;
 
 	if (!drv || !drv->hhDriver || drv->hhDriver == INVALID_HANDLE_VALUE)
 		return;
@@ -505,24 +550,41 @@ void WR0_WrIo16(struct wr0_drv_t* drv, uint16_t port, uint16_t value)
 	switch (drv->driver_type)
 	{
 	case WR0_DRIVER_WINRING0:
-		ctlCode = IOCTL_OLS_WRITE_IO_PORT_WORD;
+	{
+		OLS_WRITE_IO_PORT_INPUT inBuf = { 0 };
+		inBuf.ShortData = value;
+		inBuf.PortNumber = port;
+		length = offsetof(OLS_WRITE_IO_PORT_INPUT, ShortData) + sizeof(inBuf.ShortData);
+		result = DeviceIoControl(drv->hhDriver, IOCTL_OLS_WRITE_IO_PORT_WORD,
+			&inBuf, length, NULL, 0, &returnedLength, NULL);
+	}
 		break;
 	case WR0_DRIVER_CPUZ161:
-		ctlCode = IOCTL_CPUZ_WRITE_IO_PORT_WORD;
+	{
+		OLS_WRITE_IO_PORT_INPUT inBuf = { 0 };
+		UINT64 outBuf;
+		inBuf.ShortData = value;
+		inBuf.PortNumber = port;
+		length = sizeof(inBuf);
+		result = DeviceIoControl(drv->hhDriver, IOCTL_CPUZ_WRITE_IO_PORT_WORD,
+			&inBuf, length, &outBuf, sizeof(outBuf), &returnedLength, NULL);
+	}
 		break;
 	case WR0_DRIVER_HWIO:
-		ctlCode = IOCTL_HIO_WRITE_IO_PORT;
+	{
+		OLS_WRITE_IO_PORT_INPUT inBuf = { 0 };
+		inBuf.ShortData = value;
+		inBuf.PortNumber = port;
+		length = offsetof(OLS_WRITE_IO_PORT_INPUT, ShortData) + sizeof(inBuf.ShortData);
+		result = DeviceIoControl(drv->hhDriver, IOCTL_HIO_WRITE_IO_PORT,
+			&inBuf, length, NULL, 0, &returnedLength, NULL);
+	}
 		break;
 	default:
 		return;
 	}
-
-	inBuf.ShortData = value;
-	inBuf.PortNumber = port;
-	length = offsetof(OLS_WRITE_IO_PORT_INPUT, CharData) + sizeof(inBuf.ShortData);
-
-	result = DeviceIoControl(drv->hhDriver, ctlCode,
-		&inBuf, length, NULL, 0, &returnedLength, NULL);
+	if (!result && drv->debug)
+		printf("[IO] Write 16 @%u->%04X Failed\n", port, value);
 }
 
 void WR0_WrIo32(struct wr0_drv_t* drv, uint16_t port, uint32_t value)
@@ -530,8 +592,6 @@ void WR0_WrIo32(struct wr0_drv_t* drv, uint16_t port, uint32_t value)
 	DWORD returnedLength = 0;
 	BOOL result = FALSE;
 	DWORD length = 0;
-	OLS_WRITE_IO_PORT_INPUT inBuf = { 0 };
-	DWORD ctlCode;
 
 	if (!drv || !drv->hhDriver || drv->hhDriver == INVALID_HANDLE_VALUE)
 		return;
@@ -539,24 +599,41 @@ void WR0_WrIo32(struct wr0_drv_t* drv, uint16_t port, uint32_t value)
 	switch (drv->driver_type)
 	{
 	case WR0_DRIVER_WINRING0:
-		ctlCode = IOCTL_OLS_WRITE_IO_PORT_DWORD;
+	{
+		OLS_WRITE_IO_PORT_INPUT inBuf = { 0 };
+		inBuf.LongData = value;
+		inBuf.PortNumber = port;
+		length = offsetof(OLS_WRITE_IO_PORT_INPUT, LongData) + sizeof(inBuf.LongData);
+		result = DeviceIoControl(drv->hhDriver, IOCTL_OLS_WRITE_IO_PORT_DWORD,
+			&inBuf, length, NULL, 0, &returnedLength, NULL);
+	}
 		break;
 	case WR0_DRIVER_CPUZ161:
-		ctlCode = IOCTL_CPUZ_WRITE_IO_PORT_DWORD;
+	{
+		OLS_WRITE_IO_PORT_INPUT inBuf = { 0 };
+		UINT64 outBuf;
+		inBuf.LongData = value;
+		inBuf.PortNumber = port;
+		length = sizeof(inBuf);
+		result = DeviceIoControl(drv->hhDriver, IOCTL_CPUZ_WRITE_IO_PORT_DWORD,
+			&inBuf, length, &outBuf, sizeof(outBuf), &returnedLength, NULL);
+	}
 		break;
 	case WR0_DRIVER_HWIO:
-		ctlCode = IOCTL_HIO_WRITE_IO_PORT;
+	{
+		OLS_WRITE_IO_PORT_INPUT inBuf = { 0 };
+		inBuf.LongData = value;
+		inBuf.PortNumber = port;
+		length = offsetof(OLS_WRITE_IO_PORT_INPUT, LongData) + sizeof(inBuf.LongData);
+		result = DeviceIoControl(drv->hhDriver, IOCTL_HIO_WRITE_IO_PORT,
+			&inBuf, length, NULL, 0, &returnedLength, NULL);
+	}
 		break;
 	default:
 		return;
 	}
-
-	inBuf.LongData = value;
-	inBuf.PortNumber = port;
-	length = offsetof(OLS_WRITE_IO_PORT_INPUT, CharData) + sizeof(inBuf.LongData);
-
-	result = DeviceIoControl(drv->hhDriver, ctlCode,
-		&inBuf, length, NULL, 0, &returnedLength, NULL);
+	if (!result && drv->debug)
+		printf("[IO] Write 32 @%u->%08X Failed\n", port, value);
 }
 
 int WR0_RdPciConf(struct wr0_drv_t* drv, uint32_t addr, uint32_t reg, void* value, uint32_t size)
@@ -604,8 +681,13 @@ int WR0_RdPciConf(struct wr0_drv_t* drv, uint32_t addr, uint32_t reg, void* valu
 	default:
 		return -1;
 	}
-
-	return result ? 0 : -2;
+	if (!result)
+	{
+		//if (drv->debug)
+			//printf("[IO] Read PCI @%X(%X+%u) Failed\n", addr, reg, size);
+		return -2;
+	}
+	return 0;
 }
 
 uint8_t WR0_RdPciConf8(struct wr0_drv_t* drv, uint32_t addr, uint32_t reg)
@@ -668,8 +750,13 @@ int WR0_WrPciConf(struct wr0_drv_t* drv, uint32_t addr, uint32_t reg, void* valu
 	default:
 		return -1;
 	}
-
-	return result ? 0 : -2;
+	if (!result)
+	{
+		if (drv->debug)
+			printf("[IO] Write PCI @%X(%X+%u) Failed\n", addr, reg, size);
+		return -2;
+	}
+	return 0;
 }
 
 void WR0_WrPciConf8(struct wr0_drv_t* drv, uint32_t addr, uint32_t reg, uint8_t value)
