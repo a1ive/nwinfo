@@ -725,7 +725,7 @@ PrintDDR3(PNODE nd, UINT8* rawSpd, CHAR* Ids, DWORD IdsSize)
 		NWL_NodeAttrSetf(nd, "tRP", NAFLG_FMT_NUMERIC, "%u", tRP);
 
 		UINT16 tRAS = 0;
-		if (tRAS > 0.0f)
+		if (tCK > 0.0f)
 		{
 			float t = (UINT8)rawSpd[22] * mtb + (UINT8)(rawSpd[21] & 0x0F) * 32.0f;
 			tRAS = (UINT16)(t / tCK + DDR4_ROUNDING_FACTOR);
@@ -733,7 +733,7 @@ PrintDDR3(PNODE nd, UINT8* rawSpd, CHAR* Ids, DWORD IdsSize)
 		NWL_NodeAttrSetf(nd, "tRAS", NAFLG_FMT_NUMERIC, "%u", tRAS);
 
 		UINT16 tRC = 0;
-		if (tRC > 0.0f)
+		if (tCK > 0.0f)
 		{
 			float t = (UINT8)rawSpd[23] * mtb + (UINT8)(rawSpd[21] >> 4) * 32.0f + 1;
 			tRC = (UINT16)(t / tCK + DDR4_ROUNDING_FACTOR);
