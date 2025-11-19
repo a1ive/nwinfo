@@ -70,10 +70,10 @@ jobs:
       run: |
         $TargetFolder = "PKG"
         New-Item -ItemType Directory -Path $TargetFolder -Force | Out-Null
-        Copy-Item -Path "x64\Release\nwinfo.exe" -Destination "$($TargetFolder)\nwinfox64.exe"
-        Copy-Item -Path "x64\Release\gnwinfo.exe" -Destination "$($TargetFolder)\gnwinfox64.exe"
-        Copy-Item -Path "Win32\Release\nwinfo.exe" -Destination "$($TargetFolder)\nwinfo.exe"
-        Copy-Item -Path "Win32\Release\gnwinfo.exe" -Destination "$($TargetFolder)\gnwinfo.exe"
+        Copy-Item -Path "x64\Release\nwinfo.exe" -Destination "$($TargetFolder)\nwinfo.exe"
+        Copy-Item -Path "x64\Release\gnwinfo.exe" -Destination "$($TargetFolder)\gnwinfo.exe"
+        Copy-Item -Path "Win32\Release\nwinfo.exe" -Destination "$($TargetFolder)\nwinfox86.exe"
+        Copy-Item -Path "Win32\Release\gnwinfo.exe" -Destination "$($TargetFolder)\gnwinfox86.exe"
         .\copy_res.ps1 -TargetFolder $TargetFolder
         
     - name: Create ZIPs

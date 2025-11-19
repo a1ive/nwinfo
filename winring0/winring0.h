@@ -90,3 +90,5 @@ BOOL WR0_WaitPciBus(DWORD timeout);
 void WR0_ReleasePciBus(void);
 BOOL WR0_WaitSmBus(DWORD timeout);
 void WR0_ReleaseSmBus(void);
+
+BOOL WR0_IsWoW64(void);

@@ -64,23 +64,6 @@ static BOOL load_driver(struct wr0_drv_t* drv)
 	return TRUE;
 }
 
-typedef BOOL(WINAPI* LPFN_ISWOW64PROCESS) (HANDLE, PBOOL);
-static BOOL is_x64(void)
-{
-#ifdef _WIN64
-	return TRUE;
-#else
-	BOOL bIsWow64 = FALSE;
-	HMODULE hMod = GetModuleHandleW(L"kernel32");
-	LPFN_ISWOW64PROCESS fnIsWow64Process = NULL;
-	if (hMod)
-		fnIsWow64Process = (LPFN_ISWOW64PROCESS)GetProcAddress(hMod, "IsWow64Process");
-	if (fnIsWow64Process)
-		fnIsWow64Process(GetCurrentProcess(), &bIsWow64);
-	return bIsWow64;
-#endif
-}
-
 BOOL
 WR0_CheckPawnIO(void)
 {
@@ -249,48 +232,35 @@ fail:
 struct wr0_drv_t* WR0_OpenDriver(int debug)
 {
 	struct wr0_drv_t* drv = NULL;
-	DWORD ver = 0;
-	if (is_x64())
+	if (WR0_IsWoW64())
+		return NULL;
+	drv = open_driver_real(CPUZDRV_NAME, CPUZDRV_ID, WR0_DRIVER_CPUZ161, CPUZDRV_OBJ, debug);
+	if (drv)
+		return drv;
+	drv = open_driver_real(HWIODRV_NAME, HWIODRV_ID, WR0_DRIVER_HWIO, HWIODRV_OBJ, debug);
+	if (drv)
+		return drv;
+	drv = open_driver_real(HWRWDRV_NAME, HWRWDRV_ID, WR0_DRIVER_WINRING0, HWRWDRV_OBJ, debug);
+	if (drv)
+		return drv;
+	drv = open_driver_real(WINRING0_NAME, WINRING0_ID, WR0_DRIVER_WINRING0, WINRING0_OBJ, debug);
+	if (drv)
+		return drv;
+#ifdef _WIN64
+	drv = open_driver_real(PAWNIO_NAME, PAWNIO_ID, WR0_DRIVER_PAWNIO, PAWNIO_OBJ, debug);
+	if (drv)
 	{
-		drv = open_driver_real(CPUZDRV_NAME_X64, CPUZDRV_ID, WR0_DRIVER_CPUZ161, CPUZDRV_OBJ, debug);
-		if (drv)
-			return drv;
-		drv = open_driver_real(HWIODRV_NAME_X64, HWIODRV_ID, WR0_DRIVER_HWIO, HWIODRV_OBJ, debug);
-		if (drv)
-			return drv;
-		drv = open_driver_real(HWRWDRV_NAME_X64, HWRWDRV_ID, WR0_DRIVER_WINRING0, HWRWDRV_OBJ, debug);
-		if (drv)
-			return drv;
-		drv = open_driver_real(WINRING0_NAME_X64, WINRING0_ID, WR0_DRIVER_WINRING0, WINRING0_OBJ, debug);
-		if (drv)
-			return drv;
-		drv = open_driver_real(PAWNIO_NAME, PAWNIO_ID, WR0_DRIVER_PAWNIO, PAWNIO_OBJ, debug);
-		if (drv)
-		{
-			load_pawnio(&drv->pio_amd0f, L"AMDFamily0F.bin", debug);
-			load_pawnio(&drv->pio_amd10, L"AMDFamily10.bin", debug);
-			load_pawnio(&drv->pio_amd17, L"AMDFamily17.bin", debug);
-			load_pawnio(&drv->pio_intel, L"IntelMSR.bin", debug);
-			load_pawnio(&drv->pio_rysmu, L"RyzenSMU.bin", debug);
-			load_pawnio(&drv->pio_smi801, L"SmbusI801.bin", debug);
-			load_pawnio(&drv->pio_smpiix4, L"SmbusPIIX4.bin", debug);
-			return drv;
-		}
+		load_pawnio(&drv->pio_amd0f, L"AMDFamily0F.bin", debug);
+		load_pawnio(&drv->pio_amd10, L"AMDFamily10.bin", debug);
+		load_pawnio(&drv->pio_amd17, L"AMDFamily17.bin", debug);
+		load_pawnio(&drv->pio_intel, L"IntelMSR.bin", debug);
+		load_pawnio(&drv->pio_rysmu, L"RyzenSMU.bin", debug);
+		load_pawnio(&drv->pio_smi801, L"SmbusI801.bin", debug);
+		load_pawnio(&drv->pio_smpiix4, L"SmbusPIIX4.bin", debug);
+		return drv;
 	}
-	else
-	{
-		drv = open_driver_real(CPUZDRV_NAME, CPUZDRV_ID, WR0_DRIVER_CPUZ161, CPUZDRV_OBJ, debug);
-		if (drv)
-			return drv;
-		drv = open_driver_real(HWIODRV_NAME, HWIODRV_ID, WR0_DRIVER_HWIO, HWIODRV_OBJ, debug);
-		if (drv)
-			return drv;
-		drv = open_driver_real(HWRWDRV_NAME, HWRWDRV_ID, WR0_DRIVER_WINRING0, HWRWDRV_OBJ, debug);
-		if (drv)
-			return drv;
-		drv = open_driver_real(WINRING0_NAME, WINRING0_ID, WR0_DRIVER_WINRING0, WINRING0_OBJ, debug);
-	}
-	return drv;
+#endif
+	return NULL;
 }
 
 int WR0_RdMsr(struct wr0_drv_t* drv, uint32_t msr_index, uint64_t* result)

@@ -8,8 +8,11 @@
 
 // WinRing0.sys
 #define WINRING0_ID							L"WinRing0_1_2_0"
+#ifdef _WIN64
+#define WINRING0_NAME						L"WinRing0x64.sys"
+#else
 #define WINRING0_NAME						L"WinRing0.sys"
-#define WINRING0_NAME_X64					L"WinRing0x64.sys"
+#endif
 #define WINRING0_OBJ						L"\\\\.\\WinRing0_1_2_0"
 
 // WinRing0
@@ -80,8 +83,11 @@
 
 // HwRwDrv.sys
 #define HWRWDRV_ID							L"HwRwDrv"
+#ifdef _WIN64
+#define HWRWDRV_NAME						L"HwRwDrvx64.sys"
+#else
 #define HWRWDRV_NAME						L"HwRwDrv.sys"
-#define HWRWDRV_NAME_X64					L"HwRwDrvx64.sys"
+#endif
 #define HWRWDRV_OBJ							L"\\\\.\\HwRwDrv"
 
 // PCI Error Code
@@ -143,8 +149,11 @@ typedef struct _OLS_WRITE_MEMORY_INPUT
 
 // HwIo.sys
 #define HWIODRV_ID							L"HwIo"
+#ifdef _WIN64
+#define HWIODRV_NAME						L"HwIox64.sys"
+#else
 #define HWIODRV_NAME						L"HwIo.sys"
-#define HWIODRV_NAME_X64					L"HwIox64.sys"
+#endif
 #define HWIODRV_OBJ							L"\\\\.\\HwIo"
 
 // HwIo
@@ -175,8 +184,11 @@ typedef struct _OLS_WRITE_MEMORY_INPUT
 
 // CPUZ.sys
 #define CPUZDRV_ID							L"cpuz161"
+#ifdef _WIN64
+#define CPUZDRV_NAME						L"cpuidx64.sys"
+#else
 #define CPUZDRV_NAME						L"cpuid.sys"
-#define CPUZDRV_NAME_X64					L"cpuidx64.sys"
+#endif
 #define CPUZDRV_OBJ							L"\\\\.\\CPUZ161"
 
 // CPUZ

@@ -89,3 +89,20 @@ void WR0_ReleaseSmBus(void)
 	if (mutex_smbus != NULL)
 		ReleaseMutex(mutex_smbus);
 }
+
+typedef BOOL(WINAPI* LPFN_ISWOW64PROCESS) (HANDLE, PBOOL);
+BOOL WR0_IsWoW64(void)
+{
+#ifdef _WIN64
+	return FALSE;
+#else
+	BOOL bIsWow64 = FALSE;
+	HMODULE hMod = GetModuleHandleW(L"kernel32");
+	LPFN_ISWOW64PROCESS fnIsWow64Process = NULL;
+	if (hMod)
+		fnIsWow64Process = (LPFN_ISWOW64PROCESS)GetProcAddress(hMod, "IsWow64Process");
+	if (fnIsWow64Process)
+		fnIsWow64Process(GetCurrentProcess(), &bIsWow64);
+	return bIsWow64;
+#endif
+}
