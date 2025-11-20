@@ -16,7 +16,7 @@ jobs:
 
     steps:
     - name: Run git checkout
-      uses: actions/checkout@v5
+      uses: actions/checkout@v6
 
     - name: Create PDF
       uses: BaileyJM02/markdown-to-pdf@v1
@@ -40,7 +40,7 @@ jobs:
 
     steps:
     - name: Run git checkout
-      uses: actions/checkout@v5
+      uses: actions/checkout@v6
       with:
         fetch-depth: 0
 
