@@ -152,4 +152,19 @@ int SM_ProcCall(smbus_t* ctx, uint8_t slave_addr, uint8_t offset, uint16_t* valu
 #define SPD5_HUB_TS_MSB         0x32    // MR50 - TS Current Sensed Temperature - High Byte
 #define SPD5_HUB_TS_STATUS      0x33    // MR51 - Temperature Sensor Status
 
+// slave_addr = SPD_SLABE_ADDR_BASE + dimm_index
+#define SPD_SLABE_ADDR_BASE     0x50
+
+bool SM_DDR4_IsAvailable(smbus_t* ctx, uint8_t slave_addr);
+bool SM_DDR5_IsAvailable(smbus_t* ctx, uint8_t slave_addr);
+
+int SM_DDR4_ReadByteAt(smbus_t* ctx, uint8_t slave_addr, uint16_t address, uint8_t* value);
+int SM_DDR5_ReadByteAt(smbus_t* ctx, uint8_t slave_addr, uint16_t address, uint8_t* value);
+
+bool SM_DDR4_IsThermalSensorPresent(smbus_t* ctx, uint8_t slave_addr);
+bool SM_DDR5_IsThermalSensorPresent(smbus_t* ctx, uint8_t slave_addr);
+
+float SM_DDR4_GetTemperature(smbus_t* ctx, uint8_t slave_addr);
+float SM_DDR5_GetTemperature(smbus_t* ctx, uint8_t slave_addr);
+
 int SM_GetSpd(smbus_t* ctx, uint8_t dimm_index, uint8_t data[SPD_MAX_SIZE]);

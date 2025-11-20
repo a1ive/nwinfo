@@ -351,7 +351,6 @@ PrintDDR5(PNODE nd, UINT8* rawSpd, CHAR* Ids, DWORD IdsSize)
 	NWL_NodeAttrSet(nd, "Date", SDRDDR12345Date(rawSpd[515], rawSpd[516]), 0);
 	NWL_NodeAttrSet(nd, "Serial Number", SDRDDR12345SN(rawSpd, 517), NAFLG_FMT_SENSITIVE);
 	NWL_NodeAttrSet(nd, "Part Number", SDRDDR12345SKU(rawSpd, 521, 20), NAFLG_FMT_SENSITIVE);
-	NWL_NodeAttrSetBool(nd, "Thermal Sensor", 1, 0); // ?
 
 	bool xmp = false;
 	UINT32 mhzFreq = 0;
@@ -384,7 +383,7 @@ PrintDDR5(PNODE nd, UINT8* rawSpd, CHAR* Ids, DWORD IdsSize)
 	if (xmp)
 	{
 		NWL_NodeAttrSet(nd, "XMP", "XMP 3.0", 0);
-		NWL_NodeAttrSet(nd, "Voltage", (rawSpd[15] == 0) ? "1.1V" : "UNKNOWN", 0); //FIXME
+		NWL_NodeAttrSet(nd, "Voltage", (rawSpd[16] == 0) ? "1.1V" : "UNKNOWN", 0); //FIXME
 
 		UINT16 tCL = 0;
 		if (tCK != 0)
@@ -430,7 +429,7 @@ PrintDDR5(PNODE nd, UINT8* rawSpd, CHAR* Ids, DWORD IdsSize)
 	else
 	{
 		NWL_NodeAttrSet(nd, "XMP", "None", 0);
-		NWL_NodeAttrSet(nd, "Voltage", (rawSpd[15]  == 0) ? "1.1V" : "UNKNOWN", 0);
+		NWL_NodeAttrSet(nd, "Voltage", (rawSpd[16]  == 0) ? "1.1V" : "UNKNOWN", 0);
 
 		UINT16 tCL = 0;
 		if (tCK != 0)
@@ -486,7 +485,6 @@ PrintDDR4(PNODE nd, UINT8* rawSpd, CHAR* Ids, DWORD IdsSize)
 	NWL_NodeAttrSet(nd, "Date", SDRDDR12345Date(rawSpd[323], rawSpd[324]), 0);
 	NWL_NodeAttrSet(nd, "Serial Number", SDRDDR12345SN(rawSpd, 325), NAFLG_FMT_SENSITIVE);
 	NWL_NodeAttrSet(nd, "Part Number", SDRDDR12345SKU(rawSpd, 329, 20), NAFLG_FMT_SENSITIVE);
-	NWL_NodeAttrSetBool(nd, "Thermal Sensor", (rawSpd[14] & 0x80), 0); // ?
 
 	bool xmp = false;
 	float mhzFreq = 0.0f;
@@ -616,7 +614,6 @@ PrintDDR3(PNODE nd, UINT8* rawSpd, CHAR* Ids, DWORD IdsSize)
 	NWL_NodeAttrSet(nd, "Serial Number", SDRDDR12345SN(rawSpd, 122), NAFLG_FMT_SENSITIVE);
 	NWL_NodeAttrSet(nd, "Part Number", SDRDDR12345SKU(rawSpd, 128, 18), NAFLG_FMT_SENSITIVE);
 	NWL_NodeAttrSet(nd, "Voltage", DDR3Voltage(rawSpd), 0);
-	NWL_NodeAttrSetBool(nd, "Thermal Sensor", (rawSpd[32] & 0x80), 0); // DDR3 MPR ?
 
 	bool xmp = false;
 	UINT32 mhzFreq = 0;
@@ -982,8 +979,9 @@ GetSpdTypeStr(UINT8 t)
 }
 
 void
-ParseSpd(PNODE node, int id, CHAR* ids, DWORD idsSize, UINT8 rawSpd[SPD_MAX_SIZE])
+ParseSpd(PNODE node, smbus_t* ctx, int id, CHAR* ids, DWORD idsSize, UINT8 rawSpd[SPD_MAX_SIZE])
 {
+	bool tsPresent = false;
 	PNODE nspd = NWL_NodeAppendNew(node, "Slot", NFLG_TABLE_ROW);
 	NWL_NodeAttrSetf(nspd, "ID", NAFLG_FMT_NUMERIC, "%d", id);
 	NWL_NodeAttrSet(nspd, "Memory Type", GetSpdTypeStr(rawSpd[SPD_MEMORY_TYPE_OFFSET]), 0);
@@ -1015,12 +1013,28 @@ ParseSpd(PNODE node, int id, CHAR* ids, DWORD idsSize, UINT8 rawSpd[SPD_MAX_SIZE
 	case MEM_TYPE_LPDDR4X:
 		PrintDDR4(nspd, rawSpd, ids, idsSize);
 		NWL_NodeAttrSetRaw(nspd, "Binary Data", rawSpd, 512);
+		if (ctx)
+		{
+			tsPresent = SM_DDR4_IsThermalSensorPresent(ctx, SPD_SLABE_ADDR_BASE + id);
+			NWL_NodeAttrSetBool(nspd, "Thermal Sensor", tsPresent, 0);
+			if (tsPresent)
+				NWL_NodeAttrSetf(nspd, "Temperature (C)", NAFLG_FMT_NUMERIC, "%.1f",
+					SM_DDR4_GetTemperature(ctx, SPD_SLABE_ADDR_BASE + id));
+		}
 		break;
 	case MEM_TYPE_DDR5:
 	case MEM_TYPE_LPDDR5:
 	case MEM_TYPE_LPDDR5X:
 		PrintDDR5(nspd, rawSpd, ids, idsSize);
 		NWL_NodeAttrSetRaw(nspd, "Binary Data", rawSpd, 1024);
+		if (ctx)
+		{
+			tsPresent = SM_DDR5_IsThermalSensorPresent(ctx, SPD_SLABE_ADDR_BASE + id);
+			NWL_NodeAttrSetBool(nspd, "Thermal Sensor", tsPresent, 0);
+			if (tsPresent)
+				NWL_NodeAttrSetf(nspd, "Temperature (C)", NAFLG_FMT_NUMERIC, "%.1f",
+					SM_DDR5_GetTemperature(ctx, SPD_SLABE_ADDR_BASE + id));
+		}
 		break;
 	case MEM_TYPE_FPM_DRAM:
 	case MEM_TYPE_EDO:
@@ -1081,7 +1095,7 @@ PNODE NW_Spd(VOID)
 	if (NWLC->SpdDump)
 	{
 		LoadSpdDump(NWLC->SpdDump, rawSpd);
-		ParseSpd(node, 0, ids, idsSize, rawSpd);
+		ParseSpd(node, NULL, 0, ids, idsSize, rawSpd);
 		goto out;
 	}
 
@@ -1094,7 +1108,7 @@ PNODE NW_Spd(VOID)
 	{
 		if (SM_GetSpd(ctx, i, rawSpd) != SM_OK)
 			continue;
-		ParseSpd(node, i, ids, idsSize, rawSpd);
+		ParseSpd(node, ctx, i, ids, idsSize, rawSpd);
 	}
 	SMBUS_DBG("Time: %llu", GetTickCount64() - tStart);
 	SM_Free(ctx);

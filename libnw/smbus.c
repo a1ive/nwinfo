@@ -142,7 +142,7 @@ int SM_ProcCall(smbus_t* ctx, uint8_t slave_addr, uint8_t offset, uint16_t* valu
 	return rc;
 }
 
-static inline int DDR4_SetPage(smbus_t* ctx, uint8_t slave_addr, uint8_t page)
+static inline int SetDDR4Page(smbus_t* ctx, uint8_t slave_addr, uint8_t page)
 {
 	if (page > SPD_DDR4_PAGE_MAX)
 		return SM_ERR_PARAM;
@@ -151,14 +151,14 @@ static inline int DDR4_SetPage(smbus_t* ctx, uint8_t slave_addr, uint8_t page)
 	return SM_WriteByteData(ctx, SPD_DDR4_ADDR_PAGE + page, 0, SPD_DDR4_PAGE_MASK);
 }
 
-static bool DDR4_IsAvailable(smbus_t* ctx, uint8_t slave_addr)
+bool SM_DDR4_IsAvailable(smbus_t* ctx, uint8_t slave_addr)
 {
 	if (SM_WriteQuick(ctx, SPD_DDR4_ADDR_PAGE, 0x00) != SM_OK)
 	{
 		SMBUS_DBG("DDR4 WriteQuick failed");
 		return false;
 	}
-	if (DDR4_SetPage(ctx, slave_addr, 0) != SM_OK)
+	if (SetDDR4Page(ctx, slave_addr, 0) != SM_OK)
 	{
 		SMBUS_DBG("DDR4 SetPage 0 failed");
 		return false;
@@ -172,8 +172,8 @@ static bool DDR4_IsAvailable(smbus_t* ctx, uint8_t slave_addr)
 	return true;
 }
 
-static int
-DDR4_ReadByteAt(smbus_t* ctx, uint8_t slave_addr, uint16_t address, uint8_t* value)
+int
+SM_DDR4_ReadByteAt(smbus_t* ctx, uint8_t slave_addr, uint16_t address, uint8_t* value)
 {
 	if (address >= ((SPD_DDR4_PAGE_MAX + 1) << SPD_DDR4_PAGE_SHIFT))
 		return SM_ERR_PARAM;
@@ -181,7 +181,7 @@ DDR4_ReadByteAt(smbus_t* ctx, uint8_t slave_addr, uint16_t address, uint8_t* val
 	uint8_t page = (uint8_t)(address >> SPD_DDR4_PAGE_SHIFT);
 	uint8_t offset = (uint8_t)(address & SPD_DDR4_PAGE_MASK);
 
-	int status = DDR4_SetPage(ctx, slave_addr, page);
+	int status = SetDDR4Page(ctx, slave_addr, page);
 	if (status != SM_OK)
 		return status;
 
@@ -189,7 +189,50 @@ DDR4_ReadByteAt(smbus_t* ctx, uint8_t slave_addr, uint16_t address, uint8_t* val
 	return status;
 }
 
-static inline int DDR5_SetPage(smbus_t* ctx, uint8_t slave_addr, uint8_t page)
+static inline float ConvertTemperature(uint16_t temp_raw)
+{
+	float temp = 0.0f;
+	if ((temp_raw & 0x1000) != 0) // Negative temperature
+	{
+		temp_raw = (uint16_t)(temp_raw & ~0x1000);
+		temp = temp_raw * 0.0625f - 256;
+	}
+	else // Positive temperature
+	{
+		temp = temp_raw* 0.0625f;
+	}
+	return temp;
+}
+
+bool SM_DDR4_IsThermalSensorPresent(smbus_t* ctx, uint8_t slave_addr)
+{
+	uint8_t spd_byte = 0;
+	if (SM_DDR4_ReadByteAt(ctx, slave_addr, 14, &spd_byte) != SM_OK)
+		return false;
+	if (!(spd_byte & 0x80)) // Bit 7
+		return false;
+	uint8_t ts_addr = 0x18 | (slave_addr & 0x07);
+	if (SM_WriteQuick(ctx, ts_addr, 0x00) != SM_OK)
+		return false;
+	return true;
+}
+
+float SM_DDR4_GetTemperature(smbus_t* ctx, uint8_t slave_addr)
+{
+	uint8_t ts_addr = 0x18 | (slave_addr & 0x07);
+	uint16_t temp_raw = 0;
+	if (SetDDR4Page(ctx, slave_addr, 0) != SM_OK)
+		return 0.0f;
+	if (SM_ReadWordData(ctx, ts_addr, 0x05, &temp_raw) != SM_OK)
+		return 0.0f;
+	// Swap bytes
+	temp_raw = (uint16_t)(((temp_raw & 0xFF00) >> 8) | ((temp_raw & 0x00FF) << 8));
+	// Strip away not required bits
+	temp_raw &= 0x0FFF;
+	return ConvertTemperature(temp_raw);
+}
+
+static inline int SetDDR5Page(smbus_t* ctx, uint8_t slave_addr, uint8_t page)
 {
 	if (page > SPD_DDR5_PAGE_MAX)
 		return SM_ERR_PARAM;
@@ -203,7 +246,7 @@ static inline int DDR5_SetPage(smbus_t* ctx, uint8_t slave_addr, uint8_t page)
 	return SM_WriteByteData(ctx, slave_addr, SPD5_HUB_I2C_CONF, page);
 }
 
-static bool DDR5_IsAvailable(smbus_t* ctx, uint8_t slave_addr)
+bool SM_DDR5_IsAvailable(smbus_t* ctx, uint8_t slave_addr)
 {
 	uint8_t current_page;
 	if (SM_ReadByteData(ctx, slave_addr, SPD5_HUB_I2C_CONF, &current_page) != SM_OK)
@@ -213,7 +256,7 @@ static bool DDR5_IsAvailable(smbus_t* ctx, uint8_t slave_addr)
 	}
 	ctx->spd_page = current_page & 0x07;
 	ctx->last_dimm_addr = slave_addr;
-	if (DDR5_SetPage(ctx, slave_addr, 0) != SM_OK)
+	if (SetDDR5Page(ctx, slave_addr, 0) != SM_OK)
 	{
 		SMBUS_DBG("DDR5 SetPage 0 failed");
 		return false;
@@ -228,8 +271,8 @@ static bool DDR5_IsAvailable(smbus_t* ctx, uint8_t slave_addr)
 	return true;
 }
 
-static int
-DDR5_ReadByteAt(smbus_t* ctx, uint8_t slave_addr, uint16_t address, uint8_t* value)
+int
+SM_DDR5_ReadByteAt(smbus_t* ctx, uint8_t slave_addr, uint16_t address, uint8_t* value)
 {
 	if (address >= ((SPD_DDR5_PAGE_MAX + 1) << SPD_DDR5_PAGE_SHIFT))
 		return SM_ERR_PARAM;
@@ -237,11 +280,33 @@ DDR5_ReadByteAt(smbus_t* ctx, uint8_t slave_addr, uint16_t address, uint8_t* val
 	uint8_t page = (uint8_t)(address >> SPD_DDR5_PAGE_SHIFT);
 	uint8_t offset = (uint8_t)((address & SPD_DDR5_PAGE_MASK) | 0x80);
 
-	int status = DDR5_SetPage(ctx, slave_addr, page);
+	int status = SetDDR5Page(ctx, slave_addr, page);
 	if (status != SM_OK)
 		return status;
 
 	return SM_ReadByteData(ctx, slave_addr, offset, value);
+}
+
+bool SM_DDR5_IsThermalSensorPresent(smbus_t* ctx, uint8_t slave_addr)
+{
+	uint8_t mr5 = 0; // MR5 - Device Capability
+	if (SetDDR5Page(ctx, slave_addr, 0) != SM_OK)
+		return false;
+	if (SM_ReadByteData(ctx, slave_addr, SPD5_HUB_CAP, &mr5) != SM_OK)
+		return false;
+	if (!(mr5 & 0x02)) // Bit 1 = Temperature Sensor Support
+		return false;
+	return true;
+}
+
+float SM_DDR5_GetTemperature(smbus_t* ctx, uint8_t slave_addr)
+{
+	uint16_t temp_raw = 0;
+	if (SetDDR5Page(ctx, slave_addr, 0) != SM_OK)
+		return 0.0f;
+	if (SM_ReadWordData(ctx, slave_addr, SPD5_HUB_TS_LSB, &temp_raw) != SM_OK)
+		return 0.0f;
+	return ConvertTemperature(temp_raw);
 }
 
 static const uint16_t
@@ -278,14 +343,14 @@ int SM_GetSpd(smbus_t* ctx, uint8_t dimm_index, uint8_t data[SPD_MAX_SIZE])
 		return SM_ERR_PARAM;
 
 	// SPD slave address for DIMMs are typically 0x50 to 0x57.
-	uint8_t slave_addr = 0x50 + dimm_index;
+	uint8_t slave_addr = SPD_SLABE_ADDR_BASE + dimm_index;
 	memset(data, 0xFF, SPD_MAX_SIZE);
 
 	WR0_WaitSmBus(100);
 
-	if (DDR4_IsAvailable(ctx, slave_addr))
+	if (SM_DDR4_IsAvailable(ctx, slave_addr))
 		SMBUS_DBG("Detected DDR4 SPD");
-	else if (DDR5_IsAvailable(ctx, slave_addr))
+	else if (SM_DDR5_IsAvailable(ctx, slave_addr))
 		SMBUS_DBG("Detected DDR5 SPD");
 	else if (SM_ReadByteData(ctx, slave_addr, SPD_MEMORY_TYPE_OFFSET, &ctx->spd_type) != SM_OK)
 	{
@@ -309,7 +374,7 @@ int SM_GetSpd(smbus_t* ctx, uint8_t dimm_index, uint8_t data[SPD_MAX_SIZE])
 			for (uint16_t i = 0; i < ARRAYSIZE(SPD_INDEX_DDR4); i++)
 			{
 				uint16_t off = SPD_INDEX_DDR4[i];
-				result = DDR4_ReadByteAt(ctx, slave_addr, off, &data[off]);
+				result = SM_DDR4_ReadByteAt(ctx, slave_addr, off, &data[off]);
 				if (result != SM_OK)
 				{
 					SMBUS_DBG("Failed to read addr %u for DDR4 SPD on DIMM %u", off, dimm_index);
@@ -321,7 +386,7 @@ int SM_GetSpd(smbus_t* ctx, uint8_t dimm_index, uint8_t data[SPD_MAX_SIZE])
 		{
 			for (uint16_t i = 0; i < 512; i++)
 			{
-				result = DDR4_ReadByteAt(ctx, slave_addr, i, &data[i]);
+				result = SM_DDR4_ReadByteAt(ctx, slave_addr, i, &data[i]);
 				if (result != SM_OK)
 				{
 					SMBUS_DBG("Failed to read addr %u for DDR4 SPD on DIMM %u", i, dimm_index);
@@ -329,7 +394,7 @@ int SM_GetSpd(smbus_t* ctx, uint8_t dimm_index, uint8_t data[SPD_MAX_SIZE])
 				}
 			}
 		}
-		DDR4_SetPage(ctx, slave_addr, 0);
+		SetDDR4Page(ctx, slave_addr, 0);
 		break;
 	case MEM_TYPE_DDR5:
 	case MEM_TYPE_LPDDR5:
@@ -339,7 +404,7 @@ int SM_GetSpd(smbus_t* ctx, uint8_t dimm_index, uint8_t data[SPD_MAX_SIZE])
 			for (uint16_t i = 0; i < ARRAYSIZE(SPD_INDEX_DDR5); i++)
 			{
 				uint16_t off = SPD_INDEX_DDR5[i];
-				result = DDR5_ReadByteAt(ctx, slave_addr, off, &data[off]);
+				result = SM_DDR5_ReadByteAt(ctx, slave_addr, off, &data[off]);
 				if (result != SM_OK)
 				{
 					SMBUS_DBG("Failed to read addr %u for DDR5 SPD on DIMM %u", off, dimm_index);
@@ -351,7 +416,7 @@ int SM_GetSpd(smbus_t* ctx, uint8_t dimm_index, uint8_t data[SPD_MAX_SIZE])
 		{
 			for (uint16_t i = 0; i < 1024; i++)
 			{
-				result = DDR5_ReadByteAt(ctx, slave_addr, i, &data[i]);
+				result = SM_DDR5_ReadByteAt(ctx, slave_addr, i, &data[i]);
 				if (result != SM_OK)
 				{
 					SMBUS_DBG("Failed to read addr %u for DDR5 SPD on DIMM %u", i, dimm_index);
@@ -359,7 +424,7 @@ int SM_GetSpd(smbus_t* ctx, uint8_t dimm_index, uint8_t data[SPD_MAX_SIZE])
 				}
 			}
 		}
-		DDR5_SetPage(ctx, slave_addr, 0);
+		SetDDR5Page(ctx, slave_addr, 0);
 		break;
 	case MEM_TYPE_DDR3:
 	case MEM_TYPE_LPDDR3:
