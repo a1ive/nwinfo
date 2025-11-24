@@ -917,26 +917,68 @@ DWORD WR0_RdMem(struct wr0_drv_t* drv,
 
 
 // smn=1 -> 0xB8/0xBC AMD 15h Temperature
+#define NB_PCI_REG_ADDR_ADDR 0xB8
+#define NB_PCI_REG_DATA_ADDR 0xBC
 // smn=2 -> 0xC4/0xC8 Zen SMU
+#define SMU_PCI_ADDR_REG 0xC4
+#define SMU_PCI_DATA_REG 0xC8
 // smn=3 -> 0x60/0x64 Zen Temperature
+#define FAMILY_17H_PCI_CONTROL_REGISTER     0x60
+#define FAMILY_17H_PCI_DATA_REGISTER        0x64
+
 DWORD WR0_RdAmdSmn(struct wr0_drv_t* drv, DWORD bdf, DWORD smn, DWORD reg)
 {
 	DWORD returnedLength = 0;
 	BOOL result = FALSE;
-	DWORD inBuf[3];
 	DWORD value = 0;
+	uint32_t addr[2];
 
-	if (!drv || !drv->hhDriver || drv->hhDriver == INVALID_HANDLE_VALUE || drv->driver_type != WR0_DRIVER_CPUZ161)
+	if (!drv || !drv->hhDriver || drv->hhDriver == INVALID_HANDLE_VALUE)
 		return 0;
+	switch (smn)
+	{
+	case 1:
+		addr[0] = NB_PCI_REG_ADDR_ADDR;
+		addr[1] = NB_PCI_REG_DATA_ADDR;
+		break;
+	case 2:
+		addr[0] = SMU_PCI_ADDR_REG;
+		addr[1] = SMU_PCI_DATA_REG;
+		break;
+	case 3:
+		addr[0] = FAMILY_17H_PCI_CONTROL_REGISTER;
+		addr[1] = FAMILY_17H_PCI_DATA_REGISTER;
+		break;
+	default:
+		return 0;
+	}
 
-	inBuf[0] = bdf;
-	inBuf[1] = smn;
-	inBuf[2] = reg;
+	switch (drv->driver_type)
+	{
+	case WR0_DRIVER_CPUZ161:
+	{
+		DWORD inBuf[3];
+		inBuf[0] = bdf;
+		inBuf[1] = smn;
+		inBuf[2] = reg;
+		result = DeviceIoControl(drv->hhDriver, IOCTL_CPUZ_READ_AMD_SMN,
+			inBuf, sizeof(inBuf), &value, sizeof(value), &returnedLength, NULL);
+	}
+		break;
+	case WR0_DRIVER_HWIO:
+	case WR0_DRIVER_WINRING0:
+	{
+		WR0_WrPciConf32(drv, bdf, addr[0], reg);
+		value = WR0_RdPciConf32(drv, bdf, addr[1]);
+		result = TRUE;
+	}
+		break;
+	default:
+		return 0;
+	}
 
-	result = DeviceIoControl(drv->hhDriver, IOCTL_CPUZ_READ_AMD_SMN,
-		inBuf, sizeof(inBuf), &value, sizeof(value), &returnedLength, NULL);
 	if (NWLC->Debug)
-		printf("[SMN] Read AMD SMN reg=%08xh %d value=%08xh\n", reg, result, value);
+		printf("[SMN] Read AMD SMN reg=%08xh (%X,%X) %d value=%08xh\n", addr[0], addr[1], reg, result, value);
 
 	return value;
 }

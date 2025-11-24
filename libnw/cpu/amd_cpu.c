@@ -357,9 +357,6 @@ static int amd_k8_temperature(struct msr_info_t* info)
 #define FAMILY_16H_MODEL_00_MISC_CONTROL_DEVICE_ID 0x1533
 #define FAMILY_16H_MODEL_30_MISC_CONTROL_DEVICE_ID 0x1583
 
-#define NB_PCI_REG_ADDR_ADDR 0xB8
-#define NB_PCI_REG_DATA_ADDR 0xBC
-
 static int amd_k10_temperature(struct msr_info_t* info)
 {
 	uint32_t value = 0;
@@ -417,9 +414,7 @@ static int amd_k10_temperature(struct msr_info_t* info)
 
 	if (smu)
 	{
-		if (info->handle->driver_type == WR0_DRIVER_CPUZ161)
-			value = WR0_RdAmdSmn(info->handle, 0, 1, SMU_REPORTED_TEMP_CTRL_OFFSET);
-		else if (info->handle->driver_type == WR0_DRIVER_PAWNIO)
+		if (info->handle->driver_type == WR0_DRIVER_PAWNIO)
 		{
 			struct pio_mod_t* pio = &info->handle->pio_amd10;
 			ULONG64 in = SMU_REPORTED_TEMP_CTRL_OFFSET;
@@ -429,8 +424,7 @@ static int amd_k10_temperature(struct msr_info_t* info)
 		}
 		else
 		{
-			WR0_WrPciConf32(info->handle, 0, NB_PCI_REG_ADDR_ADDR, SMU_REPORTED_TEMP_CTRL_OFFSET);
-			value = WR0_RdPciConf32(info->handle, 0, NB_PCI_REG_DATA_ADDR);
+			value = WR0_RdAmdSmn(info->handle, 0, 1, SMU_REPORTED_TEMP_CTRL_OFFSET);
 		}
 	}
 	else
@@ -464,19 +458,13 @@ static int amd_k10_temperature(struct msr_info_t* info)
 
 #define F17H_M01H_THM_TCON_CUR_TMP          0x00059800
 #define F17H_TEMP_OFFSET_FLAG               0x80000
-#define FAMILY_17H_PCI_CONTROL_REGISTER     0x60
-#define FAMILY_17H_PCI_DATA_REGISTER        0x64
 
 static float amd_17h_temperature(struct msr_info_t* info)
 {
 	uint32_t temperature;
 	float offset = 0.0f;
 
-	if (info->handle->driver_type == WR0_DRIVER_CPUZ161)
-	{
-		temperature = WR0_RdAmdSmn(info->handle, 0, 3, F17H_M01H_THM_TCON_CUR_TMP);
-	}
-	else if (info->handle->driver_type == WR0_DRIVER_PAWNIO)
+	if (info->handle->driver_type == WR0_DRIVER_PAWNIO)
 	{
 		ULONG64 in = F17H_M01H_THM_TCON_CUR_TMP;
 		ULONG64 out = 0;
@@ -485,8 +473,7 @@ static float amd_17h_temperature(struct msr_info_t* info)
 	}
 	else
 	{
-		WR0_WrPciConf32(info->handle, 0, FAMILY_17H_PCI_CONTROL_REGISTER, F17H_M01H_THM_TCON_CUR_TMP);
-		temperature = WR0_RdPciConf32(info->handle, 0, FAMILY_17H_PCI_DATA_REGISTER);
+		temperature = WR0_RdAmdSmn(info->handle, 0, 3, F17H_M01H_THM_TCON_CUR_TMP);
 	}
 
 	if (strstr(info->id->brand_str, "1600X") ||
