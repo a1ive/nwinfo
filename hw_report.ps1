@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Unlicense
 
 # Set the working directory to the script's location
-Set-Location -Path (Split-Path -Parent -Path $MyInvocation.MyCommand.Path)
+if ($PSScriptRoot) { Set-Location -Path $PSScriptRoot }
 
 # Check if the script is running with administrator privileges
 if (!([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] 'Administrator')) {
@@ -51,12 +51,20 @@ function Log-Message {
 try {
 	# Determine the appropriate nwinfo executable based on the OS architecture
 	Log-Message "Checking OS architecture..."
-	if (([Environment]::Is64BitOperatingSystem) -And (Test-Path ".\nwinfox64.exe")) {
-		$programPath = ".\nwinfox64.exe"
-	} elseif (Test-Path ".\nwinfo.exe") {
-		$programPath = ".\nwinfo.exe"
+	if ([Environment]::Is64BitOperatingSystem) {
+		if (Test-Path ".\nwinfo.exe") {
+			$programPath = ".\nwinfo.exe"
+		} else {
+			throw "nwinfo.exe not found."
+		}
 	} else {
-		throw "nwinfo.exe not found."
+		if (Test-Path ".\nwinfox86.exe") {
+			$programPath = ".\nwinfox86.exe"
+		} elseif (Test-Path ".\nwinfo.exe") {
+			$programPath = ".\nwinfo.exe"
+		} else {
+			throw "nwinfo.exe not found."
+		}
 	}
 	Log-Message "Using $programPath..."
 
@@ -91,12 +99,16 @@ try {
 	$processOutput = $proc.StandardOutput.ReadToEnd()
 	$proc.WaitForExit()
 
+	if ($proc.HasExited -and $proc.ExitCode -ne 0) {
+		throw "nwinfo exited with code $($proc.ExitCode)."
+	}
+
 	Log-Message "Processing nwinfo output..."
 	$utf8Json = $processOutput
 
 	# Parse the JSON output into a PowerShell object
 	Log-Message "Parsing JSON..."
-	$parsedJson = $utf8Json | ConvertFrom-Json
+	$parsedJson = $utf8Json | ConvertFrom-Json -ErrorAction Stop
 
 	# Initialize a dictionary to group SMBIOS data by Table Type
 	Log-Message "Parsing SMBIOS..."

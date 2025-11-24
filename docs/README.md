@@ -160,7 +160,12 @@ Exports active physical network interfaces with IPv4 addresses to `report.html` 
 
 ### PowerShell Script for System Diagnostics
 
-`hw_report.ps1` is a PowerShell script designed to generate and display a detailed hardware and system report using `nwinfo`.
+`hw_report.ps1` is a PowerShell script designed to generate and display a detailed hardware and system report using `nwinfo`.  
+
+You might need to temporarily allow script execution by running the following command:
+```powershell
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
+```
 
 <div style="page-break-after: always;"></div>
 
