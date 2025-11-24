@@ -58,28 +58,25 @@
 static inline int
 read_amd_msr(struct msr_info_t* info, uint32_t msr_index, uint8_t highbit, uint8_t lowbit, uint64_t* result)
 {
-	if (info->handle->driver_type != WR0_DRIVER_PAWNIO)
-		return cpu_rdmsr_range(info->handle, msr_index, highbit, lowbit, result);
-
-	int err;
+	int err = ERR_CPU_UNKN;
 	const uint8_t bits = highbit - lowbit + 1;
 	ULONG64 in = msr_index;
 	ULONG64 out = 0;
-	struct pio_mod_t* pio = NULL;
 
 	if (highbit > 63 || lowbit > highbit)
-		return cpuid_set_error(ERR_INVRANGE);
+		return ERR_INVRANGE;
 
-	if (info->id->x86.ext_family == 0x0f)
-		pio = &info->handle->pio_amd0f;
-	else if (info->id->x86.ext_family >= 0x10 && info->id->x86.ext_family <= 0x16)
-		pio = &info->handle->pio_amd10;
-	else if (info->id->x86.ext_family >= 0x17 && info->id->x86.ext_family <= 0x1A)
-		pio = &info->handle->pio_amd17;
+	if (info->handle->driver_type == WR0_DRIVER_PAWNIO)
+	{
+		if (info->id->x86.ext_family == 0x0f)
+			err = WR0_ExecPawn(info->handle, &info->handle->pio_amd0f, "ioctl_read_msr", &in, 1, &out, 1, NULL);
+		else if (info->id->x86.ext_family >= 0x10 && info->id->x86.ext_family <= 0x16)
+			err = WR0_ExecPawn(info->handle, &info->handle->pio_amd10, "ioctl_read_msr", &in, 1, &out, 1, NULL);
+		else if (info->id->x86.ext_family >= 0x17 && info->id->x86.ext_family <= 0x1A)
+			err = WR0_ExecPawn(info->handle, &info->handle->pio_amd17, "ioctl_read_msr", &in, 1, &out, 1, NULL);
+	}
 	else
-		return cpuid_set_error(ERR_CPU_UNKN);
-
-	err = WR0_ExecPawn(info->handle, pio, "ioctl_read_msr", &in, 1, &out, 1, NULL);
+		err = WR0_RdMsr(info->handle, msr_index, &out);
 
 	if (!err && bits < 64)
 	{

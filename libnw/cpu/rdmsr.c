@@ -1,29 +1,4 @@
-/*
- * Copyright 2009  Veselin Georgiev,
- * anrieffNOSPAM @ mgail_DOT.com (convert to gmail)
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions
- * are met:
- *
- * 1. Redistributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer.
- * 2. Redistributions in binary form must reproduce the above copyright
- *    notice, this list of conditions and the following disclaimer in the
- *    documentation and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
- * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
- * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
- * IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
- * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
- * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
- * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- */
-
+// SPDX-License-Identifier: Unlicense
 
 #include "rdmsr.h"
 
@@ -32,25 +7,9 @@
 #include <winerror.h>
 #include <pathcch.h>
 
-#define IA32_MPERF             0xE7
-#define IA32_APERF             0xE8
-
-static int perfmsr_measure(struct wr0_drv_t* handle, int msr)
-{
-	int err;
-	uint64_t a, b;
-	uint64_t x, y;
-	err = WR0_RdMsr(handle, msr, &x);
-	if (err)
-		return CPU_INVALID_VALUE;
-	sys_precise_clock(&a);
-	busy_loop_delay(10);
-	WR0_RdMsr(handle, msr, &y);
-	sys_precise_clock(&b);
-	if (a >= b || x > y)
-		return CPU_INVALID_VALUE;
-	return (int) ((y - x) / (b - a));
-}
+extern struct msr_fn_t msr_fn_intel;
+extern struct msr_fn_t msr_fn_amd;
+extern struct msr_fn_t msr_fn_centaur;
 
 static bool set_cpu_affinity(logical_cpu_t logical_cpu)
 {
@@ -81,26 +40,6 @@ static bool set_cpu_affinity(logical_cpu_t logical_cpu)
 	group_aff.Group = (WORD)group;
 	group_aff.Mask = (KAFFINITY)(1ULL << number);
 	return SetThreadGroupAffinity(thread, &group_aff, NULL);
-}
-
-int cpu_rdmsr_range(struct wr0_drv_t* handle, uint32_t msr_index, uint8_t highbit, uint8_t lowbit, uint64_t* result)
-{
-	int err;
-	const uint8_t bits = highbit - lowbit + 1;
-
-	if(highbit > 63 || lowbit > highbit)
-		return cpuid_set_error(ERR_INVRANGE);
-
-	err = WR0_RdMsr(handle, msr_index, result);
-
-	if(!err && bits < 64)
-	{
-		/* Show only part of register */
-		*result >>= lowbit;
-		*result &= (1ULL << bits) - 1;
-	}
-
-	return err;
 }
 
 int cpu_msrinfo(struct wr0_drv_t* handle, logical_cpu_t cpu, cpu_msrinfo_request_t which)
@@ -160,12 +99,6 @@ int cpu_msrinfo(struct wr0_drv_t* handle, logical_cpu_t cpu, cpu_msrinfo_request
 	int ret = CPU_INVALID_VALUE;
 	switch (which)
 	{
-		case INFO_MPERF:
-			ret = perfmsr_measure(handle, IA32_MPERF);
-			break;
-		case INFO_APERF:
-			ret = perfmsr_measure(handle, IA32_APERF);
-			break;
 		case INFO_MIN_MULTIPLIER:
 			ret = (int) (fn->get_min_multiplier(&info) * 100);
 			break;

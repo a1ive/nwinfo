@@ -18,7 +18,7 @@ draw_install_pawnio_button(struct nk_context* ctx)
 		MessageBoxW(g_ctx.wnd, L"Failed to install PawnIO", L"Error", MB_ICONERROR | MB_OK);
 		return;
 	}
-	NWLC->NwDrv = WR0_OpenDriver(NWLC->Debug);
+	NWLC->NwDrv = WR0_OpenDriver();
 }
 
 VOID

@@ -7,6 +7,7 @@
 #include "libnw.h"
 #include <libcpuid.h>
 #include <libcpuid_util.h>
+#include "cpu/rdmsr.h"
 
 #include "utils.h"
 

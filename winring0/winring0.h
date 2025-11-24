@@ -31,7 +31,6 @@ struct wr0_drv_t
 	SC_HANDLE scDriver;
 	HANDLE hhDriver;
 	int errorcode;
-	int debug;
 
 	struct pio_mod_t pio_amd0f;
 	struct pio_mod_t pio_amd10;
@@ -79,7 +78,7 @@ int WR0_SendSmuCmd(struct wr0_drv_t* drv, uint32_t cmd, uint32_t rsp, uint32_t a
 
 int WR0_ExecPawn(struct wr0_drv_t* drv, struct pio_mod_t* mod, LPCSTR fn, const ULONG64* in, SIZE_T in_size, PULONG64 out, SIZE_T out_size, PSIZE_T return_size);
 
-struct wr0_drv_t* WR0_OpenDriver(int debug);
+struct wr0_drv_t* WR0_OpenDriver(void);
 int WR0_CloseDriver(struct wr0_drv_t* drv);
 
 void WR0_MicroSleep(unsigned int usec);

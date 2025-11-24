@@ -87,7 +87,6 @@ struct wr0_drv_t;
 
 typedef struct
 {
-	int debug;
 	ry_codename_t codename;
 	uint32_t smu_version;
 	uint32_t pci_id;

@@ -10,6 +10,7 @@
 #include <shlobj.h>
 #include "winring0.h"
 #include "winring0_priv.h"
+#include "../libnw/libnw.h"
 
 static BOOL load_driver(struct wr0_drv_t* drv)
 {
@@ -138,7 +139,7 @@ static BOOL find_driver(struct wr0_drv_t* driver, LPCWSTR name, LPCWSTR id, LPCW
 }
 
 static struct wr0_drv_t*
-open_driver_real(LPCWSTR name, LPCWSTR id, enum wr0_driver_type t, LPCWSTR obj, int debug)
+open_driver_real(LPCWSTR name, LPCWSTR id, enum wr0_driver_type t, LPCWSTR obj)
 {
 	struct wr0_drv_t* drv;
 	BOOL status = FALSE;
@@ -163,14 +164,13 @@ open_driver_real(LPCWSTR name, LPCWSTR id, enum wr0_driver_type t, LPCWSTR obj, 
 	if (!status)
 		goto fail;
 	drv->driver_type = t;
-	drv->debug = debug;
 	return drv;
 fail:
 	free(drv);
 	return NULL;
 }
 
-static int load_pawnio(struct pio_mod_t* mod, LPCWSTR name, int debug)
+static int load_pawnio(struct pio_mod_t* mod, LPCWSTR name)
 {
 	WCHAR path[MAX_PATH] = { 0 };
 	HANDLE hFile = INVALID_HANDLE_VALUE;
@@ -195,7 +195,7 @@ static int load_pawnio(struct pio_mod_t* mod, LPCWSTR name, int debug)
 	if (!ReadFile(hFile, mod->blob, mod->size, &mod->size, NULL) || mod->size == 0)
 		goto fail;
 
-	if (debug)
+	if (NWLC->Debug)
 		printf("[PIO] Load file OK %ls\n", name);
 
 	mod->hd = CreateFileW(PAWNIO_OBJ,
@@ -208,7 +208,7 @@ static int load_pawnio(struct pio_mod_t* mod, LPCWSTR name, int debug)
 
 	CloseHandle(hFile);
 
-	if (debug)
+	if (NWLC->Debug)
 		printf("[PIO] Load blob OK %ls size=%lu\n", name, mod->size);
 	return 0;
 
@@ -222,41 +222,41 @@ fail:
 	mod->blob = NULL;
 	mod->size = 0;
 	mod->hd = INVALID_HANDLE_VALUE;
-	if (debug)
+	if (NWLC->Debug)
 		printf("[PIO] Load blob FAIL %ls\n", name);
 	return -1;
 }
 
 #define HWRWDRV_MIN_VER 0x01000601
 
-struct wr0_drv_t* WR0_OpenDriver(int debug)
+struct wr0_drv_t* WR0_OpenDriver(void)
 {
 	struct wr0_drv_t* drv = NULL;
 	if (WR0_IsWoW64())
 		return NULL;
-	drv = open_driver_real(CPUZDRV_NAME, CPUZDRV_ID, WR0_DRIVER_CPUZ161, CPUZDRV_OBJ, debug);
+	drv = open_driver_real(CPUZDRV_NAME, CPUZDRV_ID, WR0_DRIVER_CPUZ161, CPUZDRV_OBJ);
 	if (drv)
 		return drv;
-	drv = open_driver_real(HWIODRV_NAME, HWIODRV_ID, WR0_DRIVER_HWIO, HWIODRV_OBJ, debug);
+	drv = open_driver_real(HWIODRV_NAME, HWIODRV_ID, WR0_DRIVER_HWIO, HWIODRV_OBJ);
 	if (drv)
 		return drv;
-	drv = open_driver_real(HWRWDRV_NAME, HWRWDRV_ID, WR0_DRIVER_WINRING0, HWRWDRV_OBJ, debug);
+	drv = open_driver_real(HWRWDRV_NAME, HWRWDRV_ID, WR0_DRIVER_WINRING0, HWRWDRV_OBJ);
 	if (drv)
 		return drv;
-	drv = open_driver_real(WINRING0_NAME, WINRING0_ID, WR0_DRIVER_WINRING0, WINRING0_OBJ, debug);
+	drv = open_driver_real(WINRING0_NAME, WINRING0_ID, WR0_DRIVER_WINRING0, WINRING0_OBJ);
 	if (drv)
 		return drv;
 #ifdef _WIN64
-	drv = open_driver_real(PAWNIO_NAME, PAWNIO_ID, WR0_DRIVER_PAWNIO, PAWNIO_OBJ, debug);
+	drv = open_driver_real(PAWNIO_NAME, PAWNIO_ID, WR0_DRIVER_PAWNIO, PAWNIO_OBJ);
 	if (drv)
 	{
-		load_pawnio(&drv->pio_amd0f, L"AMDFamily0F.bin", debug);
-		load_pawnio(&drv->pio_amd10, L"AMDFamily10.bin", debug);
-		load_pawnio(&drv->pio_amd17, L"AMDFamily17.bin", debug);
-		load_pawnio(&drv->pio_intel, L"IntelMSR.bin", debug);
-		load_pawnio(&drv->pio_rysmu, L"RyzenSMU.bin", debug);
-		load_pawnio(&drv->pio_smi801, L"SmbusI801.bin", debug);
-		load_pawnio(&drv->pio_smpiix4, L"SmbusPIIX4.bin", debug);
+		load_pawnio(&drv->pio_amd0f, L"AMDFamily0F.bin");
+		load_pawnio(&drv->pio_amd10, L"AMDFamily10.bin");
+		load_pawnio(&drv->pio_amd17, L"AMDFamily17.bin");
+		load_pawnio(&drv->pio_intel, L"IntelMSR.bin");
+		load_pawnio(&drv->pio_rysmu, L"RyzenSMU.bin");
+		load_pawnio(&drv->pio_smi801, L"SmbusI801.bin");
+		load_pawnio(&drv->pio_smpiix4, L"SmbusPIIX4.bin");
 		return drv;
 	}
 #endif
@@ -372,7 +372,7 @@ uint8_t WR0_RdIo8(struct wr0_drv_t* drv, uint16_t port)
 	default:
 		return 0;
 	}
-	if (!result && drv->debug)
+	if (!result && NWLC->Debug)
 		printf("[IO] Read 8 @%u Failed\n", port);
 	return value;
 }
@@ -412,7 +412,7 @@ uint16_t WR0_RdIo16(struct wr0_drv_t* drv, uint16_t port)
 	default:
 		return 0;
 	}
-	if (!result && drv->debug)
+	if (!result && NWLC->Debug)
 		printf("[IO] Read 16 @%u Failed\n", port);
 	return value;
 }
@@ -454,7 +454,7 @@ uint32_t WR0_RdIo32(struct wr0_drv_t* drv, uint16_t port)
 	default:
 		return 0;
 	}
-	if (!result && drv->debug)
+	if (!result && NWLC->Debug)
 		printf("[IO] Read 32 @%u Failed\n", port);
 	return value;
 }
@@ -504,7 +504,7 @@ void WR0_WrIo8(struct wr0_drv_t* drv, uint16_t port, uint8_t value)
 	default:
 		return;
 	}
-	if (!result && drv->debug)
+	if (!result && NWLC->Debug)
 		printf("[IO] Write 8 @%u->%02X Failed\n", port, value);
 }
 
@@ -553,7 +553,7 @@ void WR0_WrIo16(struct wr0_drv_t* drv, uint16_t port, uint16_t value)
 	default:
 		return;
 	}
-	if (!result && drv->debug)
+	if (!result && NWLC->Debug)
 		printf("[IO] Write 16 @%u->%04X Failed\n", port, value);
 }
 
@@ -602,7 +602,7 @@ void WR0_WrIo32(struct wr0_drv_t* drv, uint16_t port, uint32_t value)
 	default:
 		return;
 	}
-	if (!result && drv->debug)
+	if (!result && NWLC->Debug)
 		printf("[IO] Write 32 @%u->%08X Failed\n", port, value);
 }
 
@@ -653,7 +653,7 @@ int WR0_RdPciConf(struct wr0_drv_t* drv, uint32_t addr, uint32_t reg, void* valu
 	}
 	if (!result)
 	{
-		//if (drv->debug)
+		//if (NWLC->Debug)
 			//printf("[IO] Read PCI @%X(%X+%u) Failed\n", addr, reg, size);
 		return -2;
 	}
@@ -722,7 +722,7 @@ int WR0_WrPciConf(struct wr0_drv_t* drv, uint32_t addr, uint32_t reg, void* valu
 	}
 	if (!result)
 	{
-		if (drv->debug)
+		if (NWLC->Debug)
 			printf("[IO] Write PCI @%X(%X+%u) Failed\n", addr, reg, size);
 		return -2;
 	}
@@ -935,7 +935,7 @@ DWORD WR0_RdAmdSmn(struct wr0_drv_t* drv, DWORD bdf, DWORD smn, DWORD reg)
 
 	result = DeviceIoControl(drv->hhDriver, IOCTL_CPUZ_READ_AMD_SMN,
 		inBuf, sizeof(inBuf), &value, sizeof(value), &returnedLength, NULL);
-	if (drv->debug)
+	if (NWLC->Debug)
 		printf("[SMN] Read AMD SMN reg=%08xh %d value=%08xh\n", reg, result, value);
 
 	return value;
@@ -964,7 +964,7 @@ WR0_SendSmuCmd(struct wr0_drv_t* drv, uint32_t cmd, uint32_t rsp, uint32_t arg, 
 	}
 	result = DeviceIoControl(drv->hhDriver, IOCTL_CPUZ_SEND_SMN_CMD,
 		inBuf, sizeof(inBuf), outBuf, sizeof(outBuf), &returnedLength, NULL);
-	if (drv->debug)
+	if (NWLC->Debug)
 		printf("[SMU] Send SMU fn=%08xh %d -> %u\n", fn, result, outBuf[0]);
 	memcpy(args, &outBuf[1], 6 * sizeof(uint32_t));
 	if (result && outBuf[0] == 1)
@@ -1010,7 +1010,7 @@ int WR0_ExecPawn(struct wr0_drv_t* drv, struct pio_mod_t* mod, LPCSTR fn,
 
 	free(inBuf);
 
-	if (drv->debug)
+	if (NWLC->Debug)
 	{
 		printf("[PIO] Exec %s %s", bRes ? "OK" : "FAIL", fn);
 		for (SIZE_T i = 0; in && i < min(in_size, 4); i++)

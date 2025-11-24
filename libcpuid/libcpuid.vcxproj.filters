@@ -57,12 +57,6 @@
     <ClInclude Include="rdcpuid.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="rdmsr.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="ryzen_smu.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="asm-bits.c">
@@ -83,9 +77,6 @@
     <ClCompile Include="rdtsc.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="rdmsr.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="recog_centaur.c">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -93,18 +84,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="rdcpuid.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="hwmon_amd.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="hwmon_centaur.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="hwmon_intel.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="ryzen_smu.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

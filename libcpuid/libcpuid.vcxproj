@@ -128,29 +128,22 @@
     <ClInclude Include="libcpuid_types.h" />
     <ClInclude Include="libcpuid_util.h" />
     <ClInclude Include="rdcpuid.h" />
-    <ClInclude Include="rdmsr.h" />
     <ClInclude Include="rdtsc.h" />
     <ClInclude Include="recog_amd.h" />
     <ClInclude Include="recog_arm.h" />
     <ClInclude Include="recog_centaur.h" />
     <ClInclude Include="recog_intel.h" />
-    <ClInclude Include="ryzen_smu.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="asm-bits.c" />
     <ClCompile Include="cpuid_main.c" />
-    <ClCompile Include="hwmon_amd.c" />
-    <ClCompile Include="hwmon_centaur.c" />
-    <ClCompile Include="hwmon_intel.c" />
     <ClCompile Include="libcpuid_util.c" />
     <ClCompile Include="rdcpuid.c" />
-    <ClCompile Include="rdmsr.c" />
     <ClCompile Include="rdtsc.c" />
     <ClCompile Include="recog_amd.c" />
     <ClCompile Include="recog_arm.c" />
     <ClCompile Include="recog_centaur.c" />
     <ClCompile Include="recog_intel.c" />
-    <ClCompile Include="ryzen_smu.c" />
   </ItemGroup>
   <ItemGroup>
     <MASM Include="masm-x64.asm">
@@ -160,11 +153,6 @@
   <ItemGroup>
     <None Include="packages.config" />
     <None Include="README.md" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\winring0\winring0.vcxproj">
-      <Project>{792baf89-d4da-4626-a147-52fc32bc77b2}</Project>
-    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

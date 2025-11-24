@@ -8,6 +8,33 @@
 #define MSR_VIA_TEMP_F7_6B   0x174d
 #define MSR_VIA_VID_F6_C7    0x198
 
+static inline int
+read_centaur_msr(struct wr0_drv_t* handle, uint32_t msr_index, uint8_t highbit, uint8_t lowbit, uint64_t* result)
+{
+	int err;
+	const uint8_t bits = highbit - lowbit + 1;
+	ULONG64 in = msr_index;
+	ULONG64 out = 0;
+
+	if (highbit > 63 || lowbit > highbit)
+		return ERR_INVRANGE;
+
+	if (handle->driver_type == WR0_DRIVER_PAWNIO)
+		err = ERR_NOT_IMP;
+	else
+		err = WR0_RdMsr(handle, msr_index, &out);
+
+	if (!err && bits < 64)
+	{
+		/* Show only part of register */
+		out >>= lowbit;
+		out &= (1ULL << bits) - 1;
+		*result = out;
+	}
+
+	return err;
+}
+
 static double get_min_multiplier(struct msr_info_t* info)
 {
 	return (double)CPU_INVALID_VALUE / 100;
@@ -25,7 +52,7 @@ static double get_max_multiplier(struct msr_info_t* info)
 
 static int get_temperature(struct msr_info_t* info)
 {
-	uint64_t reg;
+	uint64_t reg = 0;
 	uint32_t addr = 0;
 	if (info->id->x86.ext_family == 0x07)
 	{
@@ -54,9 +81,9 @@ static int get_temperature(struct msr_info_t* info)
 		if (WR0_WrMsr(info->handle, MSR_VIA_INDEX_F7_6B, 0x19, 0))
 			goto fail;
 	}
-	if (cpu_rdmsr_range(info->handle, addr, 23, 0, &reg))
+	if (read_centaur_msr(info->handle, addr, 23, 0, &reg))
 		goto fail;
-	return (int)(reg);
+	return (int)reg;
 fail:
 	return CPU_INVALID_VALUE;
 }

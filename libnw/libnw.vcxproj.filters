@@ -22,6 +22,12 @@
     <Filter Include="smbus">
       <UniqueIdentifier>{9056a76d-211d-428b-927a-280c77c83348}</UniqueIdentifier>
     </Filter>
+    <Filter Include="cpu">
+      <UniqueIdentifier>{3dff91f6-583e-4d94-af65-8245ca9017f2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="winring0">
+      <UniqueIdentifier>{9bee2e3b-71a4-48c0-b6f0-58a760a7b8c4}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="format.h">
@@ -80,6 +86,21 @@
     </ClInclude>
     <ClInclude Include="smbus.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="cpu\rdmsr.h">
+      <Filter>cpu</Filter>
+    </ClInclude>
+    <ClInclude Include="cpu\ryzen_smu.h">
+      <Filter>cpu</Filter>
+    </ClInclude>
+    <ClInclude Include="..\winring0\shmem.h">
+      <Filter>winring0</Filter>
+    </ClInclude>
+    <ClInclude Include="..\winring0\winring0.h">
+      <Filter>winring0</Filter>
+    </ClInclude>
+    <ClInclude Include="..\winring0\winring0_priv.h">
+      <Filter>winring0</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -205,6 +226,30 @@
     </ClCompile>
     <ClCompile Include="smbus\smbus_piix4.c">
       <Filter>smbus</Filter>
+    </ClCompile>
+    <ClCompile Include="cpu\amd_cpu.c">
+      <Filter>cpu</Filter>
+    </ClCompile>
+    <ClCompile Include="cpu\centaur_cpu.c">
+      <Filter>cpu</Filter>
+    </ClCompile>
+    <ClCompile Include="cpu\intel_cpu.c">
+      <Filter>cpu</Filter>
+    </ClCompile>
+    <ClCompile Include="cpu\rdmsr.c">
+      <Filter>cpu</Filter>
+    </ClCompile>
+    <ClCompile Include="cpu\ryzen_smu.c">
+      <Filter>cpu</Filter>
+    </ClCompile>
+    <ClCompile Include="..\winring0\mutexes.c">
+      <Filter>winring0</Filter>
+    </ClCompile>
+    <ClCompile Include="..\winring0\shmem.c">
+      <Filter>winring0</Filter>
+    </ClCompile>
+    <ClCompile Include="..\winring0\winring0.c">
+      <Filter>winring0</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

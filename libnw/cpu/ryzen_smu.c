@@ -7,6 +7,7 @@
 #include <string.h>
 #include <intrin.h>
 #include <winring0.h>
+#include "../libnw.h"
 
 #define SMU_PCI_ADDR_REG 0xC4
 #define SMU_PCI_DATA_REG 0xC8
@@ -31,7 +32,7 @@ typedef struct
 #define SMU_DEBUG(...) \
 	do \
 	{ \
-		if (handle->debug) \
+		if (NWLC->Debug) \
 		{ \
 			printf("[SMU] " __VA_ARGS__); \
 			puts(""); \
@@ -789,7 +790,6 @@ ry_handle_t* ryzen_smu_init(struct wr0_drv_t* drv_handle, struct cpu_id_t* id)
 		return NULL;
 
 	handle->drv_handle = drv_handle;
-	handle->debug = drv_handle->debug;
 
 	if (drv_handle->driver_type == WR0_DRIVER_PAWNIO)
 	{

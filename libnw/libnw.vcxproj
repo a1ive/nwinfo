@@ -127,15 +127,17 @@
     <ProjectReference Include="..\libcpuid\libcpuid.vcxproj">
       <Project>{2da3ea59-bdf3-4fc0-8ac2-5605ce22b800}</Project>
     </ProjectReference>
-    <ProjectReference Include="..\winring0\winring0.vcxproj">
-      <Project>{792baf89-d4da-4626-a147-52fc32bc77b2}</Project>
-    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\libcdi\libcdi.h" />
+    <ClInclude Include="..\winring0\shmem.h" />
+    <ClInclude Include="..\winring0\winring0.h" />
+    <ClInclude Include="..\winring0\winring0_priv.h" />
     <ClInclude Include="acpi.h" />
     <ClInclude Include="audio.h" />
     <ClInclude Include="base64.h" />
+    <ClInclude Include="cpu\rdmsr.h" />
+    <ClInclude Include="cpu\ryzen_smu.h" />
     <ClInclude Include="devtree.h" />
     <ClInclude Include="disk.h" />
     <ClInclude Include="efivars.h" />
@@ -153,12 +155,20 @@
     <ClInclude Include="version.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\winring0\mutexes.c" />
+    <ClCompile Include="..\winring0\shmem.c" />
+    <ClCompile Include="..\winring0\winring0.c" />
     <ClCompile Include="acpi.c" />
     <ClCompile Include="audio.cpp" />
     <ClCompile Include="audio_nw.c" />
     <ClCompile Include="base64.c" />
     <ClCompile Include="battery.c" />
     <ClCompile Include="cpuid.c" />
+    <ClCompile Include="cpu\amd_cpu.c" />
+    <ClCompile Include="cpu\centaur_cpu.c" />
+    <ClCompile Include="cpu\intel_cpu.c" />
+    <ClCompile Include="cpu\rdmsr.c" />
+    <ClCompile Include="cpu\ryzen_smu.c" />
     <ClCompile Include="devtree.c" />
     <ClCompile Include="disk.c" />
     <ClCompile Include="display.c" />

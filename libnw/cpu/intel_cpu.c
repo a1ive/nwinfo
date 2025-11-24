@@ -25,18 +25,18 @@
 static inline int
 read_intel_msr(struct wr0_drv_t* handle, uint32_t msr_index, uint8_t highbit, uint8_t lowbit, uint64_t* result)
 {
-	if (handle->driver_type != WR0_DRIVER_PAWNIO)
-		return cpu_rdmsr_range(handle, msr_index, highbit, lowbit, result);
-
 	int err;
 	const uint8_t bits = highbit - lowbit + 1;
 	ULONG64 in = msr_index;
 	ULONG64 out = 0;
 
 	if (highbit > 63 || lowbit > highbit)
-		return cpuid_set_error(ERR_INVRANGE);
+		return ERR_INVRANGE;
 
-	err = WR0_ExecPawn(handle, &handle->pio_intel, "ioctl_read_msr", &in, 1, &out, 1, NULL);
+	if (handle->driver_type == WR0_DRIVER_PAWNIO)
+		err = WR0_ExecPawn(handle, &handle->pio_intel, "ioctl_read_msr", &in, 1, &out, 1, NULL);
+	else
+		err = WR0_RdMsr(handle, msr_index, &out);
 
 	if (!err && bits < 64)
 	{

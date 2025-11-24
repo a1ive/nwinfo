@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <winring0.h>
+#include "libnw.h"
 
 #define SM_OK             0
 #define SM_ERR_GENERIC    -1
@@ -95,7 +96,7 @@ int SM_ProcCall(smbus_t* ctx, uint8_t slave_addr, uint8_t offset, uint16_t* valu
 #define SMBUS_DBG(...) \
 	do \
 	{ \
-		if (ctx->drv->debug) \
+		if (NWLC->Debug) \
 		{ \
 			printf("[SM] " __VA_ARGS__); \
 			puts(""); \

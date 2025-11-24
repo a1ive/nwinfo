@@ -38,7 +38,7 @@ VOID NW_Init(PNWLIB_CONTEXT pContext)
 	if (WR0_IsWoW64())
 		NWL_NodeAppendMultiSz(&NWLC->ErrLog, "Running under WoW64 mode");
 
-	NWLC->NwDrv = WR0_OpenDriver(NWLC->Debug);
+	NWLC->NwDrv = WR0_OpenDriver();
 	NWLC->NwRsdp = NWL_GetRsdp();
 	NWLC->NwRsdt = NWL_GetRsdt();
 	NWLC->NwXsdt = NWL_GetXsdt();
