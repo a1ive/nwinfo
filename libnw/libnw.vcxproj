@@ -156,6 +156,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\winring0\mutexes.c" />
+    <ClCompile Include="..\winring0\pawnio.c" />
     <ClCompile Include="..\winring0\shmem.c" />
     <ClCompile Include="..\winring0\winring0.c" />
     <ClCompile Include="acpi.c" />

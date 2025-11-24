@@ -33,7 +33,7 @@ read_intel_msr(struct wr0_drv_t* handle, uint32_t msr_index, uint8_t highbit, ui
 	if (highbit > 63 || lowbit > highbit)
 		return ERR_INVRANGE;
 
-	if (handle->driver_type == WR0_DRIVER_PAWNIO)
+	if (handle->type == WR0_DRIVER_PAWNIO)
 		err = WR0_ExecPawn(handle, &handle->pio_intel, "ioctl_read_msr", &in, 1, &out, 1, NULL);
 	else
 		err = WR0_RdMsr(handle, msr_index, &out);

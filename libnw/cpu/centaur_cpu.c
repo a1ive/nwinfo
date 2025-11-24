@@ -19,7 +19,7 @@ read_centaur_msr(struct wr0_drv_t* handle, uint32_t msr_index, uint8_t highbit, 
 	if (highbit > 63 || lowbit > highbit)
 		return ERR_INVRANGE;
 
-	if (handle->driver_type == WR0_DRIVER_PAWNIO)
+	if (handle->type == WR0_DRIVER_PAWNIO)
 		err = ERR_NOT_IMP;
 	else
 		err = WR0_RdMsr(handle, msr_index, &out);

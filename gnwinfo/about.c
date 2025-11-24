@@ -43,7 +43,7 @@ gnwinfo_draw_about_window(struct nk_context* ctx, float width, float height)
 	nk_l(ctx, "Build. " __DATE__ " " __TIME__, NK_TEXT_CENTERED);
 	nk_lf(ctx, NK_TEXT_CENTERED, "%s (%u)", N_(N__LANG_NAME_), g_lang_id);
 	if (NWLC->NwDrv)
-		nk_l(ctx, NWL_Ucs2ToUtf8(NWLC->NwDrv->driver_id), NK_TEXT_CENTERED);
+		nk_l(ctx, NWL_Ucs2ToUtf8(NWLC->NwDrv->id), NK_TEXT_CENTERED);
 	else
 	{
 		nk_layout_row_dynamic(ctx, 0, 3);

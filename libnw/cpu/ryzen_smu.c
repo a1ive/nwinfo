@@ -363,7 +363,7 @@ static ry_err_t send_command(ry_handle_t* handle, uint32_t fn, ry_args_t* args)
 
 	SMU_DEBUG("Send RSMU Fn %Xh", fn);
 
-	if (handle->drv_handle->driver_type == WR0_DRIVER_CPUZ161)
+	if (handle->drv_handle->type == WR0_DRIVER_CPUZ161)
 	{
 		int err = WR0_SendSmuCmd(handle->drv_handle, handle->rsmu_cmd_addr,
 			handle->rsmu_rsp_addr, handle->rsmu_arg_addr, fn, args->args);
@@ -791,7 +791,7 @@ ry_handle_t* ryzen_smu_init(struct wr0_drv_t* drv_handle, struct cpu_id_t* id)
 
 	handle->drv_handle = drv_handle;
 
-	if (drv_handle->driver_type == WR0_DRIVER_PAWNIO)
+	if (drv_handle->type == WR0_DRIVER_PAWNIO)
 	{
 		ULONG64 out[2] = { 0 };
 		if (WR0_ExecPawn(drv_handle, &drv_handle->pio_rysmu, "ioctl_get_smu_version", NULL, 0, out, 1, NULL))
@@ -837,7 +837,7 @@ void ryzen_smu_free(ry_handle_t* handle)
 
 ry_err_t ryzen_smu_init_pm_table(ry_handle_t* handle)
 {
-	if (handle->drv_handle->driver_type == WR0_DRIVER_PAWNIO)
+	if (handle->drv_handle->type == WR0_DRIVER_PAWNIO)
 		goto out;
 
 	if (handle->rsmu_cmd_addr == 0)
@@ -869,7 +869,7 @@ ry_err_t ryzen_smu_update_pm_table(ry_handle_t* handle)
 	if (!handle->pm_table_base_addr)
 		return RYZEN_SMU_UNSUPPORTED;
 
-	if (handle->drv_handle->driver_type == WR0_DRIVER_PAWNIO)
+	if (handle->drv_handle->type == WR0_DRIVER_PAWNIO)
 	{
 		if (WR0_ExecPawn(handle->drv_handle, &handle->drv_handle->pio_rysmu, "ioctl_update_pm_table", NULL, 0, NULL, 0, NULL))
 			return RYZEN_SMU_DRIVER_ERROR;
@@ -896,7 +896,7 @@ ry_err_t ryzen_smu_get_pm_table_float(ry_handle_t* handle, size_t offset, float*
 		return RYZEN_SMU_UNSUPPORTED;
 	if (offset + sizeof(float) > handle->pm_table_size)
 		return RYZEN_SMU_INVALID_ARGUMENT;
-	if (handle->drv_handle->driver_type == WR0_DRIVER_PAWNIO)
+	if (handle->drv_handle->type == WR0_DRIVER_PAWNIO)
 		memcpy(value, handle->pm_table_buffer + offset, sizeof(float));
 	else
 		WR0_RdMmIo(handle->drv_handle, handle->pm_table_base_addr + offset, value, sizeof(float));

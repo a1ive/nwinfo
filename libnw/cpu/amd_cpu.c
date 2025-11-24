@@ -66,7 +66,7 @@ read_amd_msr(struct msr_info_t* info, uint32_t msr_index, uint8_t highbit, uint8
 	if (highbit > 63 || lowbit > highbit)
 		return ERR_INVRANGE;
 
-	if (info->handle->driver_type == WR0_DRIVER_PAWNIO)
+	if (info->handle->type == WR0_DRIVER_PAWNIO)
 	{
 		if (info->id->x86.ext_family == 0x0f)
 			err = WR0_ExecPawn(info->handle, &info->handle->pio_amd0f, "ioctl_read_msr", &in, 1, &out, 1, NULL);
@@ -320,7 +320,7 @@ static int amd_k8_temperature(struct msr_info_t* info)
 		info->id->x86.ext_model != 0x7c)
 		offset += 21;
 
-	if (info->handle->driver_type != WR0_DRIVER_PAWNIO)
+	if (info->handle->type != WR0_DRIVER_PAWNIO)
 	{
 		addr = WR0_FindPciById(info->handle, AMD_PCI_VENDOR_ID, AMD_PCI_CONTROL_DEVICE_ID, info->id->index);
 
@@ -414,7 +414,7 @@ static int amd_k10_temperature(struct msr_info_t* info)
 
 	if (smu)
 	{
-		if (info->handle->driver_type == WR0_DRIVER_PAWNIO)
+		if (info->handle->type == WR0_DRIVER_PAWNIO)
 		{
 			struct pio_mod_t* pio = &info->handle->pio_amd10;
 			ULONG64 in = SMU_REPORTED_TEMP_CTRL_OFFSET;
@@ -424,12 +424,12 @@ static int amd_k10_temperature(struct msr_info_t* info)
 		}
 		else
 		{
-			value = WR0_RdAmdSmn(info->handle, 0, 1, SMU_REPORTED_TEMP_CTRL_OFFSET);
+			value = WR0_RdAmdSmn(info->handle, WR0_SMN_AMD15H, SMU_REPORTED_TEMP_CTRL_OFFSET);
 		}
 	}
 	else
 	{
-		if (info->handle->driver_type == WR0_DRIVER_PAWNIO)
+		if (info->handle->type == WR0_DRIVER_PAWNIO)
 		{
 			struct pio_mod_t* pio = &info->handle->pio_amd10;
 			ULONG64 in[2] = { 0, 0xA4 }; // cpu index, offset
@@ -464,7 +464,7 @@ static float amd_17h_temperature(struct msr_info_t* info)
 	uint32_t temperature;
 	float offset = 0.0f;
 
-	if (info->handle->driver_type == WR0_DRIVER_PAWNIO)
+	if (info->handle->type == WR0_DRIVER_PAWNIO)
 	{
 		ULONG64 in = F17H_M01H_THM_TCON_CUR_TMP;
 		ULONG64 out = 0;
@@ -473,7 +473,7 @@ static float amd_17h_temperature(struct msr_info_t* info)
 	}
 	else
 	{
-		temperature = WR0_RdAmdSmn(info->handle, 0, 3, F17H_M01H_THM_TCON_CUR_TMP);
+		temperature = WR0_RdAmdSmn(info->handle, WR0_SMN_AMD17H, F17H_M01H_THM_TCON_CUR_TMP);
 	}
 
 	if (strstr(info->id->brand_str, "1600X") ||

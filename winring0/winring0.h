@@ -11,6 +11,8 @@ enum wr0_driver_type
 	WR0_DRIVER_HWIO,
 	WR0_DRIVER_CPUZ161,
 	WR0_DRIVER_PAWNIO,
+
+	WR0_DRIVER_MAX
 };
 
 struct pio_mod_t
@@ -22,15 +24,20 @@ struct pio_mod_t
 
 struct wr0_drv_t
 {
-	LPCWSTR driver_name;
-	enum wr0_driver_type driver_type;
-	LPCWSTR driver_id;
-	LPCWSTR driver_obj;
-	WCHAR driver_path[MAX_PATH];
-	SC_HANDLE scManager;
-	SC_HANDLE scDriver;
-	HANDLE hhDriver;
-	int errorcode;
+	LPCWSTR name;
+	enum wr0_driver_type type;
+	LPCWSTR id;
+	LPCWSTR obj;
+
+	BOOL(*load)(struct wr0_drv_t* drv);
+	BOOL(*install)(struct wr0_drv_t* drv);
+	void(*uninstall)(struct wr0_drv_t* drv);
+
+	WCHAR path[MAX_PATH];
+	SC_HANDLE scm;
+	SC_HANDLE sch;
+	HANDLE handle;
+	BOOL installed;
 
 	struct pio_mod_t pio_amd0f;
 	struct pio_mod_t pio_amd10;
@@ -73,13 +80,20 @@ uint32_t WR0_FindPciById(struct wr0_drv_t* drv, uint16_t vid, uint16_t did, uint
 uint32_t WR0_FindPciByClass(struct wr0_drv_t* drv, uint8_t base, uint8_t sub, uint8_t prog, uint8_t index);
 int WR0_RdMmIo(struct wr0_drv_t* drv, uint64_t addr, void* value, uint32_t size);
 DWORD WR0_RdMem(struct wr0_drv_t* drv, DWORD_PTR address, PBYTE buffer, DWORD count, DWORD unitSize);
-DWORD WR0_RdAmdSmn(struct wr0_drv_t* drv, DWORD bdf, DWORD smn, DWORD reg);
+
+enum wr0_smn_type
+{
+	WR0_SMN_AMD15H = 1, // 0xB8/0xBC
+	WR0_SMN_ZENSMU = 2, // 0xC4/0xC8
+	WR0_SMN_AMD17H = 3, // 0x60/0x64
+};
+DWORD WR0_RdAmdSmn(struct wr0_drv_t* drv, enum wr0_smn_type smn, DWORD reg);
 int WR0_SendSmuCmd(struct wr0_drv_t* drv, uint32_t cmd, uint32_t rsp, uint32_t arg, uint32_t fn, uint32_t args[6]);
 
 int WR0_ExecPawn(struct wr0_drv_t* drv, struct pio_mod_t* mod, LPCSTR fn, const ULONG64* in, SIZE_T in_size, PULONG64 out, SIZE_T out_size, PSIZE_T return_size);
 
 struct wr0_drv_t* WR0_OpenDriver(void);
-int WR0_CloseDriver(struct wr0_drv_t* drv);
+void WR0_CloseDriver(struct wr0_drv_t* drv);
 
 void WR0_MicroSleep(unsigned int usec);
 

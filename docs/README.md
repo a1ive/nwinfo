@@ -178,13 +178,13 @@ This project is compatible with Windows XP using [YY-Thunks](https://github.com/
 
 This project searches for and loads drivers in the following order: **CPUZ161 -> EVGA -> HwRwDrv -> WinRing0 -> PawnIO**.
 
-| Driver | Filename | License | Notes |
-|--------|----------|---------|-------|
-| [PawnIO](https://github.com/namazso/PawnIO) | PawnIO.sys | GPL v2 | Safe to use, but some hardware information may be unavailable. |
-| [HwRwDrv](https://hwrwdrv.phpnet.us/?i=1) | HwRwDrvx64.sys | Closed source | May be flagged as a virus by antivirus software and detected by anti-cheat systems. |
-| [WinRing0](http://openlibsys.org/) | WinRing0x64.sys | BSD | Listed as a vulnerable driver by Microsoft, detected as a virus, and triggers anti-cheat software, not provided in the releases. |
-| [CPUZ161](https://www.cpuid.com/softwares/cpu-z.html) | cpuidx64.sys | Closed source | Safe to use, not provided in the releases. |
-| [EVGA](https://www.evga.com/precisionx1/) | HwIox64.sys | Closed source | May be flagged as a virus by antivirus software and detected by anti-cheat systems, not provided in the releases. |
+| Driver | Filename | Security Status | Included | CPU Sensor | SPD | ACPI |
+|--------|----------|-----------------|----------|------------|-----|------|
+| [PawnIO](https://github.com/namazso/PawnIO)           | PawnIO.sys      | ✅ Safe to use    | ✅ | ⚠️ | ⚠️ | ❌ |
+| [HwRwDrv](https://hwrwdrv.phpnet.us/?i=1)             | HwRwDrvx64.sys  | ⚠️ Vulnerable     | ✅ | ✅ | ✅ | ✅ |
+| [WinRing0](http://openlibsys.org/)                    | WinRing0x64.sys | ❌ Blocked by AV  | ❌ | ✅ | ✅ | ❌ |
+| [CPUZ161](https://www.cpuid.com/softwares/cpu-z.html) | cpuidx64.sys    | ✅ Safe to use    | ❌ | ✅ | ✅ | ✅ |
+| [EVGA](https://www.evga.com/precisionx1/)             | HwIox64.sys     | ⚠️ May be flagged | ❌ | ✅ | ✅ | ❌ |
 
 **Note:** The program can still run normally even if all drivers are removed, but some hardware information may not be accessible.
 

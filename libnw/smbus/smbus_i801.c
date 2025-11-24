@@ -151,7 +151,7 @@ static int I801Detect(smbus_t* ctx)
 {
 	bool found = false;
 
-	if (ctx->drv->driver_type == WR0_DRIVER_PAWNIO)
+	if (ctx->drv->type == WR0_DRIVER_PAWNIO)
 	{
 		ULONG64 out[3];
 		if (WR0_ExecPawn(ctx->drv, &ctx->drv->pio_smi801, "ioctl_identity", NULL, 0, out, 3, NULL))
@@ -193,7 +193,7 @@ static int I801Detect(smbus_t* ctx)
 
 static int I801Init(smbus_t* ctx)
 {
-	if (ctx->drv->driver_type == WR0_DRIVER_PAWNIO)
+	if (ctx->drv->type == WR0_DRIVER_PAWNIO)
 	{
 		ULONG64 out;
 		if (WR0_ExecPawn(ctx->drv, &ctx->drv->pio_smi801, "ioctl_write_protection", NULL, 0, &out, 1, NULL))
@@ -479,7 +479,7 @@ I801BlockTransaction(smbus_t* ctx, uint8_t addr, uint8_t hstcmd, uint8_t read_wr
 static int
 I801Xfer(smbus_t* ctx, uint8_t addr, uint8_t read_write, uint8_t command, uint8_t protocol, union i2c_smbus_data* data)
 {
-	if (ctx->drv->driver_type == WR0_DRIVER_PAWNIO)
+	if (ctx->drv->type == WR0_DRIVER_PAWNIO)
 	{
 		ULONG64 in[9] = { 0 };
 		ULONG64 out[5] = { 0 };

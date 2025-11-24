@@ -217,11 +217,22 @@ typedef struct _CPUZ_READ_PCI_CONFIG_INPUT
 	DWORD Length;
 } CPUZ_READ_PCI_CONFIG_INPUT;
 
-typedef struct _CPUZ_READ_PCI_CONFIG_OUTPUT
+typedef struct _CPUZ_WRITE_PCI_CONFIG_INPUT
 {
-	DWORD Length;
-	UINT8 Data[4];
-} CPUZ_READ_PCI_CONFIG_OUTPUT;
+	union
+	{
+		DWORD Bus;
+		DWORD RetVal;
+	};
+	union
+	{
+		DWORD Device;
+		DWORD RetZero;
+	};
+	DWORD Function;
+	DWORD Offset;
+	DWORD Value;
+} CPUZ_WRITE_PCI_CONFIG_INPUT;
 
 #pragma pack(pop)
 
@@ -261,6 +272,9 @@ typedef struct _CPUZ_READ_PCI_CONFIG_OUTPUT
 // 0x9C402700
 #define IOCTL_CPUZ_READ_PCI_CONFIG 0x9C402700
 
+// 0x9C402728
+#define IOCTL_CPUZ_WRITE_PCI_CONFIG 0x9C402728
+
 // PawnIO
 #define PIO_TYPE 41394
 
@@ -268,6 +282,10 @@ typedef struct _CPUZ_READ_PCI_CONFIG_OUTPUT
 #define PAWNIO_ID							L"PawnIO"
 #define PAWNIO_NAME							L"PawnIO.sys" // PawnIO.sys for x86 is not provided
 #define PAWNIO_OBJ							L"\\\\.\\PawnIO"
+
+#define PAWNIO_SETUP_EXE					L"PawnIOSetup.exe"
+#define PAWNIO_SETUP_CMD					PAWNIO_SETUP_EXE L" -install -silent"
+#define PAWNIO_DEL_CMD						PAWNIO_SETUP_EXE L" -uninstall -silent"
 
 // PawnIO
 #define IOCTL_PIO_GET_REFCOUNT \

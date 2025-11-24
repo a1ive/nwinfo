@@ -135,7 +135,7 @@ static int PIIX4Detect(smbus_t* ctx)
 {
 	bool found = false;
 
-	if (ctx->drv->driver_type == WR0_DRIVER_PAWNIO)
+	if (ctx->drv->type == WR0_DRIVER_PAWNIO)
 	{
 		ULONG64 in = 0;
 		ULONG64 out[3];
@@ -271,7 +271,7 @@ static int PIIX4Init(smbus_t* ctx)
 	int rc = SM_ERR_GENERIC;
 	ctx->spd_wd = false;
 	ZeroMemory(&piix4_quirks, sizeof(piix4_quirks));
-	if (ctx->drv->driver_type == WR0_DRIVER_PAWNIO)
+	if (ctx->drv->type == WR0_DRIVER_PAWNIO)
 	{
 		return SM_OK;
 	}
@@ -506,7 +506,7 @@ PIIX4BlockTransaction(smbus_t* ctx, uint8_t addr, uint8_t hstcmd, uint8_t read_w
 static int
 PIIX4Xfer(smbus_t* ctx, uint8_t addr, uint8_t read_write, uint8_t command, uint8_t protocol, union i2c_smbus_data* data)
 {
-	if (ctx->drv->driver_type == WR0_DRIVER_PAWNIO)
+	if (ctx->drv->type == WR0_DRIVER_PAWNIO)
 	{
 		ULONG64 in[9] = { 0 };
 		ULONG64 out[5] = { 0 };

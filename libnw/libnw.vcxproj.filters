@@ -251,6 +251,9 @@
     <ClCompile Include="..\winring0\winring0.c">
       <Filter>winring0</Filter>
     </ClCompile>
+    <ClCompile Include="..\winring0\pawnio.c">
+      <Filter>winring0</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
