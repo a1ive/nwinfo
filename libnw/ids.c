@@ -279,7 +279,7 @@ NWL_GetPnpManufacturer(PNODE nd, CHAR* Ids, DWORD IdsSize, CONST CHAR* Code)
 }
 
 VOID
-NWL_GetSpdManufacturer(PNODE nd, CHAR* Ids, DWORD IdsSize, UINT Bank, UINT Item)
+NWL_GetSpdManufacturer(PNODE nd, LPCSTR Key, CHAR* Ids, DWORD IdsSize, UINT Bank, UINT Item)
 {
 	DWORD Offset = 0;
 	CHAR* bLine = NULL;
@@ -305,7 +305,7 @@ NWL_GetSpdManufacturer(PNODE nd, CHAR* Ids, DWORD IdsSize, UINT Bank, UINT Item)
 				}
 				if (Item == strtoul(iLine, &p, 10) && isspace(p[0]))
 				{
-					NWL_NodeAttrSet(nd, "Manufacturer", &p[1], 0);
+					NWL_NodeAttrSet(nd, Key, &p[1], 0);
 					free(iLine);
 					free(bLine);
 					return;
@@ -318,7 +318,7 @@ NWL_GetSpdManufacturer(PNODE nd, CHAR* Ids, DWORD IdsSize, UINT Bank, UINT Item)
 		bLine = IdsGetline(Ids, IdsSize, &Offset);
 	}
 fail:
-	NWL_NodeAttrSetf(nd, "Manufacturer", 0, "%02X%02X", Bank, Item);
+	NWL_NodeAttrSetf(nd, Key, 0, "%02X%02X", --Bank, Item);
 }
 
 static HANDLE

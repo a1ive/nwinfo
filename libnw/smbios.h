@@ -122,8 +122,14 @@ typedef struct _TYPE_3_
 	UINT8 NumPowerCord;
 	UINT8 ElementCount;
 	UINT8 ElementRecordLength;
-	UINT8 pElements;
 } SystemEnclosure, * PSystemEnclosure;
+
+typedef struct _TYPE_3_ENEMENT_
+{
+	UINT8 ElementType;
+	UINT8 ElementMin;
+	UINT8 ElementMax;
+} SystemEnclosureElement, * PSystemEnclosureElement;
 
 typedef struct _TYPE_4_
 {
@@ -222,6 +228,16 @@ typedef struct _TYPE_9_
 	UINT16 SlotID;
 	UINT8 SlotCharacteristics1;
 	UINT8 SlotCharacteristics2;
+	UINT16 SegGroupNum;
+	UINT8 BusNum;
+	UINT8 DevFunNum;
+	UINT8 DataBusWidth;
+	UINT8 PeerGroupNum;
+	UINT8 PeerGroups[0];
+	// UINT8 SlotInfo;
+	// UINT8 SlotPhysWidth;
+	// UINT16 SlotPitch;
+	// UINT8 SlotHeight;
 } SystemSlots, * PSystemSlots;
 
 typedef struct _TYPE_10_
@@ -321,7 +337,11 @@ typedef struct _TYPE_17_
 	UINT64 CacheSize;
 	UINT64 LogicalSize;
 	UINT32 ExtendedSpeed;
-	UINT16 ExtendedConfiguredMemSpeed;
+	UINT32 ExtendedConfiguredMemSpeed;
+	UINT16 PMIC0VID;
+	UINT16 PMIC0Rev;
+	UINT16 RCDVID;
+	UINT16 RCDRev;
 } MemoryDevice, * PMemoryDevice;
 
 typedef struct _TYPE_18_
@@ -597,6 +617,14 @@ typedef struct _TYPE_44_
 	UINT8 ProcessorType;
 	UINT8 ProcessorSpecificData[0];
 } ProcessorAdditionalInfo, * PProcessorAdditionalInfo;
+
+typedef struct _TYPE_44_X64_
+{
+	UINT8 BlockId;
+	UINT8 BlockLength;
+	UINT16 Revision;
+	UINT32 UseConditionAttr;
+} ProcessorX64Block, * PProcessorX64Block;
 
 typedef struct _TYPE_45_
 {

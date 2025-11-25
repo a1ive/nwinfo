@@ -234,7 +234,7 @@ DDR345Manufacturer(PNODE nd, UINT8 Lsb, UINT8 Msb, CHAR* Ids, DWORD IdsSize)
 		NWL_NodeAttrSet(nd, "Manufacturer", "UNKNOWN", 0);
 		return;
 	}
-	NWL_GetSpdManufacturer(nd, Ids, IdsSize, Lsb & 0x7f, Msb & 0x7f);
+	NWL_GetSpdManufacturer(nd, "Manufacturer", Ids, IdsSize, Lsb & 0x7f, Msb & 0x7f);
 }
 
 static void
@@ -246,7 +246,7 @@ SDRDDR12Manufacturer(PNODE nd, UINT8* rawSpd, CHAR* Ids, DWORD IdsSize)
 		if (rawSpd[contCode] != 0x7F)
 			break;
 	}
-	NWL_GetSpdManufacturer(nd, Ids, IdsSize, contCode - 64, rawSpd[contCode] & 0x7FU);
+	NWL_GetSpdManufacturer(nd, "Manufacturer", Ids, IdsSize, contCode - 64, rawSpd[contCode] & 0x7FU);
 }
 
 static LPCSTR

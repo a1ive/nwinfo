@@ -228,6 +228,36 @@ static void ProcSystemEnclosure(PNODE tab, void* p)
 	if (pSysEnclosure->Header.Length < 0x15) // 2.3
 		return;
 	NWL_NodeAttrSetf(tab, "OEM-defined", NAFLG_FMT_NUMERIC, "%u", pSysEnclosure->OEMDefine);
+	if (pSysEnclosure->Height > 0 && pSysEnclosure->Height != 0xFF)
+		NWL_NodeAttrSetf(tab, "Height", 0, "%uU", pSysEnclosure->Height);
+	else
+		NWL_NodeAttrSetf(tab, "Height", 0, "Unspecified");
+	NWL_NodeAttrSetf(tab, "Number of Power Cords", NAFLG_FMT_NUMERIC, "%u", pSysEnclosure->NumPowerCord);
+	NWL_NodeAttrSetf(tab, "Contained Element Count", NAFLG_FMT_NUMERIC, "%u", pSysEnclosure->ElementCount);
+	NWL_NodeAttrSetf(tab, "Contained Element Record Length", NAFLG_FMT_NUMERIC, "%u", pSysEnclosure->ElementRecordLength);
+
+	UINT32 dwElementSize = ((UINT32)pSysEnclosure->ElementCount) * pSysEnclosure->ElementRecordLength;
+	if (dwElementSize > 0 && pSysEnclosure->ElementRecordLength >= 3)
+	{
+#if 0
+		for (UINT32 i = 0; i < pSysEnclosure->ElementCount; i++)
+		{
+			PSystemEnclosureElement pElement = (UINT8*)p + sizeof(SystemEnclosure) + (i * pSysEnclosure->ElementRecordLength);
+			// TODO
+		}
+#endif
+	}
+
+	if (pSysEnclosure->Header.Length < 0x16 + dwElementSize) // 2.7
+		return;
+	UINT8 skuNumber = *((UINT8*)p + 0x15 + dwElementSize);
+	NWL_NodeAttrSet(tab, "Asset Tag", LocateString(p, skuNumber), 0);
+	if (pSysEnclosure->Header.Length < 0x18 + dwElementSize) // 3.9
+		return;
+	UINT8 rackType = *((UINT8*)p + 0x16 + dwElementSize);
+	NWL_NodeAttrSetf(tab, "Rack Type", NAFLG_FMT_NUMERIC, "%u", rackType);
+	UINT8 rackHeight = *((UINT8*)p + 0x17 + dwElementSize);
+	NWL_NodeAttrSetf(tab, "Rack Height", NAFLG_FMT_NUMERIC, "%u", rackHeight);
 }
 
 static const CHAR*
@@ -435,6 +465,18 @@ pProcessorFamily2ToStr(UINT16 Family)
 {
 	switch (Family)
 	{
+	case 0x100: return "ARMv7";
+	case 0x101: return "ARMv8";
+	case 0x102: return "ARMv9";
+	case 0x103: return "ARM"; // Reserved for future use by ARM
+	case 0x118: return "ARM";
+	case 0x119: return "StrongARM";
+	case 0x12C: return "6x86";
+	case 0x12D: return "MediaGX";
+	case 0x12E: return "MII";
+	case 0x140: return "WinChip";
+	case 0x141: return "DSP";
+	case 0x1F4: return "Video Processor";
 	case 0x300: return "Intel Core 3";
 	case 0x301: return "Intel Core 5";
 	case 0x302: return "Intel Core 7";
@@ -447,6 +489,116 @@ pProcessorFamily2ToStr(UINT16 Family)
 	return "Unknown";
 }
 
+static const CHAR*
+pProcessorStatusToStr(UCHAR Status)
+{
+	switch (Status & 0x07) // Bits 0-2
+	{
+	case 0x01: return "Enabled";
+	case 0x02: return "Disabled By User";
+	case 0x03: return "Disabled By Firmware";
+	case 0x04: return "Idle";
+	}
+	return "Unknown";
+}
+
+static const CHAR*
+pProcessorUpgradeToStr(UCHAR Upgrade)
+{
+	switch (Upgrade)
+	{
+	case 0x01: return "Other";
+	case 0x02: return "Unknown";
+	case 0x03: return "Daughter Board";
+	case 0x04: return "ZIF Socket";
+	case 0x05: return "Replaceable Piggy Back";
+	case 0x06: return "None";
+	case 0x07: return "LIF Socket";
+	case 0x08: return "Slot 1";
+	case 0x09: return "Slot 2";
+	case 0x0A: return "370-pin Socket";
+	case 0x0B: return "Slot A";
+	case 0x0C: return "Slot M";
+	case 0x0D: return "Socket 423";
+	case 0x0E: return "Socket A (Socket 462)";
+	case 0x0F: return "Socket 478";
+	case 0x10: return "Socket 754";
+	case 0x11: return "Socket 940";
+	case 0x12: return "Socket 939";
+	case 0x13: return "Socket mPGA604";
+	case 0x14: return "Socket LGA771";
+	case 0x15: return "Socket LGA775";
+	case 0x16: return "Socket S1";
+	case 0x17: return "Socket AM2";
+	case 0x18: return "Socket F (1207)";
+	case 0x19: return "Socket LGA1366";
+	case 0x1A: return "Socket G34";
+	case 0x1B: return "Socket AM3";
+	case 0x1C: return "Socket C32";
+	case 0x1D: return "Socket LGA1156";
+	case 0x1E: return "Socket LGA1567";
+	case 0x1F: return "Socket PGA988A";
+	case 0x20: return "Socket BGA1288";
+	case 0x21: return "Socket rPGA988B";
+	case 0x22: return "Socket BGA1023";
+	case 0x23: return "Socket BGA1224";
+	case 0x24: return "Socket LGA1155";
+	case 0x25: return "Socket LGA1356";
+	case 0x26: return "Socket LGA2011";
+	case 0x27: return "Socket FS1";
+	case 0x28: return "Socket FS2";
+	case 0x29: return "Socket FM1";
+	case 0x2A: return "Socket FM2";
+	case 0x2B: return "Socket LGA2011-3";
+	case 0x2C: return "Socket LGA1356-3";
+	case 0x2D: return "Socket LGA1150";
+	case 0x2E: return "Socket BGA1168";
+	case 0x2F: return "Socket BGA1234";
+	case 0x30: return "Socket BGA1364";
+	case 0x31: return "Socket AM4";
+	case 0x32: return "Socket LGA1151";
+	case 0x33: return "Socket BGA1356";
+	case 0x34: return "Socket BGA1440";
+	case 0x35: return "Socket BGA1515";
+	case 0x36: return "Socket LGA3647-1";
+	case 0x37: return "Socket SP3";
+	case 0x38: return "Socket SP3r2";
+	case 0x39: return "Socket LGA2066";
+	case 0x3A: return "Socket BGA1392";
+	case 0x3B: return "Socket BGA1510";
+	case 0x3C: return "Socket BGA1528";
+	case 0x3D: return "Socket LGA4189";
+	case 0x3E: return "Socket LGA1200";
+	case 0x3F: return "Socket LGA4677";
+	case 0x40: return "Socket LGA1700";
+	case 0x41: return "Socket BGA1744";
+	case 0x42: return "Socket BGA1781";
+	case 0x43: return "Socket BGA1211";
+	case 0x44: return "Socket BGA2422";
+	case 0x45: return "Socket LGA1211";
+	case 0x46: return "Socket LGA2422";
+	case 0x47: return "Socket LGA5773";
+	case 0x48: return "Socket BGA5773";
+	case 0x49: return "Socket AM5";
+	case 0x4A: return "Socket SP5";
+	case 0x4B: return "Socket SP6";
+	case 0x4C: return "Socket BGA883";
+	case 0x4D: return "Socket BGA1190";
+	case 0x4E: return "Socket BGA4129";
+	case 0x4F: return "Socket LGA4710";
+	case 0x50: return "Socket LGA7529";
+	case 0x51: return "Socket BGA1964";
+	case 0x52: return "Socket BGA1792";
+	case 0x53: return "Socket BGA2049";
+	case 0x54: return "Socket BGA2551";
+	case 0x55: return "Socket LGA1851";
+	case 0x56: return "Socket BGA2114";
+	case 0x57: return "Socket BGA2833";
+	}
+	return "Unknown";
+}
+
+
 static void ProcProcessorInfo(PNODE tab, void* p)
 {
 	PProcessorInfo	pProcessor = (PProcessorInfo)p;
@@ -458,6 +610,7 @@ static void ProcProcessorInfo(PNODE tab, void* p)
 	NWL_NodeAttrSet(tab, "Type", pProcessorTypeToStr(pProcessor->Type), 0);
 	NWL_NodeAttrSet(tab, "Processor Family", pProcessorFamilyToStr(pProcessor->Family, lpManufacturer), 0);
 	NWL_NodeAttrSet(tab, "Processor Manufacturer", lpManufacturer, 0);
+	NWL_NodeAttrSetf(tab, "Processor ID", 0, "%08X_%08X", (UINT32)(pProcessor->ID >> 32), (UINT32)(pProcessor->ID & 0xFFFFFFFF)); // TODO
 	NWL_NodeAttrSet(tab, "Processor Version", LocateString(p, pProcessor->Version), 0);
 	if (!pProcessor->Voltage)
 	{
@@ -479,8 +632,18 @@ static void ProcProcessorInfo(PNODE tab, void* p)
 		NWL_NodeAttrSetf(tab, "External Clock (MHz)", NAFLG_FMT_NUMERIC, "%u", pProcessor->ExtClock);
 	NWL_NodeAttrSetf(tab, "Max Speed (MHz)", NAFLG_FMT_NUMERIC, "%u", pProcessor->MaxSpeed);
 	NWL_NodeAttrSetf(tab, "Current Speed (MHz)", NAFLG_FMT_NUMERIC, "%u", pProcessor->CurrentSpeed);
+	NWL_NodeAttrSetf(tab, "Status", 0, "%s%s",
+		(pProcessor->Status & 0x40) ? "Populated " : "Unpopulated ", // Bit 6
+		pProcessorStatusToStr(pProcessor->Status));
+	if (pProcessor->ProcessorUpgrade == 0xFF && pProcessor->Header.Length > 0x32) // Socket Type must be non-null
+		NWL_NodeAttrSet(tab, "Processor Upgrade", LocateString(p, pProcessor->SocketType), 0);
+	else
+		NWL_NodeAttrSet(tab, "Processor Upgrade", pProcessorUpgradeToStr(pProcessor->ProcessorUpgrade), 0);
 	if (pProcessor->Header.Length < 0x20) // 2.1
 		return;
+	NWL_NodeAttrSetf(tab, "L1 Cache Handle", NAFLG_FMT_NUMERIC, "%u", pProcessor->L1CacheHandle);
+	NWL_NodeAttrSetf(tab, "L2 Cache Handle", NAFLG_FMT_NUMERIC, "%u", pProcessor->L2CacheHandle);
+	NWL_NodeAttrSetf(tab, "L3 Cache Handle", NAFLG_FMT_NUMERIC, "%u", pProcessor->L3CacheHandle);
 	if (pProcessor->Header.Length < 0x23) // 2.3
 		return;
 	NWL_NodeAttrSet(tab, "Serial Number", LocateString(p, pProcessor->Serial), NAFLG_FMT_SENSITIVE);
@@ -505,7 +668,7 @@ static void ProcProcessorInfo(PNODE tab, void* p)
 	if (pProcessor->Header.Length > 0x30)
 		NWL_NodeAttrSetf(tab, "Thread Enabled", NAFLG_FMT_NUMERIC, "%u", pProcessor->ThreadEnabled);
 	NWL_NodeAttrSetf(tab, "Processor Characteristics", 0, "0x%04X", pProcessor->ProcessorChar);
-	if (pProcessor->Header.Length > 0x32)
+	if (pProcessor->Header.Length > 0x32) // 3.8
 		NWL_NodeAttrSet(tab, "Socket Type", LocateString(p, pProcessor->SocketType), 0);
 }
 
@@ -946,6 +1109,12 @@ static void ProcPSystemSlots(PNODE tab, void* p)
 	if (pSys->Header.Length < 0x0d) // 2.1
 		return;
 	NWL_NodeAttrSetf(tab, "Slot Characteristics 2", 0, "0x%02X", pSys->SlotCharacteristics2);
+	if (pSys->Header.Length < 0x11) // 2.6
+		return;
+	NWL_NodeAttrSetf(tab, "Segment Group Number", NAFLG_FMT_NUMERIC, "%u", pSys->SegGroupNum);
+	NWL_NodeAttrSetf(tab, "Bus Number", NAFLG_FMT_NUMERIC, "%u", pSys->BusNum);
+	NWL_NodeAttrSetf(tab, "Device Number", NAFLG_FMT_NUMERIC, "%u", pSys->DevFunNum >> 3); // Bits 7-3
+	NWL_NodeAttrSetf(tab, "Function Number", NAFLG_FMT_NUMERIC, "%u", pSys->DevFunNum & 0x07); // Bits 2-0
 }
 
 static const CHAR*
@@ -1179,6 +1348,7 @@ pMDMemoryTypeToStr(UCHAR Type)
 	case 0x22: return "DDR5";
 	case 0x23: return "LPDDR5";
 	case 0x24: return "HBM3";
+	case 0x25: return "MRDIMM";
 	}
 	return "Unknown";
 }
@@ -1203,19 +1373,36 @@ pMDFormFactorToStr(UCHAR Type)
 	case 0x0e: return "SRIMM";
 	case 0x0f: return "FB-DIMM";
 	case 0x10: return "Die";
+	case 0x11: return "CAMM";
+	case 0x12: return "CUDIMM";
+	case 0x13: return "CSODIMM";
 	}
 	return "Unknown";
 }
 
+static const CHAR*
+pMDTechnologyToStr(UCHAR Technology)
+{
+	switch (Technology & 0x1F)
+	{
+	case 0x01: return "Other";
+	case 0x02: return "Unknown";
+	case 0x03: return "DRAM";
+	case 0x04: return "NVDIMM-N";
+	case 0x05: return "NVDIMM-F";
+	case 0x06: return "NVDIMM-P";
+	case 0x07: return "Intel Optane";
+	case 0x08: return "MRDIMM";
+	}
+	return "Reserved";
+}
+
 static void
-JedecIdToVendor(PNODE node, PMemoryDevice md)
+JedecIdToVendor(PNODE node, PMemoryDevice md, CHAR* db, DWORD dbsz)
 {
 	UINT id;
-	DWORD sz = 0;
-	CHAR* db = NULL;
 	LPCSTR vendor = NULL;
 
-	db = NWL_LoadIdsToMemory(L"jep106.ids", &sz);
 	if (!db)
 		goto fail;
 
@@ -1230,12 +1417,9 @@ JedecIdToVendor(PNODE node, PMemoryDevice md)
 			goto fail;
 		id = strtoul(vendor, NULL, 16);
 	}
-	NWL_GetSpdManufacturer(node, db, sz, (id >> 8) & 0x7F, id & 0x7F);
-	free(db);
+	NWL_GetSpdManufacturer(node, "Manufacturer", db, dbsz, (id >> 8) & 0x7F, id & 0x7F);
 	return;
 fail:
-	if (db)
-		free(db);
 	vendor = LocateString((void*)md, md->Manufacturer);
 	NWL_NodeAttrSet(node, "Manufacturer", vendor, 0);
 }
@@ -1244,32 +1428,89 @@ static void ProcMemoryDevice(PNODE tab, void* p)
 {
 	PMemoryDevice pMD = (PMemoryDevice)p;
 	UINT64 sz = 0;
+	DWORD dbsz = 0;
+	CHAR* db = NWL_LoadIdsToMemory(L"jep106.ids", &dbsz);
+
 	NWL_NodeAttrSet(tab, "Description", "Memory Device", 0);
-	if (pMD->Header.Length < 0x15) // 2.1
-		return;
-	NWL_NodeAttrSet(tab, "Device Locator", LocateString(p, pMD->DeviceLocator), 0);
-	NWL_NodeAttrSet(tab, "Bank Locator", LocateString(p, pMD->BankLocator), 0);
-	NWL_NodeAttrSet(tab, "Form Factor", pMDFormFactorToStr(pMD->FormFactor), 0);
-	if (pMD->TotalWidth)
-		NWL_NodeAttrSetf(tab, "Total Width (bits)", NAFLG_FMT_NUMERIC, "%u", pMD->TotalWidth);
-	if (pMD->DataWidth)
-		NWL_NodeAttrSetf(tab, "Data Width (bits)", NAFLG_FMT_NUMERIC, "%u", pMD->DataWidth);
-	if (pMD->Size & (1ULL << 15))
+
+	if (pMD->Size == 0)
+		goto out; // No memory device installed
+
+	NWL_NodeAttrSetf(tab, "Physical Memory Array Handle", NAFLG_FMT_NUMERIC, "%u", pMD->PhysicalArrayHandle);
+	NWL_NodeAttrSetf(tab, "Memory Error Information Handle", NAFLG_FMT_NUMERIC, "%u", pMD->ErrorInformationHandle);
+	NWL_NodeAttrSetf(tab, "Total Width (bits)", NAFLG_FMT_NUMERIC, "%u", pMD->TotalWidth);
+	NWL_NodeAttrSetf(tab, "Data Width (bits)", NAFLG_FMT_NUMERIC, "%u", pMD->DataWidth);
+
+	if (pMD->Size == 0x7FFF && pMD->Header.Length >= 0x22) // 2.7
+		sz = pMD->ExtendedSize & 0x7FFFFFFFU;
+	else if (pMD->Size & (1ULL << 15))
 		sz = ((UINT64)pMD->Size - (1ULL << 15)) * 1024;
 	else
 		sz = ((UINT64)pMD->Size) * 1024 * 1024;
-	if (!sz)
-		return;
 	NWL_NodeAttrSet(tab, "Device Size", NWL_GetHumanSize(sz, NWLC->NwUnits, 1024), NAFLG_FMT_HUMAN_SIZE);
+
+	NWL_NodeAttrSet(tab, "Form Factor", pMDFormFactorToStr(pMD->FormFactor), 0);
+	NWL_NodeAttrSetf(tab, "Device Set", NAFLG_FMT_NUMERIC, "%u", pMD->DeviceSet);
+	NWL_NodeAttrSet(tab, "Device Locator", LocateString(p, pMD->DeviceLocator), 0);
+	NWL_NodeAttrSet(tab, "Bank Locator", LocateString(p, pMD->BankLocator), 0);
 	NWL_NodeAttrSet(tab, "Device Type", pMDMemoryTypeToStr(pMD->MemoryType), 0);
-	if (pMD->Header.Length < 0x1b) // 2.3
-		return;
-	if (pMD->Speed)
+	NWL_NodeAttrSetf(tab, "Type Detail", NAFLG_FMT_NUMERIC, "%u", pMD->TypeDetail);
+	if (pMD->Header.Length < 0x1B) // 2.3
+		goto out;
+	if (pMD->Speed == 0xFFFF && pMD->Header.Length >= 0x5C) // 3.3
+		NWL_NodeAttrSetf(tab, "Speed (MT/s)", NAFLG_FMT_NUMERIC, "%u", pMD->ExtendedSpeed);
+	else
 		NWL_NodeAttrSetf(tab, "Speed (MT/s)", NAFLG_FMT_NUMERIC, "%u", pMD->Speed);
-	JedecIdToVendor(tab, pMD);
+	JedecIdToVendor(tab, pMD, db, dbsz);
 	NWL_NodeAttrSet(tab, "Serial Number", LocateString(p, pMD->SN), NAFLG_FMT_SENSITIVE);
 	NWL_NodeAttrSet(tab, "Asset Tag Number", LocateString(p, pMD->AssetTag), 0);
 	NWL_NodeAttrSet(tab, "Part Number", LocateString(p, pMD->PN), 0);
+	if (pMD->Header.Length < 0x1C) // 2.6
+		goto out;
+	NWL_NodeAttrSetf(tab, "Attributes", NAFLG_FMT_NUMERIC, "%u", pMD->Attributes);
+	if (pMD->Header.Length < 0x22) // 2.7
+		goto out;
+	if (pMD->ConfiguredMemSpeed == 0xFFFF && pMD->Header.Length >= 0x5C) // 3.3
+		NWL_NodeAttrSetf(tab, "Configured Memory Speed (MT/s)", NAFLG_FMT_NUMERIC, "%u", pMD->ExtendedConfiguredMemSpeed & 0x7FFFFFFFU);
+	else
+		NWL_NodeAttrSetf(tab, "Configured Memory Speed (MT/s)", NAFLG_FMT_NUMERIC, "%u", pMD->ConfiguredMemSpeed);
+	if (pMD->Header.Length < 0x28) // 2.8
+		goto out;
+	NWL_NodeAttrSetf(tab, "Minimum Voltage (mV)", NAFLG_FMT_NUMERIC, "%u", pMD->MinVoltage);
+	NWL_NodeAttrSetf(tab, "Maximum Voltage (mV)", NAFLG_FMT_NUMERIC, "%u", pMD->MaxVoltage);
+	NWL_NodeAttrSetf(tab, "Configured Voltage (mV)", NAFLG_FMT_NUMERIC, "%u", pMD->ConfiguredVoltage);
+	if (pMD->Header.Length < 0x54) // 3.2
+		goto out;
+	NWL_NodeAttrSet(tab, "Memory Technology", pMDTechnologyToStr(pMD->MemoryTechnology), 0);
+	NWL_NodeAttrSetf(tab, "Memory Operating Mode Capability", NAFLG_FMT_NUMERIC, "%u", pMD->MemoryOpModeCapability);
+	NWL_NodeAttrSet(tab, "Firmware Version", LocateString(p, pMD->FirmwareVersion), 0);
+
+	NWL_GetSpdManufacturer(tab, "Module Manufacturer", db, dbsz, pMD->ModuleVID & 0x7F, (pMD->ModuleVID >> 8) & 0x7F);
+	NWL_NodeAttrSetf(tab, "Module Manufacturer ID", NAFLG_FMT_NUMERIC, "%u", pMD->ModuleVID);
+	NWL_NodeAttrSetf(tab, "Module Product ID", NAFLG_FMT_NUMERIC, "%u", pMD->ModulePID);
+
+	NWL_GetSpdManufacturer(tab, "Memory Subsystem Controller Manufacturer", db, dbsz, pMD->MemorySubsysControllerVID & 0x7F, (pMD->MemorySubsysControllerVID >> 8) & 0x7F);
+	NWL_NodeAttrSetf(tab, "Memory Subsystem Controller Manufacturer ID", NAFLG_FMT_NUMERIC, "%u", pMD->MemorySubsysControllerVID);
+	NWL_NodeAttrSetf(tab, "Memory Subsystem Controller Product ID", NAFLG_FMT_NUMERIC, "%u", pMD->MemorySubsysControllerPID);
+
+	NWL_NodeAttrSet(tab, "Non-Volatile Size", NWL_GetHumanSize(pMD->NonVolatileSize, NWLC->NwUnits, 1024), NAFLG_FMT_HUMAN_SIZE);
+	NWL_NodeAttrSet(tab, "Volatile Size", NWL_GetHumanSize(pMD->VolatileSize, NWLC->NwUnits, 1024), NAFLG_FMT_HUMAN_SIZE);
+	NWL_NodeAttrSet(tab, "Cache Size", NWL_GetHumanSize(pMD->CacheSize, NWLC->NwUnits, 1024), NAFLG_FMT_HUMAN_SIZE);
+	NWL_NodeAttrSet(tab, "Logical Size", NWL_GetHumanSize(pMD->LogicalSize, NWLC->NwUnits, 1024), NAFLG_FMT_HUMAN_SIZE);
+	if (pMD->Header.Length < 0x64) // 3.7
+		goto out;
+
+	NWL_GetSpdManufacturer(tab, "PMIC0 Manufacturer", db, dbsz, pMD->PMIC0VID & 0x7F, (pMD->PMIC0VID >> 8) & 0x7F);
+	NWL_NodeAttrSetf(tab, "PMIC0 Manufacturer ID", NAFLG_FMT_NUMERIC, "%u", pMD->PMIC0VID);
+	NWL_NodeAttrSetf(tab, "PMIC0 Revision", NAFLG_FMT_NUMERIC, "%u", pMD->PMIC0Rev);
+
+	NWL_GetSpdManufacturer(tab, "RCD Manufacturer", db, dbsz, pMD->RCDVID & 0x7F, (pMD->RCDVID >> 8) & 0x7F);
+	NWL_NodeAttrSetf(tab, "RCD Manufacturer ID", NAFLG_FMT_NUMERIC, "%u", pMD->RCDVID);
+	NWL_NodeAttrSetf(tab, "RCD Revision", NAFLG_FMT_NUMERIC, "%u", pMD->RCDRev);
+
+out:
+	if (db)
+		free(db);
 }
 
 static const CHAR*

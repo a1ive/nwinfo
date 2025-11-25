@@ -72,7 +72,7 @@ draw_msr(struct nk_context* ctx, int index, PNODE cpu, LPCSTR brand)
 		nk_layout_row(ctx, NK_DYNAMIC, 0, 2, ratio);
 
 		nk_l(ctx, N_(N__SOCKET), NK_TEXT_LEFT);
-		nk_lhc(ctx, gnwinfo_get_smbios_attr("4", "Socket Designation", (PVOID)brand, is_cpu_name_match), NK_TEXT_LEFT, g_color_text_l);
+		nk_lhc(ctx, gnwinfo_get_smbios_attr("4", "Processor Upgrade", (PVOID)brand, is_cpu_name_match), NK_TEXT_LEFT, g_color_text_l);
 		nk_l(ctx, N_(N__MULTIPLIER), NK_TEXT_LEFT);
 		nk_lhc(ctx, g_ctx.cpu_info[index].MsrMulti, NK_TEXT_LEFT, g_color_text_l);
 		nk_l(ctx, N_(N__BASE_CLOCK), NK_TEXT_LEFT);
