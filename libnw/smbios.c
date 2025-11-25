@@ -1441,11 +1441,11 @@ static void ProcMemoryDevice(PNODE tab, void* p)
 	NWL_NodeAttrSetf(tab, "Total Width (bits)", NAFLG_FMT_NUMERIC, "%u", pMD->TotalWidth);
 	NWL_NodeAttrSetf(tab, "Data Width (bits)", NAFLG_FMT_NUMERIC, "%u", pMD->DataWidth);
 
-	if (pMD->Size == 0x7FFF && pMD->Header.Length >= 0x22) // 2.7
-		sz = pMD->ExtendedSize & 0x7FFFFFFFU;
-	else if (pMD->Size & (1ULL << 15))
-		sz = ((UINT64)pMD->Size - (1ULL << 15)) * 1024;
-	else
+	if (pMD->Size == 0x7FFFU && pMD->Header.Length >= 0x22) // 2.7
+		sz = ((UINT64)pMD->ExtendedSize & 0x7FFFFFFFU) * 1024 * 1024; // in MiB
+	else if (pMD->Size & (1ULL << 15)) // in KiB
+		sz = ((UINT64)pMD->Size & 0x7FFFU) * 1024;
+	else // in MiB
 		sz = ((UINT64)pMD->Size) * 1024 * 1024;
 	NWL_NodeAttrSet(tab, "Device Size", NWL_GetHumanSize(sz, NWLC->NwUnits, 1024), NAFLG_FMT_HUMAN_SIZE);
 
