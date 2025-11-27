@@ -320,8 +320,9 @@ static uint32_t nv_gpu_get(void* data, NWLIB_GPU_DEV* dev, uint32_t dev_count)
 		}
 		else if (get_legacy_mem_info(ctx->GpuHandle[i], &ctx->List[i].Mem) == NVAPI_OK)
 		{
-			info->TotalMemory = ctx->List[i].Mem.dedicatedVideoMemory;
-			info->FreeMemory = ctx->List[i].Mem.curAvailableDedicatedVideoMemory;
+			// KiB to Bytes
+			info->TotalMemory = ctx->List[i].Mem.dedicatedVideoMemory * 1024ULL;
+			info->FreeMemory = ctx->List[i].Mem.curAvailableDedicatedVideoMemory * 1024ULL;
 		}
 		if (info->FreeMemory < info->TotalMemory)
 			info->MemoryPercent = 100ULL - 100ULL * info->FreeMemory / info->TotalMemory;
