@@ -815,16 +815,37 @@ int WR0_WrPciConf(struct wr0_drv_t* drv, uint32_t addr, uint32_t reg, void* valu
 		break;
 	case WR0_DRIVER_CPUZ161:
 	{
+		CPUZ_WRITE_PCI_CONFIG_INPUT inBuf = { 0 };
+		inBuf.Bus = PciGetBus(addr);
+		inBuf.Device = PciGetDev(addr);
+		inBuf.Function = PciGetFunc(addr);
+		inBuf.Offset = reg;
+		uint32_t ioAddr = 0x80000000U | (inBuf.Bus << 16) | (inBuf.Device << 11) | (inBuf.Function << 8) | (reg & 0xFC);
 		if (size == sizeof(DWORD))
 		{
-			CPUZ_WRITE_PCI_CONFIG_INPUT inBuf = { 0 };
-			inBuf.Bus = PciGetBus(addr);
-			inBuf.Device = PciGetDev(addr);
-			inBuf.Function = PciGetFunc(addr);
-			inBuf.Offset = reg;
+#if 0
+			// Use port IO
+			WR0_WrIo32(drv, 0xCF8, ioAddr);
+			WR0_WrIo32(drv, 0xCFC + (reg & 3), *(uint32_t*)value);
+#else
 			memcpy(&inBuf.Value, value, sizeof(DWORD));
 			result = DeviceIoControl(drv->handle, IOCTL_CPUZ_WRITE_PCI_CONFIG,
 				&inBuf, sizeof(inBuf), &inBuf, sizeof(inBuf), &returnedLength, NULL);
+#endif
+		}
+		else if (size == sizeof(uint16_t))
+		{
+			// Use port IO
+			WR0_WrIo32(drv, 0xCF8, ioAddr);
+			WR0_WrIo16(drv, 0xCFC + (reg & 2), *(uint16_t*)value);
+			result = TRUE;
+		}
+		else if (size == sizeof(uint8_t))
+		{
+			// Use port IO
+			WR0_WrIo32(drv, 0xCF8, ioAddr);
+			WR0_WrIo8(drv, 0xCFC + (reg & 3), *(uint8_t*)value);
+			result = TRUE;
 		}
 	}
 	default:
@@ -1065,6 +1086,7 @@ DWORD WR0_RdAmdSmn(struct wr0_drv_t* drv, enum wr0_smn_type smn, DWORD reg)
 	switch (drv->type)
 	{
 	case WR0_DRIVER_CPUZ161:
+#if 1
 	{
 		DWORD inBuf[3];
 		inBuf[0] = 0; // BDF, (bus << 16) | (dev << 11) | (fn << 8)
@@ -1074,6 +1096,7 @@ DWORD WR0_RdAmdSmn(struct wr0_drv_t* drv, enum wr0_smn_type smn, DWORD reg)
 			inBuf, sizeof(inBuf), &value, sizeof(value), &returnedLength, NULL);
 	}
 		break;
+#endif
 	case WR0_DRIVER_HWIO:
 	case WR0_DRIVER_WINRING0:
 	{
