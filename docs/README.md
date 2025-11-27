@@ -8,8 +8,8 @@
 **NWinfo** is a Win32 program that allows you to obtain system and hardware information.
 
 ## Features
-* Obtain detailed information about SMBIOS, CPUID, S.M.A.R.T., PCI, EDID, and more.
-* Support exporting in JSON, YAML, and HTML formats.
+* Retrieves detailed information about SMBIOS, CPUID, S.M.A.R.T., PCI, EDID, and more.
+* Supports exporting in JSON, YAML, and HTML formats.
 * Gathers information directly without relying on WMI.
 
 ## Download
@@ -58,12 +58,12 @@ Exports active physical network interfaces with IPv4 addresses to `report.html` 
   Write to `FILE` instead of printing to screen.  
 - --cp=`CODEPAGE`  
   Set the code page of output text.  
-  `CODEPAGE` can be `ANSI` and `UTF8`.  
+  `CODEPAGE` can be `ANSI` or `UTF8`.  
 - --human  
   Display numbers in human readable format.  
 - --bin=`FORMAT`  
   Specify binary format.  
-  `FORMAT` can be `NONE` (default), `BASE64` and `HEX`.  
+  `FORMAT` can be `NONE` (default), `BASE64` or `HEX`.  
 - --debug  
   Print debug info to stdout.  
 - --hide-sensitive  
@@ -119,7 +119,7 @@ Exports active physical network interfaces with IPv4 addresses to `report.html` 
   Print EDID info.  
 - --pci[=`CLASS`]  
   Print PCI info.  
-  `CLASS` specifies the class code of pci devices, e.g. `0C05` (SMBus).  
+  `CLASS` specifies the class code of PCI devices, e.g. `0C05` (SMBus).  
 - --spd[=`FILE`]  
   Print DIMM SPD info.  
   Driver is required to access SPD data.  
@@ -138,8 +138,8 @@ Exports active physical network interfaces with IPv4 addresses to `report.html` 
    Print audio devices.  
  - --gpu  
    Print GPU utilization and sensors (e.g. temperature).  
-   GPU drivers are required to access these info.  
-   nVidia (NVAPI), AMD (ADL2) and Intel (IGCL) are supported.  
+   GPU drivers are required to access this information.  
+   NVIDIA (NVAPI), AMD (ADL2) and Intel (IGCL) are supported.  
  - --device[=`TYPE`]  
    Print device tree.  
    `TYPE` specifies the type of the devices, e.g. `ACPI`, `SWD`, `PCI` or `USB`.  
@@ -169,24 +169,58 @@ Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
 
 <div style="page-break-after: always;"></div>
 
-## Notes
+## Supported OS
 
-### Windows XP
-This project is compatible with Windows XP using [YY-Thunks](https://github.com/Chuyu-Team/YY-Thunks), but it may not retrieve some hardware information.
+- Windows 10 / Server 2016 and later (NT 10.0)
+- Windows 8.1 / Server 2012 R2 (NT 6.3)
+- Windows 8 / Server 2012 (NT 6.2)
+- Windows 7 / Server 2008 R2 (NT 6.1)
+- Windows Vista / Server 2008 (NT 6.0)
+- Windows Server 2003 (NT 5.2)
+- Windows XP (NT 5.1)
+
+## Supported Hardware
+
+### CPU
+
+| Vendor | CPUID | Temperature | Voltage | Power | Clock |
+|--------|-------|-------------|---------|-------|-------|
+| Intel         | ✅ | ✅ | ✅ | ✅ | ✅ |
+| AMD           | ✅ | ✅ | ✅ | ✅ | ✅ |
+| VIA / Zhaoxin | ✅ | ✅ | ❌ | ❌ | ❌ |
+
+### GPU
+
+- Vendor / API: NVIDIA (NVAPI), AMD (ADL2), Intel (IGCL), Generic (D3D), Generic (GPU-Z)
+- Sensors: VRAM Usage, GPU Usage, Temperature, Power, Clock, Voltage, Fan Speed
+
+### Memory Module SPD
+
+- SMBus: Intel PCH, PIIX4 / AMD SB / Hygon 
+- Memory Module: SDR, DDR, DDR2, DDR3, DDR4, DDR5
+- Thermal Sensor: DDR4, DDR5
+
+### HDD / SSD S.M.A.R.T.
+
+NWinfo uses [libcdi](https://github.com/a1ive/libcdi) to access S.M.A.R.T. data.
+
+`libcdi` is a dynamic library based on [CrystalDiskInfo](https://crystalmark.info/en/software/crystaldiskinfo/).
+
+Note: NVMe requires Windows 10 or later.
 
 ## Supported Drivers
 
-This project searches for and loads drivers in the following order: **CPUZ161 -> EVGA -> HwRwDrv -> WinRing0 -> PawnIO**.
+The program searches for and loads drivers in the following order: **CPUZ161 -> EVGA -> HwRwDrv -> WinRing0 -> PawnIO**.
 
-| Driver | Filename | Security Status | Included | CPU Sensor | SPD | ACPI |
-|--------|----------|-----------------|----------|------------|-----|------|
-| [PawnIO](https://github.com/namazso/PawnIO)           | PawnIO.sys      | ✅ Safe to use    | ✅ | ⚠️ | ⚠️ | ❌ |
-| [HwRwDrv](https://hwrwdrv.phpnet.us/?i=1)             | HwRwDrvx64.sys  | ⚠️ Vulnerable     | ✅ | ✅ | ✅ | ✅ |
-| [WinRing0](http://openlibsys.org/)                    | WinRing0x64.sys | ❌ Blocked by AV  | ❌ | ✅ | ✅ | ❌ |
-| [CPUZ161](https://www.cpuid.com/softwares/cpu-z.html) | cpuidx64.sys    | ✅ Safe to use    | ❌ | ✅ | ✅ | ✅ |
-| [EVGA](https://www.evga.com/precisionx1/)             | HwIox64.sys     | ⚠️ May be flagged | ❌ | ✅ | ✅ | ❌ |
+| Driver | Filename | Security Status | Bundled | CPU Sensor | SPD | ACPI |
+|--------|----------|-----------------|---------|------------|-----|------|
+| [PawnIO](https://github.com/namazso/PawnIO)           | PawnIO.sys      | ✅ Safe to use   | ✅ | ⚠️ | ⚠️ | ❌ |
+| [HwRwDrv](https://hwrwdrv.phpnet.us/?i=1)             | HwRwDrvx64.sys  | ⚠️ Vulnerable    | ✅ | ✅ | ✅ | ✅ |
+| [WinRing0](http://openlibsys.org/)                    | WinRing0x64.sys | ❌ Blocked by AV | ❌ | ✅ | ✅ | ❌ |
+| [CPUZ161](https://www.cpuid.com/softwares/cpu-z.html) | cpuidx64.sys    | ✅ Safe to use   | ❌ | ✅ | ✅ | ✅ |
+| [EVGA](https://www.evga.com/precisionx1/)             | HwIox64.sys     | ✅ Safe to use   | ❌ | ✅ | ✅ | ❌ |
 
-**Note:** The program can still run normally even if all drivers are removed, but some hardware information may not be accessible.
+**Note:** The program can still run normally even without drivers, but some hardware information may not be accessible.
 
 ### PawnIO Driver Installation
 
