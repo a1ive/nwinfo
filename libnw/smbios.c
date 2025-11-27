@@ -30,6 +30,25 @@ fail:
 	return "NULL";
 }
 
+static UINT64
+pExtROMSizeToBytes(UINT16 ExtSize)
+{
+	UINT64 Ret = ExtSize & 0x3FFFU; // Bits 0-13
+	switch (ExtSize >> 14) // Bits 14-15
+	{
+	case 0: // MiB
+		Ret *= 1024 * 1024;
+		break;
+	case 1: // GiB
+		Ret *= 1024 * 1024 * 1024;
+		break;
+	default: // Reserved
+		Ret = 0;
+		break;
+	}
+	return Ret;
+}
+
 static void ProcBIOSInfo(PNODE tab, void* p)
 {
 	PBIOSInfo pBIOS = (PBIOSInfo)p;
@@ -40,14 +59,29 @@ static void ProcBIOSInfo(PNODE tab, void* p)
 	NWL_NodeAttrSet(tab, "Version", LocateString(p, pBIOS->Version), 0);
 	NWL_NodeAttrSetf(tab, "Starting Segment", 0, "%04Xh", pBIOS->StartingAddrSeg);
 	NWL_NodeAttrSet(tab, "Release Date", LocateString(p, pBIOS->ReleaseDate), 0);
-	NWL_NodeAttrSetf(tab, "Image Size (K)", NAFLG_FMT_NUMERIC, "%u", (pBIOS->ROMSize + 1) * 64);
-	NWL_NodeAttrSetf(tab, "BIOS Characteristics", 0, "0x%016llX", pBIOS->Characteristics);
-	if (pBIOS->Header.Length < 0x18) // 2.4
+	if (pBIOS->ROMSize == 0xFFU && pBIOS->Header.Length >= 0x1A) // 3.1
+		NWL_NodeAttrSet(tab, "ROM Size", NWL_GetHumanSize(pExtROMSizeToBytes(pBIOS->ExtendROMSize), NWLC->NwUnits, 1024), NAFLG_FMT_HUMAN_SIZE);
+	else // 64KiB * (n + 1)
+		NWL_NodeAttrSet(tab, "ROM Size", NWL_GetHumanSize(64ULL * 1024 * (pBIOS->ROMSize + 1), NWLC->NwUnits, 1024), NAFLG_FMT_HUMAN_SIZE);
+	NWL_NodeAttrSetf(tab, "Firmware Characteristics", 0, "0x%016llX", pBIOS->Characteristics);
+	if (pBIOS->Header.Length < 0x13) // 2.1
 		return;
-	if (pBIOS->MajorRelease != 0xff || pBIOS->MinorRelease != 0xff)
-		NWL_NodeAttrSetf(tab, "System BIOS Version", 0, "%u.%u", pBIOS->MajorRelease, pBIOS->MinorRelease);
-	if (pBIOS->ECFirmwareMajor != 0xff || pBIOS->ECFirmwareMinor != 0xff)
-		NWL_NodeAttrSetf(tab, "EC Firmware Version", 0, "%u.%u", pBIOS->ECFirmwareMajor, pBIOS->ECFirmwareMinor);
+	// 2.1 & 2.2 : 1 byte
+	NWL_NodeAttrSetf(tab, "Firmware Characteristics Extension 1", 0, "0x%02X", pBIOS->Extension[0]);
+	if (pBIOS->Header.Length < 0x14) // 2.3
+		return;
+	NWL_NodeAttrSetf(tab, "Firmware Characteristics Extension 2", 0, "0x%02X", pBIOS->Extension[1]);
+
+	NWL_NodeAttrSetBool(tab, "BIOS Boot Specification", pBIOS->Extension[1] & 0x01, 0);
+	NWL_NodeAttrSetBool(tab, "Fn Key Network Boot", pBIOS->Extension[1] & 0x02, 0); // Function key-initiated network service boot
+	NWL_NodeAttrSetBool(tab, "Enable Targeted Content Distribution", pBIOS->Extension[1] & 0x04, 0);
+	NWL_NodeAttrSetBool(tab, "UEFI Specification", pBIOS->Extension[1] & 0x08, 0);
+	NWL_NodeAttrSetBool(tab, "Virtual Machine", pBIOS->Extension[1] & 0x10, 0);
+	NWL_NodeAttrSetBool(tab, "Manufacturing Mode Support", pBIOS->Extension[1] & 0x20, 0);
+	NWL_NodeAttrSetBool(tab, "Manufacturing Mode Enabled", pBIOS->Extension[1] & 0x40, 0);
+
+	NWL_NodeAttrSetf(tab, "Platform Firmware Version", 0, "%u.%u", pBIOS->MajorRelease, pBIOS->MinorRelease);
+	NWL_NodeAttrSetf(tab, "EC Firmware Version", 0, "%u.%u", pBIOS->ECFirmwareMajor, pBIOS->ECFirmwareMinor);
 }
 
 static const CHAR*
@@ -1458,7 +1492,7 @@ static void ProcMemoryDevice(PNODE tab, void* p)
 	if (pMD->Header.Length < 0x1B) // 2.3
 		goto out;
 	if (pMD->Speed == 0xFFFF && pMD->Header.Length >= 0x5C) // 3.3
-		NWL_NodeAttrSetf(tab, "Speed (MT/s)", NAFLG_FMT_NUMERIC, "%u", pMD->ExtendedSpeed);
+		NWL_NodeAttrSetf(tab, "Speed (MT/s)", NAFLG_FMT_NUMERIC, "%u", pMD->ExtendedSpeed & 0x7FFFFFFFU);
 	else
 		NWL_NodeAttrSetf(tab, "Speed (MT/s)", NAFLG_FMT_NUMERIC, "%u", pMD->Speed);
 	JedecIdToVendor(tab, pMD, db, dbsz);
@@ -1471,9 +1505,9 @@ static void ProcMemoryDevice(PNODE tab, void* p)
 	if (pMD->Header.Length < 0x22) // 2.7
 		goto out;
 	if (pMD->ConfiguredMemSpeed == 0xFFFF && pMD->Header.Length >= 0x5C) // 3.3
-		NWL_NodeAttrSetf(tab, "Configured Memory Speed (MT/s)", NAFLG_FMT_NUMERIC, "%u", pMD->ExtendedConfiguredMemSpeed & 0x7FFFFFFFU);
+		NWL_NodeAttrSetf(tab, "Configured Speed (MT/s)", NAFLG_FMT_NUMERIC, "%u", pMD->ExtendedConfiguredMemSpeed & 0x7FFFFFFFU);
 	else
-		NWL_NodeAttrSetf(tab, "Configured Memory Speed (MT/s)", NAFLG_FMT_NUMERIC, "%u", pMD->ConfiguredMemSpeed);
+		NWL_NodeAttrSetf(tab, "Configured Speed (MT/s)", NAFLG_FMT_NUMERIC, "%u", pMD->ConfiguredMemSpeed);
 	if (pMD->Header.Length < 0x28) // 2.8
 		goto out;
 	NWL_NodeAttrSetf(tab, "Minimum Voltage (mV)", NAFLG_FMT_NUMERIC, "%u", pMD->MinVoltage);

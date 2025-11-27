@@ -74,6 +74,7 @@ typedef struct _TYPE_0_
 	UINT8 MinorRelease;
 	UINT8 ECFirmwareMajor;
 	UINT8 ECFirmwareMinor;
+	UINT16 ExtendROMSize;
 } BIOSInfo, *PBIOSInfo;
 
 typedef struct _TYPE_1_
