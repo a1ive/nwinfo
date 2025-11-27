@@ -18,9 +18,10 @@ typedef struct _NWLIB_GPU_DEV
 	uint32_t PciBus;
 	uint32_t PciDevice;
 	uint32_t PciFunction;
-	uint64_t TotalMemory;
-	uint64_t FreeMemory;
-	uint64_t MemoryPercent;
+	uint64_t TotalMemory; // Dedicated Video Memory
+	uint64_t FreeMemory; // Dedicated Video Memory
+	uint64_t UsedMemory; // Dedicated Video Memory
+	uint64_t MemoryPercent; // Used Dedicated Video Memory in percent
 	double UsageCounter;
 	double UsagePercent;
 	double Energy;

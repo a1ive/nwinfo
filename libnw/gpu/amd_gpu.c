@@ -188,11 +188,11 @@ get_gpu_mem(void* adl, int adapter, ADL_GPU_INFO* gpu, NWLIB_GPU_DEV* info)
 	if (gpu->VRamUsed < 0)
 		return;
 
-	uint64_t used_mem = ((uint64_t)gpu->VRamUsed) * 1024 * 1024;
-	if (used_mem < info->TotalMemory)
+	info->UsedMemory = ((uint64_t)gpu->VRamUsed) * 1024 * 1024;
+	if (info->UsedMemory < info->TotalMemory)
 	{
-		info->FreeMemory = info->TotalMemory - used_mem;
-		info->MemoryPercent = used_mem * 100ULL / info->TotalMemory;
+		info->FreeMemory = info->TotalMemory - info->UsedMemory;
+		info->MemoryPercent = 100ULL * info->UsedMemory / info->TotalMemory;
 	}
 }
 

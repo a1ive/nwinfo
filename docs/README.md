@@ -191,8 +191,18 @@ Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
 
 ### GPU
 
-- Vendor / API: NVIDIA (NVAPI), AMD (ADL2), Intel (IGCL), Generic (D3D), Generic (GPU-Z)
-- Sensors: VRAM Usage, GPU Usage, Temperature, Power, Clock, Voltage, Fan Speed
+| Vendor | API | GPU Usage | VRAM | Temperature | Power | Frequency | Voltage | Fan Speed |
+|--------|-----|-----------|------|-------------|-------|-----------|---------|-----------|
+| NVIDIA  | NVAPI | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| AMD     | ADL2  | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Intel   | IGCL  | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Generic | D3D   | ✅ | ✅ | ✅ | ✅ | ❌ | ❌ | ⚠️ |
+| Generic | GPU-Z | ✅ | ⚠️ | ✅ | ✅ | ✅ | ✅ | ✅ |
+
+Notes:
+ * `VRAM` refers to the dedicated video memory only.
+ * `Frequency` refers to the GPU core frequency.
+ * `Power` refers to the board power draw.
 
 ### Memory Module SPD
 

@@ -31,6 +31,11 @@ struct D3D_GPU_DATA
 	D3DKMT_ADAPTERADDRESS Bdf;
 	D3DKMT_SEGMENTSIZEINFO SegSize;
 	D3DKMT_ADAPTER_PERFDATA PerfData;
+	D3DKMT_QUERYSTATISTICS Stats;
+	ULONG NbSegments;
+	ULONG NodeCount;
+	UINT64 TimeStamp;
+	UINT64 RunningTime;
 };
 
 struct D3D_GPU_CTX
@@ -39,6 +44,7 @@ struct D3D_GPU_CTX
 	NTSTATUS(APIENTRY* EnumAdapters)(D3DKMT_ENUMADAPTERS*);
 	NTSTATUS(APIENTRY* QueryAdapterInfo)(const D3DKMT_QUERYADAPTERINFO*);
 	NTSTATUS(APIENTRY* OpenAdapterFromLuid)(D3DKMT_OPENADAPTERFROMLUID*);
+	NTSTATUS(APIENTRY* QueryStatistics)(const D3DKMT_QUERYSTATISTICS*);
 	NTSTATUS(APIENTRY* CloseAdapter)(const D3DKMT_CLOSEADAPTER*);
 	D3DKMT_ENUMADAPTERS Adapters;
 	NTSTATUS Result;
@@ -137,9 +143,13 @@ static void* d3d_gpu_init(PNWLIB_GPU_INFO info)
 	*(FARPROC*)&ctx->EnumAdapters = GetProcAddress(ctx->Gdi, "D3DKMTEnumAdapters");
 	*(FARPROC*)&ctx->QueryAdapterInfo = GetProcAddress(ctx->Gdi, "D3DKMTQueryAdapterInfo");
 	*(FARPROC*)&ctx->OpenAdapterFromLuid = GetProcAddress(ctx->Gdi, "D3DKMTOpenAdapterFromLuid");
+	*(FARPROC*)&ctx->QueryStatistics = GetProcAddress(ctx->Gdi, "D3DKMTQueryStatistics");
 	*(FARPROC*)&ctx->CloseAdapter = GetProcAddress(ctx->Gdi, "D3DKMTCloseAdapter");
-	if (ctx->EnumAdapters == NULL || ctx->QueryAdapterInfo == NULL ||
-		ctx->OpenAdapterFromLuid == NULL || ctx->CloseAdapter == NULL)
+	if (ctx->EnumAdapters == NULL
+		|| ctx->QueryAdapterInfo == NULL
+		|| ctx->OpenAdapterFromLuid == NULL
+		|| ctx->QueryStatistics == NULL
+		|| ctx->CloseAdapter == NULL)
 	{
 		GPU_DBG(GDID3D, "Cannot get D3DKMT functions");
 		goto fail;
@@ -212,6 +222,17 @@ static void* d3d_gpu_init(PNWLIB_GPU_INFO info)
 			gpu->DeviceIds.DeviceIds.VendorID, gpu->DeviceIds.DeviceIds.DeviceID,
 			gpu->DeviceIds.DeviceIds.SubSystemID, gpu->DeviceIds.DeviceIds.RevisionID,
 			gpu->Name);
+
+		memset(&gpu->Stats, 0, sizeof(D3DKMT_QUERYSTATISTICS));
+		gpu->Stats.Type = D3DKMT_QUERYSTATISTICS_ADAPTER;
+		gpu->Stats.AdapterLuid = gpu->OpenAdapter.AdapterLuid;
+		ctx->Result = ctx->QueryStatistics(&gpu->Stats);
+		if (NT_SUCCESS(ctx->Result))
+		{
+			gpu->NbSegments = gpu->Stats.QueryResult.AdapterInformation.NbSegments;
+			gpu->NodeCount = gpu->Stats.QueryResult.AdapterInformation.NodeCount;
+			GPU_DBG(GDID3D, "%u segments, %u nodes", gpu->NbSegments, gpu->NodeCount);
+		}
 	}
 
 	return ctx;
@@ -221,6 +242,56 @@ fail:
 	FreeLibrary(ctx->Gdi);
 	free(ctx);
 	return NULL;
+}
+
+static uint64_t get_used_memory(struct D3D_GPU_CTX* ctx, struct D3D_GPU_DATA* gpu)
+{
+	uint64_t used_memory = 0;
+	for (ULONG i = 0; i < gpu->NbSegments; i++)
+	{
+		memset(&gpu->Stats, 0, sizeof(D3DKMT_QUERYSTATISTICS));
+		gpu->Stats.Type = D3DKMT_QUERYSTATISTICS_SEGMENT;
+		gpu->Stats.AdapterLuid = gpu->OpenAdapter.AdapterLuid;
+		gpu->Stats.QuerySegment.SegmentId = i;
+		ctx->Result = ctx->QueryStatistics(&gpu->Stats);
+		if (!NT_SUCCESS(ctx->Result))
+			break;
+		if (gpu->Stats.QueryResult.SegmentInformation.Aperture) // Shared
+			continue;
+		else
+			used_memory += gpu->Stats.QueryResult.SegmentInformation.BytesResident;
+	}
+	return used_memory;
+}
+
+static double get_usage_percent(struct D3D_GPU_CTX* ctx, struct D3D_GPU_DATA* gpu)
+{
+	double usage = 0.0;
+	uint64_t current_stamp = 0;
+	uint64_t current_running = 0;
+	for (ULONG i = 0; i < gpu->NodeCount; i++)
+	{
+		memset(&gpu->Stats, 0, sizeof(D3DKMT_QUERYSTATISTICS));
+		gpu->Stats.Type = D3DKMT_QUERYSTATISTICS_NODE;
+		gpu->Stats.AdapterLuid = gpu->OpenAdapter.AdapterLuid;
+		gpu->Stats.QueryNode.NodeId = i;
+		ctx->Result = ctx->QueryStatistics(&gpu->Stats);
+		if (!NT_SUCCESS(ctx->Result))
+			break;
+		current_stamp += GetTickCount64();
+		current_running += gpu->Stats.QueryResult.NodeInformation.GlobalInformation.RunningTime.QuadPart;
+	}
+	double diff_time = (double)current_stamp - gpu->TimeStamp;
+	double diff_running = (double)current_running - gpu->RunningTime; // in microseconds
+	if (diff_time != 0.0)
+		usage = 0.1 * diff_running / diff_time;
+	if (usage < 0.0)
+		usage = 0.0;
+	else if (usage > 100.0)
+		usage = 100.0;
+	gpu->RunningTime = current_running;
+	gpu->TimeStamp = current_stamp;
+	return usage;
 }
 
 static uint32_t d3d_gpu_get(void* data, NWLIB_GPU_DEV* dev, uint32_t dev_count)
@@ -260,6 +331,14 @@ static uint32_t d3d_gpu_get(void* data, NWLIB_GPU_DEV* dev, uint32_t dev_count)
 			info->Temperature = (double)gpu->PerfData.Temperature * 0.1; // deci-Celsius to Celsius
 			info->FanSpeed = gpu->PerfData.FanRPM;
 		}
+
+		info->UsedMemory = get_used_memory(ctx, gpu);
+		if (info->UsedMemory < info->TotalMemory)
+		{
+			info->FreeMemory = info->TotalMemory - info->UsedMemory;
+			info->MemoryPercent = 100ULL * info->UsedMemory / info->TotalMemory;
+		}
+		info->UsagePercent = get_usage_percent(ctx, gpu);
 	}
 
 	return count;
