@@ -271,5 +271,26 @@
     <CopyFileToFolders Include="jep106.ids">
       <Filter>Binary Files</Filter>
     </CopyFileToFolders>
+    <CopyFileToFolders Include="..\winring0\pawn\AMDFamily0F.bin">
+      <Filter>Binary Files</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="..\winring0\pawn\AMDFamily10.bin">
+      <Filter>Binary Files</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="..\winring0\pawn\AMDFamily17.bin">
+      <Filter>Binary Files</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="..\winring0\pawn\IntelMSR.bin">
+      <Filter>Binary Files</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="..\winring0\pawn\RyzenSMU.bin">
+      <Filter>Binary Files</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="..\winring0\pawn\SmbusI801.bin">
+      <Filter>Binary Files</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="..\winring0\pawn\SmbusPIIX4.bin">
+      <Filter>Binary Files</Filter>
+    </CopyFileToFolders>
   </ItemGroup>
 </Project>
