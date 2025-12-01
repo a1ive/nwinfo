@@ -78,6 +78,7 @@ lang_tr_tr[N__MAX_] =
 	[N__HIDE_DETAILS] = u8"Detayları gizle",
 	[N__HIDE_SMART] = u8"SMART'ı gizle",
 	[N__DISPLAY_SMART_HEX] = u8"SMART'ı HEX formatında göster",
+	[N__DISK_USE_WMI] = u8"WMI Kullan",
 	[N__ADV_DISK_SEARCH] = u8"Gelişmiş disk araması",
 	[N__HD204UI_WORKAROUND] = u8"HD204UI özel çözüm",
 	[N__ADATA_SSD_WORKAROUND] = u8"ADATA SSD özel çözümü",

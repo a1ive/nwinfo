@@ -78,6 +78,7 @@ lang_sv_se[N__MAX_] =
 	[N__HIDE_DETAILS] = u8"Dölj detaljer",
 	[N__HIDE_SMART] = u8"Dölj SMART",
 	[N__DISPLAY_SMART_HEX] = u8"Visa SMART i HEX-format",
+	[N__DISK_USE_WMI] = u8"Använd WMI",
 	[N__ADV_DISK_SEARCH] = u8"Avancerad disksökning",
 	[N__HD204UI_WORKAROUND] = u8"HD204UI-lösning",
 	[N__ADATA_SSD_WORKAROUND] = u8"ADATA SSD-lösning",

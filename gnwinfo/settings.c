@@ -161,6 +161,8 @@ gnwinfo_draw_settings_window(struct nk_context* ctx, float width, float height)
 	nk_spacer(ctx);
 	g_ctx.smart_hex = !nk_check_label(ctx, N_(N__DISPLAY_SMART_HEX), !g_ctx.smart_hex);
 	nk_spacer(ctx);
+	nk_checkbox_flags_label(ctx, N_(N__DISK_USE_WMI), &g_ctx.smart_flag, CDI_FLAG_USE_WMI);
+	nk_spacer(ctx);
 	nk_checkbox_flags_label(ctx, N_(N__ADV_DISK_SEARCH), &g_ctx.smart_flag, CDI_FLAG_ADVANCED_SEARCH);
 	nk_spacer(ctx);
 	nk_checkbox_flags_label(ctx, N_(N__HD204UI_WORKAROUND), &g_ctx.smart_flag, CDI_FLAG_WORKAROUND_HD204UI);

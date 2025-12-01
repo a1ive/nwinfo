@@ -78,6 +78,7 @@ lang_zh_tw[N__MAX_] =
 	[N__HIDE_DETAILS] = u8"隱藏詳細資訊",
 	[N__HIDE_SMART] = u8"隱藏 SMART",
 	[N__DISPLAY_SMART_HEX] = u8"以十六進位格式顯示 SMART",
+	[N__DISK_USE_WMI] = u8"使用 WMI",
 	[N__ADV_DISK_SEARCH] = u8"進階磁碟搜尋",
 	[N__HD204UI_WORKAROUND] = u8"HD204UI 解決方法",
 	[N__ADATA_SSD_WORKAROUND] = u8"ADATA SSD 解決方法",

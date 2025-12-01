@@ -80,6 +80,7 @@ lang_en_us[N__MAX_] =
 	[N__HIDE_DETAILS] = u8"Hide details",
 	[N__HIDE_SMART] = u8"Hide SMART",
 	[N__DISPLAY_SMART_HEX] = u8"Display SMART in HEX format",
+	[N__DISK_USE_WMI] = u8"Use WMI",
 	[N__ADV_DISK_SEARCH] = u8"Advanced disk search",
 	[N__HD204UI_WORKAROUND] = u8"HD204UI workaround",
 	[N__ADATA_SSD_WORKAROUND] = u8"ADATA SSD workaround",

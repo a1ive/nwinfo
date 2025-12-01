@@ -78,6 +78,7 @@ lang_zh_cn[N__MAX_] =
 	[N__HIDE_DETAILS] = u8"隐藏详细信息",
 	[N__HIDE_SMART] = u8"隐藏 SMART",
 	[N__DISPLAY_SMART_HEX] = u8"以十六进制显示 SMART",
+	[N__DISK_USE_WMI] = u8"使用 WMI",
 	[N__ADV_DISK_SEARCH] = u8"高级磁盘搜索",
 	[N__HD204UI_WORKAROUND] = u8"HD204UI 特殊方案",
 	[N__ADATA_SSD_WORKAROUND] = u8"ADATA SSD 特殊方案",

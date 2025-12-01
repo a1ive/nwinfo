@@ -80,6 +80,7 @@ lang_ja_jp[N__MAX_] =
 	[N__HIDE_DETAILS] = u8"詳細を非表示",
 	[N__HIDE_SMART] = u8"SMART情報を非表示",
 	[N__DISPLAY_SMART_HEX] = u8"SMART値を16進数で表示",
+	[N__DISK_USE_WMI] = u8"WMIを使用",
 	[N__ADV_DISK_SEARCH] = u8"高度なディスク検索",
 	[N__HD204UI_WORKAROUND] = u8"HD204UI回避策",
 	[N__ADATA_SSD_WORKAROUND] = u8"ADATA SSD回避策",
