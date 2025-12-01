@@ -31,6 +31,9 @@
     <Filter Include="stb">
       <UniqueIdentifier>{c3f9e0d1-b521-4ce5-824c-6fd7db11d96d}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Binary Files">
+      <UniqueIdentifier>{65fe37cf-f273-4140-9f90-e118b097d7cc}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="node.h">
@@ -263,5 +266,10 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <CopyFileToFolders Include="jep106.ids">
+      <Filter>Binary Files</Filter>
+    </CopyFileToFolders>
   </ItemGroup>
 </Project>

@@ -22,7 +22,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
-    <None Include="gnwinfo.ini" />
     <None Include="..\README.md" />
   </ItemGroup>
   <ItemGroup>
@@ -209,5 +208,8 @@
     <Image Include="..\docs\images\icon.ico">
       <Filter>Resource Files</Filter>
     </Image>
+  </ItemGroup>
+  <ItemGroup>
+    <CopyFileToFolders Include="gnwinfo.ini" />
   </ItemGroup>
 </Project>

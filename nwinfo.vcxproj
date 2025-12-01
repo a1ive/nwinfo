@@ -26,7 +26,9 @@
     <None Include=".github\workflows\msbuild.yml" />
     <None Include="copy_res.ps1" />
     <None Include="docs\README.md" />
-    <None Include="hw_report.ps1" />
+    <CopyFileToFolders Include="hw_report.ps1">
+      <FileType>Document</FileType>
+    </CopyFileToFolders>
     <None Include="packages.config" />
     <None Include="README.md" />
     <None Include="_config.yml" />

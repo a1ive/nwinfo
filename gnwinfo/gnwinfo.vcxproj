@@ -123,7 +123,9 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <None Include="..\README.md" />
-    <None Include="gnwinfo.ini" />
+    <CopyFileToFolders Include="gnwinfo.ini">
+      <FileType>Document</FileType>
+    </CopyFileToFolders>
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>

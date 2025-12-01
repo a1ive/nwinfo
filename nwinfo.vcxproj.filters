@@ -38,7 +38,6 @@
   <ItemGroup>
     <None Include="packages.config" />
     <None Include="copy_res.ps1" />
-    <None Include="hw_report.ps1" />
     <None Include="_layouts\default.html">
       <Filter>GitHub</Filter>
     </None>
@@ -62,5 +61,8 @@
     <Image Include="docs\images\icon.ico">
       <Filter>Resource Files</Filter>
     </Image>
+  </ItemGroup>
+  <ItemGroup>
+    <CopyFileToFolders Include="hw_report.ps1" />
   </ItemGroup>
 </Project>
