@@ -277,8 +277,6 @@ draw_mem_capacity(struct nk_context* ctx)
 static VOID
 draw_memory(struct nk_context* ctx)
 {
-	INT i;
-
 	nk_layout_row(ctx, NK_DYNAMIC, 0, 4, (float[4]) { 0.3f, 0.4f, 0.3f - g_ctx.gui_ratio, g_ctx.gui_ratio });
 	nk_image_label(ctx, GET_PNG(IDR_PNG_MEMORY), N_(N__MEMORY), NK_TEXT_LEFT, g_color_text_d);
 	nk_lhcf(ctx, NK_TEXT_LEFT,
@@ -293,9 +291,10 @@ draw_memory(struct nk_context* ctx)
 	{
 		nk_layout_row(ctx, NK_DYNAMIC, 0, 2, (float[2]) { 0.3f, 0.7f });
 		draw_mem_capacity(ctx);
-		for (i = 0; g_ctx.smbios->Children[i].LinkedNode; i++)
+		INT count = NWL_NodeChildCount(g_ctx.smbios);
+		for (INT i = 0; i < count; i++)
 		{
-			PNODE tab = g_ctx.smbios->Children[i].LinkedNode;
+			PNODE tab = NWL_NodeEnumChild(g_ctx.smbios, i);
 			LPCSTR attr = NWL_NodeAttrGet(tab, "Table Type");
 			if (strcmp(attr, "17") != 0)
 				continue;
@@ -352,17 +351,19 @@ draw_display(struct nk_context* ctx)
 	}
 	else
 	{
-		for (i = 0; g_ctx.gpu_info.PciList->Children[i].LinkedNode; i++)
+		INT count = NWL_NodeChildCount(g_ctx.gpu_info.PciList);
+		for (i = 0; i < count; i++)
 		{
-			PNODE gpu = g_ctx.gpu_info.PciList->Children[i].LinkedNode;
+			PNODE gpu = NWL_NodeEnumChild(g_ctx.gpu_info.PciList, i);
 			nk_layout_row(ctx, NK_DYNAMIC, 0, 2, (float[2]) { 0.3f, 0.7f });
 			nk_lhsc(ctx, NWL_NodeAttrGet(gpu, "Vendor"), NK_TEXT_LEFT, g_color_text_d, nk_true, nk_true);
 			nk_lhc(ctx, NWL_NodeAttrGet(gpu, "Device"), NK_TEXT_LEFT, g_color_text_l);
 		}
 	}
-	for (i = 0; g_ctx.edid->Children[i].LinkedNode; i++)
+	INT count = NWL_NodeChildCount(g_ctx.edid);
+	for (i = 0; i < count; i++)
 	{
-		PNODE mon = g_ctx.edid->Children[i].LinkedNode;
+		PNODE mon = NWL_NodeEnumChild(g_ctx.edid, i);
 		LPCSTR id = NWL_NodeAttrGet(mon, "ID");
 		if (id[0] == '-')
 			continue;
@@ -381,13 +382,13 @@ draw_display(struct nk_context* ctx)
 static LPCSTR
 get_drive_letter(PNODE volume)
 {
-	INT i;
 	PNODE vol_path_name = NWL_NodeGetChild(volume, "Volume Path Names");
 	if (!vol_path_name)
 		goto fail;
-	for (i = 0; vol_path_name->Children[i].LinkedNode; i++)
+	INT count = NWL_NodeChildCount(vol_path_name);
+	for (INT i = 0; i < count; i++)
 	{
-		PNODE mnt = vol_path_name->Children[i].LinkedNode;
+		PNODE mnt = NWL_NodeEnumChild(vol_path_name, i);
 		LPCSTR attr = NWL_NodeAttrGet(mnt, "Drive Letter");
 		if (attr[0] != '-')
 			return attr;
@@ -410,15 +411,15 @@ open_folder(LPCSTR drive_letter, LPCSTR volume_guid)
 static VOID
 draw_volume(struct nk_context* ctx, PNODE disk, BOOL cdrom)
 {
-	INT i;
 	PNODE vol = NWL_NodeGetChild(disk, "Volumes");
 	if (!vol)
 		return;
 	nk_layout_row(ctx, NK_DYNAMIC, 0, 5, (float[5]) { 0.12f, 0.18f, 0.4f, 0.3f - g_ctx.gui_ratio, g_ctx.gui_ratio });
-	for (i = 0; vol->Children[i].LinkedNode; i++)
+	INT count = NWL_NodeChildCount(vol);
+	for (INT i = 0; i < count; i++)
 	{
 		struct nk_image img = GET_PNG(IDR_PNG_DIR);
-		PNODE tab = vol->Children[i].LinkedNode;
+		PNODE tab = NWL_NodeEnumChild(vol, i);
 		LPCSTR path = NWL_NodeAttrGet(tab, "Path");
 		LPCSTR drive = get_drive_letter(tab);
 		LPCSTR volume_guid = NWL_NodeAttrGet(tab, "Volume GUID");
@@ -459,18 +460,22 @@ draw_volume_compact(struct nk_context* ctx, PNODE disk)
 	PNODE vol = NWL_NodeGetChild(disk, "Volumes");
 	if (!vol)
 		return;
-	for (i = 0, count = 0; vol->Children[i].LinkedNode; i++)
+	for (i = 0, count = 0; ; i++)
 	{
-		LPCSTR drive = get_drive_letter(vol->Children[i].LinkedNode);
+		PNODE node = NWL_NodeEnumChild(vol, i);
+		if (!node)
+			break;
+		LPCSTR drive = get_drive_letter(node);
 		if (drive)
 			count++;
 	}
 	nk_layout_row_begin(ctx, NK_STATIC, 0, count + 1);
 	nk_layout_row_push(ctx, 0.3f * g_ctx.gui_width);
 	nk_spacer(ctx);
-	for (i = 0; vol->Children[i].LinkedNode; i++)
+	count = NWL_NodeChildCount(vol);
+	for (i = 0; i < count; i++)
 	{
-		PNODE tab = vol->Children[i].LinkedNode;
+		PNODE tab = NWL_NodeEnumChild(vol, i);
 		LPCSTR drive = get_drive_letter(tab);
 		if (!drive)
 			continue;
@@ -485,11 +490,11 @@ draw_volume_compact(struct nk_context* ctx, PNODE disk)
 static VOID
 draw_net_drive(struct nk_context* ctx)
 {
-	INT i;
-	for (i = 0; g_ctx.smb->Children[i].LinkedNode; i++)
+	INT count = NWL_NodeChildCount(g_ctx.smb);
+	for (INT i = 0; i < count; i++)
 	{
-		PNODE nd = g_ctx.smb->Children[i].LinkedNode;
-		if (strcmp(nd->Name, "Drive") != 0)
+		PNODE nd = NWL_NodeEnumChild(g_ctx.smb, i);
+		if (!nd || strcmp(nd->name, "Drive") != 0)
 			continue;
 		LPCSTR local = NWL_NodeAttrGet(nd, "Local Name");
 		LPCSTR remote = NWL_NodeAttrGet(nd, "Remote Name");
@@ -507,9 +512,12 @@ draw_net_drive_compact(struct nk_context* ctx)
 	INT i;
 	INT count = 0;
 	CHAR buf[] = "A";
-	for (i = 0; g_ctx.smb->Children[i].LinkedNode; i++)
+	for (i = 0; ; i++)
 	{
-		if (strcmp(g_ctx.smb->Children[i].LinkedNode->Name, "Drive") != 0)
+		PNODE node = NWL_NodeEnumChild(g_ctx.smb, i);
+		if (!node)
+			break;
+		if (strcmp(node->name, "Drive") != 0)
 			continue;
 		count++;
 	}
@@ -518,10 +526,11 @@ draw_net_drive_compact(struct nk_context* ctx)
 	nk_layout_row_begin(ctx, NK_STATIC, 0, count + 1);
 	nk_layout_row_push(ctx, 0.3f * g_ctx.gui_width);
 	nk_lhsc(ctx, N_(N__NETWORK_DRIVES), NK_TEXT_LEFT, g_color_text_d, nk_false, nk_true);
-	for (i = 0; g_ctx.smb->Children[i].LinkedNode; i++)
+	count = NWL_NodeChildCount(g_ctx.smb);
+	for (i = 0; i < count; i++)
 	{
-		PNODE tab = g_ctx.smb->Children[i].LinkedNode;
-		if (strcmp(tab->Name, "Drive") != 0)
+		PNODE tab = NWL_NodeEnumChild(g_ctx.smb, i);
+		if (strcmp(tab->name, "Drive") != 0)
 			continue;
 		LPCSTR drive = NWL_NodeAttrGet(tab, "Local Name");
 		buf[0] = drive[0];
@@ -535,20 +544,19 @@ draw_net_drive_compact(struct nk_context* ctx)
 static VOID
 draw_storage(struct nk_context* ctx)
 {
-	INT i;
-
 	nk_layout_row(ctx, NK_DYNAMIC, 0, 2, (float[2]) { 1.0f - g_ctx.gui_ratio, g_ctx.gui_ratio });
 	nk_image_label(ctx, GET_PNG(IDR_PNG_DISK), N_(N__STORAGE), NK_TEXT_LEFT, g_color_text_d);
 	if (quick_access_button(ctx, GET_PNG(IDR_PNG_SMART), "S.M.A.R.T."))
 		g_ctx.window_flag |= GUI_WINDOW_SMART;
 
-	for (i = 0; g_ctx.disk->Children[i].LinkedNode; i++)
+	INT count = NWL_NodeChildCount(g_ctx.disk);
+	for (INT i = 0; i < count; i++)
 	{
 		BOOL cdrom;
 		LPCSTR prefix = "HD";
 		LPCSTR path, id;
 		LPCSTR ssd = "";
-		PNODE disk = g_ctx.disk->Children[i].LinkedNode;
+		PNODE disk = NWL_NodeEnumChild(g_ctx.disk, i);
 		if (!disk)
 			continue;
 		path = NWL_NodeAttrGet(disk, "Path");
@@ -629,13 +637,13 @@ draw_storage(struct nk_context* ctx)
 static LPCSTR
 get_first_ipv4(PNODE node)
 {
-	INT i;
 	PNODE unicasts = NWL_NodeGetChild(node, "Unicasts");
 	if (!unicasts)
 		return "";
-	for (i = 0; unicasts->Children[i].LinkedNode; i++)
+	INT count = NWL_NodeChildCount(unicasts);
+	for (INT i = 0; i < count; i++)
 	{
-		PNODE ip = unicasts->Children[i].LinkedNode;
+		PNODE ip = NWL_NodeEnumChild(unicasts, i);
 		LPCSTR addr = NWL_NodeAttrGet(ip, "IPv4");
 		if (strcmp(addr, "-") != 0)
 			return addr;
@@ -646,8 +654,6 @@ get_first_ipv4(PNODE node)
 static VOID
 draw_network(struct nk_context* ctx)
 {
-	INT i;
-
 	nk_layout_row(ctx, NK_DYNAMIC, 0, 4, (float[4]) { 0.64f, 0.18f - g_ctx.gui_ratio, 0.18f, g_ctx.gui_ratio });
 	nk_image_label(ctx, GET_PNG(IDR_PNG_NETWORK), N_(N__NETWORK), NK_TEXT_LEFT, g_color_text_d);
 	nk_lhcf(ctx, NK_TEXT_LEFT, g_color_warning, u8"\u2191 %s", g_ctx.net_traffic.StrSend);
@@ -655,10 +661,11 @@ draw_network(struct nk_context* ctx)
 	if (quick_access_button(ctx, GET_PNG(IDR_PNG_EDIT), NULL))
 		ShellExecuteW(NULL, NULL, L"::{7007ACC7-3202-11D1-AAD2-00805FC1270E}", NULL, NULL, SW_NORMAL);
 
-	for (i = 0; g_ctx.network->Children[i].LinkedNode; i++)
+	INT count = NWL_NodeChildCount(g_ctx.network);
+	for (INT i = 0; i < count; i++)
 	{
 		BOOL is_active = FALSE;
-		PNODE nw = g_ctx.network->Children[i].LinkedNode;
+		PNODE nw = NWL_NodeEnumChild(g_ctx.network, i);
 		struct nk_color color = g_color_error;
 		if (!nw)
 			continue;

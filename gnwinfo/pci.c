@@ -7,7 +7,7 @@ static int tree_id = 0;
 static void draw_pci_node(struct nk_context* ctx, PNODE node)
 {
 	int i;
-	if (!node || !node->Attributes)
+	if (!node || !node->attributes)
 		return;
 	if (nk_tree_image_push_id(ctx, NK_TREE_TAB,
 		GET_PNG(IDR_PNG_PCI),
@@ -15,13 +15,15 @@ static void draw_pci_node(struct nk_context* ctx, PNODE node)
 		NK_MINIMIZED, tree_id++))
 	{
 		const float ratio[] = { 0.2f, 0.8f };
+		INT count = NWL_NodeAttrCount(node);
 		nk_layout_row(ctx, NK_DYNAMIC, 0, 2, ratio);
-		for (i = 0; node->Attributes[i].LinkedAttribute; i++)
+		for (i = 0; i < count; i++)
 		{
-			if (strcmp(node->Attributes[i].LinkedAttribute->Key, "HWID") == 0)
+			PNODE_ATT att = NWL_NodeAttrEnum(node, i);
+			if (!att || strcmp(att->key, "HWID") == 0)
 				continue;
-			nk_l(ctx, node->Attributes[i].LinkedAttribute->Key, NK_TEXT_LEFT);
-			nk_lhc(ctx, node->Attributes[i].LinkedAttribute->Value, NK_TEXT_RIGHT, g_color_text_l);
+			nk_l(ctx, att->key, NK_TEXT_LEFT);
+			nk_lhc(ctx, att->value, NK_TEXT_RIGHT, g_color_text_l);
 		}
 		nk_tree_pop(ctx);
 	}
@@ -31,13 +33,14 @@ void draw_pci_class(struct nk_context* ctx, const char* title, struct nk_image i
 {
 	if (nk_tree_image_push_id(ctx, NK_TREE_TAB, image, title, NK_MINIMIZED, tree_id++))
 	{
-		PNODE_LINK pci;
-		for (pci = &g_ctx.pci->Children[0]; pci->LinkedNode != NULL; pci++)
+		INT count = NWL_NodeChildCount(g_ctx.pci);
+		for (INT i = 0; i < count; i++)
 		{
-			const char* cl = NWL_NodeAttrGet(pci->LinkedNode, "Class Code");
+			PNODE pci = NWL_NodeEnumChild(g_ctx.pci, i);
+			const char* cl = NWL_NodeAttrGet(pci, "Class Code");
 			if (_strnicmp(cl, code, 2) != 0)
 				continue;
-			draw_pci_node(ctx, pci->LinkedNode);
+			draw_pci_node(ctx, pci);
 		}
 		nk_tree_pop(ctx);
 	}
@@ -75,14 +78,14 @@ VOID gnwinfo_draw_pci_window(struct nk_context* ctx, float width, float height)
 	draw_pci_class(ctx, "Encryption controller", GET_PNG(IDR_PNG_FIRMWARE), "10");
 	if (nk_tree_image_push_id(ctx, NK_TREE_TAB, GET_PNG(IDR_PNG_PCI), "Other", NK_MINIMIZED, tree_id++))
 	{
-		PNODE_LINK pci;
-		for (pci = &g_ctx.pci->Children[0]; pci->LinkedNode != NULL; pci++)
+		INT count = NWL_NodeChildCount(g_ctx.pci);
+		for (INT i = 0; i < count; i++)
 		{
-			const char* cl = NWL_NodeAttrGet(pci->LinkedNode, "Class Code");
-			if (cl[0] == '0' ||
-				(cl[0] == '1' && cl[1] == '0'))
+			PNODE pci = NWL_NodeEnumChild(g_ctx.pci, i);
+			const char* cl = NWL_NodeAttrGet(pci, "Class Code");
+			if (cl[0] == '0' || (cl[0] == '1' && cl[1] == '0'))
 				continue;
-			draw_pci_node(ctx, pci->LinkedNode);
+			draw_pci_node(ctx, pci);
 		}
 		nk_tree_pop(ctx);
 	}

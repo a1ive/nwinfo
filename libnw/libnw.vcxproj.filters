@@ -28,6 +28,9 @@
     <Filter Include="winring0">
       <UniqueIdentifier>{9bee2e3b-71a4-48c0-b6f0-58a760a7b8c4}</UniqueIdentifier>
     </Filter>
+    <Filter Include="stb">
+      <UniqueIdentifier>{c3f9e0d1-b521-4ce5-824c-6fd7db11d96d}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="format.h">
@@ -101,6 +104,9 @@
     </ClInclude>
     <ClInclude Include="..\winring0\winring0_priv.h">
       <Filter>winring0</Filter>
+    </ClInclude>
+    <ClInclude Include="..\stb\stb_ds.h">
+      <Filter>stb</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

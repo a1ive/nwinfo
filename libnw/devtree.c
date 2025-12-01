@@ -208,7 +208,7 @@ GetDeviceInfoDefault(PNODE node, void* data, DEVINST devInst, LPCSTR hwIds)
 
 static PNODE AppendDevices(PNODE parent, const char* hub)
 {
-	if (parent->Flags & NFLG_TABLE)
+	if (parent->flags & NFLG_TABLE)
 		return parent;
 	PNODE ret = NWL_NodeGetChild(parent, hub);
 	if (ret)

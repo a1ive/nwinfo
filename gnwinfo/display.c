@@ -15,9 +15,10 @@ draw_key_value(struct nk_context* ctx, PNODE node, LPCSTR key)
 static VOID
 draw_monitors(struct nk_context* ctx)
 {
-	for (INT i = 0; g_ctx.edid->Children[i].LinkedNode; i++)
+	INT count = NWL_NodeChildCount(g_ctx.edid);
+	for (INT i = 0; i < count; i++)
 	{
-		PNODE mon = g_ctx.edid->Children[i].LinkedNode;
+		PNODE mon = NWL_NodeEnumChild(g_ctx.edid, i);
 		LPCSTR id = NWL_NodeAttrGet(mon, "ID");
 		if (id[0] == '-')
 			continue;
@@ -47,21 +48,25 @@ static VOID
 draw_gpu(struct nk_context* ctx)
 {
 	PNODE pci03 = g_ctx.gpu_info.PciList;
-	for (INT i = 0; pci03->Children[i].LinkedNode; i++)
+	INT pci03_count = NWL_NodeChildCount(pci03);
+	for (INT i = 0; i < pci03_count; i++)
 	{
-		PNODE gpu = pci03->Children[i].LinkedNode;
+		PNODE gpu = NWL_NodeEnumChild(pci03, i);
+		if (!gpu)
+			continue;
 		nk_layout_row_dynamic(ctx, 0, 1);
 		nk_image_label(ctx, GET_PNG(IDR_PNG_GPU), NWL_NodeAttrGet(gpu, "HWID"), NK_TEXT_LEFT, g_color_text_l);
 
 		nk_layout_row(ctx, NK_DYNAMIC, 0, 2, (float[2]) { 0.3f, 0.7f });
 
-		for (INT j = 0; gpu->Attributes[j].LinkedAttribute; j++)
+		INT attr_count = NWL_NodeAttrCount(gpu);
+		for (INT j = 0; j < attr_count; j++)
 		{
-			NODE_ATT* att = gpu->Attributes[j].LinkedAttribute;
-			if (strcmp(att->Key, "HWID") == 0)
+			NODE_ATT* att = NWL_NodeAttrEnum(gpu, j);
+			if (!att || strcmp(att->key, "HWID") == 0)
 				continue;
-			nk_lhsc(ctx, att->Key, NK_TEXT_LEFT, g_color_text_d, nk_false, nk_true);
-			nk_lhc(ctx, att->Value, NK_TEXT_RIGHT, g_color_text_l);
+			nk_lhsc(ctx, att->key, NK_TEXT_LEFT, g_color_text_d, nk_false, nk_true);
+			nk_lhc(ctx, att->value, NK_TEXT_RIGHT, g_color_text_l);
 		}
 	}
 }

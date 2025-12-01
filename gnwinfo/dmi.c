@@ -8,7 +8,7 @@ static void draw_dmi_node(struct nk_context* ctx, PNODE node)
 {
 	int i;
 	char name[48];
-	if (!node || !node->Attributes || node->Name[0] != 'T')
+	if (!node || !node->attributes || node->name[0] != 'T')
 		return;
 
 	snprintf(name, sizeof(name), "%s", NWL_NodeAttrGet(node, "Description"));
@@ -18,11 +18,15 @@ static void draw_dmi_node(struct nk_context* ctx, PNODE node)
 	if (nk_tree_push_id(ctx, NK_TREE_TAB, name, NK_MINIMIZED, tree_id++))
 	{
 		const float ratio[] = { 0.4f, 0.6f };
+		INT count = NWL_NodeAttrCount(node);
 		nk_layout_row(ctx, NK_DYNAMIC, 0, 2, ratio);
-		for (i = 0; node->Attributes[i].LinkedAttribute; i++)
+		for (i = 0; i < count; i++)
 		{
-			nk_l(ctx, node->Attributes[i].LinkedAttribute->Key, NK_TEXT_LEFT);
-			nk_lhc(ctx, node->Attributes[i].LinkedAttribute->Value, NK_TEXT_RIGHT, g_color_text_l);
+			PNODE_ATT att = NWL_NodeAttrEnum(node, i);
+			if (!att)
+				continue;
+			nk_l(ctx, att->key, NK_TEXT_LEFT);
+			nk_lhc(ctx, att->value, NK_TEXT_RIGHT, g_color_text_l);
 		}
 		nk_tree_pop(ctx);
 	}
@@ -30,7 +34,6 @@ static void draw_dmi_node(struct nk_context* ctx, PNODE node)
 
 VOID gnwinfo_draw_dmi_window(struct nk_context* ctx, float width, float height)
 {
-	PNODE_LINK dmi;
 	if (!(g_ctx.window_flag & GUI_WINDOW_DMI))
 		return;
 	if (!nk_begin_ex(ctx, "SMBIOS",
@@ -43,9 +46,10 @@ VOID gnwinfo_draw_dmi_window(struct nk_context* ctx, float width, float height)
 	}
 	tree_id = 0;
 
-	for (dmi = &g_ctx.smbios->Children[0]; dmi->LinkedNode != NULL; dmi++)
+	INT count = NWL_NodeChildCount(g_ctx.smbios);
+	for (INT i = 0; i < count; i++)
 	{
-		draw_dmi_node(ctx, dmi->LinkedNode);
+		draw_dmi_node(ctx, NWL_NodeEnumChild(g_ctx.smbios, i));
 	}
 
 out:

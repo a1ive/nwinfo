@@ -28,31 +28,21 @@
 #define NA_BOOL_FALSE			"N"
 
 // Structures
-typedef struct _NODE
-{
-	CHAR* Name;						// Name of the node
-	struct _NODE_ATT_LINK* Attributes;	// Array of attributes linked to the node
-	struct _NODE* Parent;				// Parent node
-	struct _NODE_LINK* Children;		// Array of linked child nodes
-	INT Flags;							// Node configuration flags
-} NODE, * PNODE;
-
-typedef struct _NODE_LINK
-{
-	struct _NODE* LinkedNode;			// Node attached to this node
-} NODE_LINK, * PNODE_LINK;
-
 typedef struct _NODE_ATT
 {
-	char* Key;						// Attribute name
-	char* Value;						// Attribute value string (may be null separated multistring if NAFLG_ARRAY is set)
-	INT Flags;							// Attribute configuration flags
+	char* key; // alloc
+	char* value; // alloc
+	int flags;
 } NODE_ATT, * PNODE_ATT;
 
-typedef struct _NODE_ATT_LINK
+typedef struct _NODE
 {
-	struct _NODE_ATT* LinkedAttribute;	// Attribute linked to this node
-} NODE_ATT_LINK, * PNODE_ATT_LINK;
+	char* name; // alloc
+	struct _NODE* parent; // ptr
+	struct _NODE** children; // dynamic array
+	struct _NODE_ATT* attributes; // string hash map
+	int flags;
+} NODE, * PNODE;
 
 // Functions
 PNODE NWL_NodeAlloc(LPCSTR name, INT flags);
@@ -60,11 +50,13 @@ VOID NWL_NodeFree(PNODE node, INT deep);
 
 INT NWL_NodeDepth(PNODE node);
 INT NWL_NodeChildCount(PNODE node);
+PNODE NWL_NodeEnumChild(PNODE parent, INT index);
 INT NWL_NodeAppendChild(PNODE parent, PNODE child);
 PNODE NWL_NodeAppendNew(PNODE parent, LPCSTR name, INT flags);
 PNODE NWL_NodeGetChild(PNODE parent, LPCSTR name);
 
 INT NWL_NodeAttrCount(PNODE node);
+PNODE_ATT NWL_NodeAttrEnum(PNODE node, INT index);
 LPCSTR NWL_NodeAttrGet(PNODE node, LPCSTR key);
 PNODE_ATT NWL_NodeAttrSet(PNODE node, LPCSTR key, LPCSTR value, INT flags);
 PNODE_ATT

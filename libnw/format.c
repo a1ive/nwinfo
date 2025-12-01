@@ -321,21 +321,24 @@ static INT NWL_NodeToJson(PNODE node, FILE* file)
 
 	// Print header
 	fprintcx(file, NODE_JS_DELIM_INDENT, indent);
-	if (indent_depth > 0 && (node->Flags & NFLG_TABLE_ROW) == 0)
-		fprintf(file, "\"%s\": ", node->Name);
+	if (indent_depth > 0 && (node->flags & NFLG_TABLE_ROW) == 0)
+		fprintf(file, "\"%s\": ", node->name);
 
-	if ((node->Flags & NFLG_TABLE) == 0)
+	if ((node->flags & NFLG_TABLE) == 0)
 		fputs("{", file);
 	else
 		fputs("[", file);
 
 	// Print attributes
-	if (atts > 0 && (node->Flags & NFLG_TABLE) == 0)
+	if (atts > 0 && (node->flags & NFLG_TABLE) == 0)
 	{
 		for (i = 0; i < atts; i++)
 		{
-			PNODE_ATT att = node->Attributes[i].LinkedAttribute;
-			if (att->Value && *att->Value != '\0')
+			PNODE_ATT att = NWL_NodeAttrEnum(node, i);
+			if (!att)
+				continue;
+
+			if (att->value && *att->value != '\0')
 			{
 				if (plural)
 					fputs(",", file);
@@ -343,34 +346,34 @@ static INT NWL_NodeToJson(PNODE node, FILE* file)
 				// Print attribute name
 				fputs(NODE_JS_DELIM_NL, file);
 				fprintcx(file, NODE_JS_DELIM_INDENT, indent + 1);
-				fprintf(file, "\"%s\": ", att->Key);
+				fprintf(file, "\"%s\": ", att->key);
 
 				// Print value
-				if (att->Flags & NAFLG_ARRAY)
+				if (att->flags & NAFLG_ARRAY)
 				{
 					char* c;
 					fputs("[ ", file);
-					for (c = att->Value; *c != '\0'; c += strlen(c) + 1)
+					for (c = att->value; *c != '\0'; c += strlen(c) + 1)
 					{
-						if (c != att->Value)
+						if (c != att->value)
 							fputs(", ", file);
 						JsonEscapeContent(c, NWLC->NwBuf, NWINFO_BUFSZ);
 						fprintf(file, "\"%s\"", NWLC->NwBuf);
 					}
 					fputs(" ]", file);
 				}
-				else if (att->Flags & NAFLG_FMT_NUMERIC)
-					fputs(att->Value, file);
-				else if (att->Flags & NAFLG_FMT_BOOLEAN)
+				else if (att->flags & NAFLG_FMT_NUMERIC)
+					fputs(att->value, file);
+				else if (att->flags & NAFLG_FMT_BOOLEAN)
 				{
-					if (strcmp(att->Value, NA_BOOL_TRUE) == 0)
+					if (strcmp(att->value, NA_BOOL_TRUE) == 0)
 						fputs(NODE_JS_BOOL_TRUE, file);
 					else
 						fputs(NODE_JS_BOOL_FALSE, file);
 				}
 				else
 				{
-					JsonEscapeContent(att->Value, NWLC->NwBuf, NWINFO_BUFSZ);
+					JsonEscapeContent(att->value, NWLC->NwBuf, NWINFO_BUFSZ);
 					fprintf(file, "\"%s\"", NWLC->NwBuf);
 				}
 				plural = 1;
@@ -384,11 +387,15 @@ static INT NWL_NodeToJson(PNODE node, FILE* file)
 		indent_depth++;
 		for (i = 0; i < children; i++)
 		{
+			PNODE child = NWL_NodeEnumChild(node, i);
+			if (!child)
+				continue;
+
 			if (plural)
 				fputs(",", file);
 
 			fputs(NODE_JS_DELIM_NL, file);
-			nodes += NWL_NodeToJson(node->Children[i].LinkedNode, file);
+			nodes += NWL_NodeToJson(child, file);
 			plural = 1;
 		}
 		indent_depth--;
@@ -399,7 +406,7 @@ static INT NWL_NodeToJson(PNODE node, FILE* file)
 		fputs(NODE_JS_DELIM_NL, file);
 		fprintcx(file, NODE_JS_DELIM_INDENT, indent);
 	}
-	if ((node->Flags & NFLG_TABLE) == 0)
+	if ((node->flags & NFLG_TABLE) == 0)
 		fputs("}", file);
 	else
 		fputs("]", file);
@@ -414,15 +421,15 @@ static INT NWL_NodeToYaml(PNODE node, FILE* file)
 	int children = NWL_NodeChildCount(node);
 	PNODE child = NULL;
 
-	if (!node->Parent)
+	if (!node->parent)
 		fputs("---"NODE_YAML_DELIM_NL, file);
 
 	fprintcx(file, NODE_YAML_DELIM_INDENT, indent_depth);
 
-	if (NFLG_TABLE_ROW & node->Flags)
+	if (NFLG_TABLE_ROW & node->flags)
 		fputs("- ", file);
 
-	fprintf(file, "%s:", node->Name);
+	fprintf(file, "%s:", node->name);
 
 	// Print attributes
 	if (atts > 0)
@@ -430,17 +437,19 @@ static INT NWL_NodeToYaml(PNODE node, FILE* file)
 		fputs(NODE_YAML_DELIM_NL, file);
 		for (i = 0; i < atts; i++)
 		{
-			PNODE_ATT att = node->Attributes[i].LinkedAttribute;
+			PNODE_ATT att = NWL_NodeAttrEnum(node, i);
+			if (!att)
+				continue;
 
 			fprintcx(file, NODE_YAML_DELIM_INDENT, indent_depth + 1);
-			fprintf(file, "%s: ", att->Key);
-			if (att->Flags & NAFLG_ARRAY)
+			fprintf(file, "%s: ", att->key);
+			if (att->flags & NAFLG_ARRAY)
 			{
 				char* c;
 				fputs("[ ", file);
-				for (c = att->Value; *c != '\0'; c += strlen(c) + 1)
+				for (c = att->value; *c != '\0'; c += strlen(c) + 1)
 				{
-					if (c != att->Value)
+					if (c != att->value)
 						fputs(", ", file);
 					YamlEscapeContent(c, NWLC->NwBuf, NWINFO_BUFSZ);
 					fprintf(file, "\'%s\'", NWLC->NwBuf);
@@ -449,10 +458,10 @@ static INT NWL_NodeToYaml(PNODE node, FILE* file)
 			}
 			else
 			{
-				CHAR* attVal = (att->Value && *att->Value != '\0') ? att->Value : "~";
-				if (att->Flags & NAFLG_FMT_NUMERIC)
+				CHAR* attVal = (att->value && *att->value != '\0') ? att->value : "~";
+				if (att->flags & NAFLG_FMT_NUMERIC)
 					fputs(attVal, file);
-				else if (att->Flags & NAFLG_FMT_BOOLEAN)
+				else if (att->flags & NAFLG_FMT_BOOLEAN)
 				{
 					if (strcmp(attVal, NA_BOOL_TRUE) == 0)
 						fputs(NODE_YAML_BOOL_TRUE, file);
@@ -461,7 +470,6 @@ static INT NWL_NodeToYaml(PNODE node, FILE* file)
 				}
 				else
 				{
-					attVal = (att->Value && *att->Value != '\0') ? att->Value : "~";
 					YamlEscapeContent(attVal, NWLC->NwBuf, NWINFO_BUFSZ);
 					fprintf(file, "\'%s\'", NWLC->NwBuf);
 				}
@@ -478,7 +486,9 @@ static INT NWL_NodeToYaml(PNODE node, FILE* file)
 		indent_depth++;
 		for (i = 0; i < children; i++)
 		{
-			child = node->Children[i].LinkedNode;
+			child = NWL_NodeEnumChild(node, i);
+			if (!child)
+				continue;
 			NWL_NodeToYaml(child, file);
 		}
 		indent_depth--;
@@ -500,24 +510,26 @@ static INT NWL_NodeToLua(PNODE node, FILE* file)
 	int plural = 0;
 	int indent = indent_depth;
 
-	if (!node->Parent)
+	if (!node->parent)
 		fputs("_NWINFO = ", file);
 
 	// Print header
 	fprintcx(file, NODE_LUA_DELIM_INDENT, indent);
-	if (indent_depth > 0 && (node->Flags & NFLG_TABLE_ROW) == 0)
-		fprintf(file, "[\"%s\"] = ", node->Name);
+	if (indent_depth > 0 && (node->flags & NFLG_TABLE_ROW) == 0)
+		fprintf(file, "[\"%s\"] = ", node->name);
 
-	//if ((node->Flags & NFLG_TABLE) == 0)
+	//if ((node->flags & NFLG_TABLE) == 0)
 	fputs("{", file);
 
 	// Print attributes
-	if (atts > 0 && (node->Flags & NFLG_TABLE) == 0)
+	if (atts > 0 && (node->flags & NFLG_TABLE) == 0)
 	{
 		for (i = 0; i < atts; i++)
 		{
-			PNODE_ATT att = node->Attributes[i].LinkedAttribute;
-			if (att->Value && *att->Value != '\0')
+			PNODE_ATT att = NWL_NodeAttrEnum(node, i);
+			if (!att)
+				continue;
+			if (att->value && *att->value != '\0')
 			{
 				if (plural)
 					fputs(",", file);
@@ -525,32 +537,32 @@ static INT NWL_NodeToLua(PNODE node, FILE* file)
 				// Print attribute name
 				fputs(NODE_LUA_DELIM_NL, file);
 				fprintcx(file, NODE_LUA_DELIM_INDENT, indent + 1);
-				fprintf(file, "[\"%s\"] = ", att->Key);
+				fprintf(file, "[\"%s\"] = ", att->key);
 
 				// Print value
-				if (att->Flags & NAFLG_ARRAY)
+				if (att->flags & NAFLG_ARRAY)
 				{
 					char* c;
 					fputs("{ ", file);
-					for (c = att->Value; *c != '\0'; c += strlen(c) + 1)
+					for (c = att->value; *c != '\0'; c += strlen(c) + 1)
 					{
-						if (c != att->Value)
+						if (c != att->value)
 							fputs(", ", file);
 						LuaEscapeContent(c, NWLC->NwBuf, NWINFO_BUFSZ);
 						fprintf(file, "\"%s\"", NWLC->NwBuf);
 					}
 					fputs(" }", file);
 				}
-				else if (att->Flags & NAFLG_FMT_BOOLEAN)
+				else if (att->flags & NAFLG_FMT_BOOLEAN)
 				{
-					if (strcmp(att->Value, NA_BOOL_TRUE) == 0)
+					if (strcmp(att->value, NA_BOOL_TRUE) == 0)
 						fputs(NODE_LUA_BOOL_TRUE, file);
 					else
 						fputs(NODE_LUA_BOOL_FALSE, file);
 				}
 				else
 				{
-					LuaEscapeContent(att->Value, NWLC->NwBuf, NWINFO_BUFSZ);
+					LuaEscapeContent(att->value, NWLC->NwBuf, NWINFO_BUFSZ);
 					fprintf(file, "\"%s\"", NWLC->NwBuf);
 				}
 				plural = 1;
@@ -564,11 +576,15 @@ static INT NWL_NodeToLua(PNODE node, FILE* file)
 		indent_depth++;
 		for (i = 0; i < children; i++)
 		{
+			PNODE child = NWL_NodeEnumChild(node, i);
+			if (!child)
+				continue;
+
 			if (plural)
 				fputs(",", file);
 
 			fputs(NODE_LUA_DELIM_NL, file);
-			nodes += NWL_NodeToLua(node->Children[i].LinkedNode, file);
+			nodes += NWL_NodeToLua(child, file);
 			plural = 1;
 		}
 		indent_depth--;
@@ -579,7 +595,7 @@ static INT NWL_NodeToLua(PNODE node, FILE* file)
 		fputs(NODE_LUA_DELIM_NL, file);
 		fprintcx(file, NODE_LUA_DELIM_INDENT, indent);
 	}
-	//if ((node->Flags & NFLG_TABLE) == 0)
+	//if ((node->flags & NFLG_TABLE) == 0)
 	fputs("}", file);
 	return nodes;
 }
@@ -593,9 +609,9 @@ static int NWL_NodeToTree(PNODE node, FILE* file)
 
 	// Print node name with indentation
 	fprintcx(file, NODE_TREE_DELIM_INDENT, indent_depth);
-	if (node->Parent)
+	if (node->parent)
 		fputs(NODE_TREE_BRANCH, file);
-	fprintf(file, "%s", node->Name);
+	fprintf(file, "%s", node->name);
 	fputs(NODE_TREE_DELIM_NL, file);
 
 	// Increase indent for attributes and children
@@ -606,21 +622,24 @@ static int NWL_NodeToTree(PNODE node, FILE* file)
 	{
 		for (i = 0; i < atts; i++)
 		{
-			PNODE_ATT att = node->Attributes[i].LinkedAttribute;
+			PNODE_ATT att = NWL_NodeAttrEnum(node, i);
+			if (!att)
+				continue;
+
 			// Skip attributes with no value
-			if (!att->Value || *att->Value == '\0')
+			if (!att->value || *att->value == '\0')
 				continue;
 
 			fprintcx(file, NODE_TREE_DELIM_INDENT, indent_depth);
 			fputs(NODE_TREE_LEAF, file);
-			fprintf(file, "%s: ", att->Key);
+			fprintf(file, "%s: ", att->key);
 
 			// Print value
-			if (att->Flags & NAFLG_ARRAY)
+			if (att->flags & NAFLG_ARRAY)
 			{
 				char* c;
 				int first = 1;
-				for (c = att->Value; *c != '\0'; c += strlen(c) + 1)
+				for (c = att->value; *c != '\0'; c += strlen(c) + 1)
 				{
 					if (!first)
 						fputs(", ", file);
@@ -629,16 +648,16 @@ static int NWL_NodeToTree(PNODE node, FILE* file)
 					first = 0;
 				}
 			}
-			else if (att->Flags & NAFLG_FMT_BOOLEAN)
+			else if (att->flags & NAFLG_FMT_BOOLEAN)
 			{
-				if (strcmp(att->Value, NA_BOOL_TRUE) == 0)
+				if (strcmp(att->value, NA_BOOL_TRUE) == 0)
 					fputs(NODE_TREE_BOOL_TRUE, file);
 				else
 					fputs(NODE_TREE_BOOL_FALSE, file);
 			}
 			else
 			{
-				TreeEscapeContent(att->Value, NWLC->NwBuf, NWINFO_BUFSZ);
+				TreeEscapeContent(att->value, NWLC->NwBuf, NWINFO_BUFSZ);
 				fprintf(file, "%s", NWLC->NwBuf);
 			}
 			fputs(NODE_TREE_DELIM_NL, file);
@@ -652,7 +671,9 @@ static int NWL_NodeToTree(PNODE node, FILE* file)
 		fputs(NODE_TREE_SUB NODE_TREE_DELIM_NL, file);
 		for (i = 0; i < children; i++)
 		{
-			PNODE child = node->Children[i].LinkedNode;
+			PNODE child = NWL_NodeEnumChild(node, i);
+			if (!child)
+				continue;
 			count += NWL_NodeToTree(child, file);
 		}
 	}
@@ -671,7 +692,7 @@ static int NWL_NodeToHtml(PNODE node, FILE* file)
 	int children = NWL_NodeChildCount(node);
 
 	// Print HTML header for the root node
-	if (!node->Parent)
+	if (!node->parent)
 	{
 		fputs("<!DOCTYPE html>\n"
 			"<html>\n<head>\n"
@@ -700,7 +721,7 @@ static int NWL_NodeToHtml(PNODE node, FILE* file)
 	// Node name in <summary>
 	fprintcx(file, "  ", indent_depth + 1);
 	fputs("<summary>", file);
-	HtmlEscapeContent(node->Name, NWLC->NwBuf, NWINFO_BUFSZ);
+	HtmlEscapeContent(node->name, NWLC->NwBuf, NWINFO_BUFSZ);
 	fprintf(file, "%s</summary>\n", NWLC->NwBuf);
 
 	// Increase indent for attributes and children
@@ -715,22 +736,25 @@ static int NWL_NodeToHtml(PNODE node, FILE* file)
 		fputs("<ul>\n", file);
 		for (i = 0; i < atts; i++)
 		{
-			PNODE_ATT att = node->Attributes[i].LinkedAttribute;
-			if (!att->Value || *att->Value == '\0')
+			PNODE_ATT att = NWL_NodeAttrEnum(node, i);
+			if (!att)
+				continue;
+
+			if (!att->value || *att->value == '\0')
 				continue;
 
 			fprintcx(file, "  ", indent_depth + 1);
 			fputs("<li>", file);
 			// Key
-			HtmlEscapeContent(att->Key, NWLC->NwBuf, NWINFO_BUFSZ);
+			HtmlEscapeContent(att->key, NWLC->NwBuf, NWINFO_BUFSZ);
 			fprintf(file, "<span class=\"key\">%s:</span> ", NWLC->NwBuf);
 			// Value
 			fputs("<span class=\"value\">", file);
-			if (att->Flags & NAFLG_ARRAY)
+			if (att->flags & NAFLG_ARRAY)
 			{
 				char* c;
 				int first = 1;
-				for (c = att->Value; *c != '\0'; c += strlen(c) + 1)
+				for (c = att->value; *c != '\0'; c += strlen(c) + 1)
 				{
 					if (!first)
 						fputs(", ", file);
@@ -739,16 +763,16 @@ static int NWL_NodeToHtml(PNODE node, FILE* file)
 					first = 0;
 				}
 			}
-			else if (att->Flags & NAFLG_FMT_BOOLEAN)
+			else if (att->flags & NAFLG_FMT_BOOLEAN)
 			{
-				if (strcmp(att->Value, NA_BOOL_TRUE) == 0)
+				if (strcmp(att->value, NA_BOOL_TRUE) == 0)
 					fputs(NODE_TREE_BOOL_TRUE, file); // "Yes"
 				else
 					fputs(NODE_TREE_BOOL_FALSE, file); // "No"
 			}
 			else
 			{
-				HtmlEscapeContent(att->Value, NWLC->NwBuf, NWINFO_BUFSZ);
+				HtmlEscapeContent(att->value, NWLC->NwBuf, NWINFO_BUFSZ);
 				fprintf(file, "%s", NWLC->NwBuf);
 			}
 			fputs("</span></li>\n", file);
@@ -764,7 +788,9 @@ static int NWL_NodeToHtml(PNODE node, FILE* file)
 	{
 		for (i = 0; i < children; i++)
 		{
-			PNODE child = node->Children[i].LinkedNode;
+			PNODE child = NWL_NodeEnumChild(node, i);
+			if (!child)
+				continue;
 			count += NWL_NodeToHtml(child, file);
 		}
 	}
@@ -776,7 +802,7 @@ static int NWL_NodeToHtml(PNODE node, FILE* file)
 	fputs("</details>\n", file);
 
 	// Print HTML footer for the root node
-	if (!node->Parent)
+	if (!node->parent)
 	{
 		fputs("</body>\n</html>\n", file);
 	}

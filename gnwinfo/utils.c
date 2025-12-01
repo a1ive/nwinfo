@@ -19,10 +19,10 @@ gnwinfo_get_color(double value, double warn, double err)
 LPCSTR
 gnwinfo_get_smbios_attr(LPCSTR type, LPCSTR key, PVOID ctx, BOOL(*cond)(PNODE node, PVOID ctx))
 {
-	INT i;
-	for (i = 0; g_ctx.smbios->Children[i].LinkedNode; i++)
+	INT count = NWL_NodeChildCount(g_ctx.smbios);
+	for (INT i = 0; i < count; i++)
 	{
-		PNODE tab = g_ctx.smbios->Children[i].LinkedNode;
+		PNODE tab = NWL_NodeEnumChild(g_ctx.smbios, i);
 		LPCSTR attr = NWL_NodeAttrGet(tab, "Table Type");
 		if (strcmp(attr, type) != 0)
 			continue;
