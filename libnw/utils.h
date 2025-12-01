@@ -4,7 +4,7 @@
 #define VC_EXTRALEAN
 #include <windows.h>
 #include <cfgmgr32.h>
-#include "format.h"
+#include "node.h"
 #include "nt.h"
 
 struct RAW_SMBIOS_DATA;

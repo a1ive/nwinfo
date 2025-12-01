@@ -142,7 +142,7 @@
     <ClInclude Include="devtree.h" />
     <ClInclude Include="disk.h" />
     <ClInclude Include="efivars.h" />
-    <ClInclude Include="format.h" />
+    <ClInclude Include="node.h" />
     <ClInclude Include="gpu\adl.h" />
     <ClInclude Include="gpu\gpu.h" />
     <ClInclude Include="gpu\igcl.h" />
@@ -150,7 +150,7 @@
     <ClInclude Include="libnw.h" />
     <ClInclude Include="nt.h" />
     <ClInclude Include="smbios.h" />
-    <ClInclude Include="smbus.h" />
+    <ClInclude Include="smbus\smbus.h" />
     <ClInclude Include="utils.h" />
     <ClInclude Include="vbr.h" />
     <ClInclude Include="version.h" />
@@ -197,12 +197,12 @@
     <ClCompile Include="productpolicy.c" />
     <ClCompile Include="smb.c" />
     <ClCompile Include="smbios.c" />
-    <ClCompile Include="smbus.c" />
+    <ClCompile Include="smbus\smbus.c" />
     <ClCompile Include="smbus\smbus_i801.c" />
     <ClCompile Include="smbus\smbus_piix4.c" />
     <ClCompile Include="spd.c" />
     <ClCompile Include="sys.c" />
-    <ClCompile Include="table.c" />
+    <ClCompile Include="node.c" />
     <ClCompile Include="uefi.c" />
     <ClCompile Include="usb.c" />
     <ClCompile Include="utils.c" />

@@ -10,7 +10,7 @@
 extern "C" {
 #endif
 
-#include "format.h"
+#include "node.h"
 
 #define NWINFO_BUFSZ 65535
 #define NWINFO_BUFSZW (NWINFO_BUFSZ / sizeof(WCHAR))

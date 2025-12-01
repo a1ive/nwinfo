@@ -4,7 +4,7 @@
 #define VC_EXTRALEAN
 #include <windows.h>
 #include <cfgmgr32.h>
-#include "format.h"
+#include "node.h"
 
 //typedef void* DEVTREE_CTX;
 

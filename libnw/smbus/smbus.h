@@ -4,7 +4,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <winring0.h>
-#include "libnw.h"
+#include "../libnw.h"
 
 #define SM_OK             0
 #define SM_ERR_GENERIC    -1

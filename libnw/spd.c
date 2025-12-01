@@ -7,7 +7,7 @@
 
 #include "libnw.h"
 #include "utils.h"
-#include "smbus.h"
+#include "smbus/smbus.h"
 
 // https://www.ti.com/lit/ug/smmu001/smmu001.pdf
 // https://github.com/hardinfo2/hardinfo2/blob/master/modules/devices/spd-decode.c

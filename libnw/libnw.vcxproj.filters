@@ -33,7 +33,7 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="format.h">
+    <ClInclude Include="node.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="libnw.h">
@@ -87,9 +87,6 @@
     <ClInclude Include="gpu\nvapi.h">
       <Filter>gpu</Filter>
     </ClInclude>
-    <ClInclude Include="smbus.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="cpu\rdmsr.h">
       <Filter>cpu</Filter>
     </ClInclude>
@@ -107,6 +104,9 @@
     </ClInclude>
     <ClInclude Include="..\stb\stb_ds.h">
       <Filter>stb</Filter>
+    </ClInclude>
+    <ClInclude Include="smbus\smbus.h">
+      <Filter>smbus</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -188,7 +188,7 @@
     <ClCompile Include="libcdi.c">
       <Filter>libcdi</Filter>
     </ClCompile>
-    <ClCompile Include="table.c">
+    <ClCompile Include="node.c">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="devtree.c">
@@ -220,9 +220,6 @@
     </ClCompile>
     <ClCompile Include="gpu\gpuz_shm.c">
       <Filter>gpu</Filter>
-    </ClCompile>
-    <ClCompile Include="smbus.c">
-      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="smbus\smbus_i801.c">
       <Filter>smbus</Filter>
@@ -259,6 +256,9 @@
     </ClCompile>
     <ClCompile Include="..\winring0\pawnio.c">
       <Filter>winring0</Filter>
+    </ClCompile>
+    <ClCompile Include="smbus\smbus.c">
+      <Filter>smbus</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

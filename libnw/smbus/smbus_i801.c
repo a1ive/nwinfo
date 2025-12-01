@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: Unlicense
 
-#include "../smbus.h"
+#include "smbus.h"
 #include <windows.h>
 #include <stdio.h>
 
