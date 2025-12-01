@@ -53,7 +53,7 @@ Exports active physical network interfaces with IPv4 addresses to `report.html` 
 
 - --format=`FORMAT`  
   Specify output format.  
-  `FORMAT` can be `YAML` (default), `JSON`, `LUA`, `TREE` and `HTML`.  
+  `FORMAT` can be `YAML` (default), `JSON`, `LUA`, `TREE`, or `HTML`.  
 - --output=`FILE`  
   Write to `FILE` instead of printing to screen.  
 - --cp=`CODEPAGE`  
@@ -134,15 +134,15 @@ Exports active physical network interfaces with IPv4 addresses to `report.html` 
   - `FLAGS`  
     `MENU` Print UEFI boot menus.  
     `VARS` List all UEFI variables.  
- - --audio  
-   Print audio devices.  
- - --gpu  
-   Print GPU utilization and sensors (e.g. temperature).  
-   GPU drivers are required to access this information.  
-   NVIDIA (NVAPI), AMD (ADL2) and Intel (IGCL) are supported.  
- - --device[=`TYPE`]  
-   Print device tree.  
-   `TYPE` specifies the type of the devices, e.g. `ACPI`, `SWD`, `PCI` or `USB`.  
+- --audio  
+  Print audio devices.  
+- --gpu  
+  Print GPU utilization and sensors (e.g. temperature).  
+  GPU drivers are required to access this information.  
+  NVIDIA (NVAPI), AMD (ADL2) and Intel (IGCL) are supported.  
+- --device[=`TYPE`]  
+  Print device tree.  
+  `TYPE` specifies the type of the devices, e.g. `ACPI`, `SWD`, `PCI`, or `USB`.  
 
 ### System Information
 
@@ -244,6 +244,37 @@ Uninstall the PawnIO driver silently using the following command:
 ```bat
 .\PawnIOSetup.exe -uninstall -silent
 ```
+
+<div style="page-break-after: always;"></div>
+
+## File List
+
+This section describes all files included in the final release package.
+
+| File Name | Category | Description |
+|-----------|----------|-------------|
+| `nwinfo.exe` | Executable | Main executable (x64) |
+| `nwinfox86.exe` | Executable | Main executable (x86) |
+| `gnwinfo.exe` | Executable | GUI executable (x64) |
+| `gnwinfox86.exe` | Executable | GUI executable (x86) |
+| `hw_report.ps1` | Script | Example PowerShell script |
+| `libcdi.dll` | Library | S.M.A.R.T. data access library (x86) |
+| `libcdix64.dll` | Library | S.M.A.R.T. data access library (x64) |
+| `gnwinfo.ini` | Configuration | Configuration file for the GUI |
+| `pci.ids` | Database | PCI database |
+| `usb.ids` | Database | USB database |
+| `pnp.ids` | Database | PnP (monitor) vendor database |
+| `jep106.ids` | Database | JEDEC memory module vendor database |
+| `HwRwDrvx64.sys` | Driver | HwRwDrv driver (x64) |
+| `HwRwDrv.sys` | Driver | HwRwDrv driver (x86) |
+| `PawnIOSetup.exe` | Driver | PawnIO driver installer (x64) |
+| `IntelMSR.bin` | PawnIO Module | Intel MSR module for PawnIO driver |
+| `AMDFamily0F.bin` | PawnIO Module | AMD K8 MSR module for PawnIO driver |
+| `AMDFamily10.bin` | PawnIO Module | AMD K10 MSR module for PawnIO driver |
+| `AMDFamily17.bin` | PawnIO Module | AMD Zen MSR module for PawnIO driver |
+| `RyzenSMU.bin` | PawnIO Module | AMD Ryzen SMU module for PawnIO driver |
+| `SmbusPIIX4.bin` | PawnIO Module | PIIX4 SMBus module for PawnIO driver |
+| `SmbusI801.bin` | PawnIO Module | I801 SMBus module for PawnIO driver |
 
 <div style="page-break-after: always;"></div>
 
