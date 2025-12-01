@@ -16,6 +16,7 @@
     <ClCompile Include="nwinfo.c" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="optparse.h" />
     <ClInclude Include="resource.h" />
   </ItemGroup>
   <ItemGroup>
@@ -24,6 +25,7 @@
   <ItemGroup>
     <None Include=".github\dependabot.yml" />
     <None Include=".github\workflows\msbuild.yml" />
+    <None Include=".gitignore" />
     <None Include="copy_res.ps1" />
     <None Include="docs\README.md" />
     <CopyFileToFolders Include="hw_report.ps1">

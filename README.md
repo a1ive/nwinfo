@@ -45,9 +45,10 @@ For details, see [CLI (nwinfo)](./docs/README.md#cli-nwinfo) in the documentatio
 This project is licensed under the [Unlicense](https://unlicense.org/) license.
 
 * [libcpuid](https://libcpuid.sourceforge.net)
-* [SysInv](https://github.com/cavaliercoder/sysinv)
 * [CrystalDiskInfo](https://github.com/hiyohiyo/CrystalDiskInfo)
 * [Nuklear](https://github.com/Immediate-Mode-UI/Nuklear)
+* [stb](https://github.com/nothings/stb)
+* [optparse](https://github.com/skeeto/optparse)
 * [hwdata](https://github.com/vcrhonek/hwdata)
 * [Linux USB](http://www.linux-usb.org)
 * [The PCI ID Repository](https://pci-ids.ucw.cz)

@@ -4,7 +4,78 @@
 #include <version.h>
 #include "libcdi/libcdi.h"
 
+#define OPTPARSE_IMPLEMENTATION
+#define OPTPARSE_API static
+#include "optparse.h"
+
 static NWLIB_CONTEXT nwContext;
+
+enum
+{
+	NW_OPT_HELP = 0,
+	NW_OPT_HELP_WIN32,
+	NW_OPT_FORMAT,
+	NW_OPT_OUTPUT,
+	NW_OPT_CP,
+	NW_OPT_HUMAN,
+	NW_OPT_BIN,
+	NW_OPT_DEBUG,
+	NW_OPT_HIDE_SENSITIVE,
+	NW_OPT_SYS,
+	NW_OPT_CPU,
+	NW_OPT_NET,
+	NW_OPT_ACPI,
+	NW_OPT_SMBIOS,
+	NW_OPT_DISK,
+	NW_OPT_SMART,
+	NW_OPT_DISPLAY,
+	NW_OPT_PCI,
+	NW_OPT_USB,
+	NW_OPT_SPD,
+	NW_OPT_BATTERY,
+	NW_OPT_UEFI,
+	NW_OPT_SHARES,
+	NW_OPT_AUDIO,
+	NW_OPT_PUBLIC_IP,
+	NW_OPT_PRODUCT_POLICY,
+	NW_OPT_GPU,
+	NW_OPT_FONT,
+	NW_OPT_DEVICE,
+};
+
+static struct optparse_option nwOptions[] =
+{
+	{ "help", 'h', OPTPARSE_NONE },
+	{ "?", '?', OPTPARSE_NONE },
+	{ "format", 'f', OPTPARSE_REQUIRED},
+	{ "output", 'o', OPTPARSE_REQUIRED},
+	{ "cp", 'c', OPTPARSE_REQUIRED},
+	{ "human", 'u', OPTPARSE_NONE},
+	{ "bin", 'b', OPTPARSE_REQUIRED},
+	{ "debug", 'd', OPTPARSE_NONE},
+	{ "hide-sensitive", 'i', OPTPARSE_NONE},
+	{ "sys", 0, OPTPARSE_NONE },
+	{ "cpu", 0, OPTPARSE_OPTIONAL },
+	{ "net", 0, OPTPARSE_OPTIONAL },
+	{ "acpi", 0, OPTPARSE_OPTIONAL },
+	{ "smbios", 0, OPTPARSE_OPTIONAL },
+	{ "disk", 0, OPTPARSE_OPTIONAL },
+	{ "smart", 0, OPTPARSE_REQUIRED },
+	{ "display", 0, OPTPARSE_NONE },
+	{ "pci", 0, OPTPARSE_OPTIONAL },
+	{ "usb", 0, OPTPARSE_NONE },
+	{ "spd", 0, OPTPARSE_OPTIONAL },
+	{ "battery", 0, OPTPARSE_NONE },
+	{ "uefi", 0, OPTPARSE_OPTIONAL },
+	{ "shares", 0, OPTPARSE_NONE },
+	{ "audio", 0, OPTPARSE_NONE },
+	{ "public-ip", 0, OPTPARSE_NONE },
+	{ "product-policy", 0, OPTPARSE_OPTIONAL },
+	{ "gpu", 0, OPTPARSE_NONE },
+	{ "font", 0, OPTPARSE_NONE },
+	{ "device", 0, OPTPARSE_OPTIONAL },
+	{ 0, 0, 0 },
+};
 
 static void nwinfo_help(void)
 {
@@ -98,50 +169,45 @@ typedef struct _NW_ARG_FILTER
 } NW_ARG_FILTER;
 
 static char*
-nwinfo_get_opts(char* arg, UINT64* flag, int count, NW_ARG_FILTER* filter, const char* extra)
+nwinfo_get_opts(const char* arg, UINT64* flag, int count, const NW_ARG_FILTER* filter, const char* extra)
 {
-	int i;
-	int argc;
-	char* p;
+	char* dup;
+	char* token;
 	char* str = NULL;
-	char** argv;
-	size_t len = 0;
+	size_t len = extra ? strlen(extra) : 0;
 
-	if (arg[0] != '=')
+	if (!arg || !*arg)
 		return NULL;
-	for (p = arg, argc = 0; p; p = strchr(p, ','), argc++)
-		p++;
-	argv = calloc(argc, sizeof(char*));
-	if (!argv)
-		return NULL;
-	for (p = arg, i = 0; p; p = strchr(p, ','), i++)
-	{
-		*p = '\0';
-		p++;
-		argv[i] = p;
-	}
-	if (extra)
-		len = strlen(extra);
 
-	for (i = 0; i < argc; i++)
+	dup = _strdup(arg);
+	if (!dup)
+		return NULL;
+
+	for (token = dup; token && *token; )
 	{
-		if (extra && _strnicmp(argv[i], extra, len) == 0)
+		char* next = strchr(token, ',');
+		if (next)
+			*next++ = '\0';
+
+		if (extra && _strnicmp(token, extra, len) == 0)
 		{
-			str = argv[i];
-			continue;
+			free(str);
+			str = _strdup(token);
 		}
-		for (int j = 0; j < count; j++)
+		else
 		{
-			if (_stricmp(argv[i], filter[j].arg) == 0)
+			for (int j = 0; j < count; j++)
 			{
-				*flag |= filter[j].flag;
-				break;
+				if (_stricmp(token, filter[j].arg) == 0)
+				{
+					*flag |= filter[j].flag;
+					break;
+				}
 			}
 		}
+		token = next;
 	}
-	if (str)
-		str = _strdup(str);
-	free(argv);
+	free(dup);
 	return str;
 }
 
@@ -159,60 +225,72 @@ int main(int argc, char* argv[])
 	nwContext.AcpiTable = 0;
 	nwContext.SmbiosType = 127;
 	nwContext.DiskPath = NULL;
-	
-	for (int i = 0; i < argc; i++)
+	for (int i = 1; i < argc; i++)
 	{
-		if (i == 0 && argc > 1)
-			continue;
-		else if (_stricmp(argv[i], "--help") == 0
-			|| _stricmp(argv[i], "-h") == 0
-			|| _stricmp(argv[i], "/h") == 0
-			|| _stricmp(argv[i], "/?") == 0)
+		if (_stricmp(argv[i], "/h") == 0 || _stricmp(argv[i], "/?") == 0)
 		{
 			nwinfo_help();
-			exit(0);
+			return 0;
 		}
-		else if (_strnicmp(argv[i], "--format=", 9) == 0 && argv[i][9])
+	}
+	struct optparse options;
+	optparse_init(&options, argv);
+
+	for (;;)
+	{
+		int option = optparse(&options, nwOptions, NULL);
+		if (option == OPTPARSE_DONE)
+			break;
+
+		switch (option)
 		{
-			if (_stricmp(&argv[i][9], "YAML") == 0)
+		case OPTPARSE_ERR:
+			fprintf(stderr, "Error: %s\n", options.errmsg);
+			return 1;
+		case NW_OPT_HELP:
+		case NW_OPT_HELP_WIN32:
+			nwinfo_help();
+			return 0;
+		case NW_OPT_FORMAT:
+			if (_stricmp(options.optarg, "YAML") == 0)
 				nwContext.NwFormat = FORMAT_YAML;
-			else if (_stricmp(&argv[i][9], "JSON") == 0)
+			else if (_stricmp(options.optarg, "JSON") == 0)
 				nwContext.NwFormat = FORMAT_JSON;
-			else if (_stricmp(&argv[i][9], "LUA") == 0)
+			else if (_stricmp(options.optarg, "LUA") == 0)
 				nwContext.NwFormat = FORMAT_LUA;
-			else if (_stricmp(&argv[i][9], "TREE") == 0)
+			else if (_stricmp(options.optarg, "TREE") == 0)
 				nwContext.NwFormat = FORMAT_TREE;
-			else if (_stricmp(&argv[i][9], "HTML") == 0)
+			else if (_stricmp(options.optarg, "HTML") == 0)
 				nwContext.NwFormat = FORMAT_HTML;
-		}
-		else if (_strnicmp(argv[i], "--cp=", 5) == 0 && argv[i][5])
-		{
+			break;
+		case NW_OPT_CP:
 			bSetCodePage = TRUE;
-			if (_stricmp(&argv[i][5], "ANSI") == 0)
+			if (_stricmp(options.optarg, "ANSI") == 0)
 				nwContext.CodePage = CP_ACP;
-			else if (_stricmp(&argv[i][5], "UTF8") == 0)
+			else if (_stricmp(options.optarg, "UTF8") == 0)
 				nwContext.CodePage = CP_UTF8;
-		}
-		else if (_strnicmp(argv[i], "--output=", 9) == 0 && argv[i][9])
-			lpFileName = &argv[i][9];
-		else if (_stricmp(argv[i], "--human") == 0)
+			break;
+		case NW_OPT_OUTPUT:
+			lpFileName = options.optarg;
+			break;
+		case NW_OPT_HUMAN:
 			nwContext.HumanSize = TRUE;
-		else if (_strnicmp(argv[i], "--bin=", 6) == 0 && argv[i][6])
-		{
-			if (_stricmp(&argv[i][6], "BASE64") == 0)
+			break;
+		case NW_OPT_BIN:
+			if (_stricmp(options.optarg, "BASE64") == 0)
 				nwContext.BinaryFormat = BIN_FMT_BASE64;
-			else if (_stricmp(&argv[i][6], "HEX") == 0)
+			else if (_stricmp(options.optarg, "HEX") == 0)
 				nwContext.BinaryFormat = BIN_FMT_HEX;
-		}
-		else if (_stricmp(argv[i], "--sys") == 0)
+			break;
+		case NW_OPT_SYS:
 			nwContext.SysInfo = TRUE;
-		else if (_strnicmp(argv[i], "--cpu", 5) == 0)
-		{
-			if (argv[i][5] == '=' && argv[i][6])
-				nwContext.CpuDump = &argv[i][6];
+			break;
+		case NW_OPT_CPU:
+			if (options.optarg && options.optarg[0])
+				nwContext.CpuDump = options.optarg;
 			nwContext.CpuInfo = TRUE;
-		}
-		else if (_strnicmp(argv[i], "--net", 5) == 0)
+			break;
+		case NW_OPT_NET:
 		{
 			NW_ARG_FILTER filter[] =
 			{
@@ -223,22 +301,21 @@ int main(int argc, char* argv[])
 				{"eth", NW_NET_ETH},
 				{"wlan", NW_NET_WLAN},
 			};
-			nwContext.NetGuid = nwinfo_get_opts(&argv[i][5], &nwContext.NetFlags, ARRAYSIZE(filter), filter, "{");
+			nwContext.NetGuid = nwinfo_get_opts(options.optarg, &nwContext.NetFlags, ARRAYSIZE(filter), filter, "{");
 			nwContext.NetInfo = TRUE;
+			break;
 		}
-		else if (_strnicmp(argv[i], "--acpi", 6) == 0)
-		{
-			if (argv[i][6] == '=' && strlen(&argv[i][7]) == 4)
-				memcpy(&nwContext.AcpiTable, &argv[i][7], 4);
+		case NW_OPT_ACPI:
+			if (options.optarg && strlen(options.optarg) == 4)
+				memcpy(&nwContext.AcpiTable, options.optarg, 4);
 			nwContext.AcpiInfo = TRUE;
-		}
-		else if (_strnicmp(argv[i], "--smbios", 8) == 0)
-		{
-			if (argv[i][8] == '=' && argv[i][9])
-				nwContext.SmbiosType = (UINT8)strtoul(&argv[i][9], NULL, 0);
+			break;
+		case NW_OPT_SMBIOS:
+			if (options.optarg && options.optarg[0])
+				nwContext.SmbiosType = (UINT8)strtoul(options.optarg, NULL, 0);
 			nwContext.DmiInfo = TRUE;
-		}
-		else if (_strnicmp(argv[i], "--disk", 6) == 0)
+			break;
+		case NW_OPT_DISK:
 		{
 			NW_ARG_FILTER filter[] =
 			{
@@ -252,11 +329,12 @@ int main(int argc, char* argv[])
 				{"sas", NW_DISK_SAS},
 				{"usb", NW_DISK_USB},
 			};
-			nwContext.DiskPath = nwinfo_get_opts(&argv[i][6], &nwContext.DiskFlags,
+			nwContext.DiskPath = nwinfo_get_opts(options.optarg, &nwContext.DiskFlags,
 				ARRAYSIZE(filter), filter, "\\\\.\\");
 			nwContext.DiskInfo = TRUE;
+			break;
 		}
-		else if (_strnicmp(argv[i], "--smart", 7) == 0)
+		case NW_OPT_SMART:
 		{
 			NW_ARG_FILTER filter[] =
 			{
@@ -287,67 +365,76 @@ int main(int argc, char* argv[])
 				{"DEFAULT", CDI_FLAG_DEFAULT},
 			};
 			nwContext.NwSmartFlags = 0;
-			nwinfo_get_opts(&argv[i][7], &nwContext.NwSmartFlags,
+			nwinfo_get_opts(options.optarg, &nwContext.NwSmartFlags,
 				ARRAYSIZE(filter), filter, NULL);
+			break;
 		}
-		else if (_stricmp(argv[i], "--display") == 0)
+		case NW_OPT_DISPLAY:
 			nwContext.EdidInfo = TRUE;
-		else if (_strnicmp(argv[i], "--pci", 5) == 0)
-		{
-			if (argv[i][5] == '=' && argv[i][6])
-				nwContext.PciClass = &argv[i][6];
+			break;
+		case NW_OPT_PCI:
+			if (options.optarg && options.optarg[0])
+				nwContext.PciClass = options.optarg;
 			nwContext.PciInfo = TRUE;
-		}
-		else if (_stricmp(argv[i], "--usb") == 0)
+			break;
+		case NW_OPT_USB:
 			nwContext.UsbInfo = TRUE;
-		else if (_strnicmp(argv[i], "--spd", 5) == 0)
-		{
-			if (argv[i][5] == '=' && argv[i][6])
-				nwContext.SpdDump = &argv[i][6];
+			break;
+		case NW_OPT_SPD:
+			if (options.optarg && options.optarg[0])
+				nwContext.SpdDump = options.optarg;
 			nwContext.SpdInfo = TRUE;
-		}
-		else if (_stricmp(argv[i], "--battery") == 0)
+			break;
+		case NW_OPT_BATTERY:
 			nwContext.BatteryInfo = TRUE;
-		else if (_strnicmp(argv[i], "--uefi", 6) == 0)
+			break;
+		case NW_OPT_UEFI:
 		{
 			NW_ARG_FILTER filter[] =
 			{
 				{"vars", NW_UEFI_VARS},
 				{"menu", NW_UEFI_MENU},
 			};
-			nwinfo_get_opts(&argv[i][6], &nwContext.UefiFlags, ARRAYSIZE(filter), filter, NULL);
+			nwinfo_get_opts(options.optarg, &nwContext.UefiFlags, ARRAYSIZE(filter), filter, NULL);
 			nwContext.UefiInfo = TRUE;
+			break;
 		}
-		else if (_stricmp(argv[i], "--shares") == 0)
+		case NW_OPT_SHARES:
 			nwContext.ShareInfo = TRUE;
-		else if (_stricmp(argv[i], "--audio") == 0)
+			break;
+		case NW_OPT_AUDIO:
 			nwContext.AudioInfo = TRUE;
-		else if (_stricmp(argv[i], "--public-ip") == 0)
+			break;
+		case NW_OPT_PUBLIC_IP:
 			nwContext.PublicIpInfo = TRUE;
-		else if (_strnicmp(argv[i], "--product-policy", 16) == 0)
-		{
+			break;
+		case NW_OPT_PRODUCT_POLICY:
 			nwContext.ProductPolicyInfo = TRUE;
-			if (argv[i][16] == '=' && argv[i][17])
-				nwContext.ProductPolicy = &argv[i][17];
-		}
-		else if (_stricmp(argv[i], "--gpu") == 0)
+			if (options.optarg && options.optarg[0])
+				nwContext.ProductPolicy = options.optarg;
+			break;
+		case NW_OPT_GPU:
 			nwContext.GpuInfo = TRUE;
-		else if (_stricmp(argv[i], "--font") == 0)
+			break;
+		case NW_OPT_FONT:
 			nwContext.FontInfo = TRUE;
-		else if (_strnicmp(argv[i], "--device", 8) == 0)
-		{
-			if (argv[i][8] == '=' && argv[i][9])
-				nwContext.DevTreeFilter = &argv[i][9];
+			break;
+		case NW_OPT_DEVICE:
+			if (options.optarg && options.optarg[0])
+				nwContext.DevTreeFilter = options.optarg;
 			nwContext.DevTree = TRUE;
-		}
-		else if (_stricmp(argv[i], "--debug") == 0)
+			break;
+		case NW_OPT_DEBUG:
 			nwContext.Debug = TRUE;
-		else if (_stricmp(argv[i], "--hide-sensitive") == 0)
+			break;
+		case NW_OPT_HIDE_SENSITIVE:
 			nwContext.HideSensitive = TRUE;
-		else
-		{
+			break;
+		default:
+			break;
 		}
 	}
+
 	if (bSetCodePage == FALSE)
 	{
 		if (lpFileName)

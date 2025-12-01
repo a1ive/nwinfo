@@ -29,6 +29,9 @@
     <ClInclude Include="resource.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="optparse.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Resource.rc">
@@ -55,6 +58,9 @@
     </None>
     <None Include="docs\README.md">
       <Filter>Docs</Filter>
+    </None>
+    <None Include=".gitignore">
+      <Filter>GitHub</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>
