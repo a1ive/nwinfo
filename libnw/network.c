@@ -321,11 +321,16 @@ PNODE NW_Network(VOID)
 			GetWlanInfo(nic, pCurrAddresses);
 		if (pCurrAddresses->PhysicalAddressLength != 0)
 		{
-			NWLC->NwBuf[0] = '\0';
+			int len = 0;
 			for (i = 0; i < pCurrAddresses->PhysicalAddressLength; i++)
 			{
-				snprintf(NWLC->NwBuf, NWINFO_BUFSZ, "%s%.2X%s", NWLC->NwBuf,
-					pCurrAddresses->PhysicalAddress[i], (i == (pCurrAddresses->PhysicalAddressLength - 1)) ? "" : "-");
+				if (len >= 0 && len < NWINFO_BUFSZ)
+				{
+					int written = snprintf(NWLC->NwBuf + len, NWINFO_BUFSZ - len, "%.2X%s",
+						pCurrAddresses->PhysicalAddress[i], (i == (pCurrAddresses->PhysicalAddressLength - 1)) ? "" : "-");
+					if (written > 0)
+						len += written;
+				}
 			}
 			NWL_NodeAttrSet(nic, "MAC Address", NWLC->NwBuf, NAFLG_FMT_SENSITIVE);
 		}

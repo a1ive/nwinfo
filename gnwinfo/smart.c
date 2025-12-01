@@ -54,7 +54,7 @@ draw_health(struct nk_context* ctx, CDI_SMART* smart, int disk, float height)
 		if (n >= 0)
 			snprintf(tmp, sizeof(tmp), "%s\n%d%%", get_health_status(health), n);
 		else
-			snprintf(tmp, sizeof(tmp), "%s", get_health_status(health));
+			strcpy_s(tmp, sizeof(tmp), get_health_status(health));
 		nk_block(ctx, get_attr_color(health), tmp);
 
 		nk_l(ctx, N_(N__TEMPERATURE), NK_TEXT_CENTERED);
@@ -156,10 +156,10 @@ draw_info(struct nk_context* ctx, CDI_SMART* smart, int disk)
 
 		nk_l(ctx, N_(N__MODE), NK_TEXT_LEFT);
 		str = cdi_get_string(smart, disk, CDI_STRING_TRANSFER_MODE_CUR);
-		strcpy_s(NWLC->NwBuf, NWINFO_BUFSZ, NWL_Ucs2ToUtf8(str));
+		snprintf(NWLC->NwBuf, NWINFO_BUFSZ, "%s|", NWL_Ucs2ToUtf8(str));
 		cdi_free_string(str);
 		str = cdi_get_string(smart, disk, CDI_STRING_TRANSFER_MODE_MAX);
-		snprintf(NWLC->NwBuf, NWINFO_BUFSZ, "%s|%s", NWLC->NwBuf, NWL_Ucs2ToUtf8(str));
+		strcat_s(NWLC->NwBuf, NWINFO_BUFSZ, NWL_Ucs2ToUtf8(str));
 		cdi_free_string(str);
 		nk_lhc(ctx, NWLC->NwBuf, NK_TEXT_LEFT, g_color_text_l);
 		nk_l(ctx, N_(N__POWER_ON_COUNT), NK_TEXT_LEFT);

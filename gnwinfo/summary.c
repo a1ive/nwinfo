@@ -24,17 +24,17 @@ draw_os(struct nk_context* ctx)
 {
 	nk_layout_row(ctx, NK_DYNAMIC, 0, 3, (float[3]) { 0.3f, 0.7f - g_ctx.gui_ratio, g_ctx.gui_ratio });
 	nk_image_label(ctx, GET_PNG(IDR_PNG_OS), N_(N__OS), NK_TEXT_LEFT, g_color_text_d);
-	snprintf(m_buf, MAX_PATH, "%s %s",
+	int len = snprintf(m_buf, MAX_PATH, "%s %s",
 		NWL_NodeAttrGet(g_ctx.system, "OS"),
 		NWL_NodeAttrGet(g_ctx.system, "Processor Architecture"));
 	if (g_ctx.main_flag & MAIN_OS_EDITIONID)
 	{
 		LPCSTR edition = NWL_NodeAttrGet(g_ctx.system, "Edition");
-		if (edition[0] != '-')
-			snprintf(m_buf, MAX_PATH, "%s %s", m_buf, edition);
+		if (edition[0] != '-' && len >= 0 && len < MAX_PATH)
+			len += snprintf(m_buf + len, MAX_PATH - len, " %s", edition);
 	}
-	if (g_ctx.main_flag & MAIN_OS_BUILD)
-		snprintf(m_buf, MAX_PATH, "%s (%s)", m_buf, NWL_NodeAttrGet(g_ctx.system, "Build Number"));
+	if ((g_ctx.main_flag & MAIN_OS_BUILD) && len >= 0 && len < MAX_PATH)
+		snprintf(m_buf + len, MAX_PATH - len, " (%s)", NWL_NodeAttrGet(g_ctx.system, "Build Number"));
 	nk_lhc(ctx, m_buf, NK_TEXT_LEFT, g_color_text_l);
 	if (quick_access_button(ctx, GET_PNG(IDR_PNG_INFO), NULL))
 		ShellExecuteW(GetDesktopWindow(), NULL,
@@ -75,14 +75,14 @@ draw_bios(struct nk_context* ctx)
 	nk_layout_row(ctx, NK_DYNAMIC, 0, 3, (float[3]) { 0.3f, 0.7f - g_ctx.gui_ratio, g_ctx.gui_ratio });
 	nk_image_label(ctx, GET_PNG(IDR_PNG_FIRMWARE), N_(N__BIOS), NK_TEXT_LEFT, g_color_text_d);
 
-	strcpy_s(m_buf, MAX_PATH, NWL_NodeAttrGet(g_ctx.system, "Firmware"));
-	if (sb[0] == 'E')
-		snprintf(m_buf, MAX_PATH, "%s %s", m_buf, N_(N__SB));
-	else if (sb[0] == 'D')
-		snprintf(m_buf, MAX_PATH, "%s %s", m_buf, N_(N__SB_OFF));
+	int len = snprintf(m_buf, MAX_PATH, "%s", NWL_NodeAttrGet(g_ctx.system, "Firmware"));
+	if (sb[0] == 'E' && len >= 0 && len < MAX_PATH)
+		len += snprintf(m_buf + len, MAX_PATH - len, " %s", N_(N__SB));
+	else if (sb[0] == 'D' && len >= 0 && len < MAX_PATH)
+		len += snprintf(m_buf + len, MAX_PATH - len, " %s", N_(N__SB_OFF));
 
-	if (tpm[0] == 'v')
-		snprintf(m_buf, MAX_PATH, "%s TPM%s", m_buf, tpm);
+	if (tpm[0] == 'v' && len >= 0 && len < MAX_PATH)
+		snprintf(m_buf + len, MAX_PATH - len, " TPM%s", tpm);
 
 	nk_lhc(ctx, m_buf, NK_TEXT_LEFT, g_color_text_l);
 
@@ -162,15 +162,12 @@ draw_computer(struct nk_context* ctx)
 
 	nk_layout_row(ctx, NK_DYNAMIC, 0, 3, (float[3]) { 0.3f, 0.7f - g_ctx.gui_ratio, g_ctx.gui_ratio });
 	nk_lhsc(ctx, N_(N__POWER_STAT), NK_TEXT_LEFT, g_color_text_d, nk_false, nk_true);
-	snprintf(m_buf, MAX_PATH, "%s %s",
+	int len = snprintf(m_buf, MAX_PATH, "%s %s",
 		ac, NWL_NodeAttrGet(g_ctx.battery, "Active Power Scheme Name"));
-	if (has_battery)
-	{
-		snprintf(m_buf, MAX_PATH, "%s %s %s",
-			m_buf,
+	if (has_battery && len >= 0 && len < MAX_PATH)
+		snprintf(m_buf + len, MAX_PATH - len, " %s %s",
 			NWL_NodeAttrGet(g_ctx.battery, "Battery Life Percentage"),
 			time);
-	}
 	nk_lhc(ctx, m_buf, NK_TEXT_LEFT, g_color_text_l);
 	if (quick_access_button(ctx, GET_PNG(IDR_PNG_BATTERY), NULL))
 		ShellExecuteW(GetDesktopWindow(), NULL,
@@ -220,12 +217,13 @@ draw_processor(struct nk_context* ctx)
 
 		nk_layout_row(ctx, NK_DYNAMIC, 0, 3, (float[3]) { 0.3f, 0.4f, 0.3f });
 		nk_spacer(ctx);
-		snprintf(m_buf, MAX_PATH, "%s %s", NWL_NodeAttrGet(cpu, "Cores"), N_(N__CORES));
-		snprintf(m_buf, MAX_PATH, "%s %s %s", m_buf,
-			NWL_NodeAttrGet(cpu, "Logical CPUs"),
-			N_(N__THREADS));
-		if (g_ctx.cpu_info[i].MsrPower > 0.0)
-			snprintf(m_buf, MAX_PATH, "%s %.2fW", m_buf, g_ctx.cpu_info[i].MsrPower);
+		int len = snprintf(m_buf, MAX_PATH, "%s %s", NWL_NodeAttrGet(cpu, "Cores"), N_(N__CORES));
+		if (len >= 0 && len < MAX_PATH)
+			len += snprintf(m_buf + len, MAX_PATH - len, " %s %s",
+				NWL_NodeAttrGet(cpu, "Logical CPUs"),
+				N_(N__THREADS));
+		if (g_ctx.cpu_info[i].MsrPower > 0.0 && len >= 0 && len < MAX_PATH)
+			snprintf(m_buf + len, MAX_PATH - len, " %.2fW", g_ctx.cpu_info[i].MsrPower);
 
 		nk_lhc(ctx, m_buf, NK_TEXT_LEFT, g_color_text_l);
 		if (g_ctx.cpu_info[i].MsrTemp > 0)
@@ -244,13 +242,13 @@ draw_processor(struct nk_context* ctx)
 
 		nk_layout_row(ctx, NK_DYNAMIC, 0, 2, (float[2]) { 0.3f, 0.7f });
 		nk_lhsc(ctx, N_(N__CACHE), NK_TEXT_LEFT, g_color_text_d, nk_false, nk_true);
-		snprintf(m_buf, MAX_PATH, "L1 %s", cache_size[0]);
-		if (cache_size[1][0] != '-')
-			snprintf(m_buf, MAX_PATH, "%s L2 %s", m_buf, cache_size[1]);
-		if (cache_size[2][0] != '-')
-			snprintf(m_buf, MAX_PATH, "%s L3 %s", m_buf, cache_size[2]);
-		if (cache_size[3][0] != '-')
-			snprintf(m_buf, MAX_PATH, "%s L4 %s", m_buf, cache_size[3]);
+		int len = snprintf(m_buf, MAX_PATH, "L1 %s", cache_size[0]);
+		if (cache_size[1][0] != '-' && len >= 0 && len < MAX_PATH)
+			len += snprintf(m_buf + len, MAX_PATH - len, " L2 %s", cache_size[1]);
+		if (cache_size[2][0] != '-' && len >= 0 && len < MAX_PATH)
+			len += snprintf(m_buf + len, MAX_PATH - len, " L3 %s", cache_size[2]);
+		if (cache_size[3][0] != '-' && len >= 0 && len < MAX_PATH)
+			snprintf(m_buf + len, MAX_PATH - len, " L4 %s", cache_size[3]);
 		nk_lhc(ctx, m_buf, NK_TEXT_LEFT, g_color_text_l);
 	}
 }
@@ -689,10 +687,9 @@ draw_network(struct nk_context* ctx)
 		if (g_ctx.main_flag & MAIN_NET_DETAIL)
 		{
 			nk_layout_row(ctx, NK_DYNAMIC, 0, 2, (float[2]) { 0.64f, 0.36f });
-			strcpy_s(m_buf, MAX_PATH, strcmp(NWL_NodeAttrGet(nw, "DHCP Enabled"), NA_BOOL_TRUE) == 0 ? " DHCP" : "");
-			if (is_active)
-				snprintf(m_buf, MAX_PATH, u8"%s \u21c5 %s / %s",
-					m_buf,
+			int len = snprintf(m_buf, MAX_PATH, "%s", strcmp(NWL_NodeAttrGet(nw, "DHCP Enabled"), NA_BOOL_TRUE) == 0 ? " DHCP" : "");
+			if (is_active && len >= 0 && len < MAX_PATH)
+				snprintf(m_buf + len, MAX_PATH - len, u8" \u21c5 %s / %s",
 					NWL_NodeAttrGet(nw, "Transmit Link Speed"),
 					NWL_NodeAttrGet(nw, "Receive Link Speed"));
 			nk_lhsc(ctx, m_buf, NK_TEXT_LEFT, g_color_text_d, nk_true, nk_true);
