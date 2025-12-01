@@ -6,6 +6,7 @@
 #include <shmem.h>
 #include "gpu.h"
 #include "../utils.h"
+#include "../libnw.h"
 
 #define GPUZ_SHMEM_NAME L"GPUZShMem"
 #define GPUZ_MAX_RECORDS 128
@@ -66,7 +67,7 @@ search_gpu_device(PNWLIB_GPU_INFO info, struct GPUZ_SHM_CTX* ctx)
 			dev->PciDevice == ctx->PciDevice &&
 			dev->PciFunction == ctx->PciFunction)
 		{
-			GPU_DBG(GPUZSHM, "Matched by PCI BDF %u:%u:%u -> %s",
+			NWL_Debug(GPUZSHM, "Matched by PCI BDF %u:%u:%u -> %s",
 				ctx->PciBus, ctx->PciDevice, ctx->PciFunction, dev->Name);
 			return dev;
 		}
@@ -83,49 +84,51 @@ static void* gpuz_shm_init(PNWLIB_GPU_INFO info)
 	ctx->Result = WR0_OpenShMem(&ctx->ShMem, GPUZ_SHMEM_NAME);
 	if (ctx->Result != 0)
 		goto fail;
-	GPU_DBG(GPUZSHM, "Opened shared memory %ls, size=%zu", GPUZ_SHMEM_NAME, ctx->ShMem.size);
+	NWL_Debug(GPUZSHM, "Opened shared memory %s, size=%zu", NWL_Ucs2ToUtf8(GPUZ_SHMEM_NAME), ctx->ShMem.size);
 	if (ctx->ShMem.size < sizeof(GPUZ_SH_MEM))
 	{
-		GPU_DBG(GPUZSHM, "Shared memory size too small %zu < %zu", ctx->ShMem.size, sizeof(GPUZ_SH_MEM));
+		NWL_Debug(GPUZSHM, "Shared memory size too small %zu < %zu", ctx->ShMem.size, sizeof(GPUZ_SH_MEM));
 		goto fail;
 	}
 
 	ctx->Data = (GPUZ_SH_MEM*)ctx->ShMem.addr;
-	GPU_DBG(GPUZSHM, "GPU-Z SHM version=%u, lastUpdate=%u", ctx->Data->version, ctx->Data->lastUpdate);
+	NWL_Debug(GPUZSHM, "GPU-Z SHM version=%u, lastUpdate=%u", ctx->Data->version, ctx->Data->lastUpdate);
 	for (UINT i = 0; i < GPUZ_MAX_RECORDS; i++)
 	{
+		CHAR value[GPUZ_STR_LEN];
 		GPUZ_RECORD* rec = &ctx->Data->data[i];
 		if (rec->key[0] == L'\0')
 			continue;
-		GPU_DBG(GPUZSHM, "DATA[%u]: %ls = %ls", i, rec->key, rec->value);
+		strcpy_s(value, GPUZ_STR_LEN, NWL_Ucs2ToUtf8(rec->value));
+		NWL_Debug(GPUZSHM, "DATA[%u]: %s = %s", i, NWL_Ucs2ToUtf8(rec->key), value);
 		if (wcscmp(rec->key, L"CardName") == 0)
-			strcpy_s(ctx->Name, MAX_GPU_STR, NWL_Ucs2ToUtf8(rec->value));
+			strcpy_s(ctx->Name, MAX_GPU_STR, value);
 		else if (wcscmp(rec->key, L"IGP") == 0)
-			ctx->IGP = (uint32_t)wcstoul(rec->value, NULL, 10);
+			ctx->IGP = (uint32_t)strtoul(value, NULL, 10);
 		else if (wcscmp(rec->key, L"VendorID") == 0)
-			ctx->VendorId = (uint32_t)wcstoul(rec->value, NULL, 16);
+			ctx->VendorId = (uint32_t)strtoul(value, NULL, 16);
 		else if (wcscmp(rec->key, L"DeviceID") == 0)
-			ctx->DeviceId = (uint32_t)wcstoul(rec->value, NULL, 16);
+			ctx->DeviceId = (uint32_t)strtoul(value, NULL, 16);
 		else if (wcscmp(rec->key, L"SubsysID") == 0)
-			ctx->Subsys |= (uint32_t)wcstoul(rec->value, NULL, 16) << 16;
+			ctx->Subsys |= (uint32_t)strtoul(value, NULL, 16) << 16;
 		else if (wcscmp(rec->key, L"SubvendorID") == 0)
-			ctx->Subsys |= (uint32_t)wcstoul(rec->value, NULL, 16) & 0xFFFF;
+			ctx->Subsys |= (uint32_t)strtoul(value, NULL, 16) & 0xFFFF;
 		else if (wcscmp(rec->key, L"RevisionID") == 0)
-			ctx->RevId = (uint32_t)wcstoul(rec->value, NULL, 16);
+			ctx->RevId = (uint32_t)strtoul(value, NULL, 16);
 		else if (wcscmp(rec->key, L"Bus") == 0)
-			ctx->PciBus = (uint32_t)wcstoul(rec->value, NULL, 10);
+			ctx->PciBus = (uint32_t)strtoul(value, NULL, 10);
 		else if (wcscmp(rec->key, L"Dev") == 0)
-			ctx->PciDevice = (uint32_t)wcstoul(rec->value, NULL, 10);
+			ctx->PciDevice = (uint32_t)strtoul(value, NULL, 10);
 		else if (wcscmp(rec->key, L"Fn") == 0)
-			ctx->PciFunction = (uint32_t)wcstoul(rec->value, NULL, 10);
+			ctx->PciFunction = (uint32_t)strtoul(value, NULL, 10);
 	}
-	GPU_DBG(GPUZSHM, "GPUZ GPU: %s [%04X-%04X SUBSYS %08X REV %02X] Bus %u, Device %u, Function %u",
+	NWL_Debug(GPUZSHM, "GPUZ GPU: %s [%04X-%04X SUBSYS %08X REV %02X] Bus %u, Device %u, Function %u",
 		ctx->Name, ctx->VendorId, ctx->DeviceId, ctx->Subsys, ctx->RevId,
 		ctx->PciBus, ctx->PciDevice, ctx->PciFunction);
 	ctx->Device = search_gpu_device(info, ctx);
 	if (ctx->Device == NULL)
 	{
-		GPU_DBG(GPUZSHM, "Cannot find matching GPU device");
+		NWL_Debug(GPUZSHM, "Cannot find matching GPU device");
 		goto fail;
 	}
 
@@ -134,13 +137,13 @@ static void* gpuz_shm_init(PNWLIB_GPU_INFO info)
 		GPUZ_SENSOR_RECORD* rec = &ctx->Data->sensors[i];
 		if (rec->name[0] == L'\0')
 			continue;
-		GPU_DBG(GPUZSHM, "SENSOR[%u]: %ls = %.2f %ls", i, rec->name, rec->value, rec->unit);
+		NWL_Debug(GPUZSHM, "SENSOR[%u]: %s = %.2f", i, NWL_Ucs2ToUtf8(rec->name), rec->value);
 	}
 
 	return ctx;
 
 fail:
-	GPU_DBG(GPUZSHM, "INIT ERR %d", ctx->Result);
+	NWL_Debug(GPUZSHM, "INIT ERR %d", ctx->Result);
 	WR0_CloseShMem(&ctx->ShMem);
 	free(ctx);
 	return NULL;

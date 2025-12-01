@@ -96,11 +96,7 @@ int SM_ProcCall(smbus_t* ctx, uint8_t slave_addr, uint8_t offset, uint16_t* valu
 #define SMBUS_DBG(...) \
 	do \
 	{ \
-		if (NWLC->Debug) \
-		{ \
-			printf("[SM] " __VA_ARGS__); \
-			puts(""); \
-		} \
+		NWL_Debug("SM", __VA_ARGS__); \
 	} while (0)
 
 #define SMBUS_BASE_CLASS        0x0C

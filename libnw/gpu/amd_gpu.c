@@ -8,6 +8,7 @@
 #include <windows.h>
 #include "gpu.h"
 #include "adl.h"
+#include "../libnw.h"
 
 #define ATIADL "ADL"
 
@@ -80,7 +81,7 @@ get_adl_sensor(ADL_GPU_INFO* gpu, const ADLPMLogData* pmlog_data, const ADLPMLog
 		&& od8_log->sensors[sensor_type].supported)
 		support_od8 = true;
 
-	GPU_DBG(ATIADL, "%s sensor type %d PMLog %d OD8 %d", gpu->AdapterInfo->strAdapterName, sensor_type, support_pmlog, support_od8);
+	NWL_Debug(ATIADL, "%s sensor type %d PMLog %d OD8 %d", gpu->AdapterInfo->strAdapterName, sensor_type, support_pmlog, support_od8);
 
 	if (support_pmlog)
 	{
@@ -129,12 +130,12 @@ init_pmlog(ADL_CTX* ctx, ADL_GPU_INFO* gpu, int adapter_index)
 	if (ADL2_Adapter_PMLog_Start(ctx->AdlHandle, adapter_index, &gpu->PMLogStartInput, &gpu->PMLogStartOutput, gpu->PMLogDevice) == ADL_OK)
 	{
 		gpu->PMLogStarted = 1;
-		GPU_DBG(ATIADL, "PMLog started");
+		NWL_Debug(ATIADL, "PMLog started");
 		return;
 	}
 
 fail:
-	GPU_DBG(ATIADL, "PMLog failed");
+	NWL_Debug(ATIADL, "PMLog failed");
 	ADL2_Device_PMLog_Device_Destroy(ctx->AdlHandle, gpu->PMLogDevice);
 	gpu->PMLogDevice = 0;
 }
@@ -228,12 +229,12 @@ static void* adl_gpu_init(PNWLIB_GPU_INFO info)
 	ctx->Result = ADL2_Main_Control_Create(1, &ctx->AdlHandle);
 	if (ctx->Result != ADL_OK)
 		goto fail;
-	GPU_DBG(ATIADL, "ADL2 main control created");
+	NWL_Debug(ATIADL, "ADL2 main control created");
 
 	ctx->Result = ADL2_Adapter_NumberOfAdapters_Get(ctx->AdlHandle, &ctx->AdapterInfoCount);
 	if (ctx->Result != ADL_OK)
 		goto fail;
-	GPU_DBG(ATIADL, "Found %d devices", ctx->AdapterInfoCount);
+	NWL_Debug(ATIADL, "Found %d devices", ctx->AdapterInfoCount);
 	if (ctx->AdapterInfoCount <= 0)
 		goto fail;
 
@@ -249,13 +250,13 @@ static void* adl_gpu_init(PNWLIB_GPU_INFO info)
 	ctx->Result = ADL2_Adapter_AdapterInfo_Get(ctx->AdlHandle, ctx->AdapterInfoList, (size_t)ctx->AdapterInfoCount * sizeof(AdapterInfo));
 	if (ctx->Result != ADL_OK)
 		goto fail;
-	GPU_DBG(ATIADL, "ADL2_Adapter_AdapterInfo_Get OK");
+	NWL_Debug(ATIADL, "ADL2_Adapter_AdapterInfo_Get OK");
 
 	// Correct vendor ids and skip invalid devices
 	for (int i = 0; i < ctx->AdapterInfoCount; i++)
 	{
 		AdapterInfo* adapter = &ctx->AdapterInfoList[i];
-		GPU_DBG(ATIADL, "Parsing [%d] %s (%04X)", i, adapter->strUDID, adapter->iVendorID);
+		NWL_Debug(ATIADL, "Parsing [%d] %s (%04X)", i, adapter->strUDID, adapter->iVendorID);
 		if (adapter->strUDID[0] == '\0')
 			continue;
 		// Fuck AMD -- ADLAdapterInfo.VendorID field reported by ADL is wrong.
@@ -265,7 +266,7 @@ static void* adl_gpu_init(PNWLIB_GPU_INFO info)
 		{
 			id_start += sizeof("PCI_VEN_") - 1;
 			adapter->iVendorID = (int)strtol(id_start, NULL, 16);
-			GPU_DBG(ATIADL, "Correct VID %04X", adapter->iVendorID);
+			NWL_Debug(ATIADL, "Correct VID %04X", adapter->iVendorID);
 		}
 		if (adapter->iVendorID != 0x1002)
 			continue;
@@ -283,13 +284,13 @@ static void* adl_gpu_init(PNWLIB_GPU_INFO info)
 		}
 		if (is_duplicate)
 		{
-			GPU_DBG(ATIADL, "GPU at Bus %d, Device %d is a duplicate. Skipping.", adapter->iBusNumber, adapter->iDeviceNumber);
+			NWL_Debug(ATIADL, "GPU at Bus %d, Device %d is a duplicate. Skipping.", adapter->iBusNumber, adapter->iDeviceNumber);
 			continue;
 		}
 
 		ADL_GPU_INFO* gpu = &ctx->Devices[ctx->GpuCount];
 		gpu->AdapterInfo = adapter;
-		GPU_DBG(ATIADL, "PNP id %s", adapter->strPNPString);
+		NWL_Debug(ATIADL, "PNP id %s", adapter->strPNPString);
 
 		id_start = strstr(adapter->strUDID, "&DEV_");
 		if (id_start)
@@ -310,18 +311,18 @@ static void* adl_gpu_init(PNWLIB_GPU_INFO info)
 			gpu->RevId = (uint32_t)strtol(id_start, NULL, 16);
 		}
 
-		GPU_DBG(ATIADL, "Initializing GPU [%d] PMLog", i);
+		NWL_Debug(ATIADL, "Initializing GPU [%d] PMLog", i);
 		if (ADL2_GcnAsicInfo_Get(ctx->AdlHandle, adapter->iAdapterIndex, &gpu->GcnInfo) != ADL_OK)
-			GPU_DBG(ATIADL, "ADL2_GcnAsicInfo_Get failed");
+			NWL_Debug(ATIADL, "ADL2_GcnAsicInfo_Get failed");
 		else
 		{
-			GPU_DBG(ATIADL, "ADL2_GcnAsicInfo_Get ASICFamilyId %d", gpu->GcnInfo.ASICFamilyId);
+			NWL_Debug(ATIADL, "ADL2_GcnAsicInfo_Get ASICFamilyId %d", gpu->GcnInfo.ASICFamilyId);
 			init_pmlog(ctx, gpu, adapter->iAdapterIndex);
 		}
 
 		// Get Overdrive API version
 		get_overdrive_version(ctx, gpu, adapter->iAdapterIndex);
-		GPU_DBG(ATIADL, "Overdrive API supported: %d, version %d", gpu->OdSupported, gpu->OdApiLevel);
+		NWL_Debug(ATIADL, "Overdrive API supported: %d, version %d", gpu->OdSupported, gpu->OdApiLevel);
 
 		ctx->GpuCount++;
 	}
@@ -329,11 +330,11 @@ static void* adl_gpu_init(PNWLIB_GPU_INFO info)
 	if (ctx->GpuCount <= 0)
 		goto fail;
 
-	GPU_DBG(ATIADL, "Found %d valid GPU(s)", ctx->GpuCount);
+	NWL_Debug(ATIADL, "Found %d valid GPU(s)", ctx->GpuCount);
 	return ctx;
 
 fail:
-	GPU_DBG(ATIADL, "ADL INIT ERR %d", ctx->Result);
+	NWL_Debug(ATIADL, "ADL INIT ERR %d", ctx->Result);
 	adl_gpu_free(ctx);
 	return NULL;
 }

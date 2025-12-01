@@ -55,16 +55,20 @@ struct match_entry_t {
 
 int match_cpu_codename(const struct match_entry_t* matchtable, int count, struct cpu_id_t* data);
 
-void warnf(const char* format, ...)
-#ifdef __GNUC__
-__attribute__((format(printf, 1, 2)))
-#endif
-;
-void debugf(int verboselevel, const char* format, ...)
-#ifdef __GNUC__
-__attribute__((format(printf, 2, 3)))
-#endif
-;
+#define warnf(...) \
+	do \
+	{ \
+		if (_warn_fun) \
+			_warn_fun("CPU", __VA_ARGS__); \
+	} while (0)
+
+#define debugf(verboselevel,...) \
+	do \
+	{ \
+		if (_warn_fun && _current_verboselevel >= (verboselevel)) \
+			_warn_fun("CPU", __VA_ARGS__); \
+	} while (0)
+
 void generic_get_cpu_list(const struct match_entry_t* matchtable, int count,
                           struct cpu_list_t* list);
 

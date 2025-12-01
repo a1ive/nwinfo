@@ -9,6 +9,7 @@
 #include <dxgi.h>
 #include "gpu.h"
 #include "../utils.h"
+#include "../libnw.h"
 
 #pragma comment(lib, "dxguid.lib")
 
@@ -111,7 +112,7 @@ get_ids_from_dxgi(LUID* luid, D3DKMT_DEVICE_IDS* ids)
 			continue;
 		if (memcmp(luid, &desc.AdapterLuid, sizeof(LUID)) == 0)
 		{
-			GPU_DBG(GDID3D, "Found adapter in DXGI adapter %u", i);
+			NWL_Debug(GDID3D, "Found adapter in DXGI adapter %u", i);
 			ids->VendorID = desc.VendorId;
 			ids->DeviceID = desc.DeviceId;
 			ids->SubSystemID = desc.SubSysId;
@@ -135,7 +136,7 @@ static void* d3d_gpu_init(PNWLIB_GPU_INFO info)
 	ctx->Gdi = LoadLibraryW(L"gdi32.dll");
 	if (ctx->Gdi == NULL)
 	{
-		GPU_DBG(GDID3D, "Cannot load gdi32.dll");
+		NWL_Debug(GDID3D, "Cannot load gdi32.dll");
 		free(ctx);
 		return NULL;
 	}
@@ -151,7 +152,7 @@ static void* d3d_gpu_init(PNWLIB_GPU_INFO info)
 		|| ctx->QueryStatistics == NULL
 		|| ctx->CloseAdapter == NULL)
 	{
-		GPU_DBG(GDID3D, "Cannot get D3DKMT functions");
+		NWL_Debug(GDID3D, "Cannot get D3DKMT functions");
 		goto fail;
 	}
 
@@ -175,13 +176,13 @@ static void* d3d_gpu_init(PNWLIB_GPU_INFO info)
 		if (NT_SUCCESS(ctx->Result) && gpu->Name[0] == L'\0')
 			strcpy_s(gpu->Name, D3D_ADAPTER_NAME_LEN, NWL_Ucs2ToUtf8(gpu->RegInfo.AdapterString));
 		
-		GPU_DBG(GDID3D, "Querying adapter [%u]: %s", i, gpu->Name);
+		NWL_Debug(GDID3D, "Querying adapter [%u]: %s", i, gpu->Name);
 
 		ctx->Result = query_adapter_info(ctx, gpu, KMTQAITYPE_ADAPTERADDRESS, &gpu->Bdf, sizeof(D3DKMT_ADAPTERADDRESS));
 		if (!NT_SUCCESS(ctx->Result))
 			continue;
 
-		GPU_DBG(GDID3D, "BDF %u:%u:%u", gpu->Bdf.BusNumber, gpu->Bdf.DeviceNumber, gpu->Bdf.FunctionNumber);
+		NWL_Debug(GDID3D, "BDF %u:%u:%u", gpu->Bdf.BusNumber, gpu->Bdf.DeviceNumber, gpu->Bdf.FunctionNumber);
 
 		// KMTQAITYPE_PHYSICALADAPTERDEVICEIDS requires Windows 10 or later
 		ctx->Result = query_adapter_info(ctx, gpu, KMTQAITYPE_PHYSICALADAPTERDEVICEIDS, &gpu->DeviceIds, sizeof(D3DKMT_QUERY_DEVICE_IDS));
@@ -192,12 +193,12 @@ static void* d3d_gpu_init(PNWLIB_GPU_INFO info)
 			gpu->DeviceIds.DeviceIds.SubSystemID <<= 16;
 			gpu->DeviceIds.DeviceIds.SubSystemID |= gpu->DeviceIds.DeviceIds.SubVendorID;
 		}
-		GPU_DBG(GDID3D, "Device ID [%04X-%04X SUBSYS %08X REV %02X ]", gpu->DeviceIds.DeviceIds.VendorID,
+		NWL_Debug(GDID3D, "Device ID [%04X-%04X SUBSYS %08X REV %02X ]", gpu->DeviceIds.DeviceIds.VendorID,
 			gpu->DeviceIds.DeviceIds.DeviceID, gpu->DeviceIds.DeviceIds.SubSystemID, gpu->DeviceIds.DeviceIds.RevisionID);
 
 		if (gpu->DeviceIds.DeviceIds.VendorID == 0x1414)
 		{
-			GPU_DBG(GDID3D, "Skipping Microsoft Device %s", gpu->Name);
+			NWL_Debug(GDID3D, "Skipping Microsoft Device %s", gpu->Name);
 			continue;
 		}
 
@@ -205,20 +206,20 @@ static void* d3d_gpu_init(PNWLIB_GPU_INFO info)
 		query_adapter_info(ctx, gpu, KMTQAITYPE_ADAPTERTYPE, &gpu->AdapterType, sizeof(D3DKMT_ADAPTERTYPE));
 		if (gpu->AdapterType.SoftwareDevice)
 		{
-			GPU_DBG(GDID3D, "Skipping software adapter %s", gpu->Name);
+			NWL_Debug(GDID3D, "Skipping software adapter %s", gpu->Name);
 			continue;
 		}
 
 		if (is_duplicated_gpu(info, &gpu->Bdf, &gpu->DeviceIds.DeviceIds))
 		{
-			GPU_DBG(GDID3D, "Skipping duplicated adapter [%04X-%04X SUBSYS %08X REV %02X ] %s",
+			NWL_Debug(GDID3D, "Skipping duplicated adapter [%04X-%04X SUBSYS %08X REV %02X ] %s",
 				gpu->DeviceIds.DeviceIds.VendorID, gpu->DeviceIds.DeviceIds.DeviceID,
 				gpu->DeviceIds.DeviceIds.SubSystemID, gpu->DeviceIds.DeviceIds.RevisionID, gpu->Name);
 			continue;
 		}
 
 		gpu->Valid = TRUE;
-		GPU_DBG(GDID3D, "Found [%lu] [%04X-%04X SUBSYS %08X REV %02X ] %s", i,
+		NWL_Debug(GDID3D, "Found [%lu] [%04X-%04X SUBSYS %08X REV %02X ] %s", i,
 			gpu->DeviceIds.DeviceIds.VendorID, gpu->DeviceIds.DeviceIds.DeviceID,
 			gpu->DeviceIds.DeviceIds.SubSystemID, gpu->DeviceIds.DeviceIds.RevisionID,
 			gpu->Name);
@@ -231,14 +232,14 @@ static void* d3d_gpu_init(PNWLIB_GPU_INFO info)
 		{
 			gpu->NbSegments = gpu->Stats.QueryResult.AdapterInformation.NbSegments;
 			gpu->NodeCount = gpu->Stats.QueryResult.AdapterInformation.NodeCount;
-			GPU_DBG(GDID3D, "%u segments, %u nodes", gpu->NbSegments, gpu->NodeCount);
+			NWL_Debug(GDID3D, "%u segments, %u nodes", gpu->NbSegments, gpu->NodeCount);
 		}
 	}
 
 	return ctx;
 
 fail:
-	GPU_DBG(GDID3D, "INIT ERR %x", ctx->Result);
+	NWL_Debug(GDID3D, "INIT ERR %x", ctx->Result);
 	FreeLibrary(ctx->Gdi);
 	free(ctx);
 	return NULL;

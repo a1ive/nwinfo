@@ -137,6 +137,7 @@ VOID NW_Print(LPCSTR lpFileName);
 VOID NW_Fini(VOID);
 
 noreturn VOID NWL_ErrExit(INT nExitCode, LPCSTR lpszText);
+extern void(*NWL_Debug)(const char* condition, _Printf_format_string_ char const* const format, ...);
 
 PNODE NW_Acpi(VOID);
 PNODE NW_Cpuid(VOID);
@@ -230,13 +231,6 @@ typedef struct _NWLIB_CUR_DISPLAY
 	UINT Scale;
 } NWLIB_CUR_DISPLAY;
 VOID NWL_GetCurDisplay(HWND wnd, NWLIB_CUR_DISPLAY* info);
-
-#define NWL_Debugf(...) \
-	do \
-	{ \
-		if (NWLC->Debug) \
-			printf(__VA_ARGS__); \
-	} while (0)
 
 #ifdef __cplusplus
 } /* extern "C" */

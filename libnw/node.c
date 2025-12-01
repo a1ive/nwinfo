@@ -17,7 +17,7 @@ PNODE NWL_NodeAlloc(LPCSTR name, INT flags)
 {
 	PNODE node = NULL;
 
-	NWL_Debugf("[DBG] ALLOC [%s]\n", name);
+	NWL_Debug("NODE", "ALLOC [%s]", name);
 
 	node = (PNODE)calloc(1, sizeof(NODE));
 	if (!node)
@@ -98,7 +98,7 @@ INT NWL_NodeAppendChild(PNODE parent, PNODE child)
 	if (!parent || !child)
 		return parent ? NWL_NodeChildCount(parent) : 0;
 
-	NWL_Debugf("[DBG] APPEND [%s] -> [%s]\n", parent->name, child->name);
+	NWL_Debug("NODE", "APPEND [%s] -> [%s]", parent->name, child->name);
 
 	arrpush(parent->children, child);
 	child->parent = parent;
@@ -196,7 +196,7 @@ PNODE_ATT NWL_NodeAttrSet(PNODE node, LPCSTR key, LPCSTR value, INT flags)
 {
 	NODE_ATT* att;
 
-	NWL_Debugf("[DBG] SET <%s> = <%s>\n", key, value ? value : "(null)");
+	NWL_Debug("NODE", "SET <%s> = <%s>", key, value ? value : "(null)");
 
 	if (!node || !key)
 		return NULL;
@@ -331,7 +331,7 @@ PNODE_ATT NWL_NodeAttrSetMulti(PNODE node, LPCSTR key, LPCSTR value, int flags)
 	nvalue = value ? value : "\0";
 
 	for (c = nvalue; *c != '\0'; c += strlen(c) + 1)
-		NWL_Debugf("[DBG] MULTI <%s> += {%s}\n", key, c);
+		NWL_Debug("NODE", "MULTI <%s> += {%s}", key, c);
 	nvalue_len = (size_t)(c - nvalue + 1);
 
 	att = NWL_NodeAttrGetEntry(node, key);

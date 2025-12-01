@@ -20,9 +20,42 @@ noreturn VOID NWL_ErrExit(INT nExitCode, LPCSTR lpszText)
 	exit(nExitCode);
 }
 
+static void RealDebugPrint(const char* condition, _Printf_format_string_ char const* const format, ...)
+{
+	// prefix
+	fputc('[', stdout);
+	fputs(condition, stdout);
+	fputs("] ", stdout);
+
+	// body
+	va_list ap;
+	va_start(ap, format);
+	vfprintf(stdout, format, ap);
+	va_end(ap);
+
+	// ensure trailing '\n' if format doesn't end with one
+	{
+		size_t len = strlen(format);
+		if (len == 0 || format[len - 1] != '\n')
+			fputc('\n', stdout);
+	}
+
+	fflush(stdout);
+}
+
+static void FakeDebugPrint(const char* condition, _Printf_format_string_ char const* const format, ...)
+{
+	UNREFERENCED_PARAMETER(condition);
+	UNREFERENCED_PARAMETER(format);
+}
+
+void(*NWL_Debug)(const char* condition, _Printf_format_string_ char const* const format, ...) = FakeDebugPrint;
+
 VOID NW_Init(PNWLIB_CONTEXT pContext)
 {
 	NWLC = pContext;
+	if (NWLC->Debug)
+		NWL_Debug = RealDebugPrint;
 	NWL_NtGetVersion(&NWLC->NwOsInfo);
 	GetNativeSystemInfo(&NWLC->NwSi);
 	NWLC->NwRoot = NWL_NodeAlloc("NWinfo", 0);

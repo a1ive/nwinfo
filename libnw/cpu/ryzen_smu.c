@@ -32,11 +32,7 @@ typedef struct
 #define SMU_DEBUG(...) \
 	do \
 	{ \
-		if (NWLC->Debug) \
-		{ \
-			printf("[SMU] " __VA_ARGS__); \
-			puts(""); \
-		} \
+		NWL_Debug("SMU", __VA_ARGS__); \
 	} while (0)
 
 static const char* get_codename_str(ry_codename_t codename)

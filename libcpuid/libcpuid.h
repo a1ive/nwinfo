@@ -1817,7 +1817,7 @@ struct cpu_epc_t cpuid_get_epc(int index, const struct cpu_raw_data_t* raw);
  */
 const char* cpuid_lib_version(void);
 
-typedef void (*libcpuid_warn_fn_t) (const char *msg);
+typedef void (*libcpuid_warn_fn_t) (const char* condition, char const* const format, ...);
 /**
  * @brief Sets the warning print function
  *

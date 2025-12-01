@@ -357,12 +357,6 @@ PrintCpuInfo(PNODE node, struct cpu_id_t* data)
 	PrintFeatures(node, data);
 }
 
-static void libcpuid_warn (const char* msg)
-{
-	if (NWLC->Debug)
-		printf("[CPU] %s", msg);
-}
-
 PNODE NW_Cpuid(VOID)
 {
 	uint8_t i;
@@ -373,7 +367,7 @@ PNODE NW_Cpuid(VOID)
 		NWL_NodeAppendChild(NWLC->NwRoot, node);
 	if (NWLC->Debug)
 		cpuid_set_verbosiness_level(2);
-	cpuid_set_warn_function(libcpuid_warn);
+	cpuid_set_warn_function(NWL_Debug);
 	cpuid_free_system_id(id);
 	cpuid_free_raw_data_array(raw);
 	NWL_NodeAttrSetf(node, "Total CPUs", NAFLG_FMT_NUMERIC, "%d", cpuid_get_total_cpus());

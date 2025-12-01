@@ -5,7 +5,6 @@
 #include <ws2tcpip.h>
 #include <netioapi.h>
 #include <wlanapi.h>
-#include <pdhmsg.h>
 
 #include "libnw.h"
 #include "utils.h"

@@ -606,16 +606,17 @@ PrintSmartInfo(PNODE node, CDI_SMART* ptr, INT index)
 	for (i = 0; i < count; i++)
 	{
 		char key[] = "SMART XX";
-		WCHAR* val;
+		char name[64];
 		BYTE id = cdi_get_smart_id(ptr, index, i);
 		if (id == 0)
 			continue;
 		str = cdi_get_smart_name(ptr, index, id);
-		val = cdi_get_smart_value(ptr, index, i, TRUE);
-		snprintf(key, sizeof(key), "SMART %02X", id);
-		NWL_NodeAttrSetf(node, key, 0, "%ls %s", val, NWL_Ucs2ToUtf8(str));
+		strcpy_s(name, sizeof(name), NWL_Ucs2ToUtf8(str));
 		cdi_free_string(str);
-		cdi_free_string(val);
+		str = cdi_get_smart_value(ptr, index, i, TRUE);
+		snprintf(key, sizeof(key), "SMART %02X", id);
+		NWL_NodeAttrSetf(node, key, 0, "%s %s", NWL_Ucs2ToUtf8(str), name);
+		cdi_free_string(str);
 	}
 }
 

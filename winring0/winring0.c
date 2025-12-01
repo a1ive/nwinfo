@@ -1,12 +1,10 @@
 // SPDX-License-Identifier: Unlicense
-#include <windows.h>
-#include <winioctl.h>
-#include <pathcch.h>
-#include <winternl.h>
-#include <shlobj.h>
 #include "winring0.h"
 #include "winring0_priv.h"
 #include "../libnw/libnw.h"
+#include "../libnw/utils.h"
+#include <pathcch.h>
+#include <shlobj.h>
 
 static BOOL load_wr0(struct wr0_drv_t* drv)
 {
@@ -180,8 +178,7 @@ static int load_pio_mod(struct pio_mod_t* mod, LPCWSTR name)
 	if (!ReadFile(hFile, mod->blob, mod->size, &mod->size, NULL) || mod->size == 0)
 		goto fail;
 
-	if (NWLC->Debug)
-		printf("[PIO] Load file OK %ls\n", name);
+	NWL_Debug("PIO", "Load file OK %s", NWL_Ucs2ToUtf8(name));
 
 	mod->hd = CreateFileW(PAWNIO_OBJ,
 		GENERIC_WRITE | GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE,
@@ -193,8 +190,7 @@ static int load_pio_mod(struct pio_mod_t* mod, LPCWSTR name)
 
 	CloseHandle(hFile);
 
-	if (NWLC->Debug)
-		printf("[PIO] Load blob OK %ls size=%lu\n", name, mod->size);
+	NWL_Debug("PIO", "Load blob OK %s size=%lu", NWL_Ucs2ToUtf8(name), mod->size);
 	return 0;
 
 fail:
@@ -207,8 +203,7 @@ fail:
 	mod->blob = NULL;
 	mod->size = 0;
 	mod->hd = INVALID_HANDLE_VALUE;
-	if (NWLC->Debug)
-		printf("[PIO] Load blob FAIL %ls\n", name);
+	NWL_Debug("PIO", "Load blob FAIL %s", NWL_Ucs2ToUtf8(name));
 	return -1;
 }
 
@@ -327,27 +322,22 @@ struct wr0_drv_t* WR0_OpenDriver(void)
 		ZeroMemory(drv->path, MAX_PATH);
 		if (drv->load(drv))
 		{
-			if (NWLC->Debug)
-				printf("[DRV] %ls loaded.\n", drv->name);
+			NWL_Debug("DRV", "%s loaded.", NWL_Ucs2ToUtf8(drv->name));
 			return drv;
 		}
 		if (!drv->install(drv))
 		{
-			if (NWLC->Debug)
-				printf("[DRV] cannot install %ls.\n", drv->name);
+			NWL_Debug("DRV", "cannot install %s.", NWL_Ucs2ToUtf8(drv->name));
 			ZeroMemory(drv->path, MAX_PATH);
 			continue;
 		}
-		if (NWLC->Debug)
-			printf("[DRV] %ls installed.\n", drv->name);
+		NWL_Debug("DRV", "%s installed.", NWL_Ucs2ToUtf8(drv->name));
 		if (drv->load(drv))
 		{
-			if (NWLC->Debug)
-				printf("[DRV] %ls loaded.\n", drv->name);
+			NWL_Debug("DRV", "%s loaded.", NWL_Ucs2ToUtf8(drv->name));
 			return drv;
 		}
-		if (NWLC->Debug)
-			printf("[DRV] cannot load %ls.\n", drv->name);
+		NWL_Debug("DRV", "cannot load %s.", NWL_Ucs2ToUtf8(drv->name));
 		ZeroMemory(drv->path, MAX_PATH);
 	}
 	return NULL;
@@ -468,8 +458,8 @@ uint8_t WR0_RdIo8(struct wr0_drv_t* drv, uint16_t port)
 	default:
 		return 0;
 	}
-	if (!result && NWLC->Debug)
-		printf("[IO] Read 8 @%u Failed\n", port);
+	if (!result)
+		NWL_Debug("IO", "Read 8 @%u failed", port);
 	return value;
 }
 
@@ -508,8 +498,8 @@ uint16_t WR0_RdIo16(struct wr0_drv_t* drv, uint16_t port)
 	default:
 		return 0;
 	}
-	if (!result && NWLC->Debug)
-		printf("[IO] Read 16 @%u Failed\n", port);
+	if (!result)
+		NWL_Debug("IO", "Read 16 @%u failed", port);
 	return value;
 }
 
@@ -550,8 +540,8 @@ uint32_t WR0_RdIo32(struct wr0_drv_t* drv, uint16_t port)
 	default:
 		return 0;
 	}
-	if (!result && NWLC->Debug)
-		printf("[IO] Read 32 @%u Failed\n", port);
+	if (!result)
+		NWL_Debug("IO", "Read 32 @%u failed", port);
 	return value;
 }
 
@@ -600,8 +590,8 @@ void WR0_WrIo8(struct wr0_drv_t* drv, uint16_t port, uint8_t value)
 	default:
 		return;
 	}
-	if (!result && NWLC->Debug)
-		printf("[IO] Write 8 @%u->%02X Failed\n", port, value);
+	if (!result)
+		NWL_Debug("IO", "Write 8 @%u->%02X failed", port, value);
 }
 
 void WR0_WrIo16(struct wr0_drv_t* drv, uint16_t port, uint16_t value)
@@ -649,8 +639,8 @@ void WR0_WrIo16(struct wr0_drv_t* drv, uint16_t port, uint16_t value)
 	default:
 		return;
 	}
-	if (!result && NWLC->Debug)
-		printf("[IO] Write 16 @%u->%04X Failed\n", port, value);
+	if (!result)
+		NWL_Debug("IO", "Write 16 @%u->%04X failed", port, value);
 }
 
 void WR0_WrIo32(struct wr0_drv_t* drv, uint16_t port, uint32_t value)
@@ -698,8 +688,8 @@ void WR0_WrIo32(struct wr0_drv_t* drv, uint16_t port, uint32_t value)
 	default:
 		return;
 	}
-	if (!result && NWLC->Debug)
-		printf("[IO] Write 32 @%u->%08X Failed\n", port, value);
+	if (!result)
+		NWL_Debug("IO", "Write 32 @%u->%08X failed", port, value);
 }
 
 int WR0_RdPciConf(struct wr0_drv_t* drv, uint32_t addr, uint32_t reg, void* value, uint32_t size)
@@ -749,8 +739,7 @@ int WR0_RdPciConf(struct wr0_drv_t* drv, uint32_t addr, uint32_t reg, void* valu
 	}
 	if (!result)
 	{
-		//if (NWLC->Debug)
-			//printf("[IO] Read PCI @%X(%X+%u) Failed\n", addr, reg, size);
+		//NWL_Debug("IO", "Read PCI @%X(%X+%u) failed", addr, reg, size);
 		return -2;
 	}
 	return 0;
@@ -853,8 +842,7 @@ int WR0_WrPciConf(struct wr0_drv_t* drv, uint32_t addr, uint32_t reg, void* valu
 	}
 	if (!result)
 	{
-		if (NWLC->Debug)
-			printf("[IO] Write PCI @%X(%X+%u) Failed\n", addr, reg, size);
+		NWL_Debug("IO", "Write PCI @%X(%X+%u) failed", addr, reg, size);
 		return -2;
 	}
 	return 0;
@@ -1109,8 +1097,7 @@ DWORD WR0_RdAmdSmn(struct wr0_drv_t* drv, enum wr0_smn_type smn, DWORD reg)
 		return 0;
 	}
 
-	if (NWLC->Debug)
-		printf("[SMN] Read AMD SMN reg=%08xh (%X,%X) %d value=%08xh\n", reg, addr[0], addr[1], result, value);
+	NWL_Debug("SMN", "Read AMD SMN reg=%08xh (%X,%X) %d value=%08xh", reg, addr[0], addr[1], result, value);
 
 	return value;
 }
@@ -1138,8 +1125,7 @@ WR0_SendSmuCmd(struct wr0_drv_t* drv, uint32_t cmd, uint32_t rsp, uint32_t arg, 
 	}
 	result = DeviceIoControl(drv->handle, IOCTL_CPUZ_SEND_SMN_CMD,
 		inBuf, sizeof(inBuf), outBuf, sizeof(outBuf), &returnedLength, NULL);
-	if (NWLC->Debug)
-		printf("[SMU] Send SMU fn=%08xh %d -> %u\n", fn, result, outBuf[0]);
+	NWL_Debug("SMU", "Send SMU fn=%08xh %d -> %u", fn, result, outBuf[0]);
 	memcpy(args, &outBuf[1], 6 * sizeof(uint32_t));
 	if (result && outBuf[0] == 1)
 		return 0;

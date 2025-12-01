@@ -46,39 +46,7 @@ void match_features(const struct feature_map_t* matchtable, int count, uint32_t 
 			data->flags[matchtable[i].feature] = 1;
 }
 
-static void default_warn(const char *msg)
-{
-	fprintf(stderr, "%s", msg);
-}
-
-libcpuid_warn_fn_t _warn_fun = default_warn;
-
-#if defined(_MSC_VER)
-#	define vsnprintf _vsnprintf
-#endif
-void warnf(const char* format, ...)
-{
-	if (getenv("LIBCPUID_NO_WARN"))
-		return;
-	char buff[1024];
-	va_list va;
-	if (!_warn_fun) return;
-	va_start(va, format);
-	vsnprintf(buff, sizeof(buff), format, va);
-	va_end(va);
-	_warn_fun(buff);
-}
-
-void debugf(int verboselevel, const char* format, ...)
-{
-	char buff[1024];
-	va_list va;
-	if (!_warn_fun || (verboselevel > _current_verboselevel)) return;
-	va_start(va, format);
-	vsnprintf(buff, sizeof(buff), format, va);
-	va_end(va);
-	_warn_fun(buff);
-}
+libcpuid_warn_fn_t _warn_fun = NULL;
 
 static int score(const struct match_entry_t* entry, const struct cpu_id_t* data)
 {

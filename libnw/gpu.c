@@ -70,18 +70,6 @@ VOID NWL_FreeGpu(PNWLIB_GPU_INFO info)
 	ZeroMemory(info, sizeof(NWLIB_GPU_INFO));
 }
 
-void GPU_DBG(LPCSTR drv, LPCSTR _Printf_format_string_ format, ...)
-{
-	if (!NWLC->Debug)
-		return;
-	va_list args;
-	va_start(args, format);
-	printf("[%s] ", drv);
-	vprintf(format, args);
-	va_end(args);
-	printf("\n");
-}
-
 PNODE NW_Gpu(VOID)
 {
 	NWLIB_GPU_INFO info;

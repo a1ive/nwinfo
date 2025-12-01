@@ -8,6 +8,7 @@
 #include <windows.h>
 #include "gpu.h"
 #include "nvapi.h"
+#include "../libnw.h"
 
 #define NVDL "NV"
 
@@ -59,16 +60,16 @@ static void* nv_gpu_init(PNWLIB_GPU_INFO info)
 	ctx->Result = NvAPI_Initialize();
 	if (ctx->Result != NVAPI_OK)
 	{
-		GPU_DBG(NVDL, "NvAPI_Initialize failed %d", ctx->Result);
+		NWL_Debug(NVDL, "NvAPI_Initialize failed %d", ctx->Result);
 		free(ctx);
 		return NULL;
 	}
-	GPU_DBG(NVDL, "NvAPI Initialized");
+	NWL_Debug(NVDL, "NvAPI Initialized");
 
 	ctx->Result = NvAPI_EnumPhysicalGPUs(ctx->GpuHandle, &ctx->GpuCount);
 	if (ctx->Result != NVAPI_OK)
 		goto fail;
-	GPU_DBG(NVDL, "Found %lu devices", (unsigned long)ctx->GpuCount);
+	NWL_Debug(NVDL, "Found %lu devices", (unsigned long)ctx->GpuCount);
 
 	ctx->List = calloc(ctx->GpuCount, sizeof(struct NV_GPU_DATA));
 	if (ctx->List == NULL)
@@ -79,13 +80,13 @@ static void* nv_gpu_init(PNWLIB_GPU_INFO info)
 		NvAPI_GPU_GetPCIIdentifiers(ctx->GpuHandle[i],
 			&ctx->List[i].DeviceId, &ctx->List[i].Subsys, &ctx->List[i].RevId, &ctx->List[i].ExtDeviceId);
 		ctx->List[i].VendorId = ctx->List[i].DeviceId & 0xFFFF;
-		GPU_DBG(NVDL, "Found [%d] %s (%08X-%04X-REV_%02X-EXT_%X)", i, ctx->List[i].Name,
+		NWL_Debug(NVDL, "Found [%d] %s (%08X-%04X-REV_%02X-EXT_%X)", i, ctx->List[i].Name,
 			ctx->List[i].DeviceId, ctx->List[i].Subsys, ctx->List[i].RevId, ctx->List[i].ExtDeviceId);
 		if (ctx->List[i].Name[0] != '\0' && ctx->List[i].VendorId == 0x10DE)
 			ctx->List[i].Valid = NV_TRUE;
 		NvAPI_GPU_GetBusId(ctx->GpuHandle[i], &ctx->List[i].BusId);
 		NvAPI_GPU_GetBusSlotId(ctx->GpuHandle[i], &ctx->List[i].SlotId);
-		GPU_DBG(NVDL, "Valid GPU [%d] %04X:%04X Bus %X Slot %X", i,
+		NWL_Debug(NVDL, "Valid GPU [%d] %04X:%04X Bus %X Slot %X", i,
 			ctx->List[i].VendorId, ctx->List[i].ExtDeviceId, ctx->List[i].BusId, ctx->List[i].SlotId);
 
 		ctx->List[i].MemEx.version = NV_GPU_MEMORY_INFO_EX_VER;
@@ -104,7 +105,7 @@ static void* nv_gpu_init(PNWLIB_GPU_INFO info)
 	return ctx;
 
 fail:
-	GPU_DBG(NVDL, "INIT ERR %d", ctx->Result);
+	NWL_Debug(NVDL, "INIT ERR %d", ctx->Result);
 	NvAPI_Unload();
 	return NULL;
 }

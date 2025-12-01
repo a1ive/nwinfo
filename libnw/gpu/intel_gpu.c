@@ -8,6 +8,7 @@
 #include <windows.h>
 #include "igcl.h"
 #include "gpu.h"
+#include "../libnw.h"
 
 #define IGCL "IGCL"
 
@@ -54,7 +55,7 @@ static void* igcl_gpu_init(PNWLIB_GPU_INFO info)
 	ctx->Result = ctlEnumerateDevices(ctx->ApiHandle, &ctx->AdapterCount, NULL);
 	if (ctx->Result != CTL_RESULT_SUCCESS)
 		goto fail;
-	GPU_DBG(IGCL, "Found %u devices", ctx->AdapterCount);
+	NWL_Debug(IGCL, "Found %u devices", ctx->AdapterCount);
 
 	ctx->Devices = calloc(ctx->AdapterCount, sizeof(ctl_device_adapter_handle_t));
 	if (ctx->Devices == NULL)
@@ -76,36 +77,36 @@ static void* igcl_gpu_init(PNWLIB_GPU_INFO info)
 		gpu->Props.device_id_size = sizeof(LUID);
 		gpu->Props.Version = 2;
 		ctx->Result = ctlGetDeviceProperties(ctx->Devices[i], &gpu->Props);
-		GPU_DBG(IGCL, "GetDeviceProperties [%u] %X", i, ctx->Result);
+		NWL_Debug(IGCL, "GetDeviceProperties [%u] %X", i, ctx->Result);
 		if (ctx->Result != CTL_RESULT_SUCCESS)
 			continue;
 
 		if (gpu->Props.device_type != CTL_DEVICE_TYPE_GRAPHICS
 			|| gpu->Props.pci_vendor_id != 0x8086)
 		{
-			GPU_DBG(IGCL, "Skip [%u] TYPE %u VID %04X", i, gpu->Props.device_type, gpu->Props.pci_vendor_id);
+			NWL_Debug(IGCL, "Skip [%u] TYPE %u VID %04X", i, gpu->Props.device_type, gpu->Props.pci_vendor_id);
 			continue;
 		}
 
 		gpu->Valid = TRUE;
-		GPU_DBG(IGCL, "Found Intel GPU %s (%04X-%04X %04X%04X %02X)",
+		NWL_Debug(IGCL, "Found Intel GPU %s (%04X-%04X %04X%04X %02X)",
 			gpu->Props.name, gpu->Props.pci_vendor_id, gpu->Props.pci_device_id,
 			gpu->Props.pci_subsys_id, gpu->Props.pci_subsys_vendor_id, gpu->Props.rev_id);
 
 		gpu->Pci.Size = sizeof(ctl_pci_properties_t);
 		ctx->Result = ctlPciGetProperties(ctx->Devices[i], &gpu->Pci);
-		GPU_DBG(IGCL, "BDF %u:%u:%u",
+		NWL_Debug(IGCL, "BDF %u:%u:%u",
 			gpu->Pci.address.bus, gpu->Pci.address.device, gpu->Pci.address.function);
 
 		ctx->Result = ctlEnumMemoryModules(ctx->Devices[i], &gpu->MemoryCount, NULL);
-		GPU_DBG(IGCL, "%u memory handle(s)", gpu->MemoryCount);
+		NWL_Debug(IGCL, "%u memory handle(s)", gpu->MemoryCount);
 		if (gpu->MemoryCount > MAX_MEM_HANDLE)
 			gpu->MemoryCount = MAX_MEM_HANDLE;
 	}
 	return ctx;
 
 fail:
-	GPU_DBG(IGCL, "INIT ERR %x", ctx->Result);
+	NWL_Debug(IGCL, "INIT ERR %x", ctx->Result);
 	free(ctx->List);
 	free(ctx->Devices);
 	if (ctx->ApiHandle)

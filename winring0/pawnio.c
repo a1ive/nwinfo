@@ -84,15 +84,7 @@ int WR0_ExecPawn(struct wr0_drv_t* drv, struct pio_mod_t* mod, LPCSTR fn,
 
 	free(inBuf);
 
-	if (NWLC->Debug)
-	{
-		printf("[PIO] Exec %s %s", bRes ? "OK" : "FAIL", fn);
-		for (SIZE_T i = 0; in && i < min(in_size, 4); i++)
-			printf(" in[%zu]=%llxh", i, in[i]);
-		for (SIZE_T i = 0; out && i < min(out_size, 4); i++)
-			printf(" out[%zu]=%llxh", i, out[i]);
-		printf(" ret=%lu\n", returnedLength);
-	}
+	NWL_Debug("PIO", "Exec %s %s in@%zu out@%zu ret@%lu", bRes ? "OK" : "FAIL", fn, in_size, out_size, returnedLength);
 
 	if (bRes == FALSE)
 		return -1;

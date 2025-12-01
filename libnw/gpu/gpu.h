@@ -69,5 +69,3 @@ VOID NWL_InitGpu(PNWLIB_GPU_INFO info);
 VOID NWL_GetGpuInfo(PNWLIB_GPU_INFO info);
 
 VOID NWL_FreeGpu(PNWLIB_GPU_INFO info);
-
-void GPU_DBG(LPCSTR drv, LPCSTR _Printf_format_string_ format, ...);
