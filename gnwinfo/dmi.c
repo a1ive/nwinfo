@@ -6,7 +6,6 @@ static int tree_id = 0;
 
 static void draw_dmi_node(struct nk_context* ctx, PNODE node)
 {
-	int i;
 	char name[48];
 	if (!node || !node->attributes || node->name[0] != 'T')
 		return;
@@ -20,7 +19,7 @@ static void draw_dmi_node(struct nk_context* ctx, PNODE node)
 		const float ratio[] = { 0.4f, 0.6f };
 		INT count = NWL_NodeAttrCount(node);
 		nk_layout_row(ctx, NK_DYNAMIC, 0, 2, ratio);
-		for (i = 0; i < count; i++)
+		for (INT i = 0; i < count; i++)
 		{
 			PNODE_ATT att = NWL_NodeAttrEnum(node, i);
 			if (!att)

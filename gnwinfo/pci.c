@@ -6,7 +6,6 @@ static int tree_id = 0;
 
 static void draw_pci_node(struct nk_context* ctx, PNODE node)
 {
-	int i;
 	if (!node || !node->attributes)
 		return;
 	if (nk_tree_image_push_id(ctx, NK_TREE_TAB,
@@ -17,7 +16,7 @@ static void draw_pci_node(struct nk_context* ctx, PNODE node)
 		const float ratio[] = { 0.2f, 0.8f };
 		INT count = NWL_NodeAttrCount(node);
 		nk_layout_row(ctx, NK_DYNAMIC, 0, 2, ratio);
-		for (i = 0; i < count; i++)
+		for (INT i = 0; i < count; i++)
 		{
 			PNODE_ATT att = NWL_NodeAttrEnum(node, i);
 			if (!att || strcmp(att->key, "HWID") == 0)

@@ -1246,9 +1246,9 @@ static void ProcGroupAssoc(PNODE tab, void* p)
 	ndev = NWL_NodeAppendNew(tab, "Items", NFLG_TABLE);
 	for (i = 0; i < count; i++)
 	{
-		PNODE p = NWL_NodeAppendNew(ndev, "Item", NFLG_TABLE_ROW);
-		NWL_NodeAttrSetf(p, "Type", NAFLG_FMT_NUMERIC, "%u", pGA->GAItem[i].ItemType);
-		NWL_NodeAttrSetf(p, "Handle", NAFLG_FMT_NUMERIC, "%u", pGA->GAItem[i].ItemHandle);
+		PNODE item = NWL_NodeAppendNew(ndev, "Item", NFLG_TABLE_ROW);
+		NWL_NodeAttrSetf(item, "Type", NAFLG_FMT_NUMERIC, "%u", pGA->GAItem[i].ItemType);
+		NWL_NodeAttrSetf(item, "Handle", NAFLG_FMT_NUMERIC, "%u", pGA->GAItem[i].ItemHandle);
 	}
 }
 

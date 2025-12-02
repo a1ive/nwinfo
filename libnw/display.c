@@ -691,8 +691,6 @@ static void DecodeEdid(const BYTE* edidData, DWORD edidSize,  PNODE nm, CHAR* id
 	int edidMajor = edidData[18];
 	int edidMinor = edidData[19];
 
-	BYTE gammaValue = edidData[23];
-
 	mi.Ver = (edidMajor << 8) | edidMinor;
 	mi.Width = 10ULL * edidData[21];
 	mi.Height = 10ULL * edidData[22];

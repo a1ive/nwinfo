@@ -41,12 +41,11 @@ get_health_status(enum CDI_DISK_STATUS status)
 static void
 draw_health(struct nk_context* ctx, CDI_SMART* smart, int disk, float height)
 {
-	int n;
-	char tmp[32];
-
 	if (nk_group_begin(ctx, "SMART Health", 0))
 	{
+		int n;
 		int health;
+		char tmp[32];
 		nk_layout_row_dynamic(ctx, height / 5.0f, 1);
 		nk_l(ctx, N_(N__HEALTH_STATUS), NK_TEXT_CENTERED);
 		n = cdi_get_int(smart, disk, CDI_INT_LIFE);

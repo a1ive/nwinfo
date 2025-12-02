@@ -388,7 +388,7 @@ static ry_err_t send_command(ry_handle_t* handle, uint32_t fn, ry_args_t* args)
 	write_smn(handle, handle->rsmu_rsp_addr, 0);
 
 	// Write the arguments into the argument registers
-	for (int i = 0; i < SMU_MAX_ARGS; i++)
+	for (i = 0; i < SMU_MAX_ARGS; i++)
 	{
 		rc = write_smn(handle, handle->rsmu_arg_addr + (i * 4), args->args[i]);
 		if (rc != RYZEN_SMU_OK)
@@ -412,7 +412,7 @@ static ry_err_t send_command(ry_handle_t* handle, uint32_t fn, ry_args_t* args)
 		return RYZEN_SMU_CMD_TIMEOUT;
 
 	// Read the response value
-	for (int i = 0; i < SMU_MAX_ARGS; i++)
+	for (i = 0; i < SMU_MAX_ARGS; i++)
 	{
 		rc = read_smn(handle, handle->rsmu_arg_addr + (i * 4), &args->args[i]);
 		if (rc != RYZEN_SMU_OK)
