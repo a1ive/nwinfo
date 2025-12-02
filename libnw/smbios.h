@@ -654,3 +654,9 @@ typedef struct _TYPE_46_
 } StringProperty, * PStringProperty;
 
 #pragma pack()
+
+const char* NWL_GetDmiString(UINT8* hdr, UINT8 offset);
+
+PSMBIOSHEADER NWL_GetNextDmiTable(LPBYTE* pCur, const LPBYTE lastAddr, UINT8 Type);
+
+const char* NWL_GetDmiProcessorSocket(PProcessorInfo pProcessor);

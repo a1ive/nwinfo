@@ -4,7 +4,7 @@
 #include "smbios.h"
 #include "utils.h"
 
-static const char* LocateString(UINT8* hdr, UINT8 offset)
+const char* NWL_GetDmiString(UINT8* hdr, UINT8 offset)
 {
 	UINT8* ptr = hdr + hdr[1]; // PSMBIOSHEADER->Length
 	UINT8* end = NWLC->NwSmbios->Data + NWLC->NwSmbios->Length;
@@ -55,10 +55,10 @@ static void ProcBIOSInfo(PNODE tab, void* p)
 	NWL_NodeAttrSet(tab, "Description", "BIOS Information", 0);
 	if (pBIOS->Header.Length < 0x12) // 2.0
 		return;
-	NWL_NodeAttrSet(tab, "Vendor", LocateString(p, pBIOS->Vendor), 0);
-	NWL_NodeAttrSet(tab, "Version", LocateString(p, pBIOS->Version), 0);
+	NWL_NodeAttrSet(tab, "Vendor", NWL_GetDmiString(p, pBIOS->Vendor), 0);
+	NWL_NodeAttrSet(tab, "Version", NWL_GetDmiString(p, pBIOS->Version), 0);
 	NWL_NodeAttrSetf(tab, "Starting Segment", 0, "%04Xh", pBIOS->StartingAddrSeg);
-	NWL_NodeAttrSet(tab, "Release Date", LocateString(p, pBIOS->ReleaseDate), 0);
+	NWL_NodeAttrSet(tab, "Release Date", NWL_GetDmiString(p, pBIOS->ReleaseDate), 0);
 	if (pBIOS->ROMSize == 0xFFU && pBIOS->Header.Length >= 0x1A) // 3.1
 		NWL_NodeAttrSet(tab, "ROM Size", NWL_GetHumanSize(pExtROMSizeToBytes(pBIOS->ExtendROMSize), NWLC->NwUnits, 1024), NAFLG_FMT_HUMAN_SIZE);
 	else // 64KiB * (n + 1)
@@ -107,18 +107,18 @@ static void ProcSysInfo(PNODE tab, void* p)
 	NWL_NodeAttrSet(tab, "Description", "System Information", 0);
 	if (pSystem->Header.Length < 0x08) // 2.0
 		return;
-	NWL_NodeAttrSet(tab, "Manufacturer", LocateString(p, pSystem->Manufacturer), 0);
-	NWL_NodeAttrSet(tab, "Product Name", LocateString(p, pSystem->ProductName), 0);
-	NWL_NodeAttrSet(tab, "Version", LocateString(p, pSystem->Version), 0);
-	NWL_NodeAttrSet(tab, "Serial Number", LocateString(p, pSystem->SN), NAFLG_FMT_SENSITIVE);
+	NWL_NodeAttrSet(tab, "Manufacturer", NWL_GetDmiString(p, pSystem->Manufacturer), 0);
+	NWL_NodeAttrSet(tab, "Product Name", NWL_GetDmiString(p, pSystem->ProductName), 0);
+	NWL_NodeAttrSet(tab, "Version", NWL_GetDmiString(p, pSystem->Version), 0);
+	NWL_NodeAttrSet(tab, "Serial Number", NWL_GetDmiString(p, pSystem->SN), NAFLG_FMT_SENSITIVE);
 	if (pSystem->Header.Length < 0x19) // 2.1
 		return;
 	NWL_NodeAttrSet(tab, "UUID", NWL_GuidToStr(pSystem->UUID), NAFLG_FMT_GUID);
 	NWL_NodeAttrSet(tab, "Wake-up Type", pWakeUpTypeToStr(pSystem->WakeUpType), 0);
 	if (pSystem->Header.Length < 0x1b) // 2.4
 		return;
-	NWL_NodeAttrSet(tab, "SKU Number", LocateString(p, pSystem->SKUNumber), 0);
-	NWL_NodeAttrSet(tab, "Family", LocateString(p, pSystem->Family), 0);
+	NWL_NodeAttrSet(tab, "SKU Number", NWL_GetDmiString(p, pSystem->SKUNumber), 0);
+	NWL_NodeAttrSet(tab, "Family", NWL_GetDmiString(p, pSystem->Family), 0);
 }
 
 static const CHAR*
@@ -148,19 +148,19 @@ static void ProcBoardInfo(PNODE tab, void* p)
 	NWL_NodeAttrSet(tab, "Description", "Base Board Information", 0);
 	if (pBoard->Header.Length < 0x08)
 		return;
-	NWL_NodeAttrSet(tab, "Manufacturer", LocateString(p, pBoard->Manufacturer), 0);
-	NWL_NodeAttrSet(tab, "Product Name", LocateString(p, pBoard->Product), 0);
-	NWL_NodeAttrSet(tab, "Version", LocateString(p, pBoard->Version), 0);
-	NWL_NodeAttrSet(tab, "Serial Number", LocateString(p, pBoard->SN), NAFLG_FMT_SENSITIVE);
+	NWL_NodeAttrSet(tab, "Manufacturer", NWL_GetDmiString(p, pBoard->Manufacturer), 0);
+	NWL_NodeAttrSet(tab, "Product Name", NWL_GetDmiString(p, pBoard->Product), 0);
+	NWL_NodeAttrSet(tab, "Version", NWL_GetDmiString(p, pBoard->Version), 0);
+	NWL_NodeAttrSet(tab, "Serial Number", NWL_GetDmiString(p, pBoard->SN), NAFLG_FMT_SENSITIVE);
 	if (pBoard->Header.Length < 0x09)
 		return;
-	NWL_NodeAttrSet(tab, "Asset Tag", LocateString(p, pBoard->AssetTag), 0);
+	NWL_NodeAttrSet(tab, "Asset Tag", NWL_GetDmiString(p, pBoard->AssetTag), 0);
 	if (pBoard->Header.Length < 0x0a)
 		return;
 	NWL_NodeAttrSetf(tab, "Feature Flags", 0, "0x%02X", pBoard->FeatureFlags);
 	if (pBoard->Header.Length < 0x0b)
 		return;
-	NWL_NodeAttrSet(tab, "Location in Chassis", LocateString(p, pBoard->LocationInChassis), 0);
+	NWL_NodeAttrSet(tab, "Location in Chassis", NWL_GetDmiString(p, pBoard->LocationInChassis), 0);
 	if (pBoard->Header.Length < 0x0d)
 		return;
 	NWL_NodeAttrSetf(tab, "Chassis Handle", NAFLG_FMT_NUMERIC, "%u", pBoard->ChassisHandle);
@@ -249,10 +249,10 @@ static void ProcSystemEnclosure(PNODE tab, void* p)
 	NWL_NodeAttrSetf(tab, "Type", 0, "%s%s",
 		(pSysEnclosure->Type & 0x80) ? "[LOCK]" : "",
 		pSystemEnclosureTypeToStr(pSysEnclosure->Type));
-	NWL_NodeAttrSet(tab, "Manufacturer", LocateString(p, pSysEnclosure->Manufacturer), 0);
-	NWL_NodeAttrSet(tab, "Version", LocateString(p, pSysEnclosure->Version), 0);
-	NWL_NodeAttrSet(tab, "Serial Number", LocateString(p, pSysEnclosure->SN), NAFLG_FMT_SENSITIVE);
-	NWL_NodeAttrSet(tab, "Asset Tag", LocateString(p, pSysEnclosure->AssetTag), 0);
+	NWL_NodeAttrSet(tab, "Manufacturer", NWL_GetDmiString(p, pSysEnclosure->Manufacturer), 0);
+	NWL_NodeAttrSet(tab, "Version", NWL_GetDmiString(p, pSysEnclosure->Version), 0);
+	NWL_NodeAttrSet(tab, "Serial Number", NWL_GetDmiString(p, pSysEnclosure->SN), NAFLG_FMT_SENSITIVE);
+	NWL_NodeAttrSet(tab, "Asset Tag", NWL_GetDmiString(p, pSysEnclosure->AssetTag), 0);
 	if (pSysEnclosure->Header.Length < 0x0d) // 2.1
 		return;
 	NWL_NodeAttrSet(tab, "Boot-up State", pBootUpStateToStr(pSysEnclosure->BootupState), 0);
@@ -285,7 +285,7 @@ static void ProcSystemEnclosure(PNODE tab, void* p)
 	if (pSysEnclosure->Header.Length < 0x16 + dwElementSize) // 2.7
 		return;
 	UINT8 skuNumber = *((UINT8*)p + 0x15 + dwElementSize);
-	NWL_NodeAttrSet(tab, "Asset Tag", LocateString(p, skuNumber), 0);
+	NWL_NodeAttrSet(tab, "Asset Tag", NWL_GetDmiString(p, skuNumber), 0);
 	if (pSysEnclosure->Header.Length < 0x18 + dwElementSize) // 3.9
 		return;
 	UINT8 rackType = *((UINT8*)p + 0x16 + dwElementSize);
@@ -536,7 +536,7 @@ pProcessorStatusToStr(UCHAR Status)
 	return "Unknown";
 }
 
-static const CHAR*
+static inline const CHAR*
 pProcessorUpgradeToStr(UCHAR Upgrade)
 {
 	switch (Upgrade)
@@ -632,20 +632,27 @@ pProcessorUpgradeToStr(UCHAR Upgrade)
 	return "Unknown";
 }
 
+const char* NWL_GetDmiProcessorSocket(PProcessorInfo pProcessor)
+{
+	if (pProcessor->ProcessorUpgrade == 0xFF && pProcessor->Header.Length > 0x32) // Socket Type must be non-null
+		return NWL_GetDmiString((UINT8*)pProcessor, pProcessor->SocketType);
+	else
+		return pProcessorUpgradeToStr(pProcessor->ProcessorUpgrade);
+}
 
 static void ProcProcessorInfo(PNODE tab, void* p)
 {
-	PProcessorInfo	pProcessor = (PProcessorInfo)p;
+	PProcessorInfo pProcessor = (PProcessorInfo)p;
 	NWL_NodeAttrSet(tab, "Description", "Processor Information", 0);
 	if (pProcessor->Header.Length < 0x1a) // 2.0
 		return;
-	LPCSTR lpManufacturer = LocateString(p, pProcessor->Manufacturer);
-	NWL_NodeAttrSet(tab, "Socket Designation", LocateString(p, pProcessor->SocketDesignation), 0);
+	LPCSTR lpManufacturer = NWL_GetDmiString(p, pProcessor->Manufacturer);
+	NWL_NodeAttrSet(tab, "Socket Designation", NWL_GetDmiString(p, pProcessor->SocketDesignation), 0);
 	NWL_NodeAttrSet(tab, "Type", pProcessorTypeToStr(pProcessor->Type), 0);
 	NWL_NodeAttrSet(tab, "Processor Family", pProcessorFamilyToStr(pProcessor->Family, lpManufacturer), 0);
 	NWL_NodeAttrSet(tab, "Processor Manufacturer", lpManufacturer, 0);
 	NWL_NodeAttrSetf(tab, "Processor ID", 0, "%08X_%08X", (UINT32)(pProcessor->ID >> 32), (UINT32)(pProcessor->ID & 0xFFFFFFFF)); // TODO
-	NWL_NodeAttrSet(tab, "Processor Version", LocateString(p, pProcessor->Version), 0);
+	NWL_NodeAttrSet(tab, "Processor Version", NWL_GetDmiString(p, pProcessor->Version), 0);
 	if (!pProcessor->Voltage)
 	{
 		// unsupported
@@ -669,10 +676,7 @@ static void ProcProcessorInfo(PNODE tab, void* p)
 	NWL_NodeAttrSetf(tab, "Status", 0, "%s%s",
 		(pProcessor->Status & 0x40) ? "Populated " : "Unpopulated ", // Bit 6
 		pProcessorStatusToStr(pProcessor->Status));
-	if (pProcessor->ProcessorUpgrade == 0xFF && pProcessor->Header.Length > 0x32) // Socket Type must be non-null
-		NWL_NodeAttrSet(tab, "Processor Upgrade", LocateString(p, pProcessor->SocketType), 0);
-	else
-		NWL_NodeAttrSet(tab, "Processor Upgrade", pProcessorUpgradeToStr(pProcessor->ProcessorUpgrade), 0);
+	NWL_NodeAttrSet(tab, "Processor Upgrade", NWL_GetDmiProcessorSocket(pProcessor), 0);
 	if (pProcessor->Header.Length < 0x20) // 2.1
 		return;
 	NWL_NodeAttrSetf(tab, "L1 Cache Handle", NAFLG_FMT_NUMERIC, "%u", pProcessor->L1CacheHandle);
@@ -680,9 +684,9 @@ static void ProcProcessorInfo(PNODE tab, void* p)
 	NWL_NodeAttrSetf(tab, "L3 Cache Handle", NAFLG_FMT_NUMERIC, "%u", pProcessor->L3CacheHandle);
 	if (pProcessor->Header.Length < 0x23) // 2.3
 		return;
-	NWL_NodeAttrSet(tab, "Serial Number", LocateString(p, pProcessor->Serial), NAFLG_FMT_SENSITIVE);
-	NWL_NodeAttrSet(tab, "Asset Tag", LocateString(p, pProcessor->AssetTag), 0);
-	NWL_NodeAttrSet(tab, "Part Number", LocateString(p, pProcessor->PartNum), 0);
+	NWL_NodeAttrSet(tab, "Serial Number", NWL_GetDmiString(p, pProcessor->Serial), NAFLG_FMT_SENSITIVE);
+	NWL_NodeAttrSet(tab, "Asset Tag", NWL_GetDmiString(p, pProcessor->AssetTag), 0);
+	NWL_NodeAttrSet(tab, "Part Number", NWL_GetDmiString(p, pProcessor->PartNum), 0);
 	if (pProcessor->Header.Length < 0x28) // 2.5
 		return;
 	if (pProcessor->Family == 0xef && pProcessor->Header.Length > 0x28)
@@ -703,7 +707,7 @@ static void ProcProcessorInfo(PNODE tab, void* p)
 		NWL_NodeAttrSetf(tab, "Thread Enabled", NAFLG_FMT_NUMERIC, "%u", pProcessor->ThreadEnabled);
 	NWL_NodeAttrSetf(tab, "Processor Characteristics", 0, "0x%04X", pProcessor->ProcessorChar);
 	if (pProcessor->Header.Length > 0x32) // 3.8
-		NWL_NodeAttrSet(tab, "Socket Type", LocateString(p, pProcessor->SocketType), 0);
+		NWL_NodeAttrSet(tab, "Socket Type", NWL_GetDmiString(p, pProcessor->SocketType), 0);
 }
 
 static void ProcMemCtrlInfo(PNODE tab, void* p)
@@ -718,12 +722,12 @@ static void ProcMemCtrlInfo(PNODE tab, void* p)
 
 static void ProcMemModuleInfo(PNODE tab, void* p)
 {
-	PMemModuleInfo	pMemModule = (PMemModuleInfo)p;
+	PMemModuleInfo pMemModule = (PMemModuleInfo)p;
 	UCHAR sz = 0;
 	NWL_NodeAttrSet(tab, "Description", "Memory Module Information", 0);
 	if (pMemModule->Header.Length < 0x0c)
 		return;
-	NWL_NodeAttrSet(tab, "Socket Designation", LocateString(p, pMemModule->SocketDesignation), 0);
+	NWL_NodeAttrSet(tab, "Socket Designation", NWL_GetDmiString(p, pMemModule->SocketDesignation), 0);
 	NWL_NodeAttrSetf(tab, "Current Speed (ns)", NAFLG_FMT_NUMERIC, "%u", pMemModule->CurrentSpeed);
 	sz = pMemModule->InstalledSize & 0x7F;
 	if (sz > 0x7D)
@@ -828,12 +832,12 @@ pCacheAssocToStr(UCHAR Type)
 
 static void ProcCacheInfo(PNODE tab, void* p)
 {
-	PCacheInfo	pCache = (PCacheInfo)p;
+	PCacheInfo pCache = (PCacheInfo)p;
 	UINT64 sz = 0;
 	NWL_NodeAttrSet(tab, "Description", "Cache Information", 0);
 	if (pCache->Header.Length < 0x0f) // 2.0
 		return;
-	NWL_NodeAttrSet(tab, "Socket Designation", LocateString(p, pCache->SocketDesignation), 0);
+	NWL_NodeAttrSet(tab, "Socket Designation", NWL_GetDmiString(p, pCache->SocketDesignation), 0);
 	NWL_NodeAttrSetf(tab, "Cache Configuration", 0, "0x%04X", pCache->Configuration);
 	NWL_NodeAttrSet(tab, "Operational Mode", pCacheConfToOpMode(pCache->Configuration), 0);
 	NWL_NodeAttrSetBool(tab, "Enabled", pCache->Configuration & 0x80, 0);
@@ -981,9 +985,9 @@ static void ProcPortConnectInfo(PNODE tab, void* p)
 	NWL_NodeAttrSet(tab, "Description", "Port Connector Information", 0);
 	if (pPort->Header.Length < 0x09)
 		return;
-	NWL_NodeAttrSet(tab, "Internal Reference Designator", LocateString(p, pPort->IntDesignator), 0);
+	NWL_NodeAttrSet(tab, "Internal Reference Designator", NWL_GetDmiString(p, pPort->IntDesignator), 0);
 	NWL_NodeAttrSet(tab, "Internal Connector Type", pIntConnectTypeToStr(pPort->IntConnectorType), 0);
-	NWL_NodeAttrSet(tab, "External Reference Designator", LocateString(p, pPort->ExtDesignator), 0);
+	NWL_NodeAttrSet(tab, "External Reference Designator", NWL_GetDmiString(p, pPort->ExtDesignator), 0);
 	NWL_NodeAttrSet(tab, "External Connector Type", pIntConnectTypeToStr(pPort->ExtConnectorType), 0);
 	NWL_NodeAttrSet(tab, "Port Type", pPortTypeToStr(pPort->PortType), 0);
 }
@@ -1133,7 +1137,7 @@ static void ProcPSystemSlots(PNODE tab, void* p)
 	NWL_NodeAttrSet(tab, "Description", "System Slots", 0);
 	if (pSys->Header.Length < 0x0c) // 2.0
 		return;
-	NWL_NodeAttrSet(tab, "Slot Designation", LocateString(p, pSys->SlotDesignation), 0);
+	NWL_NodeAttrSet(tab, "Slot Designation", NWL_GetDmiString(p, pSys->SlotDesignation), 0);
 	NWL_NodeAttrSet(tab, "Slot Type", pSysSlotTypeToStr(pSys->SlotType), 0);
 	NWL_NodeAttrSet(tab, "Slot Data Bus Width", pSysSlotBusWidthToStr(pSys->SlotDataBusWidth), 0);
 	NWL_NodeAttrSet(tab, "Current Usage", pSysSlotUsageToStr(pSys->CurrentUsage), 0);
@@ -1188,7 +1192,7 @@ static void ProcOnBoardDevInfo(PNODE tab, void* p)
 		UCHAR status = pDev->DeviceInfo[i].DeviceType & 0x90;
 		NWL_NodeAttrSet(pd, "Type", pOnBoardDeviceTypeToStr(type), 0);
 		NWL_NodeAttrSet(pd, "Status", status ? "Enabled" : "Disabled", 0);
-		NWL_NodeAttrSet(pd, "Description", LocateString(p, pDev->DeviceInfo[i].Description), 0);
+		NWL_NodeAttrSet(pd, "Description", NWL_GetDmiString(p, pDev->DeviceInfo[i].Description), 0);
 	}
 }
 
@@ -1202,7 +1206,7 @@ static void ProcOEMString(PNODE tab, void* p)
 		return;
 	NWL_NodeAttrSetf(tab, "Number of Strings", NAFLG_FMT_NUMERIC, "%u", pString->Count);
 	for (i = 1; i <= pString->Count; i++)
-		NWL_NodeAppendMultiSz(&oem, LocateString(p, i));
+		NWL_NodeAppendMultiSz(&oem, NWL_GetDmiString(p, i));
 	NWL_NodeAttrSetMulti(tab, "OEM Strings", oem, 0);
 	free(oem);
 }
@@ -1217,7 +1221,7 @@ static void ProcSysConfOptions(PNODE tab, void* p)
 		return;
 	NWL_NodeAttrSetf(tab, "Number of Strings", NAFLG_FMT_NUMERIC, "%u", pString->Count);
 	for (i = 1; i <= pString->Count; i++)
-		NWL_NodeAppendMultiSz(&conf, LocateString(p, i));
+		NWL_NodeAppendMultiSz(&conf, NWL_GetDmiString(p, i));
 	NWL_NodeAttrSetMulti(tab, "Configuration Strings", conf, 0);
 	free(conf);
 }
@@ -1229,7 +1233,7 @@ static void ProcBIOSLangInfo(PNODE tab, void* p)
 	if (pLang->Header.Length < 0x16)
 		return;
 	NWL_NodeAttrSetf(tab, "Installable Languages", NAFLG_FMT_NUMERIC, "%u", pLang->InstallableLang);
-	NWL_NodeAttrSet(tab, "Current Language", LocateString(p, pLang->CurrentLang), 0);
+	NWL_NodeAttrSet(tab, "Current Language", NWL_GetDmiString(p, pLang->CurrentLang), 0);
 }
 
 static void ProcGroupAssoc(PNODE tab, void* p)
@@ -1240,7 +1244,7 @@ static void ProcGroupAssoc(PNODE tab, void* p)
 	NWL_NodeAttrSet(tab, "Description", "Group Associations", 0);
 	if (pGA->Header.Length < 0x05)
 		return;
-	NWL_NodeAttrSet(tab, "Group Name", LocateString(p, pGA->GroupName), 0);
+	NWL_NodeAttrSet(tab, "Group Name", NWL_GetDmiString(p, pGA->GroupName), 0);
 	count = (pGA->Header.Length - sizeof(pGA->GroupName) - sizeof(SMBIOSHEADER)) / (sizeof(pGA->GAItem[0]));
 	NWL_NodeAttrSetf(tab, "Number of Items", NAFLG_FMT_NUMERIC, "%u", count);
 	ndev = NWL_NodeAppendNew(tab, "Items", NFLG_TABLE);
@@ -1444,7 +1448,7 @@ JedecIdToVendor(PNODE node, PMemoryDevice md, CHAR* db, DWORD dbsz)
 		id = (md->ModuleVID & 0x7F) << 8 | (md->ModuleVID >> 8) & 0x7F;
 	else
 	{
-		vendor = LocateString((void*)md, md->Manufacturer);
+		vendor = NWL_GetDmiString((void*)md, md->Manufacturer);
 		if (!isxdigit(vendor[0]) || !isxdigit(vendor[1])
 			|| !isxdigit(vendor[2]) || !isxdigit(vendor[3])
 			|| vendor[4] != '\0')
@@ -1454,7 +1458,7 @@ JedecIdToVendor(PNODE node, PMemoryDevice md, CHAR* db, DWORD dbsz)
 	NWL_GetSpdManufacturer(node, "Manufacturer", db, dbsz, (id >> 8) & 0x7F, id & 0x7F);
 	return;
 fail:
-	vendor = LocateString((void*)md, md->Manufacturer);
+	vendor = NWL_GetDmiString((void*)md, md->Manufacturer);
 	NWL_NodeAttrSet(node, "Manufacturer", vendor, 0);
 }
 
@@ -1485,8 +1489,8 @@ static void ProcMemoryDevice(PNODE tab, void* p)
 
 	NWL_NodeAttrSet(tab, "Form Factor", pMDFormFactorToStr(pMD->FormFactor), 0);
 	NWL_NodeAttrSetf(tab, "Device Set", NAFLG_FMT_NUMERIC, "%u", pMD->DeviceSet);
-	NWL_NodeAttrSet(tab, "Device Locator", LocateString(p, pMD->DeviceLocator), 0);
-	NWL_NodeAttrSet(tab, "Bank Locator", LocateString(p, pMD->BankLocator), 0);
+	NWL_NodeAttrSet(tab, "Device Locator", NWL_GetDmiString(p, pMD->DeviceLocator), 0);
+	NWL_NodeAttrSet(tab, "Bank Locator", NWL_GetDmiString(p, pMD->BankLocator), 0);
 	NWL_NodeAttrSet(tab, "Device Type", pMDMemoryTypeToStr(pMD->MemoryType), 0);
 	NWL_NodeAttrSetf(tab, "Type Detail", NAFLG_FMT_NUMERIC, "%u", pMD->TypeDetail);
 	if (pMD->Header.Length < 0x1B) // 2.3
@@ -1496,9 +1500,9 @@ static void ProcMemoryDevice(PNODE tab, void* p)
 	else
 		NWL_NodeAttrSetf(tab, "Speed (MT/s)", NAFLG_FMT_NUMERIC, "%u", pMD->Speed);
 	JedecIdToVendor(tab, pMD, db, dbsz);
-	NWL_NodeAttrSet(tab, "Serial Number", LocateString(p, pMD->SN), NAFLG_FMT_SENSITIVE);
-	NWL_NodeAttrSet(tab, "Asset Tag Number", LocateString(p, pMD->AssetTag), 0);
-	NWL_NodeAttrSet(tab, "Part Number", LocateString(p, pMD->PN), 0);
+	NWL_NodeAttrSet(tab, "Serial Number", NWL_GetDmiString(p, pMD->SN), NAFLG_FMT_SENSITIVE);
+	NWL_NodeAttrSet(tab, "Asset Tag Number", NWL_GetDmiString(p, pMD->AssetTag), 0);
+	NWL_NodeAttrSet(tab, "Part Number", NWL_GetDmiString(p, pMD->PN), 0);
 	if (pMD->Header.Length < 0x1C) // 2.6
 		goto out;
 	NWL_NodeAttrSetf(tab, "Attributes", NAFLG_FMT_NUMERIC, "%u", pMD->Attributes);
@@ -1517,7 +1521,7 @@ static void ProcMemoryDevice(PNODE tab, void* p)
 		goto out;
 	NWL_NodeAttrSet(tab, "Memory Technology", pMDTechnologyToStr(pMD->MemoryTechnology), 0);
 	NWL_NodeAttrSetf(tab, "Memory Operating Mode Capability", NAFLG_FMT_NUMERIC, "%u", pMD->MemoryOpModeCapability);
-	NWL_NodeAttrSet(tab, "Firmware Version", LocateString(p, pMD->FirmwareVersion), 0);
+	NWL_NodeAttrSet(tab, "Firmware Version", NWL_GetDmiString(p, pMD->FirmwareVersion), 0);
 
 	NWL_GetSpdManufacturer(tab, "Module Manufacturer", db, dbsz, pMD->ModuleVID & 0x7F, (pMD->ModuleVID >> 8) & 0x7F);
 	NWL_NodeAttrSetf(tab, "Module Manufacturer ID", NAFLG_FMT_NUMERIC, "%u", pMD->ModuleVID);
@@ -1696,11 +1700,11 @@ static void ProcPortableBattery(PNODE tab, void* p)
 	NWL_NodeAttrSet(tab, "Description", "Portable Battery", 0);
 	if (pPB->Header.Length < 0x1a) // 2.1
 		return;
-	NWL_NodeAttrSet(tab, "Location", LocateString(p, pPB->Location), 0);
-	NWL_NodeAttrSet(tab, "Manufacturer", LocateString(p, pPB->Manufacturer), 0);
-	NWL_NodeAttrSet(tab, "Manufacturer Date", LocateString(p, pPB->Date), 0);
-	NWL_NodeAttrSet(tab, "Serial Number", LocateString(p, pPB->SN), NAFLG_FMT_SENSITIVE);
-	NWL_NodeAttrSet(tab, "Device Name", LocateString(p, pPB->DeviceName), 0);
+	NWL_NodeAttrSet(tab, "Location", NWL_GetDmiString(p, pPB->Location), 0);
+	NWL_NodeAttrSet(tab, "Manufacturer", NWL_GetDmiString(p, pPB->Manufacturer), 0);
+	NWL_NodeAttrSet(tab, "Manufacturer Date", NWL_GetDmiString(p, pPB->Date), 0);
+	NWL_NodeAttrSet(tab, "Serial Number", NWL_GetDmiString(p, pPB->SN), NAFLG_FMT_SENSITIVE);
+	NWL_NodeAttrSet(tab, "Device Name", NWL_GetDmiString(p, pPB->DeviceName), 0);
 }
 
 static const CHAR*
@@ -1780,7 +1784,7 @@ static void ProcVoltageProbe(PNODE tab, void* p)
 	NWL_NodeAttrSet(tab, "Description", "Voltage Probe", 0);
 	if (pVoltage->Header.Length < 0x14)
 		return;
-	NWL_NodeAttrSet(tab, "Description", LocateString(p, pVoltage->Description), 0);
+	NWL_NodeAttrSet(tab, "Description", NWL_GetDmiString(p, pVoltage->Description), 0);
 	NWL_NodeAttrSetf(tab, "Location and Status", 0, "%02Xh", pVoltage->LocationStatus);
 	NWL_NodeAttrSetf(tab, "Maximum Value", NAFLG_FMT_NUMERIC, "%u", pVoltage->MaxValue);
 	NWL_NodeAttrSetf(tab, "Minimum Value", NAFLG_FMT_NUMERIC, "%u", pVoltage->MinValue);
@@ -1805,7 +1809,7 @@ static void ProcCoolingDevice(PNODE tab, void* p)
 		"%u", pCoolingDevice->CoolingUnitGroup);
 	NWL_NodeAttrSetf(tab, "OEM-defined", NAFLG_FMT_NUMERIC, "%lu", pCoolingDevice->OEMDefined);
 	NWL_NodeAttrSetf(tab, "Nominal Speed", NAFLG_FMT_NUMERIC, "%u", pCoolingDevice->NominalSpeed);
-	NWL_NodeAttrSet(tab, "Description", LocateString(p, pCoolingDevice->Description), 0);
+	NWL_NodeAttrSet(tab, "Description", NWL_GetDmiString(p, pCoolingDevice->Description), 0);
 }
 
 static void ProcTempProbe(PNODE tab, void* p)
@@ -1814,7 +1818,7 @@ static void ProcTempProbe(PNODE tab, void* p)
 	NWL_NodeAttrSet(tab, "Description", "Temperature Probe", 0);
 	if (pTemp->Header.Length < 0x14)
 		return;
-	NWL_NodeAttrSet(tab, "Description", LocateString(p, pTemp->Description), 0);
+	NWL_NodeAttrSet(tab, "Description", NWL_GetDmiString(p, pTemp->Description), 0);
 	NWL_NodeAttrSetf(tab, "Location and Status", 0, "%02Xh", pTemp->LocationStatus);
 	NWL_NodeAttrSetf(tab, "Maximum Value", NAFLG_FMT_NUMERIC, "%u", pTemp->MaxValue);
 	NWL_NodeAttrSetf(tab, "Minimum Value", NAFLG_FMT_NUMERIC, "%u", pTemp->MinValue);
@@ -1831,7 +1835,7 @@ static void ProcElecCurrentProbe(PNODE tab, void* p)
 	NWL_NodeAttrSet(tab, "Description", "Electrical Current Probe", 0);
 	if (pCurrent->Header.Length < 0x14)
 		return;
-	NWL_NodeAttrSet(tab, "Description", LocateString(p, pCurrent->Description), 0);
+	NWL_NodeAttrSet(tab, "Description", NWL_GetDmiString(p, pCurrent->Description), 0);
 	NWL_NodeAttrSetf(tab, "Location and Status", 0, "%02Xh", pCurrent->LocationStatus);
 	NWL_NodeAttrSetf(tab, "Maximum Value", NAFLG_FMT_NUMERIC, "%u", pCurrent->MaxValue);
 	NWL_NodeAttrSetf(tab, "Minimum Value", NAFLG_FMT_NUMERIC, "%u", pCurrent->MinValue);
@@ -1848,7 +1852,7 @@ static void ProcOutOfBandRemoteAccess(PNODE tab, void* p)
 	NWL_NodeAttrSet(tab, "Description", "Out-of-Band Remote Access", 0);
 	if (pRemoteAccess->Header.Length < 0x06)
 		return;
-	NWL_NodeAttrSet(tab, "Manufacturer", LocateString(p, pRemoteAccess->Manufacturer), 0);
+	NWL_NodeAttrSet(tab, "Manufacturer", NWL_GetDmiString(p, pRemoteAccess->Manufacturer), 0);
 	NWL_NodeAttrSetBool(tab, "Outbound Connection Enabled", pRemoteAccess->Connections & (1 << 1), 0);
 	NWL_NodeAttrSetBool(tab, "Inbound Connection Enabled", pRemoteAccess->Connections & (1 << 0), 0);
 }
@@ -1952,7 +1956,7 @@ static void ProcManagementDevice(PNODE tab, void* p)
 	NWL_NodeAttrSet(tab, "Description", "Management Device", 0);
 	if (pMgmtDev->Header.Length < 0x0b) // 2.3
 		return;
-	NWL_NodeAttrSet(tab, "Information", LocateString(p, pMgmtDev->Description), 0);
+	NWL_NodeAttrSet(tab, "Information", NWL_GetDmiString(p, pMgmtDev->Description), 0);
 	NWL_NodeAttrSet(tab, "Type", pManagementDeviceTypeToStr(pMgmtDev->Type), 0);
 	NWL_NodeAttrSetf(tab, "Address", 0, "%08Xh", pMgmtDev->Address);
 	NWL_NodeAttrSet(tab, "Address Type", pManagementDeviceAddrTypeToStr(pMgmtDev->AddressType), 0);
@@ -1964,7 +1968,7 @@ static void ProcManagementDeviceComponent(PNODE tab, void* p)
 	NWL_NodeAttrSet(tab, "Description", "Management Device Component", 0);
 	if (pMgmtComp->Header.Length < 0x0b) // 2.3
 		return;
-	NWL_NodeAttrSet(tab, "Information", LocateString(p, pMgmtComp->Description), 0);
+	NWL_NodeAttrSet(tab, "Information", NWL_GetDmiString(p, pMgmtComp->Description), 0);
 	NWL_NodeAttrSetf(tab, "Management Device Handle", NAFLG_FMT_NUMERIC, "%u", pMgmtComp->DeviceHandle);
 	NWL_NodeAttrSetf(tab, "Component Handle", NAFLG_FMT_NUMERIC, "%u", pMgmtComp->ComponentHandle);
 	NWL_NodeAttrSetf(tab, "Threshold Handle", NAFLG_FMT_NUMERIC, "%u", pMgmtComp->ThresholdHandle);
@@ -1976,7 +1980,7 @@ static void ProcManagementDeviceThreshold(PNODE tab, void* p)
 	NWL_NodeAttrSet(tab, "Description", "Management Device Threshold Data", 0);
 	if (pMgmtThres->Header.Length < 0x10) // 2.3
 		return;
-	NWL_NodeAttrSet(tab, "Information", LocateString(p, pMgmtThres->Description), 0);
+	NWL_NodeAttrSet(tab, "Information", NWL_GetDmiString(p, pMgmtThres->Description), 0);
 	NWL_NodeAttrSetf(tab, "Lower Threshold (Non-critical)", NAFLG_FMT_NUMERIC, "%u", pMgmtThres->LowerNonCritical);
 	NWL_NodeAttrSetf(tab, "Upper Threshold (Non-critical)", NAFLG_FMT_NUMERIC, "%u", pMgmtThres->UpperNonCritical);
 	NWL_NodeAttrSetf(tab, "Lower Threshold (Critical)", NAFLG_FMT_NUMERIC, "%u", pMgmtThres->LowerCritical);
@@ -2103,13 +2107,13 @@ static void ProcSysPowerSupply(PNODE tab, void* p)
 		return;
 
 	NWL_NodeAttrSetf(tab, "Power Unit Group", NAFLG_FMT_NUMERIC, "%u", pPower->PowerUnitGroup);
-	NWL_NodeAttrSet(tab, "Location", LocateString(p, pPower->Location), 0);
-	NWL_NodeAttrSet(tab, "Device Name", LocateString(p, pPower->DeviceName), 0);
-	NWL_NodeAttrSet(tab, "Manufacturer", LocateString(p, pPower->Manufacturer), 0);
-	NWL_NodeAttrSet(tab, "Serial Number", LocateString(p, pPower->SerialNumber), NAFLG_FMT_SENSITIVE);
-	NWL_NodeAttrSet(tab, "Asset Tag", LocateString(p, pPower->AssetTag), 0);
-	NWL_NodeAttrSet(tab, "Model Part Number", LocateString(p, pPower->ModelPartNumber), 0);
-	NWL_NodeAttrSet(tab, "Revision Level", LocateString(p, pPower->RevisionLevel), 0);
+	NWL_NodeAttrSet(tab, "Location", NWL_GetDmiString(p, pPower->Location), 0);
+	NWL_NodeAttrSet(tab, "Device Name", NWL_GetDmiString(p, pPower->DeviceName), 0);
+	NWL_NodeAttrSet(tab, "Manufacturer", NWL_GetDmiString(p, pPower->Manufacturer), 0);
+	NWL_NodeAttrSet(tab, "Serial Number", NWL_GetDmiString(p, pPower->SerialNumber), NAFLG_FMT_SENSITIVE);
+	NWL_NodeAttrSet(tab, "Asset Tag", NWL_GetDmiString(p, pPower->AssetTag), 0);
+	NWL_NodeAttrSet(tab, "Model Part Number", NWL_GetDmiString(p, pPower->ModelPartNumber), 0);
+	NWL_NodeAttrSet(tab, "Revision Level", NWL_GetDmiString(p, pPower->RevisionLevel), 0);
 	if (pPower->MaxPowerCapacity != 0x8000)
 		NWL_NodeAttrSetf(tab, "Max Power Capacity (W)", NAFLG_FMT_NUMERIC, "%u", pPower->MaxPowerCapacity);
 
@@ -2170,7 +2174,7 @@ static void ProcOnBoardDevicesExtInfo(PNODE tab, void* p)
 	NWL_NodeAttrSet(tab, "Description", "Onboard Devices Extended Information", 0);
 	if (pDevInfo->Header.Length < 0x0b)
 		return;
-	NWL_NodeAttrSet(tab, "Reference Designation", LocateString(p, pDevInfo->RefDesignation), 0);
+	NWL_NodeAttrSet(tab, "Reference Designation", NWL_GetDmiString(p, pDevInfo->RefDesignation), 0);
 	NWL_NodeAttrSet(tab, "Device Status", (pDevInfo->DeviceType & 0x80) ? "Enabled" : "Disabled", 0);
 	NWL_NodeAttrSet(tab, "Device Type", pOnBoardDevExtTypeToStr(pDevInfo->DeviceType), 0);
 	NWL_NodeAttrSetf(tab, "Device Type Instance", NAFLG_FMT_NUMERIC, "%u", pDevInfo->DeviceTypeInstance);
@@ -2225,7 +2229,7 @@ static void ProcTPMDevice(PNODE tab, void* p)
 		pTPM->Vendor[0], pTPM->Vendor[1],
 		pTPM->Vendor[2], pTPM->Vendor[3]);
 	NWL_NodeAttrSetf(tab, "Spec Version", 0, "%u%u", pTPM->MajorSpecVer, pTPM->MinorSpecVer);
-	NWL_NodeAttrSet(tab, "TPM Description", LocateString(p, pTPM->Description), 0);
+	NWL_NodeAttrSet(tab, "TPM Description", NWL_GetDmiString(p, pTPM->Description), 0);
 }
 
 static const CHAR*
@@ -2261,15 +2265,15 @@ static void ProcFwInventory(PNODE tab, void* p)
 	NWL_NodeAttrSet(tab, "Description", "Firmware Inventory Information", 0);
 	if (pFirmware->Header.Length < 0x18)
 		return;
-	NWL_NodeAttrSet(tab, "Component Name", LocateString(p, pFirmware->ComponentName), 0);
-	NWL_NodeAttrSet(tab, "Firmware Version", LocateString(p, pFirmware->Version), 0);
+	NWL_NodeAttrSet(tab, "Component Name", NWL_GetDmiString(p, pFirmware->ComponentName), 0);
+	NWL_NodeAttrSet(tab, "Firmware Version", NWL_GetDmiString(p, pFirmware->Version), 0);
 	NWL_NodeAttrSetf(tab, "Version Format", NAFLG_FMT_NUMERIC, "%u", pFirmware->VersionFormat);
-	NWL_NodeAttrSet(tab, "Firmware ID", LocateString(p, pFirmware->ID), 0);
+	NWL_NodeAttrSet(tab, "Firmware ID", NWL_GetDmiString(p, pFirmware->ID), 0);
 	NWL_NodeAttrSetf(tab, "ID Format", NAFLG_FMT_NUMERIC, "%u", pFirmware->IDFormat);
-	NWL_NodeAttrSet(tab, "Release Date", LocateString(p, pFirmware->ReleaseDate), 0);
-	NWL_NodeAttrSet(tab, "Manufacturer", LocateString(p, pFirmware->Manufacturer), 0);
+	NWL_NodeAttrSet(tab, "Release Date", NWL_GetDmiString(p, pFirmware->ReleaseDate), 0);
+	NWL_NodeAttrSet(tab, "Manufacturer", NWL_GetDmiString(p, pFirmware->Manufacturer), 0);
 	NWL_NodeAttrSet(tab, "Lowest Supported Firmware Version",
-		LocateString(p, pFirmware->LowestSupportedVersion), 0);
+		NWL_GetDmiString(p, pFirmware->LowestSupportedVersion), 0);
 	if (pFirmware->ImageSize != ~0ULL)
 		NWL_NodeAttrSet(tab, "Image Size", NWL_GetHumanSize(pFirmware->ImageSize, NWLC->NwUnits, 1024), NAFLG_FMT_HUMAN_SIZE);
 }
@@ -2281,7 +2285,7 @@ static void ProcStringProperty(PNODE tab, void* p)
 	if (pString->Header.Length < 0x09)
 		return;
 	NWL_NodeAttrSetf(tab, "String Property ID", NAFLG_FMT_NUMERIC, "%u", pString->ID);
-	NWL_NodeAttrSet(tab, "String Property Value",LocateString(p, pString->Value), 0);
+	NWL_NodeAttrSet(tab, "String Property Value",NWL_GetDmiString(p, pString->Value), 0);
 	NWL_NodeAttrSetf(tab, "Parent Handle", NAFLG_FMT_NUMERIC, "%u", pString->ParentHandle);
 }
 
@@ -2295,19 +2299,78 @@ static void ProcEndTable(PNODE tab, void* p)
 	NWL_NodeAttrSet(tab, "Description", "End-of-Table", 0);
 }
 
-static void DumpSMBIOS(PNODE node, void* Addr, UINT Len, UINT8 Type)
+static LPBYTE SkipDmiStrings(LPBYTE p, const LPBYTE lastAddress)
 {
-	LPBYTE p = (LPBYTE)(Addr);
-	const LPBYTE lastAddress = p + Len;
-	PSMBIOSHEADER pHeader;
-	PNODE tab;
-
+	// SMBIOS string sets are terminated by a double NULL (0x00 0x00).
 	while (p < lastAddress)
 	{
-		pHeader = (PSMBIOSHEADER)p;
-		if (Type != 127 && pHeader->Type != Type)
-			goto next_table;
-		tab = NWL_NodeAppendNew(node, "Table", NFLG_TABLE_ROW);
+		if (*p == 0)
+		{
+			if ((p + 1 < lastAddress) && *(p + 1) == 0)
+				return p + 2;
+		}
+		p++;
+	}
+	return lastAddress;
+}
+
+PSMBIOSHEADER NWL_GetNextDmiTable(LPBYTE* pCur, const LPBYTE lastAddr, UINT8 Type)
+{
+	LPBYTE p = *pCur;
+
+	while (p + sizeof(SMBIOSHEADER) <= lastAddr)
+	{
+		PSMBIOSHEADER pHeader = (PSMBIOSHEADER)p;
+
+		if (pHeader->Length < sizeof(SMBIOSHEADER))
+			break;
+		if (p + pHeader->Length > lastAddr)
+			break;
+
+		LPBYTE next = SkipDmiStrings(p + pHeader->Length, lastAddr);
+
+		if (pHeader->Type == 127 && pHeader->Length == 4)
+		{
+			*pCur = lastAddr;
+			if (Type == 127 || pHeader->Type == Type)
+				return pHeader;
+			return NULL;
+		}
+
+		if (Type == 127 || pHeader->Type == Type)
+		{
+			*pCur = next;
+			return pHeader;
+		}
+
+		p = next;
+	}
+
+	*pCur = lastAddr;
+	return NULL;
+}
+
+PNODE NW_Smbios(VOID)
+{
+	PNODE node = NWL_NodeAlloc("SMBIOS", NFLG_TABLE);
+	PNODE info = NWL_NodeAppendNew(node, "DMI", NFLG_TABLE_ROW);
+	if (NWLC->DmiInfo)
+		NWL_NodeAppendChild(NWLC->NwRoot, node);
+	if (!NWLC->NwSmbios)
+		NWLC->NwSmbios = NWL_GetSmbios();
+	if (!NWLC->NwSmbios)
+		return node;
+	NWL_NodeAttrSetf(info, "SMBIOS Version", 0, "%u.%u", NWLC->NwSmbios->MajorVersion, NWLC->NwSmbios->MinorVersion);
+	NWL_NodeAttrSetf(info, "DMI Reversion", NAFLG_FMT_NUMERIC, "%u", NWLC->NwSmbios->DmiRevision);
+	NWL_NodeAttrSetf(info, "SMBIOS Length", NAFLG_FMT_NUMERIC, "%u", NWLC->NwSmbios->Length);
+
+	LPBYTE p = (LPBYTE)NWLC->NwSmbios->Data;
+	const LPBYTE lastAddress = p + NWLC->NwSmbios->Length;
+	PSMBIOSHEADER pHeader;
+
+	while ((pHeader = NWL_GetNextDmiTable(&p, lastAddress, NWLC->SmbiosType)) != NULL)
+	{
+		PNODE tab = NWL_NodeAppendNew(node, "Table", NFLG_TABLE_ROW);
 		NWL_NodeAttrSetf(tab, "Table Type", NAFLG_FMT_NUMERIC, "%u", pHeader->Type);
 		NWL_NodeAttrSetf(tab, "Table Length", NAFLG_FMT_NUMERIC, "%u", pHeader->Length);
 		NWL_NodeAttrSetf(tab, "Table Handle", NAFLG_FMT_NUMERIC, "%u", pHeader->Handle);
@@ -2464,29 +2527,10 @@ static void DumpSMBIOS(PNODE node, void* Addr, UINT Len, UINT8 Type)
 		default:
 			break;
 		}
-	next_table:
+
 		if ((pHeader->Type == 127) && (pHeader->Length == 4))
 			break;
-		p += pHeader->Length;
-		while ((*p++ != 0 || *p++ != 0) && p < lastAddress)
-			;
 	}
-}
 
-PNODE NW_Smbios(VOID)
-{
-	
-	PNODE node = NWL_NodeAlloc("SMBIOS", NFLG_TABLE);
-	PNODE info = NWL_NodeAppendNew(node, "DMI", NFLG_TABLE_ROW);
-	if (NWLC->DmiInfo)
-		NWL_NodeAppendChild(NWLC->NwRoot, node);
-	if (!NWLC->NwSmbios)
-		NWLC->NwSmbios = NWL_GetSmbios();
-	if (!NWLC->NwSmbios)
-		return node;
-	NWL_NodeAttrSetf(info, "SMBIOS Version", 0, "%u.%u", NWLC->NwSmbios->MajorVersion, NWLC->NwSmbios->MinorVersion);
-	NWL_NodeAttrSetf(info, "DMI Reversion", NAFLG_FMT_NUMERIC, "%u", NWLC->NwSmbios->DmiRevision);
-	NWL_NodeAttrSetf(info, "SMBIOS Length", NAFLG_FMT_NUMERIC, "%u", NWLC->NwSmbios->Length);
-	DumpSMBIOS(node, NWLC->NwSmbios->Data, NWLC->NwSmbios->Length, NWLC->SmbiosType);
 	return node;
 }
