@@ -151,6 +151,12 @@ typedef struct _GNW_CONTEXT
 
 	UINT audio_count;
 	NWLIB_AUDIO_DEV* audio;
+
+	SRWLOCK lock;
+	HANDLE update_event;
+	HANDLE update_thread;
+	volatile LONG update_mask;
+	volatile LONG update_stop;
 } GNW_CONTEXT;
 extern GNW_CONTEXT g_ctx;
 

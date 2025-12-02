@@ -2,6 +2,7 @@
 
 #include <windows.h>
 #include <winioctl.h>
+#include <objbase.h>
 #include "gnwinfo.h"
 #include "utils.h"
 #include "gettext.h"
@@ -10,6 +11,13 @@
 #include "../libcpuid/libcpuid_util.h"
 
 GNW_CONTEXT g_ctx;
+
+#define GNW_UPDATE_FLAG_1S      (1u << 0)
+#define GNW_UPDATE_FLAG_1M      (1u << 1)
+#define GNW_UPDATE_FLAG_DISK    (1u << 2)
+#define GNW_UPDATE_FLAG_DISPLAY (1u << 3)
+#define GNW_UPDATE_FLAG_POWER   (1u << 4)
+#define GNW_UPDATE_FLAG_SMB     (1u << 5)
 
 static struct nk_image
 load_png(WORD id)
@@ -37,58 +45,240 @@ gnwinfo_ctx_error_callback(LPCSTR lpszText)
 	MessageBoxA(g_ctx.wnd, lpszText, "Error", MB_ICONERROR);
 }
 
-void
-gnwinfo_ctx_update(WPARAM wparam)
+static DWORD
+gnwinfo_ctx_update_flag(WPARAM wparam)
+{
+	switch (wparam)
+	{
+	case IDT_TIMER_1S: return GNW_UPDATE_FLAG_1S;
+	case IDT_TIMER_1M: return GNW_UPDATE_FLAG_1M;
+	case IDT_TIMER_DISK: return GNW_UPDATE_FLAG_DISK;
+	case IDT_TIMER_DISPLAY: return GNW_UPDATE_FLAG_DISPLAY;
+	case IDT_TIMER_POWER: return GNW_UPDATE_FLAG_POWER;
+	case IDT_TIMER_SMB: return GNW_UPDATE_FLAG_SMB;
+	default: return 0;
+	}
+}
+
+static void
+gnwinfo_ctx_update_1s(void)
+{
+	PNODE network = NULL;
+	NWLIB_MEM_INFO mem_status = { 0 };
+	NWLIB_NET_TRAFFIC net_traffic = { 0 };
+	double cpu_usage = 0.0;
+	DWORD cpu_freq = 0;
+	NWLIB_CPU_INFO* cpu_info = NULL;
+	NWLIB_CUR_DISPLAY cur_display = { 0 };
+	NWLIB_GPU_INFO gpu_info;
+	UINT audio_count = 0;
+	NWLIB_AUDIO_DEV* audio = NULL;
+	CHAR sys_uptime[NWL_STR_SIZE] = { 0 };
+	DWORD main_flag = 0;
+	int cpu_count = 0;
+	BOOL enable_audio = FALSE;
+
+	AcquireSRWLockShared(&g_ctx.lock);
+	main_flag = g_ctx.main_flag;
+	cpu_count = g_ctx.cpu_count;
+	enable_audio = (g_ctx.lib.NwOsInfo.dwMajorVersion >= 6);
+	if (cpu_count > 0 && g_ctx.cpu_info)
+	{
+		cpu_info = malloc((size_t)cpu_count * sizeof(NWLIB_CPU_INFO));
+		if (cpu_info)
+			memcpy(cpu_info, g_ctx.cpu_info, (size_t)cpu_count * sizeof(NWLIB_CPU_INFO));
+	}
+	gpu_info = g_ctx.gpu_info;
+	ReleaseSRWLockShared(&g_ctx.lock);
+
+	g_ctx.lib.NetFlags = NW_NET_PHYS | ((main_flag & MAIN_NET_INACTIVE) ? 0 : NW_NET_ACTIVE);
+	network = NW_Network();
+	NWL_GetUptime(sys_uptime, NWL_STR_SIZE);
+	NWL_GetMemInfo(&mem_status);
+	NWL_GetNetTraffic(&net_traffic, !(main_flag & MAIN_NET_UNIT_B));
+	cpu_usage = NWL_GetCpuUsage();
+	cpu_freq = NWL_GetCpuFreq();
+	if (cpu_info && cpu_count > 0)
+		NWL_GetCpuMsr(cpu_count, cpu_info);
+	NWL_GetCurDisplay(g_ctx.wnd, &cur_display);
+	NWL_GetGpuInfo(&gpu_info);
+	if ((main_flag & MAIN_INFO_AUDIO) && enable_audio)
+		audio = NWL_GetAudio(&audio_count);
+
+	AcquireSRWLockExclusive(&g_ctx.lock);
+	PNODE old_network = g_ctx.network;
+	g_ctx.network = network;
+	memcpy(g_ctx.sys_uptime, sys_uptime, sizeof(g_ctx.sys_uptime));
+	g_ctx.mem_status = mem_status;
+	g_ctx.net_traffic = net_traffic;
+	g_ctx.cpu_usage = cpu_usage;
+	g_ctx.cpu_freq = cpu_freq;
+	if (cpu_info && g_ctx.cpu_info && cpu_count == g_ctx.cpu_count)
+		memcpy(g_ctx.cpu_info, cpu_info, (size_t)cpu_count * sizeof(NWLIB_CPU_INFO));
+	g_ctx.cur_display = cur_display;
+	g_ctx.gpu_info = gpu_info;
+	NWLIB_AUDIO_DEV* old_audio = g_ctx.audio;
+	g_ctx.audio = audio;
+	g_ctx.audio_count = audio_count;
+	ReleaseSRWLockExclusive(&g_ctx.lock);
+
+	if (old_network)
+		NWL_NodeFree(old_network, 1);
+	if (old_audio)
+		free(old_audio);
+	if (cpu_info)
+		free(cpu_info);
+}
+
+static void
+gnwinfo_ctx_update_battery(void)
+{
+	PNODE battery = NW_Battery();
+
+	AcquireSRWLockExclusive(&g_ctx.lock);
+	PNODE old_battery = g_ctx.battery;
+	g_ctx.battery = battery;
+	ReleaseSRWLockExclusive(&g_ctx.lock);
+
+	if (old_battery)
+		NWL_NodeFree(old_battery, 1);
+}
+
+static void
+gnwinfo_ctx_update_disk(void)
+{
+	DWORD main_flag = 0;
+
+	AcquireSRWLockShared(&g_ctx.lock);
+	main_flag = g_ctx.main_flag;
+	ReleaseSRWLockShared(&g_ctx.lock);
+
+	g_ctx.lib.NwSmartInit = FALSE;
+	g_ctx.lib.DiskFlags = (main_flag & MAIN_DISK_SMART) ? 0 : NW_DISK_NO_SMART;
+
+	PNODE disk = NW_Disk();
+
+	AcquireSRWLockExclusive(&g_ctx.lock);
+	PNODE old_disk = g_ctx.disk;
+	g_ctx.disk = disk;
+	ReleaseSRWLockExclusive(&g_ctx.lock);
+
+	if (old_disk)
+		NWL_NodeFree(old_disk, 1);
+}
+
+static void
+gnwinfo_ctx_update_smb(void)
+{
+	PNODE smb = NW_NetShare();
+
+	AcquireSRWLockExclusive(&g_ctx.lock);
+	PNODE old_smb = g_ctx.smb;
+	g_ctx.smb = smb;
+	ReleaseSRWLockExclusive(&g_ctx.lock);
+
+	if (old_smb)
+		NWL_NodeFree(old_smb, 1);
+}
+
+static void
+gnwinfo_ctx_update_display(void)
+{
+	AcquireSRWLockExclusive(&g_ctx.lock);
+	NWL_FreeGpu(&g_ctx.gpu_info);
+	ReleaseSRWLockExclusive(&g_ctx.lock);
+
+	NWLIB_GPU_INFO gpu_info;
+	NWL_InitGpu(&gpu_info);
+	PNODE edid = NW_Edid();
+
+	AcquireSRWLockExclusive(&g_ctx.lock);
+	g_ctx.gpu_info = gpu_info;
+	PNODE old_edid = g_ctx.edid;
+	g_ctx.edid = edid;
+	ReleaseSRWLockExclusive(&g_ctx.lock);
+
+	if (old_edid)
+		NWL_NodeFree(old_edid, 1);
+}
+
+static void
+gnwinfo_ctx_update_internal(WPARAM wparam)
 {
 	switch (wparam)
 	{
 	case IDT_TIMER_1S:
-		if (g_ctx.network)
-			NWL_NodeFree(g_ctx.network, 1);
-		g_ctx.lib.NetFlags = NW_NET_PHYS | ((g_ctx.main_flag & MAIN_NET_INACTIVE) ? 0 : NW_NET_ACTIVE);
-		g_ctx.network = NW_Network();
-		NWL_GetUptime(g_ctx.sys_uptime, NWL_STR_SIZE);
-		NWL_GetMemInfo(&g_ctx.mem_status);
-		NWL_GetNetTraffic(&g_ctx.net_traffic, !(g_ctx.main_flag & MAIN_NET_UNIT_B));
-		g_ctx.cpu_usage = NWL_GetCpuUsage();
-		g_ctx.cpu_freq = NWL_GetCpuFreq();
-		NWL_GetCpuMsr(g_ctx.cpu_count, g_ctx.cpu_info);
-		NWL_GetCurDisplay(g_ctx.wnd, &g_ctx.cur_display);
-		NWL_GetGpuInfo(&g_ctx.gpu_info);
-		if (g_ctx.audio)
-		{
-			free(g_ctx.audio);
-			g_ctx.audio = NULL;
-		}
-		if ((g_ctx.main_flag & MAIN_INFO_AUDIO) && g_ctx.lib.NwOsInfo.dwMajorVersion >= 6)
-			g_ctx.audio = NWL_GetAudio(&g_ctx.audio_count);
+		gnwinfo_ctx_update_1s();
 		break;
 	case IDT_TIMER_1M:
 	case IDT_TIMER_POWER:
-		if (g_ctx.battery)
-			NWL_NodeFree(g_ctx.battery, 1);
-		g_ctx.battery = NW_Battery();
+		gnwinfo_ctx_update_battery();
 		break;
 	case IDT_TIMER_DISK:
-		if (g_ctx.disk)
-			NWL_NodeFree(g_ctx.disk, 1);
-		g_ctx.lib.NwSmartInit = FALSE;
-		g_ctx.lib.DiskFlags = (g_ctx.main_flag & MAIN_DISK_SMART) ? 0 : NW_DISK_NO_SMART;
-		g_ctx.disk = NW_Disk();
+		gnwinfo_ctx_update_disk();
 		break;
 	case IDT_TIMER_SMB:
-		if (g_ctx.smb)
-			NWL_NodeFree(g_ctx.smb, 1);
-		g_ctx.smb = NW_NetShare();
+		gnwinfo_ctx_update_smb();
 		break;
 	case IDT_TIMER_DISPLAY:
-		NWL_FreeGpu(&g_ctx.gpu_info);
-		NWL_InitGpu(&g_ctx.gpu_info);
-		if (g_ctx.edid)
-			NWL_NodeFree(g_ctx.edid, 1);
-		g_ctx.edid = NW_Edid();
+		gnwinfo_ctx_update_display();
+		break;
+	default:
 		break;
 	}
+}
+
+static DWORD WINAPI
+gnwinfo_ctx_update_thread(LPVOID lpParameter)
+{
+	(void)lpParameter;
+	for (;;)
+	{
+		if (WaitForSingleObject(g_ctx.update_event, INFINITE) != WAIT_OBJECT_0)
+			break;
+		if (g_ctx.update_stop)
+			break;
+
+		for (;;)
+		{
+			DWORD mask = (DWORD)InterlockedExchange(&g_ctx.update_mask, 0);
+			if (mask == 0)
+				break;
+			if (mask & GNW_UPDATE_FLAG_1S)
+				gnwinfo_ctx_update_internal(IDT_TIMER_1S);
+			if (mask & GNW_UPDATE_FLAG_1M)
+				gnwinfo_ctx_update_internal(IDT_TIMER_1M);
+			if (mask & GNW_UPDATE_FLAG_DISK)
+				gnwinfo_ctx_update_internal(IDT_TIMER_DISK);
+			if (mask & GNW_UPDATE_FLAG_DISPLAY)
+				gnwinfo_ctx_update_internal(IDT_TIMER_DISPLAY);
+			if (mask & GNW_UPDATE_FLAG_POWER)
+				gnwinfo_ctx_update_internal(IDT_TIMER_POWER);
+			if (mask & GNW_UPDATE_FLAG_SMB)
+				gnwinfo_ctx_update_internal(IDT_TIMER_SMB);
+			if (g_ctx.update_stop)
+				break;
+		}
+	}
+	return 0;
+}
+
+void
+gnwinfo_ctx_update(WPARAM wparam)
+{
+	DWORD flag = gnwinfo_ctx_update_flag(wparam);
+
+	if (!flag)
+		return;
+
+	if (!g_ctx.update_event || !g_ctx.update_thread)
+	{
+		gnwinfo_ctx_update_internal(wparam);
+		return;
+	}
+
+	InterlockedOr(&g_ctx.update_mask, (LONG)flag);
+	SetEvent(g_ctx.update_event);
 }
 
 void
@@ -100,6 +290,13 @@ gnwinfo_ctx_init(HINSTANCE inst, HWND wnd, struct nk_context* ctx, float width, 
 		MessageBoxW(NULL, L"ALREADY RUNNING", L"ERROR", MB_ICONERROR | MB_OK);
 		exit(1);
 	}
+
+	InitializeSRWLock(&g_ctx.lock);
+	g_ctx.update_mask = 0;
+	g_ctx.update_stop = 0;
+	g_ctx.update_event = CreateEventW(NULL, FALSE, FALSE, NULL);
+	if (g_ctx.update_event)
+		g_ctx.update_thread = CreateThread(NULL, 0, gnwinfo_ctx_update_thread, NULL, 0, NULL);
 
 	g_ctx.main_flag = strtoul(gnwinfo_get_ini_value(L"Widgets", L"MainFlags", L"0xFFFFFFFF"), NULL, 16);
 	g_ctx.smart_hex = strtoul(gnwinfo_get_ini_value(L"Widgets", L"SmartFormat", L"0"), NULL, 10);
@@ -179,6 +376,23 @@ gnwinfo_ctx_exit(void)
 {
 	KillTimer(g_ctx.wnd, IDT_TIMER_1S);
 	KillTimer(g_ctx.wnd, IDT_TIMER_1M);
+
+	if (g_ctx.update_event)
+	{
+		g_ctx.update_stop = 1;
+		SetEvent(g_ctx.update_event);
+	}
+	if (g_ctx.update_thread)
+	{
+		WaitForSingleObject(g_ctx.update_thread, INFINITE);
+		CloseHandle(g_ctx.update_thread);
+		g_ctx.update_thread = NULL;
+	}
+	if (g_ctx.update_event)
+	{
+		CloseHandle(g_ctx.update_event);
+		g_ctx.update_event = NULL;
+	}
 
 	if (g_ctx.cpu_info)
 		free(g_ctx.cpu_info);

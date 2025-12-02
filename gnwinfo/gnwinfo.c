@@ -259,7 +259,7 @@ wWinMain(_In_ HINSTANCE hInstance,
 	ctx = nk_gdip_init(wnd, g_init_width, g_init_height);
 	set_dpi_scaling(wnd);
 
-	(void)CoInitializeEx(0, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE);
+	(void)CoInitializeEx(0, COINIT_MULTITHREADED | COINIT_DISABLE_OLE1DDE);
 	gnwinfo_set_style(ctx);
 	gnwinfo_ctx_init(hInstance, wnd, ctx, (float)(g_init_width * g_dpi_factor), (float)(g_init_height * g_dpi_factor));
 
@@ -292,6 +292,7 @@ wWinMain(_In_ HINSTANCE hInstance,
 		nk_input_end(ctx);
 
 		/* GUI */
+		AcquireSRWLockShared(&g_ctx.lock);
 		if (g_ctx.window_flag & GUI_WINDOW_SETTINGS)
 			gnwinfo_set_style(ctx);
 		gnwinfo_draw_main_window(ctx, g_ctx.gui_width, g_ctx.gui_height);
@@ -304,6 +305,7 @@ wWinMain(_In_ HINSTANCE hInstance,
 		gnwinfo_draw_display_window(ctx, g_ctx.gui_width, g_ctx.gui_height);
 		gnwinfo_draw_mm_window(ctx, g_ctx.gui_width, g_ctx.gui_height);
 		gnwinfo_draw_hostname_window(ctx, g_ctx.gui_width, g_ctx.gui_height);
+		ReleaseSRWLockShared(&g_ctx.lock);
 
 		/* Draw */
 		nk_gdip_render(g_ctx.gui_aa, g_color_back);
