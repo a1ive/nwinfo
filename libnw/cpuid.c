@@ -10,6 +10,7 @@
 #include "cpu/rdmsr.h"
 
 #include "utils.h"
+#include "smbios.h"
 
 static __int64
 CpuCompareFileTime(const FILETIME* time1, const FILETIME* time2)
@@ -330,6 +331,24 @@ PrintCpuMsr(PNODE node, struct cpu_id_t* data)
 	NWL_NodeAttrSetf(node, "PL2 (W)", NAFLG_FMT_NUMERIC, "%.2lf", info.MsrPl2);
 }
 
+// Get DMI Processor Information (Type 4) Table
+static void
+PrintCpuDmi(PNODE node, const char* name)
+{
+	LPBYTE p = (LPBYTE)NWLC->NwSmbios->Data;
+	const LPBYTE lastAddress = p + NWLC->NwSmbios->Length;
+	PProcessorInfo pInfo;
+
+	while ((pInfo = (PProcessorInfo)NWL_GetNextDmiTable(&p, lastAddress, 4)) != NULL)
+	{
+		if (strcmp(name, NWL_GetDmiString((UINT8*)pInfo, pInfo->Version)) != 0)
+			continue;
+		NWL_NodeAttrSetf(node, "Base Clock (MHz)", NAFLG_FMT_NUMERIC, "%u", pInfo->CurrentSpeed);
+		NWL_NodeAttrSet(node, "Socket Designation", NWL_GetDmiString((UINT8*)pInfo, pInfo->SocketDesignation), 0);
+		NWL_NodeAttrSet(node, "Socket Type", NWL_GetDmiProcessorSocket(pInfo), 0);
+	}
+}
+
 static void
 PrintCpuInfo(PNODE node, struct cpu_id_t* data)
 {
@@ -355,6 +374,7 @@ PrintCpuInfo(PNODE node, struct cpu_id_t* data)
 	if (!NWLC->CpuDump)
 		PrintCpuMsr(node, data);
 	PrintFeatures(node, data);
+	PrintCpuDmi(node, data->brand_str);
 }
 
 PNODE NW_Cpuid(VOID)

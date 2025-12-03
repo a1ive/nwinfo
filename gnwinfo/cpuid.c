@@ -56,15 +56,8 @@ draw:
 	}
 }
 
-static BOOL
-is_cpu_name_match(PNODE node, PVOID ctx)
-{
-	LPCSTR name = NWL_NodeAttrGet(node, "Processor Version");
-	return (strcmp(name, (LPCSTR)ctx) == 0);
-}
-
 static void
-draw_msr(struct nk_context* ctx, int index, PNODE cpu, LPCSTR brand)
+draw_msr(struct nk_context* ctx, int index, PNODE cpu)
 {
 	if (nk_group_begin(ctx, N_(N__MSR), NK_WINDOW_BORDER | NK_WINDOW_TITLE))
 	{
@@ -72,11 +65,11 @@ draw_msr(struct nk_context* ctx, int index, PNODE cpu, LPCSTR brand)
 		nk_layout_row(ctx, NK_DYNAMIC, 0, 2, ratio);
 
 		nk_l(ctx, N_(N__SOCKET), NK_TEXT_LEFT);
-		nk_lhc(ctx, gnwinfo_get_smbios_attr("4", "Processor Upgrade", (PVOID)brand, is_cpu_name_match), NK_TEXT_LEFT, g_color_text_l);
+		nk_lhc(ctx, NWL_NodeAttrGet(cpu, "Socket Type"), NK_TEXT_LEFT, g_color_text_l);
 		nk_l(ctx, N_(N__MULTIPLIER), NK_TEXT_LEFT);
 		nk_lhc(ctx, g_ctx.cpu_info[index].MsrMulti, NK_TEXT_LEFT, g_color_text_l);
 		nk_l(ctx, N_(N__BASE_CLOCK), NK_TEXT_LEFT);
-		nk_lhcf(ctx, NK_TEXT_LEFT, g_color_text_l, "%s MHz", gnwinfo_get_smbios_attr("4", "Current Speed (MHz)", (const PVOID)brand, is_cpu_name_match));
+		nk_lhcf(ctx, NK_TEXT_LEFT, g_color_text_l, "%s MHz", NWL_NodeAttrGet(cpu, "Base Clock (MHz)"));
 		nk_l(ctx, N_(N__CORE_SPEED), NK_TEXT_LEFT);
 		nk_lhcf(ctx, NK_TEXT_LEFT, g_color_text_l, "%.2f MHz", g_ctx.cpu_info[index].MsrFreq);
 		nk_l(ctx, N_(N__BUS_CLOCK), NK_TEXT_LEFT);
@@ -107,7 +100,6 @@ gnwinfo_draw_cpuid_window(struct nk_context* ctx, float width, float height)
 	CHAR name[32];
 	CHAR buf[MAX_PATH];
 	PNODE cpu = NULL;
-	LPCSTR brand = NULL;
 	static int cpu_index = 0;
 	if (!(g_ctx.window_flag & GUI_WINDOW_CPUID))
 		return;
@@ -137,12 +129,11 @@ gnwinfo_draw_cpuid_window(struct nk_context* ctx, float width, float height)
 
 	snprintf(name, sizeof(name), "CPU%d", cpu_index);
 	cpu = NWL_NodeGetChild(g_ctx.cpuid, name);
-	brand = NWL_NodeAttrGet(cpu, "Brand");
 
 	CPUID_ROW_BEGIN(2, 0.2f);
 	nk_l(ctx, N_(N__BRAND), NK_TEXT_LEFT);
 	CPUID_ROW_PUSH(0.8f);
-	nk_lhc(ctx, brand, NK_TEXT_LEFT, g_color_text_l);
+	nk_lhc(ctx, NWL_NodeAttrGet(cpu, "Brand"), NK_TEXT_LEFT, g_color_text_l);
 	CPUID_ROW_END;
 
 	CPUID_ROW_BEGIN(6, 0.2f);
@@ -208,7 +199,7 @@ gnwinfo_draw_cpuid_window(struct nk_context* ctx, float width, float height)
 	CPUID_ROW_PUSH(0.4f);
 	draw_cache(ctx, cpu);
 	CPUID_ROW_PUSH(0.4f);
-	draw_msr(ctx, cpu_index, cpu, brand);
+	draw_msr(ctx, cpu_index, cpu);
 	CPUID_ROW_END;
 
 out:
