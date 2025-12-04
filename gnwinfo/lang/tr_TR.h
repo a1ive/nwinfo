@@ -72,6 +72,7 @@ lang_tr_tr[N__MAX_] =
 	[N__HIDE_VENDOR] = u8"Üretici firma adını gizle",
 	[N__HIDE_VERSION] = u8"Sürümü gizle",
 	[N__HIDE_CACHE] = u8"Önbelleği gizle",
+	[N__USE_SMBUS_SPD] = u8"SPD kullan",
 	[N__COMPACT_VIEW] = u8"Kompakt görünüm",
 	[N__USE_BIT_UNITS] = u8"Bit birimlerini kullan",
 	[N__HIDE_INACTIVE_NETWORK] = u8"Aktif olmayan ağı gizle",

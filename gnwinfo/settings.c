@@ -138,6 +138,8 @@ gnwinfo_draw_settings_window(struct nk_context* ctx, float width, float height)
 	nk_layout_row(ctx, NK_DYNAMIC, 0, 2, (float[2]) { 0.1f, 0.9f });
 	nk_spacer(ctx);
 	nk_checkbox_flags_label(ctx, N_(N__HIDE_DETAILS), &g_ctx.main_flag, MAIN_MEM_DETAIL);
+	nk_spacer(ctx);
+	nk_checkbox_flags_label(ctx, N_(N__USE_SMBUS_SPD), &g_ctx.main_flag, MAIN_SMBUS_SPD);
 
 	nk_layout_row_dynamic(ctx, 0, 1);
 	set_label(ctx, N_(N__NETWORK));

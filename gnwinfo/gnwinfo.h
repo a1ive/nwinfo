@@ -75,7 +75,7 @@ nk_block(struct nk_context* ctx, struct nk_color color, const char* str);
 
 #define MAIN_NO_QUICK       (1U << 15)
 #define MAIN_NET_INACTIVE   (1U << 16)
-//#define MAIN_NO_PDH         (1U << 17)
+#define MAIN_SMBUS_SPD        (1U << 17)
 #define MAIN_NET_DETAIL     (1U << 18)
 #define MAIN_DISK_SMART     (1U << 19)
 #define MAIN_OS_DETAIL      (1U << 20)

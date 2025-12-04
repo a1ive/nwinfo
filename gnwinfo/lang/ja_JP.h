@@ -74,6 +74,7 @@ lang_ja_jp[N__MAX_] =
 	[N__HIDE_VENDOR] = u8"ベンダーを非表示",
 	[N__HIDE_VERSION] = u8"バージョンを非表示",
 	[N__HIDE_CACHE] = u8"キャッシュを非表示",
+	[N__USE_SMBUS_SPD] = u8"SPD を使用",
 	[N__COMPACT_VIEW] = u8"コンパクト表示",
 	[N__USE_BIT_UNITS] = u8"ビット単位を使用",
 	[N__HIDE_INACTIVE_NETWORK] = u8"非アクティブなネットワークを非表示",

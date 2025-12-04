@@ -74,6 +74,7 @@ lang_ko_kr[N__MAX_] =
 	[N__HIDE_VENDOR] = u8"공급업체 숨기기",
 	[N__HIDE_VERSION] = u8"버전 숨기기",
 	[N__HIDE_CACHE] = u8"캐시 숨기기",
+	[N__USE_SMBUS_SPD] = u8"SPD 사용",
 	[N__COMPACT_VIEW] = u8"간략히 보기",
 	[N__USE_BIT_UNITS] = u8"비트 단위 사용",
 	[N__HIDE_INACTIVE_NETWORK] = u8"비활성 네트워크 숨기기",

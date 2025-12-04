@@ -74,6 +74,7 @@ lang_en_us[N__MAX_] =
 	[N__HIDE_VENDOR] = u8"Hide vendor",
 	[N__HIDE_VERSION] = u8"Hide version",
 	[N__HIDE_CACHE] = u8"Hide cache",
+	[N__USE_SMBUS_SPD] = u8"Use SPD",
 	[N__COMPACT_VIEW] = u8"Compact view",
 	[N__USE_BIT_UNITS] = u8"Use bit units",
 	[N__HIDE_INACTIVE_NETWORK] = u8"Hide inactive network",

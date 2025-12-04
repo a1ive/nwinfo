@@ -211,7 +211,12 @@ gnwinfo_ctx_update_display(void)
 static void
 gnwinfo_ctx_update_spd(void)
 {
-	PNODE spd = NW_Spd();
+	DWORD main_flag = 0;
+	AcquireSRWLockShared(&g_ctx.lock);
+	main_flag = g_ctx.main_flag;
+	ReleaseSRWLockShared(&g_ctx.lock);
+
+	PNODE spd = (main_flag & MAIN_SMBUS_SPD) ? NULL : NW_Spd();
 
 	AcquireSRWLockExclusive(&g_ctx.lock);
 	PNODE old_spd = g_ctx.spd;

@@ -72,6 +72,7 @@ lang_zh_cn[N__MAX_] =
 	[N__HIDE_VENDOR] = u8"隐藏厂商",
 	[N__HIDE_VERSION] = u8"隐藏版本",
 	[N__HIDE_CACHE] = u8"隐藏缓存",
+	[N__USE_SMBUS_SPD] = u8"使用 SPD",
 	[N__COMPACT_VIEW] = u8"紧凑视图",
 	[N__USE_BIT_UNITS] = u8"使用比特单位",
 	[N__HIDE_INACTIVE_NETWORK] = u8"隐藏非活动网络",

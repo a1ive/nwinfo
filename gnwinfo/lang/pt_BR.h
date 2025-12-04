@@ -74,6 +74,7 @@ lang_pt_br[N__MAX_] =
 	[N__HIDE_VENDOR] = u8"Ocultar fabricante",
 	[N__HIDE_VERSION] = u8"Ocultar versão",
 	[N__HIDE_CACHE] = u8"Ocultar cache",
+	[N__USE_SMBUS_SPD] = u8"Usar SPD",
 	[N__COMPACT_VIEW] = u8"Visão compacta",
 	[N__USE_BIT_UNITS] = u8"Usar unidades de bit",
 	[N__HIDE_INACTIVE_NETWORK] = u8"Ocultar rede inativa",

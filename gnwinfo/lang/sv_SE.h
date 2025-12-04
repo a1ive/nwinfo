@@ -72,6 +72,7 @@ lang_sv_se[N__MAX_] =
 	[N__HIDE_VENDOR] = u8"Dölj tillverkare",
 	[N__HIDE_VERSION] = u8"Dölj version",
 	[N__HIDE_CACHE] = u8"Dölj cache",
+	[N__USE_SMBUS_SPD] = u8"Använd SPD",
 	[N__COMPACT_VIEW] = u8"Kompakt vy",
 	[N__USE_BIT_UNITS] = u8"Använd bitenheter",
 	[N__HIDE_INACTIVE_NETWORK] = u8"Dölj inaktiva nätverk",
