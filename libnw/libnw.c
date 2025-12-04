@@ -5,6 +5,7 @@
 
 #include <libcpuid.h>
 #include "../libcdi/libcdi.h"
+#include "smbus/smbus.h"
 
 PNWLIB_CONTEXT NWLC = NULL;
 
@@ -146,6 +147,8 @@ VOID NW_Fini(VOID)
 		free(NWLC->NwSmbios);
 	if (NWLC->NwSmart)
 		cdi_destroy_smart(NWLC->NwSmart);
+	if (NWLC->NwSmbus)
+		SM_Free(NWLC->NwSmbus);
 	cpuid_free_system_id(NWLC->NwCpuid);
 	free(NWLC->NwCpuid);
 	cpuid_free_raw_data_array(NWLC->NwCpuRaw);

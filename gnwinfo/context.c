@@ -18,6 +18,7 @@ GNW_CONTEXT g_ctx;
 #define GNW_UPDATE_FLAG_DISPLAY (1u << 3)
 #define GNW_UPDATE_FLAG_POWER   (1u << 4)
 #define GNW_UPDATE_FLAG_SMB     (1u << 5)
+#define GNW_UPDATE_FLAG_SPD     (1u << 6)
 
 static struct nk_image
 load_png(WORD id)
@@ -56,6 +57,7 @@ gnwinfo_ctx_update_flag(WPARAM wparam)
 	case IDT_TIMER_DISPLAY: return GNW_UPDATE_FLAG_DISPLAY;
 	case IDT_TIMER_POWER: return GNW_UPDATE_FLAG_POWER;
 	case IDT_TIMER_SMB: return GNW_UPDATE_FLAG_SMB;
+	case IDT_TIMER_SPD: return GNW_UPDATE_FLAG_SPD;
 	default: return 0;
 	}
 }
@@ -77,6 +79,7 @@ gnwinfo_ctx_update_1s(void)
 	DWORD main_flag = 0;
 	int cpu_count = 0;
 	BOOL enable_audio = FALSE;
+	NWLIB_MEM_SENSORS mem_sensors = { 0 };
 
 	AcquireSRWLockShared(&g_ctx.lock);
 	main_flag = g_ctx.main_flag;
@@ -89,6 +92,7 @@ gnwinfo_ctx_update_1s(void)
 			memcpy(cpu_info, g_ctx.cpu_info, (size_t)cpu_count * sizeof(NWLIB_CPU_INFO));
 	}
 	gpu_info = g_ctx.gpu_info;
+	mem_sensors = g_ctx.mem_sensors;
 	ReleaseSRWLockShared(&g_ctx.lock);
 
 	g_ctx.lib.NetFlags = NW_NET_PHYS | ((main_flag & MAIN_NET_INACTIVE) ? 0 : NW_NET_ACTIVE);
@@ -104,6 +108,7 @@ gnwinfo_ctx_update_1s(void)
 	NWL_GetGpuInfo(&gpu_info);
 	if ((main_flag & MAIN_INFO_AUDIO) && enable_audio)
 		audio = NWL_GetAudio(&audio_count);
+	NWL_GetMemSensors(&mem_sensors);
 
 	AcquireSRWLockExclusive(&g_ctx.lock);
 	PNODE old_network = g_ctx.network;
@@ -120,6 +125,7 @@ gnwinfo_ctx_update_1s(void)
 	NWLIB_AUDIO_DEV* old_audio = g_ctx.audio;
 	g_ctx.audio = audio;
 	g_ctx.audio_count = audio_count;
+	g_ctx.mem_sensors = mem_sensors;
 	ReleaseSRWLockExclusive(&g_ctx.lock);
 
 	if (old_network)
@@ -203,6 +209,20 @@ gnwinfo_ctx_update_display(void)
 }
 
 static void
+gnwinfo_ctx_update_spd(void)
+{
+	PNODE spd = NW_Spd();
+
+	AcquireSRWLockExclusive(&g_ctx.lock);
+	PNODE old_spd = g_ctx.spd;
+	g_ctx.spd = spd;
+	ReleaseSRWLockExclusive(&g_ctx.lock);
+
+	if (old_spd)
+		NWL_NodeFree(old_spd, 1);
+}
+
+static void
 gnwinfo_ctx_update_internal(WPARAM wparam)
 {
 	switch (wparam)
@@ -222,6 +242,9 @@ gnwinfo_ctx_update_internal(WPARAM wparam)
 		break;
 	case IDT_TIMER_DISPLAY:
 		gnwinfo_ctx_update_display();
+		break;
+	case IDT_TIMER_SPD:
+		gnwinfo_ctx_update_spd();
 		break;
 	default:
 		break;
@@ -256,6 +279,8 @@ gnwinfo_ctx_update_thread(LPVOID lpParameter)
 				gnwinfo_ctx_update_internal(IDT_TIMER_POWER);
 			if (mask & GNW_UPDATE_FLAG_SMB)
 				gnwinfo_ctx_update_internal(IDT_TIMER_SMB);
+			if (mask & GNW_UPDATE_FLAG_SPD)
+				gnwinfo_ctx_update_internal(IDT_TIMER_SPD);
 			if (g_ctx.update_stop)
 				break;
 		}
@@ -363,6 +388,7 @@ gnwinfo_ctx_init(HINSTANCE inst, HWND wnd, struct nk_context* ctx, float width, 
 	gnwinfo_ctx_update(IDT_TIMER_1M);
 	gnwinfo_ctx_update(IDT_TIMER_DISK);
 	gnwinfo_ctx_update(IDT_TIMER_SMB);
+	gnwinfo_ctx_update(IDT_TIMER_SPD);
 
 	for (WORD i = 0; i < sizeof(g_ctx.image) / sizeof(g_ctx.image[0]); i++)
 		g_ctx.image[i] = load_png(i + IDR_PNG_MIN);
@@ -407,6 +433,7 @@ gnwinfo_ctx_exit(void)
 	NWL_NodeFree(g_ctx.network, 1);
 	NWL_NodeFree(g_ctx.disk, 1);
 	NWL_NodeFree(g_ctx.smb, 1);
+	NWL_NodeFree(g_ctx.spd, 1);
 	NWL_NodeFree(g_ctx.battery, 1);
 	NWL_NodeFree(g_ctx.edid, 1);
 	NW_Fini();

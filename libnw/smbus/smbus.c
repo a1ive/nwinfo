@@ -308,6 +308,48 @@ float SM_DDR5_GetTemperature(smbus_t* ctx, uint8_t slave_addr)
 	return ConvertTemperature(temp_raw);
 }
 
+VOID NWL_GetMemSensors(NWLIB_MEM_SENSORS* info)
+{
+	if (NWLC->NwSmbus == NULL)
+		return;
+	WR0_WaitSmBus(10);
+	if (!info->Initialized)
+	{
+		info->Count = 0;
+		for (uint8_t i = 0; i < SPD_MAX_SLOT; i++)
+		{
+			uint8_t slave_addr = SPD_SLABE_ADDR_BASE + i;
+			info->Sensor[info->Count].Addr = slave_addr;
+			if (SM_DDR4_IsAvailable(NWLC->NwSmbus, slave_addr))
+			{
+				if (SM_DDR4_IsThermalSensorPresent(NWLC->NwSmbus, slave_addr))
+					info->Sensor[info->Count].Type = MEM_TYPE_DDR4;
+				info->Count++;
+			}
+			else if (SM_DDR5_IsAvailable(NWLC->NwSmbus, slave_addr))
+			{
+				if (SM_DDR5_IsThermalSensorPresent(NWLC->NwSmbus, slave_addr))
+					info->Sensor[info->Count].Type = MEM_TYPE_DDR5;
+				info->Count++;
+			}
+		}
+		info->Initialized = TRUE;
+	}
+	for (uint8_t i = 0; i < info->Count; i++)
+	{
+		switch (info->Sensor[i].Type)
+		{
+		case MEM_TYPE_DDR4:
+			info->Sensor[i].Temp = SM_DDR4_GetTemperature(NWLC->NwSmbus, info->Sensor[i].Addr);
+			break;
+		case MEM_TYPE_DDR5:
+			info->Sensor[i].Temp = SM_DDR5_GetTemperature(NWLC->NwSmbus, info->Sensor[i].Addr);
+			break;
+		}
+	}
+	WR0_ReleaseSmBus();
+}
+
 static const uint16_t
 SPD_INDEX_DDR3[] =
 {

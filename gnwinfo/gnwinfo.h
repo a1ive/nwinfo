@@ -132,6 +132,7 @@ typedef struct _GNW_CONTEXT
 	PNODE uefi;
 	PNODE battery;
 	PNODE smb;
+	PNODE spd;
 
 	LPCSTR sys_boot;
 	LPCSTR sys_disk;
@@ -151,6 +152,8 @@ typedef struct _GNW_CONTEXT
 
 	UINT audio_count;
 	NWLIB_AUDIO_DEV* audio;
+
+	NWLIB_MEM_SENSORS mem_sensors;
 
 	SRWLOCK lock;
 	HANDLE update_event;

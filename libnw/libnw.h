@@ -23,6 +23,7 @@ struct wr0_drv_t;
 struct _CDI_SMART;
 struct cpu_raw_data_array_t;
 struct system_id_t;
+struct smbus_context;
 
 typedef struct _NWLIB_CONTEXT
 {
@@ -105,6 +106,8 @@ typedef struct _NWLIB_CONTEXT
 
 	struct _CDI_SMART* NwSmart;
 	UINT64 NwSmartFlags;
+
+	struct smbus_context* NwSmbus;
 
 	struct wr0_drv_t* NwDrv;
 	UINT CodePage;
@@ -231,6 +234,19 @@ typedef struct _NWLIB_CUR_DISPLAY
 	UINT Scale;
 } NWLIB_CUR_DISPLAY;
 VOID NWL_GetCurDisplay(HWND wnd, NWLIB_CUR_DISPLAY* info);
+
+typedef struct _NWLIB_MEM_SENSORS
+{
+	BOOL Initialized;
+	UINT8 Count;
+	struct
+	{
+		UINT8 Addr;
+		UINT8 Type;
+		float Temp;
+	} Sensor[8];
+} NWLIB_MEM_SENSORS;
+VOID NWL_GetMemSensors(NWLIB_MEM_SENSORS* info);
 
 #ifdef __cplusplus
 } /* extern "C" */

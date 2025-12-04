@@ -256,6 +256,7 @@ draw_processor(struct nk_context* ctx)
 static VOID
 draw_mem_capacity(struct nk_context* ctx)
 {
+	nk_layout_row(ctx, NK_DYNAMIC, 0, 2, (float[2]) { 0.3f, 0.7f });
 	nk_lhsc(ctx, N_(N__MAX_CAPACITY), NK_TEXT_LEFT, g_color_text_d, nk_false, nk_true);
 	LPCSTR id = "16";
 	LPCSTR capacity = gnwinfo_get_smbios_attr(id, "Max Capacity", NULL, NULL);
@@ -273,6 +274,64 @@ draw_mem_capacity(struct nk_context* ctx)
 }
 
 static VOID
+draw_mem_dmi(struct nk_context* ctx)
+{
+	nk_layout_row(ctx, NK_DYNAMIC, 0, 2, (float[2]) { 0.3f, 0.7f });
+	INT count = NWL_NodeChildCount(g_ctx.smbios);
+	for (INT i = 0; i < count; i++)
+	{
+		PNODE tab = NWL_NodeEnumChild(g_ctx.smbios, i);
+		LPCSTR attr = NWL_NodeAttrGet(tab, "Table Type");
+		if (strcmp(attr, "17") != 0)
+			continue;
+		LPCSTR ddr = NWL_NodeAttrGet(tab, "Device Type");
+		if (ddr[0] == '-')
+			continue;
+		nk_lhsc(ctx, NWL_NodeAttrGet(tab, "Bank Locator"), NK_TEXT_LEFT, g_color_text_d, nk_true, nk_true);
+		nk_lhcf(ctx, NK_TEXT_LEFT, g_color_text_l,
+			"%s-%s %s %s %s",
+			ddr,
+			NWL_NodeAttrGet(tab, "Speed (MT/s)"),
+			NWL_NodeAttrGet(tab, "Device Size"),
+			NWL_NodeAttrGet(tab, "Manufacturer"),
+			NWL_NodeAttrGet(tab, "Serial Number"));
+	}
+}
+
+static VOID
+draw_mem_spd(struct nk_context* ctx)
+{
+	INT count = NWL_NodeChildCount(g_ctx.spd);
+	for (INT i = 0; i < count; i++)
+	{
+		PNODE tab = NWL_NodeEnumChild(g_ctx.spd, i);
+		nk_layout_row(ctx, NK_DYNAMIC, 0, 2, (float[2]) { 0.3f, 0.7f });
+		nk_lhscf(ctx, NK_TEXT_LEFT, g_color_text_d, nk_true, nk_true, "BANK %s", NWL_NodeAttrGet(tab, "ID"));
+		nk_lhcf(ctx, NK_TEXT_LEFT, g_color_text_l,
+			"%s-%s %s %s %s",
+			NWL_NodeAttrGet(tab, "Memory Type"),
+			NWL_NodeAttrGet(tab, "Speed (MHz)"),
+			NWL_NodeAttrGet(tab, "Capacity"),
+			NWL_NodeAttrGet(tab, "Manufacturer"),
+			NWL_NodeAttrGet(tab, "Serial Number"));
+		nk_layout_row(ctx, NK_DYNAMIC, 0, 3, (float[3]) { 0.3f, 0.4f, 0.3f });
+		nk_spacer(ctx);
+		nk_lhcf(ctx, NK_TEXT_LEFT, g_color_text_l,
+			"%s CL%s-%s-%s-%s",
+			NWL_NodeAttrGet(tab, "Module Type"),
+			NWL_NodeAttrGet(tab, "tCL"),
+			NWL_NodeAttrGet(tab, "tRCD"),
+			NWL_NodeAttrGet(tab, "tRP"),
+			NWL_NodeAttrGet(tab, "tRAS"));
+		double temp = g_ctx.mem_sensors.Sensor[i].Temp;
+		if (temp > 0.0)
+			nk_lhcf(ctx, NK_TEXT_LEFT, gnwinfo_get_color(temp, 55.0, 85.0), u8"%.1f"TEMP_CELSIUS_SYMBOL, temp);
+		else
+			nk_spacer(ctx);
+	}
+}
+
+static VOID
 draw_memory(struct nk_context* ctx)
 {
 	nk_layout_row(ctx, NK_DYNAMIC, 0, 4, (float[4]) { 0.3f, 0.4f, 0.3f - g_ctx.gui_ratio, g_ctx.gui_ratio });
@@ -287,27 +346,11 @@ draw_memory(struct nk_context* ctx)
 
 	if (g_ctx.main_flag & MAIN_MEM_DETAIL)
 	{
-		nk_layout_row(ctx, NK_DYNAMIC, 0, 2, (float[2]) { 0.3f, 0.7f });
 		draw_mem_capacity(ctx);
-		INT count = NWL_NodeChildCount(g_ctx.smbios);
-		for (INT i = 0; i < count; i++)
-		{
-			PNODE tab = NWL_NodeEnumChild(g_ctx.smbios, i);
-			LPCSTR attr = NWL_NodeAttrGet(tab, "Table Type");
-			if (strcmp(attr, "17") != 0)
-				continue;
-			LPCSTR ddr = NWL_NodeAttrGet(tab, "Device Type");
-			if (ddr[0] == '-')
-				continue;
-			nk_lhsc(ctx, NWL_NodeAttrGet(tab, "Bank Locator"), NK_TEXT_LEFT, g_color_text_d, nk_true, nk_true);
-			nk_lhcf(ctx, NK_TEXT_LEFT, g_color_text_l,
-				"%s-%s %s %s %s",
-				ddr,
-				NWL_NodeAttrGet(tab, "Speed (MT/s)"),
-				NWL_NodeAttrGet(tab, "Device Size"),
-				NWL_NodeAttrGet(tab, "Manufacturer"),
-				NWL_NodeAttrGet(tab, "Serial Number"));
-		}
+		if (g_ctx.spd)
+			draw_mem_spd(ctx);
+		else
+			draw_mem_dmi(ctx);
 	}
 }
 

@@ -958,22 +958,22 @@ GetSpdTypeStr(UINT8 t)
 	case MEM_TYPE_FPM_DRAM: return "FPM DRAM";
 	case MEM_TYPE_EDO: return "EDO";
 	case MEM_TYPE_PNEDO: return "PNEDO";
-	case MEM_TYPE_SDRAM: return "SDR SDRAM";
+	case MEM_TYPE_SDRAM: return "SDRAM";
 	case MEM_TYPE_ROM: return "ROM";
-	case MEM_TYPE_SGRAM: return "DDR SGRAM";
-	case MEM_TYPE_DDR: return "DDR SDRAM";
-	case MEM_TYPE_DDR2: return "DDR2 SDRAM";
-	case MEM_TYPE_DDR2_FB: return "DDR2 SDRAM FB-DIMM";
-	case MEM_TYPE_DDR2_FB_P: return "DDR2 SDRAM FB-DIMM PROBE";
-	case MEM_TYPE_DDR3: return "DDR3 SDRAM";
-	case MEM_TYPE_DDR4: return "DDR4 SDRAM";
-	case MEM_TYPE_DDR4E: return "DDR4E SDRAM";
-	case MEM_TYPE_LPDDR3: return "LPDDR3 SDRAM";
-	case MEM_TYPE_LPDDR4: return "LPDDR4 SDRAM";
-	case MEM_TYPE_LPDDR4X: return "LPDDR4X SDRAM";
-	case MEM_TYPE_DDR5: return "DDR5 SDRAM";
-	case MEM_TYPE_LPDDR5: return "LPDDR5 SDRAM";
-	case MEM_TYPE_LPDDR5X: return "LPDDR5X SDRAM";
+	case MEM_TYPE_SGRAM: return "SGRAM";
+	case MEM_TYPE_DDR: return "DDR";
+	case MEM_TYPE_DDR2: return "DDR2";
+	case MEM_TYPE_DDR2_FB: return "DDR2 FB-DIMM";
+	case MEM_TYPE_DDR2_FB_P: return "DDR2 FB-DIMM PROBE";
+	case MEM_TYPE_DDR3: return "DDR3";
+	case MEM_TYPE_DDR4: return "DDR4";
+	case MEM_TYPE_DDR4E: return "DDR4E";
+	case MEM_TYPE_LPDDR3: return "LPDDR3";
+	case MEM_TYPE_LPDDR4: return "LPDDR4";
+	case MEM_TYPE_LPDDR4X: return "LPDDR4X";
+	case MEM_TYPE_DDR5: return "DDR5";
+	case MEM_TYPE_LPDDR5: return "LPDDR5";
+	case MEM_TYPE_LPDDR5X: return "LPDDR5X";
 	}
 	return "UNKNOWN";
 }
@@ -1099,19 +1099,19 @@ PNODE NW_Spd(VOID)
 		goto out;
 	}
 
-	smbus_t* ctx = SM_Init(NWLC->NwDrv);
-	if (!ctx)
+	if (NWLC->NwSmbus == NULL)
+		NWLC->NwSmbus = SM_Init(NWLC->NwDrv);
+	if (NWLC->NwSmbus == NULL)
 		goto out;
 
 	UINT64 tStart = GetTickCount64();
 	for (i = 0; i < SPD_MAX_SLOT; i++)
 	{
-		if (SM_GetSpd(ctx, i, rawSpd) != SM_OK)
+		if (SM_GetSpd(NWLC->NwSmbus, i, rawSpd) != SM_OK)
 			continue;
-		ParseSpd(node, ctx, i, ids, idsSize, rawSpd);
+		ParseSpd(node, NWLC->NwSmbus, i, ids, idsSize, rawSpd);
 	}
 	SMBUS_DBG("Time: %llu", GetTickCount64() - tStart);
-	SM_Free(ctx);
 
 out:
 	free(ids);
