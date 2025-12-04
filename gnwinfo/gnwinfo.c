@@ -292,7 +292,7 @@ wWinMain(_In_ HINSTANCE hInstance,
 		nk_input_end(ctx);
 
 		/* GUI */
-		AcquireSRWLockShared(&g_ctx.lock);
+		AcquireSRWLockExclusive(&g_ctx.lock);
 		if (g_ctx.window_flag & GUI_WINDOW_SETTINGS)
 			gnwinfo_set_style(ctx);
 		gnwinfo_draw_main_window(ctx, g_ctx.gui_width, g_ctx.gui_height);
@@ -305,7 +305,9 @@ wWinMain(_In_ HINSTANCE hInstance,
 		gnwinfo_draw_display_window(ctx, g_ctx.gui_width, g_ctx.gui_height);
 		gnwinfo_draw_mm_window(ctx, g_ctx.gui_width, g_ctx.gui_height);
 		gnwinfo_draw_hostname_window(ctx, g_ctx.gui_width, g_ctx.gui_height);
-		ReleaseSRWLockShared(&g_ctx.lock);
+		ReleaseSRWLockExclusive(&g_ctx.lock);
+		if (g_ctx.exit_pending)
+			gnwinfo_ctx_exit();
 
 		/* Draw */
 		nk_gdip_render(g_ctx.gui_aa, g_color_back);

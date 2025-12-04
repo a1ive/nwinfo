@@ -160,6 +160,7 @@ typedef struct _GNW_CONTEXT
 	HANDLE update_thread;
 	volatile LONG update_mask;
 	volatile LONG update_stop;
+	volatile LONG exit_pending;
 } GNW_CONTEXT;
 extern GNW_CONTEXT g_ctx;
 

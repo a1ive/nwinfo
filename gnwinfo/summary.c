@@ -784,7 +784,8 @@ gnwinfo_draw_main_window(struct nk_context* ctx, float width, float height)
 		nk_image_id(0), GET_PNG(IDR_PNG_CLOSE)))
 	{
 		nk_end(ctx);
-		gnwinfo_ctx_exit();
+		InterlockedExchange(&g_ctx.exit_pending, 1);
+		return;
 	}
 
 	nk_layout_row_begin(ctx, NK_DYNAMIC, 0, 4);
@@ -808,7 +809,7 @@ gnwinfo_draw_main_window(struct nk_context* ctx, float width, float height)
 		g_ctx.window_flag |= GUI_WINDOW_ABOUT;
 	nk_layout_row_push(ctx, g_ctx.gui_ratio);
 	if (nk_button_image_hover(ctx, GET_PNG(IDR_PNG_CLOSE), N_(N__CLOSE)))
-		gnwinfo_ctx_exit();
+		InterlockedExchange(&g_ctx.exit_pending, 1);
 	nk_layout_row_end(ctx);
 
 	if (g_ctx.main_flag & MAIN_INFO_OS)

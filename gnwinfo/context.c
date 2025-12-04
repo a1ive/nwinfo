@@ -324,6 +324,7 @@ gnwinfo_ctx_init(HINSTANCE inst, HWND wnd, struct nk_context* ctx, float width, 
 	InitializeSRWLock(&g_ctx.lock);
 	g_ctx.update_mask = 0;
 	g_ctx.update_stop = 0;
+	g_ctx.exit_pending = 0;
 	g_ctx.update_event = CreateEventW(NULL, FALSE, FALSE, NULL);
 	if (g_ctx.update_event)
 		g_ctx.update_thread = CreateThread(NULL, 0, gnwinfo_ctx_update_thread, NULL, 0, NULL);
