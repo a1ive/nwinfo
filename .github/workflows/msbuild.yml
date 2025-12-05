@@ -17,6 +17,8 @@ jobs:
     steps:
     - name: Run git checkout
       uses: actions/checkout@v6
+      with:
+        submodules: recursive
 
     - name: Create PDF
       uses: BaileyJM02/markdown-to-pdf@v1
@@ -42,7 +44,7 @@ jobs:
     - name: Run git checkout
       uses: actions/checkout@v6
       with:
-        fetch-depth: 0
+        submodules: recursive
 
     - name: Add MSBuild to PATH
       uses: microsoft/setup-msbuild@v2
@@ -58,6 +60,8 @@ jobs:
       run: |
         msbuild /m /p:Configuration=Release /p:platform=x64 ${{env.SOLUTION_FILE_PATH}}
         msbuild /m /p:Configuration=Release /p:platform=x86 ${{env.SOLUTION_FILE_PATH}}
+        msbuild /m /p:Configuration=DLLRelease /p:platform=x64 ${{env.SOLUTION_FILE_PATH}}
+        msbuild /m /p:Configuration=DLLRelease /p:platform=x86 ${{env.SOLUTION_FILE_PATH}}
 
     - name: Download README.pdf
       uses: actions/download-artifact@v6
@@ -75,10 +79,30 @@ jobs:
         Copy-Item -Path "Win32\Release\nwinfo.exe" -Destination "$($TargetFolder)\nwinfox86.exe"
         Copy-Item -Path "Win32\Release\gnwinfo.exe" -Destination "$($TargetFolder)\gnwinfox86.exe"
         .\copy_res.ps1 -TargetFolder $TargetFolder
-        
+
+    - name: Prepare DLL Package
+      shell: pwsh
+      run: |
+        $TargetFolder = "PKG_DLL"
+        New-Item -ItemType Directory -Path $TargetFolder -Force | Out-Null
+        $dllTargets = @(
+          @{ Platform = "x64"; Source = "x64\DLLRelease" },
+          @{ Platform = "x86"; Source = "Win32\DLLRelease" }
+        )
+
+        foreach ($t in $dllTargets) {
+          $destDir = Join-Path $TargetFolder $t.Platform
+          New-Item -ItemType Directory -Path $destDir -Force | Out-Null
+          $dllFiles = "libnw.dll","libnw.lib","libnw.pdb"
+          foreach ($f in $dllFiles) {
+            Copy-Item -Path (Join-Path $t.Source $f) -Destination (Join-Path $destDir $f)
+          }
+        }
+
     - name: Create ZIPs
       run: |
         Compress-Archive -Path "PKG\*" -DestinationPath "nwinfo.zip" -Force
+        Compress-Archive -Path "PKG_DLL\*" -DestinationPath "dev.zip" -Force
 
     - name: Generate Release Notes
       env:
@@ -123,6 +147,7 @@ jobs:
       run: |
         $date_version = (Get-Date -Format 'yyyyMMdd') + ".${{ github.run_number }}"
         gh release create latest "nwinfo.zip" `
+          "dev.zip" `
           --prerelease `
           --title "Build $date_version" `
           --notes-file "release_notes.txt"

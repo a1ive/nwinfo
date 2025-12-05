@@ -28,7 +28,7 @@ $FilesToCopy = @(
 $FilesToDownload = @(
 	"https://raw.githubusercontent.com/pciutils/pciids/master/pci.ids",
 	"https://raw.githubusercontent.com/vcrhonek/hwdata/master/pnp.ids",
-	"https://raw.githubusercontent.com/vcrhonek/hwdata/master/usb.ids",
+	"https://raw.githubusercontent.com/vcrhonek/hwdata/master/usb.ids"
 )
 
 # Function to handle local file copying
