@@ -13,22 +13,36 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "gnwinfo", "gnwinfo\gnwinfo.
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		DLLRelease|x64 = DLLRelease|x64
+		DLLRelease|x86 = DLLRelease|x86
 		Release|x64 = Release|x64
 		Release|x86 = Release|x86
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{348208C4-74A1-4677-8573-6FC389C3AE40}.DLLRelease|x64.ActiveCfg = Release|x64
+		{348208C4-74A1-4677-8573-6FC389C3AE40}.DLLRelease|x86.ActiveCfg = Release|Win32
 		{348208C4-74A1-4677-8573-6FC389C3AE40}.Release|x64.ActiveCfg = Release|x64
 		{348208C4-74A1-4677-8573-6FC389C3AE40}.Release|x64.Build.0 = Release|x64
 		{348208C4-74A1-4677-8573-6FC389C3AE40}.Release|x86.ActiveCfg = Release|Win32
 		{348208C4-74A1-4677-8573-6FC389C3AE40}.Release|x86.Build.0 = Release|Win32
+		{2DA3EA59-BDF3-4FC0-8AC2-5605CE22B800}.DLLRelease|x64.ActiveCfg = Release|x64
+		{2DA3EA59-BDF3-4FC0-8AC2-5605CE22B800}.DLLRelease|x64.Build.0 = Release|x64
+		{2DA3EA59-BDF3-4FC0-8AC2-5605CE22B800}.DLLRelease|x86.ActiveCfg = Release|Win32
+		{2DA3EA59-BDF3-4FC0-8AC2-5605CE22B800}.DLLRelease|x86.Build.0 = Release|Win32
 		{2DA3EA59-BDF3-4FC0-8AC2-5605CE22B800}.Release|x64.ActiveCfg = Release|x64
 		{2DA3EA59-BDF3-4FC0-8AC2-5605CE22B800}.Release|x64.Build.0 = Release|x64
 		{2DA3EA59-BDF3-4FC0-8AC2-5605CE22B800}.Release|x86.ActiveCfg = Release|Win32
 		{2DA3EA59-BDF3-4FC0-8AC2-5605CE22B800}.Release|x86.Build.0 = Release|Win32
+		{D0954ECF-A37A-4DE0-8D49-0D0505F56B29}.DLLRelease|x64.ActiveCfg = DLLRelease|x64
+		{D0954ECF-A37A-4DE0-8D49-0D0505F56B29}.DLLRelease|x64.Build.0 = DLLRelease|x64
+		{D0954ECF-A37A-4DE0-8D49-0D0505F56B29}.DLLRelease|x86.ActiveCfg = DLLRelease|Win32
+		{D0954ECF-A37A-4DE0-8D49-0D0505F56B29}.DLLRelease|x86.Build.0 = DLLRelease|Win32
 		{D0954ECF-A37A-4DE0-8D49-0D0505F56B29}.Release|x64.ActiveCfg = Release|x64
 		{D0954ECF-A37A-4DE0-8D49-0D0505F56B29}.Release|x64.Build.0 = Release|x64
 		{D0954ECF-A37A-4DE0-8D49-0D0505F56B29}.Release|x86.ActiveCfg = Release|Win32
 		{D0954ECF-A37A-4DE0-8D49-0D0505F56B29}.Release|x86.Build.0 = Release|Win32
+		{C8356469-07C6-4366-A561-12C610BE1263}.DLLRelease|x64.ActiveCfg = Release|x64
+		{C8356469-07C6-4366-A561-12C610BE1263}.DLLRelease|x86.ActiveCfg = Release|Win32
 		{C8356469-07C6-4366-A561-12C610BE1263}.Release|x64.ActiveCfg = Release|x64
 		{C8356469-07C6-4366-A561-12C610BE1263}.Release|x64.Build.0 = Release|x64
 		{C8356469-07C6-4366-A561-12C610BE1263}.Release|x86.ActiveCfg = Release|Win32

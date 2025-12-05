@@ -2,6 +2,7 @@
 #pragma once
 
 #include <stdint.h>
+#include "../nwapi.h"
 
 #define MAX_GPU_STR 256
 
@@ -64,8 +65,8 @@ typedef struct _NWLIB_GPU_INFO
 	PNODE PciList;
 } NWLIB_GPU_INFO, * PNWLIB_GPU_INFO;
 
-VOID NWL_InitGpu(PNWLIB_GPU_INFO info);
+LIBNW_API VOID NWL_InitGpu(PNWLIB_GPU_INFO info);
 
-VOID NWL_GetGpuInfo(PNWLIB_GPU_INFO info);
+LIBNW_API VOID NWL_GetGpuInfo(PNWLIB_GPU_INFO info);
 
-VOID NWL_FreeGpu(PNWLIB_GPU_INFO info);
+LIBNW_API VOID NWL_FreeGpu(PNWLIB_GPU_INFO info);

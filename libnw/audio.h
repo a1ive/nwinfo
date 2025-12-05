@@ -5,6 +5,8 @@
 #define VC_EXTRALEAN
 #include <windows.h>
 
+#include "nwapi.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -17,7 +19,7 @@ extern "C" {
 		WCHAR id[MAX_PATH];
 	} NWLIB_AUDIO_DEV;
 
-	NWLIB_AUDIO_DEV* NWL_GetAudio(UINT* count);
+	LIBNW_API NWLIB_AUDIO_DEV* NWL_GetAudio(UINT* count);
 
 #ifdef __cplusplus
 }

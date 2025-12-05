@@ -6,6 +6,8 @@
 #define VC_EXTRALEAN
 #include <windows.h>
 
+#include "nwapi.h"
+
 #pragma pack(1)
 
 typedef WCHAR CHAR16;
@@ -259,15 +261,15 @@ typedef struct _VARIABLE_NAME
 extern GUID EFI_GV_GUID;
 extern GUID EFI_EMPTY_GUID;
 
-BOOL NWL_IsEfi(VOID);
-DWORD NWL_GetEfiVar(LPCWSTR lpName, LPGUID lpGuid,
+LIBNW_API BOOL NWL_IsEfi(VOID);
+LIBNW_API DWORD NWL_GetEfiVar(LPCWSTR lpName, LPGUID lpGuid,
 	PVOID pBuffer, DWORD nSize, PDWORD pdwAttribubutes);
 VOID* NWL_GetEfiVarAlloc(LPCWSTR lpName, LPGUID lpGuid,
 	PDWORD pdwSize, PDWORD pdwAttributes);
-PVARIABLE_NAME NWL_EnumerateEfiVar(PULONG pulSize);
-BOOL NWL_SetEfiVarEx(LPCWSTR lpName, LPGUID lpGuid,
+LIBNW_API PVARIABLE_NAME NWL_EnumerateEfiVar(PULONG pulSize);
+LIBNW_API BOOL NWL_SetEfiVarEx(LPCWSTR lpName, LPGUID lpGuid,
 	PVOID pBuffer, DWORD nSize, DWORD dwAttributes);
-BOOL NWL_SetEfiVar(LPCWSTR lpName, LPGUID lpGuid, PVOID pBuffer, DWORD nSize);
-BOOL NWL_DeleteEfiVar(LPCWSTR lpName, LPGUID lpGuid);
+LIBNW_API BOOL NWL_SetEfiVar(LPCWSTR lpName, LPGUID lpGuid, PVOID pBuffer, DWORD nSize);
+LIBNW_API BOOL NWL_DeleteEfiVar(LPCWSTR lpName, LPGUID lpGuid);
 
 CHAR* NWL_GetEfiDpStr(EFI_DEVICE_PATH* pDp);

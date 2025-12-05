@@ -6,6 +6,8 @@
 #include <windows.h>
 #include <stdnoreturn.h>
 
+#include "nwapi.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -134,37 +136,37 @@ typedef struct _NWLIB_CONTEXT
 
 extern PNWLIB_CONTEXT NWLC;
 
-VOID NW_Init(PNWLIB_CONTEXT pContext);
-VOID NW_Export(PNODE node, FILE* file);
-VOID NW_Print(LPCSTR lpFileName);
-VOID NW_Fini(VOID);
+LIBNW_API VOID NW_Init(PNWLIB_CONTEXT pContext);
+LIBNW_API VOID NW_Export(PNODE node, FILE* file);
+LIBNW_API VOID NW_Print(LPCSTR lpFileName);
+LIBNW_API VOID NW_Fini(VOID);
 
-noreturn VOID NWL_ErrExit(INT nExitCode, LPCSTR lpszText);
+LIBNW_API noreturn VOID NWL_ErrExit(INT nExitCode, LPCSTR lpszText);
 extern void(*NWL_Debug)(const char* condition, _Printf_format_string_ char const* const format, ...);
 
-PNODE NW_Acpi(VOID);
-PNODE NW_Cpuid(VOID);
-PNODE NW_Disk(VOID);
-PNODE NW_Edid(VOID);
-PNODE NW_Network(VOID);
-PNODE NW_Pci(VOID);
-PNODE NW_Smbios(VOID);
-PNODE NW_Spd(VOID);
-PNODE NW_System(VOID);
-PNODE NW_Usb(VOID);
-PNODE NW_Battery(VOID);
-PNODE NW_Libinfo(VOID);
-PNODE NW_Uefi(VOID);
-PNODE NW_NetShare(VOID);
-PNODE NW_Audio(VOID);
-PNODE NW_PublicIp(VOID);
-PNODE NW_ProductPolicy(VOID);
-PNODE NW_Gpu(VOID);
-PNODE NW_Font(VOID);
-PNODE NW_DevTree(VOID);
+LIBNW_API PNODE NW_Acpi(VOID);
+LIBNW_API PNODE NW_Cpuid(VOID);
+LIBNW_API PNODE NW_Disk(VOID);
+LIBNW_API PNODE NW_Edid(VOID);
+LIBNW_API PNODE NW_Network(VOID);
+LIBNW_API PNODE NW_Pci(VOID);
+LIBNW_API PNODE NW_Smbios(VOID);
+LIBNW_API PNODE NW_Spd(VOID);
+LIBNW_API PNODE NW_System(VOID);
+LIBNW_API PNODE NW_Usb(VOID);
+LIBNW_API PNODE NW_Battery(VOID);
+LIBNW_API PNODE NW_Libinfo(VOID);
+LIBNW_API PNODE NW_Uefi(VOID);
+LIBNW_API PNODE NW_NetShare(VOID);
+LIBNW_API PNODE NW_Audio(VOID);
+LIBNW_API PNODE NW_PublicIp(VOID);
+LIBNW_API PNODE NW_ProductPolicy(VOID);
+LIBNW_API PNODE NW_Gpu(VOID);
+LIBNW_API PNODE NW_Font(VOID);
+LIBNW_API PNODE NW_DevTree(VOID);
 
-VOID NWL_GetUptime(CHAR* szUptime, DWORD dwSize);
-VOID NWL_GetHostname(CHAR* szHostname);
+LIBNW_API VOID NWL_GetUptime(CHAR* szUptime, DWORD dwSize);
+LIBNW_API VOID NWL_GetHostname(CHAR* szHostname);
 
 #define NWL_STR_SIZE 64
 
@@ -192,10 +194,10 @@ typedef struct _NWLIB_MEM_INFO
 	CHAR StrSfciAvail[NWL_STR_SIZE];
 } NWLIB_MEM_INFO, *PNWLIB_MEM_INFO;
 
-VOID NWL_GetMemInfo(PNWLIB_MEM_INFO pMemInfo);
+LIBNW_API VOID NWL_GetMemInfo(PNWLIB_MEM_INFO pMemInfo);
 
-double NWL_GetCpuUsage(VOID);
-DWORD NWL_GetCpuFreq(VOID);
+LIBNW_API double NWL_GetCpuUsage(VOID);
+LIBNW_API DWORD NWL_GetCpuFreq(VOID);
 
 typedef struct _NWLIB_CPU_INFO
 {
@@ -213,7 +215,7 @@ typedef struct _NWLIB_CPU_INFO
 	int GpuEnergy;
 	double GpuPower;
 }NWLIB_CPU_INFO;
-VOID NWL_GetCpuMsr(int count, NWLIB_CPU_INFO* info);
+LIBNW_API VOID NWL_GetCpuMsr(int count, NWLIB_CPU_INFO* info);
 
 typedef struct _NWLIB_NET_TRAFFIC
 {
@@ -222,9 +224,9 @@ typedef struct _NWLIB_NET_TRAFFIC
 	CHAR StrRecv[NWL_STR_SIZE];
 	CHAR StrSend[NWL_STR_SIZE];
 } NWLIB_NET_TRAFFIC;
-VOID NWL_GetNetTraffic(NWLIB_NET_TRAFFIC* info, BOOL bit);
+LIBNW_API VOID NWL_GetNetTraffic(NWLIB_NET_TRAFFIC* info, BOOL bit);
 
-PNODE NWL_EnumPci(PNODE pNode, LPCSTR pciClass);
+LIBNW_API PNODE NWL_EnumPci(PNODE pNode, LPCSTR pciClass);
 
 typedef struct _NWLIB_CUR_DISPLAY
 {
@@ -233,7 +235,7 @@ typedef struct _NWLIB_CUR_DISPLAY
 	UINT Dpi;
 	UINT Scale;
 } NWLIB_CUR_DISPLAY;
-VOID NWL_GetCurDisplay(HWND wnd, NWLIB_CUR_DISPLAY* info);
+LIBNW_API VOID NWL_GetCurDisplay(HWND wnd, NWLIB_CUR_DISPLAY* info);
 
 typedef struct _NWLIB_MEM_SENSORS
 {
@@ -246,7 +248,7 @@ typedef struct _NWLIB_MEM_SENSORS
 		float Temp;
 	} Sensor[8];
 } NWLIB_MEM_SENSORS;
-VOID NWL_GetMemSensors(NWLIB_MEM_SENSORS* info);
+LIBNW_API VOID NWL_GetMemSensors(struct smbus_context* ctx, NWLIB_MEM_SENSORS* info);
 
 #ifdef __cplusplus
 } /* extern "C" */

@@ -73,25 +73,25 @@ struct smbus_context
 	uint8_t last_dimm_addr;
 };
 
-smbus_t* SM_Init(struct wr0_drv_t* drv);
+LIBNW_API smbus_t* SM_Init(struct wr0_drv_t* drv);
 
-void SM_Free(smbus_t* ctx);
+LIBNW_API void SM_Free(smbus_t* ctx);
 
-int SM_WriteQuick(smbus_t* ctx, uint8_t slave_addr, uint8_t value);
+LIBNW_API int SM_WriteQuick(smbus_t* ctx, uint8_t slave_addr, uint8_t value);
 
-int SM_ReadByte(smbus_t* ctx, uint8_t slave_addr, uint8_t* value);
+LIBNW_API int SM_ReadByte(smbus_t* ctx, uint8_t slave_addr, uint8_t* value);
 
-int SM_WriteByte(smbus_t* ctx, uint8_t slave_addr, uint8_t value);
+LIBNW_API int SM_WriteByte(smbus_t* ctx, uint8_t slave_addr, uint8_t value);
 
-int SM_ReadByteData(smbus_t* ctx, uint8_t slave_addr, uint8_t offset, uint8_t* value);
+LIBNW_API int SM_ReadByteData(smbus_t* ctx, uint8_t slave_addr, uint8_t offset, uint8_t* value);
 
-int SM_WriteByteData(smbus_t* ctx, uint8_t slave_addr, uint8_t offset, uint8_t value);
+LIBNW_API int SM_WriteByteData(smbus_t* ctx, uint8_t slave_addr, uint8_t offset, uint8_t value);
 
-int SM_ReadWordData(smbus_t* ctx, uint8_t slave_addr, uint8_t offset, uint16_t* value);
+LIBNW_API int SM_ReadWordData(smbus_t* ctx, uint8_t slave_addr, uint8_t offset, uint16_t* value);
 
-int SM_WriteWordData(smbus_t* ctx, uint8_t slave_addr, uint8_t offset, uint16_t value);
+LIBNW_API int SM_WriteWordData(smbus_t* ctx, uint8_t slave_addr, uint8_t offset, uint16_t value);
 
-int SM_ProcCall(smbus_t* ctx, uint8_t slave_addr, uint8_t offset, uint16_t* value);
+LIBNW_API int SM_ProcCall(smbus_t* ctx, uint8_t slave_addr, uint8_t offset, uint16_t* value);
 
 #define SMBUS_DBG(...) \
 	do \
@@ -152,16 +152,16 @@ int SM_ProcCall(smbus_t* ctx, uint8_t slave_addr, uint8_t offset, uint16_t* valu
 // slave_addr = SPD_SLABE_ADDR_BASE + dimm_index
 #define SPD_SLABE_ADDR_BASE     0x50
 
-bool SM_DDR4_IsAvailable(smbus_t* ctx, uint8_t slave_addr);
-bool SM_DDR5_IsAvailable(smbus_t* ctx, uint8_t slave_addr);
+LIBNW_API bool SM_DDR4_IsAvailable(smbus_t* ctx, uint8_t slave_addr);
+LIBNW_API bool SM_DDR5_IsAvailable(smbus_t* ctx, uint8_t slave_addr);
 
-int SM_DDR4_ReadByteAt(smbus_t* ctx, uint8_t slave_addr, uint16_t address, uint8_t* value);
-int SM_DDR5_ReadByteAt(smbus_t* ctx, uint8_t slave_addr, uint16_t address, uint8_t* value);
+LIBNW_API int SM_DDR4_ReadByteAt(smbus_t* ctx, uint8_t slave_addr, uint16_t address, uint8_t* value);
+LIBNW_API int SM_DDR5_ReadByteAt(smbus_t* ctx, uint8_t slave_addr, uint16_t address, uint8_t* value);
 
-bool SM_DDR4_IsThermalSensorPresent(smbus_t* ctx, uint8_t slave_addr);
-bool SM_DDR5_IsThermalSensorPresent(smbus_t* ctx, uint8_t slave_addr);
+LIBNW_API bool SM_DDR4_IsThermalSensorPresent(smbus_t* ctx, uint8_t slave_addr);
+LIBNW_API bool SM_DDR5_IsThermalSensorPresent(smbus_t* ctx, uint8_t slave_addr);
 
-float SM_DDR4_GetTemperature(smbus_t* ctx, uint8_t slave_addr);
-float SM_DDR5_GetTemperature(smbus_t* ctx, uint8_t slave_addr);
+LIBNW_API float SM_DDR4_GetTemperature(smbus_t* ctx, uint8_t slave_addr);
+LIBNW_API float SM_DDR5_GetTemperature(smbus_t* ctx, uint8_t slave_addr);
 
-int SM_GetSpd(smbus_t* ctx, uint8_t dimm_index, uint8_t data[SPD_MAX_SIZE]);
+LIBNW_API int SM_GetSpd(smbus_t* ctx, uint8_t dimm_index, uint8_t data[SPD_MAX_SIZE]);

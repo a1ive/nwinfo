@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 #include <windows.h>
+#include "../libnw/nwapi.h"
 
 enum wr0_driver_type
 {
@@ -57,29 +58,29 @@ struct wr0_drv_t
 // PCI Device Address to Function Number
 #define PciGetFunc(address)				(address&7)
 
-BOOL WR0_CheckPawnIO(void);
-BOOL WR0_InstallPawnIO(void);
+LIBNW_API BOOL WR0_CheckPawnIO(void);
+LIBNW_API BOOL WR0_InstallPawnIO(void);
 
-int WR0_RdMsr(struct wr0_drv_t* drv, uint32_t msr_index, uint64_t* result);
-int WR0_WrMsr(struct wr0_drv_t* drv, uint32_t msr_index, DWORD eax, DWORD edx);
-uint8_t WR0_RdIo8(struct wr0_drv_t* drv, uint16_t port);
-uint16_t WR0_RdIo16(struct wr0_drv_t* drv, uint16_t port);
-uint32_t WR0_RdIo32(struct wr0_drv_t* drv, uint16_t port);
-void WR0_WrIo8(struct wr0_drv_t* drv, uint16_t port, uint8_t value);
-void WR0_WrIo16(struct wr0_drv_t* drv, uint16_t port, uint16_t value);
-void WR0_WrIo32(struct wr0_drv_t* drv, uint16_t port, uint32_t value);
-int WR0_RdPciConf(struct wr0_drv_t* drv, uint32_t addr, uint32_t reg, void* value, uint32_t size);
-uint8_t WR0_RdPciConf8(struct wr0_drv_t* drv, uint32_t addr, uint32_t reg);
-uint16_t WR0_RdPciConf16(struct wr0_drv_t* drv, uint32_t addr, uint32_t reg);
-uint32_t WR0_RdPciConf32(struct wr0_drv_t* drv, uint32_t addr, uint32_t reg);
-int WR0_WrPciConf(struct wr0_drv_t* drv, uint32_t addr, uint32_t reg, void* value, uint32_t size);
-void WR0_WrPciConf8(struct wr0_drv_t* drv, uint32_t addr, uint32_t reg, uint8_t value);
-void WR0_WrPciConf16(struct wr0_drv_t* drv, uint32_t addr, uint32_t reg, uint16_t value);
-void WR0_WrPciConf32(struct wr0_drv_t* drv, uint32_t addr, uint32_t reg, uint32_t value);
-uint32_t WR0_FindPciById(struct wr0_drv_t* drv, uint16_t vid, uint16_t did, uint8_t index);
-uint32_t WR0_FindPciByClass(struct wr0_drv_t* drv, uint8_t base, uint8_t sub, uint8_t prog, uint8_t index);
-int WR0_RdMmIo(struct wr0_drv_t* drv, uint64_t addr, void* value, uint32_t size);
-DWORD WR0_RdMem(struct wr0_drv_t* drv, DWORD_PTR address, PBYTE buffer, DWORD count, DWORD unitSize);
+LIBNW_API int WR0_RdMsr(struct wr0_drv_t* drv, uint32_t msr_index, uint64_t* result);
+LIBNW_API int WR0_WrMsr(struct wr0_drv_t* drv, uint32_t msr_index, DWORD eax, DWORD edx);
+LIBNW_API uint8_t WR0_RdIo8(struct wr0_drv_t* drv, uint16_t port);
+LIBNW_API uint16_t WR0_RdIo16(struct wr0_drv_t* drv, uint16_t port);
+LIBNW_API uint32_t WR0_RdIo32(struct wr0_drv_t* drv, uint16_t port);
+LIBNW_API void WR0_WrIo8(struct wr0_drv_t* drv, uint16_t port, uint8_t value);
+LIBNW_API void WR0_WrIo16(struct wr0_drv_t* drv, uint16_t port, uint16_t value);
+LIBNW_API void WR0_WrIo32(struct wr0_drv_t* drv, uint16_t port, uint32_t value);
+LIBNW_API int WR0_RdPciConf(struct wr0_drv_t* drv, uint32_t addr, uint32_t reg, void* value, uint32_t size);
+LIBNW_API uint8_t WR0_RdPciConf8(struct wr0_drv_t* drv, uint32_t addr, uint32_t reg);
+LIBNW_API uint16_t WR0_RdPciConf16(struct wr0_drv_t* drv, uint32_t addr, uint32_t reg);
+LIBNW_API uint32_t WR0_RdPciConf32(struct wr0_drv_t* drv, uint32_t addr, uint32_t reg);
+LIBNW_API int WR0_WrPciConf(struct wr0_drv_t* drv, uint32_t addr, uint32_t reg, void* value, uint32_t size);
+LIBNW_API void WR0_WrPciConf8(struct wr0_drv_t* drv, uint32_t addr, uint32_t reg, uint8_t value);
+LIBNW_API void WR0_WrPciConf16(struct wr0_drv_t* drv, uint32_t addr, uint32_t reg, uint16_t value);
+LIBNW_API void WR0_WrPciConf32(struct wr0_drv_t* drv, uint32_t addr, uint32_t reg, uint32_t value);
+LIBNW_API uint32_t WR0_FindPciById(struct wr0_drv_t* drv, uint16_t vid, uint16_t did, uint8_t index);
+LIBNW_API uint32_t WR0_FindPciByClass(struct wr0_drv_t* drv, uint8_t base, uint8_t sub, uint8_t prog, uint8_t index);
+LIBNW_API int WR0_RdMmIo(struct wr0_drv_t* drv, uint64_t addr, void* value, uint32_t size);
+LIBNW_API DWORD WR0_RdMem(struct wr0_drv_t* drv, DWORD_PTR address, PBYTE buffer, DWORD count, DWORD unitSize);
 
 enum wr0_smn_type
 {
@@ -87,21 +88,21 @@ enum wr0_smn_type
 	WR0_SMN_ZENSMU = 2, // 0xC4/0xC8
 	WR0_SMN_AMD17H = 3, // 0x60/0x64
 };
-DWORD WR0_RdAmdSmn(struct wr0_drv_t* drv, enum wr0_smn_type smn, DWORD reg);
-int WR0_SendSmuCmd(struct wr0_drv_t* drv, uint32_t cmd, uint32_t rsp, uint32_t arg, uint32_t fn, uint32_t args[6]);
+LIBNW_API DWORD WR0_RdAmdSmn(struct wr0_drv_t* drv, enum wr0_smn_type smn, DWORD reg);
+LIBNW_API int WR0_SendSmuCmd(struct wr0_drv_t* drv, uint32_t cmd, uint32_t rsp, uint32_t arg, uint32_t fn, uint32_t args[6]);
 
-int WR0_ExecPawn(struct wr0_drv_t* drv, struct pio_mod_t* mod, LPCSTR fn, const ULONG64* in, SIZE_T in_size, PULONG64 out, SIZE_T out_size, PSIZE_T return_size);
+LIBNW_API int WR0_ExecPawn(struct wr0_drv_t* drv, struct pio_mod_t* mod, LPCSTR fn, const ULONG64* in, SIZE_T in_size, PULONG64 out, SIZE_T out_size, PSIZE_T return_size);
 
-struct wr0_drv_t* WR0_OpenDriver(void);
-void WR0_CloseDriver(struct wr0_drv_t* drv);
+LIBNW_API struct wr0_drv_t* WR0_OpenDriver(void);
+LIBNW_API void WR0_CloseDriver(struct wr0_drv_t* drv);
 
-void WR0_MicroSleep(unsigned int usec);
+LIBNW_API void WR0_MicroSleep(unsigned int usec);
 
-void WR0_OpenMutexes(void);
-void WR0_CloseMutexes(void);
-BOOL WR0_WaitPciBus(DWORD timeout);
-void WR0_ReleasePciBus(void);
-BOOL WR0_WaitSmBus(DWORD timeout);
-void WR0_ReleaseSmBus(void);
+LIBNW_API void WR0_OpenMutexes(void);
+LIBNW_API void WR0_CloseMutexes(void);
+LIBNW_API BOOL WR0_WaitPciBus(DWORD timeout);
+LIBNW_API void WR0_ReleasePciBus(void);
+LIBNW_API BOOL WR0_WaitSmBus(DWORD timeout);
+LIBNW_API void WR0_ReleaseSmBus(void);
 
-BOOL WR0_IsWoW64(void);
+LIBNW_API BOOL WR0_IsWoW64(void);

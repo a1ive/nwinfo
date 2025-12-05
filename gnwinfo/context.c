@@ -108,7 +108,7 @@ gnwinfo_ctx_update_1s(void)
 	NWL_GetGpuInfo(&gpu_info);
 	if ((main_flag & MAIN_INFO_AUDIO) && enable_audio)
 		audio = NWL_GetAudio(&audio_count);
-	NWL_GetMemSensors(&mem_sensors);
+	NWL_GetMemSensors(g_ctx.lib.NwSmbus, &mem_sensors);
 
 	AcquireSRWLockExclusive(&g_ctx.lock);
 	PNODE old_network = g_ctx.network;

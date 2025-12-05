@@ -111,6 +111,9 @@
     <ClInclude Include="smbus\smbus.h">
       <Filter>smbus</Filter>
     </ClInclude>
+    <ClInclude Include="nwapi.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="acpi.c">
@@ -292,5 +295,10 @@
     <CopyFileToFolders Include="..\winring0\pawn\SmbusPIIX4.bin">
       <Filter>Binary Files</Filter>
     </CopyFileToFolders>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="Resource.rc">
+      <Filter>Resource Files</Filter>
+    </ResourceCompile>
   </ItemGroup>
 </Project>
