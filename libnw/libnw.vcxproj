@@ -160,6 +160,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <ModuleDefinitionFile>exports.def</ModuleDefinitionFile>
     </Link>
     <Lib>
       <IgnoreAllDefaultLibraries>
@@ -218,6 +219,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <ModuleDefinitionFile>exports.def</ModuleDefinitionFile>
     </Link>
     <Lib>
       <IgnoreAllDefaultLibraries>
@@ -340,6 +342,7 @@
     <CopyFileToFolders Include="..\winring0\pawn\SmbusPIIX4.bin">
       <FileType>Document</FileType>
     </CopyFileToFolders>
+    <None Include="exports.def" />
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
