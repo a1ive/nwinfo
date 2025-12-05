@@ -4,7 +4,7 @@
 #include "utils.h"
 #include <libcpuid.h>
 #include <winring0.h>
-#include "../libcdi/libcdi.h"
+#include "../libcdi/libcdi/libcdi.h"
 #include "version.h"
 
 static void

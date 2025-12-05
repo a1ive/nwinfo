@@ -66,9 +66,6 @@
     <ClInclude Include="audio.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\libcdi\libcdi.h">
-      <Filter>libcdi</Filter>
-    </ClInclude>
     <ClInclude Include="vbr.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -113,6 +110,9 @@
     </ClInclude>
     <ClInclude Include="nwapi.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libcdi\libcdi\libcdi.h">
+      <Filter>libcdi</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -190,9 +190,6 @@
     </ClCompile>
     <ClCompile Include="font.c">
       <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="libcdi.c">
-      <Filter>libcdi</Filter>
     </ClCompile>
     <ClCompile Include="node.c">
       <Filter>Source Files</Filter>

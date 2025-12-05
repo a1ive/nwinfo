@@ -2,7 +2,7 @@
 
 #include <libnw.h>
 #include <version.h>
-#include "libcdi/libcdi.h"
+#include "../libcdi/libcdi/libcdi.h"
 
 #define OPTPARSE_IMPLEMENTATION
 #define OPTPARSE_API static
