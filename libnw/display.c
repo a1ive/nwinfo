@@ -655,7 +655,7 @@ static void DecodeEstablishedTimings(const BYTE* edid, PNODE node)
 	}
 }
 
-static void DecodeEdid(const BYTE* edidData, DWORD edidSize,  PNODE nm, CHAR* ids, DWORD idsSize, const WCHAR* hwId)
+static void DecodeEdid(const BYTE* edidData, DWORD edidSize, PNODE nm, const WCHAR* hwId)
 {
 	struct MONITOR_INFO mi = { 0 };
 	// An EDID block must be at least 128 bytes.
@@ -698,7 +698,7 @@ static void DecodeEdid(const BYTE* edidData, DWORD edidSize,  PNODE nm, CHAR* id
 
 	NWL_NodeAttrSet(nm, "HWID", NWL_Ucs2ToUtf8(hwId), 0);
 	NWL_NodeAttrSetf(nm, "ID", 0, "%s%04X", vendorId, productCode);
-	NWL_GetPnpManufacturer(nm, ids, idsSize, vendorId);
+	NWL_GetPnpManufacturer(nm, &NWLC->NwPnpIds, vendorId);
 	NWL_NodeAttrSetf(nm, "EDID Version", 0, "%d.%d", edidMajor, edidMinor);
 
 	if (week > 0 && week <= 54)
@@ -908,8 +908,6 @@ PNODE NW_Edid(VOID)
 {
 	PNODE node = NWL_NodeAlloc("Display", NFLG_TABLE);
 	DWORD i = 0;
-	CHAR* ids = NULL;
-	DWORD idsSize = 0;
 	HDEVINFO hDevInfo = NULL;
 	if (NWLC->EdidInfo)
 		NWL_NodeAppendChild(NWLC->NwRoot, node);
@@ -921,7 +919,6 @@ PNODE NW_Edid(VOID)
 		goto disp;
 	}
 
-	ids = NWL_LoadIdsToMemory(L"pnp.ids", &idsSize);
 	for (i = 0; ; i++)
 	{
 		BYTE* edidData = NULL;
@@ -933,13 +930,12 @@ PNODE NW_Edid(VOID)
 		if (!edidData)
 			continue;
 		PNODE nm = NWL_NodeAppendNew(node, "Monitor", NFLG_TABLE_ROW);
-		DecodeEdid(edidData, edidSize, nm, ids, idsSize, hwId);
+		DecodeEdid(edidData, edidSize, nm, hwId);
 		NWL_NodeAttrSetRaw(nm, "Binary Data", edidData, (size_t)edidSize);
 		free(edidData);
 		free(hwId);
 	}
 	SetupDiDestroyDeviceInfoList(hDevInfo);
-	free(ids);
 disp:
 	EnumDisp(node);
 	return node;

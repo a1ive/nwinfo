@@ -44,8 +44,6 @@ PNODE NWL_EnumPci(PNODE pNode, LPCSTR pciClass)
 	DWORD i = 0;
 	SP_DEVINFO_DATA spData = { .cbSize = sizeof(SP_DEVINFO_DATA) };
 	DWORD dwFlags = DIGCF_PRESENT | DIGCF_ALLCLASSES;
-	DWORD idsSize = 0;
-	CHAR* ids = NWL_LoadIdsToMemory(L"pci.ids", &idsSize);
 	hInfo = SetupDiGetClassDevsW(NULL, L"PCI", NULL, dwFlags);
 	if (hInfo == INVALID_HANDLE_VALUE)
 	{
@@ -80,7 +78,7 @@ PNODE NWL_EnumPci(PNODE pNode, LPCSTR pciClass)
 		npci = NWL_NodeAppendNew(pNode, "Device", NFLG_TABLE_ROW);
 
 		NWL_NodeAttrSet(npci, "HWID", NWL_Ucs2ToUtf8(NWLC->NwBufW), 0);
-		NWL_ParseHwid(npci, ids, idsSize, NWLC->NwBufW, 0);
+		NWL_ParseHwid(npci, &NWLC->NwPciIds, NWLC->NwBufW, 0);
 
 		if (SetupDiGetDeviceRegistryPropertyW(hInfo, &spData,
 			SPDRP_DEVICEDESC, NULL, (PBYTE)NWLC->NwBufW, NWINFO_BUFSZB, NULL))
@@ -97,11 +95,10 @@ PNODE NWL_EnumPci(PNODE pNode, LPCSTR pciClass)
 			busNum & 0xFF, devFunc >> 16, devFunc & 0xFFFF);
 
 		NWL_NodeAttrSet(npci, "Class Code", hwClass, 0);
-		NWL_FindClass(npci, ids, idsSize, hwClass, 0);
+		NWL_FindClass(npci, &NWLC->NwPciIds, hwClass, 0);
 	}
 	SetupDiDestroyDeviceInfoList(hInfo);
 fail:
-	free(ids);
 	return pNode;
 }
 

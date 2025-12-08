@@ -10,12 +10,6 @@
 #include "utils.h"
 #include "devtree.h"
 
-typedef struct _DEVTREE_CTX
-{
-	CHAR* ids;
-	DWORD idsSize;
-} DEVTREE_CTX;
-
 static void SetUsbDiskName(PNODE node, DEVINST usbDevInst)
 {
 	CHAR buf[DEVTREE_MAX_STR_LEN];
@@ -43,7 +37,7 @@ static void SetUsbDiskName(PNODE node, DEVINST usbDevInst)
 }
 
 static void
-ParseHwClass(PNODE nd, CHAR* ids, DWORD idsSize, LPCWSTR compId)
+ParseHwClass(PNODE nd, PNWLIB_IDS ids, LPCWSTR compId)
 {
 	// USB\Class_XX&SubClass_XX&Prot_XX
 	// USB\DevClass_XX&SubClass_XX&Prot_XX
@@ -72,7 +66,7 @@ ParseHwClass(PNODE nd, CHAR* ids, DWORD idsSize, LPCWSTR compId)
 	{
 		LPCSTR u8Class = NWL_Ucs2ToUtf8(hwClass);
 		NWL_NodeAttrSet(nd, "Class Code", u8Class, 0);
-		NWL_FindClass(nd, ids, idsSize, u8Class, 1);
+		NWL_FindClass(nd, ids, u8Class, 1);
 	}
 }
 
@@ -80,14 +74,14 @@ static void
 GetDeviceInfoUsb(PNODE node, void* data, DEVINST devInst, LPCSTR hwIds)
 {
 	CHAR buf[DEVTREE_MAX_STR_LEN];
-	DEVTREE_CTX* ctx = (DEVTREE_CTX*)data;
+	PNWLIB_IDS ids = (PNWLIB_IDS)data;
 	NWL_NodeAttrSet(node, "HWID", hwIds, 0);
 
-	NWL_ParseHwid(node, ctx->ids, ctx->idsSize, NWL_Utf8ToUcs2(hwIds), 1);
+	NWL_ParseHwid(node, ids, NWL_Utf8ToUcs2(hwIds), 1);
 
 	// Parse hardware class if available
 	if (NWL_SetDevPropString(buf, DEVTREE_MAX_STR_LEN, devInst, &DEVPKEY_Device_CompatibleIds))
-		ParseHwClass(node, ctx->ids, ctx->idsSize, NWL_Utf8ToUcs2(buf));
+		ParseHwClass(node, ids, NWL_Utf8ToUcs2(buf));
 
 	// Get and print device name using DEVPKEY_NAME
 	if (NWL_SetDevPropString(buf, DEVTREE_MAX_STR_LEN, devInst, &DEVPKEY_NAME))
@@ -101,23 +95,17 @@ PNODE NW_Usb(VOID)
 {
 	DEVINST devRoot;
 	CONFIGRET cr;
-	DEVTREE_CTX data =
-	{
-		.ids = NULL,
-		.idsSize = 0,
-	};
 	DEVTREE_ENUM_CTX ctx =
 	{
 		.filter = "USB\\",
 		.filterLen = 4, // Length of "USB\\"
-		.data = &data,
+		.data = &NWLC->NwUsbIds,
 		.hub = "USB Hub",
 		.GetDeviceInfo = GetDeviceInfoUsb,
 	};
 	PNODE node = NWL_NodeAlloc("USB", NFLG_TABLE);
 	if (NWLC->UsbInfo)
 		NWL_NodeAppendChild(NWLC->NwRoot, node);
-	data.ids = NWL_LoadIdsToMemory(L"usb.ids", &data.idsSize);
 
 	cr = CM_Locate_DevNodeW(&devRoot, NULL, CM_LOCATE_DEVNODE_NORMAL);
 	if (cr != CR_SUCCESS)
@@ -129,6 +117,5 @@ PNODE NW_Usb(VOID)
 	NWL_EnumerateDevices(node, &ctx, devRoot);
 
 fail:
-	free(data.ids);
 	return node;
 }

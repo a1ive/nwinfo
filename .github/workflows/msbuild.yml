@@ -80,6 +80,20 @@ jobs:
         Copy-Item -Path "Win32\Release\gnwinfo.exe" -Destination "$($TargetFolder)\gnwinfox86.exe"
         .\copy_res.ps1 -TargetFolder $TargetFolder
 
+    - name: Run Test
+      shell: pwsh
+      run: |
+        .\PKG\nwinfo.exe --format=JSON --output=report.json --cp=UTF8 --human --bin=HEX `
+                         --sys --cpu --net --acpi --smbios --disk --display --pci --usb --spd `
+                         --battery --uefi --shares --audio --public-ip --product-policy `
+                         --gpu --font --device
+
+    - name: Upload Report
+      uses: actions/upload-artifact@v5
+      with:
+        name: report.json
+        path: report.json
+
     - name: Prepare DLL Package
       shell: pwsh
       run: |

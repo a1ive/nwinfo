@@ -14,6 +14,7 @@ struct ACPI_RSDT;
 struct ACPI_XSDT;
 struct ACPI_FADT;
 struct ACPI_FACS;
+struct _NWLIB_IDS;
 
 LIBNW_API BOOL NWL_IsAdmin(void);
 LIBNW_API DWORD NWL_ObtainPrivileges(LPWSTR privilege);
@@ -58,10 +59,9 @@ BOOL NWL_NtSetSystemInformation(SYSTEM_INFORMATION_CLASS SystemInformationClass,
 LIBNW_API VOID NWL_NtGetVersion(LPOSVERSIONINFOEXW osInfo);
 LIBNW_API PPROCESSOR_POWER_INFORMATION NWL_NtPowerInformation(size_t* szCount);
 
-VOID NWL_FindId(PNODE nd, CHAR* Ids, DWORD IdsSize, CONST CHAR* v, CONST CHAR* d, CONST CHAR* s, INT usb);
-BOOL NWL_ParseHwid(PNODE nd, CHAR* Ids, DWORD IdsSize, LPCWSTR Hwid, INT usb);
-VOID NWL_FindClass(PNODE nd, CHAR* Ids, DWORD IdsSize, CONST CHAR* Class, INT usb);
-VOID NWL_GetPnpManufacturer(PNODE nd, CHAR* Ids, DWORD IdsSize, CONST CHAR* Code);
-VOID NWL_GetSpdManufacturer(PNODE nd, LPCSTR Key, CHAR* Ids, DWORD IdsSize, UINT Bank, UINT Item);
+BOOL NWL_ParseHwid(PNODE nd, struct _NWLIB_IDS* Ids, LPCWSTR Hwid, INT usb);
+VOID NWL_FindClass(PNODE nd, struct _NWLIB_IDS* Ids, CONST CHAR* Class, INT usb);
+VOID NWL_GetPnpManufacturer(PNODE nd, struct _NWLIB_IDS* Ids, CONST CHAR* Code);
+VOID NWL_GetSpdManufacturer(PNODE nd, LPCSTR Key, struct _NWLIB_IDS* Ids, UINT Bank, UINT Item);
 CHAR* NWL_LoadIdsToMemory(LPCWSTR lpFileName, LPDWORD lpSize);
-const CHAR* NWL_GetIdsDate(LPCWSTR lpFileName);
+const CHAR* NWL_GetIdsDate(struct _NWLIB_IDS* Ids);

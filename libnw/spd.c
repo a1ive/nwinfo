@@ -227,18 +227,18 @@ SDRCapacity(UINT8* rawSpd)
 }
 
 static void
-DDR345Manufacturer(PNODE nd, UINT8 Lsb, UINT8 Msb, CHAR* Ids, DWORD IdsSize)
+DDR345Manufacturer(PNODE nd, UINT8 Lsb, UINT8 Msb)
 {
 	if (Msb == 0x00 || Msb == 0xFF)
 	{
 		NWL_NodeAttrSet(nd, "Manufacturer", "UNKNOWN", 0);
 		return;
 	}
-	NWL_GetSpdManufacturer(nd, "Manufacturer", Ids, IdsSize, Lsb & 0x7f, Msb & 0x7f);
+	NWL_GetSpdManufacturer(nd, "Manufacturer", &NWLC->NwJep106, Lsb & 0x7f, Msb & 0x7f);
 }
 
 static void
-SDRDDR12Manufacturer(PNODE nd, UINT8* rawSpd, CHAR* Ids, DWORD IdsSize)
+SDRDDR12Manufacturer(PNODE nd, UINT8* rawSpd)
 {
 	UINT8 contCode;
 	for (contCode = 64; contCode < 72; contCode++)
@@ -246,7 +246,7 @@ SDRDDR12Manufacturer(PNODE nd, UINT8* rawSpd, CHAR* Ids, DWORD IdsSize)
 		if (rawSpd[contCode] != 0x7F)
 			break;
 	}
-	NWL_GetSpdManufacturer(nd, "Manufacturer", Ids, IdsSize, contCode - 64, rawSpd[contCode] & 0x7FU);
+	NWL_GetSpdManufacturer(nd, "Manufacturer", &NWLC->NwJep106, contCode - 64, rawSpd[contCode] & 0x7FU);
 }
 
 static LPCSTR
@@ -341,13 +341,13 @@ SDRDDR12Voltage(UINT8* rawSpd)
 }
 
 static void
-PrintDDR5(PNODE nd, UINT8* rawSpd, CHAR* Ids, DWORD IdsSize)
+PrintDDR5(PNODE nd, UINT8* rawSpd)
 {
 	NWL_NodeAttrSetf(nd, "Revision", 0, "%u.%u", rawSpd[1] >> 4, rawSpd[1] & 0x0FU);
 	NWL_NodeAttrSet(nd, "Module Type", DDR5ModuleType(rawSpd[3]), 0);
 	NWL_NodeAttrSet(nd, "Capacity", DDR5Capacity(rawSpd), 0);
 	NWL_NodeAttrSetBool(nd, "ECC", ((rawSpd[235] >> 3) & 3), 0);
-	DDR345Manufacturer(nd, rawSpd[512], rawSpd[513], Ids, IdsSize);
+	DDR345Manufacturer(nd, rawSpd[512], rawSpd[513]);
 	NWL_NodeAttrSet(nd, "Date", SDRDDR12345Date(rawSpd[515], rawSpd[516]), 0);
 	NWL_NodeAttrSet(nd, "Serial Number", SDRDDR12345SN(rawSpd, 517), NAFLG_FMT_SENSITIVE);
 	NWL_NodeAttrSet(nd, "Part Number", SDRDDR12345SKU(rawSpd, 521, 20), NAFLG_FMT_SENSITIVE);
@@ -475,13 +475,13 @@ PrintDDR5(PNODE nd, UINT8* rawSpd, CHAR* Ids, DWORD IdsSize)
 }
 
 static void
-PrintDDR4(PNODE nd, UINT8* rawSpd, CHAR* Ids, DWORD IdsSize)
+PrintDDR4(PNODE nd, UINT8* rawSpd)
 {
 	NWL_NodeAttrSetf(nd, "Revision", 0, "%u.%u", rawSpd[1] >> 4, rawSpd[1] & 0x0FU);
 	NWL_NodeAttrSet(nd, "Module Type", DDR34ModuleType(rawSpd[3]), 0);
 	NWL_NodeAttrSet(nd, "Capacity", DDR4Capacity(rawSpd), 0);
 	NWL_NodeAttrSetBool(nd, "ECC", ((rawSpd[13] >> 3) & 1), 0);
-	DDR345Manufacturer(nd, rawSpd[320], rawSpd[321], Ids, IdsSize);
+	DDR345Manufacturer(nd, rawSpd[320], rawSpd[321]);
 	NWL_NodeAttrSet(nd, "Date", SDRDDR12345Date(rawSpd[323], rawSpd[324]), 0);
 	NWL_NodeAttrSet(nd, "Serial Number", SDRDDR12345SN(rawSpd, 325), NAFLG_FMT_SENSITIVE);
 	NWL_NodeAttrSet(nd, "Part Number", SDRDDR12345SKU(rawSpd, 329, 20), NAFLG_FMT_SENSITIVE);
@@ -603,13 +603,13 @@ PrintDDR4(PNODE nd, UINT8* rawSpd, CHAR* Ids, DWORD IdsSize)
 }
 
 static void
-PrintDDR3(PNODE nd, UINT8* rawSpd, CHAR* Ids, DWORD IdsSize)
+PrintDDR3(PNODE nd, UINT8* rawSpd)
 {
 	NWL_NodeAttrSetf(nd, "Revision", 0, "%u.%u", rawSpd[1] >> 4, rawSpd[1] & 0x0FU);
 	NWL_NodeAttrSet(nd, "Module Type", DDR34ModuleType(rawSpd[3]), 0);
 	NWL_NodeAttrSet(nd, "Capacity", DDR3Capacity(rawSpd), 0);
 	NWL_NodeAttrSetBool(nd, "ECC", ((rawSpd[8] >> 3) & 1), 0);
-	DDR345Manufacturer(nd, rawSpd[117], rawSpd[118], Ids, IdsSize);
+	DDR345Manufacturer(nd, rawSpd[117], rawSpd[118]);
 	NWL_NodeAttrSet(nd, "Date", SDRDDR12345Date(rawSpd[120], rawSpd[121]), 0);
 	NWL_NodeAttrSet(nd, "Serial Number", SDRDDR12345SN(rawSpd, 122), NAFLG_FMT_SENSITIVE);
 	NWL_NodeAttrSet(nd, "Part Number", SDRDDR12345SKU(rawSpd, 128, 18), NAFLG_FMT_SENSITIVE);
@@ -741,13 +741,13 @@ PrintDDR3(PNODE nd, UINT8* rawSpd, CHAR* Ids, DWORD IdsSize)
 }
 
 static void
-PrintDDR2(PNODE nd, UINT8* rawSpd, CHAR* Ids, DWORD IdsSize)
+PrintDDR2(PNODE nd, UINT8* rawSpd)
 {
 	NWL_NodeAttrSetf(nd, "Revision", 0, "%u.%u", rawSpd[62] >> 4, rawSpd[62] & 0x0FU);
 	NWL_NodeAttrSet(nd, "Module Type", DDR2ModuleType(rawSpd[3]), 0);
 	NWL_NodeAttrSet(nd, "Capacity", DDR2Capacity(rawSpd), 0);
 	NWL_NodeAttrSetBool(nd, "ECC", (rawSpd[11] & 0x02), 0);
-	SDRDDR12Manufacturer(nd, rawSpd, Ids, IdsSize);
+	SDRDDR12Manufacturer(nd, rawSpd);
 	NWL_NodeAttrSet(nd, "Date", SDRDDR12345Date(rawSpd[93], rawSpd[94]), 0);
 	NWL_NodeAttrSet(nd, "Serial Number", SDRDDR12345SN(rawSpd, 95), NAFLG_FMT_SENSITIVE);
 	NWL_NodeAttrSet(nd, "Part Number", SDRDDR12345SKU(rawSpd, 73, 18), NAFLG_FMT_SENSITIVE);
@@ -858,12 +858,12 @@ PrintDDR2(PNODE nd, UINT8* rawSpd, CHAR* Ids, DWORD IdsSize)
 }
 
 static void
-PrintDDR1(PNODE nd, UINT8* rawSpd, CHAR* Ids, DWORD IdsSize)
+PrintDDR1(PNODE nd, UINT8* rawSpd)
 {
 	NWL_NodeAttrSetf(nd, "Revision", 0, "%u.%u", rawSpd[62] >> 4, rawSpd[62] & 0x0FU);
 	NWL_NodeAttrSet(nd, "Capacity", DDR1Capacity(rawSpd), NAFLG_FMT_HUMAN_SIZE);
 	NWL_NodeAttrSetBool(nd, "ECC", (rawSpd[11] & 0x02), 0);
-	SDRDDR12Manufacturer(nd, rawSpd, Ids, IdsSize);
+	SDRDDR12Manufacturer(nd, rawSpd);
 	NWL_NodeAttrSet(nd, "Date", SDRDDR12345Date(rawSpd[93], rawSpd[94]), 0);
 	NWL_NodeAttrSet(nd, "Serial Number", SDRDDR12345SN(rawSpd, 95), NAFLG_FMT_SENSITIVE);
 	NWL_NodeAttrSet(nd, "Part Number", SDRDDR12345SKU(rawSpd, 73, 18), NAFLG_FMT_SENSITIVE);
@@ -908,12 +908,12 @@ PrintDDR1(PNODE nd, UINT8* rawSpd, CHAR* Ids, DWORD IdsSize)
 }
 
 static void
-PrintSDR(PNODE nd, UINT8* rawSpd, CHAR* Ids, DWORD IdsSize)
+PrintSDR(PNODE nd, UINT8* rawSpd)
 {
 	NWL_NodeAttrSetf(nd, "Revision", 0, "%u.%u", rawSpd[62] >> 4, rawSpd[62] & 0x0FU);
 	NWL_NodeAttrSet(nd, "Capacity", SDRCapacity(rawSpd), NAFLG_FMT_HUMAN_SIZE);
 	NWL_NodeAttrSetBool(nd, "ECC", (rawSpd[11] & 0x02), 0);
-	SDRDDR12Manufacturer(nd, rawSpd, Ids, IdsSize);
+	SDRDDR12Manufacturer(nd, rawSpd);
 	NWL_NodeAttrSet(nd, "Date", SDRDDR12345Date(rawSpd[93], rawSpd[94]), 0);
 	NWL_NodeAttrSet(nd, "Serial Number", SDRDDR12345SN(rawSpd, 95), NAFLG_FMT_SENSITIVE);
 	NWL_NodeAttrSet(nd, "Part Number", SDRDDR12345SKU(rawSpd, 73, 18), NAFLG_FMT_SENSITIVE);
@@ -979,7 +979,7 @@ GetSpdTypeStr(UINT8 t)
 }
 
 void
-ParseSpd(PNODE node, smbus_t* ctx, int id, CHAR* ids, DWORD idsSize, UINT8 rawSpd[SPD_MAX_SIZE])
+ParseSpd(PNODE node, smbus_t* ctx, int id, UINT8 rawSpd[SPD_MAX_SIZE])
 {
 	bool tsPresent = false;
 	PNODE nspd = NWL_NodeAppendNew(node, "Slot", NFLG_TABLE_ROW);
@@ -989,29 +989,29 @@ ParseSpd(PNODE node, smbus_t* ctx, int id, CHAR* ids, DWORD idsSize, UINT8 rawSp
 	switch (rawSpd[SPD_MEMORY_TYPE_OFFSET])
 	{
 	case MEM_TYPE_SDRAM:
-		PrintSDR(nspd, rawSpd, ids, idsSize);
+		PrintSDR(nspd, rawSpd);
 		NWL_NodeAttrSetRaw(nspd, "Binary Data", rawSpd, 128);
 		break;
 	case MEM_TYPE_DDR:
-		PrintDDR1(nspd, rawSpd, ids, idsSize);
+		PrintDDR1(nspd, rawSpd);
 		NWL_NodeAttrSetRaw(nspd, "Binary Data", rawSpd, 128);
 		break;
 	case MEM_TYPE_DDR2:
 	case MEM_TYPE_DDR2_FB:
 	case MEM_TYPE_DDR2_FB_P:
-		PrintDDR2(nspd, rawSpd, ids, idsSize);
+		PrintDDR2(nspd, rawSpd);
 		NWL_NodeAttrSetRaw(nspd, "Binary Data", rawSpd, 256);
 		break;
 	case MEM_TYPE_DDR3:
 	case MEM_TYPE_LPDDR3:
-		PrintDDR3(nspd, rawSpd, ids, idsSize);
+		PrintDDR3(nspd, rawSpd);
 		NWL_NodeAttrSetRaw(nspd, "Binary Data", rawSpd, 256);
 		break;
 	case MEM_TYPE_DDR4:
 	case MEM_TYPE_DDR4E:
 	case MEM_TYPE_LPDDR4:
 	case MEM_TYPE_LPDDR4X:
-		PrintDDR4(nspd, rawSpd, ids, idsSize);
+		PrintDDR4(nspd, rawSpd);
 		NWL_NodeAttrSetRaw(nspd, "Binary Data", rawSpd, 512);
 		if (ctx)
 		{
@@ -1025,7 +1025,7 @@ ParseSpd(PNODE node, smbus_t* ctx, int id, CHAR* ids, DWORD idsSize, UINT8 rawSp
 	case MEM_TYPE_DDR5:
 	case MEM_TYPE_LPDDR5:
 	case MEM_TYPE_LPDDR5X:
-		PrintDDR5(nspd, rawSpd, ids, idsSize);
+		PrintDDR5(nspd, rawSpd);
 		NWL_NodeAttrSetRaw(nspd, "Binary Data", rawSpd, 1024);
 		if (ctx)
 		{
@@ -1084,18 +1084,15 @@ void LoadSpdDump(LPCSTR path, UINT8 rawSpd[SPD_MAX_SIZE])
 PNODE NW_Spd(VOID)
 {
 	int i = 0;
-	CHAR* ids = NULL;
-	DWORD idsSize = 0;
 	UINT8 rawSpd[SPD_MAX_SIZE];
 	PNODE node = NWL_NodeAlloc("SPD", NFLG_TABLE);
 	if (NWLC->SpdInfo)
 		NWL_NodeAppendChild(NWLC->NwRoot, node);
-	ids = NWL_LoadIdsToMemory(L"jep106.ids", &idsSize);
 
 	if (NWLC->SpdDump)
 	{
 		LoadSpdDump(NWLC->SpdDump, rawSpd);
-		ParseSpd(node, NULL, 0, ids, idsSize, rawSpd);
+		ParseSpd(node, NULL, 0, rawSpd);
 		goto out;
 	}
 
@@ -1109,12 +1106,11 @@ PNODE NW_Spd(VOID)
 	{
 		if (SM_GetSpd(NWLC->NwSmbus, i, rawSpd) != SM_OK)
 			continue;
-		ParseSpd(node, NWLC->NwSmbus, i, ids, idsSize, rawSpd);
+		ParseSpd(node, NWLC->NwSmbus, i, rawSpd);
 	}
 	SMBUS_DBG("Time: %llu", GetTickCount64() - tStart);
 
 out:
-	free(ids);
 	return node;
 }
 

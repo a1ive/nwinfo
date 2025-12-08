@@ -85,6 +85,10 @@ VOID NW_Init(PNWLIB_CONTEXT pContext)
 		NWL_ErrExit(ERROR_OUTOFMEMORY, "Cannot allocate memory");
 	NWLC->NwSmartInit = FALSE;
 	NWLC->NwUnits = NWL_HS_BYTE;
+	NWLC->NwPciIds.Ids = NWL_LoadIdsToMemory(L"pci.ids", &NWLC->NwPciIds.Size);
+	NWLC->NwUsbIds.Ids = NWL_LoadIdsToMemory(L"usb.ids", &NWLC->NwUsbIds.Size);
+	NWLC->NwPnpIds.Ids = NWL_LoadIdsToMemory(L"pnp.ids", &NWLC->NwPnpIds.Size);
+	NWLC->NwJep106.Ids = NWL_LoadIdsToMemory(L"jep106.ids", &NWLC->NwJep106.Size);
 }
 
 VOID NW_Print(LPCSTR lpFileName)
@@ -159,7 +163,11 @@ VOID NW_Fini(VOID)
 		NWL_NodeFree(NWLC->NwRoot, 1);
 	if (NWLC->NwFile && NWLC->NwFile != stdout)
 		fclose(NWLC->NwFile);
-	ZeroMemory(NWLC, sizeof(NWLIB_CONTEXT));
 	free(NWLC->ErrLog);
+	free(NWLC->NwPciIds.Ids);
+	free(NWLC->NwUsbIds.Ids);
+	free(NWLC->NwPnpIds.Ids);
+	free(NWLC->NwJep106.Ids);
+	ZeroMemory(NWLC, sizeof(NWLIB_CONTEXT));
 	NWLC = NULL;
 }

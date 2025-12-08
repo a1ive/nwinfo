@@ -27,6 +27,12 @@ struct cpu_raw_data_array_t;
 struct system_id_t;
 struct smbus_context;
 
+typedef struct _NWLIB_IDS
+{
+	CHAR* Ids;
+	DWORD Size;
+} NWLIB_IDS, * PNWLIB_IDS;
+
 typedef struct _NWLIB_CONTEXT
 {
 	BOOL HumanSize;
@@ -127,6 +133,12 @@ typedef struct _NWLIB_CONTEXT
 	LPCSTR* NwUnits;
 	CHAR* ErrLog;
 	VOID (*ErrLogCallback) (LPCSTR lpszText);
+
+	NWLIB_IDS NwPciIds;
+	NWLIB_IDS NwUsbIds;
+	NWLIB_IDS NwPnpIds;
+	NWLIB_IDS NwJep106;
+
 	union
 	{
 		WCHAR NwBufW[NWINFO_BUFSZW];

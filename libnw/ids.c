@@ -11,34 +11,34 @@
 #include <winring0.h>
 
 static CHAR*
-IdsGetline(CHAR* Ids, DWORD IdsSize, DWORD* Offset)
+IdsGetline(PNWLIB_IDS Ids, DWORD* Offset)
 {
 	CHAR* Line = NULL;
 	DWORD i = 0, Len = 0;
-	if (*Offset >= IdsSize)
+	if (*Offset >= Ids->Size)
 		return NULL;
-	for (i = *Offset; i < IdsSize; i++)
+	for (i = *Offset; i < Ids->Size; i++)
 	{
-		if (Ids[i] == '\n' || Ids[i] == '\r')
+		if (Ids->Ids[i] == '\n' || Ids->Ids[i] == '\r')
 			break;
 	}
 	Len = i - *Offset;
 	Line = malloc((SIZE_T)Len + 1);
 	if (!Line)
 		return NULL;
-	memcpy(Line, Ids + *Offset, Len);
+	memcpy(Line, Ids->Ids + *Offset, Len);
 	Line[Len] = 0;
 	*Offset += Len;
-	for (i = *Offset; i < IdsSize; i++, (*Offset)++)
+	for (i = *Offset; i < Ids->Size; i++, (*Offset)++)
 	{
-		if (Ids[i] != '\n' && Ids[i] != '\r')
+		if (Ids->Ids[i] != '\n' && Ids->Ids[i] != '\r')
 			break;
 	}
 	return Line;
 }
 
-VOID
-NWL_FindId(PNODE nd, CHAR* Ids, DWORD IdsSize, CONST CHAR* v, CONST CHAR* d, CONST CHAR* s, INT usb)
+static void
+NWL_FindId(PNODE nd, PNWLIB_IDS Ids, CONST CHAR* v, CONST CHAR* d, CONST CHAR* s, INT usb)
 {
 	DWORD Offset = 0;
 	CHAR* vLine = NULL;
@@ -46,30 +46,30 @@ NWL_FindId(PNODE nd, CHAR* Ids, DWORD IdsSize, CONST CHAR* v, CONST CHAR* d, CON
 	CHAR* sLine = NULL;
 	if (!v || !d)
 		return;
-	vLine = IdsGetline(Ids, IdsSize, &Offset);
+	vLine = IdsGetline(Ids, &Offset);
 	while (vLine)
 	{
 		if (!vLine[0] || vLine[0] == '#' || strlen(vLine) < 7)
 		{
 			free(vLine);
-			vLine = IdsGetline(Ids, IdsSize, &Offset);
+			vLine = IdsGetline(Ids, &Offset);
 			continue;
 		}
 		if (_strnicmp(v, vLine, 4) != 0)
 		{
 			free(vLine);
-			vLine = IdsGetline(Ids, IdsSize, &Offset);
+			vLine = IdsGetline(Ids, &Offset);
 			continue;
 		}
 		NWL_NodeAttrSet(nd, "Vendor", vLine + 6, 0);
 		free(vLine);
-		dLine = IdsGetline(Ids, IdsSize, &Offset);
+		dLine = IdsGetline(Ids, &Offset);
 		while (dLine)
 		{
 			if (!dLine[0] || dLine[0] == '#')
 			{
 				free(dLine);
-				dLine = IdsGetline(Ids, IdsSize, &Offset);
+				dLine = IdsGetline(Ids, &Offset);
 				continue;
 			}
 			if (dLine[0] != '\t' || strlen(dLine) < 8)
@@ -80,20 +80,20 @@ NWL_FindId(PNODE nd, CHAR* Ids, DWORD IdsSize, CONST CHAR* v, CONST CHAR* d, CON
 			if (_strnicmp(d, dLine + 1, 4) != 0)
 			{
 				free(dLine);
-				dLine = IdsGetline(Ids, IdsSize, &Offset);
+				dLine = IdsGetline(Ids, &Offset);
 				continue;
 			}
 			NWL_NodeAttrSet(nd, "Device", dLine + 7, 0);
 			free(dLine);
 			if (!s)
 				break;
-			sLine = IdsGetline(Ids, IdsSize, &Offset);
+			sLine = IdsGetline(Ids, &Offset);
 			while (sLine)
 			{
 				if (!sLine[0] || sLine[0] == '#')
 				{
 					free(sLine);
-					sLine = IdsGetline(Ids, IdsSize, &Offset);
+					sLine = IdsGetline(Ids, &Offset);
 					continue;
 				}
 				if (sLine[0] != '\t' || !sLine[1] || sLine[1] != '\t' || strlen(sLine) < 14)
@@ -104,7 +104,7 @@ NWL_FindId(PNODE nd, CHAR* Ids, DWORD IdsSize, CONST CHAR* v, CONST CHAR* d, CON
 				if (_strnicmp(s, sLine + 2, 9) != 0)
 				{
 					free(sLine);
-					sLine = IdsGetline(Ids, IdsSize, &Offset);
+					sLine = IdsGetline(Ids, &Offset);
 					continue;
 				}
 				NWL_NodeAttrSet(nd, usb ? "Interface" : "Subsys", sLine + 13, 0);
@@ -118,7 +118,7 @@ NWL_FindId(PNODE nd, CHAR* Ids, DWORD IdsSize, CONST CHAR* v, CONST CHAR* d, CON
 }
 
 BOOL
-NWL_ParseHwid(PNODE nd, CHAR* Ids, DWORD IdsSize, LPCWSTR Hwid, INT usb)
+NWL_ParseHwid(PNODE nd, struct _NWLIB_IDS* Ids, LPCWSTR Hwid, INT usb)
 {
 	// PCI\VEN_XXXX&DEV_XXXX
 	// PCI\VEN_XXXX&DEV_XXXX&SUBSYS_XXXXXXXX
@@ -166,12 +166,12 @@ NWL_ParseHwid(PNODE nd, CHAR* Ids, DWORD IdsSize, LPCWSTR Hwid, INT usb)
 
 	NWL_NodeAttrSet(nd, "Vendor ID", vid, 0);
 	NWL_NodeAttrSet(nd, "Device ID", did, 0);
-	NWL_FindId(nd, Ids, IdsSize, vid, did, p ? subsys : NULL, usb);
+	NWL_FindId(nd, Ids, vid, did, p ? subsys : NULL, usb);
 	return 1;
 }
 
 VOID
-NWL_FindClass(PNODE nd, CHAR* Ids, DWORD IdsSize, CONST CHAR* Class, INT usb)
+NWL_FindClass(PNODE nd, struct _NWLIB_IDS* Ids, CONST CHAR* Class, INT usb)
 {
 	DWORD Offset = 0;
 	CHAR* vLine = NULL;
@@ -182,32 +182,32 @@ NWL_FindClass(PNODE nd, CHAR* Ids, DWORD IdsSize, CONST CHAR* Class, INT usb)
 	CONST CHAR* v = Class;
 	CONST CHAR* d = strlen(Class) >= 4 ? Class + 2 : NULL;
 	CONST CHAR* s = strlen(Class) >= 6 ? Class + 4 : NULL;
-	vLine = IdsGetline(Ids, IdsSize, &Offset);
+	vLine = IdsGetline(Ids, &Offset);
 	while (vLine)
 	{
 		if (!vLine[0] || vLine[0] != 'C' || strlen(vLine) < 7 || vLine[1] != ' ')
 		{
 			free(vLine);
-			vLine = IdsGetline(Ids, IdsSize, &Offset);
+			vLine = IdsGetline(Ids, &Offset);
 			continue;
 		}
 		if (_strnicmp(v, vLine + 2, 2) != 0)
 		{
 			free(vLine);
-			vLine = IdsGetline(Ids, IdsSize, &Offset);
+			vLine = IdsGetline(Ids, &Offset);
 			continue;
 		}
 		NWL_NodeAttrSet(nd, "Class", vLine + 6, 0);
 		free(vLine);
 		if (!d)
 			goto out;
-		dLine = IdsGetline(Ids, IdsSize, &Offset);
+		dLine = IdsGetline(Ids, &Offset);
 		while (dLine)
 		{
 			if (!dLine[0] || dLine[0] == '#')
 			{
 				free(dLine);
-				dLine = IdsGetline(Ids, IdsSize, &Offset);
+				dLine = IdsGetline(Ids, &Offset);
 				continue;
 			}
 			if (dLine[0] != '\t' || strlen(dLine) < 6)
@@ -218,20 +218,20 @@ NWL_FindClass(PNODE nd, CHAR* Ids, DWORD IdsSize, CONST CHAR* Class, INT usb)
 			if (_strnicmp(d, dLine + 1, 2) != 0)
 			{
 				free(dLine);
-				dLine = IdsGetline(Ids, IdsSize, &Offset);
+				dLine = IdsGetline(Ids, &Offset);
 				continue;
 			}
 			NWL_NodeAttrSet(nd, "Subclass", dLine + 5, 0);
 			free(dLine);
 			if (!s)
 				break;
-			sLine = IdsGetline(Ids, IdsSize, &Offset);
+			sLine = IdsGetline(Ids, &Offset);
 			while (sLine)
 			{
 				if (!sLine[0] || sLine[0] == '#')
 				{
 					free(sLine);
-					sLine = IdsGetline(Ids, IdsSize, &Offset);
+					sLine = IdsGetline(Ids, &Offset);
 					continue;
 				}
 				if (sLine[0] != '\t' || !sLine[1] || sLine[1] != '\t' || strlen(sLine) < 7)
@@ -242,7 +242,7 @@ NWL_FindClass(PNODE nd, CHAR* Ids, DWORD IdsSize, CONST CHAR* Class, INT usb)
 				if (_strnicmp(s, sLine + 2, 2) != 0)
 				{
 					free(sLine);
-					sLine = IdsGetline(Ids, IdsSize, &Offset);
+					sLine = IdsGetline(Ids, &Offset);
 					continue;
 				}
 				NWL_NodeAttrSet(nd, usb ? "Protocol" : "Prog IF", sLine + 6, 0);
@@ -257,12 +257,12 @@ NWL_FindClass(PNODE nd, CHAR* Ids, DWORD IdsSize, CONST CHAR* Class, INT usb)
 }
 
 VOID
-NWL_GetPnpManufacturer(PNODE nd, CHAR* Ids, DWORD IdsSize, CONST CHAR* Code)
+NWL_GetPnpManufacturer(PNODE nd, struct _NWLIB_IDS* Ids, CONST CHAR* Code)
 {
 	DWORD Offset = 0;
 	CHAR* Line = NULL;
 
-	Line = IdsGetline(Ids, IdsSize, &Offset);
+	Line = IdsGetline(Ids, &Offset);
 	while (Line)
 	{
 		if (isalpha(Line[0]) && isalpha(Line[1]) && isalpha(Line[2]) && isspace(Line[3])
@@ -273,13 +273,13 @@ NWL_GetPnpManufacturer(PNODE nd, CHAR* Ids, DWORD IdsSize, CONST CHAR* Code)
 			return;
 		}
 		free(Line);
-		Line = IdsGetline(Ids, IdsSize, &Offset);
+		Line = IdsGetline(Ids, &Offset);
 	}
 	NWL_NodeAttrSet(nd, "Manufacturer", Code, 0);
 }
 
 VOID
-NWL_GetSpdManufacturer(PNODE nd, LPCSTR Key, CHAR* Ids, DWORD IdsSize, UINT Bank, UINT Item)
+NWL_GetSpdManufacturer(PNODE nd, LPCSTR Key, struct _NWLIB_IDS* Ids, UINT Bank, UINT Item)
 {
 	DWORD Offset = 0;
 	CHAR* bLine = NULL;
@@ -288,13 +288,13 @@ NWL_GetSpdManufacturer(PNODE nd, LPCSTR Key, CHAR* Ids, DWORD IdsSize, UINT Bank
 
 	Bank++;
 
-	bLine = IdsGetline(Ids, IdsSize, &Offset);
+	bLine = IdsGetline(Ids, &Offset);
 	while (bLine)
 	{
 		if (isdigit(bLine[0])
 			&& Bank == strtoul(bLine, NULL, 10))
 		{
-			iLine = IdsGetline(Ids, IdsSize, &Offset);
+			iLine = IdsGetline(Ids, &Offset);
 			while (iLine)
 			{
 				if (!isspace(iLine[0]) || !isdigit(iLine[1]))
@@ -311,11 +311,11 @@ NWL_GetSpdManufacturer(PNODE nd, LPCSTR Key, CHAR* Ids, DWORD IdsSize, UINT Bank
 					return;
 				}
 				free(iLine);
-				iLine = IdsGetline(Ids, IdsSize, &Offset);
+				iLine = IdsGetline(Ids, &Offset);
 			}
 		}
 		free(bLine);
-		bLine = IdsGetline(Ids, IdsSize, &Offset);
+		bLine = IdsGetline(Ids, &Offset);
 	}
 fail:
 	NWL_NodeAttrSetf(nd, Key, 0, "%02X%02X", --Bank, Item);
@@ -381,18 +381,15 @@ fail:
 	return NULL;
 }
 
-const CHAR* NWL_GetIdsDate(LPCWSTR lpFileName)
+const CHAR* NWL_GetIdsDate(struct _NWLIB_IDS* Ids)
 {
 	static CHAR Date[] = "1453.05.29";
-	DWORD IdsSize = 0;
 	DWORD Offset = 0;
-	CHAR* Ids = NULL;
 	CHAR* Line = NULL;
 
 	strcpy_s(Date, sizeof(Date), "UNKNOWN");
 
-	Ids = NWL_LoadIdsToMemory(lpFileName, &IdsSize);
-	Line = IdsGetline(Ids, IdsSize, &Offset);
+	Line = IdsGetline(Ids, &Offset);
 	while (Line)
 	{
 		// # Version: 2022.09.09
@@ -409,12 +406,10 @@ const CHAR* NWL_GetIdsDate(LPCWSTR lpFileName)
 			break;
 		}
 		free(Line);
-		Line = IdsGetline(Ids, IdsSize, &Offset);
+		Line = IdsGetline(Ids, &Offset);
 	}
 	if (Line)
 		free(Line);
-	if (Ids)
-		free(Ids);
 
 	return Date;
 }

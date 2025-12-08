@@ -1436,12 +1436,12 @@ pMDTechnologyToStr(UCHAR Technology)
 }
 
 static void
-JedecIdToVendor(PNODE node, PMemoryDevice md, CHAR* db, DWORD dbsz)
+JedecIdToVendor(PNODE node, PMemoryDevice md)
 {
 	UINT id;
 	LPCSTR vendor = NULL;
 
-	if (!db)
+	if (!NWLC->NwJep106.Ids)
 		goto fail;
 
 	if (md->Header.Length >= 0x54) // 3.2
@@ -1455,7 +1455,7 @@ JedecIdToVendor(PNODE node, PMemoryDevice md, CHAR* db, DWORD dbsz)
 			goto fail;
 		id = strtoul(vendor, NULL, 16);
 	}
-	NWL_GetSpdManufacturer(node, "Manufacturer", db, dbsz, (id >> 8) & 0x7F, id & 0x7F);
+	NWL_GetSpdManufacturer(node, "Manufacturer", &NWLC->NwJep106, (id >> 8) & 0x7F, id & 0x7F);
 	return;
 fail:
 	vendor = NWL_GetDmiString((void*)md, md->Manufacturer);
@@ -1466,13 +1466,11 @@ static void ProcMemoryDevice(PNODE tab, void* p)
 {
 	PMemoryDevice pMD = (PMemoryDevice)p;
 	UINT64 sz = 0;
-	DWORD dbsz = 0;
-	CHAR* db = NWL_LoadIdsToMemory(L"jep106.ids", &dbsz);
 
 	NWL_NodeAttrSet(tab, "Description", "Memory Device", 0);
 
 	if (pMD->Size == 0)
-		goto out; // No memory device installed
+		return; // No memory device installed
 
 	NWL_NodeAttrSetf(tab, "Physical Memory Array Handle", NAFLG_FMT_NUMERIC, "%u", pMD->PhysicalArrayHandle);
 	NWL_NodeAttrSetf(tab, "Memory Error Information Handle", NAFLG_FMT_NUMERIC, "%u", pMD->ErrorInformationHandle);
@@ -1494,40 +1492,40 @@ static void ProcMemoryDevice(PNODE tab, void* p)
 	NWL_NodeAttrSet(tab, "Device Type", pMDMemoryTypeToStr(pMD->MemoryType), 0);
 	NWL_NodeAttrSetf(tab, "Type Detail", NAFLG_FMT_NUMERIC, "%u", pMD->TypeDetail);
 	if (pMD->Header.Length < 0x1B) // 2.3
-		goto out;
+		return;
 	if (pMD->Speed == 0xFFFF && pMD->Header.Length >= 0x5C) // 3.3
 		NWL_NodeAttrSetf(tab, "Speed (MT/s)", NAFLG_FMT_NUMERIC, "%u", pMD->ExtendedSpeed & 0x7FFFFFFFU);
 	else
 		NWL_NodeAttrSetf(tab, "Speed (MT/s)", NAFLG_FMT_NUMERIC, "%u", pMD->Speed);
-	JedecIdToVendor(tab, pMD, db, dbsz);
+	JedecIdToVendor(tab, pMD);
 	NWL_NodeAttrSet(tab, "Serial Number", NWL_GetDmiString(p, pMD->SN), NAFLG_FMT_SENSITIVE);
 	NWL_NodeAttrSet(tab, "Asset Tag Number", NWL_GetDmiString(p, pMD->AssetTag), 0);
 	NWL_NodeAttrSet(tab, "Part Number", NWL_GetDmiString(p, pMD->PN), 0);
 	if (pMD->Header.Length < 0x1C) // 2.6
-		goto out;
+		return;
 	NWL_NodeAttrSetf(tab, "Attributes", NAFLG_FMT_NUMERIC, "%u", pMD->Attributes);
 	if (pMD->Header.Length < 0x22) // 2.7
-		goto out;
+		return;
 	if (pMD->ConfiguredMemSpeed == 0xFFFF && pMD->Header.Length >= 0x5C) // 3.3
 		NWL_NodeAttrSetf(tab, "Configured Speed (MT/s)", NAFLG_FMT_NUMERIC, "%u", pMD->ExtendedConfiguredMemSpeed & 0x7FFFFFFFU);
 	else
 		NWL_NodeAttrSetf(tab, "Configured Speed (MT/s)", NAFLG_FMT_NUMERIC, "%u", pMD->ConfiguredMemSpeed);
 	if (pMD->Header.Length < 0x28) // 2.8
-		goto out;
+		return;
 	NWL_NodeAttrSetf(tab, "Minimum Voltage (mV)", NAFLG_FMT_NUMERIC, "%u", pMD->MinVoltage);
 	NWL_NodeAttrSetf(tab, "Maximum Voltage (mV)", NAFLG_FMT_NUMERIC, "%u", pMD->MaxVoltage);
 	NWL_NodeAttrSetf(tab, "Configured Voltage (mV)", NAFLG_FMT_NUMERIC, "%u", pMD->ConfiguredVoltage);
 	if (pMD->Header.Length < 0x54) // 3.2
-		goto out;
+		return;
 	NWL_NodeAttrSet(tab, "Memory Technology", pMDTechnologyToStr(pMD->MemoryTechnology), 0);
 	NWL_NodeAttrSetf(tab, "Memory Operating Mode Capability", NAFLG_FMT_NUMERIC, "%u", pMD->MemoryOpModeCapability);
 	NWL_NodeAttrSet(tab, "Firmware Version", NWL_GetDmiString(p, pMD->FirmwareVersion), 0);
 
-	NWL_GetSpdManufacturer(tab, "Module Manufacturer", db, dbsz, pMD->ModuleVID & 0x7F, (pMD->ModuleVID >> 8) & 0x7F);
+	NWL_GetSpdManufacturer(tab, "Module Manufacturer", &NWLC->NwJep106, pMD->ModuleVID & 0x7F, (pMD->ModuleVID >> 8) & 0x7F);
 	NWL_NodeAttrSetf(tab, "Module Manufacturer ID", NAFLG_FMT_NUMERIC, "%u", pMD->ModuleVID);
 	NWL_NodeAttrSetf(tab, "Module Product ID", NAFLG_FMT_NUMERIC, "%u", pMD->ModulePID);
 
-	NWL_GetSpdManufacturer(tab, "Memory Subsystem Controller Manufacturer", db, dbsz, pMD->MemorySubsysControllerVID & 0x7F, (pMD->MemorySubsysControllerVID >> 8) & 0x7F);
+	NWL_GetSpdManufacturer(tab, "Memory Subsystem Controller Manufacturer", &NWLC->NwJep106, pMD->MemorySubsysControllerVID & 0x7F, (pMD->MemorySubsysControllerVID >> 8) & 0x7F);
 	NWL_NodeAttrSetf(tab, "Memory Subsystem Controller Manufacturer ID", NAFLG_FMT_NUMERIC, "%u", pMD->MemorySubsysControllerVID);
 	NWL_NodeAttrSetf(tab, "Memory Subsystem Controller Product ID", NAFLG_FMT_NUMERIC, "%u", pMD->MemorySubsysControllerPID);
 
@@ -1536,19 +1534,15 @@ static void ProcMemoryDevice(PNODE tab, void* p)
 	NWL_NodeAttrSet(tab, "Cache Size", NWL_GetHumanSize(pMD->CacheSize, NWLC->NwUnits, 1024), NAFLG_FMT_HUMAN_SIZE);
 	NWL_NodeAttrSet(tab, "Logical Size", NWL_GetHumanSize(pMD->LogicalSize, NWLC->NwUnits, 1024), NAFLG_FMT_HUMAN_SIZE);
 	if (pMD->Header.Length < 0x64) // 3.7
-		goto out;
+		return;
 
-	NWL_GetSpdManufacturer(tab, "PMIC0 Manufacturer", db, dbsz, pMD->PMIC0VID & 0x7F, (pMD->PMIC0VID >> 8) & 0x7F);
+	NWL_GetSpdManufacturer(tab, "PMIC0 Manufacturer", &NWLC->NwJep106, pMD->PMIC0VID & 0x7F, (pMD->PMIC0VID >> 8) & 0x7F);
 	NWL_NodeAttrSetf(tab, "PMIC0 Manufacturer ID", NAFLG_FMT_NUMERIC, "%u", pMD->PMIC0VID);
 	NWL_NodeAttrSetf(tab, "PMIC0 Revision", NAFLG_FMT_NUMERIC, "%u", pMD->PMIC0Rev);
 
-	NWL_GetSpdManufacturer(tab, "RCD Manufacturer", db, dbsz, pMD->RCDVID & 0x7F, (pMD->RCDVID >> 8) & 0x7F);
+	NWL_GetSpdManufacturer(tab, "RCD Manufacturer", &NWLC->NwJep106, pMD->RCDVID & 0x7F, (pMD->RCDVID >> 8) & 0x7F);
 	NWL_NodeAttrSetf(tab, "RCD Manufacturer ID", NAFLG_FMT_NUMERIC, "%u", pMD->RCDVID);
 	NWL_NodeAttrSetf(tab, "RCD Revision", NAFLG_FMT_NUMERIC, "%u", pMD->RCDRev);
-
-out:
-	if (db)
-		free(db);
 }
 
 static const CHAR*

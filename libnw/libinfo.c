@@ -52,10 +52,10 @@ PNODE NW_Libinfo(VOID)
 	NWL_NodeAttrSet(pNode, "libcpuid", cpuid_lib_version(), 0);
 	if (NWLC->NwSmart)
 		NWL_NodeAttrSet(pNode, "CrystalDiskInfo", cdi_get_version(), 0);
-	NWL_NodeAttrSet(pNode, "PCI ID", NWL_GetIdsDate(L"pci.ids"), 0);
-	NWL_NodeAttrSet(pNode, "USB ID", NWL_GetIdsDate(L"usb.ids"), 0);
-	NWL_NodeAttrSet(pNode, "PNP ID", NWL_GetIdsDate(L"pnp.ids"), 0);
-	NWL_NodeAttrSet(pNode, "JEP106 ID", NWL_GetIdsDate(L"jep106.ids"), 0);
+	NWL_NodeAttrSet(pNode, "PCI ID", NWL_GetIdsDate(&NWLC->NwPciIds), 0);
+	NWL_NodeAttrSet(pNode, "USB ID", NWL_GetIdsDate(&NWLC->NwUsbIds), 0);
+	NWL_NodeAttrSet(pNode, "PNP ID", NWL_GetIdsDate(&NWLC->NwPnpIds), 0);
+	NWL_NodeAttrSet(pNode, "JEP106 ID", NWL_GetIdsDate(&NWLC->NwJep106), 0);
 	NWL_NodeAttrSetMulti(pNode, "Error", NWLC->ErrLog, 0);
 	return pNode;
 }
