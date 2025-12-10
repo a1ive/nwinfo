@@ -169,16 +169,6 @@ Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
 
 <div style="page-break-after: always;"></div>
 
-## Supported OS
-
-- Windows 10 / Server 2016 and later (NT 10.0)
-- Windows 8.1 / Server 2012 R2 (NT 6.3)
-- Windows 8 / Server 2012 (NT 6.2)
-- Windows 7 / Server 2008 R2 (NT 6.1)
-- Windows Vista / Server 2008 (NT 6.0)
-- Windows Server 2003 (NT 5.2)
-- Windows XP (NT 5.1)
-
 ## Supported Hardware
 
 ### CPU

@@ -56,13 +56,11 @@ gnwinfo_ctx_update_1s(void)
 	CHAR sys_uptime[NWL_STR_SIZE] = { 0 };
 	DWORD main_flag = 0;
 	int cpu_count = 0;
-	BOOL enable_audio = FALSE;
 	NWLIB_MEM_SENSORS mem_sensors = { 0 };
 
 	AcquireSRWLockShared(&g_ctx.lock);
 	main_flag = g_ctx.main_flag;
 	cpu_count = g_ctx.cpu_count;
-	enable_audio = (g_ctx.lib.NwOsInfo.dwMajorVersion >= 6);
 	if (cpu_count > 0 && g_ctx.cpu_info)
 	{
 		cpu_info = malloc((size_t)cpu_count * sizeof(NWLIB_CPU_INFO));
@@ -84,7 +82,7 @@ gnwinfo_ctx_update_1s(void)
 		NWL_GetCpuMsr(cpu_count, cpu_info);
 	NWL_GetCurDisplay(g_ctx.wnd, &cur_display);
 	NWL_GetGpuInfo(&gpu_info);
-	if ((main_flag & MAIN_INFO_AUDIO) && enable_audio)
+	if (main_flag & MAIN_INFO_AUDIO)
 		audio = NWL_GetAudio(&audio_count);
 	NWL_GetMemSensors(g_ctx.lib.NwSmbus, &mem_sensors);
 
