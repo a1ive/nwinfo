@@ -314,6 +314,8 @@ static struct wr0_drv_t* drv_list[WR0_DRIVER_MAX] =
 
 struct wr0_drv_t* WR0_OpenDriver(void)
 {
+	if (WR0_GetWineVersion())
+		return NULL;
 	if (WR0_IsWoW64())
 		return NULL;
 	for (size_t i = 0; i < ARRAYSIZE(drv_list); i++)

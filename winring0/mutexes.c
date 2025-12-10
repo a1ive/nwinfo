@@ -106,3 +106,28 @@ BOOL WR0_IsWoW64(void)
 	return bIsWow64;
 #endif
 }
+
+typedef LPCSTR(CDECL* LPFN_WINEGETVER) (VOID);
+LPCSTR WR0_GetWineVersion(void)
+{
+	HMODULE hModule = GetModuleHandleW(L"ntdll");
+	LPFN_WINEGETVER fnWineGetVersion = NULL;
+	if (hModule)
+		fnWineGetVersion = (LPFN_WINEGETVER)GetProcAddress(hModule, "wine_get_version");
+	if (fnWineGetVersion)
+		return fnWineGetVersion();
+	return NULL;
+}
+
+typedef VOID(CDECL* LPFN_WINEGETHOST) (const CHAR**, const CHAR**);
+void WR0_GetWineHost(const CHAR** sysname, const CHAR** release)
+{
+	HMODULE hModule = GetModuleHandleW(L"ntdll");
+	LPFN_WINEGETHOST fnWineGetHost = NULL;
+	*sysname = NULL;
+	*release = NULL;
+	if (hModule)
+		fnWineGetHost = (LPFN_WINEGETHOST)GetProcAddress(hModule, "wine_get_host_version");
+	if (fnWineGetHost)
+		fnWineGetHost(sysname, release);
+}

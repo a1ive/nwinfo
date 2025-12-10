@@ -8,6 +8,7 @@
 #include "libnw.h"
 #include "utils.h"
 #include "efivars.h"
+#include <winring0.h>
 
 #define PSAPI_VERSION 1
 #include <psapi.h>
@@ -162,27 +163,46 @@ static void PrintOsVer(PNODE node)
 {
 	DWORD dwType, dwSize;
 	CHAR szSP[] = " SP65535.65535";
-	LPWSTR lpEdition = NULL;
 	DWORD dwInstallDate = 0;
+	LPCSTR lpWineVer = WR0_GetWineVersion();
+	LPWSTR lpEdition = NWL_NtGetRegValue(HKEY_LOCAL_MACHINE, L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion", L"EditionID", &dwSize, &dwType);
+
 	if (NWLC->NwOsInfo.wServicePackMinor)
 		snprintf(szSP, sizeof(szSP), " SP%u.%u", NWLC->NwOsInfo.wServicePackMajor, NWLC->NwOsInfo.wServicePackMinor);
 	else if (NWLC->NwOsInfo.wServicePackMajor)
 		snprintf(szSP, sizeof(szSP), " SP%u", NWLC->NwOsInfo.wServicePackMajor);
 	else
 		szSP[0] = '\0';
-	NWL_NodeAttrSetf(node, "OS", 0, "Windows %s%s", OsVersionToStr(&NWLC->NwOsInfo, &NWLC->NwSi), szSP);
-	NWL_NodeAttrSetf(node, "Build Number", 0, "%lu.%lu.%lu",
-		NWLC->NwOsInfo.dwMajorVersion, NWLC->NwOsInfo.dwMinorVersion, NWLC->NwOsInfo.dwBuildNumber);
+
+	if (lpWineVer)
+	{
+		CHAR* sysName;
+		CHAR* hostVer;
+		WR0_GetWineHost(&sysName, &hostVer);
+		NWL_NodeAttrSetf(node, "OS", 0, "%s %s", sysName, hostVer);
+		NWL_NodeAttrSet(node, "Build Number", lpWineVer, 0);
+		NWL_NodeAttrSet(node, "Edition", "Wine", 0);
+		NWL_NodeAttrSetf(node, "OS (Wine)", 0, "Windows %s%s", OsVersionToStr(&NWLC->NwOsInfo, &NWLC->NwSi), szSP);
+		NWL_NodeAttrSetf(node, "Build Number (Wine)", 0, "%lu.%lu.%lu",
+			NWLC->NwOsInfo.dwMajorVersion, NWLC->NwOsInfo.dwMinorVersion, NWLC->NwOsInfo.dwBuildNumber);
+		if (lpEdition)
+			NWL_NodeAttrSet(node, "Edition (Wine)", NWL_Ucs2ToUtf8(lpEdition), 0);
+	}
+	else
+	{
+		NWL_NodeAttrSetf(node, "OS", 0, "Windows %s%s", OsVersionToStr(&NWLC->NwOsInfo, &NWLC->NwSi), szSP);
+		NWL_NodeAttrSetf(node, "Build Number", 0, "%lu.%lu.%lu",
+			NWLC->NwOsInfo.dwMajorVersion, NWLC->NwOsInfo.dwMinorVersion, NWLC->NwOsInfo.dwBuildNumber);
+		if (lpEdition)
+			NWL_NodeAttrSet(node, "Edition", NWL_Ucs2ToUtf8(lpEdition), 0);
+	}
+
 	if (NWL_GetRegDwordValue(HKEY_LOCAL_MACHINE, L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion", L"UBR", &dwSize) == 0)
 		NWL_NodeAttrSetf(node, "UBR", NAFLG_FMT_NUMERIC, "%lu", dwSize);
-	lpEdition = NWL_NtGetRegValue(HKEY_LOCAL_MACHINE, L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion", L"EditionID", &dwSize, &dwType);
-	if (lpEdition)
-	{
-		NWL_NodeAttrSet(node, "Edition", NWL_Ucs2ToUtf8(lpEdition), 0);
-		free(lpEdition);
-	}
+
 	NWL_GetRegDwordValue(HKEY_LOCAL_MACHINE, L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion", L"InstallDate", &dwInstallDate);
 	NWL_NodeAttrSet(node, "Install Date", NWL_UnixTimeToStr(dwInstallDate), 0);
+	free(lpEdition);
 }
 
 static void
