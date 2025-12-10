@@ -33,13 +33,13 @@
 
 #define IDR_PNG_MAX                     136
 
-#define IDT_TIMER_1S                    2001
-#define IDT_TIMER_1M                    2002
-#define IDT_TIMER_DISK                  2003
-#define IDT_TIMER_DISPLAY               2004
-#define IDT_TIMER_POWER                 2005
-#define IDT_TIMER_SMB                   2006
-#define IDT_TIMER_SPD                   2007
+#define IDT_TIMER_1S                    (1u << 0)
+#define IDT_TIMER_1M                    (1u << 1)
+#define IDT_TIMER_DISK                  (1u << 2)
+#define IDT_TIMER_DISPLAY               (1u << 3)
+#define IDT_TIMER_POWER                 (1u << 4)
+#define IDT_TIMER_SMB                   (1u << 5)
+#define IDT_TIMER_SPD                   (1u << 6)
 
 // Next default values for new objects
 // 

@@ -302,6 +302,11 @@ static VOID
 draw_mem_spd(struct nk_context* ctx)
 {
 	INT count = NWL_NodeChildCount(g_ctx.spd);
+	if (count <= 0)
+	{
+		draw_mem_dmi(ctx);
+		return;
+	}
 	for (INT i = 0; i < count; i++)
 	{
 		PNODE tab = NWL_NodeEnumChild(g_ctx.spd, i);

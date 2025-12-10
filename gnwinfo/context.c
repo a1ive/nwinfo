@@ -12,13 +12,7 @@
 
 GNW_CONTEXT g_ctx;
 
-#define GNW_UPDATE_FLAG_1S      (1u << 0)
-#define GNW_UPDATE_FLAG_1M      (1u << 1)
-#define GNW_UPDATE_FLAG_DISK    (1u << 2)
-#define GNW_UPDATE_FLAG_DISPLAY (1u << 3)
-#define GNW_UPDATE_FLAG_POWER   (1u << 4)
-#define GNW_UPDATE_FLAG_SMB     (1u << 5)
-#define GNW_UPDATE_FLAG_SPD     (1u << 6)
+typedef void (*gnwinfo_update_fn)(void);
 
 static struct nk_image
 load_png(WORD id)
@@ -44,22 +38,6 @@ static void
 gnwinfo_ctx_error_callback(LPCSTR lpszText)
 {
 	MessageBoxA(g_ctx.wnd, lpszText, "Error", MB_ICONERROR);
-}
-
-static DWORD
-gnwinfo_ctx_update_flag(WPARAM wparam)
-{
-	switch (wparam)
-	{
-	case IDT_TIMER_1S: return GNW_UPDATE_FLAG_1S;
-	case IDT_TIMER_1M: return GNW_UPDATE_FLAG_1M;
-	case IDT_TIMER_DISK: return GNW_UPDATE_FLAG_DISK;
-	case IDT_TIMER_DISPLAY: return GNW_UPDATE_FLAG_DISPLAY;
-	case IDT_TIMER_POWER: return GNW_UPDATE_FLAG_POWER;
-	case IDT_TIMER_SMB: return GNW_UPDATE_FLAG_SMB;
-	case IDT_TIMER_SPD: return GNW_UPDATE_FLAG_SPD;
-	default: return 0;
-	}
 }
 
 static void
@@ -227,32 +205,28 @@ gnwinfo_ctx_update_spd(void)
 		NWL_NodeFree(old_spd, 1);
 }
 
-static void
-gnwinfo_ctx_update_internal(WPARAM wparam)
+static const struct
 {
-	switch (wparam)
+	WPARAM timer_id;
+	gnwinfo_update_fn fn;
+} g_update_table[] =
+{
+	{ IDT_TIMER_1S, gnwinfo_ctx_update_1s },
+	{ IDT_TIMER_1M, gnwinfo_ctx_update_battery },
+	{ IDT_TIMER_DISK, gnwinfo_ctx_update_disk },
+	{ IDT_TIMER_DISPLAY, gnwinfo_ctx_update_display },
+	{ IDT_TIMER_POWER, gnwinfo_ctx_update_battery },
+	{ IDT_TIMER_SMB, gnwinfo_ctx_update_smb },
+	{ IDT_TIMER_SPD, gnwinfo_ctx_update_spd },
+};
+
+static void
+gnwinfo_ctx_run_mask(WPARAM mask)
+{
+	for (size_t i = 0; i < ARRAYSIZE(g_update_table); i++)
 	{
-	case IDT_TIMER_1S:
-		gnwinfo_ctx_update_1s();
-		break;
-	case IDT_TIMER_1M:
-	case IDT_TIMER_POWER:
-		gnwinfo_ctx_update_battery();
-		break;
-	case IDT_TIMER_DISK:
-		gnwinfo_ctx_update_disk();
-		break;
-	case IDT_TIMER_SMB:
-		gnwinfo_ctx_update_smb();
-		break;
-	case IDT_TIMER_DISPLAY:
-		gnwinfo_ctx_update_display();
-		break;
-	case IDT_TIMER_SPD:
-		gnwinfo_ctx_update_spd();
-		break;
-	default:
-		break;
+		if (mask & g_update_table[i].timer_id)
+			g_update_table[i].fn();
 	}
 }
 
@@ -260,34 +234,22 @@ static DWORD WINAPI
 gnwinfo_ctx_update_thread(LPVOID lpParameter)
 {
 	(void)lpParameter;
+	HANDLE events[2] = { g_ctx.update_event, g_ctx.stop_event };
+
 	for (;;)
 	{
-		if (WaitForSingleObject(g_ctx.update_event, INFINITE) != WAIT_OBJECT_0)
+		DWORD wait = WaitForMultipleObjects(ARRAYSIZE(events), events, FALSE, INFINITE);
+		if (wait == WAIT_OBJECT_0 + 1)
 			break;
-		if (g_ctx.update_stop)
+		if (wait != WAIT_OBJECT_0)
 			break;
 
 		for (;;)
 		{
-			DWORD mask = (DWORD)InterlockedExchange(&g_ctx.update_mask, 0);
-			if (mask == 0)
+			WPARAM mask = (WPARAM)InterlockedExchange(&g_ctx.update_mask, 0);
+			if (!mask)
 				break;
-			if (mask & GNW_UPDATE_FLAG_1S)
-				gnwinfo_ctx_update_internal(IDT_TIMER_1S);
-			if (mask & GNW_UPDATE_FLAG_1M)
-				gnwinfo_ctx_update_internal(IDT_TIMER_1M);
-			if (mask & GNW_UPDATE_FLAG_DISK)
-				gnwinfo_ctx_update_internal(IDT_TIMER_DISK);
-			if (mask & GNW_UPDATE_FLAG_DISPLAY)
-				gnwinfo_ctx_update_internal(IDT_TIMER_DISPLAY);
-			if (mask & GNW_UPDATE_FLAG_POWER)
-				gnwinfo_ctx_update_internal(IDT_TIMER_POWER);
-			if (mask & GNW_UPDATE_FLAG_SMB)
-				gnwinfo_ctx_update_internal(IDT_TIMER_SMB);
-			if (mask & GNW_UPDATE_FLAG_SPD)
-				gnwinfo_ctx_update_internal(IDT_TIMER_SPD);
-			if (g_ctx.update_stop)
-				break;
+			gnwinfo_ctx_run_mask(mask);
 		}
 	}
 	return 0;
@@ -296,18 +258,16 @@ gnwinfo_ctx_update_thread(LPVOID lpParameter)
 void
 gnwinfo_ctx_update(WPARAM wparam)
 {
-	DWORD flag = gnwinfo_ctx_update_flag(wparam);
-
-	if (!flag)
+	if (!wparam)
 		return;
 
 	if (!g_ctx.update_event || !g_ctx.update_thread)
 	{
-		gnwinfo_ctx_update_internal(wparam);
+		gnwinfo_ctx_run_mask(wparam);
 		return;
 	}
 
-	InterlockedOr(&g_ctx.update_mask, (LONG)flag);
+	InterlockedOr(&g_ctx.update_mask, (LONG)wparam);
 	SetEvent(g_ctx.update_event);
 }
 
@@ -323,11 +283,24 @@ gnwinfo_ctx_init(HINSTANCE inst, HWND wnd, struct nk_context* ctx, float width, 
 
 	InitializeSRWLock(&g_ctx.lock);
 	g_ctx.update_mask = 0;
-	g_ctx.update_stop = 0;
 	g_ctx.exit_pending = 0;
 	g_ctx.update_event = CreateEventW(NULL, FALSE, FALSE, NULL);
-	if (g_ctx.update_event)
+	g_ctx.stop_event = CreateEventW(NULL, TRUE, FALSE, NULL);
+	if (g_ctx.update_event && g_ctx.stop_event)
 		g_ctx.update_thread = CreateThread(NULL, 0, gnwinfo_ctx_update_thread, NULL, 0, NULL);
+	else
+	{
+		if (g_ctx.update_event)
+		{
+			CloseHandle(g_ctx.update_event);
+			g_ctx.update_event = NULL;
+		}
+		if (g_ctx.stop_event)
+		{
+			CloseHandle(g_ctx.stop_event);
+			g_ctx.stop_event = NULL;
+		}
+	}
 
 	g_ctx.main_flag = strtoul(gnwinfo_get_ini_value(L"Widgets", L"MainFlags", L"0xFFFFFFFF"), NULL, 16);
 	g_ctx.smart_hex = strtoul(gnwinfo_get_ini_value(L"Widgets", L"SmartFormat", L"0"), NULL, 10);
@@ -411,9 +384,10 @@ gnwinfo_ctx_exit(void)
 
 	if (g_ctx.update_event)
 	{
-		g_ctx.update_stop = 1;
 		SetEvent(g_ctx.update_event);
 	}
+	if (g_ctx.stop_event)
+		SetEvent(g_ctx.stop_event);
 	if (g_ctx.update_thread)
 	{
 		WaitForSingleObject(g_ctx.update_thread, INFINITE);
@@ -424,6 +398,11 @@ gnwinfo_ctx_exit(void)
 	{
 		CloseHandle(g_ctx.update_event);
 		g_ctx.update_event = NULL;
+	}
+	if (g_ctx.stop_event)
+	{
+		CloseHandle(g_ctx.stop_event);
+		g_ctx.stop_event = NULL;
 	}
 
 	if (g_ctx.cpu_info)

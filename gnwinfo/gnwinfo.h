@@ -157,9 +157,9 @@ typedef struct _GNW_CONTEXT
 
 	SRWLOCK lock;
 	HANDLE update_event;
+	HANDLE stop_event;
 	HANDLE update_thread;
 	volatile LONG update_mask;
-	volatile LONG update_stop;
 	volatile LONG exit_pending;
 } GNW_CONTEXT;
 extern GNW_CONTEXT g_ctx;
