@@ -175,16 +175,6 @@ draw_computer(struct nk_context* ctx)
 			NULL, NULL, SW_NORMAL);
 }
 
-static BOOL
-is_cache_level_equal(PNODE node, const PVOID ctx)
-{
-	UINT8 cache_level = *(const PUINT8)ctx;
-	LPCSTR str = NWL_NodeAttrGet(node, "Cache Level");
-	CHAR buf[] = "L1";
-	buf[1] += cache_level;
-	return (strcmp(str, buf) == 0);
-}
-
 static VOID
 draw_processor(struct nk_context* ctx)
 {
@@ -232,23 +222,23 @@ draw_processor(struct nk_context* ctx)
 				u8"%d"TEMP_CELSIUS_SYMBOL, g_ctx.cpu_info[i].MsrTemp);
 		else
 			nk_spacer(ctx);
-	}
 
-	if (g_ctx.main_flag & MAIN_CPU_CACHE)
-	{
-		LPCSTR cache_size[4];
-		for (UINT8 cache_level = 0; cache_level < 4; cache_level++)
-			cache_size[cache_level] = gnwinfo_get_smbios_attr("7", "Installed Cache Size", &cache_level, is_cache_level_equal);
-
+		if (!(g_ctx.main_flag & MAIN_CPU_CACHE))
+			continue;
 		nk_layout_row(ctx, NK_DYNAMIC, 0, 2, (float[2]) { 0.3f, 0.7f });
-		nk_lhsc(ctx, N_(N__CACHE), NK_TEXT_LEFT, g_color_text_d, nk_false, nk_true);
-		int len = snprintf(m_buf, MAX_PATH, "L1 %s", cache_size[0]);
-		if (cache_size[1][0] != '-' && len >= 0 && len < MAX_PATH)
-			len += snprintf(m_buf + len, MAX_PATH - len, " L2 %s", cache_size[1]);
-		if (cache_size[2][0] != '-' && len >= 0 && len < MAX_PATH)
-			len += snprintf(m_buf + len, MAX_PATH - len, " L3 %s", cache_size[2]);
-		if (cache_size[3][0] != '-' && len >= 0 && len < MAX_PATH)
-			snprintf(m_buf + len, MAX_PATH - len, " L4 %s", cache_size[3]);
+		nk_spacer(ctx);
+		PNODE cache = NWL_NodeGetChild(cpu, "Cache");
+		LPCSTR l1 = NWL_NodeAttrGet(cache, "L1 Cache Size");
+		LPCSTR l2 = NWL_NodeAttrGet(cache, "L2 Cache Size");
+		LPCSTR l3 = NWL_NodeAttrGet(cache, "L3 Cache Size");
+		LPCSTR l4 = NWL_NodeAttrGet(cache, "L4 Cache Size");
+		len = snprintf(m_buf, MAX_PATH, "L1 %s", l1);
+		if (l2[0] != '-' && len >= 0 && len < MAX_PATH)
+			len += snprintf(m_buf + len, MAX_PATH - len, " L2 %s", l2);
+		if (l3[0] != '-' && len >= 0 && len < MAX_PATH)
+			len += snprintf(m_buf + len, MAX_PATH - len, " L3 %s", l3);
+		if (l4[0] != '-' && len >= 0 && len < MAX_PATH)
+			snprintf(m_buf + len, MAX_PATH - len, " L4 %s", l4);
 		nk_lhc(ctx, m_buf, NK_TEXT_LEFT, g_color_text_l);
 	}
 }
