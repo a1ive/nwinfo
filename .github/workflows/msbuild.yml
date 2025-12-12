@@ -31,7 +31,7 @@ jobs:
         table_of_contents: false
 
     - name: Upload PDF
-      uses: actions/upload-artifact@v5
+      uses: actions/upload-artifact@v6
       with:
         name: README.pdf
         path: build/README.pdf
@@ -89,7 +89,7 @@ jobs:
                          --gpu --font --device
 
     - name: Upload Report
-      uses: actions/upload-artifact@v5
+      uses: actions/upload-artifact@v6
       with:
         name: report.json
         path: report.json
