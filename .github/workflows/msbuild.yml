@@ -64,7 +64,7 @@ jobs:
         msbuild /m /p:Configuration=DLLRelease /p:platform=x86 ${{env.SOLUTION_FILE_PATH}}
 
     - name: Download README.pdf
-      uses: actions/download-artifact@v6
+      uses: actions/download-artifact@v7
       with:
         name: README.pdf
         path: .
