@@ -4,7 +4,7 @@
 #include "utils.h"
 
 #include <libcpuid.h>
-#include "../libcdi/libcdi/libcdi.h"
+#include "../libcdi/libcdi.h"
 #include "smbus/smbus.h"
 
 PNWLIB_CONTEXT NWLC = NULL;

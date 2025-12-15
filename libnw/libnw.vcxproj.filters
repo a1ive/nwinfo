@@ -111,7 +111,7 @@
     <ClInclude Include="nwapi.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\libcdi\libcdi\libcdi.h">
+    <ClInclude Include="..\libcdi\libcdi.h">
       <Filter>libcdi</Filter>
     </ClInclude>
   </ItemGroup>
@@ -262,6 +262,9 @@
     </ClCompile>
     <ClCompile Include="smbus\smbus.c">
       <Filter>smbus</Filter>
+    </ClCompile>
+    <ClCompile Include="..\libcdi\CDIWrapper.c">
+      <Filter>libcdi</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

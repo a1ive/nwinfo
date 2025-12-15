@@ -247,6 +247,8 @@ This section describes all files included in the final release package.
 | `nwinfox86.exe` | Executable | Main executable (x86) |
 | `gnwinfo.exe` | Executable | GUI executable (x64) |
 | `gnwinfox86.exe` | Executable | GUI executable (x86) |
+| `libcdi.dll` | Library | S.M.A.R.T. data access library (x64) |
+| `libcdix86.dll` | Library | S.M.A.R.T. data access library (x86) |
 | `hw_report.ps1` | Script | Example PowerShell script |
 | `gnwinfo.ini` | Configuration | Configuration file for the GUI |
 | `pci.ids` | Database | PCI database |

@@ -2,7 +2,7 @@
 
 #include "gnwinfo.h"
 #include "gettext.h"
-#include "../libcdi/libcdi/libcdi.h"
+#include "../libcdi/libcdi.h"
 
 LPCSTR NWL_Ucs2ToUtf8(LPCWSTR src);
 LPCWSTR NWL_Utf8ToUcs2(LPCSTR src);

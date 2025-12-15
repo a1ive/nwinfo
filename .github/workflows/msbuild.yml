@@ -76,8 +76,10 @@ jobs:
         New-Item -ItemType Directory -Path $TargetFolder -Force | Out-Null
         Copy-Item -Path "x64\Release\nwinfo.exe" -Destination "$($TargetFolder)\nwinfo.exe"
         Copy-Item -Path "x64\Release\gnwinfo.exe" -Destination "$($TargetFolder)\gnwinfo.exe"
+        Copy-Item -Path "x64\Release\libcdi.dll" -Destination "$($TargetFolder)\libcdi.dll"
         Copy-Item -Path "Win32\Release\nwinfo.exe" -Destination "$($TargetFolder)\nwinfox86.exe"
         Copy-Item -Path "Win32\Release\gnwinfo.exe" -Destination "$($TargetFolder)\gnwinfox86.exe"
+        Copy-Item -Path "Win32\Release\libcdix86.dll" -Destination "$($TargetFolder)\libcdix86.dll"
         .\copy_res.ps1 -TargetFolder $TargetFolder
 
     - name: Run Test

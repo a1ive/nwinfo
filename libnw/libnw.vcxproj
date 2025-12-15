@@ -231,15 +231,12 @@
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ProjectReference Include="..\libcdi\libcdi\libcdi.vcxproj">
-      <Project>{f8c0b390-95be-4b12-ba9b-48b4774fdde4}</Project>
-    </ProjectReference>
     <ProjectReference Include="..\libcpuid\libcpuid.vcxproj">
       <Project>{2da3ea59-bdf3-4fc0-8ac2-5605ce22b800}</Project>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\libcdi\libcdi\libcdi.h" />
+    <ClInclude Include="..\libcdi\libcdi.h" />
     <ClInclude Include="..\stb\stb_ds.h" />
     <ClInclude Include="..\winring0\shmem.h" />
     <ClInclude Include="..\winring0\winring0.h" />
@@ -267,6 +264,7 @@
     <ClInclude Include="version.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\libcdi\CDIWrapper.c" />
     <ClCompile Include="..\winring0\mutexes.c" />
     <ClCompile Include="..\winring0\pawnio.c" />
     <ClCompile Include="..\winring0\shmem.c" />

@@ -7,7 +7,7 @@
 
 #include "utils.h"
 #include "vbr.h"
-#include "../libcdi/libcdi/libcdi.h"
+#include "../libcdi/libcdi.h"
 
 static LPCSTR GetRealVolumePath(LPCWSTR lpszVolume)
 {

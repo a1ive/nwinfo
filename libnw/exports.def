@@ -1,25 +1,5 @@
 LIBRARY LIBNW
 EXPORTS
-cdi_get_version
-
-cdi_create_smart
-cdi_destroy_smart
-cdi_init_smart
-cdi_update_smart
-cdi_get_disk_count
-
-cdi_get_bool
-cdi_get_int
-cdi_get_dword
-cdi_get_string
-cdi_free_string
-
-cdi_get_smart_format
-cdi_get_smart_id
-cdi_get_smart_value
-cdi_get_smart_status
-cdi_get_smart_name
-
 cpuid_get_total_cpus
 cpuid_present
 cpu_exec_cpuid

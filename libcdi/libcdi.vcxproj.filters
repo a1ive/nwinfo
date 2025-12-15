@@ -1,0 +1,110 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Headers">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
+    </Filter>
+    <Filter Include="Sources">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="RC">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="GitHub">
+      <UniqueIdentifier>{2f276474-58ab-4fa0-9532-14a803953806}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="AtaSmart.cpp">
+      <Filter>Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="libcdi.cpp">
+      <Filter>Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="NVMeInterpreter.cpp">
+      <Filter>Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="SlotSpeedGetter.cpp">
+      <Filter>Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="Priscilla\OsInfoFx.cpp">
+      <Filter>Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="Priscilla\UtilityFx.cpp">
+      <Filter>Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="Priscilla\md5.cpp">
+      <Filter>Sources</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="AtaSmart.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="libcdi.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="NVMeInterpreter.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="SlotSpeedGetter.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="SPTIUtil.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="stdafx.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="StorageQuery.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="Priscilla\OsInfoFx.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="Priscilla\UtilityFx.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="smartids.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="JMicronUsbRaidDef.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="JMicronUsbRaidInit.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="Priscilla\md5.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="resource.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="version.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Source.def">
+      <Filter>Sources</Filter>
+    </None>
+    <None Include="packages.config" />
+    <None Include="..\README.md">
+      <Filter>GitHub</Filter>
+    </None>
+    <None Include="..\.github\workflows\msbuild.yml">
+      <Filter>GitHub</Filter>
+    </None>
+    <None Include="..\.github\dependabot.yml">
+      <Filter>GitHub</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="Resource.rc">
+      <Filter>RC</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+</Project>
