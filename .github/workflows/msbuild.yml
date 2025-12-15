@@ -31,7 +31,7 @@ jobs:
         table_of_contents: false
 
     - name: Upload PDF
-      uses: actions/upload-artifact@v5
+      uses: actions/upload-artifact@v6
       with:
         name: README.pdf
         path: build/README.pdf
@@ -64,7 +64,7 @@ jobs:
         msbuild /m /p:Configuration=DLLRelease /p:platform=x86 ${{env.SOLUTION_FILE_PATH}}
 
     - name: Download README.pdf
-      uses: actions/download-artifact@v6
+      uses: actions/download-artifact@v7
       with:
         name: README.pdf
         path: .
@@ -89,13 +89,6 @@ jobs:
                          --sys --cpu --net --acpi --smbios --disk --display --pci --usb --spd `
                          --battery --uefi --shares --audio --public-ip --product-policy `
                          --gpu --font --device
-
-    - name: Upload Report
-      uses: actions/upload-artifact@v5
-      with:
-        name: report.json
-        path: report.json
-
     - name: Prepare DLL Package
       shell: pwsh
       run: |
@@ -118,8 +111,25 @@ jobs:
     - name: Create ZIPs
       run: |
         Compress-Archive -Path "PKG\*" -DestinationPath "nwinfo.zip" -Force
-        Compress-Archive -Path "PKG_DLL\*" -DestinationPath "dev.zip" -Force
+        Compress-Archive -Path "PKG_DLL\*" -DestinationPath "libnw.zip" -Force
 
+    - name: Upload Application
+      uses: actions/upload-artifact@v6
+      with:
+        name: nwinfo
+        path: nwinfo.zip
+
+    - name: Upload Library
+      uses: actions/upload-artifact@v6
+      with:
+        name: libnw
+        path: libnw.zip
+
+    - name: Upload Report
+      uses: actions/upload-artifact@v6
+      with:
+        name: report
+        path: report.json
     - name: Generate Release Notes
       env:
         COMMITS_JSON: ${{ toJSON(github.event.commits) }}
@@ -163,7 +173,6 @@ jobs:
       run: |
         $date_version = (Get-Date -Format 'yyyyMMdd') + ".${{ github.run_number }}"
         gh release create latest "nwinfo.zip" `
-          "dev.zip" `
           --prerelease `
           --title "Build $date_version" `
           --notes-file "release_notes.txt"
