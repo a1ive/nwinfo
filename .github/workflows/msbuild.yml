@@ -5,6 +5,8 @@ on:
   push:
     branches:
       - "master"
+    tags:
+      - "*"
 
 env:
   # Path to the solution file relative to the root of the project.
@@ -117,64 +119,62 @@ jobs:
       uses: actions/upload-artifact@v6
       with:
         name: nwinfo
-        path: nwinfo.zip
+        path: PKG/
 
     - name: Upload Library
       uses: actions/upload-artifact@v6
       with:
         name: libnw
-        path: libnw.zip
+        path: PKG_DLL/
 
     - name: Upload Report
       uses: actions/upload-artifact@v6
       with:
         name: report
         path: report.json
+
     - name: Generate Release Notes
-      env:
-        COMMITS_JSON: ${{ toJSON(github.event.commits) }}
+      if: startsWith(github.ref, 'refs/tags/')
       run: |
         $changelogLines = New-Object System.Collections.Generic.List[string]
-        if ("${{ github.event_name }}" -eq "push") {
-          Write-Host "Generating changelog from push event payload"
-          $commits = $env:COMMITS_JSON | ConvertFrom-Json
-          if ($null -ne $commits) {
-            foreach ($commit in $commits) {
-              $shortSha = $commit.id.Substring(0, 7)
-              # Take only the first line of the commit message
-              $commitMessage = ($commit.message -split "`r?`n")[0]
-              $changelogLines.Add("* $commitMessage ($shortSha) by @$($commit.author.name)")
-            }
-          }
+        $tagName = "${{ github.ref_name }}"
+        Write-Host "Generating changelog from tag '$tagName'"
+        $isShallow = (git rev-parse --is-shallow-repository) -eq "true"
+        if ($isShallow) {
+          git fetch --prune origin "+refs/tags/*:refs/tags/*" --deepen=200
+        } else {
+          git fetch --prune origin "+refs/tags/*:refs/tags/*"
         }
-        else {
-          Write-Host "Generating changelog for workflow_dispatch event (latest commit)"
-          $latest_commit = git log --pretty=format:'* %s (%h) by @%an' -n 1
-          $changelogLines.Add($latest_commit)
+        $prevTag = ""
+        try {
+          $prevTag = git describe --abbrev=0 --tags "$tagName^" 2>$null
+        } catch {}
+        if (-not [string]::IsNullOrWhiteSpace($prevTag)) {
+          $logRange = "$prevTag..$tagName"
+        } else {
+          $logRange = $tagName
+        }
+        $logOutput = git log --pretty=format:'* %s (%h) by @%an' $logRange
+        if (-not [string]::IsNullOrWhiteSpace($logOutput)) {
+          $changelogLines.AddRange($logOutput -split "`n")
+        } else {
+          $changelogLines.Add("No commits found for $logRange. Automated build from tag $tagName.")
         }
 
         $changelogBody = $changelogLines -join "`n"
         if ([string]::IsNullOrWhiteSpace($changelogBody)) {
-          $changelogBody = "No new commits in this push. Automated build from commit ${{ github.sha }}."
+          $changelogBody = "No changelog entries generated. Automated build from commit ${{ github.sha }}."
         }
 
         $changelogBody | Out-File -FilePath "release_notes.txt" -Encoding utf8
 
-    - name: Delete old release
-      continue-on-error: true
-      working-directory: ${{env.GITHUB_WORKSPACE}}
-      run: |
-        gh release delete latest --cleanup-tag --yes
-      env:
-        GH_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
-
     - name: Release
+      if: startsWith(github.ref, 'refs/tags/')
       working-directory: ${{env.GITHUB_WORKSPACE}}
       run: |
         $date_version = (Get-Date -Format 'yyyyMMdd') + ".${{ github.run_number }}"
-        gh release create latest "nwinfo.zip" `
-          --prerelease `
-          --title "Build $date_version" `
+        gh release create "${{ github.ref_name }}" "nwinfo.zip" `
+          --title "${{ github.ref_name }} (Build $date_version)" `
           --notes-file "release_notes.txt"
       env:
         GH_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
