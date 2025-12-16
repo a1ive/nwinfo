@@ -325,6 +325,8 @@ GetMsrData(NWLIB_CPU_INFO* info, struct cpu_id_t* data)
 			info->GpuEnergy = value;
 		}
 #endif
+		value = cpu_msrinfo(NWLC->NwDrv, i, INFO_MICROCODE_VER);
+		info->BiosRev = (UINT32)value;
 		break;
 	}
 }
@@ -352,6 +354,7 @@ PrintCpuMsr(PNODE node, struct cpu_id_t* data)
 	NWL_NodeAttrSetf(node, "Power (W)", NAFLG_FMT_NUMERIC, "%.2lf", info.MsrPower);
 	NWL_NodeAttrSetf(node, "PL1 (W)", NAFLG_FMT_NUMERIC, "%.2lf", info.MsrPl1);
 	NWL_NodeAttrSetf(node, "PL2 (W)", NAFLG_FMT_NUMERIC, "%.2lf", info.MsrPl2);
+	NWL_NodeAttrSetf(node, "Microcode Rev", 0, "0x%X", info.BiosRev);
 }
 
 // Get DMI Processor Information (Type 4) Table

@@ -90,6 +90,8 @@ draw_msr(struct nk_context* ctx, int index, PNODE cpu)
 		nk_l(ctx, N_(N__IGPU_POWER), NK_TEXT_LEFT);
 		nk_lhcf(ctx, NK_TEXT_LEFT, g_color_text_l, "%.2f W", g_ctx.cpu_info[index].GpuPower);
 #endif
+		nk_l(ctx, N_(N__MICROCODE), NK_TEXT_LEFT);
+		nk_lhcf(ctx, NK_TEXT_LEFT, g_color_text_l, "0x%X", g_ctx.cpu_info[index].BiosRev);
 		nk_group_end(ctx);
 	}
 }

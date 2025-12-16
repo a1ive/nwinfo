@@ -655,6 +655,18 @@ static double get_igpu_energy(struct msr_info_t* info)
 	return (double)CPU_INVALID_VALUE / 100;
 }
 
+#define MSR_IA32_BIOS_SIGN_ID  0x8B
+
+static int get_microcode_ver(struct msr_info_t* info)
+{
+	uint64_t rev;
+	if (read_amd_msr(info, MSR_IA32_BIOS_SIGN_ID, 31, 0, &rev))
+		goto fail;
+	return (int)rev;
+fail:
+	return 0;
+}
+
 struct msr_fn_t msr_fn_amd =
 {
 	.get_min_multiplier = get_min_multiplier,
@@ -669,4 +681,5 @@ struct msr_fn_t msr_fn_amd =
 	.get_bus_clock = get_bus_clock,
 	.get_igpu_temperature = get_igpu_temperature,
 	.get_igpu_energy = get_igpu_energy,
+	.get_microcode_ver = get_microcode_ver,
 };

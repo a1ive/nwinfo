@@ -49,6 +49,7 @@ lang_ja_jp[N__MAX_] =
 	[N__PL2] = u8"PL2",
 	[N__IGPU_TEMPERATURE] = u8"iGPU温度",
 	[N__IGPU_POWER] = u8"iGPU電力",
+	[N__MICROCODE] = u8"マイクロコード",
 	[N__L1_D] = u8"L1 データ",
 	[N__L1_I] = u8"L1 命令",
 	[N__L2] = u8"L2",

@@ -128,6 +128,11 @@ static double get_igpu_energy(struct msr_info_t* info)
 	return (double)CPU_INVALID_VALUE / 100;
 }
 
+static int get_microcode_ver(struct msr_info_t* info)
+{
+	return 0;
+}
+
 struct msr_fn_t msr_fn_centaur =
 {
 	.get_min_multiplier = get_min_multiplier,
@@ -142,4 +147,5 @@ struct msr_fn_t msr_fn_centaur =
 	.get_bus_clock = get_bus_clock,
 	.get_igpu_temperature = get_igpu_temperature,
 	.get_igpu_energy = get_igpu_energy,
+	.get_microcode_ver = get_microcode_ver,
 };

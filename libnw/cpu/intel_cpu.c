@@ -21,6 +21,7 @@
 #define MSR_PP0_ENERGY_STATUS  0x639
 #define MSR_PP1_ENERGY_STATUS  0x641
 #define MSR_PLATFORM_INFO      0xCE
+#define MSR_IA32_BIOS_SIGN_ID  0x8B
 
 static inline int
 read_intel_msr(struct wr0_drv_t* handle, uint32_t msr_index, uint8_t highbit, uint8_t lowbit, uint64_t* result)
@@ -244,6 +245,16 @@ fail:
 	return (double)CPU_INVALID_VALUE / 100;
 }
 
+static int get_microcode_ver(struct msr_info_t* info)
+{
+	uint64_t rev;
+	if (read_intel_msr(info->handle, MSR_IA32_BIOS_SIGN_ID, 63, 32, &rev))
+		goto fail;
+	return (int)rev;
+fail:
+	return 0;
+}
+
 struct msr_fn_t msr_fn_intel =
 {
 	.get_min_multiplier = get_min_multiplier,
@@ -258,4 +269,5 @@ struct msr_fn_t msr_fn_intel =
 	.get_bus_clock = get_bus_clock,
 	.get_igpu_temperature = get_igpu_temperature,
 	.get_igpu_energy = get_igpu_energy,
+	.get_microcode_ver = get_microcode_ver,
 };

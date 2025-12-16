@@ -47,6 +47,7 @@ lang_zh_cn[N__MAX_] =
 	[N__PL2] = u8"PL2",
 	[N__IGPU_TEMPERATURE] = u8"iGPU温度",
 	[N__IGPU_POWER] = u8"iGPU功率",
+	[N__MICROCODE] = u8"微码",
 	[N__L1_D] = u8"L1 数据",
 	[N__L1_I] = u8"L1 指令",
 	[N__L2] = u8"L2",

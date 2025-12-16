@@ -39,6 +39,7 @@ typedef enum
 	INFO_IGPU_TEMPERATURE,     /*!< The current integrated GPU temperature in Celsius. */
 	INFO_IGPU_ENERGY,          /*!< The current integrated GPU energy consumption in Joules,
 									multiplied by 100. */
+	INFO_MICROCODE_VER,        /*!< The microcode revision number */
 } cpu_msrinfo_request_t;
 
 /**
@@ -72,6 +73,7 @@ struct msr_fn_t
 	double (*get_bus_clock)(struct msr_info_t* info);
 	int (*get_igpu_temperature)(struct msr_info_t* info);
 	double (*get_igpu_energy)(struct msr_info_t* info);
+	int (*get_microcode_ver)(struct msr_info_t* info);
 };
 
 struct msr_info_t

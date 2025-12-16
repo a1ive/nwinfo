@@ -47,6 +47,7 @@ lang_sv_se[N__MAX_] =
 	[N__PL2] = u8"PL2",
 	[N__IGPU_TEMPERATURE] = u8"iGPU-temperatur",
 	[N__IGPU_POWER] = u8"iGPU-ström",
+	[N__MICROCODE] = u8"Mikrokod",
 	[N__L1_D] = u8"L1 D",
 	[N__L1_I] = u8"L1 I",
 	[N__L2] = u8"L2",

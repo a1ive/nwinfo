@@ -136,6 +136,9 @@ int cpu_msrinfo(struct wr0_drv_t* handle, logical_cpu_t cpu, cpu_msrinfo_request
 		case INFO_IGPU_ENERGY:
 			ret = (int) (fn->get_igpu_energy(&info) * 100);
 			break;
+		case INFO_MICROCODE_VER:
+			ret = (int) (fn->get_microcode_ver(&info));
+			break;
 	}
 	// Restore AffinityMask
 	SetThreadGroupAffinity(thread, &saved_aff, NULL);
