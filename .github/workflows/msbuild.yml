@@ -121,7 +121,18 @@ jobs:
         name: nwinfo
         path: PKG/
 
-    - name: Upload Library
+    - name: Upload Library libcdi
+      uses: actions/upload-artifact@v6
+      with:
+        name: libcdi
+        path: |
+          PKG\libcdi.dll
+          PKG\libcdix86.dll
+          libcdi\libcdi.h
+          libcdi\README.md
+          libcdi\LICENSE.txt
+
+    - name: Upload Library libnw
       uses: actions/upload-artifact@v6
       with:
         name: libnw
