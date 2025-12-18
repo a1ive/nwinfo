@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MIT
+
 #include "stdafx.h"
 #include "AtaSmart.h"
 #include "NVMeInterpreter.h"

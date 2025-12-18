@@ -13,6 +13,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "gnwinfo", "gnwinfo\gnwinfo.
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libcdi", "libcdi\libcdi.vcxproj", "{F8C0B390-95BE-4B12-BA9B-48B4774FDDE4}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "cditest", "cditest\cditest.vcxproj", "{D070BD1A-A6B4-4CA7-B5B2-F12E0F7A5EB7}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		DLLRelease|x64 = DLLRelease|x64
@@ -57,6 +59,14 @@ Global
 		{F8C0B390-95BE-4B12-BA9B-48B4774FDDE4}.Release|x64.Build.0 = Release|x64
 		{F8C0B390-95BE-4B12-BA9B-48B4774FDDE4}.Release|x86.ActiveCfg = Release|Win32
 		{F8C0B390-95BE-4B12-BA9B-48B4774FDDE4}.Release|x86.Build.0 = Release|Win32
+		{D070BD1A-A6B4-4CA7-B5B2-F12E0F7A5EB7}.DLLRelease|x64.ActiveCfg = Release|x64
+		{D070BD1A-A6B4-4CA7-B5B2-F12E0F7A5EB7}.DLLRelease|x64.Build.0 = Release|x64
+		{D070BD1A-A6B4-4CA7-B5B2-F12E0F7A5EB7}.DLLRelease|x86.ActiveCfg = Release|Win32
+		{D070BD1A-A6B4-4CA7-B5B2-F12E0F7A5EB7}.DLLRelease|x86.Build.0 = Release|Win32
+		{D070BD1A-A6B4-4CA7-B5B2-F12E0F7A5EB7}.Release|x64.ActiveCfg = Release|x64
+		{D070BD1A-A6B4-4CA7-B5B2-F12E0F7A5EB7}.Release|x64.Build.0 = Release|x64
+		{D070BD1A-A6B4-4CA7-B5B2-F12E0F7A5EB7}.Release|x86.ActiveCfg = Release|Win32
+		{D070BD1A-A6B4-4CA7-B5B2-F12E0F7A5EB7}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

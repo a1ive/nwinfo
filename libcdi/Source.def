@@ -1,4 +1,3 @@
-LIBRARY LIBCDI
 EXPORTS
 cdi_get_version
 

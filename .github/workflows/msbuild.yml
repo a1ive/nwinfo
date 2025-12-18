@@ -91,29 +91,10 @@ jobs:
                          --sys --cpu --net --acpi --smbios --disk --display --pci --usb --spd `
                          --battery --uefi --shares --audio --public-ip --product-policy `
                          --gpu --font --device
-    - name: Prepare DLL Package
-      shell: pwsh
-      run: |
-        $TargetFolder = "PKG_DLL"
-        New-Item -ItemType Directory -Path $TargetFolder -Force | Out-Null
-        $dllTargets = @(
-          @{ Platform = "x64"; Source = "x64\DLLRelease" },
-          @{ Platform = "x86"; Source = "Win32\DLLRelease" }
-        )
-
-        foreach ($t in $dllTargets) {
-          $destDir = Join-Path $TargetFolder $t.Platform
-          New-Item -ItemType Directory -Path $destDir -Force | Out-Null
-          $dllFiles = "libnw.dll","libnw.lib","libnw.pdb"
-          foreach ($f in $dllFiles) {
-            Copy-Item -Path (Join-Path $t.Source $f) -Destination (Join-Path $destDir $f)
-          }
-        }
 
     - name: Create ZIPs
       run: |
         Compress-Archive -Path "PKG\*" -DestinationPath "nwinfo.zip" -Force
-        Compress-Archive -Path "PKG_DLL\*" -DestinationPath "libnw.zip" -Force
 
     - name: Upload Application
       uses: actions/upload-artifact@v6
@@ -121,28 +102,39 @@ jobs:
         name: nwinfo
         path: PKG/
 
-    - name: Upload Library libcdi
+    - name: Upload Library
       uses: actions/upload-artifact@v6
       with:
-        name: libcdi
+        name: Library
         path: |
-          PKG\libcdi.dll
-          PKG\libcdix86.dll
+          report.json
+          LICENSE
+          libcpuid\COPYING
           libcdi\libcdi.h
           libcdi\README.md
           libcdi\LICENSE.txt
-
-    - name: Upload Library libnw
-      uses: actions/upload-artifact@v6
-      with:
-        name: libnw
-        path: PKG_DLL/
-
-    - name: Upload Report
-      uses: actions/upload-artifact@v6
-      with:
-        name: report
-        path: report.json
+          x64\DLLRelease\libnw.dll
+          x64\DLLRelease\libnw.lib
+          x64\DLLRelease\libnw.pdb
+          x64\Release\libcdi.dll
+          x64\Release\libcdi.lib
+          x64\Release\libcdi.pdb
+          x64\Release\cditest.exe
+          x64\Release\libcpuid.lib
+          x64\Release\libcpuid.pdb
+          x64\Release\libnw.lib
+          x64\Release\libnw.pdb
+          Win32\DLLRelease\libnw.dll
+          Win32\DLLRelease\libnw.lib
+          Win32\DLLRelease\libnw.pdb
+          Win32\Release\libcdix86.dll
+          Win32\Release\libcdix86.lib
+          Win32\Release\libcdix86.pdb
+          Win32\Release\cditest.exe
+          Win32\Release\libcpuid.lib
+          Win32\Release\libcpuid.pdb
+          Win32\Release\libnw.lib
+          Win32\Release\libnw.pdb
 
     - name: Generate Release Notes
       if: startsWith(github.ref, 'refs/tags/')
