@@ -214,9 +214,9 @@ The program searches for and loads drivers in the following order: **CPUZ161 -> 
 
 | Driver | Filename | Security Status | Bundled | CPU Sensor | SPD | ACPI |
 |--------|----------|-----------------|---------|------------|-----|------|
-| [PawnIO](https://github.com/namazso/PawnIO)           | PawnIO.sys      | ✅ Safe to use   | ✅ | ⚠️ | ⚠️ | ❌ |
-| [HwRwDrv](https://hwrwdrv.phpnet.us/?i=1)             | HwRwDrvx64.sys  | ⚠️ Vulnerable    | ✅ | ✅ | ✅ | ✅ |
-| [WinRing0](http://openlibsys.org/)                    | WinRing0x64.sys | ❌ Blocked by AV | ❌ | ✅ | ✅ | ❌ |
+| [PawnIO](https://github.com/namazso/PawnIO)           | PawnIO.sys      | ✅ Safe to use   | ✅ | ⚠️ | ✅ | ❌ |
+| [HwRwDrv](https://hwrwdrv.phpnet.us/?i=1)             | HwRwDrvx64.sys  | ❌ Vulnerable    | ❌ | ✅ | ✅ | ✅ |
+| [WinRing0](http://openlibsys.org/)                    | WinRing0x64.sys | ❌ Blocked by AV | ❌ | ✅ | ✅ | ⚠️ |
 | [CPUZ161](https://www.cpuid.com/softwares/cpu-z.html) | cpuidx64.sys    | ✅ Safe to use   | ❌ | ✅ | ✅ | ✅ |
 | [EVGA](https://www.evga.com/precisionx1/)             | HwIox64.sys     | ✅ Safe to use   | ❌ | ✅ | ✅ | ❌ |
 
@@ -255,8 +255,6 @@ This section describes all files included in the final release package.
 | `usb.ids` | Database | USB database |
 | `pnp.ids` | Database | PnP (monitor) vendor database |
 | `jep106.ids` | Database | JEDEC memory module vendor database |
-| `HwRwDrvx64.sys` | Driver | HwRwDrv driver (x64) |
-| `HwRwDrv.sys` | Driver | HwRwDrv driver (x86) |
 | `PawnIOSetup.exe` | Driver | PawnIO driver installer (x64) |
 | `IntelMSR.bin` | PawnIO Module | Intel MSR module for PawnIO driver |
 | `AMDFamily0F.bin` | PawnIO Module | AMD K8 MSR module for PawnIO driver |
@@ -278,7 +276,4 @@ This project is licensed under the [Unlicense](https://unlicense.org/) license.
 * [stb](https://github.com/nothings/stb)
 * [optparse](https://github.com/skeeto/optparse)
 * [hwdata](https://github.com/vcrhonek/hwdata)
-* [Linux USB](http://www.linux-usb.org)
-* [The PCI ID Repository](https://pci-ids.ucw.cz)
-* [edid-decode](https://git.linuxtv.org/v4l-utils.git/tree/utils/edid-decode)
 * [PawnIO](https://pawnio.eu/)

@@ -32,19 +32,6 @@
 
 For details, see [CLI (nwinfo)](./docs/README.md#cli-nwinfo) in the documentation.
 
-## Driver Information
-
-> [!WARNING]
->
-> This application ships with the `HwRwDrv` driver, which is known for security vulnerabilities.
->
-> *   It may be flagged as malware by your antivirus.
-> *   It can be detected by anti-cheat software, potentially leading to an account ban in online games.
->
-> If you have any concerns, feel free to delete the driver file.  
-> You could install [PawnIO](https://pawnio.eu/) driver as an alternative.  
-> See [Supported Drivers](./docs/README.md#supported-drivers) for more information.  
-
 ## Licenses & Credits
 
 This project is licensed under the [Unlicense](https://unlicense.org/) license.
@@ -55,7 +42,4 @@ This project is licensed under the [Unlicense](https://unlicense.org/) license.
 * [stb](https://github.com/nothings/stb)
 * [optparse](https://github.com/skeeto/optparse)
 * [hwdata](https://github.com/vcrhonek/hwdata)
-* [Linux USB](http://www.linux-usb.org)
-* [The PCI ID Repository](https://pci-ids.ucw.cz)
-* [edid-decode](https://git.linuxtv.org/v4l-utils.git/tree/utils/edid-decode)
 * [PawnIO](https://pawnio.eu/)

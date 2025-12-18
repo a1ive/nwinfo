@@ -1,7 +1,5 @@
 // SPDX-License-Identifier: Unlicense
 
-// Base on https://github.com/cavaliercoder/sysinv
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
