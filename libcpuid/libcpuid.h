@@ -121,7 +121,6 @@
 /* Include C99 booleans: */
 #include <stdbool.h>
 
-#include <winring0.h>
 #define LIBCPUID_DISABLE_DEPRECATED
 
 /* Include some integer type specifications: */

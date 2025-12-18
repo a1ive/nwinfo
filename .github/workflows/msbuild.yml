@@ -110,6 +110,9 @@ jobs:
           report.json
           LICENSE
           libcpuid\COPYING
+          libcpuid\libcpuid.h
+          libcpuid\libcpuid_constants.h
+          libcpuid\libcpuid_types.h
           libcdi\libcdi.h
           libcdi\README.md
           libcdi\LICENSE.txt
@@ -122,6 +125,7 @@ jobs:
           x64\Release\cditest.exe
           x64\Release\libcpuid.lib
           x64\Release\libcpuid.pdb
+          x64\Release\cpuid_tool.exe
           x64\Release\libnw.lib
           x64\Release\libnw.pdb
           Win32\DLLRelease\libnw.dll
@@ -133,6 +137,7 @@ jobs:
           Win32\Release\cditest.exe
           Win32\Release\libcpuid.lib
           Win32\Release\libcpuid.pdb
+          Win32\Release\cpuid_tool.exe
           Win32\Release\libnw.lib
           Win32\Release\libnw.pdb
 
