@@ -14,7 +14,6 @@
 #define MSR_IA32_EBL_CR_POWERON 0x2A
 #define MSR_TURBO_RATIO_LIMIT 0x1AD
 #define MSR_IA32_TEMPERATURE_TARGET 0x1A2
-#define MSR_IA32_PERF_STATUS        0x198
 #define MSR_RAPL_POWER_UNIT    0x606
 #define MSR_PKG_POWER_LIMIT    0x610
 #define MSR_PKG_ENERGY_STATUS  0x611
@@ -39,15 +38,18 @@ read_intel_msr(struct wr0_drv_t* handle, uint32_t msr_index, uint8_t highbit, ui
 	else
 		err = WR0_RdMsr(handle, msr_index, &out);
 
-	if (!err && bits < 64)
+	if (err)
+		return err;
+
+	/* Show only part of register when a subrange is requested */
+	if (bits < 64)
 	{
-		/* Show only part of register */
 		out >>= lowbit;
 		out &= (1ULL << bits) - 1;
-		*result = out;
 	}
+	*result = out;
 
-	return err;
+	return 0;
 }
 
 static double get_min_multiplier(struct msr_info_t* info)

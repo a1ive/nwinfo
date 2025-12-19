@@ -78,15 +78,18 @@ read_amd_msr(struct msr_info_t* info, uint32_t msr_index, uint8_t highbit, uint8
 	else
 		err = WR0_RdMsr(info->handle, msr_index, &out);
 
-	if (!err && bits < 64)
+	if (err)
+		return err;
+
+	/* Show only part of register when a subrange is requested */
+	if (bits < 64)
 	{
-		/* Show only part of register */
 		out >>= lowbit;
 		out &= (1ULL << bits) - 1;
-		*result = out;
 	}
+	*result = out;
 
-	return err;
+	return 0;
 }
 
 static int get_amd_multipliers(struct msr_info_t* info, uint32_t pstate, double* multiplier)

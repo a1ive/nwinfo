@@ -2,11 +2,19 @@
 
 #include "rdmsr.h"
 
-#define MSR_VIA_TEMP_F6_C7   0x1169
-#define MSR_VIA_TEMP_F7_NANO 0x1423
-#define MSR_VIA_INDEX_F7_6B  0x174c
-#define MSR_VIA_TEMP_F7_6B   0x174d
-#define MSR_VIA_VID_F6_C7    0x198
+#define MSR_IA32_PERF_STATUS  0x198
+
+#define MSR_IA32_BIOS_SIGN_ID 0x8B
+#define MSR_FSB_FREQ          0xCD
+
+#define MSR_ZX_TEMP          0x1423
+#define MSR_ZX_TEMP_CRIT     0x1416
+#define MSR_ZX_TEMP_MAX      0x1415
+#define MSR_ZX_TEMP_CRIT_6B  0x175B
+#define MSR_ZX_TEMP_MAX_6B   0x175A
+
+#define MSR_VIA_TEMP_0A_0D   0x1169
+#define MSR_VIA_TEMP_0F      0x1423
 
 static inline int
 read_centaur_msr(struct wr0_drv_t* handle, uint32_t msr_index, uint8_t highbit, uint8_t lowbit, uint64_t* result)
@@ -24,15 +32,18 @@ read_centaur_msr(struct wr0_drv_t* handle, uint32_t msr_index, uint8_t highbit, 
 	else
 		err = WR0_RdMsr(handle, msr_index, &out);
 
-	if (!err && bits < 64)
+	if (err)
+		return err;
+
+	/* Show only part of register when a subrange is requested */
+	if (bits < 64)
 	{
-		/* Show only part of register */
 		out >>= lowbit;
 		out &= (1ULL << bits) - 1;
-		*result = out;
 	}
+	*result = out;
 
-	return err;
+	return 0;
 }
 
 static double get_min_multiplier(struct msr_info_t* info)
@@ -50,42 +61,39 @@ static double get_max_multiplier(struct msr_info_t* info)
 	return (double)CPU_INVALID_VALUE / 100;
 }
 
+// https://github.com/deepin-community/kernel/blob/linux-6.6.y/drivers/hwmon/zhaoxin-cputemp.c
 static int get_temperature(struct msr_info_t* info)
 {
 	uint64_t reg = 0;
-	uint32_t addr = 0;
-	if (info->id->x86.ext_family == 0x07)
+	switch (info->id->x86.ext_family)
 	{
-		if (info->id->x86.ext_model == 0x6b)
-			addr = MSR_VIA_TEMP_F7_6B;
-		else
-			addr = MSR_VIA_TEMP_F7_NANO;
-	}
-	else if (info->id->x86.ext_family == 0x06)
+	case 0x06: // VIA
 	{
 		switch (info->id->x86.ext_model)
 		{
-		case 0x0a:
-		case 0x0d:
-			addr = MSR_VIA_TEMP_F6_C7;
+		case 0x0A:
+		case 0x0D:
+			if (read_centaur_msr(info->handle, MSR_VIA_TEMP_0A_0D, 23, 0, &reg))
+				return CPU_INVALID_VALUE;
 			break;
-		case 0x0f:
-			addr = MSR_VIA_TEMP_F7_NANO;
+		case 0x0F:
+			if (read_centaur_msr(info->handle, MSR_VIA_TEMP_0F, 23, 0, &reg))
+				return CPU_INVALID_VALUE;
 			break;
+		default:
+			return CPU_INVALID_VALUE;
 		}
 	}
-	if (addr == 0)
-		goto fail;
-	if (addr == MSR_VIA_TEMP_F7_6B)
-	{
-		if (WR0_WrMsr(info->handle, MSR_VIA_INDEX_F7_6B, 0x19, 0))
-			goto fail;
+		break;
+	case 0x07: // Zhaoxin
+		if (read_centaur_msr(info->handle, MSR_ZX_TEMP, 23, 0, &reg))
+			return CPU_INVALID_VALUE;
+		break;
+	default:
+		return CPU_INVALID_VALUE;
 	}
-	if (read_centaur_msr(info->handle, addr, 23, 0, &reg))
-		goto fail;
+
 	return (int)reg;
-fail:
-	return CPU_INVALID_VALUE;
 }
 
 static int get_pkg_temperature(struct msr_info_t* info)
@@ -115,6 +123,20 @@ static double get_voltage(struct msr_info_t* info)
 
 static double get_bus_clock(struct msr_info_t* info)
 {
+	uint64_t reg;
+	if (read_centaur_msr(info->handle, MSR_FSB_FREQ, 2, 0, &reg))
+		goto fail;
+	switch (reg)
+	{
+	case 0: return 266.67;
+	case 1: return 133.33;
+	case 2: return 200.00;
+	case 3: return 166.67;
+	case 4: return 333.33;
+	case 5: return 100.00;
+	case 6: return 400.00;
+	}
+fail:
 	return (double)CPU_INVALID_VALUE / 100;
 }
 
@@ -130,6 +152,11 @@ static double get_igpu_energy(struct msr_info_t* info)
 
 static int get_microcode_ver(struct msr_info_t* info)
 {
+	uint64_t rev;
+	if (read_centaur_msr(info->handle, MSR_IA32_BIOS_SIGN_ID, 63, 32, &rev))
+		goto fail;
+	return (int)rev;
+fail:
 	return 0;
 }
 
