@@ -188,18 +188,24 @@ PrintHypervisor(PNODE node, const struct cpu_id_t* data)
 }
 
 static void
-PrintCacheSize(PNODE node, LPCSTR name, int32_t instances, int32_t size, int32_t assoc)
+PrintCacheSize(PNODE node, LPCSTR name, int32_t instances, int32_t size, int32_t assoc, UINT64* sum)
 {
 	if (size <= 0)
 		return;
 	else if (instances <= 0)
+	{
 		NWL_NodeAttrSetf(node, name, 0,
 			"%s, %d-way",
 			NWL_GetHumanSize(size, &NWLC->NwUnits[1], 1024), assoc);
+		*sum += 1024ULL * size;
+	}
 	else
+	{
 		NWL_NodeAttrSetf(node, name, 0,
 			"%d * %s, %d-way",
 			instances, NWL_GetHumanSize(size, &NWLC->NwUnits[1], 1024), assoc);
+		*sum += 1024ULL * size * instances;
+	}
 }
 
 static void
@@ -207,43 +213,30 @@ PrintCache(PNODE node, const struct cpu_id_t* data)
 {
 	PNODE cache;
 	BOOL saved_human_size;
+	UINT64 l1 = 0, l2 = 0, l3 = 0, l4 = 0;
 	cache = NWL_NodeAppendNew(node, "Cache", NFLG_ATTGROUP);
 	saved_human_size = NWLC->HumanSize;
 	NWLC->HumanSize = TRUE;
 	PrintCacheSize(cache, "L1 D",
-		data->l1_data_instances, data->l1_data_cache, data->l1_data_assoc);
+		data->l1_data_instances, data->l1_data_cache, data->l1_data_assoc, &l1);
 	PrintCacheSize(cache, "L1 I",
-		data->l1_instruction_instances, data->l1_instruction_cache, data->l1_instruction_assoc);
+		data->l1_instruction_instances, data->l1_instruction_cache, data->l1_instruction_assoc, &l1);
 	PrintCacheSize(cache, "L2",
-		data->l2_instances, data->l2_cache, data->l2_assoc);
+		data->l2_instances, data->l2_cache, data->l2_assoc, &l2);
 	PrintCacheSize(cache, "L3",
-		data->l3_instances, data->l3_cache, data->l3_assoc);
+		data->l3_instances, data->l3_cache, data->l3_assoc, &l3);
 	PrintCacheSize(cache, "L4",
-		data->l4_instances, data->l4_cache, data->l4_assoc);
+		data->l4_instances, data->l4_cache, data->l4_assoc, &l4);
 	NWLC->HumanSize = saved_human_size;
 
-	UINT64 cache_size = 0;
-	if (data->l1_data_instances > 0)
-		cache_size += 1024ULL * (data->l1_data_cache * data->l1_data_instances);
-	if (data->l1_instruction_instances > 0)
-		cache_size += 1024ULL * (data->l1_instruction_cache * data->l1_instruction_instances);
-	if (cache_size > 0)
-		NWL_NodeAttrSet(cache, "L1 Cache Size", NWL_GetHumanSize(cache_size, NWLC->NwUnits, 1024), NAFLG_FMT_HUMAN_SIZE);
-	if (data->l2_instances > 0)
-	{
-		cache_size = 1024ULL * (data->l2_cache * data->l2_instances);
-		NWL_NodeAttrSet(cache, "L2 Cache Size", NWL_GetHumanSize(cache_size, NWLC->NwUnits, 1024), NAFLG_FMT_HUMAN_SIZE);
-	}
-	if (data->l3_instances > 0)
-	{
-		cache_size = 1024ULL * (data->l3_cache * data->l3_instances);
-		NWL_NodeAttrSet(cache, "L3 Cache Size", NWL_GetHumanSize(cache_size, NWLC->NwUnits, 1024), NAFLG_FMT_HUMAN_SIZE);
-	}
-	if (data->l4_instances > 0)
-	{
-		cache_size = 1024ULL * (data->l4_cache * data->l4_instances);
-		NWL_NodeAttrSet(cache, "L4 Cache Size", NWL_GetHumanSize(cache_size, NWLC->NwUnits, 1024), NAFLG_FMT_HUMAN_SIZE);
-	}
+	if (l1 > 0)
+		NWL_NodeAttrSet(cache, "L1 Cache Size", NWL_GetHumanSize(l1, NWLC->NwUnits, 1024), NAFLG_FMT_HUMAN_SIZE);
+	if (l2 > 0)
+		NWL_NodeAttrSet(cache, "L2 Cache Size", NWL_GetHumanSize(l2, NWLC->NwUnits, 1024), NAFLG_FMT_HUMAN_SIZE);
+	if (l3 > 0)
+		NWL_NodeAttrSet(cache, "L3 Cache Size", NWL_GetHumanSize(l3, NWLC->NwUnits, 1024), NAFLG_FMT_HUMAN_SIZE);
+	if (l4 > 0)
+		NWL_NodeAttrSet(cache, "L4 Cache Size", NWL_GetHumanSize(l4, NWLC->NwUnits, 1024), NAFLG_FMT_HUMAN_SIZE);
 }
 
 static void
