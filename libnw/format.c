@@ -322,7 +322,10 @@ static INT NWL_NodeToJson(PNODE node, FILE* file)
 	// Print header
 	fprintcx(file, NODE_JS_DELIM_INDENT, indent);
 	if (indent_depth > 0 && (node->flags & NFLG_TABLE_ROW) == 0)
-		fprintf(file, "\"%s\": ", node->name);
+	{
+		JsonEscapeContent(node->name, NWLC->NwBuf, NWINFO_BUFSZ);
+		fprintf(file, "\"%s\": ", NWLC->NwBuf);
+	}
 
 	if ((node->flags & NFLG_TABLE) == 0)
 		fputs("{", file);
@@ -346,7 +349,8 @@ static INT NWL_NodeToJson(PNODE node, FILE* file)
 				// Print attribute name
 				fputs(NODE_JS_DELIM_NL, file);
 				fprintcx(file, NODE_JS_DELIM_INDENT, indent + 1);
-				fprintf(file, "\"%s\": ", att->key);
+				JsonEscapeContent(att->key, NWLC->NwBuf, NWINFO_BUFSZ);
+				fprintf(file, "\"%s\": ", NWLC->NwBuf);
 
 				// Print value
 				if (att->flags & NAFLG_ARRAY)
@@ -429,7 +433,11 @@ static INT NWL_NodeToYaml(PNODE node, FILE* file)
 	if (NFLG_TABLE_ROW & node->flags)
 		fputs("- ", file);
 
-	fprintf(file, "%s:", node->name);
+	YamlEscapeContent(node->name, NWLC->NwBuf, NWINFO_BUFSZ);
+	if (node->flags & NAFLG_FMT_KEY_QUOTE)
+		fprintf(file, "'%s':", NWLC->NwBuf);
+	else
+		fprintf(file, "%s:", NWLC->NwBuf);
 
 	// Print attributes
 	if (atts > 0)
@@ -442,7 +450,11 @@ static INT NWL_NodeToYaml(PNODE node, FILE* file)
 				continue;
 
 			fprintcx(file, NODE_YAML_DELIM_INDENT, indent_depth + 1);
-			fprintf(file, "%s: ", att->key);
+			YamlEscapeContent(att->key, NWLC->NwBuf, NWINFO_BUFSZ);
+			if (att->flags & NAFLG_FMT_KEY_QUOTE)
+				fprintf(file, "'%s': ", NWLC->NwBuf);
+			else
+				fprintf(file, "%s: ", NWLC->NwBuf);
 			if (att->flags & NAFLG_ARRAY)
 			{
 				char* c;
@@ -516,7 +528,10 @@ static INT NWL_NodeToLua(PNODE node, FILE* file)
 	// Print header
 	fprintcx(file, NODE_LUA_DELIM_INDENT, indent);
 	if (indent_depth > 0 && (node->flags & NFLG_TABLE_ROW) == 0)
-		fprintf(file, "[\"%s\"] = ", node->name);
+	{
+		LuaEscapeContent(node->name, NWLC->NwBuf, NWINFO_BUFSZ);
+		fprintf(file, "[\"%s\"] = ", NWLC->NwBuf);
+	}
 
 	//if ((node->flags & NFLG_TABLE) == 0)
 	fputs("{", file);
@@ -537,7 +552,8 @@ static INT NWL_NodeToLua(PNODE node, FILE* file)
 				// Print attribute name
 				fputs(NODE_LUA_DELIM_NL, file);
 				fprintcx(file, NODE_LUA_DELIM_INDENT, indent + 1);
-				fprintf(file, "[\"%s\"] = ", att->key);
+				LuaEscapeContent(att->key, NWLC->NwBuf, NWINFO_BUFSZ);
+				fprintf(file, "[\"%s\"] = ", NWLC->NwBuf);
 
 				// Print value
 				if (att->flags & NAFLG_ARRAY)
@@ -611,7 +627,8 @@ static int NWL_NodeToTree(PNODE node, FILE* file)
 	fprintcx(file, NODE_TREE_DELIM_INDENT, indent_depth);
 	if (node->parent)
 		fputs(NODE_TREE_BRANCH, file);
-	fprintf(file, "%s", node->name);
+	TreeEscapeContent(node->name, NWLC->NwBuf, NWINFO_BUFSZ);
+	fprintf(file, "%s", NWLC->NwBuf);
 	fputs(NODE_TREE_DELIM_NL, file);
 
 	// Increase indent for attributes and children
@@ -632,7 +649,8 @@ static int NWL_NodeToTree(PNODE node, FILE* file)
 
 			fprintcx(file, NODE_TREE_DELIM_INDENT, indent_depth);
 			fputs(NODE_TREE_LEAF, file);
-			fprintf(file, "%s: ", att->key);
+			TreeEscapeContent(att->key, NWLC->NwBuf, NWINFO_BUFSZ);
+			fprintf(file, "%s: ", NWLC->NwBuf);
 
 			// Print value
 			if (att->flags & NAFLG_ARRAY)
