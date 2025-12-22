@@ -62,6 +62,7 @@ typedef struct _NWLIB_CONTEXT
 	BOOL GpuInfo;
 	BOOL FontInfo;
 	BOOL DevTree;
+	BOOL Sensors;
 
 	BOOL Debug;
 	BOOL HideSensitive;
@@ -176,6 +177,7 @@ LIBNW_API PNODE NW_ProductPolicy(VOID);
 LIBNW_API PNODE NW_Gpu(VOID);
 LIBNW_API PNODE NW_Font(VOID);
 LIBNW_API PNODE NW_DevTree(VOID);
+LIBNW_API PNODE NW_Sensors(VOID);
 
 LIBNW_API VOID NWL_GetUptime(CHAR* szUptime, DWORD dwSize);
 LIBNW_API VOID NWL_GetHostname(CHAR* szHostname);

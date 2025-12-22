@@ -6,6 +6,7 @@
 #include <libcpuid.h>
 #include "../libcdi/libcdi.h"
 #include "smbus/smbus.h"
+#include "sensor/sensors.h"
 
 PNWLIB_CONTEXT NWLC = NULL;
 
@@ -135,6 +136,8 @@ VOID NW_Print(LPCSTR lpFileName)
 		NW_Font();
 	if (NWLC->DevTree)
 		NW_DevTree();
+	if (NWLC->Sensors)
+		NW_Sensors();
 	NW_Libinfo();
 	NW_Export(NWLC->NwRoot, NWLC->NwFile);
 }
@@ -157,6 +160,7 @@ VOID NW_Fini(VOID)
 	free(NWLC->NwCpuid);
 	cpuid_free_raw_data_array(NWLC->NwCpuRaw);
 	free(NWLC->NwCpuRaw);
+	NWL_FreeSensors();
 	WR0_CloseDriver(NWLC->NwDrv);
 	WR0_CloseMutexes();
 	if (NWLC->NwRoot)

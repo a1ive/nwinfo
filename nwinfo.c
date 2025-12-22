@@ -41,6 +41,7 @@ enum
 	NW_OPT_GPU,
 	NW_OPT_FONT,
 	NW_OPT_DEVICE,
+	NW_OPT_SENSORS,
 };
 
 static struct optparse_option nwOptions[] =
@@ -74,6 +75,7 @@ static struct optparse_option nwOptions[] =
 	{ "gpu", 0, OPTPARSE_NONE },
 	{ "font", 0, OPTPARSE_NONE },
 	{ "device", 0, OPTPARSE_OPTIONAL },
+	{ "sensors", 0, OPTPARSE_NONE },
 	{ 0, 0, 0 },
 };
 
@@ -159,7 +161,8 @@ static void nwinfo_help(void)
 		"  --font           Print installed fonts.\n"
 		"  --device[=TYPE]  Print device tree.\n"
 		"                   TYPE specifies the type of the devices,\n"
-		"                   e.g. 'ACPI', 'SWD', 'PCI' or 'USB'.\n");
+		"                   e.g. 'ACPI', 'SWD', 'PCI' or 'USB'.\n"
+		"  --sensors        Print sensors.\n");
 }
 
 typedef struct _NW_ARG_FILTER
@@ -423,6 +426,9 @@ int main(int argc, char* argv[])
 			if (options.optarg && options.optarg[0])
 				nwContext.DevTreeFilter = options.optarg;
 			nwContext.DevTree = TRUE;
+			break;
+		case NW_OPT_SENSORS:
+			nwContext.Sensors = TRUE;
 			break;
 		case NW_OPT_DEBUG:
 			nwContext.Debug = TRUE;

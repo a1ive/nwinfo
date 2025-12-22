@@ -257,6 +257,7 @@
     <ClInclude Include="libnw.h" />
     <ClInclude Include="nt.h" />
     <ClInclude Include="nwapi.h" />
+    <ClInclude Include="sensor\sensors.h" />
     <ClInclude Include="smbios.h" />
     <ClInclude Include="smbus\smbus.h" />
     <ClInclude Include="utils.h" />
@@ -303,6 +304,8 @@
     <ClCompile Include="nt.c" />
     <ClCompile Include="pci.c" />
     <ClCompile Include="productpolicy.c" />
+    <ClCompile Include="sensors.c" />
+    <ClCompile Include="sensor\lhm.c" />
     <ClCompile Include="smb.c" />
     <ClCompile Include="smbios.c" />
     <ClCompile Include="smbus\smbus.c" />
