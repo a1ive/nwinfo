@@ -200,7 +200,7 @@
     <ClCompile Include="base64.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="gpu\igcl.cpp">
+    <ClCompile Include="gpu\igcl.c">
       <Filter>gpu</Filter>
     </ClCompile>
     <ClCompile Include="gpu\intel_gpu.c">

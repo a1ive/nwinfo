@@ -5,6 +5,7 @@
 
 #include <stdint.h>
 #include <stddef.h>
+#include <stdbool.h>
 
 #if defined(__cplusplus)
 extern "C" {
@@ -55,6 +56,7 @@ typedef uint32_t ctl_init_flags_t;
 typedef enum _ctl_init_flag_t
 {
 	CTL_INIT_FLAG_USE_LEVEL_ZERO = CTL_BIT(0),
+	CTL_INIT_FLAG_IGSC_FUL = CTL_BIT(1),
 	CTL_INIT_FLAG_MAX = 0x80000000
 } ctl_init_flag_t;
 
@@ -167,13 +169,13 @@ typedef struct _ctl_init_args_t
 } ctl_init_args_t;
 
 ctl_result_t CTL_APICALL
-ctlInit(
+IGCL_Init(
 	ctl_init_args_t* pInitDesc,                     ///< [in][out] App's control API version
 	ctl_api_handle_t* phAPIHandle                   ///< [in][out][release] Control API handle
 	);
 
 ctl_result_t CTL_APICALL
-ctlClose(
+IGCL_Close(
 	ctl_api_handle_t hAPIHandle                     ///< [in][release] Control API handle obtained during init call
 	);
 
@@ -245,13 +247,13 @@ typedef struct _ctl_device_adapter_properties_t
 } ctl_device_adapter_properties_t;
 
 ctl_result_t CTL_APICALL
-ctlCheckDriverVersion(
+IGCL_CheckDriverVersion(
 	ctl_device_adapter_handle_t hDeviceAdapter,     ///< [in][release] handle to control device adapter
 	ctl_version_info_t version_info                 ///< [in][release] Driver version info
 	);
 
 ctl_result_t CTL_APICALL
-ctlEnumerateDevices(
+IGCL_EnumerateDevices(
 	ctl_api_handle_t hAPIHandle,					///< [in][release] Applications should pass the Control API handle returned
 													///< by the CtlInit function 
 	uint32_t* pCount,								///< [in,out][release] pointer to the number of device instances. If count
@@ -265,7 +267,7 @@ ctlEnumerateDevices(
 	);
 
 ctl_result_t CTL_APICALL
-ctlGetDeviceProperties(
+IGCL_GetDeviceProperties(
 	ctl_device_adapter_handle_t hDAhandle,          ///< [in][release] Handle to control device adapter
 	ctl_device_adapter_properties_t* pProperties    ///< [in,out][release] Query result for device properties
 	);
@@ -404,7 +406,7 @@ typedef struct _ctl_power_telemetry_t
 } ctl_power_telemetry_t;
 
 ctl_result_t CTL_APICALL
-ctlPowerTelemetryGet(
+IGCL_PowerTelemetryGet(
 	ctl_device_adapter_handle_t hDeviceHandle,      ///< [in][release] Handle to display adapter
 	ctl_power_telemetry_t* pTelemetryInfo           ///< [out] The overclocking properties for the specified domain.
 	);
@@ -450,13 +452,13 @@ typedef struct _ctl_pci_state_t
 } ctl_pci_state_t;
 
 ctl_result_t CTL_APICALL
-ctlPciGetProperties(
+IGCL_PciGetProperties(
 	ctl_device_adapter_handle_t hDAhandle,          ///< [in][release] Handle to display adapter
 	ctl_pci_properties_t* pProperties               ///< [in,out] Will contain the PCI properties.
 	);
 
 ctl_result_t CTL_APICALL
-ctlPciGetState(
+IGCL_PciGetState(
 	ctl_device_adapter_handle_t hDAhandle,          ///< [in][release] Handle to display adapter
 	ctl_pci_state_t* pState                         ///< [in,out] Will contain the PCI properties.
 	);
@@ -473,7 +475,7 @@ typedef struct _ctl_mem_state_t
 } ctl_mem_state_t;
 
 ctl_result_t CTL_APICALL
-ctlEnumMemoryModules(
+IGCL_EnumMemoryModules(
 	ctl_device_adapter_handle_t hDAhandle,          ///< [in][release] Handle to display adapter
 	uint32_t* pCount,                               ///< [in,out] pointer to the number of components of this type.
 													///< if count is zero, then the driver shall update the value with the
@@ -489,7 +491,7 @@ ctlEnumMemoryModules(
 	);
 
 ctl_result_t CTL_APICALL
-ctlMemoryGetState(
+IGCL_MemoryGetState(
 	ctl_mem_handle_t hMemory,                       ///< [in] Handle for the component.
 	ctl_mem_state_t* pState                         ///< [in,out] Will contain the current health and allocated memory.
 );

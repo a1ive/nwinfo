@@ -48,11 +48,11 @@ static void* igcl_gpu_init(PNWLIB_GPU_INFO info)
 	ctx->InitArgs.Version = 0;
 	memset(&ctx->InitArgs.ApplicationUID, 0, sizeof(ctl_application_id_t));
 
-	ctx->Result = ctlInit(&ctx->InitArgs, &ctx->ApiHandle);
+	ctx->Result = IGCL_Init(&ctx->InitArgs, &ctx->ApiHandle);
 	if (ctx->Result != CTL_RESULT_SUCCESS)
 		goto fail;
 
-	ctx->Result = ctlEnumerateDevices(ctx->ApiHandle, &ctx->AdapterCount, NULL);
+	ctx->Result = IGCL_EnumerateDevices(ctx->ApiHandle, &ctx->AdapterCount, NULL);
 	if (ctx->Result != CTL_RESULT_SUCCESS)
 		goto fail;
 	NWL_Debug(IGCL, "Found %u devices", ctx->AdapterCount);
@@ -61,7 +61,7 @@ static void* igcl_gpu_init(PNWLIB_GPU_INFO info)
 	if (ctx->Devices == NULL)
 		goto fail;
 
-	ctx->Result = ctlEnumerateDevices(ctx->ApiHandle, &ctx->AdapterCount, ctx->Devices);
+	ctx->Result = IGCL_EnumerateDevices(ctx->ApiHandle, &ctx->AdapterCount, ctx->Devices);
 	if (ctx->Result != CTL_RESULT_SUCCESS)
 		goto fail;
 
@@ -76,7 +76,7 @@ static void* igcl_gpu_init(PNWLIB_GPU_INFO info)
 		gpu->Props.Size = sizeof(ctl_device_adapter_properties_t);
 		gpu->Props.device_id_size = sizeof(LUID);
 		gpu->Props.Version = 2;
-		ctx->Result = ctlGetDeviceProperties(ctx->Devices[i], &gpu->Props);
+		ctx->Result = IGCL_GetDeviceProperties(ctx->Devices[i], &gpu->Props);
 		NWL_Debug(IGCL, "GetDeviceProperties [%u] %X", i, ctx->Result);
 		if (ctx->Result != CTL_RESULT_SUCCESS)
 			continue;
@@ -94,11 +94,11 @@ static void* igcl_gpu_init(PNWLIB_GPU_INFO info)
 			gpu->Props.pci_subsys_id, gpu->Props.pci_subsys_vendor_id, gpu->Props.rev_id);
 
 		gpu->Pci.Size = sizeof(ctl_pci_properties_t);
-		ctx->Result = ctlPciGetProperties(ctx->Devices[i], &gpu->Pci);
+		ctx->Result = IGCL_PciGetProperties(ctx->Devices[i], &gpu->Pci);
 		NWL_Debug(IGCL, "BDF %u:%u:%u",
 			gpu->Pci.address.bus, gpu->Pci.address.device, gpu->Pci.address.function);
 
-		ctx->Result = ctlEnumMemoryModules(ctx->Devices[i], &gpu->MemoryCount, NULL);
+		ctx->Result = IGCL_EnumMemoryModules(ctx->Devices[i], &gpu->MemoryCount, NULL);
 		NWL_Debug(IGCL, "%u memory handle(s)", gpu->MemoryCount);
 		if (gpu->MemoryCount > MAX_MEM_HANDLE)
 			gpu->MemoryCount = MAX_MEM_HANDLE;
@@ -110,7 +110,7 @@ fail:
 	free(ctx->List);
 	free(ctx->Devices);
 	if (ctx->ApiHandle)
-		ctlClose(ctx->ApiHandle);
+		IGCL_Close(ctx->ApiHandle);
 	free(ctx);
 	return NULL;
 }
@@ -146,7 +146,7 @@ static uint32_t igcl_gpu_get(void* data, NWLIB_GPU_DEV* dev, uint32_t dev_count)
 		info->PciDevice = gpu->Pci.address.device;
 		info->PciFunction = gpu->Pci.address.function;
 
-		ctx->Result = ctlPowerTelemetryGet(ctx->Devices[i], &ctx->Pt);
+		ctx->Result = IGCL_PowerTelemetryGet(ctx->Devices[i], &ctx->Pt);
 		if (ctx->Result != CTL_RESULT_SUCCESS)
 			continue;
 
@@ -197,7 +197,7 @@ static uint32_t igcl_gpu_get(void* data, NWLIB_GPU_DEV* dev, uint32_t dev_count)
 			}
 		}
 
-		ctx->Result = ctlEnumMemoryModules(ctx->Devices[i], &gpu->MemoryCount, gpu->Memory);
+		ctx->Result = IGCL_EnumMemoryModules(ctx->Devices[i], &gpu->MemoryCount, gpu->Memory);
 		if (ctx->Result == CTL_RESULT_SUCCESS)
 		{
 			ctl_mem_state_t state = { 0 };
@@ -206,7 +206,7 @@ static uint32_t igcl_gpu_get(void* data, NWLIB_GPU_DEV* dev, uint32_t dev_count)
 			info->FreeMemory = 0;
 			for (uint32_t j = 0; j < gpu->MemoryCount; j++)
 			{
-				ctx->Result = ctlMemoryGetState(gpu->Memory[j], &state);
+				ctx->Result = IGCL_MemoryGetState(gpu->Memory[j], &state);
 				if (ctx->Result != CTL_RESULT_SUCCESS)
 					continue;
 				info->FreeMemory += state.free;
@@ -230,7 +230,7 @@ static void igcl_gpu_free(void* data)
 		return;
 	free(ctx->List);
 	free(ctx->Devices);
-	ctlClose(ctx->ApiHandle);
+	IGCL_Close(ctx->ApiHandle);
 	free(ctx);
 }
 

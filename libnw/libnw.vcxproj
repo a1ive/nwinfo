@@ -291,7 +291,7 @@
     <ClCompile Include="gpu\amd_gpu.c" />
     <ClCompile Include="gpu\d3d_gpu.c" />
     <ClCompile Include="gpu\gpuz_shm.c" />
-    <ClCompile Include="gpu\igcl.cpp" />
+    <ClCompile Include="gpu\igcl.c" />
     <ClCompile Include="gpu\intel_gpu.c" />
     <ClCompile Include="gpu\nvapi.c" />
     <ClCompile Include="gpu\nvidia_gpu.c" />

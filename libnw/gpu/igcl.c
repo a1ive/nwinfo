@@ -2,8 +2,7 @@
 // Copyright (C) 2025 Intel Corporation
 
 #include <windows.h>
-#include <strsafe.h>
-#include <vector>
+#include <wchar.h>
 
 #include "igcl.h"
 
@@ -60,7 +59,7 @@ typedef ctl_result_t(CTL_APICALL* ctl_pfnMemoryGetState_t)(
 
 static HINSTANCE hinstLib = NULL;
 
-HINSTANCE GetLoaderHandle(void)
+static inline HINSTANCE GetLoaderHandle(void)
 {
 	return hinstLib;
 }
@@ -72,7 +71,7 @@ HINSTANCE GetLoaderHandle(void)
 #endif
 #define CTL_DLL_PATH_LEN 512
 
-ctl_result_t GetControlAPIDLLPath(ctl_init_args_t* pInitArgs, wchar_t* pwcDLLPath)
+static inline ctl_result_t GetControlAPIDLLPath(ctl_init_args_t* pInitArgs, wchar_t* pwcDLLPath)
 {
 	// Load the requested DLL based on major version in init args
 	uint16_t majorVersion = CTL_MAJOR_VERSION(pInitArgs->AppVersion);
@@ -84,11 +83,11 @@ ctl_result_t GetControlAPIDLLPath(ctl_init_args_t* pInitArgs, wchar_t* pwcDLLPat
 
 #if (CTL_IMPL_MAJOR_VERSION > 1)
 	if (majorVersion > 1)
-		StringCbPrintfW(pwcDLLPath,CTL_DLL_PATH_LEN,L"%s%d.dll", CTL_DLL_NAME, majorVersion);
+		swprintf(pwcDLLPath,CTL_DLL_PATH_LEN,L"%s%d.dll", CTL_DLL_NAME, majorVersion);
 	else // just control_api.dll
-		StringCbPrintfW(pwcDLLPath,CTL_DLL_PATH_LEN,L"%s.dll", CTL_DLL_NAME);
+		swprintf(pwcDLLPath,CTL_DLL_PATH_LEN,L"%s.dll", CTL_DLL_NAME);
 #else
-	StringCbPrintfW(pwcDLLPath,CTL_DLL_PATH_LEN,L"%s.dll", CTL_DLL_NAME);
+	swprintf(pwcDLLPath,CTL_DLL_PATH_LEN,L"%s.dll", CTL_DLL_NAME);
 #endif
 
 	return CTL_RESULT_SUCCESS;
@@ -110,31 +109,23 @@ ctl_result_t GetControlAPIDLLPath(ctl_init_args_t* pInitArgs, wchar_t* pwcDLLPat
 *     - ::CTL_RESULT_ERROR_UNSUPPORTED_VERSION - "Unsupported version"
 */
 ctl_result_t CTL_APICALL
-ctlInit(
+IGCL_Init(
 	ctl_init_args_t* pInitDesc,                     ///< [in][out] App's control API version
 	ctl_api_handle_t* phAPIHandle                   ///< [in][out][release] Control API handle
 	)
 {
 	ctl_result_t result = CTL_RESULT_ERROR_NOT_INITIALIZED;
 	
-	// special code - only for ctlInit()
+	// special code - only for IGCL_Init()
 	if (NULL == hinstLib)
 	{
-		std::vector<wchar_t> strDLLPath;
-		try
-		{
-			strDLLPath.resize(CTL_DLL_PATH_LEN);
-		}
-		catch (std::bad_alloc&)
-		{
-			return CTL_RESULT_ERROR_OUT_OF_DEVICE_MEMORY;
-		}
+		wchar_t dllPath[CTL_DLL_PATH_LEN];
 
-		result = GetControlAPIDLLPath(pInitDesc, strDLLPath.data());
+		result = GetControlAPIDLLPath(pInitDesc, dllPath);
 		if (result == CTL_RESULT_SUCCESS)
 		{
 			DWORD dwFlags = LOAD_LIBRARY_SEARCH_SYSTEM32;
-			hinstLib = LoadLibraryExW(strDLLPath.data(), NULL, dwFlags);
+			hinstLib = LoadLibraryExW(dllPath, NULL, dwFlags);
 			if (NULL == hinstLib)
 				result = CTL_RESULT_ERROR_LOAD;
 		}
@@ -167,7 +158,7 @@ ctlInit(
 *     - ::CTL_RESULT_ERROR_UNSUPPORTED_VERSION - "Unsupported version"
 */
 ctl_result_t CTL_APICALL
-ctlClose(
+IGCL_Close(
 	ctl_api_handle_t hAPIHandle                     ///< [in][release] Control API handle obtained during init call
 	)
 {
@@ -182,7 +173,7 @@ ctlClose(
 			result = pfnClose(hAPIHandle);
 	}
 
-	// special code - only for ctlClose()
+	// special code - only for IGCL_Close()
 	// might get CTL_RESULT_SUCCESS_STILL_OPEN_BY_ANOTHER_CALLER
 	// if its open by another caller do not free the instance handle
 	if(result == CTL_RESULT_SUCCESS)
@@ -212,7 +203,7 @@ ctlClose(
 *     - ::CTL_RESULT_ERROR_UNSUPPORTED_VERSION - "Unsupported version"
 */
 ctl_result_t CTL_APICALL
-ctlCheckDriverVersion(
+IGCL_CheckDriverVersion(
 	ctl_device_adapter_handle_t hDeviceAdapter,     ///< [in][release] handle to control device adapter
 	ctl_version_info_t version_info                 ///< [in][release] Driver version info
 	)
@@ -247,7 +238,7 @@ ctlCheckDriverVersion(
 *     - ::CTL_RESULT_ERROR_UNSUPPORTED_VERSION - "Unsupported version"
 */
 ctl_result_t CTL_APICALL
-ctlEnumerateDevices(
+IGCL_EnumerateDevices(
 	ctl_api_handle_t hAPIHandle,                    ///< [in][release] Applications should pass the Control API handle returned
 													///< by the CtlInit function 
 	uint32_t* pCount,                               ///< [in,out][release] pointer to the number of device instances. If count
@@ -290,7 +281,7 @@ ctlEnumerateDevices(
 *     - ::CTL_RESULT_ERROR_UNSUPPORTED_VERSION - "Unsupported version"
 */
 ctl_result_t CTL_APICALL
-ctlGetDeviceProperties(
+IGCL_GetDeviceProperties(
 	ctl_device_adapter_handle_t hDAhandle,          ///< [in][release] Handle to control device adapter
 	ctl_device_adapter_properties_t* pProperties    ///< [in,out][release] Query result for device properties
 	)
@@ -325,7 +316,7 @@ ctlGetDeviceProperties(
 *         + `nullptr == pTelemetryInfo`
 */
 ctl_result_t CTL_APICALL
-ctlPowerTelemetryGet(
+IGCL_PowerTelemetryGet(
 	ctl_device_adapter_handle_t hDeviceHandle,      ///< [in][release] Handle to display adapter
 	ctl_power_telemetry_t* pTelemetryInfo           ///< [out] The overclocking properties for the specified domain.
 	)
@@ -360,7 +351,7 @@ ctlPowerTelemetryGet(
 *         + `nullptr == pProperties`
 */
 ctl_result_t CTL_APICALL
-ctlPciGetProperties(
+IGCL_PciGetProperties(
 	ctl_device_adapter_handle_t hDAhandle,          ///< [in][release] Handle to display adapter
 	ctl_pci_properties_t* pProperties               ///< [in,out] Will contain the PCI properties.
 	)
@@ -397,7 +388,7 @@ ctlPciGetProperties(
 *         + `nullptr == pState`
 */
 ctl_result_t CTL_APICALL
-ctlPciGetState(
+IGCL_PciGetState(
 	ctl_device_adapter_handle_t hDAhandle,          ///< [in][release] Handle to display adapter
 	ctl_pci_state_t* pState                         ///< [in,out] Will contain the PCI properties.
 	)
@@ -433,7 +424,7 @@ ctlPciGetState(
 *         + `nullptr == pCount`
 */
 ctl_result_t CTL_APICALL
-ctlEnumMemoryModules(
+IGCL_EnumMemoryModules(
 	ctl_device_adapter_handle_t hDAhandle,          ///< [in][release] Handle to display adapter
 	uint32_t* pCount,                               ///< [in,out] pointer to the number of components of this type.
 													///< if count is zero, then the driver shall update the value with the
@@ -478,7 +469,7 @@ ctlEnumMemoryModules(
 *         + `nullptr == pState`
 */
 ctl_result_t CTL_APICALL
-ctlMemoryGetState(
+IGCL_MemoryGetState(
 	ctl_mem_handle_t hMemory,                       ///< [in] Handle for the component.
 	ctl_mem_state_t* pState                         ///< [in,out] Will contain the current health and allocated memory.
 	)
