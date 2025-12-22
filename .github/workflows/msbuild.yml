@@ -116,6 +116,8 @@ jobs:
           libcdi\libcdi.h
           libcdi\README.md
           libcdi\LICENSE.txt
+          liblhm\lhm.h
+          liblhm\LICENSE.txt
           x64\DLLRelease\libnw.dll
           x64\DLLRelease\libnw.lib
           x64\DLLRelease\libnw.pdb
@@ -126,6 +128,10 @@ jobs:
           x64\Release\libcpuid.lib
           x64\Release\libcpuid.pdb
           x64\Release\cpuid_tool.exe
+          x64\Release\liblhm.dll
+          x64\Release\liblhm.lib
+          x64\Release\liblhm.pdb
+          x64\Release\lhmtest.exe
           x64\Release\libnw.lib
           x64\Release\libnw.pdb
           Win32\DLLRelease\libnw.dll

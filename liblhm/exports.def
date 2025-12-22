@@ -1,0 +1,8 @@
+EXPORTS
+LhmInitialize
+LhmGetToggleCount
+LhmGetToggleInfo
+LhmSetToggleEnabled
+LhmEnumerateSensors
+LhmShutdown
+LhmGetLastError
