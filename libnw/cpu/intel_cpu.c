@@ -21,6 +21,7 @@
 #define MSR_PP1_ENERGY_STATUS  0x641
 #define MSR_PLATFORM_INFO      0xCE
 #define MSR_IA32_BIOS_SIGN_ID  0x8B
+#define MSR_FSB_FREQ           0xCD
 
 static inline int
 read_intel_msr(struct wr0_drv_t* handle, uint32_t msr_index, uint8_t highbit, uint8_t lowbit, uint64_t* result)
@@ -73,8 +74,8 @@ static double get_cur_multiplier(struct msr_info_t* info)
 		goto fail;
 	return (double)reg;
 fail:
-	if (!read_intel_msr(info->handle, MSR_IA32_EBL_CR_POWERON, 63, 0, &reg))
-		return (double)((reg >> 22) & 0x1f);
+	if (!read_intel_msr(info->handle, MSR_IA32_EBL_CR_POWERON, 26, 22, &reg))
+		return (double)reg;
 	return (double)CPU_INVALID_VALUE / 100;
 }
 
@@ -104,8 +105,8 @@ static double get_max_multiplier(struct msr_info_t* info)
 	return (double)reg;
 
 fail:
-	if (!read_intel_msr(info->handle, MSR_IA32_PERF_STATUS, 63, 0, &reg))
-		return (double)((reg >> 40) & 0x1f);
+	if (!read_intel_msr(info->handle, MSR_IA32_PERF_STATUS, 44, 40, &reg))
+		return (double)reg;
 	return (double)CPU_INVALID_VALUE / 100;
 }
 
@@ -133,7 +134,7 @@ static int get_temperature(struct msr_info_t* info)
 	if (read_intel_msr(info->handle, MSR_IA32_THERM_STATUS, 31, 31, &read_valid))
 		goto fail;
 	if (read_intel_msr(info->handle, MSR_IA32_TEMPERATURE_TARGET, 23, 16, &tj))
-		goto fail;
+		tj = 100;
 	if (read_valid)
 		return (int)(tj - delta);
 
@@ -149,7 +150,7 @@ static int get_pkg_temperature(struct msr_info_t* info)
 	if (read_intel_msr(info->handle, MSR_IA32_PACKAGE_THERM_STATUS, 22, 16, &delta))
 		goto fail;
 	if (read_intel_msr(info->handle, MSR_IA32_TEMPERATURE_TARGET, 23, 16, &tj))
-		goto fail;
+		tj = 100;
 	return (int)(tj - delta);
 fail:
 	return CPU_INVALID_VALUE;
@@ -227,6 +228,19 @@ static double get_bus_clock(struct msr_info_t* info)
 		goto fail;
 	return (double)info->cpu_clock / reg;
 fail:
+	if (!read_intel_msr(info->handle, MSR_FSB_FREQ, 2, 0, &reg))
+	{
+		switch (reg)
+		{
+		case 0: return 266.67;
+		case 1: return 133.33;
+		case 2: return 200.00;
+		case 3: return 166.67;
+		case 4: return 333.33;
+		case 5: return 100.00;
+		case 6: return 400.00;
+		}
+	}
 	return (double)CPU_INVALID_VALUE / 100;
 }
 

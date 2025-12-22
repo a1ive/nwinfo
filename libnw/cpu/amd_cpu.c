@@ -347,75 +347,24 @@ static int amd_k8_temperature(struct msr_info_t* info)
 }
 
 #define SMU_REPORTED_TEMP_CTRL_OFFSET              0xD8200CA4
-
-#define FAMILY_10H_MISCELLANEOUS_CONTROL_DEVICE_ID 0x1203
-#define FAMILY_11H_MISCELLANEOUS_CONTROL_DEVICE_ID 0x1303
-#define FAMILY_12H_MISCELLANEOUS_CONTROL_DEVICE_ID 0x1703
-#define FAMILY_14H_MISCELLANEOUS_CONTROL_DEVICE_ID 0x1703
-#define FAMILY_15H_MODEL_00_MISC_CONTROL_DEVICE_ID 0x1603
-#define FAMILY_15H_MODEL_10_MISC_CONTROL_DEVICE_ID 0x1403
-#define FAMILY_15H_MODEL_30_MISC_CONTROL_DEVICE_ID 0x141D
-#define FAMILY_15H_MODEL_60_MISC_CONTROL_DEVICE_ID 0x1573
-#define FAMILY_15H_MODEL_70_MISC_CONTROL_DEVICE_ID 0x15B3
-#define FAMILY_16H_MODEL_00_MISC_CONTROL_DEVICE_ID 0x1533
-#define FAMILY_16H_MODEL_30_MISC_CONTROL_DEVICE_ID 0x1583
+#define PCI_REPORTED_TEMP_CTRL_REGISTER            0xA4
 
 static int amd_k10_temperature(struct msr_info_t* info)
 {
 	uint32_t value = 0;
-	uint32_t addr;
-	uint16_t did = 0;
 	bool smu = false;
-	switch (info->id->x86.ext_family)
+	if (info->id->x86.ext_family = 0x15)
 	{
-	case 0x10:
-		did = FAMILY_10H_MISCELLANEOUS_CONTROL_DEVICE_ID;
-		break;
-	case 0x11:
-		did = FAMILY_11H_MISCELLANEOUS_CONTROL_DEVICE_ID;
-		break;
-	case 0x12:
-		did = FAMILY_12H_MISCELLANEOUS_CONTROL_DEVICE_ID;
-		break;
-	case 0x14:
-		did = FAMILY_14H_MISCELLANEOUS_CONTROL_DEVICE_ID;
-		break;
-	case 0x15:
 		switch (info->id->x86.ext_model & 0xF0)
 		{
-		case 0x00:
-			did = FAMILY_15H_MODEL_00_MISC_CONTROL_DEVICE_ID;
-			break;
-		case 0x10:
-			did = FAMILY_15H_MODEL_10_MISC_CONTROL_DEVICE_ID;
-			break;
-		case 0x30:
-			did = FAMILY_15H_MODEL_30_MISC_CONTROL_DEVICE_ID;
-			break;
 		case 0x60:
-			did = FAMILY_15H_MODEL_60_MISC_CONTROL_DEVICE_ID;
-			smu = true;
-			break;
 		case 0x70:
-			did = FAMILY_15H_MODEL_70_MISC_CONTROL_DEVICE_ID;
 			smu = true;
 			break;
 		}
-		break;
-	case 0x16:
-		switch (info->id->x86.ext_model & 0xF0)
-		{
-		case 0x00:
-			did = FAMILY_16H_MODEL_00_MISC_CONTROL_DEVICE_ID;
-			break;
-		case 0x30:
-			did = FAMILY_16H_MODEL_30_MISC_CONTROL_DEVICE_ID;
-			break;
-		};
-		break;
 	}
 
-	if (smu)
+	if (info->id->x86.ext_family = 0x15)
 	{
 		if (info->handle->type == WR0_DRIVER_PAWNIO)
 		{
@@ -435,22 +384,17 @@ static int amd_k10_temperature(struct msr_info_t* info)
 		if (info->handle->type == WR0_DRIVER_PAWNIO)
 		{
 			struct pio_mod_t* pio = &info->handle->pio_amd10;
-			ULONG64 in[2] = { 0, 0xA4 }; // cpu index, offset
+			ULONG64 in[2] = { 0, PCI_REPORTED_TEMP_CTRL_REGISTER }; // cpu index, offset
 			ULONG64 out;
 			if (WR0_ExecPawn(info->handle, pio, "ioctl_read_miscctl", in, 2, &out, 1, NULL) == 0)
 				value = (uint32_t)out;
 		}
 		else
 		{
-			addr = WR0_FindPciById(info->handle, AMD_PCI_VENDOR_ID, did, info->id->index);
-			if (addr == 0xFFFFFFFF)
-				return CPU_INVALID_VALUE;
-			value = WR0_RdPciConf32(info->handle, addr, 0xA4);
+			value = WR0_RdPciConf32(info->handle, PciBusDevFunc(0, 24, 3), PCI_REPORTED_TEMP_CTRL_REGISTER);
 		}
 	}
-	if ((info->id->x86.ext_family == 0x15 ||
-		info->id->x86.ext_family == 0x16)
-		&& (value & 0x30000) == 0x3000)
+	if ((info->id->x86.ext_family == 0x15 || info->id->x86.ext_family == 0x16) && (value & 0x30000) == 0x3000)
 	{
 		if (info->id->x86.ext_family == 0x15 && (info->id->x86.ext_model & 0xF0) == 0x00)
 			return (int)(((value >> 21) & 0x7FC) / 8.0f) - 49;
