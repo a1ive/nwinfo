@@ -2,7 +2,8 @@
 
 #include <libnw.h>
 #include <version.h>
-#include "../libcdi/libcdi.h"
+#include "libcdi/libcdi.h"
+#include "sensor/sensors.h"
 
 #define OPTPARSE_IMPLEMENTATION
 #define OPTPARSE_API static
@@ -75,7 +76,7 @@ static struct optparse_option nwOptions[] =
 	{ "gpu", 0, OPTPARSE_NONE },
 	{ "font", 0, OPTPARSE_NONE },
 	{ "device", 0, OPTPARSE_OPTIONAL },
-	{ "sensors", 0, OPTPARSE_NONE },
+	{ "sensors", 0, OPTPARSE_OPTIONAL },
 	{ 0, 0, 0 },
 };
 
@@ -162,7 +163,11 @@ static void nwinfo_help(void)
 		"  --device[=TYPE]  Print device tree.\n"
 		"                   TYPE specifies the type of the devices,\n"
 		"                   e.g. 'ACPI', 'SWD', 'PCI' or 'USB'.\n"
-		"  --sensors        Print sensors.\n");
+		"  --sensors[=SRC,..]\n"
+		"                   Print sensors.\n"
+		"                   SRC specifies the provider of sensors.\n"
+		"                   Available providers are:\n"
+		"                   'LHM', 'GPU', 'DIMM' and 'HWINFO'.\n");
 }
 
 typedef struct _NW_ARG_FILTER
@@ -428,8 +433,18 @@ int main(int argc, char* argv[])
 			nwContext.DevTree = TRUE;
 			break;
 		case NW_OPT_SENSORS:
+		{
+			NW_ARG_FILTER filter[] =
+			{
+				{"LHM", NWL_SENSOR_LHM},
+				{"GPU", NWL_SENSOR_GPU},
+				{"DIMM", NWL_SENSOR_DIMM},
+				{"HWINFO", NWL_SENSOR_HWINFO},
+			};
+			nwinfo_get_opts(options.optarg, &nwContext.NwSensorFlags, ARRAYSIZE(filter), filter, NULL);
 			nwContext.Sensors = TRUE;
 			break;
+		}
 		case NW_OPT_DEBUG:
 			nwContext.Debug = TRUE;
 			break;

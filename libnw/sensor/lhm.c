@@ -85,6 +85,7 @@ static void lhm_get(PNODE node)
 sensor_t sensor_lhm =
 {
 	.name = "LibreHardwareMonitor",
+	.flag = NWL_SENSOR_LHM,
 	.init = lhm_init,
 	.get = lhm_get,
 	.fini = lhm_fini,

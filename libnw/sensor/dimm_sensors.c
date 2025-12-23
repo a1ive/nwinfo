@@ -43,6 +43,7 @@ static void dimm_get(PNODE node)
 sensor_t sensor_dimm =
 {
 	.name = "DIMM",
+	.flag = NWL_SENSOR_DIMM,
 	.init = dimm_init,
 	.get = dimm_get,
 	.fini = dimm_fini,

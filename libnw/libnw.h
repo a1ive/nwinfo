@@ -121,6 +121,8 @@ typedef struct _NWLIB_CONTEXT
 
 	struct _NWLIB_GPU_INFO* NwGpu;
 
+	UINT64 NwSensorFlags;
+
 	struct wr0_drv_t* NwDrv;
 	UINT CodePage;
 	struct _NODE* NwRoot;

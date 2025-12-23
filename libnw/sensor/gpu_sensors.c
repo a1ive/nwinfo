@@ -46,6 +46,7 @@ static void gpu_get(PNODE node)
 sensor_t sensor_gpu =
 {
 	.name = "GPU",
+	.flag = NWL_SENSOR_GPU,
 	.init = gpu_init,
 	.get = gpu_get,
 	.fini = gpu_fini,

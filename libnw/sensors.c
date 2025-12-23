@@ -23,7 +23,7 @@ static sensor_t* sensor_list[] =
 
 static bool sensor_initialized = false;
 
-void NWL_InitSensors(void)
+void NWL_InitSensors(uint64_t flags)
 {
 	if (sensor_initialized)
 		return;
@@ -32,7 +32,8 @@ void NWL_InitSensors(void)
 		sensor_t* s = sensor_list[i];
 		if (s == NULL)
 			continue;
-		s->enabled = s->init();
+		if (flags == 0 || (flags & s->flag))
+			s->enabled = s->init();
 	}
 	sensor_initialized = true;
 }
@@ -77,7 +78,7 @@ PNODE NW_Sensors(VOID)
 	if (NWLC->Sensors)
 		NWL_NodeAppendChild(NWLC->NwRoot, node);
 
-	NWL_InitSensors();
+	NWL_InitSensors(NWLC->NwSensorFlags);
 	NWL_GetSensors(node);
 	return node;
 }

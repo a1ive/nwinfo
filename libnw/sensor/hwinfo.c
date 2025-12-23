@@ -131,6 +131,7 @@ static void hwinfo_get(PNODE node)
 sensor_t sensor_hwinfo =
 {
 	.name = "HWiNFO",
+	.flag = NWL_SENSOR_HWINFO,
 	.init = hwinfo_init,
 	.get = hwinfo_get,
 	.fini = hwinfo_fini,
