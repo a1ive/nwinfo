@@ -291,7 +291,6 @@
     <ClCompile Include="gpu\adl.c" />
     <ClCompile Include="gpu\amd_gpu.c" />
     <ClCompile Include="gpu\d3d_gpu.c" />
-    <ClCompile Include="gpu\gpuz_shm.c" />
     <ClCompile Include="gpu\igcl.c" />
     <ClCompile Include="gpu\intel_gpu.c" />
     <ClCompile Include="gpu\nvapi.c" />
@@ -306,8 +305,9 @@
     <ClCompile Include="productpolicy.c" />
     <ClCompile Include="sensors.c" />
     <ClCompile Include="sensor\dimm_sensors.c" />
+    <ClCompile Include="sensor\gpuz_shmem.c" />
     <ClCompile Include="sensor\gpu_sensors.c" />
-    <ClCompile Include="sensor\hwinfo.c" />
+    <ClCompile Include="sensor\hwinfo_shmem.c" />
     <ClCompile Include="sensor\lhm.c" />
     <ClCompile Include="smb.c" />
     <ClCompile Include="smbios.c" />

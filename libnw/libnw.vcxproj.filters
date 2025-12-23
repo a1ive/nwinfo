@@ -227,9 +227,6 @@
     <ClCompile Include="gpu\d3d_gpu.c">
       <Filter>gpu</Filter>
     </ClCompile>
-    <ClCompile Include="gpu\gpuz_shm.c">
-      <Filter>gpu</Filter>
-    </ClCompile>
     <ClCompile Include="smbus\smbus_i801.c">
       <Filter>smbus</Filter>
     </ClCompile>
@@ -284,7 +281,10 @@
     <ClCompile Include="sensor\dimm_sensors.c">
       <Filter>sensor</Filter>
     </ClCompile>
-    <ClCompile Include="sensor\hwinfo.c">
+    <ClCompile Include="sensor\hwinfo_shmem.c">
+      <Filter>sensor</Filter>
+    </ClCompile>
+    <ClCompile Include="sensor\gpuz_shmem.c">
       <Filter>sensor</Filter>
     </ClCompile>
   </ItemGroup>

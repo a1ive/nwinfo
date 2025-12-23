@@ -167,7 +167,7 @@ static void nwinfo_help(void)
 		"                   Print sensors.\n"
 		"                   SRC specifies the provider of sensors.\n"
 		"                   Available providers are:\n"
-		"                   'LHM', 'GPU', 'DIMM' and 'HWINFO'.\n");
+		"                   'LHM', 'GPU', 'DIMM', 'HWINFO' and 'GPU-Z'.\n");
 }
 
 typedef struct _NW_ARG_FILTER
@@ -440,6 +440,7 @@ int main(int argc, char* argv[])
 				{"GPU", NWL_SENSOR_GPU},
 				{"DIMM", NWL_SENSOR_DIMM},
 				{"HWINFO", NWL_SENSOR_HWINFO},
+				{"GPU-Z", NWL_SENSOR_GPUZ},
 			};
 			nwinfo_get_opts(options.optarg, &nwContext.NwSensorFlags, ARRAYSIZE(filter), filter, NULL);
 			nwContext.Sensors = TRUE;

@@ -124,7 +124,7 @@ static void hwinfo_get(PNODE node)
 		PNODE key = NWL_NodeEnumChild(node, reading->dwSensorIndex);
 		if (strcmp(sensor->szSensorNameOrig, key->name) != 0)
 			continue;
-		NWL_NodeAttrSetf(key, reading->szLabelOrig, NAFLG_FMT_KEY_QUOTE, "%.2f", reading->Value);
+		NWL_NodeAttrSetf(key, reading->szLabelOrig, NAFLG_FMT_KEY_QUOTE | NAFLG_FMT_NUMERIC, "%.2f", reading->Value);
 	}
 }
 

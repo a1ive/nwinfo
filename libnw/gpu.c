@@ -14,7 +14,6 @@ extern NWLIB_GPU_DRV gpu_drv_intel;
 extern NWLIB_GPU_DRV gpu_drv_amd;
 extern NWLIB_GPU_DRV gpu_drv_nvidia;
 extern NWLIB_GPU_DRV gpu_drv_d3d;
-extern NWLIB_GPU_DRV gpu_drv_gpuz;
 
 PNWLIB_GPU_INFO NWL_InitGpu(VOID)
 {
@@ -26,7 +25,6 @@ PNWLIB_GPU_INFO NWL_InitGpu(VOID)
 	info->Driver[NWLIB_GPU_DRV_AMD] = &gpu_drv_amd;
 	info->Driver[NWLIB_GPU_DRV_NVIDIA] = &gpu_drv_nvidia;
 	info->Driver[NWLIB_GPU_DRV_D3D] = &gpu_drv_d3d;
-	info->Driver[NWLIB_GPU_DRV_GPUZ] = &gpu_drv_gpuz;
 
 	for (int i = 0; i < NWLIB_GPU_DRV_COUNT; i++)
 	{
