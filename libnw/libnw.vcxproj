@@ -305,6 +305,7 @@
     <ClCompile Include="pci.c" />
     <ClCompile Include="productpolicy.c" />
     <ClCompile Include="sensors.c" />
+    <ClCompile Include="sensor\gpu_sensors.c" />
     <ClCompile Include="sensor\lhm.c" />
     <ClCompile Include="smb.c" />
     <ClCompile Include="smbios.c" />

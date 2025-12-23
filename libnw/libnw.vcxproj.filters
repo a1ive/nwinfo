@@ -278,6 +278,9 @@
     <ClCompile Include="sensor\lhm.c">
       <Filter>sensor</Filter>
     </ClCompile>
+    <ClCompile Include="sensor\gpu_sensors.c">
+      <Filter>sensor</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

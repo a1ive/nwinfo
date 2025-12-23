@@ -9,10 +9,12 @@
 #include "sensor/sensors.h"
 
 extern sensor_t sensor_lhm;
+extern sensor_t sensor_gpu;
 
 static sensor_t* sensor_list[] =
 {
 	&sensor_lhm,
+	&sensor_gpu,
 };
 
 static bool sensor_initialized = false;
