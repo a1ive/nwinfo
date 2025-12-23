@@ -47,7 +47,9 @@ draw_monitors(struct nk_context* ctx)
 static VOID
 draw_gpu(struct nk_context* ctx)
 {
-	PNODE pci03 = g_ctx.gpu_info.PciList;
+	if (!g_ctx.lib.NwGpu)
+		return;
+	PNODE pci03 = g_ctx.lib.NwGpu->PciList;
 	INT pci03_count = NWL_NodeChildCount(pci03);
 	for (INT i = 0; i < pci03_count; i++)
 	{

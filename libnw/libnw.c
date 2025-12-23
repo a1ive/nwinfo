@@ -6,6 +6,7 @@
 #include <libcpuid.h>
 #include "../libcdi/libcdi.h"
 #include "smbus/smbus.h"
+#include "gpu/gpu.h"
 #include "sensor/sensors.h"
 
 PNWLIB_CONTEXT NWLC = NULL;
@@ -154,8 +155,8 @@ VOID NW_Fini(VOID)
 		free(NWLC->NwSmbios);
 	if (NWLC->NwSmart)
 		cdi_destroy_smart(NWLC->NwSmart);
-	if (NWLC->NwSmbus)
-		SM_Free(NWLC->NwSmbus);
+	SM_Free(NWLC->NwSmbus);
+	NWL_FreeGpu(NWLC->NwGpu);
 	cpuid_free_system_id(NWLC->NwCpuid);
 	free(NWLC->NwCpuid);
 	cpuid_free_raw_data_array(NWLC->NwCpuRaw);
@@ -163,8 +164,7 @@ VOID NW_Fini(VOID)
 	NWL_FreeSensors();
 	WR0_CloseDriver(NWLC->NwDrv);
 	WR0_CloseMutexes();
-	if (NWLC->NwRoot)
-		NWL_NodeFree(NWLC->NwRoot, 1);
+	NWL_NodeFree(NWLC->NwRoot, 1);
 	if (NWLC->NwFile && NWLC->NwFile != stdout)
 		fclose(NWLC->NwFile);
 	free(NWLC->ErrLog);
@@ -172,6 +172,8 @@ VOID NW_Fini(VOID)
 	free(NWLC->NwUsbIds.Ids);
 	free(NWLC->NwPnpIds.Ids);
 	free(NWLC->NwJep106.Ids);
+	NWL_Debug("NW", "Exit");
+	NWL_Debug = FakeDebugPrint;
 	ZeroMemory(NWLC, sizeof(NWLIB_CONTEXT));
 	NWLC = NULL;
 }

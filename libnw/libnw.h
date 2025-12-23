@@ -26,6 +26,7 @@ struct _CDI_SMART;
 struct cpu_raw_data_array_t;
 struct system_id_t;
 struct smbus_context;
+struct _NWLIB_GPU_INFO;
 
 typedef struct _NWLIB_IDS
 {
@@ -117,6 +118,8 @@ typedef struct _NWLIB_CONTEXT
 	UINT64 NwSmartFlags;
 
 	struct smbus_context* NwSmbus;
+
+	struct _NWLIB_GPU_INFO* NwGpu;
 
 	struct wr0_drv_t* NwDrv;
 	UINT CodePage;

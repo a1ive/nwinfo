@@ -50,7 +50,6 @@ gnwinfo_ctx_update_1s(void)
 	DWORD cpu_freq = 0;
 	NWLIB_CPU_INFO* cpu_info = NULL;
 	NWLIB_CUR_DISPLAY cur_display = { 0 };
-	NWLIB_GPU_INFO gpu_info;
 	UINT audio_count = 0;
 	NWLIB_AUDIO_DEV* audio = NULL;
 	CHAR sys_uptime[NWL_STR_SIZE] = { 0 };
@@ -67,7 +66,6 @@ gnwinfo_ctx_update_1s(void)
 		if (cpu_info)
 			memcpy(cpu_info, g_ctx.cpu_info, (size_t)cpu_count * sizeof(NWLIB_CPU_INFO));
 	}
-	gpu_info = g_ctx.gpu_info;
 	mem_sensors = g_ctx.mem_sensors;
 	ReleaseSRWLockShared(&g_ctx.lock);
 
@@ -81,7 +79,6 @@ gnwinfo_ctx_update_1s(void)
 	if (cpu_info && cpu_count > 0)
 		NWL_GetCpuMsr(cpu_count, cpu_info);
 	NWL_GetCurDisplay(g_ctx.wnd, &cur_display);
-	NWL_GetGpuInfo(&gpu_info);
 	if (main_flag & MAIN_INFO_AUDIO)
 		audio = NWL_GetAudio(&audio_count);
 	NWL_GetMemSensors(g_ctx.lib.NwSmbus, &mem_sensors);
@@ -97,19 +94,16 @@ gnwinfo_ctx_update_1s(void)
 	if (cpu_info && g_ctx.cpu_info && cpu_count == g_ctx.cpu_count)
 		memcpy(g_ctx.cpu_info, cpu_info, (size_t)cpu_count * sizeof(NWLIB_CPU_INFO));
 	g_ctx.cur_display = cur_display;
-	g_ctx.gpu_info = gpu_info;
+	NWL_GetGpuInfo(g_ctx.lib.NwGpu);
 	NWLIB_AUDIO_DEV* old_audio = g_ctx.audio;
 	g_ctx.audio = audio;
 	g_ctx.audio_count = audio_count;
 	g_ctx.mem_sensors = mem_sensors;
 	ReleaseSRWLockExclusive(&g_ctx.lock);
 
-	if (old_network)
-		NWL_NodeFree(old_network, 1);
-	if (old_audio)
-		free(old_audio);
-	if (cpu_info)
-		free(cpu_info);
+	NWL_NodeFree(old_network, 1);
+	free(old_audio);
+	free(cpu_info);
 }
 
 static void
@@ -122,8 +116,7 @@ gnwinfo_ctx_update_battery(void)
 	g_ctx.battery = battery;
 	ReleaseSRWLockExclusive(&g_ctx.lock);
 
-	if (old_battery)
-		NWL_NodeFree(old_battery, 1);
+	NWL_NodeFree(old_battery, 1);
 }
 
 static void
@@ -145,8 +138,7 @@ gnwinfo_ctx_update_disk(void)
 	g_ctx.disk = disk;
 	ReleaseSRWLockExclusive(&g_ctx.lock);
 
-	if (old_disk)
-		NWL_NodeFree(old_disk, 1);
+	NWL_NodeFree(old_disk, 1);
 }
 
 static void
@@ -159,29 +151,24 @@ gnwinfo_ctx_update_smb(void)
 	g_ctx.smb = smb;
 	ReleaseSRWLockExclusive(&g_ctx.lock);
 
-	if (old_smb)
-		NWL_NodeFree(old_smb, 1);
+	NWL_NodeFree(old_smb, 1);
 }
 
 static void
 gnwinfo_ctx_update_display(void)
 {
-	AcquireSRWLockExclusive(&g_ctx.lock);
-	NWL_FreeGpu(&g_ctx.gpu_info);
-	ReleaseSRWLockExclusive(&g_ctx.lock);
-
-	NWLIB_GPU_INFO gpu_info;
-	NWL_InitGpu(&gpu_info);
+	PNWLIB_GPU_INFO gpu = NWL_InitGpu();
 	PNODE edid = NW_Edid();
 
 	AcquireSRWLockExclusive(&g_ctx.lock);
-	g_ctx.gpu_info = gpu_info;
+	PNWLIB_GPU_INFO old_gpu = g_ctx.lib.NwGpu;
+	g_ctx.lib.NwGpu = gpu;
 	PNODE old_edid = g_ctx.edid;
 	g_ctx.edid = edid;
 	ReleaseSRWLockExclusive(&g_ctx.lock);
 
-	if (old_edid)
-		NWL_NodeFree(old_edid, 1);
+	NWL_FreeGpu(old_gpu);
+	NWL_NodeFree(old_edid, 1);
 }
 
 static void
@@ -199,8 +186,7 @@ gnwinfo_ctx_update_spd(void)
 	g_ctx.spd = spd;
 	ReleaseSRWLockExclusive(&g_ctx.lock);
 
-	if (old_spd)
-		NWL_NodeFree(old_spd, 1);
+	NWL_NodeFree(old_spd, 1);
 }
 
 static const struct
@@ -405,8 +391,6 @@ gnwinfo_ctx_exit(void)
 
 	if (g_ctx.cpu_info)
 		free(g_ctx.cpu_info);
-
-	NWL_FreeGpu(&g_ctx.gpu_info);
 
 	if (g_ctx.audio)
 		free(g_ctx.audio);
