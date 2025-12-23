@@ -307,6 +307,7 @@
     <ClCompile Include="sensors.c" />
     <ClCompile Include="sensor\dimm_sensors.c" />
     <ClCompile Include="sensor\gpu_sensors.c" />
+    <ClCompile Include="sensor\hwinfo.c" />
     <ClCompile Include="sensor\lhm.c" />
     <ClCompile Include="smb.c" />
     <ClCompile Include="smbios.c" />

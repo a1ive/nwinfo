@@ -11,12 +11,14 @@
 extern sensor_t sensor_lhm;
 extern sensor_t sensor_gpu;
 extern sensor_t sensor_dimm;
+extern sensor_t sensor_hwinfo;
 
 static sensor_t* sensor_list[] =
 {
 	&sensor_lhm,
 	&sensor_gpu,
 	&sensor_dimm,
+	&sensor_hwinfo,
 };
 
 static bool sensor_initialized = false;

@@ -284,6 +284,9 @@
     <ClCompile Include="sensor\dimm_sensors.c">
       <Filter>sensor</Filter>
     </ClCompile>
+    <ClCompile Include="sensor\hwinfo.c">
+      <Filter>sensor</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
