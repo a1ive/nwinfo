@@ -166,6 +166,7 @@ typedef enum {
 	VENDOR_VORTEX86,   /*!< DM&P Vortex86 CPU */
 	VENDOR_VIA,        /*!< x86 CPU by VIA */
 	VENDOR_ZHAOXIN,    /*!< x86 CPU by Zhaoxin */
+	VENDOR_VIRTCPU,    /*!< Windows on ARM (x86), VPC7 */
 	VENDOR_ARM,        /*!< ARM CPU */
 	VENDOR_BROADCOM,   /*!< Broadcom Corporation CPU */
 	VENDOR_CAVIUM,     /*!< Cavium Inc. CPU */

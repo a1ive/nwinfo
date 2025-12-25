@@ -160,6 +160,7 @@ CpuVendorToStr(cpu_vendor_t vendor)
 	case VENDOR_VORTEX86: return "DM&P Vortex86";
 	case VENDOR_VIA: return "VIA";
 	case VENDOR_ZHAOXIN: return "Zhaoxin";
+	case VENDOR_VIRTCPU: return "Microsoft";
 	default: return "Unknown";
 	}
 }

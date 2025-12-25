@@ -1077,8 +1077,10 @@ static cpu_vendor_t cpuid_vendor_identify(const uint32_t *raw_vendor, char *vend
 	matchtable[] = {
 		/* source: http://www.sandpile.org/ia32/cpuid.htm */
 		{ VENDOR_INTEL		, "GenuineIntel" },
+		{ VENDOR_INTEL		, "GenuineIotel" }, // WTF
 		{ VENDOR_AMD		, "AuthenticAMD" },
 		{ VENDOR_AMD		, "AMDisbetter!" }, // AMD K5
+		{ VENDOR_AMD		, "AMD ISBETTER" },
 		{ VENDOR_CYRIX		, "CyrixInstead" },
 		{ VENDOR_NEXGEN		, "NexGenDriven" },
 		{ VENDOR_TRANSMETA	, "GenuineTMx86" },
@@ -1092,6 +1094,7 @@ static cpu_vendor_t cpuid_vendor_identify(const uint32_t *raw_vendor, char *vend
 		{ VENDOR_VORTEX86	, "Vortex86 SoC" },
 		{ VENDOR_VIA		, "VIA VIA VIA " },
 		{ VENDOR_ZHAOXIN	, "  Shanghai  " },
+		{ VENDOR_VIRTCPU	, "Virtual CPU " },
 	};
 
 	memcpy(vendor_str + 0, &raw_vendor[1], 4);
@@ -2485,6 +2488,9 @@ void cpuid_get_cpu_list(cpu_vendor_t vendor, struct cpu_list_t* list)
 			break;
 		case VENDOR_NSC:
 			make_list_from_string("Geode GXm,Geode GXLV,Geode GX1,Geode GX2", list);
+			break;
+		case VENDOR_VIRTCPU:
+			make_list_from_string("Microsoft Virtual PC 7,Microsoft x86-to-ARM", list);
 			break;
 		case VENDOR_ARM:
 		case VENDOR_BROADCOM:
