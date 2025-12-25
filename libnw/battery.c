@@ -1,5 +1,4 @@
 // SPDX-License-Identifier: Unlicense
-#define INITGUID
 #include <windows.h>
 #include <winbase.h>
 #include <stdio.h>

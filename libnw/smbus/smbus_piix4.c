@@ -319,6 +319,7 @@ static int PIIX4Init(smbus_t* ctx)
 	return SM_OK;
 }
 
+#ifdef LIBNW_SMBUS_CLOCK
 static uint64_t PIIX4GetClock(smbus_t* ctx)
 {
 	return (66ULL * 1000000) / (WR0_RdIo8(ctx->drv, SMBTIMING) * 4);
@@ -331,6 +332,7 @@ static int PIIX4SetClock(smbus_t* ctx, uint64_t freq)
 	WR0_WrIo8(ctx->drv, SMBTIMING, (uint8_t)((66ULL * 1000000) / freq / 4));
 	return SM_OK;
 }
+#endif
 
 static inline int PIIX4CheckBusy(smbus_t* ctx)
 {
@@ -447,6 +449,7 @@ PIIX4SimpleTransaction(smbus_t* ctx, uint8_t addr, uint8_t hstcmd, uint8_t read_
 	return SM_OK;
 }
 
+#ifdef LIBNW_SMBUS_BLOCK
 static int
 PIIX4BlockTransaction(smbus_t* ctx, uint8_t addr, uint8_t hstcmd, uint8_t read_write, uint8_t protocol, union i2c_smbus_data* data)
 {
@@ -502,6 +505,7 @@ PIIX4BlockTransaction(smbus_t* ctx, uint8_t addr, uint8_t hstcmd, uint8_t read_w
 	}
 	return SM_OK;
 }
+#endif
 
 static int
 PIIX4Xfer(smbus_t* ctx, uint8_t addr, uint8_t read_write, uint8_t command, uint8_t protocol, union i2c_smbus_data* data)
@@ -536,6 +540,7 @@ PIIX4Xfer(smbus_t* ctx, uint8_t addr, uint8_t read_write, uint8_t command, uint8
 				return SM_ERR_NO_DEVICE;
 			data->u16data = (uint8_t)out[0];
 			break;
+#ifdef LIBNW_SMBUS_BLOCK
 		case I2C_SMBUS_BLOCK_DATA:
 		case I2C_SMBUS_BLOCK_PROC_CALL:
 			memcpy(&in[4], data->block, I2C_SMBUS_BLOCK_MAX + 1);
@@ -543,6 +548,7 @@ PIIX4Xfer(smbus_t* ctx, uint8_t addr, uint8_t read_write, uint8_t command, uint8
 				return SM_ERR_NO_DEVICE;
 			memcpy(data->block, out, I2C_SMBUS_BLOCK_MAX + 1);
 			break;
+#endif
 		default:
 			return SM_ERR_PARAM;
 		}
@@ -564,10 +570,12 @@ PIIX4Xfer(smbus_t* ctx, uint8_t addr, uint8_t read_write, uint8_t command, uint8
 	case I2C_SMBUS_PROC_CALL:
 		rc = PIIX4SimpleTransaction(ctx, addr, command, read_write, protocol, data);
 		break;
+#ifdef LIBNW_SMBUS_BLOCK
 	case I2C_SMBUS_BLOCK_DATA:
 	case I2C_SMBUS_BLOCK_PROC_CALL:
 		rc = PIIX4BlockTransaction(ctx, addr, command, read_write, protocol, data);
 		break;
+#endif
 	default:
 		rc = SM_ERR_PARAM;
 		break;
@@ -581,7 +589,9 @@ const smctrl_t piix4_controller =
 	.name = "piix4",
 	.detect = PIIX4Detect,
 	.init = PIIX4Init,
+#ifdef LIBNW_SMBUS_CLOCK
 	.get_clock = PIIX4GetClock,
 	.set_clock = PIIX4SetClock,
+#endif
 	.xfer = PIIX4Xfer,
 };

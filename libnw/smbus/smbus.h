@@ -33,6 +33,8 @@ union i2c_smbus_data
 #define I2C_SMBUS_WORD_DATA         3
 // addr, data
 #define I2C_SMBUS_PROC_CALL         4
+
+#ifdef LIBNW_SMBUS_BLOCK
 // addr, rw, data
 #define I2C_SMBUS_BLOCK_DATA        5
 // -
@@ -41,6 +43,7 @@ union i2c_smbus_data
 #define I2C_SMBUS_BLOCK_PROC_CALL   7
 // -
 #define I2C_SMBUS_I2C_BLOCK_DATA    8
+#endif
 
 struct smbus_controller;
 typedef struct smbus_controller smctrl_t;
@@ -52,8 +55,10 @@ struct smbus_controller
 	const char* name;
 	int (*detect)(smbus_t* ctx);
 	int (*init)(smbus_t* ctx);
+#ifdef LIBNW_SMBUS_CLOCK
 	uint64_t (*get_clock)(smbus_t* ctx);
 	int (*set_clock)(smbus_t* ctx, uint64_t freq);
+#endif
 	int (*xfer)(smbus_t* ctx, uint8_t addr, uint8_t read_write, uint8_t command, uint8_t protocol, union i2c_smbus_data* data);
 };
 

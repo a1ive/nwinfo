@@ -545,6 +545,7 @@ NWL_StrToGuid(const CHAR* cchText, GUID* pGuid)
 	return TRUE;
 }
 
+#if 0
 struct NWL_MONITOR_CTX
 {
 	HMONITOR hMonitor;
@@ -573,6 +574,7 @@ NWL_GetMonitorFromName(LPCWSTR lpDevice)
 	EnumDisplayMonitors(NULL, NULL, EnumMonIter, (LPARAM)&ctx);
 	return ctx.hMonitor;
 }
+#endif
 
 #define SECPERMIN 60
 #define SECPERHOUR (60*SECPERMIN)

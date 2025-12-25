@@ -56,25 +56,8 @@ CDI_SMART* WINAPI cdi_create_smart(VOID)
 	*(FARPROC*)&m_cdi.cdi_get_smart_value = GetProcAddress(m_cdi.dll, "cdi_get_smart_value");
 	*(FARPROC*)&m_cdi.cdi_get_smart_status = GetProcAddress(m_cdi.dll, "cdi_get_smart_status");
 	*(FARPROC*)&m_cdi.cdi_get_smart_name = GetProcAddress(m_cdi.dll, "cdi_get_smart_name");
-	if (m_cdi.cdi_get_version == NULL ||
-		m_cdi.cdi_create_smart == NULL ||
-		m_cdi.cdi_destroy_smart == NULL ||
-		m_cdi.cdi_init_smart == NULL ||
-		m_cdi.cdi_update_smart == NULL ||
-		m_cdi.cdi_get_disk_count == NULL ||
-		m_cdi.cdi_get_bool == NULL ||
-		m_cdi.cdi_get_int == NULL ||
-		m_cdi.cdi_get_dword == NULL ||
-		m_cdi.cdi_get_string == NULL ||
-		m_cdi.cdi_free_string == NULL ||
-		m_cdi.cdi_get_smart_format == NULL ||
-		m_cdi.cdi_get_smart_id == NULL ||
-		m_cdi.cdi_get_smart_value == NULL ||
-		m_cdi.cdi_get_smart_status == NULL ||
-		m_cdi.cdi_get_smart_name == NULL)
-	{
+	if (m_cdi.cdi_create_smart == NULL)
 		goto fail;
-	}
 	return m_cdi.cdi_create_smart();
 fail:
 	ZeroMemory(&m_cdi, sizeof(m_cdi));

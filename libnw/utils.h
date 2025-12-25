@@ -42,7 +42,9 @@ LPCSTR NWL_GetBusTypeString(STORAGE_BUS_TYPE Type);
 LPCSTR NWL_GuidToStr(UCHAR Guid[16]);
 LPCSTR NWL_WinGuidToStr(BOOL bBracket, GUID* pGuid);
 BOOL NWL_StrToGuid(const CHAR* cchText, GUID* pGuid);
+#if 0
 LIBNW_API HMONITOR NWL_GetMonitorFromName(LPCWSTR lpDevice);
+#endif
 LPCSTR NWL_UnixTimeToStr(INT nix);
 LPCSTR NWL_Ucs2ToUtf8(LPCWSTR src);
 LPCWSTR NWL_Utf8ToUcs2(LPCSTR src);

@@ -223,6 +223,7 @@ static int I801Init(smbus_t* ctx)
 	return SM_OK;
 }
 
+#ifdef LIBNW_SMBUS_CLOCK
 // The i801 SMBus controller use a fixed clock frequency of 100kHz
 static uint64_t I801GetClock(smbus_t* ctx)
 {
@@ -233,7 +234,9 @@ static int I801SetClock(smbus_t* ctx, uint64_t freq)
 {
 	return SM_ERR_PARAM;
 }
+#endif
 
+#ifdef LIBNW_SMBUS_BLOCK
 static inline uint8_t I801GetBlockLen(smbus_t* ctx)
 {
 	uint8_t len = WR0_RdIo8(ctx->drv, SMBHSTDAT0);
@@ -244,6 +247,7 @@ static inline uint8_t I801GetBlockLen(smbus_t* ctx)
 	}
 	return len;
 }
+#endif
 
 static inline int I801CheckPre(smbus_t* ctx)
 {
@@ -402,6 +406,7 @@ I801SimpleTransaction(smbus_t* ctx, uint8_t addr, uint8_t hstcmd, uint8_t read_w
 	return SM_OK;
 }
 
+#ifdef LIBNW_SMBUS_BLOCK
 static int I801BlockTransactionByBlock(smbus_t* ctx, uint8_t read_write, uint8_t protocol, union i2c_smbus_data* data, uint8_t* hststs)
 {
 	uint8_t xact, len, auxctl;
@@ -475,6 +480,7 @@ I801BlockTransaction(smbus_t* ctx, uint8_t addr, uint8_t hstcmd, uint8_t read_wr
 
 	return I801BlockTransactionByBlock(ctx, read_write, protocol, data, hststs);
 }
+#endif
 
 static int
 I801Xfer(smbus_t* ctx, uint8_t addr, uint8_t read_write, uint8_t command, uint8_t protocol, union i2c_smbus_data* data)
@@ -509,6 +515,7 @@ I801Xfer(smbus_t* ctx, uint8_t addr, uint8_t read_write, uint8_t command, uint8_
 				return SM_ERR_NO_DEVICE;
 			data->u16data = (uint8_t)out[0];
 			break;
+#ifdef LIBNW_SMBUS_BLOCK
 		case I2C_SMBUS_BLOCK_DATA:
 		case I2C_SMBUS_BLOCK_PROC_CALL:
 			memcpy(&in[4], data->block, I2C_SMBUS_BLOCK_MAX + 1);
@@ -516,6 +523,7 @@ I801Xfer(smbus_t* ctx, uint8_t addr, uint8_t read_write, uint8_t command, uint8_
 				return SM_ERR_NO_DEVICE;
 			memcpy(data->block, out, I2C_SMBUS_BLOCK_MAX + 1);
 			break;
+#endif
 		default:
 			return SM_ERR_PARAM;
 		}
@@ -550,10 +558,12 @@ I801Xfer(smbus_t* ctx, uint8_t addr, uint8_t read_write, uint8_t command, uint8_
 	case I2C_SMBUS_PROC_CALL:
 		rc = I801SimpleTransaction(ctx, addr, command, read_write, protocol, data, &hststs);
 		break;
+#ifdef LIBNW_SMBUS_BLOCK
 	case I2C_SMBUS_BLOCK_DATA:
 	case I2C_SMBUS_BLOCK_PROC_CALL:
 		rc = I801BlockTransaction(ctx, addr, command, read_write, protocol, data, &hststs);
 		break;
+#endif
 	default:
 		rc = SM_ERR_PARAM;
 		goto unlock;
@@ -581,7 +591,9 @@ const smctrl_t i801_controller =
 	.name = "i801",
 	.detect = I801Detect,
 	.init = I801Init,
+#ifdef LIBNW_SMBUS_CLOCK
 	.get_clock = I801GetClock,
 	.set_clock = I801SetClock,
+#endif
 	.xfer = I801Xfer,
 };
