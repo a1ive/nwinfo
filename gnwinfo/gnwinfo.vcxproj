@@ -130,7 +130,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\nuklear\nuklear.h" />
-    <ClInclude Include="..\nuklear\nuklear_gdip.h" />
+    <ClInclude Include="..\nuklear\nuklear_d2d.h" />
     <ClInclude Include="gettext.h" />
     <ClInclude Include="gnwinfo.h" />
     <ClInclude Include="lang\en_US.h" />
@@ -147,6 +147,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\nuklear\nuklear.c" />
+    <ClCompile Include="..\nuklear\nuklear_d2d.cpp" />
     <ClCompile Include="about.c" />
     <ClCompile Include="context.c" />
     <ClCompile Include="cpuid.c" />

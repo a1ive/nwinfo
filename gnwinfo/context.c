@@ -29,7 +29,7 @@ load_png(WORD id)
 	void* data = LockResource(mem);
 	if (!data)
 		goto fail;
-	return nk_gdip_load_image_from_memory(data, size);
+	return nk_d2d_load_image_from_memory(data, size);
 fail:
 	return nk_image_id(0);
 }
@@ -300,7 +300,7 @@ gnwinfo_ctx_init(HINSTANCE inst, HWND wnd, struct nk_context* ctx, float width, 
 	nk_lhsc(ctx, N_(N__PLS_WAIT), NK_TEXT_CENTERED, g_color_text_d, nk_false, nk_false);
 	nk_spacer(ctx);
 	nk_end(ctx);
-	nk_gdip_render(g_ctx.gui_aa, g_color_back);
+	nk_d2d_render(g_ctx.gui_aa, g_color_back);
 
 	g_ctx.gui_height = height;
 	g_ctx.gui_width = width;
@@ -405,6 +405,6 @@ gnwinfo_ctx_exit(void)
 	NWL_NodeFree(g_ctx.edid, 1);
 	NW_Fini();
 	for (WORD i = 0; i < sizeof(g_ctx.image) / sizeof(g_ctx.image[0]); i++)
-		nk_gdip_image_free(g_ctx.image[i]);
+		nk_d2d_image_free(g_ctx.image[i]);
 	exit(0);
 }

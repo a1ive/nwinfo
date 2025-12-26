@@ -11,6 +11,9 @@
 
 #include <assert.h>
 #include <math.h>
+#include <string.h>
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
 #define NK_ASSERT(expr) assert(expr)
 
 #define NK_MEMSET memset
@@ -21,44 +24,6 @@
 
 #define NK_IMPLEMENTATION
 #include <nuklear.h>
-
-#pragma comment(lib, "gdiplus.lib")
-
-#define NK_GDIP_IMPLEMENTATION
-#include <nuklear_gdip.h>
-
-#include <VersionHelpers.h>
-
-GdipFont*
-nk_gdip_load_font(LPCWSTR name, int size)
-{
-	GdipFont* font = (GdipFont*)calloc(1, sizeof(GdipFont));
-	GpFontFamily* family;
-
-	if (!font)
-		goto fail;
-
-	if (GdipCreateFontFamilyFromName(name, NULL, &family))
-	{
-		UINT len = IsWindowsVistaOrGreater() ? sizeof(NONCLIENTMETRICSW) : sizeof(NONCLIENTMETRICSW) - sizeof(int);
-		NONCLIENTMETRICSW metrics = { .cbSize = len };
-		if (SystemParametersInfoW(SPI_GETNONCLIENTMETRICS, len, &metrics, 0))
-		{
-			if (GdipCreateFontFamilyFromName(metrics.lfMessageFont.lfFaceName, NULL, &family))
-				goto fail;
-		}
-		else
-			goto fail;
-	}
-
-	GdipCreateFont(family, (REAL)size, FontStyleRegular, UnitPixel, &font->handle);
-	GdipDeleteFontFamily(family);
-
-	return font;
-fail:
-	MessageBoxW(NULL, L"Failed to load font", L"Error", MB_OK);
-	exit(1);
-}
 
 static nk_bool
 nk_panel_begin_ex(struct nk_context* ctx, const char* title, enum nk_panel_type panel_type,

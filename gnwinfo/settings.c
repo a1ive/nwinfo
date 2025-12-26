@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: Unlicense
 
+#include <stdlib.h>
 #include "gnwinfo.h"
 #include "gettext.h"
 #include "../libcdi/libcdi.h"

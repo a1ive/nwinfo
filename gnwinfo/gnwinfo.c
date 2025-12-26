@@ -3,9 +3,11 @@
 #include "gnwinfo.h"
 #include "gettext.h"
 
+#include <stdlib.h>
 #include <pathcch.h>
 #include <windowsx.h>
 #include <dbt.h>
+#include <objbase.h>
 
 LPCSTR NWL_Ucs2ToUtf8(LPCWSTR src);
 LPCWSTR NWL_Utf8ToUcs2(LPCSTR src);
@@ -13,7 +15,7 @@ LPCWSTR NWL_Utf8ToUcs2(LPCSTR src);
 unsigned int g_init_width = 600;
 unsigned int g_init_height = 800;
 unsigned int g_init_alpha = 255;
-GdipFont* g_font = NULL;
+nk_d2d_font* g_font = NULL;
 int g_font_size = 12;
 double g_dpi_factor = 1.0;
 nk_bool g_dpi_scaling = 1;
@@ -39,7 +41,7 @@ set_dpi_scaling(HWND wnd)
 		g_dpi_scaling = strtol(gnwinfo_get_ini_value(L"Window", L"DpiScaling", L"1"), NULL, 10);
 	if (g_font)
 	{
-		nk_gdipfont_del(g_font);
+		nk_d2d_font_del(g_font);
 		g_font = NULL;
 	}
 	if (g_dpi_scaling)
@@ -55,8 +57,8 @@ set_dpi_scaling(HWND wnd)
 			(int)((rect.right - rect.left) * g_dpi_factor), (int)((rect.bottom - rect.top) * g_dpi_factor),
 			SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE);
 	}
-	g_font = nk_gdip_load_font(font_name, g_font_size);
-	nk_gdip_set_font(g_font);
+	g_font = nk_d2d_load_font(font_name, g_font_size);
+	nk_d2d_set_font(g_font);
 }
 
 static LRESULT CALLBACK
@@ -171,7 +173,7 @@ window_proc(HWND wnd, UINT msg, WPARAM wparam, LPARAM lparam)
 		g_ctx.gui_width = LOWORD(lparam);
 		break;
 	}
-	if (nk_gdip_handle_event(wnd, msg, wparam, lparam))
+	if (nk_d2d_handle_event(wnd, msg, wparam, lparam))
 		return 0;
 	return DefWindowProcW(wnd, msg, wparam, lparam);
 }
@@ -256,10 +258,10 @@ wWinMain(_In_ HINSTANCE hInstance,
 	SetLayeredWindowAttributes(wnd, RGB(g_color_back.r, g_color_back.g, g_color_back.b), (BYTE)g_init_alpha, layered_flag);
 
 	/* GUI */
-	ctx = nk_gdip_init(wnd, g_init_width, g_init_height);
+	(void)CoInitializeEx(0, COINIT_MULTITHREADED | COINIT_DISABLE_OLE1DDE);
+	ctx = nk_d2d_init(wnd, g_init_width, g_init_height);
 	set_dpi_scaling(wnd);
 
-	(void)CoInitializeEx(0, COINIT_MULTITHREADED | COINIT_DISABLE_OLE1DDE);
 	gnwinfo_set_style(ctx);
 	gnwinfo_ctx_init(hInstance, wnd, ctx, (float)(g_init_width * g_dpi_factor), (float)(g_init_height * g_dpi_factor));
 
@@ -310,12 +312,12 @@ wWinMain(_In_ HINSTANCE hInstance,
 			gnwinfo_ctx_exit();
 
 		/* Draw */
-		nk_gdip_render(g_ctx.gui_aa, g_color_back);
+		nk_d2d_render(g_ctx.gui_aa, g_color_back);
 	}
 
+	nk_d2d_font_del(g_font);
+	nk_d2d_shutdown();
 	CoUninitialize();
-	nk_gdipfont_del(g_font);
-	nk_gdip_shutdown();
 	UnregisterClassW(wc.lpszClassName, wc.hInstance);
 	gnwinfo_ctx_exit();
 	return 0;

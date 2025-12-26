@@ -34,7 +34,7 @@
     <ClInclude Include="..\nuklear\nuklear.h">
       <Filter>Nuklear</Filter>
     </ClInclude>
-    <ClInclude Include="..\nuklear\nuklear_gdip.h">
+    <ClInclude Include="..\nuklear\nuklear_d2d.h">
       <Filter>Nuklear</Filter>
     </ClInclude>
     <ClInclude Include="gettext.h">
@@ -112,6 +112,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\nuklear\nuklear.c">
+      <Filter>Nuklear</Filter>
+    </ClCompile>
+    <ClCompile Include="..\nuklear\nuklear_d2d.cpp">
       <Filter>Nuklear</Filter>
     </ClCompile>
     <ClCompile Include="style.c">

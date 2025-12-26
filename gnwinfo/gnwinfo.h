@@ -20,7 +20,7 @@
 #define NK_ASSERT(expr) assert(expr)
 
 #include <nuklear.h>
-#include <nuklear_gdip.h>
+#include <nuklear_d2d.h>
 
 #include <libnw.h>
 #include <gpu/gpu.h>
@@ -29,8 +29,8 @@
 
 #include <audio.h>
 
-GdipFont*
-nk_gdip_load_font(LPCWSTR name, int size);
+nk_d2d_font*
+nk_d2d_load_font(LPCWSTR name, int size);
 
 nk_bool
 nk_begin_ex(struct nk_context* ctx, const char* title,
@@ -169,7 +169,7 @@ extern WCHAR g_ini_path[MAX_PATH];
 extern unsigned int g_init_width;
 extern unsigned int g_init_height;
 extern unsigned int g_init_alpha;
-extern GdipFont* g_font;
+extern nk_d2d_font* g_font;
 extern int g_font_size;
 extern double g_dpi_factor;
 extern nk_bool g_dpi_scaling;
