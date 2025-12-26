@@ -182,9 +182,6 @@
     <ClCompile Include="audio.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="audio_nw.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="iplookup.c">
       <Filter>Source Files</Filter>
     </ClCompile>

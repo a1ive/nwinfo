@@ -159,7 +159,11 @@ LIBNW_API VOID NW_Export(PNODE node, FILE* file);
 LIBNW_API VOID NW_Print(LPCSTR lpFileName);
 LIBNW_API VOID NW_Fini(VOID);
 
+#ifdef noreturn
 LIBNW_API noreturn VOID NWL_ErrExit(INT nExitCode, LPCSTR lpszText);
+#else
+LIBNW_API VOID NWL_ErrExit(INT nExitCode, LPCSTR lpszText);
+#endif
 extern void(*NWL_Debug)(const char* condition, _Printf_format_string_ char const* const format, ...);
 
 LIBNW_API PNODE NW_Acpi(VOID);

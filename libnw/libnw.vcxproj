@@ -272,7 +272,6 @@
     <ClCompile Include="..\winring0\winring0.c" />
     <ClCompile Include="acpi.c" />
     <ClCompile Include="audio.cpp" />
-    <ClCompile Include="audio_nw.c" />
     <ClCompile Include="base64.c" />
     <ClCompile Include="battery.c" />
     <ClCompile Include="cpuid.c" />

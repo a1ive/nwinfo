@@ -233,14 +233,7 @@ int main(int argc, char* argv[])
 	nwContext.AcpiTable = 0;
 	nwContext.SmbiosType = 127;
 	nwContext.DiskPath = NULL;
-	for (int i = 1; i < argc; i++)
-	{
-		if (_stricmp(argv[i], "/h") == 0 || _stricmp(argv[i], "/?") == 0)
-		{
-			nwinfo_help();
-			return 0;
-		}
-	}
+
 	struct optparse options;
 	optparse_init(&options, argv);
 
