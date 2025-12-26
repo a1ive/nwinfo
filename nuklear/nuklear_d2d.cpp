@@ -18,8 +18,6 @@
 #include <VersionHelpers.h>
 
 #pragma comment(lib, "d2d1.lib")
-#pragma comment(lib, "dwrite.lib")
-#pragma comment(lib, "windowscodecs.lib")
 
 struct nk_d2d_device
 {
