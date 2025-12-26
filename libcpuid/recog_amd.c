@@ -397,10 +397,10 @@ const struct match_entry_t cpudb_amd[] = {
 	{ 15, -1, -1, 25,   80,  -1,    -1,    -1, { "Ryzen 5 5##0[HU]",       8 }, "Ryzen 5 (Cezanne)",              "TSMC N7FF" },
 	{ 15, -1, -1, 25,   80,  -1,    -1,    -1, { "Ryzen 3 PRO 5##0[HU]",  10 }, "Ryzen 3 PRO (Cezanne)",          "TSMC N7FF" },
 	{ 15, -1, -1, 25,   80,  -1,    -1,    -1, { "Ryzen 3 5##0[HU]",       8 }, "Ryzen 3 (Cezanne)",              "TSMC N7FF" },
-	{ 15, -1, -1, 25,   80,  -1,    -1,    -1, { "Ryzen 7 5##5U",          8 }, "Ryzen 7 (Barceló)",              "TSMC N7FF" }, /* Ryzen 7 5825U */
-	{ 15, -1, -1, 25,   80,  -1,    -1,    -1, { "Ryzen 5 5##5U",          8 }, "Ryzen 5 (Barceló)",              "TSMC N7FF" }, /* Ryzen 5 5625U */
-	{ 15, -1, -1, 25,   80,  -1,    -1,    -1, { "Ryzen 3 PRO 5##5U",     10 }, "Ryzen 3 PRO (Barceló)",          "TSMC N7FF" }, /* Ryzen 3 PRO 5475U */
-	{ 15, -1, -1, 25,   80,  -1,    -1,    -1, { "Ryzen 3 5##5C",          8 }, "Ryzen 3 (Barceló)",              "TSMC N7FF" }, /* Ryzen 3 5125C */
+	{ 15, -1, -1, 25,   80,  -1,    -1,    -1, { "Ryzen 7 5##5U",          8 }, "Ryzen 7 (Barcelo)",              "TSMC N7FF" }, /* Ryzen 7 5825U */
+	{ 15, -1, -1, 25,   80,  -1,    -1,    -1, { "Ryzen 5 5##5U",          8 }, "Ryzen 5 (Barcelo)",              "TSMC N7FF" }, /* Ryzen 5 5625U */
+	{ 15, -1, -1, 25,   80,  -1,    -1,    -1, { "Ryzen 3 PRO 5##5U",     10 }, "Ryzen 3 PRO (Barcelo)",          "TSMC N7FF" }, /* Ryzen 3 PRO 5475U */
+	{ 15, -1, -1, 25,   80,  -1,    -1,    -1, { "Ryzen 3 5##5C",          8 }, "Ryzen 3 (Barcelo)",              "TSMC N7FF" }, /* Ryzen 3 5125C */
 	/* Zen 3+ (2022) */
 	{ 15, -1, -1, 25,   68,  -1,    -1,    -1, { "Ryzen 9 PRO 6###",       8 }, "Ryzen 9 PRO (Rembrandt)",        "TSMC N6"  },
 	{ 15, -1, -1, 25,   68,  -1,    -1,    -1, { "Ryzen 9 6###",           6 }, "Ryzen 9 (Rembrandt)",            "TSMC N6"  },

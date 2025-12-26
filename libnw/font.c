@@ -36,9 +36,19 @@ PNODE NW_Font(VOID)
 	if (NWLC->FontInfo)
 		NWL_NodeAppendChild(NWLC->NwRoot, node);
 
-	HDC hDC = GetDC(NULL);
-	EnumFontFamiliesW(hDC, NULL, (FONTENUMPROCW)EnumFontFamCallBack, (LPARAM)node);
-	ReleaseDC(NULL, hDC);
+	int (WINAPI * pfnEnumFontFamiliesW)(HDC, LPCWSTR, FONTENUMPROCW, LPARAM) = NULL;
+	HMODULE hGdi32 = LoadLibraryW(L"gdi32.dll");
+	if (hGdi32)
+	{
+		*(FARPROC*)&pfnEnumFontFamiliesW = GetProcAddress(hGdi32, "EnumFontFamiliesW");
+		if (pfnEnumFontFamiliesW)
+		{
+			HDC hDC = GetDC(NULL);
+			pfnEnumFontFamiliesW(hDC, NULL, (FONTENUMPROCW)EnumFontFamCallBack, (LPARAM)node);
+			ReleaseDC(NULL, hDC);
+		}
+		FreeLibrary(hGdi32);
+	}
 
 	return node;
 }

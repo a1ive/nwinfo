@@ -95,7 +95,7 @@ get_ids_from_dxgi(LUID* luid, D3DKMT_DEVICE_IDS* ids)
 	dxgi = LoadLibraryW(L"dxgi.dll");
 	if (dxgi == NULL)
 		return;
-	pfn_create_factory = (void*)GetProcAddress(dxgi, "CreateDXGIFactory");
+	*(FARPROC*)&pfn_create_factory = GetProcAddress(dxgi, "CreateDXGIFactory");
 	if (pfn_create_factory == NULL)
 		goto fail;
 	if (FAILED(pfn_create_factory(&IID_IDXGIFactory, (void**)&factory)))

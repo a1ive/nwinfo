@@ -1595,9 +1595,11 @@ int cpu_ident_internal(struct cpu_raw_data_t* raw, struct cpu_id_t* data, struct
 					break;
 			}
 			break;
+#ifdef LIBCPUID_ARM_SUPPORT
 		case ARCHITECTURE_ARM:
 			r = cpuid_identify_arm(raw, data);
 			break;
+#endif
 		default:
 			r = ERR_CPU_UNKN;
 			break;
@@ -1649,9 +1651,11 @@ static cpu_purpose_t cpu_ident_purpose(struct cpu_raw_data_t* raw)
 					break;
 			}
 			break;
+#ifdef LIBCPUID_ARM_SUPPORT
 		case ARCHITECTURE_ARM:
 			purpose = cpuid_identify_purpose_arm(raw);
 			break;
+#endif
 		default:
 			break;
 	}
@@ -2457,7 +2461,6 @@ void cpuid_get_cpu_list(cpu_vendor_t vendor, struct cpu_list_t* list)
 	switch (vendor) {
 		case VENDOR_INTEL:
 			cpuid_get_list_intel(list);
-			cpuid_get_list_arm(vendor, list);
 			break;
 		case VENDOR_AMD:
 		case VENDOR_HYGON:
@@ -2492,6 +2495,7 @@ void cpuid_get_cpu_list(cpu_vendor_t vendor, struct cpu_list_t* list)
 		case VENDOR_VIRTCPU:
 			make_list_from_string("Microsoft Virtual PC 7,Microsoft x86-to-ARM", list);
 			break;
+#ifdef LIBCPUID_ARM_SUPPORT
 		case VENDOR_ARM:
 		case VENDOR_BROADCOM:
 		case VENDOR_CAVIUM:
@@ -2512,6 +2516,7 @@ void cpuid_get_cpu_list(cpu_vendor_t vendor, struct cpu_list_t* list)
 		case VENDOR_AMPERE:
 			cpuid_get_list_arm(vendor, list);
 			break;
+#endif
 		default:
 			warnf("Unknown vendor passed to cpuid_get_cpu_list()\n");
 			cpuid_set_error(ERR_INVRANGE);
