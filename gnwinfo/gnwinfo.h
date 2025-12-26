@@ -101,6 +101,8 @@ nk_block(struct nk_context* ctx, struct nk_color color, const char* str);
 #define GUI_WINDOW_HOSTNAME (1U << 7)
 #define GUI_WINDOW_DISPLAY  (1U << 8)
 
+#define TEMP_CELSIUS_SYMBOL u8"\u00b0C" // \u2103 or \u00b0C
+
 typedef struct _GNW_CONTEXT
 {
 	HINSTANCE inst;

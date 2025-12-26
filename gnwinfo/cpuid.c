@@ -75,7 +75,7 @@ draw_msr(struct nk_context* ctx, int index, PNODE cpu)
 		nk_l(ctx, N_(N__BUS_CLOCK), NK_TEXT_LEFT);
 		nk_lhcf(ctx, NK_TEXT_LEFT, g_color_text_l, "%.2f MHz", g_ctx.cpu_info[index].MsrBus);
 		nk_l(ctx, N_(N__TEMPERATURE), NK_TEXT_LEFT);
-		nk_lhcf(ctx, NK_TEXT_LEFT, g_color_text_l, u8"%d \u2103", g_ctx.cpu_info[index].MsrTemp);
+		nk_lhcf(ctx, NK_TEXT_LEFT, g_color_text_l, u8"%d "TEMP_CELSIUS_SYMBOL, g_ctx.cpu_info[index].MsrTemp);
 		nk_l(ctx, N_(N__VOLTAGE), NK_TEXT_LEFT);
 		nk_lhcf(ctx, NK_TEXT_LEFT, g_color_text_l, "%.2f V", g_ctx.cpu_info[index].MsrVolt);
 		nk_l(ctx, N_(N__CPU_POWER), NK_TEXT_LEFT);
@@ -86,7 +86,7 @@ draw_msr(struct nk_context* ctx, int index, PNODE cpu)
 		nk_lhcf(ctx, NK_TEXT_LEFT, g_color_text_l, "%.2f W", g_ctx.cpu_info[index].MsrPl2);
 #ifdef ENABLE_IGPU_MONITOR
 		nk_l(ctx, N_(N__IGPU_TEMPERATURE), NK_TEXT_LEFT);
-		nk_lhcf(ctx, NK_TEXT_LEFT, g_color_text_l, u8"%d \u2103", g_ctx.cpu_info[index].GpuTemp);
+		nk_lhcf(ctx, NK_TEXT_LEFT, g_color_text_l, u8"%d "TEMP_CELSIUS_SYMBOL, g_ctx.cpu_info[index].GpuTemp);
 		nk_l(ctx, N_(N__IGPU_POWER), NK_TEXT_LEFT);
 		nk_lhcf(ctx, NK_TEXT_LEFT, g_color_text_l, "%.2f W", g_ctx.cpu_info[index].GpuPower);
 #endif
