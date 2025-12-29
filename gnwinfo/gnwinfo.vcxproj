@@ -157,6 +157,7 @@
     <ClCompile Include="hostname.c" />
     <ClCompile Include="memory.c" />
     <ClCompile Include="pci.c" />
+    <ClCompile Include="sensors.c" />
     <ClCompile Include="settings.c" />
     <ClCompile Include="smart.c" />
     <ClCompile Include="style.c" />
@@ -196,6 +197,7 @@
     <Image Include="icons\pci.png" />
     <Image Include="icons\refresh.png" />
     <Image Include="icons\rocket.png" />
+    <Image Include="icons\sensor.png" />
     <Image Include="icons\settings.png" />
     <Image Include="icons\smart.png" />
     <Image Include="icons\wlan.png" />

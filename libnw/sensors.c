@@ -9,20 +9,20 @@
 #include "sensor/sensors.h"
 
 extern sensor_t sensor_lhm;
-extern sensor_t sensor_gpu;
-extern sensor_t sensor_dimm;
 extern sensor_t sensor_hwinfo;
 extern sensor_t sensor_gpuz;
 extern sensor_t sensor_cpu;
+extern sensor_t sensor_dimm;
+extern sensor_t sensor_gpu;
 
 static sensor_t* sensor_list[] =
 {
 	&sensor_lhm,
-	&sensor_gpu,
-	&sensor_dimm,
 	&sensor_hwinfo,
 	&sensor_gpuz,
 	&sensor_cpu,
+	&sensor_dimm,
+	&sensor_gpu,
 };
 
 static bool sensor_initialized = false;

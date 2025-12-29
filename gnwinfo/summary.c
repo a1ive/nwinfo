@@ -787,7 +787,7 @@ gnwinfo_draw_main_window(struct nk_context* ctx, float width, float height)
 		return;
 	}
 
-	nk_layout_row_begin(ctx, NK_DYNAMIC, 0, 4);
+	nk_layout_row_begin(ctx, NK_DYNAMIC, 0, 5);
 
 	struct nk_rect rect = nk_layout_widget_bounds(ctx);
 	g_ctx.gui_ratio = rect.h / rect.w;
@@ -804,12 +804,29 @@ gnwinfo_draw_main_window(struct nk_context* ctx, float width, float height)
 		gnwinfo_ctx_update(IDT_TIMER_SMB);
 	}
 	nk_layout_row_push(ctx, g_ctx.gui_ratio);
+	if (g_ctx.window_flag & GUI_WINDOW_SENSOR)
+	{
+		if (nk_button_image_hover(ctx, GET_PNG(IDR_PNG_PC), N_(N__SUMMARY_VIEW)))
+			g_ctx.window_flag &= ~GUI_WINDOW_SENSOR;
+	}
+	else
+	{
+		if (nk_button_image_hover(ctx, GET_PNG(IDR_PNG_SENSOR), N_(N__SENSOR_VIEW)))
+			g_ctx.window_flag |= GUI_WINDOW_SENSOR;
+	}
+	nk_layout_row_push(ctx, g_ctx.gui_ratio);
 	if (nk_button_image_hover(ctx, GET_PNG(IDR_PNG_INFO), N_(N__ABOUT)))
 		g_ctx.window_flag |= GUI_WINDOW_ABOUT;
 	nk_layout_row_push(ctx, g_ctx.gui_ratio);
 	if (nk_button_image_hover(ctx, GET_PNG(IDR_PNG_CLOSE), N_(N__CLOSE)))
 		InterlockedExchange(&g_ctx.exit_pending, 1);
 	nk_layout_row_end(ctx);
+
+	if (g_ctx.window_flag & GUI_WINDOW_SENSOR)
+	{
+		gnwinfo_draw_sensor_window(ctx, width, height);
+		goto out;
+	}
 
 	if (g_ctx.main_flag & MAIN_INFO_OS)
 		draw_os(ctx);
@@ -830,5 +847,6 @@ gnwinfo_draw_main_window(struct nk_context* ctx, float width, float height)
 	if (g_ctx.main_flag & MAIN_INFO_AUDIO)
 		draw_audio(ctx);
 
+out:
 	nk_end(ctx);
 }

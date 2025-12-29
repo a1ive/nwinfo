@@ -120,6 +120,9 @@
     <ClCompile Include="gettext.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="sensors.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="gnwinfo.rc">
@@ -206,6 +209,9 @@
       <Filter>Resource Files</Filter>
     </Image>
     <Image Include="..\docs\images\icon.ico">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="icons\sensor.png">
       <Filter>Resource Files</Filter>
     </Image>
   </ItemGroup>

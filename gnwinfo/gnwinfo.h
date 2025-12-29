@@ -100,6 +100,7 @@ nk_block(struct nk_context* ctx, struct nk_color color, const char* str);
 #define GUI_WINDOW_MM       (1U << 6)
 #define GUI_WINDOW_HOSTNAME (1U << 7)
 #define GUI_WINDOW_DISPLAY  (1U << 8)
+#define GUI_WINDOW_SENSOR   (1U << 9)
 
 typedef struct _GNW_CONTEXT
 {
@@ -133,6 +134,7 @@ typedef struct _GNW_CONTEXT
 	PNODE battery;
 	PNODE smb;
 	PNODE spd;
+	PNODE sensors;
 
 	LPCSTR sys_boot;
 	LPCSTR sys_disk;
@@ -205,6 +207,7 @@ VOID gnwinfo_draw_settings_window(struct nk_context* ctx, float width, float hei
 VOID gnwinfo_draw_pci_window(struct nk_context* ctx, float width, float height);
 VOID gnwinfo_draw_dmi_window(struct nk_context* ctx, float width, float height);
 VOID gnwinfo_draw_display_window(struct nk_context* ctx, float width, float height);
+VOID gnwinfo_draw_sensor_window(struct nk_context* ctx, float width, float height);
 
 VOID gnwinfo_set_style(struct nk_context* ctx);
 

@@ -30,8 +30,9 @@
 #define IDR_PNG_WLAN                    133
 #define IDR_PNG_MONITOR                 134
 #define IDR_PNG_GPU                     135
+#define IDR_PNG_SENSOR                  136
 
-#define IDR_PNG_MAX                     136
+#define IDR_PNG_MAX                     137
 
 #define IDT_TIMER_1S                    (1u << 0)
 #define IDT_TIMER_1M                    (1u << 1)

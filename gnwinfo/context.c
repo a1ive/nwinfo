@@ -44,6 +44,7 @@ static void
 gnwinfo_ctx_update_1s(void)
 {
 	PNODE network = NULL;
+	PNODE sensors = NULL;
 	NWLIB_MEM_INFO mem_status = { 0 };
 	NWLIB_NET_TRAFFIC net_traffic = { 0 };
 	double cpu_usage = 0.0;
@@ -54,11 +55,13 @@ gnwinfo_ctx_update_1s(void)
 	NWLIB_AUDIO_DEV* audio = NULL;
 	CHAR sys_uptime[NWL_STR_SIZE] = { 0 };
 	DWORD main_flag = 0;
+	DWORD window_flag = 0;
 	int cpu_count = 0;
 	NWLIB_MEM_SENSORS mem_sensors = { 0 };
 
 	AcquireSRWLockShared(&g_ctx.lock);
 	main_flag = g_ctx.main_flag;
+	window_flag = g_ctx.window_flag;
 	cpu_count = g_ctx.cpu_count;
 	if (cpu_count > 0 && g_ctx.cpu_info)
 	{
@@ -82,6 +85,8 @@ gnwinfo_ctx_update_1s(void)
 	if (main_flag & MAIN_INFO_AUDIO)
 		audio = NWL_GetAudio(&audio_count);
 	NWL_GetMemSensors(g_ctx.lib.NwSmbus, &mem_sensors);
+	if (window_flag & GUI_WINDOW_SENSOR)
+		sensors = NW_Sensors();
 
 	AcquireSRWLockExclusive(&g_ctx.lock);
 	PNODE old_network = g_ctx.network;
@@ -99,9 +104,12 @@ gnwinfo_ctx_update_1s(void)
 	g_ctx.audio = audio;
 	g_ctx.audio_count = audio_count;
 	g_ctx.mem_sensors = mem_sensors;
+	PNODE old_sensors = g_ctx.sensors;
+	g_ctx.sensors = sensors;
 	ReleaseSRWLockExclusive(&g_ctx.lock);
 
 	NWL_NodeFree(old_network, 1);
+	NWL_NodeFree(old_sensors, 1);
 	free(old_audio);
 	free(cpu_info);
 }
@@ -403,6 +411,7 @@ gnwinfo_ctx_exit(void)
 	NWL_NodeFree(g_ctx.spd, 1);
 	NWL_NodeFree(g_ctx.battery, 1);
 	NWL_NodeFree(g_ctx.edid, 1);
+	NWL_NodeFree(g_ctx.sensors, 1);
 	NW_Fini();
 	for (WORD i = 0; i < sizeof(g_ctx.image) / sizeof(g_ctx.image[0]); i++)
 		nk_gdip_image_free(g_ctx.image[i]);
