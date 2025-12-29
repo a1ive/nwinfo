@@ -71,6 +71,7 @@ cdi_init_smart(CDI_SMART * ptr, UINT64 flags)
 	ptr->FlagUsbASM1352R = check_flag(flags, CDI_FLAG_ENABLE_ASM1352R);
 	ptr->FlagAMD_RC2 = check_flag(flags, CDI_FLAG_ENABLE_AMD_RC2);
 	ptr->FlagUsbRealtek9220DP = check_flag(flags, CDI_FLAG_ENABLE_REALTEK_9220DP);
+	ptr->CsmiType = CAtaSmart::CSMI_TYPE_ENABLE_AUTO;
 
 	ptr->Init(check_flag(flags, CDI_FLAG_USE_WMI),
 		check_flag(flags, CDI_FLAG_ADVANCED_SEARCH),
