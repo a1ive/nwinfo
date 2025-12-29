@@ -69,9 +69,9 @@ void DebugPrint(CString cstr)
 
 	FILE* fp = NULL;
 #if _MSC_VER <= 1310
-	fp = _tfopen(file, _T("ac"));
+	fp = _tfopen(file, _T("a, ccs=UTF-8"));
 #else
-	_tfopen_s(&fp, file, _T("ac"));
+	_tfopen_s(&fp, file, _T("a, ccs=UTF-8"));
 #endif
 	
 	if (fp != NULL)
