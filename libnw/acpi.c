@@ -654,6 +654,14 @@ PNODE NW_Acpi(VOID)
 	PNODE pNode = NWL_NodeAlloc("ACPI", NFLG_TABLE);
 	if (NWLC->AcpiInfo)
 		NWL_NodeAppendChild(NWLC->NwRoot, pNode);
+
+	if (NWLC->NwRsdp == NULL)
+		NWLC->NwRsdp = NWL_GetRsdp();
+	if (NWLC->NwRsdt == NULL)
+		NWLC->NwRsdt = NWL_GetRsdt();
+	if (NWLC->NwXsdt == NULL)
+		NWLC->NwXsdt = NWL_GetXsdt();
+
 	if (NWLC->NwRsdp)
 		PrintRSDP(pNode, NWLC->NwRsdp);
 	if (NWLC->NwXsdt)

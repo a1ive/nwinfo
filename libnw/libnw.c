@@ -2,6 +2,7 @@
 
 #include "libnw.h"
 #include "utils.h"
+#include "efivars.h"
 
 #include <libcpuid.h>
 #include "../libcdi/libcdi.h"
@@ -61,6 +62,7 @@ VOID NW_Init(PNWLIB_CONTEXT pContext)
 		NWL_Debug = RealDebugPrint;
 	NWL_NtGetVersion(&NWLC->NwOsInfo);
 	GetNativeSystemInfo(&NWLC->NwSi);
+	NWLC->NwIsEfi = NWL_IsEfi();
 	NWLC->NwRoot = NWL_NodeAlloc("NWinfo", 0);
 	WR0_OpenMutexes();
 
@@ -75,9 +77,6 @@ VOID NW_Init(PNWLIB_CONTEXT pContext)
 		NWL_NodeAppendMultiSz(&NWLC->ErrLog, "Running under WoW64 mode");
 
 	NWLC->NwDrv = WR0_OpenDriver();
-	NWLC->NwRsdp = NWL_GetRsdp();
-	NWLC->NwRsdt = NWL_GetRsdt();
-	NWLC->NwXsdt = NWL_GetXsdt();
 	NWLC->NwSmbios = NWL_GetSmbios();
 	NWLC->NwSmart = cdi_create_smart();
 	NWLC->NwSmartFlags = CDI_FLAG_DEFAULT;

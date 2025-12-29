@@ -103,6 +103,7 @@ typedef struct _NWLIB_CONTEXT
 
 	OSVERSIONINFOEXW NwOsInfo;
 	SYSTEM_INFO NwSi;
+	BOOL NwIsEfi;
 
 	struct cpu_raw_data_array_t* NwCpuRaw;
 	struct system_id_t* NwCpuid;

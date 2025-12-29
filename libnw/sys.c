@@ -356,12 +356,12 @@ static void PrintTpmInfo(PNODE node)
 	HMODULE hL = NULL;
 	TPM_DEVICE_INFO tpmInfo = { 0 };
 	struct acpi_table_header* acpiHdr = NULL;
-	acpiHdr = NWL_GetAcpi('2MPT');
+	acpiHdr = NWL_GetSysAcpi('2MPT');
 	if (acpiHdr)
 		NWL_NodeAttrSet(node, "TPM", "v2.0", 0);
 	else
 	{
-		acpiHdr = NWL_GetAcpi('APCT');
+		acpiHdr = NWL_GetSysAcpi('APCT');
 		if (acpiHdr)
 			NWL_NodeAttrSet(node, "TPM", "v1.2", 0);
 	}
@@ -373,7 +373,8 @@ static void PrintTpmInfo(PNODE node)
 	hL = LoadLibraryW(L"tbs.dll");
 	if (hL)
 		*(FARPROC*)&GetTpmInfo = GetProcAddress(hL, "Tbsi_GetDeviceInfo");
-	if (GetTpmInfo) {
+	if (GetTpmInfo)
+	{
 		UINT32 dwRet = GetTpmInfo(sizeof(tpmInfo), &tpmInfo);
 		NWL_NodeAttrSetf(node, "TPM", 0, "%s", (dwRet == 0) ? TpmVersion(tpmInfo.tpmVersion) : "NOT FOUND");
 	}
@@ -527,7 +528,7 @@ PNODE NW_System(VOID)
 	PrintProductKey(node);
 	PrintSysMetrics(node);
 	PrintBootInfo(node);
-	NWL_NodeAttrSet(node, "Firmware", NWL_IsEfi() ? "UEFI" : "Legacy BIOS", 0);
+	NWL_NodeAttrSet(node, "Firmware", NWLC->NwIsEfi ? "UEFI" : "Legacy BIOS", 0);
 	PrintTpmInfo(node);
 	PrintCiInfo(node);
 	PrintMemInfo(node);

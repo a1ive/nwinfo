@@ -25,14 +25,11 @@ LIBNW_API BOOL NWL_ReadMemory(PVOID buffer, DWORD_PTR address, DWORD length);
 
 void NWL_ConvertLengthToIpv4Mask(ULONG MaskLength, ULONG* Mask);
 
-LIBNW_API UINT NWL_GetSystemFirmwareTable(DWORD FirmwareTableProviderSignature, DWORD FirmwareTableID,
-	PVOID pFirmwareTableBuffer, DWORD BufferSize);
-
 LIBNW_API struct RAW_SMBIOS_DATA* NWL_GetSmbios(void);
 LIBNW_API struct ACPI_RSDP_V2* NWL_GetRsdp(VOID);
 LIBNW_API struct ACPI_RSDT* NWL_GetRsdt(VOID);
 LIBNW_API struct ACPI_XSDT* NWL_GetXsdt(VOID);
-LIBNW_API PVOID NWL_GetAcpi(DWORD TableId);
+LIBNW_API PVOID NWL_GetSysAcpi(DWORD TableId);
 LIBNW_API PVOID NWL_GetAcpiByAddr(DWORD_PTR Addr);
 
 LIBNW_API UINT8 NWL_AcpiChecksum(VOID* base, UINT size);

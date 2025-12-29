@@ -295,7 +295,7 @@ PNODE NW_Uefi(VOID)
 		NWL_NodeAppendChild(NWLC->NwRoot, node);
 	PrintBootEnv(node);
 	PrintSecureBoot(node);
-	if (NWL_IsEfi() == FALSE)
+	if (NWLC->NwIsEfi == FALSE)
 		return node;
 	PrintOsIndicationsSupported(node);
 	PrintBootOptionSupport(node);

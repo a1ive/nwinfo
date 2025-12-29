@@ -9,11 +9,11 @@
 #include "efivars.h"
 
 GUID EFI_GV_GUID = { 0x8BE4DF61UL, 0x93CA, 0x11D2, { 0xAA, 0x0D, 0x00, 0xE0, 0x98, 0x03, 0x2B, 0x8C } };
-GUID EFI_EMPTY_GUID = { 0 };
 
 BOOL
 NWL_IsEfi(VOID)
 {
+	GUID EFI_EMPTY_GUID = { 0 };
 	BOOL IsEfi = FALSE;
 	SYSTEM_BOOT_ENVIRONMENT_INFORMATION BootInfo = { 0 };
 	if (NWL_NtQuerySystemInformation(SystemBootEnvironmentInformation, &BootInfo, sizeof(BootInfo), NULL))
