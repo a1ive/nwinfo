@@ -13,9 +13,6 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
-    <Filter Include="GitHub">
-      <UniqueIdentifier>{2f276474-58ab-4fa0-9532-14a803953806}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="AtaSmart.cpp">
@@ -92,15 +89,7 @@
       <Filter>Sources</Filter>
     </None>
     <None Include="packages.config" />
-    <None Include="..\README.md">
-      <Filter>GitHub</Filter>
-    </None>
-    <None Include="..\.github\workflows\msbuild.yml">
-      <Filter>GitHub</Filter>
-    </None>
-    <None Include="..\.github\dependabot.yml">
-      <Filter>GitHub</Filter>
-    </None>
+    <None Include="README.md" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Resource.rc">

@@ -23,11 +23,20 @@
     <ClInclude Include="lhm.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="lhmver.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="exports.def">
       <Filter>Source Files</Filter>
     </None>
     <None Include="packages.config" />
+    <None Include="README.md" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="Resource.rc">
+      <Filter>RC</Filter>
+    </ResourceCompile>
   </ItemGroup>
 </Project>

@@ -1,7 +1,6 @@
 // Microsoft Visual C++ generated resource script.
 //
-#include "resource.h"
-#include "libnw/version.h"
+#include "lhmver.h"
 
 #define APSTUDIO_READONLY_SYMBOLS
 /////////////////////////////////////////////////////////////////////////////
@@ -23,16 +22,11 @@
 
 1 TEXTINCLUDE 
 BEGIN
-    "resource.h\0"
-END
-
-2 TEXTINCLUDE 
-BEGIN
     "#include ""winres.h""\r\n"
     "\0"
 END
 
-3 TEXTINCLUDE 
+2 TEXTINCLUDE 
 BEGIN
     "\r\n"
     "\0"
@@ -48,7 +42,6 @@ END
 
 // Icon with lowest ID value placed first to ensure application icon
 // remains consistent on all systems.
-IDI_ICON1               ICON                    "docs\\images\\icon.ico"
 
 
 /////////////////////////////////////////////////////////////////////////////
@@ -59,8 +52,8 @@ IDI_ICON1               ICON                    "docs\\images\\icon.ico"
 //
 
 VS_VERSION_INFO     VERSIONINFO
- FILEVERSION        NWINFO_VERSION
- PRODUCTVERSION     NWINFO_VERSION
+ FILEVERSION        LIBLHM_VERSION
+ PRODUCTVERSION     LIBLHM_VERSION
  FILEFLAGSMASK      VS_FFI_FILEFLAGSMASK
 #ifdef _DEBUG
  FILEFLAGS          VS_FF_DEBUG
@@ -68,19 +61,19 @@ VS_VERSION_INFO     VERSIONINFO
  FILEFLAGS          0x0L
 #endif
  FILEOS             VOS__WINDOWS32
- FILETYPE           VFT_APP
+ FILETYPE           VFT_DLL
  FILESUBTYPE        0x0L
 BEGIN
     BLOCK           "StringFileInfo"
     BEGIN
         BLOCK       "040904b0"
         BEGIN
-            VALUE   "CompanyName",      NWINFO_COMPANY
-            VALUE   "FileVersion",      NWINFO_VERSION_STR
-            VALUE   "ProductVersion",   NWINFO_VERSION_STR
-            VALUE   "FileDescription",  NWINFO_FILEDESC
-            VALUE   "ProductName",      NWINFO_CLI
-            VALUE   "LegalCopyright",   NWINFO_COPYRIGHT
+            VALUE   "CompanyName",      LIBLHM_COMPANY
+            VALUE   "FileVersion",      LIBLHM_VERSION_STR
+            VALUE   "ProductVersion",   LIBLHM_VERSION_STR
+            VALUE   "FileDescription",  LIBLHM_FILEDESC
+            VALUE   "ProductName",      LIBLHM_DLL
+            VALUE   "LegalCopyright",   LIBLHM_COPYRIGHT
         END
     END
     BLOCK "VarFileInfo"

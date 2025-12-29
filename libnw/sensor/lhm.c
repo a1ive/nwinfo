@@ -66,6 +66,20 @@ static void lhm_fini(void)
 	ZeroMemory(&ctx, sizeof(ctx));
 }
 
+static LPCSTR lhm_get_key_name(LhmSensorInfo* p)
+{
+	WCHAR id[LHM_STR_MAX];
+	wcscpy_s(id, LHM_STR_MAX, p->id);
+	for (int i = 0; i < 2; i++)
+	{
+		WCHAR* p = wcsrchr(id, L'/');
+		if (p == NULL || p == id)
+			break;
+		*p = L'\0';
+	}
+	return NWL_Ucs2ToUtf8(id);
+}
+
 static void lhm_get(PNODE node)
 {
 	if (!ctx.fn_enum(&ctx.lhm, &ctx.count))
@@ -74,10 +88,13 @@ static void lhm_get(PNODE node)
 	for (size_t i = 0; i < ctx.count; i++)
 	{
 		LhmSensorInfo* p = &ctx.lhm[i];
-		LPCSTR hw = NWL_Ucs2ToUtf8(p->hardware);
+		LPCSTR hw = lhm_get_key_name(p);
 		PNODE key = NWL_NodeGetChild(node, hw);
 		if (key == NULL)
+		{
 			key = NWL_NodeAppendNew(node, hw, NFLG_ATTGROUP | NAFLG_FMT_KEY_QUOTE);
+			NWL_NodeAttrSet(key, "Hardware", NWL_Ucs2ToUtf8(p->hardware), NAFLG_FMT_NEED_QUOTE | NAFLG_FMT_KEY_QUOTE);
+		}
 		NWL_NodeAttrSetf(key, NWL_Ucs2ToUtf8(p->name), NAFLG_FMT_NUMERIC | NAFLG_FMT_KEY_QUOTE, "%.2f", p->value);
 	}
 }

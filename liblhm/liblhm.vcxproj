@@ -103,10 +103,15 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="lhm.h" />
+    <ClInclude Include="lhmver.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="exports.def" />
     <None Include="packages.config" />
+    <None Include="README.md" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="Resource.rc" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

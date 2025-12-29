@@ -1,5 +1,6 @@
 #include <windows.h>
 #include <commctrl.h>
+#include <shellapi.h>
 #include <format>
 #include <memory>
 #include <string>
@@ -7,21 +8,24 @@
 #include <unordered_map>
 #include <vector>
 
-#include "../liblhm/lhm.h"
+#include "lhm.h"
 
 #pragma comment(lib, "Comctl32.lib")
 
 namespace
 {
-	constexpr wchar_t kWindowClassName[] = L"TestCodeHardwareMonitorWindow";
-	constexpr wchar_t kWindowTitle[] = L"Libre Hardware Monitor";
-	constexpr UINT_PTR kUpdateTimerId = 1;
-	constexpr UINT kUpdateIntervalMs = 1000;
-	constexpr int kValueColumnWidth = 120;
-	constexpr int kMaxColumnWidth = 120;
-	constexpr int kMinSensorColumnWidth = 160;
-	constexpr int kCellPadding = 6;
-	constexpr UINT kToggleMenuBase = 2000;
+	constexpr wchar_t LHM_WINDOW_CLASS[] = L"HardwareMonitorWindow";
+	constexpr wchar_t LHM_WINDOW_TITLE[] = L"LibreHardwareMonitor";
+	constexpr UINT_PTR UPDATE_TIMER_ID = 1;
+	constexpr UINT UPDATE_INTERVAL_MS = 1000;
+	constexpr int COL_VAL_WIDTH = 60;
+	constexpr int COL_MAX_WIDTH = 60;
+	constexpr int COL_MIN_WIDTH = 60;
+	constexpr int CELL_PADDING = 6;
+	constexpr int LHM_WINDOW_WIDTH = 400;
+	constexpr int LHM_WINDOW_HEIGHT = 600;
+	constexpr UINT MENU_RUN_AS_ADMIN = 1000;
+	constexpr UINT MENU_TOGGLE_BASE = 2000;
 
 	HINSTANCE g_instance = nullptr;
 	HWND g_main = nullptr;
@@ -45,6 +49,8 @@ namespace
 
 	void UpdateHeaderColumns(int total_width);
 	void UpdateHeaderColumnsForTree();
+	bool IsAdmin();
+	bool RelaunchElevated();
 
 	std::wstring FormatReading(bool has_value, float value)
 	{
@@ -147,6 +153,11 @@ namespace
 		}
 
 		ExpandAllGroups();
+		HTREEITEM root = TreeView_GetRoot(g_tree);
+		if (root)
+		{
+			TreeView_EnsureVisible(g_tree, root);
+		}
 		UpdateHeaderColumnsForTree();
 		g_sensor_count = sensor_count;
 		return true;
@@ -200,26 +211,26 @@ namespace
 		HDITEMW item{};
 		item.mask = HDI_TEXT | HDI_WIDTH;
 
-		item.cxy = kMinSensorColumnWidth;
+		item.cxy = COL_MIN_WIDTH;
 		item.pszText = const_cast<wchar_t*>(L"Sensor");
 		Header_InsertItem(g_header, 0, &item);
 
-		item.cxy = kValueColumnWidth;
+		item.cxy = COL_VAL_WIDTH;
 		item.pszText = const_cast<wchar_t*>(L"Value");
 		Header_InsertItem(g_header, 1, &item);
 
-		item.cxy = kMaxColumnWidth;
+		item.cxy = COL_MAX_WIDTH;
 		item.pszText = const_cast<wchar_t*>(L"Max");
 		Header_InsertItem(g_header, 2, &item);
 	}
 
 	void UpdateHeaderColumns(int total_width)
 	{
-		const int reserved = kValueColumnWidth + kMaxColumnWidth;
+		const int reserved = COL_VAL_WIDTH + COL_MAX_WIDTH;
 		int sensor_width = total_width - reserved;
-		if (sensor_width < kMinSensorColumnWidth)
+		if (sensor_width < COL_MIN_WIDTH)
 		{
-			sensor_width = kMinSensorColumnWidth;
+			sensor_width = COL_MIN_WIDTH;
 		}
 
 		HDITEMW item{};
@@ -228,10 +239,10 @@ namespace
 		item.cxy = sensor_width;
 		Header_SetItem(g_header, 0, &item);
 
-		item.cxy = kValueColumnWidth;
+		item.cxy = COL_VAL_WIDTH;
 		Header_SetItem(g_header, 1, &item);
 
-		item.cxy = kMaxColumnWidth;
+		item.cxy = COL_MAX_WIDTH;
 		Header_SetItem(g_header, 2, &item);
 	}
 
@@ -252,6 +263,72 @@ namespace
 
 		UpdateHeaderColumns(width);
 	}
+
+	bool IsAdmin()
+	{
+		BOOL is_admin = FALSE;
+		SID_IDENTIFIER_AUTHORITY nt_authority = SECURITY_NT_AUTHORITY;
+		PSID admin_group = nullptr;
+		if (AllocateAndInitializeSid(&nt_authority, 2, SECURITY_BUILTIN_DOMAIN_RID, DOMAIN_ALIAS_RID_ADMINS,
+				0, 0, 0, 0, 0, 0, &admin_group))
+		{
+			if (!CheckTokenMembership(nullptr, admin_group, &is_admin))
+			{
+				is_admin = FALSE;
+			}
+			FreeSid(admin_group);
+		}
+		return is_admin != FALSE;
+	}
+
+	std::wstring BuildRelaunchParameters()
+	{
+		int argc = 0;
+		LPWSTR* argv = CommandLineToArgvW(GetCommandLineW(), &argc);
+		if (!argv || argc <= 1)
+		{
+			if (argv)
+			{
+				LocalFree(argv);
+			}
+			return L"";
+		}
+
+		std::wstring params;
+		for (int i = 1; i < argc; ++i)
+		{
+			if (i > 1)
+			{
+				params.push_back(L' ');
+			}
+			params.push_back(L'"');
+			params.append(argv[i]);
+			params.push_back(L'"');
+		}
+		LocalFree(argv);
+		return params;
+	}
+
+	bool RelaunchElevated()
+	{
+		WCHAR prog[MAX_PATH]{};
+		if (!GetModuleFileNameW(nullptr, prog, MAX_PATH))
+		{
+			return false;
+		}
+
+		const std::wstring params = BuildRelaunchParameters();
+
+		SHELLEXECUTEINFOW sei{};
+		sei.cbSize = sizeof(sei);
+		sei.lpVerb = L"runas";
+		sei.lpFile = prog;
+		sei.lpParameters = params.empty() ? nullptr : params.c_str();
+		sei.nShow = SW_SHOWDEFAULT;
+
+		return ShellExecuteExW(&sei) != FALSE;
+	}
+
 
 	void LayoutControls(HWND hwnd)
 	{
@@ -326,10 +403,10 @@ namespace
 		FillRect(hdc, &value_rect, brush);
 		FillRect(hdc, &max_rect, brush);
 
-		value_rect.left += kCellPadding;
-		value_rect.right -= kCellPadding;
-		max_rect.left += kCellPadding;
-		max_rect.right -= kCellPadding;
+		value_rect.left += CELL_PADDING;
+		value_rect.right -= CELL_PADDING;
+		max_rect.left += CELL_PADDING;
+		max_rect.right -= CELL_PADDING;
 
 		const wchar_t* value_ptr = value_text.empty() ? L"" : value_text.data();
 		const wchar_t* max_ptr = max_text.empty() ? L"" : max_text.data();
@@ -351,7 +428,7 @@ namespace
 			return false;
 		}
 
-		g_tree = CreateWindowExW(WS_EX_CLIENTEDGE, WC_TREEVIEWW, nullptr, WS_CHILD | WS_VISIBLE | TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | TVS_FULLROWSELECT | TVS_SHOWSELALWAYS | TVS_NOHSCROLL, 0, 0, 0, 0, hwnd, nullptr, g_instance, nullptr);
+		g_tree = CreateWindowExW(WS_EX_CLIENTEDGE, WC_TREEVIEWW, nullptr, WS_CHILD | WS_VISIBLE | TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | TVS_FULLROWSELECT | TVS_SHOWSELALWAYS | TVS_NOHSCROLL | TVS_INFOTIP, 0, 0, 0, 0, hwnd, nullptr, g_instance, nullptr);
 		if (!g_tree)
 		{
 			return false;
@@ -380,6 +457,18 @@ namespace
 			return false;
 		}
 
+		HMENU file_menu = CreatePopupMenu();
+		if (!file_menu)
+		{
+			DestroyMenu(toggle_menu);
+			DestroyMenu(menu_bar);
+			return false;
+		}
+
+		const UINT admin_flags = MF_STRING | (IsAdmin() ? MF_GRAYED : MF_ENABLED);
+		AppendMenuW(file_menu, admin_flags, MENU_RUN_AS_ADMIN, L"Run as &Administrator");
+		AppendMenuW(menu_bar, MF_POPUP, reinterpret_cast<UINT_PTR>(file_menu), L"&File");
+
 		g_toggle_count = LhmGetToggleCount();
 		for (size_t i = 0; i < g_toggle_count; ++i)
 		{
@@ -393,7 +482,7 @@ namespace
 			}
 
 			const UINT flags = MF_STRING | (enabled ? MF_CHECKED : MF_UNCHECKED);
-			AppendMenuW(toggle_menu, flags, kToggleMenuBase + static_cast<UINT>(i), name);
+			AppendMenuW(toggle_menu, flags, MENU_TOGGLE_BASE + static_cast<UINT>(i), name);
 		}
 
 		AppendMenuW(menu_bar, MF_POPUP, reinterpret_cast<UINT_PTR>(toggle_menu), L"&Hardware");
@@ -431,13 +520,13 @@ namespace
 			{
 				return -1;
 			}
-			SetTimer(hwnd, kUpdateTimerId, kUpdateIntervalMs, nullptr);
+			SetTimer(hwnd, UPDATE_TIMER_ID, UPDATE_INTERVAL_MS, nullptr);
 			return 0;
 		case WM_SIZE:
 			LayoutControls(hwnd);
 			return 0;
 		case WM_TIMER:
-			if (w_param == kUpdateTimerId)
+			if (w_param == UPDATE_TIMER_ID)
 			{
 				UpdateValues();
 			}
@@ -445,9 +534,17 @@ namespace
 		case WM_COMMAND:
 		{
 			const UINT command_id = LOWORD(w_param);
-			if (command_id >= kToggleMenuBase && command_id < kToggleMenuBase + g_toggle_count)
+			if (command_id == MENU_RUN_AS_ADMIN)
 			{
-				const size_t toggle_index = command_id - kToggleMenuBase;
+				if (!IsAdmin() && RelaunchElevated())
+				{
+					PostQuitMessage(0);
+				}
+				return 0;
+			}
+			if (command_id >= MENU_TOGGLE_BASE && command_id < MENU_TOGGLE_BASE + g_toggle_count)
+			{
+				const size_t toggle_index = command_id - MENU_TOGGLE_BASE;
 				const wchar_t* name = nullptr;
 				bool enabled = false;
 				if (!LhmGetToggleInfo(toggle_index, &name, &enabled))
@@ -472,9 +569,29 @@ namespace
 		case WM_NOTIFY:
 		{
 			const NMHDR* header = reinterpret_cast<const NMHDR*>(l_param);
-			if (header->hwndFrom == g_tree && header->code == NM_CUSTOMDRAW)
+			if (header->hwndFrom == g_tree)
 			{
-				return HandleTreeCustomDraw(reinterpret_cast<const NMTVCUSTOMDRAW*>(l_param));
+				if (header->code == NM_CUSTOMDRAW)
+				{
+					return HandleTreeCustomDraw(reinterpret_cast<const NMTVCUSTOMDRAW*>(l_param));
+				}
+				if (header->code == TVN_GETINFOTIPW)
+				{
+					auto* info = reinterpret_cast<NMTVGETINFOTIPW*>(l_param);
+					auto* node = reinterpret_cast<SensorNode*>(info->lParam);
+					if (info->pszText && info->cchTextMax > 0)
+					{
+						if (node)
+						{
+							wcsncpy_s(info->pszText, info->cchTextMax, node->id.c_str(), _TRUNCATE);
+						}
+						else
+						{
+							info->pszText[0] = L'\0';
+						}
+					}
+					return 0;
+				}
 			}
 			if (header->hwndFrom == g_header)
 			{
@@ -492,7 +609,7 @@ namespace
 			break;
 		}
 		case WM_DESTROY:
-			KillTimer(hwnd, kUpdateTimerId);
+			KillTimer(hwnd, UPDATE_TIMER_ID);
 			PostQuitMessage(0);
 			return 0;
 		}
@@ -501,9 +618,14 @@ namespace
 	}
 }
 
-int WINAPI wWinMain(HINSTANCE instance, HINSTANCE, PWSTR, int cmd_show)
+int WINAPI wWinMain(
+	_In_ HINSTANCE hInstance,
+	_In_opt_ HINSTANCE hPrevInstance,
+	_In_ LPWSTR lpCmdLine,
+	_In_ int nShowCmd
+)
 {
-	g_instance = instance;
+	g_instance = hInstance;
 
 	INITCOMMONCONTROLSEX controls{};
 	controls.dwSize = sizeof(controls);
@@ -520,11 +642,11 @@ int WINAPI wWinMain(HINSTANCE instance, HINSTANCE, PWSTR, int cmd_show)
 	wc.cbSize = sizeof(wc);
 	wc.style = CS_HREDRAW | CS_VREDRAW;
 	wc.lpfnWndProc = MainWindowProc;
-	wc.hInstance = instance;
+	wc.hInstance = hInstance;
 	wc.hIcon = LoadIconW(nullptr, IDI_APPLICATION);
 	wc.hCursor = LoadCursorW(nullptr, IDC_ARROW);
 	wc.hbrBackground = reinterpret_cast<HBRUSH>(COLOR_WINDOW + 1);
-	wc.lpszClassName = kWindowClassName;
+	wc.lpszClassName = LHM_WINDOW_CLASS;
 	wc.hIconSm = LoadIconW(nullptr, IDI_APPLICATION);
 
 	if (!RegisterClassExW(&wc))
@@ -533,14 +655,15 @@ int WINAPI wWinMain(HINSTANCE instance, HINSTANCE, PWSTR, int cmd_show)
 		return 1;
 	}
 
-	HWND hwnd = CreateWindowExW(0, kWindowClassName, kWindowTitle, WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT, 900, 600, nullptr, nullptr, instance, nullptr);
+	HWND hwnd = CreateWindowExW(0, LHM_WINDOW_CLASS, LHM_WINDOW_TITLE, WS_OVERLAPPEDWINDOW,
+		CW_USEDEFAULT, CW_USEDEFAULT, LHM_WINDOW_WIDTH, LHM_WINDOW_HEIGHT, nullptr, nullptr, hInstance, nullptr);
 	if (!hwnd)
 	{
 		LhmShutdown();
 		return 1;
 	}
 
-	ShowWindow(hwnd, cmd_show);
+	ShowWindow(hwnd, nShowCmd);
 	UpdateWindow(hwnd);
 
 	MSG msg{};

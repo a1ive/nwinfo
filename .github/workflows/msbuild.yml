@@ -117,6 +117,7 @@ jobs:
           libcdi\README.md
           libcdi\LICENSE.txt
           liblhm\lhm.h
+          liblhm\README.md
           liblhm\LICENSE.txt
           x64\DLLRelease\libnw.dll
           x64\DLLRelease\libnw.lib

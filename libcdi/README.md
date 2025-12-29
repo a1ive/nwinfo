@@ -1,7 +1,7 @@
 ﻿
 # libcdi
 
-![GitHub License](https://img.shields.io/github/license/a1ive/libcdi)
+![License](https://img.shields.io/badge/LICENSE-MIT-green)
 
 
 Dynamic library for accessing S.M.A.R.T. information, based on [CrystalDiskInfo](https://github.com/hiyohiyo/CrystalDiskInfo).

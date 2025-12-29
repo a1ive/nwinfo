@@ -139,10 +139,8 @@
     <ClInclude Include="version.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\.github\dependabot.yml" />
-    <None Include="..\.github\workflows\msbuild.yml" />
-    <None Include="..\README.md" />
     <None Include="packages.config" />
+    <None Include="README.md" />
     <None Include="Source.def" />
   </ItemGroup>
   <ItemGroup>
