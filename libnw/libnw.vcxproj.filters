@@ -284,6 +284,9 @@
     <ClCompile Include="sensor\gpuz_shmem.c">
       <Filter>sensor</Filter>
     </ClCompile>
+    <ClCompile Include="sensor\cpu_sensors.c">
+      <Filter>sensor</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
