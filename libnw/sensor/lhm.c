@@ -95,7 +95,13 @@ static void lhm_get(PNODE node)
 			key = NWL_NodeAppendNew(node, hw, NFLG_ATTGROUP | NAFLG_FMT_KEY_QUOTE);
 			NWL_NodeAttrSet(key, "Hardware", NWL_Ucs2ToUtf8(p->hardware), NAFLG_FMT_NEED_QUOTE | NAFLG_FMT_KEY_QUOTE);
 		}
-		NWL_NodeAttrSetf(key, NWL_Ucs2ToUtf8(p->name), NAFLG_FMT_NUMERIC | NAFLG_FMT_KEY_QUOTE, "%.2f", p->value);
+		LPCSTR st = NWL_Ucs2ToUtf8(p->type);
+		PNODE subkey = NWL_NodeGetChild(key, st);
+		if (subkey == NULL)
+		{
+			subkey = NWL_NodeAppendNew(key, st, NFLG_ATTGROUP | NAFLG_FMT_KEY_QUOTE);
+		}
+		NWL_NodeAttrSetf(subkey, NWL_Ucs2ToUtf8(p->name), NAFLG_FMT_NUMERIC | NAFLG_FMT_KEY_QUOTE, "%.2f", p->value);
 	}
 }
 

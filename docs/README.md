@@ -10,6 +10,7 @@
 **NWinfo** is a Win32 program that allows you to obtain system and hardware information.
 
 ## Features
+
 * Retrieves detailed information about SMBIOS, CPUID, S.M.A.R.T., PCI, EDID, and more.
 * Supports exporting in JSON, YAML, and HTML formats.
 * Gathers information directly without relying on WMI.
@@ -19,6 +20,7 @@
 - Source code: https://github.com/a1ive/nwinfo  
 - Latest Release: [GitHub Releases](https://github.com/a1ive/nwinfo/releases)  
 - Nightly Build: [Github Actions](https://github.com/a1ive/nwinfo/actions/workflows/msbuild.yml) | [Direct Link](https://nightly.link/a1ive/nwinfo/workflows/msbuild/master/nwinfo.zip)
+- Libraries: [Direct Link](https://nightly.link/a1ive/nwinfo/workflows/msbuild/master/NWinfo%20Library.zip)
 
 <div style="page-break-after: always;"></div>
 
