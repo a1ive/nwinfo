@@ -63,7 +63,7 @@ static struct optparse_option nwOptions[] =
 	{ "smbios", 0, OPTPARSE_OPTIONAL },
 	{ "disk", 0, OPTPARSE_OPTIONAL },
 	{ "smart", 0, OPTPARSE_REQUIRED },
-	{ "display", 0, OPTPARSE_NONE },
+	{ "display", 0, OPTPARSE_OPTIONAL },
 	{ "pci", 0, OPTPARSE_OPTIONAL },
 	{ "usb", 0, OPTPARSE_NONE },
 	{ "spd", 0, OPTPARSE_OPTIONAL },
@@ -139,7 +139,8 @@ static void nwinfo_help(void)
 		"                   Use 'DEFAULT' to specify the above features.\n"
 		"                   Other features are 'ADVANCED', 'HD204UI',\n"
 		"                   'ADATA', 'NOWAKEUP' and 'RTK9220DP'.\n"
-		"  --display        Print EDID info.\n"
+		"  --display[=FILE] Print EDID info.\n"
+		"    FILE           Specify the file name of the EDID dump.\n"
 		"  --pci[=CLASS]    Print PCI info.\n"
 		"                   CLASS specifies the class code of PCI devices,\n"
 		"                   e.g. '0C05' (SMBus).\n"
@@ -371,6 +372,8 @@ int main(int argc, char* argv[])
 			break;
 		}
 		case NW_OPT_DISPLAY:
+			if (options.optarg && options.optarg[0])
+				nwContext.EdidDump = options.optarg;
 			nwContext.EdidInfo = TRUE;
 			break;
 		case NW_OPT_PCI:

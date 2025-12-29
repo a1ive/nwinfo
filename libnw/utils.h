@@ -39,6 +39,7 @@ LPCSTR NWL_GetBusTypeString(STORAGE_BUS_TYPE Type);
 LPCSTR NWL_GuidToStr(UCHAR Guid[16]);
 LPCSTR NWL_WinGuidToStr(BOOL bBracket, GUID* pGuid);
 BOOL NWL_StrToGuid(const CHAR* cchText, GUID* pGuid);
+PBYTE NWL_LoadDump(LPCSTR pPath, DWORD minSize, DWORD* outSize);
 #if 0
 LIBNW_API HMONITOR NWL_GetMonitorFromName(LPCWSTR lpDevice);
 #endif

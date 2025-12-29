@@ -505,6 +505,51 @@ NWL_GetMonitorFromName(LPCWSTR lpDevice)
 }
 #endif
 
+PBYTE NWL_LoadDump(LPCSTR pPath, DWORD minSize, DWORD* outSize)
+{
+	PBYTE buf = NULL;
+	DWORD bytesRead = 0;
+	HANDLE hFile = CreateFileA(pPath, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+	if (hFile == NULL || hFile == INVALID_HANDLE_VALUE)
+	{
+		snprintf(NWLC->NwBuf, NWINFO_BUFSZ, "%s open failed", pPath);
+		NWL_NodeAppendMultiSz(&NWLC->ErrLog, NWLC->NwBuf);
+		goto out;
+	}
+
+	DWORD dwSize = GetFileSize(hFile, NULL);
+	if (dwSize == INVALID_FILE_SIZE || dwSize < minSize)
+	{
+		snprintf(NWLC->NwBuf, NWINFO_BUFSZ, "Bad file %s", pPath);
+		NWL_NodeAppendMultiSz(&NWLC->ErrLog, NWLC->NwBuf);
+		goto out;
+	}
+
+	buf = (PBYTE)malloc(dwSize);
+	if (!buf)
+	{
+		NWL_NodeAppendMultiSz(&NWLC->ErrLog, "Memory allocation failed in " __FUNCTION__);
+		goto out;
+	}
+
+	BOOL bRet = ReadFile(hFile, buf, dwSize, &bytesRead, NULL);
+	if (bRet == FALSE || bytesRead < minSize)
+	{
+		snprintf(NWLC->NwBuf, NWINFO_BUFSZ, "%s read error", NWLC->EdidDump);
+		NWL_NodeAppendMultiSz(&NWLC->ErrLog, NWLC->NwBuf);
+		bytesRead = 0;
+		free(buf);
+		buf = NULL;
+		goto out;
+	}
+
+out:
+	if (hFile && hFile != INVALID_HANDLE_VALUE)
+		CloseHandle(hFile);
+	*outSize = bytesRead;
+	return buf;
+}
+
 #define SECPERMIN 60
 #define SECPERHOUR (60*SECPERMIN)
 #define SECPERDAY (24*SECPERHOUR)

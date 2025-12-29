@@ -77,6 +77,7 @@ typedef struct _NWLIB_CONTEXT
 	LPCSTR ProductPolicy;
 	LPCSTR CpuDump;
 	LPCSTR SpdDump;
+	LPCSTR EdidDump;
 
 #define NW_NET_ACTIVE (1 << 0)
 #define NW_NET_PHYS   (1 << 1)

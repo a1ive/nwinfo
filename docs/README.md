@@ -118,15 +118,16 @@ Exports active physical network interfaces with IPv4 addresses to `report.html` 
   `CYPRESS`, `MEMORY`, `JMICRON`, `ASMEDIA`, `REALTEK`, `MEGARAID`, `VROC`, `ASM1352R` and `HIDERAID`.  
   Use `DEFAULT` to specify the above features.  
   Other features are `ADVANCED`, `HD204UI`, `ADATA`, `NOWAKEUP` and `RTK9220DP`.  
-- --display  
+- --display[=`FILE`]  
   Print EDID info.  
+  `FILE` specifies the file name of the SPD dump.  
 - --pci[=`CLASS`]  
   Print PCI info.  
   `CLASS` specifies the class code of PCI devices, e.g. `0C05` (SMBus).  
 - --spd[=`FILE`]  
   Print DIMM SPD info.  
   Driver is required to access SPD data.  
-  :warning: This option may damage the hardware.
+  :warning: This option may damage the hardware.  
   `FILE` specifies the file name of the SPD dump.  
 - --usb  
   Print USB info.  

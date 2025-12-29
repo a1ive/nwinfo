@@ -912,6 +912,19 @@ PNODE NW_Edid(VOID)
 	if (NWLC->EdidInfo)
 		NWL_NodeAppendChild(NWLC->NwRoot, node);
 
+	if (NWLC->EdidDump)
+	{
+		DWORD edidSize = 0;
+		PBYTE edidData = NWL_LoadDump(NWLC->EdidDump, 128, &edidSize);
+		if (edidData)
+		{
+			PNODE nm = NWL_NodeAppendNew(node, "Monitor", NFLG_TABLE_ROW);
+			DecodeEdid(edidData, edidSize, nm, L"FILE");
+			free(edidData);
+		}
+		return node;
+	}
+
 	hDevInfo = SetupDiGetClassDevsW(&GUID_DEVINTERFACE_MONITOR, NULL, NULL, DIGCF_PRESENT | DIGCF_DEVICEINTERFACE);
 	if (hDevInfo == INVALID_HANDLE_VALUE)
 	{

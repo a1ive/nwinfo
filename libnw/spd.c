@@ -1051,48 +1051,24 @@ ParseSpd(PNODE node, smbus_t* ctx, int id, UINT8 rawSpd[SPD_MAX_SIZE])
 	}
 }
 
-void LoadSpdDump(LPCSTR path, UINT8 rawSpd[SPD_MAX_SIZE])
-{
-	memset(rawSpd, 0xFF, SPD_MAX_SIZE);
-
-	HANDLE hFile = CreateFileA(path, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
-	if (hFile == NULL || hFile == INVALID_HANDLE_VALUE)
-	{
-		snprintf(NWLC->NwBuf, NWINFO_BUFSZ, "%s open failed", path);
-		NWL_NodeAppendMultiSz(&NWLC->ErrLog, NWLC->NwBuf);
-		return;
-	}
-	DWORD dwSize = GetFileSize(hFile, NULL);
-	if (dwSize == INVALID_FILE_SIZE || dwSize == 0)
-	{
-		snprintf(NWLC->NwBuf, NWINFO_BUFSZ, "Bad file %s", path);
-		NWL_NodeAppendMultiSz(&NWLC->ErrLog, NWLC->NwBuf);
-		CloseHandle(hFile);
-		return;
-	}
-	if (dwSize > SPD_MAX_SIZE)
-		dwSize = SPD_MAX_SIZE;
-	BOOL bRet = ReadFile(hFile, rawSpd, dwSize, &dwSize, NULL);
-	if (bRet == FALSE)
-	{
-		snprintf(NWLC->NwBuf, NWINFO_BUFSZ, "%s read error", path);
-		NWL_NodeAppendMultiSz(&NWLC->ErrLog, NWLC->NwBuf);
-	}
-	CloseHandle(hFile);
-}
-
 PNODE NW_Spd(VOID)
 {
 	int i = 0;
-	UINT8 rawSpd[SPD_MAX_SIZE];
+	UINT8 rawSpd[SPD_MAX_SIZE] = { 0xFF };
 	PNODE node = NWL_NodeAlloc("SPD", NFLG_TABLE);
 	if (NWLC->SpdInfo)
 		NWL_NodeAppendChild(NWLC->NwRoot, node);
 
 	if (NWLC->SpdDump)
 	{
-		LoadSpdDump(NWLC->SpdDump, rawSpd);
-		ParseSpd(node, NULL, 0, rawSpd);
+		DWORD dwSize = 0;
+		PBYTE buf = NWL_LoadDump(NWLC->SpdDump, 128, &dwSize);
+		if (buf)
+		{
+			memcpy(rawSpd, buf, min(SPD_MAX_SIZE, dwSize));
+			ParseSpd(node, NULL, 0, rawSpd);
+			free(buf);
+		}
 		goto out;
 	}
 
