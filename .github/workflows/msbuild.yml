@@ -105,7 +105,7 @@ jobs:
     - name: Upload Library
       uses: actions/upload-artifact@v6
       with:
-        name: Library
+        name: NWinfo Library
         path: |
           report.json
           LICENSE
@@ -144,6 +144,10 @@ jobs:
           Win32\Release\libcpuid.lib
           Win32\Release\libcpuid.pdb
           Win32\Release\cpuid_tool.exe
+          Win32\Release\liblhm.dll
+          Win32\Release\liblhm.lib
+          Win32\Release\liblhm.pdb
+          Win32\Release\lhmtest.exe
           Win32\Release\libnw.lib
           Win32\Release\libnw.pdb
 

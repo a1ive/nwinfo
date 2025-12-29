@@ -16,8 +16,9 @@
 
 ## Download
 
-The source code is maintained in a git repository at https://github.com/a1ive/nwinfo.  
-You can download the latest version of the binary from [GitHub Releases](https://github.com/a1ive/nwinfo/releases).  
+- Source code: https://github.com/a1ive/nwinfo  
+- Latest Release: [GitHub Releases](https://github.com/a1ive/nwinfo/releases)  
+- Nightly Build: [Github Actions](https://github.com/a1ive/nwinfo/actions/workflows/msbuild.yml) | [Direct Link](https://nightly.link/a1ive/nwinfo/workflows/msbuild/master/nwinfo.zip)
 
 <div style="page-break-after: always;"></div>
 
@@ -145,6 +146,10 @@ Exports active physical network interfaces with IPv4 addresses to `report.html` 
 - --device[=`TYPE`]  
   Print device tree.  
   `TYPE` specifies the type of the devices, e.g. `ACPI`, `SWD`, `PCI`, or `USB`.  
+- --sensors[=SRC,..]  
+  Print sensors.  
+  `SRC` specifies the provider of sensors.  
+  Available providers are: `LHM`, `GPU`, `CPU`, `DIMM`, `HWINFO` and `GPU-Z`.  
 
 ### System Information
 

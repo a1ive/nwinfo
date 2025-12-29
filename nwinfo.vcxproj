@@ -24,6 +24,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include=".github\dependabot.yml" />
+    <None Include=".github\FUNDING.yml" />
     <None Include=".github\workflows\msbuild.yml" />
     <None Include=".gitignore" />
     <None Include="copy_res.ps1" />

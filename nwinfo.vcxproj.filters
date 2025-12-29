@@ -62,6 +62,9 @@
     <None Include=".gitignore">
       <Filter>GitHub</Filter>
     </None>
+    <None Include=".github\FUNDING.yml">
+      <Filter>GitHub</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Image Include="docs\images\icon.ico">
