@@ -178,18 +178,82 @@ NWL_ReadMemory(PVOID buffer, DWORD_PTR address, DWORD length)
 	return TRUE;
 }
 
+static UINT
+NT5GetSmbios(struct RAW_SMBIOS_DATA* buf, DWORD buflen)
+{
+	UCHAR* ptr = NULL;
+	UCHAR* bios = NULL;
+	DWORD smbios_len = 0;
+	bios = malloc(0x10000);
+	if (!bios)
+		return 0;
+	if (!NWL_ReadMemory(bios, 0xf0000, 0x10000))
+		goto fail;
+	for (ptr = bios; ptr < bios + 0x10000; ptr += 16)
+	{
+		if (memcmp(ptr, "_SM_", 4) == 0 && NWL_AcpiChecksum(ptr, sizeof(struct smbios_eps)) == 0)
+		{
+			struct smbios_eps* eps = (struct smbios_eps*)ptr;
+			smbios_len = eps->intermediate.table_length;
+			if (!buf || buflen < smbios_len + sizeof(struct RAW_SMBIOS_DATA))
+				goto fail;
+			buf->Length = smbios_len;
+			buf->MajorVersion = eps->version_major;
+			buf->MinorVersion = eps->version_minor;
+			buf->DmiRevision = eps->intermediate.revision;
+			NWL_ReadMemory(buf->Data, eps->intermediate.table_address, smbios_len);
+			goto fail;
+		}
+		if (memcmp(ptr, "_SM3_", 5) == 0 && NWL_AcpiChecksum(ptr, sizeof(struct smbios_eps3)) == 0)
+		{
+			struct smbios_eps3* eps3 = (struct smbios_eps3*)ptr;
+			smbios_len = eps3->maximum_table_length;
+			if (!buf || buflen < smbios_len + sizeof(struct RAW_SMBIOS_DATA))
+				goto fail;
+			buf->Length = smbios_len;
+			buf->MajorVersion = eps3->version_major;
+			buf->MinorVersion = eps3->version_minor;
+			NWL_ReadMemory(buf->Data, (DWORD_PTR)eps3->table_address, smbios_len);
+			goto fail;
+		}
+	}
+fail:
+	free(bios);
+	return smbios_len + sizeof(struct RAW_SMBIOS_DATA);
+}
+
+static UINT
+NWL_GetSystemFirmwareTable(DWORD FirmwareTableProviderSignature, DWORD FirmwareTableID,
+	PVOID pFirmwareTableBuffer, DWORD BufferSize)
+{
+	UINT(WINAPI * NT6GetSystemFirmwareTable)
+		(DWORD FirmwareTableProviderSignature, DWORD FirmwareTableID, PVOID pFirmwareTableBuffer, DWORD BufferSize) = NULL;
+	HMODULE hMod = GetModuleHandleW(L"kernel32");
+
+	if (hMod)
+		*(FARPROC*)&NT6GetSystemFirmwareTable = GetProcAddress(hMod, "GetSystemFirmwareTable");
+
+	if (NT6GetSystemFirmwareTable)
+		return NT6GetSystemFirmwareTable(FirmwareTableProviderSignature, FirmwareTableID, pFirmwareTableBuffer, BufferSize);
+
+	if (FirmwareTableProviderSignature == 'RSMB')
+		return NT5GetSmbios(pFirmwareTableBuffer, BufferSize);
+
+	return 0;
+}
+
 struct RAW_SMBIOS_DATA*
 NWL_GetSmbios(void)
 {
 	struct RAW_SMBIOS_DATA* smBiosData = NULL;
 	DWORD smBiosDataSize = 0;
-	smBiosDataSize = GetSystemFirmwareTable('RSMB', 0, NULL, 0);
+	smBiosDataSize = NWL_GetSystemFirmwareTable('RSMB', 0, NULL, 0);
 	if (smBiosDataSize == 0)
 		return NULL;
 	smBiosData = (struct RAW_SMBIOS_DATA*)malloc(smBiosDataSize);
 	if (!smBiosData)
 		return NULL;
-	smBiosDataSize = GetSystemFirmwareTable('RSMB', 0, smBiosData, smBiosDataSize);
+	smBiosDataSize = NWL_GetSystemFirmwareTable('RSMB', 0, smBiosData, smBiosDataSize);
 	if (smBiosDataSize == 0)
 	{
 		free(smBiosData);
@@ -265,13 +329,13 @@ PVOID NWL_GetSysAcpi(DWORD TableId)
 {
 	PVOID pFirmwareTableBuffer = NULL;
 	UINT BufferSize = 0;
-	BufferSize = GetSystemFirmwareTable('ACPI', TableId, NULL, 0);
+	BufferSize = NWL_GetSystemFirmwareTable('ACPI', TableId, NULL, 0);
 	if (BufferSize == 0)
 		return NULL;
 	pFirmwareTableBuffer = malloc(BufferSize);
 	if (!pFirmwareTableBuffer)
 		return NULL;
-	GetSystemFirmwareTable('ACPI', TableId, pFirmwareTableBuffer, BufferSize);
+	NWL_GetSystemFirmwareTable('ACPI', TableId, pFirmwareTableBuffer, BufferSize);
 	return pFirmwareTableBuffer;
 }
 

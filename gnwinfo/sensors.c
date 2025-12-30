@@ -13,12 +13,7 @@ draw_node(struct nk_context* ctx, int level, int* id, PNODE node)
 	(*id)++;
 	if (nk_tree_image_push_id(ctx, NK_TREE_TAB, GET_PNG(IDR_PNG_SENSOR), node->name, NK_MAXIMIZED, *id))
 	{
-		int count = NWL_NodeChildCount(node);
-		for (int i = 0; i < count; i++)
-		{
-			draw_node(ctx, level + 1, id, NWL_NodeEnumChild(node, i));
-		}
-		count = NWL_NodeAttrCount(node);
+		int count = NWL_NodeAttrCount(node);
 		for (int i = 0; i < count; i++)
 		{
 			PNODE_ATT att = NWL_NodeAttrEnum(node, i);
@@ -27,6 +22,11 @@ draw_node(struct nk_context* ctx, int level, int* id, PNODE node)
 			nk_layout_row_dynamic(ctx, 0, 2);
 			nk_l(ctx, att->key, NK_TEXT_LEFT);
 			nk_lhc(ctx, att->value, NK_TEXT_RIGHT, g_color_text_l);
+		}
+		count = NWL_NodeChildCount(node);
+		for (int i = 0; i < count; i++)
+		{
+			draw_node(ctx, level + 1, id, NWL_NodeEnumChild(node, i));
 		}
 		nk_tree_pop(ctx);
 	}
