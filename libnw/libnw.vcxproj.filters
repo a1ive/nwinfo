@@ -290,6 +290,9 @@
     <ClCompile Include="sensor\disk_smart.c">
       <Filter>sensor</Filter>
     </ClCompile>
+    <ClCompile Include="sensor\net_traffic.c">
+      <Filter>sensor</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

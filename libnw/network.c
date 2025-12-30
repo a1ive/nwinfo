@@ -15,35 +15,44 @@
 #define MALLOC(x) HeapAlloc(GetProcessHeap(), 0, (x))
 #define FREE(x) HeapFree(GetProcessHeap(), 0, (x))
 
-static const char* bps_human_sizes[6] =
+static const char* BPS_UNITS[6] =
 { "bps", "kbps", "Mbps", "Gbps", "Tbps", "Pbps", };
+static const char* BIT_UINTS[6] =
+{ "b", "kb", "Mb", "Gb", "Tb", "Pb", };
 
-static UINT64 total_recv = 0, total_send = 0;
+static UINT64 mTotalRecv = 0, mTotalSend = 0, mTicks = 0;
 
 VOID
 NWL_GetNetTraffic(NWLIB_NET_TRAFFIC* info, BOOL bit)
 {
-	const char* bit_units[6] = { "b", "kb", "Mb", "Gb", "Tb", "Pb", };
-	static UINT64 old_recv = 0;
-	static UINT64 old_send = 0;
-	UINT64 diff_recv = 0;
-	UINT64 diff_send = 0;
-	if (total_recv >= old_recv)
-		diff_recv = total_recv - old_recv;
-	if (total_send >= old_send)
-		diff_send = total_send - old_send;
-	old_recv = total_recv;
-	old_send = total_send;
+	static UINT64 oldRecv = 0;
+	static UINT64 oldSend = 0;
+	static UINT64 oldTicks = 0;
+	UINT64 diffTicks = 0;
+
+	info->Recv = 0;
+	info->Send = 0;
+	if (mTicks > oldTicks)
+	{
+		diffTicks = mTicks - oldTicks;
+		if (mTotalRecv >= oldRecv)
+			info->Recv = ((double)(mTotalRecv - oldRecv)) / diffTicks * 1000.0;
+		if (mTotalSend >= oldSend)
+			info->Send = ((double)(mTotalSend - oldSend)) / diffTicks * 1000.0;
+	}
+	oldRecv = mTotalRecv;
+	oldSend = mTotalSend;
+	oldTicks = mTicks;
 
 	if (bit)
 	{
-		memcpy(info->StrRecv, NWL_GetHumanSize(diff_recv * 8, bit_units, 1000), NWL_STR_SIZE);
-		memcpy(info->StrSend, NWL_GetHumanSize(diff_send * 8, bit_units, 1000), NWL_STR_SIZE);
+		memcpy(info->StrRecv, NWL_GetHumanSize((UINT64)(info->Recv * 8.0), BIT_UINTS, 1000), NWL_STR_SIZE);
+		memcpy(info->StrSend, NWL_GetHumanSize((UINT64)(info->Send * 8.0), BIT_UINTS, 1000), NWL_STR_SIZE);
 	}
 	else
 	{
-		memcpy(info->StrRecv, NWL_GetHumanSize(diff_recv, NWLC->NwUnits, 1024), NWL_STR_SIZE);
-		memcpy(info->StrSend, NWL_GetHumanSize(diff_send, NWLC->NwUnits, 1024), NWL_STR_SIZE);
+		memcpy(info->StrRecv, NWL_GetHumanSize((UINT64)info->Recv, NWLC->NwUnits, 1024), NWL_STR_SIZE);
+		memcpy(info->StrSend, NWL_GetHumanSize((UINT64)info->Send, NWLC->NwUnits, 1024), NWL_STR_SIZE);
 	}
 }
 
@@ -263,8 +272,9 @@ PNODE NW_Network(VOID)
 	BOOL bLonghornOrLater;
 	PNODE node = NWL_NodeAlloc("Network", NFLG_TABLE);
 
-	total_recv = 0;
-	total_send = 0;
+	mTotalRecv = 0;
+	mTotalSend = 0;
+	mTicks = GetTickCount64();
 
 	if (NWLC->NetInfo)
 		NWL_NodeAppendChild(NWLC->NwRoot, node);
@@ -424,9 +434,9 @@ PNODE NW_Network(VOID)
 		if (bLonghornOrLater)
 		{
 			NWL_NodeAttrSet(nic, "Transmit Link Speed",
-				NWL_GetHumanSize(pCurrAddressesLH->TransmitLinkSpeed, bps_human_sizes, 1000), NAFLG_FMT_HUMAN_SIZE);
+				NWL_GetHumanSize(pCurrAddressesLH->TransmitLinkSpeed, BPS_UNITS, 1000), NAFLG_FMT_HUMAN_SIZE);
 			NWL_NodeAttrSet(nic, "Receive Link Speed",
-				NWL_GetHumanSize(pCurrAddressesLH->ReceiveLinkSpeed, bps_human_sizes, 1000), NAFLG_FMT_HUMAN_SIZE);
+				NWL_GetHumanSize(pCurrAddressesLH->ReceiveLinkSpeed, BPS_UNITS, 1000), NAFLG_FMT_HUMAN_SIZE);
 		}
 		NWL_NodeAttrSetf(nic, "MTU (Byte)", NAFLG_FMT_NUMERIC, "%lu", pCurrAddresses->Mtu);
 
@@ -435,9 +445,9 @@ PNODE NW_Network(VOID)
 		if (GetIfEntry(&ifRow) == NO_ERROR)
 		{
 			NWL_NodeAttrSetf(nic, "Received (Octets)", NAFLG_FMT_NUMERIC, "%lu", ifRow.dwInOctets);
-			total_recv += ifRow.dwInOctets;
+			mTotalRecv += ifRow.dwInOctets;
 			NWL_NodeAttrSetf(nic, "Sent (Octets)", NAFLG_FMT_NUMERIC, "%lu", ifRow.dwOutOctets);
-			total_send += ifRow.dwOutOctets;
+			mTotalSend += ifRow.dwOutOctets;
 		}
 next_addr:
 		pCurrAddresses = pCurrAddresses->Next;

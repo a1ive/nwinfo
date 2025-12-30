@@ -310,6 +310,7 @@
     <ClCompile Include="sensor\gpu_sensors.c" />
     <ClCompile Include="sensor\hwinfo_shmem.c" />
     <ClCompile Include="sensor\lhm.c" />
+    <ClCompile Include="sensor\net_traffic.c" />
     <ClCompile Include="smb.c" />
     <ClCompile Include="smbios.c" />
     <ClCompile Include="smbus\smbus.c" />

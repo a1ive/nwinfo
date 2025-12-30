@@ -247,8 +247,8 @@ LIBNW_API VOID NWL_GetCpuMsr(int count, NWLIB_CPU_INFO* info);
 
 typedef struct _NWLIB_NET_TRAFFIC
 {
-	UINT64 Recv;
-	UINT64 Send;
+	double Recv;
+	double Send;
 	CHAR StrRecv[NWL_STR_SIZE];
 	CHAR StrSend[NWL_STR_SIZE];
 } NWLIB_NET_TRAFFIC;
