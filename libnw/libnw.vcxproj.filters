@@ -287,6 +287,9 @@
     <ClCompile Include="sensor\cpu_sensors.c">
       <Filter>sensor</Filter>
     </ClCompile>
+    <ClCompile Include="sensor\disk_smart.c">
+      <Filter>sensor</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
