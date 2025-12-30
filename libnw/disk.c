@@ -467,19 +467,6 @@ next_drive:
 	return dwCount;
 }
 
-static INT
-GetSmartIndex(CDI_SMART* smart, DWORD Id)
-{
-	INT i, count;
-	count = cdi_get_disk_count(smart);
-	for (i = 0; i < count; i++)
-	{
-		if (cdi_get_int(smart, i, CDI_INT_DISK_ID) == Id)
-			return i;
-	}
-	return -1;
-}
-
 static VOID
 PrintSmartInfo(PNODE node, CDI_SMART* ptr, INT index)
 {
@@ -651,42 +638,49 @@ CompareDiskId(const void* a, const void* b)
 	return ((int)((const PHY_DRIVE_INFO*)a)->Index) - ((int)((const PHY_DRIVE_INFO*)b)->Index);
 }
 
+static BOOL
+MatchBusType(STORAGE_BUS_TYPE bus)
+{
+	if ((NWLC->DiskFlags & NW_DISK_PHYS) && (bus == BusTypeVirtual || bus == BusTypeFileBackedVirtual))
+		return FALSE;
+	if (!(NWLC->DiskFlags & (NW_DISK_NVME | NW_DISK_SATA | NW_DISK_SCSI | NW_DISK_SAS | NW_DISK_USB)))
+		return TRUE;
+	if ((NWLC->DiskFlags & NW_DISK_NVME) && bus == BusTypeNvme)
+		return TRUE;
+	if ((NWLC->DiskFlags & NW_DISK_SATA) && bus == BusTypeSata)
+		return TRUE;
+	if ((NWLC->DiskFlags & NW_DISK_SCSI) && bus == BusTypeScsi)
+		return TRUE;
+	if ((NWLC->DiskFlags & NW_DISK_SAS) && bus == BusTypeSas)
+		return TRUE;
+	if ((NWLC->DiskFlags & NW_DISK_USB) && bus == BusTypeUsb)
+		return TRUE;
+	return FALSE;
+}
+
 static VOID
 PrintDiskInfo(BOOL cdrom, PNODE node, CDI_SMART* smart)
 {
 	PHY_DRIVE_INFO* PhyDriveList = NULL;
-	DWORD PhyDriveCount = 0, i = 0;
+	DWORD PhyDriveCount = 0;
+	INT SmartCount = 0;
 	CHAR DiskPath[64];
 	PhyDriveCount = GetDriveInfoList(cdrom, &PhyDriveList);
+	if (!(NWLC->DiskFlags & NW_DISK_NO_SMART) && smart && !cdrom)
+		SmartCount = cdi_get_disk_count(smart);
 	if (PhyDriveCount == 0)
 		goto out;
 	qsort(PhyDriveList, PhyDriveCount, sizeof(PHY_DRIVE_INFO), CompareDiskId);
-	for (i = 0; i < PhyDriveCount; i++)
+	for (DWORD i = 0; i < PhyDriveCount; i++)
 	{
 		snprintf(DiskPath, sizeof(DiskPath),
 			cdrom ? "\\\\.\\CdRom%lu" : "\\\\.\\PhysicalDrive%lu", PhyDriveList[i].Index);
 		if (NWLC->DiskPath && _stricmp(NWLC->DiskPath, DiskPath) != 0)
 			continue;
-		if ((NWLC->DiskFlags & NW_DISK_PHYS) &&
-			(PhyDriveList[i].BusType == BusTypeVirtual || PhyDriveList[i].BusType == BusTypeFileBackedVirtual))
-			continue;
-		BOOL bMatchBus = FALSE;
-		if (!(NWLC->DiskFlags & (NW_DISK_NVME | NW_DISK_SATA | NW_DISK_SCSI | NW_DISK_SAS | NW_DISK_USB)))
-			bMatchBus = TRUE;
-		if ((NWLC->DiskFlags & NW_DISK_NVME) && PhyDriveList[i].BusType == BusTypeNvme)
-			bMatchBus = TRUE;
-		if ((NWLC->DiskFlags & NW_DISK_SATA) && PhyDriveList[i].BusType == BusTypeSata)
-			bMatchBus = TRUE;
-		if ((NWLC->DiskFlags & NW_DISK_SCSI) && PhyDriveList[i].BusType == BusTypeScsi)
-			bMatchBus = TRUE;
-		if ((NWLC->DiskFlags & NW_DISK_SAS) && PhyDriveList[i].BusType == BusTypeSas)
-			bMatchBus = TRUE;
-		if ((NWLC->DiskFlags & NW_DISK_USB) && PhyDriveList[i].BusType == BusTypeUsb)
-			bMatchBus = TRUE;
-		if (bMatchBus == FALSE)
+		if (!MatchBusType(PhyDriveList[i].BusType))
 			continue;
 		PNODE nd = NWL_NodeAppendNew(node, "Disk", NFLG_TABLE_ROW);
-		NWL_NodeAttrSet(nd, "Path",DiskPath, 0);
+		NWL_NodeAttrSet(nd, "Path", DiskPath, 0);
 		if (PhyDriveList[i].HwID[0])
 			NWL_NodeAttrSet(nd, "HWID", NWL_Ucs2ToUtf8(PhyDriveList[i].HwID), 0);
 		if (PhyDriveList[i].HwName[0])
@@ -720,16 +714,16 @@ PrintDiskInfo(BOOL cdrom, PNODE node, CDI_SMART* smart)
 			break;
 		}
 		if (!cdrom)
-		{
 			PrintIsSsd(nd, &PhyDriveList[i], PhyDriveList[i].Index);
-			if (!(NWLC->DiskFlags & NW_DISK_NO_SMART) && smart)
-				PrintSmartInfo(nd, smart, GetSmartIndex(smart, PhyDriveList[i].Index));
+		for (INT j = 0; j < SmartCount; j++)
+		{
+			if (cdi_get_int(smart, j, CDI_INT_DISK_ID) == PhyDriveList[i].Index)
+				PrintSmartInfo(nd, smart, j);
 		}
 		if (PhyDriveList[i].VolumeCount)
 		{
-			DWORD j;
 			PNODE nv = NWL_NodeAppendNew(nd, "Volumes", NFLG_TABLE);
-			for (j = 0; j < PhyDriveList[i].VolumeCount; j++)
+			for (DWORD j = 0; j < PhyDriveList[i].VolumeCount; j++)
 			{
 				PNODE vol = NWL_NodeAppendNew(nv, "Volume", NFLG_TABLE_ROW);
 				PrintVolumeInfo(vol, PhyDriveList[i].Volumes[j], &PhyDriveList[i]);
@@ -740,6 +734,29 @@ PrintDiskInfo(BOOL cdrom, PNODE node, CDI_SMART* smart)
 out:
 	if (PhyDriveList)
 		free(PhyDriveList);
+	if (NWLC->DiskPath)
+		return;
+	for (INT i = 0; i < SmartCount; i++)
+	{
+		if (cdi_get_int(smart, i, CDI_INT_DISK_ID) >= 0)
+			continue;
+		STORAGE_BUS_TYPE bus = cdi_get_int(smart, i, CDI_INT_INTERFACE_TYPE);
+		if (!MatchBusType(bus))
+			continue;
+		PNODE nd = NWL_NodeAppendNew(node, "Disk", NFLG_TABLE_ROW);
+		WCHAR* str = cdi_get_string(smart, i, CDI_STRING_MODEL);
+		NWL_NodeAttrSet(nd, "HW Name", NWL_Ucs2ToUtf8(str), 0);
+		NWL_NodeAttrSet(nd, "Product ID", NWL_Ucs2ToUtf8(str), 0);
+		cdi_free_string(str);
+
+		NWL_NodeAttrSet(nd, "Type", NWL_GetBusTypeString(bus), 0);
+
+		NWL_NodeAttrSet(nd, "Size",
+			NWL_GetHumanSize(1000ULL * 1000ULL * cdi_get_dword(smart, i, CDI_DWORD_DISK_SIZE), NWLC->NwUnits, 1024),
+			NAFLG_FMT_HUMAN_SIZE);
+
+		PrintSmartInfo(nd, smart, i);
+	}
 }
 
 PNODE NW_Disk(VOID)
@@ -752,8 +769,8 @@ PNODE NW_Disk(VOID)
 		cdi_init_smart(NWLC->NwSmart, NWLC->NwSmartFlags);
 		NWLC->NwSmartInit = TRUE;
 	}
-	if (!(NWLC->DiskFlags & (NW_DISK_CD | NW_DISK_HD)))
-		NWLC->DiskFlags |= NW_DISK_CD | NW_DISK_HD;
+	if (!(NWLC->DiskFlags & NW_DISK_DEFAULT))
+		NWLC->DiskFlags |= NW_DISK_DEFAULT;
 	if (NWLC->DiskFlags & NW_DISK_HD)
 		PrintDiskInfo(FALSE, node, NWLC->NwSmart);
 	if (NWLC->DiskFlags & NW_DISK_CD)

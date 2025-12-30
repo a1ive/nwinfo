@@ -122,7 +122,6 @@
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <None Include="..\README.md" />
     <CopyFileToFolders Include="gnwinfo.ini">
       <FileType>Document</FileType>
     </CopyFileToFolders>

@@ -594,7 +594,7 @@ draw_storage(struct nk_context* ctx)
 	{
 		BOOL cdrom;
 		LPCSTR prefix = "HD";
-		LPCSTR path, id;
+		LPCSTR path, id = "-";
 		LPCSTR ssd = "";
 		PNODE disk = NWL_NodeEnumChild(g_ctx.disk, i);
 		if (!disk)
@@ -616,7 +616,10 @@ draw_storage(struct nk_context* ctx)
 				prefix = "RM";
 		}
 		else
-			continue;
+		{
+			cdrom = FALSE;
+			prefix = "HD";
+		}
 
 		nk_layout_row(ctx, NK_DYNAMIC, 0, 3, (float[3]) { 0.3f, 0.4f, 0.23f });
 		snprintf(m_buf, MAX_PATH, "%s%s %s%s",

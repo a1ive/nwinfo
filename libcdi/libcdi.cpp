@@ -71,7 +71,9 @@ cdi_init_smart(CDI_SMART * ptr, UINT64 flags)
 	ptr->FlagUsbASM1352R = check_flag(flags, CDI_FLAG_ENABLE_ASM1352R);
 	ptr->FlagAMD_RC2 = check_flag(flags, CDI_FLAG_ENABLE_AMD_RC2);
 	ptr->FlagUsbRealtek9220DP = check_flag(flags, CDI_FLAG_ENABLE_REALTEK_9220DP);
-	ptr->CsmiType = CAtaSmart::CSMI_TYPE_ENABLE_AUTO;
+	ptr->CsmiType = (flags >> CDI_CSMI_SHIFT) & 0x07;
+	if (ptr->CsmiType >= CAtaSmart::CSMI_TYPE_ENABLE_ALL)
+		ptr->CsmiType = CAtaSmart::CSMI_TYPE_ENABLE_AUTO;
 
 	ptr->Init(check_flag(flags, CDI_FLAG_USE_WMI),
 		check_flag(flags, CDI_FLAG_ADVANCED_SEARCH),
@@ -211,6 +213,27 @@ cdi_get_int(CDI_SMART * ptr, INT index, enum CDI_ATA_INT attr)
 		return ptr->vars[index].Life;
 	case CDI_INT_MAX_ATTRIBUTE:
 		return CAtaSmart::MAX_ATTRIBUTE;
+	case CDI_INT_INTERFACE_TYPE:
+	{
+		switch (ptr->vars[index].InterfaceType)
+		{
+		case CAtaSmart::INTERFACE_TYPE_PATA:
+			return BusTypeAta;
+		case CAtaSmart::INTERFACE_TYPE_SATA:
+			return BusTypeSata;
+		case CAtaSmart::INTERFACE_TYPE_USB:
+			return BusTypeUsb;
+		case CAtaSmart::INTERFACE_TYPE_IEEE1394:
+			return BusType1394;
+		case CAtaSmart::INTERFACE_TYPE_SCSI:
+			return BusTypeScsi;
+		case CAtaSmart::INTERFACE_TYPE_NVME:
+			return BusTypeNvme;
+		case CAtaSmart::INTERFACE_TYPE_AMD_RC2:
+			return BusTypeRAID;
+		}
+		return BusTypeUnknown;
+	}
 	}
 	return -1;
 }
@@ -271,6 +294,8 @@ cdi_get_string(CDI_SMART * ptr, INT index, enum CDI_ATA_STRING attr)
 		return cs_to_wcs(ptr->vars[index].SmartKeyName);
 	case CDI_STRING_FORM_FACTOR:
 		return cs_to_wcs(ptr->vars[index].DeviceNominalFormFactor);
+	case CDI_STRING_FIRMWARE_REV:
+		return cs_to_wcs(ptr->vars[index].FirmwareRev);
 	}
 	return nullptr;
 }

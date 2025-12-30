@@ -95,6 +95,8 @@ typedef struct _NWLIB_CONTEXT
 #define NW_DISK_SCSI     (1 << 13)
 #define NW_DISK_SAS      (1 << 14)
 #define NW_DISK_USB      (1 << 15)
+
+#define NW_DISK_DEFAULT  (NW_DISK_HD | NW_DISK_CD)
 	UINT64 DiskFlags;
 #define NW_UEFI_VARS     (1 << 0)
 #define NW_UEFI_MENU     (1 << 1)

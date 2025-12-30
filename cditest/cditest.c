@@ -117,7 +117,8 @@ int main(int argc, char* argv[])
 		CDI_FLAG_ENABLE_INTEL_VROC |
 		CDI_FLAG_ENABLE_ASM1352R |
 		CDI_FLAG_ENABLE_AMD_RC2 |
-		CDI_FLAG_ENABLE_REALTEK_9220DP);
+		CDI_FLAG_ENABLE_REALTEK_9220DP |
+		CDI_FLAG_CSMI_AUTO);
 	printf("Ticks: %llu\n", GetTickCount64() - ullTick);
 
 	diskCount = cdi_get_disk_count(cdiSmart);

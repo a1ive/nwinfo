@@ -210,6 +210,11 @@ Gets the name of a S.M.A.R.T. attribute by its ID.
 #define CDI_FLAG_ENABLE_AMD_RC2         (1ULL << 25) // FALSE
 #define CDI_FLAG_ENABLE_REALTEK_9220DP  (1ULL << 26) // FALSE
 #define CDI_FLAG_HIDE_RAID_VOLUME       (1ULL << 27) // TRUE
+// CDI_FLAG[30:28]
+#define CDI_CSMI_SHIFT                  28
+#define CDI_FLAG_CSMI_DISABLE           (0ULL << CDI_CSMI_SHIFT) // FALSE
+#define CDI_FLAG_CSMI_AUTO              (1ULL << CDI_CSMI_SHIFT) // TRUE
+#define CDI_FLAG_CSMI_RAID              (2ULL << CDI_CSMI_SHIFT) // FALSE
 ```
 
 ## Enumerations
@@ -250,6 +255,7 @@ Gets the name of a S.M.A.R.T. attribute by its ID.
 - `CDI_INT_WEAR_LEVELING_COUNT`: Wear Leveling Count
 - `CDI_INT_LIFE`: Health percentage (0% - 100%)
 - `CDI_INT_MAX_ATTRIBUTE`: Max attribute count
+- `CDI_INT_INTERFACE_TYPE`: Bus type (See [STORAGE_BUS_TYPE](https://learn.microsoft.com/en-us/windows/win32/api/winioctl/ne-winioctl-storage_bus_type))
 
 ### Disk Attributes (DWORD)
 `enum CDI_ATA_DWORD`
@@ -277,6 +283,7 @@ Gets the name of a S.M.A.R.T. attribute by its ID.
 - `CDI_STRING_PNP_ID`: Plug and Play ID
 - `CDI_STRING_SMART_KEY`: S.M.A.R.T. Key
 - `CDI_STRING_FORM_FACTOR`: Form factor (inch)
+- `CDI_STRING_FIRMWARE_REV`: Firmware Revision
 
 ### Disk Health Status
 `enum CDI_DISK_STATUS`

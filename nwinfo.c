@@ -135,10 +135,12 @@ static void nwinfo_help(void)
 		"                   'NVIDIA', 'MARVELL', 'SAT', 'SUNPLUS',\n"
 		"                   'IODATA', 'LOGITEC', 'PROLIFIC', 'USBJMICRON',\n"
 		"                   'CYPRESS', 'MEMORY', 'JMICRON', 'ASMEDIA',\n"
-		"                   'REALTEK', 'MEGARAID', 'VROC', 'ASM1352R' and 'HIDERAID'.\n"
+		"                   'REALTEK', 'MEGARAID', 'VROC', 'ASM1352R',\n"
+		"                   'HIDERAID' and 'CSMIAUTO'.\n"
 		"                   Use 'DEFAULT' to specify the above features.\n"
 		"                   Other features are 'ADVANCED', 'HD204UI',\n"
-		"                   'ADATA', 'NOWAKEUP' and 'RTK9220DP'.\n"
+		"                   'ADATA', 'NOWAKEUP', 'RTK9220DP',\n"
+		"                   'NOCSMI' and 'CSMIRAID'.\n"
 		"  --display[=FILE] Print EDID info.\n"
 		"    FILE           Specify the file name of the EDID dump.\n"
 		"  --pci[=CLASS]    Print PCI info.\n"
@@ -364,6 +366,9 @@ int main(int argc, char* argv[])
 				{"ASM1352R", CDI_FLAG_ENABLE_ASM1352R},
 				{"RTK9220DP", CDI_FLAG_ENABLE_REALTEK_9220DP},
 				{"HIDERAID", CDI_FLAG_HIDE_RAID_VOLUME},
+				{"NOCSMI", CDI_FLAG_CSMI_DISABLE},
+				{"CSMIAUTO", CDI_FLAG_CSMI_AUTO},
+				{"CSMIRAID", CDI_FLAG_CSMI_RAID},
 				{"DEFAULT", CDI_FLAG_DEFAULT},
 			};
 			nwContext.NwSmartFlags = 0;
