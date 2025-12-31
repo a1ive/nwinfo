@@ -304,7 +304,8 @@ try {
 	foreach ($diskTable in $parsedJson.'Disks') {
 		$outputText += "`t$($diskTable.'HW Name')"
 		$diskType = "HDD"
-		if ($diskTable.'Path'.StartsWith("\\.\CdRom")) {
+		$diskPath = $diskTable.'Path'
+		if ($null -ne $diskPath -and $diskPath.StartsWith("\\.\CdRom")) {
 			$diskType = "CD-ROM"
 		}
 		elseif ($diskTable.'SSD' -eq $true) {
