@@ -904,12 +904,12 @@ NWL_GetCurDisplay(HWND wnd, NWLIB_CUR_DISPLAY* info)
 	info->Scale = 100 * info->Dpi / USER_DEFAULT_SCREEN_DPI;
 }
 
-PNODE NW_Edid(VOID)
+PNODE NW_Edid(BOOL bAppend)
 {
 	PNODE node = NWL_NodeAlloc("Display", NFLG_TABLE);
 	DWORD i = 0;
 	HDEVINFO hDevInfo = NULL;
-	if (NWLC->EdidInfo)
+	if (bAppend)
 		NWL_NodeAppendChild(NWLC->NwRoot, node);
 
 	if (NWLC->EdidDump)

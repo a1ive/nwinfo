@@ -73,7 +73,7 @@ gnwinfo_ctx_update_1s(void)
 	ReleaseSRWLockShared(&g_ctx.lock);
 
 	g_ctx.lib.NetFlags = NW_NET_PHYS | ((main_flag & MAIN_NET_INACTIVE) ? 0 : NW_NET_ACTIVE);
-	network = NW_Network();
+	network = NW_Network(FALSE);
 	NWL_GetUptime(sys_uptime, NWL_STR_SIZE);
 	NWL_GetMemInfo(&mem_status);
 	NWL_GetNetTraffic(&net_traffic, !(main_flag & MAIN_NET_UNIT_B));
@@ -86,7 +86,7 @@ gnwinfo_ctx_update_1s(void)
 		audio = NWL_GetAudio(&audio_count);
 	NWL_GetMemSensors(g_ctx.lib.NwSmbus, &mem_sensors);
 	if (window_flag & GUI_WINDOW_SENSOR)
-		sensors = NW_Sensors();
+		sensors = NW_Sensors(FALSE);
 
 	AcquireSRWLockExclusive(&g_ctx.lock);
 	PNODE old_network = g_ctx.network;
@@ -117,7 +117,7 @@ gnwinfo_ctx_update_1s(void)
 static void
 gnwinfo_ctx_update_battery(void)
 {
-	PNODE battery = NW_Battery();
+	PNODE battery = NW_Battery(FALSE);
 
 	AcquireSRWLockExclusive(&g_ctx.lock);
 	PNODE old_battery = g_ctx.battery;
@@ -139,7 +139,7 @@ gnwinfo_ctx_update_disk(void)
 	g_ctx.lib.NwSmartInit = FALSE;
 	g_ctx.lib.DiskFlags = (main_flag & MAIN_DISK_SMART) ? 0 : NW_DISK_NO_SMART;
 
-	PNODE disk = NW_Disk();
+	PNODE disk = NW_Disk(FALSE);
 
 	AcquireSRWLockExclusive(&g_ctx.lock);
 	PNODE old_disk = g_ctx.disk;
@@ -152,7 +152,7 @@ gnwinfo_ctx_update_disk(void)
 static void
 gnwinfo_ctx_update_smb(void)
 {
-	PNODE smb = NW_NetShare();
+	PNODE smb = NW_NetShare(FALSE);
 
 	AcquireSRWLockExclusive(&g_ctx.lock);
 	PNODE old_smb = g_ctx.smb;
@@ -166,7 +166,7 @@ static void
 gnwinfo_ctx_update_display(void)
 {
 	PNWLIB_GPU_INFO gpu = NWL_InitGpu();
-	PNODE edid = NW_Edid();
+	PNODE edid = NW_Edid(FALSE);
 
 	AcquireSRWLockExclusive(&g_ctx.lock);
 	PNWLIB_GPU_INFO old_gpu = g_ctx.lib.NwGpu;
@@ -187,7 +187,7 @@ gnwinfo_ctx_update_spd(void)
 	main_flag = g_ctx.main_flag;
 	ReleaseSRWLockShared(&g_ctx.lock);
 
-	PNODE spd = (main_flag & MAIN_SMBUS_SPD) ? NULL : NW_Spd();
+	PNODE spd = (main_flag & MAIN_SMBUS_SPD) ? NULL : NW_Spd(FALSE);
 
 	AcquireSRWLockExclusive(&g_ctx.lock);
 	PNODE old_spd = g_ctx.spd;
@@ -336,11 +336,11 @@ gnwinfo_ctx_init(HINSTANCE inst, HWND wnd, struct nk_context* ctx, float width, 
 	g_ctx.lib.NwSmartFlags = ~g_ctx.smart_flag;
 	g_ctx.lib.HideSensitive = strtoul(gnwinfo_get_ini_value(L"Window", L"HideSensitive", L"0"), NULL, 10);
 	g_ctx.lib.NwRoot = NWL_NodeAlloc("NWinfo", 0);
-	g_ctx.cpuid = NW_Cpuid();
-	g_ctx.system = NW_System();
-	g_ctx.smbios = NW_Smbios();
-	g_ctx.uefi = NW_Uefi();
-	g_ctx.pci = NW_Pci();
+	g_ctx.cpuid = NW_Cpuid(TRUE);
+	g_ctx.system = NW_System(TRUE);
+	g_ctx.smbios = NW_Smbios(TRUE);
+	g_ctx.uefi = NW_Uefi(TRUE);
+	g_ctx.pci = NW_Pci(TRUE);
 
 	g_ctx.sys_boot = NWL_NodeAttrGet(g_ctx.system, "Boot Device");
 	g_ctx.sys_disk = NWL_NodeAttrGet(g_ctx.system, "System Device");

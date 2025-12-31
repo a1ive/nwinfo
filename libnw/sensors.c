@@ -78,10 +78,10 @@ out:
 	return parent;
 }
 
-PNODE NW_Sensors(VOID)
+PNODE NW_Sensors(BOOL bAppend)
 {
 	PNODE node = NWL_NodeAlloc("Sensors", NFLG_ATTGROUP);
-	if (NWLC->Sensors)
+	if (bAppend)
 		NWL_NodeAppendChild(NWLC->NwRoot, node);
 
 	NWL_InitSensors(NWLC->NwSensorFlags);

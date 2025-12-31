@@ -241,7 +241,7 @@ NWL_EnumerateDevices(PNODE parent, DEVTREE_ENUM_CTX* ctx, DEVINST devInst)
 	}
 }
 
-PNODE NW_DevTree(VOID)
+PNODE NW_DevTree(BOOL bAppend)
 {
 	DEVTREE_ENUM_CTX ctx =
 	{
@@ -253,7 +253,7 @@ PNODE NW_DevTree(VOID)
 	DEVINST devRoot;
 	CONFIGRET cr;
 	PNODE node = NWL_NodeAlloc("Device Tree", NFLG_TABLE);
-	if (NWLC->DevTree)
+	if (bAppend)
 		NWL_NodeAppendChild(NWLC->NwRoot, node);
 
 	if (NWLC->DevTreeFilter)

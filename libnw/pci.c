@@ -102,10 +102,10 @@ fail:
 	return pNode;
 }
 
-PNODE NW_Pci(VOID)
+PNODE NW_Pci(BOOL bAppend)
 {
 	PNODE node = NWL_NodeAlloc("PCI", NFLG_TABLE);
-	if (NWLC->PciInfo)
+	if (bAppend)
 		NWL_NodeAppendChild(NWLC->NwRoot, node);
 	return NWL_EnumPci(node, NWLC->PciClass);
 }

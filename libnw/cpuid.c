@@ -397,13 +397,13 @@ PrintCpuInfo(PNODE node, struct cpu_id_t* data)
 	PrintCpuDmi(node, data->brand_str);
 }
 
-PNODE NW_Cpuid(VOID)
+PNODE NW_Cpuid(BOOL bAppend)
 {
 	uint8_t i;
 	struct cpu_raw_data_array_t* raw = NWLC->NwCpuRaw;
 	struct system_id_t* id = NWLC->NwCpuid;
 	PNODE node = NWL_NodeAlloc("CPUID", 0);
-	if (NWLC->CpuInfo)
+	if (bAppend)
 		NWL_NodeAppendChild(NWLC->NwRoot, node);
 	if (NWLC->Debug)
 		cpuid_set_verbosiness_level(2);

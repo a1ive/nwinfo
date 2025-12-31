@@ -288,10 +288,10 @@ static void PrintEfiVars(PNODE node)
 	EnumEfiVars(nv, PrintEfiVarAndSize);
 }
 
-PNODE NW_Uefi(VOID)
+PNODE NW_Uefi(BOOL bAppend)
 {
 	PNODE node = NWL_NodeAlloc("UEFI", 0);
-	if (NWLC->UefiInfo)
+	if (bAppend)
 		NWL_NodeAppendChild(NWLC->NwRoot, node);
 	PrintBootEnv(node);
 	PrintSecureBoot(node);

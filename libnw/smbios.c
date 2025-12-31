@@ -2344,11 +2344,11 @@ PSMBIOSHEADER NWL_GetNextDmiTable(LPBYTE* pCur, const LPBYTE lastAddr, UINT8 Typ
 	return NULL;
 }
 
-PNODE NW_Smbios(VOID)
+PNODE NW_Smbios(BOOL bAppend)
 {
 	PNODE node = NWL_NodeAlloc("SMBIOS", NFLG_TABLE);
 	PNODE info = NWL_NodeAppendNew(node, "DMI", NFLG_TABLE_ROW);
-	if (NWLC->DmiInfo)
+	if (bAppend)
 		NWL_NodeAppendChild(NWLC->NwRoot, node);
 	if (!NWLC->NwSmbios)
 		NWLC->NwSmbios = NWL_GetSmbios();

@@ -75,10 +75,10 @@ VOID NWL_FreeGpu(PNWLIB_GPU_INFO info)
 	free(info);
 }
 
-PNODE NW_Gpu(VOID)
+PNODE NW_Gpu(BOOL bAppend)
 {
 	PNODE node = NWL_NodeAlloc("GPU", NFLG_TABLE);
-	if (NWLC->GpuInfo)
+	if (bAppend)
 		NWL_NodeAppendChild(NWLC->NwRoot, node);
 
 	if (NWLC->NwGpu == NULL)

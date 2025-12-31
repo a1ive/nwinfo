@@ -504,10 +504,10 @@ PrintPowerScheme(PNODE node)
 		LocalFree(activeSchemeGuid);
 }
 
-PNODE NW_Battery(VOID)
+PNODE NW_Battery(BOOL bAppend)
 {
 	PNODE node = NWL_NodeAlloc("Battery", 0);
-	if (NWLC->BatteryInfo)
+	if (bAppend)
 		NWL_NodeAppendChild(NWLC->NwRoot, node);
 	PrintPowerScheme(node);
 	if (!PrintPowerInfo(node))

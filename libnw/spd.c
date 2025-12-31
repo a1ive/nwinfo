@@ -1051,12 +1051,12 @@ ParseSpd(PNODE node, smbus_t* ctx, int id, UINT8 rawSpd[SPD_MAX_SIZE])
 	}
 }
 
-PNODE NW_Spd(VOID)
+PNODE NW_Spd(BOOL bAppend)
 {
 	int i = 0;
 	UINT8 rawSpd[SPD_MAX_SIZE] = { 0xFF };
 	PNODE node = NWL_NodeAlloc("SPD", NFLG_TABLE);
-	if (NWLC->SpdInfo)
+	if (bAppend)
 		NWL_NodeAppendChild(NWLC->NwRoot, node);
 
 	if (NWLC->SpdDump)

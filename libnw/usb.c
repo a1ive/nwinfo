@@ -91,7 +91,7 @@ GetDeviceInfoUsb(PNODE node, void* data, DEVINST devInst, LPCSTR hwIds)
 	SetUsbDiskName(node, devInst);
 }
 
-PNODE NW_Usb(VOID)
+PNODE NW_Usb(BOOL bAppend)
 {
 	DEVINST devRoot;
 	CONFIGRET cr;
@@ -104,7 +104,7 @@ PNODE NW_Usb(VOID)
 		.GetDeviceInfo = GetDeviceInfoUsb,
 	};
 	PNODE node = NWL_NodeAlloc("USB", NFLG_TABLE);
-	if (NWLC->UsbInfo)
+	if (bAppend)
 		NWL_NodeAppendChild(NWLC->NwRoot, node);
 
 	cr = CM_Locate_DevNodeW(&devRoot, NULL, CM_LOCATE_DEVNODE_NORMAL);

@@ -107,10 +107,10 @@ out:
 	FreeLibrary(hDll);
 }
 
-PNODE NW_NetShare(VOID)
+PNODE NW_NetShare(BOOL bAppend)
 {
 	PNODE node = NWL_NodeAlloc("NetworkDrives", NFLG_TABLE);
-	if (NWLC->ShareInfo)
+	if (bAppend)
 		NWL_NodeAppendChild(NWLC->NwRoot, node);
 
 	EnumSharedFolders(node);

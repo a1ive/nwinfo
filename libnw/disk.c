@@ -759,10 +759,10 @@ out:
 	}
 }
 
-PNODE NW_Disk(VOID)
+PNODE NW_Disk(BOOL bAppend)
 {
 	PNODE node = NWL_NodeAlloc("Disks", NFLG_TABLE);
-	if (NWLC->DiskInfo)
+	if (bAppend)
 		NWL_NodeAppendChild(NWLC->NwRoot, node);
 	if (!(NWLC->DiskFlags & NW_DISK_NO_SMART) && NWLC->NwSmart && NWLC->NwSmartInit == FALSE)
 	{

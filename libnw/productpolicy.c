@@ -82,11 +82,11 @@ PrintProductPolicyEntry(PNODE node, PPRODUCT_POLICY_VALUE ppValue)
 	}
 }
 
-PNODE NW_ProductPolicy(VOID)
+PNODE NW_ProductPolicy(BOOL bAppend)
 {
 	CHAR hex[] = "0123456789ABCDEF";
 	PNODE node = NWL_NodeAlloc("Product Policy", NFLG_TABLE);
-	if (NWLC->ProductPolicyInfo)
+	if (bAppend)
 		NWL_NodeAppendChild(NWLC->NwRoot, node);
 	DWORD dwType;
 	DWORD ppSize;

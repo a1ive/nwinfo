@@ -518,10 +518,10 @@ static void PrintCiInfo(PNODE node)
 	NWL_NodeAttrSetBool(node, "HVCI KMCI IUM", sci.CodeIntegrityOptions & CI_OPTION_HVCI_IUM_ENABLED, 0);
 }
 
-PNODE NW_System(VOID)
+PNODE NW_System(BOOL bAppend)
 {
 	PNODE node = NWL_NodeAlloc("System", 0);
-	if (NWLC->SysInfo)
+	if (bAppend)
 		NWL_NodeAppendChild(NWLC->NwRoot, node);
 	PrintOsVer(node);
 	PrintOsInfo(node);

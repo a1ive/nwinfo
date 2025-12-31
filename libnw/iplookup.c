@@ -99,11 +99,11 @@ static void PrintGeoInfo(PNODE node)
 	free(lpOrg);
 }
 
-PNODE NW_PublicIp(VOID)
+PNODE NW_PublicIp(BOOL bAppend)
 {
 	HMODULE inet = LoadLibraryW(L"wininet.dll");
 	PNODE node = NWL_NodeAlloc("PublicIP", 0);
-	if (NWLC->PublicIpInfo)
+	if (bAppend)
 		NWL_NodeAppendChild(NWLC->NwRoot, node);
 	if (inet == NULL)
 		goto out;

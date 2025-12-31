@@ -648,11 +648,11 @@ PrintTableInfo(PNODE pNode, DESC_HEADER* Hdr)
 }
 
 // Reading from physical memory will be flagged by Windows Defender
-PNODE NW_Acpi(VOID)
+PNODE NW_Acpi(BOOL bAppend)
 {
 	UINT32 i, count;
 	PNODE pNode = NWL_NodeAlloc("ACPI", NFLG_TABLE);
-	if (NWLC->AcpiInfo)
+	if (bAppend)
 		NWL_NodeAppendChild(NWLC->NwRoot, pNode);
 
 	if (NWLC->NwRsdp == NULL)

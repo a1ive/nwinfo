@@ -256,7 +256,7 @@ GetXpAdaptersAddresses(PVOID* pEnd)
 	return (PIP_ADAPTER_ADDRESSES_XP)pAddresses;
 }
 
-PNODE NW_Network(VOID)
+PNODE NW_Network(BOOL bAppend)
 {
 	unsigned int i = 0;
 	PIP_ADAPTER_ADDRESSES_XP pAddresses = NULL;
@@ -276,7 +276,7 @@ PNODE NW_Network(VOID)
 	mTotalSend = 0;
 	mTicks = GetTickCount64();
 
-	if (NWLC->NetInfo)
+	if (bAppend)
 		NWL_NodeAppendChild(NWLC->NwRoot, node);
 	if (!(NWLC->NetFlags & (NW_NET_IPV4 | NW_NET_IPV6)))
 		NWLC->NetFlags |= NW_NET_IPV4 | NW_NET_IPV6;

@@ -30,10 +30,10 @@ EnumFontFamCallBack(ENUMLOGFONTW* lpelf, TEXTMETRICW* lptm, DWORD dwFontType, PN
 	return 1;
 }
 
-PNODE NW_Font(VOID)
+PNODE NW_Font(BOOL bAppend)
 {
 	PNODE node = NWL_NodeAlloc("Fonts", NFLG_TABLE);
-	if (NWLC->FontInfo)
+	if (bAppend)
 		NWL_NodeAppendChild(NWLC->NwRoot, node);
 
 	int (WINAPI * pfnEnumFontFamiliesW)(HDC, LPCWSTR, FONTENUMPROCW, LPARAM) = NULL;

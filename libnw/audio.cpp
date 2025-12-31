@@ -112,12 +112,12 @@ fail:
 
 extern "C" LPCSTR NWL_Ucs2ToUtf8(LPCWSTR src);
 
-PNODE NW_Audio(VOID)
+PNODE NW_Audio(BOOL bAppend)
 {
 	UINT count, i;
 	NWLIB_AUDIO_DEV* dev = NULL;
 	PNODE pNode = NWL_NodeAlloc("Audio", 0);
-	if (NWLC->AudioInfo)
+	if (bAppend)
 		NWL_NodeAppendChild(NWLC->NwRoot, pNode);
 	dev = NWL_GetAudio(&count);
 	if (!dev)
