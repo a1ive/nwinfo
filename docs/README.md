@@ -115,7 +115,7 @@ Exports active physical network interfaces with IPv4 addresses to `report.html` 
     `USB`      Include USB devices.  
 - --smart=`FLAG,...`  
   Specify S.M.A.R.T. features.  
-  Features enabled by default:
+  Features enabled by default:  
   `WMI`, `ATA`, `NVIDIA`, `MARVELL`, `SAT`, `SUNPLUS`, `IODATA`, `LOGITEC`, `PROLIFIC`, `USBJMICRON`,
   `CYPRESS`, `MEMORY`, `JMICRON`, `ASMEDIA`, `REALTEK`, `MEGARAID`, `VROC`, `ASM1352R` and `HIDERAID`.  
   Use `DEFAULT` to specify the above features.  
@@ -152,7 +152,8 @@ Exports active physical network interfaces with IPv4 addresses to `report.html` 
 - --sensors[=SRC,..]  
   Print sensors.  
   `SRC` specifies the provider of sensors.  
-  Available providers are: `LHM`, `HWINFO`, `GPU-Z`, `CPU`, `DIMM`, `GPU` and `SMART`.  
+  Available providers are:  
+  `LHM`, `HWINFO`, `GPU-Z`, `CPU`, `DIMM`, `GPU`, `SMART` and `NET`.  
 
 ### System Information
 
