@@ -176,6 +176,7 @@ extern int g_font_size;
 extern double g_dpi_factor;
 extern nk_bool g_dpi_scaling;
 extern nk_bool g_bginfo;
+extern nk_bool g_debug;
 
 #define NK_COLOR_YELLOW     {0xFF, 0xEA, 0x00, 0xFF}
 #define NK_COLOR_RED        {0xFF, 0x17, 0x44, 0xFF}

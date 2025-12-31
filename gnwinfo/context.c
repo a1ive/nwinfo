@@ -332,6 +332,9 @@ gnwinfo_ctx_init(HINSTANCE inst, HWND wnd, struct nk_context* ctx, float width, 
 	g_ctx.lib.UefiInfo = TRUE;
 	g_ctx.lib.PciInfo = TRUE;
 
+	if (g_debug)
+		g_ctx.lib.Debug = TRUE;
+
 	NW_Init(&g_ctx.lib);
 	g_ctx.lib.NwSmartFlags = ~g_ctx.smart_flag;
 	g_ctx.lib.HideSensitive = strtoul(gnwinfo_get_ini_value(L"Window", L"HideSensitive", L"0"), NULL, 10);

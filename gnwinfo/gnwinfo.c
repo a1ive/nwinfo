@@ -6,6 +6,7 @@
 #include <pathcch.h>
 #include <windowsx.h>
 #include <dbt.h>
+#include <shellapi.h>
 
 LPCSTR NWL_Ucs2ToUtf8(LPCWSTR src);
 LPCWSTR NWL_Utf8ToUcs2(LPCSTR src);
@@ -18,6 +19,7 @@ int g_font_size = 12;
 double g_dpi_factor = 1.0;
 nk_bool g_dpi_scaling = 1;
 nk_bool g_bginfo = 0;
+nk_bool g_debug = 0;
 
 static UINT m_dpi = USER_DEFAULT_SCREEN_DPI;
 
@@ -188,6 +190,31 @@ get_ini_color(LPCWSTR key, struct nk_color* color)
 	color->b = hex & 0xFF;
 }
 
+static void
+parse_cmdline(LPWSTR cmdline)
+{
+	int argc = 0;
+	LPWSTR* argv = CommandLineToArgvW(cmdline, &argc);
+	if (!argv)
+		return;
+	for (int i = 0; i < argc; i++)
+	{
+		if (_wcsicmp(argv[i], L"/debug") == 0)
+		{
+			if (AttachConsole(ATTACH_PARENT_PROCESS))
+			{
+				FILE* fp = NULL;
+				freopen_s(&fp, "CONOUT$", "w", stdout);
+				freopen_s(&fp, "CONOUT$", "w", stderr);
+				setvbuf(stdout, NULL, _IONBF, 0);
+				setvbuf(stderr, NULL, _IONBF, 0);
+				g_debug = 1;
+			}
+		}
+	}
+	LocalFree(argv);
+}
+
 int APIENTRY
 wWinMain(_In_ HINSTANCE hInstance,
 	_In_opt_ HINSTANCE hPrevInstance,
@@ -204,6 +231,8 @@ wWinMain(_In_ HINSTANCE hInstance,
 	int running = 1;
 	int needs_refresh = 1;
 	DWORD layered_flag = LWA_ALPHA;
+
+	parse_cmdline(lpCmdLine);
 
 	GetModuleFileNameW(NULL, g_ini_path, MAX_PATH);
 	PathCchRemoveFileSpec(g_ini_path, MAX_PATH);
