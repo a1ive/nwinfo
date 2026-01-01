@@ -19,7 +19,7 @@
 ## Download
 
 - [Latest Release](https://github.com/a1ive/nwinfo/releases/latest)
-- [Nightly Build](https://nightly.link/a1ive/nwinfo/workflows/msbuild/master/nwinfo.zip)
+- [Nightly Build](https://nightly.link/a1ive/nwinfo/workflows/msbuild/master/NWinfo.zip)
 
 ## GUI Preview
 
