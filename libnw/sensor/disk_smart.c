@@ -57,9 +57,14 @@ static void disk_get(PNODE node)
 {
 	BOOL need_update = FALSE;
 	ULONGLONG ticks = GetTickCount64();
-	if (ticks > ctx.ticks + 1000 * 60)
+	INT count = cdi_get_disk_count(NWLC->NwSmart);
+	if (count != ctx.count || ticks > ctx.ticks + 1000 * 60)
+	{
 		need_update = TRUE;
-	ctx.ticks = ticks;
+		ctx.ticks = ticks;
+		ctx.count = count;
+	}
+	NWL_NodeAttrSetf(node, "Last Update", NAFLG_FMT_NUMERIC, "%llu", ctx.ticks);
 	for (INT i = 0; i < ctx.count; i++)
 	{
 		if (need_update)
