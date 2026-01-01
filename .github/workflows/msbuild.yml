@@ -94,12 +94,12 @@ jobs:
 
     - name: Create ZIPs
       run: |
-        Compress-Archive -Path "PKG\*" -DestinationPath "nwinfo.zip" -Force
+        Compress-Archive -Path "PKG\*" -DestinationPath "NWinfo.zip" -Force
 
     - name: Upload Application
       uses: actions/upload-artifact@v6
       with:
-        name: nwinfo
+        name: NWinfo
         path: PKG/
 
     - name: Upload Library
@@ -192,7 +192,7 @@ jobs:
       working-directory: ${{env.GITHUB_WORKSPACE}}
       run: |
         $date_version = (Get-Date -Format 'yyyyMMdd') + ".${{ github.run_number }}"
-        gh release create "${{ github.ref_name }}" "nwinfo.zip" `
+        gh release create "${{ github.ref_name }}" "NWinfo.zip" `
           --title "${{ github.ref_name }} (Build $date_version)" `
           --notes-file "release_notes.txt"
       env:
