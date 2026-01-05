@@ -391,44 +391,17 @@ PrintCpuInfo(PNODE node, struct cpu_id_t* data)
 	NWL_NodeAttrSetf(node, "SSE Units", 0, "%d bits (%s)",
 		data->x86.sse_size, data->detection_hints[CPU_HINT_SSE_SIZE_AUTH] ? "authoritative" : "non-authoritative");
 	PrintCache(node, data);
-	if (!NWLC->CpuDump)
-		PrintCpuMsr(node, data);
 	PrintFeatures(node, data);
-	PrintCpuDmi(node, data->brand_str);
+	if (!NWLC->CpuDump)
+	{
+		PrintCpuDmi(node, data->brand_str);
+		PrintCpuMsr(node, data);
+	}
 }
 
-PNODE NW_Cpuid(BOOL bAppend)
+static inline void
+PrintAllCpuInfo(PNODE node, struct system_id_t* id)
 {
-	uint8_t i;
-	struct cpu_raw_data_array_t* raw = NWLC->NwCpuRaw;
-	struct system_id_t* id = NWLC->NwCpuid;
-	PNODE node = NWL_NodeAlloc("CPUID", 0);
-	if (bAppend)
-		NWL_NodeAppendChild(NWLC->NwRoot, node);
-	if (NWLC->Debug)
-		cpuid_set_verbosiness_level(2);
-	cpuid_set_warn_function(NWL_Debug);
-	cpuid_free_system_id(id);
-	cpuid_free_raw_data_array(raw);
-	NWL_NodeAttrSetf(node, "Total CPUs", NAFLG_FMT_NUMERIC, "%d", cpuid_get_total_cpus());
-	if (NWLC->CpuDump)
-	{
-		if (cpuid_deserialize_all_raw_data(raw, NWLC->CpuDump) < 0)
-		{
-			NWL_NodeAppendMultiSz(&NWLC->ErrLog, "Cannot deserialize raw CPU data");
-			goto fail;
-		}
-	}
-	else if (cpuid_get_all_raw_data(raw) < 0)
-	{
-		NWL_NodeAppendMultiSz(&NWLC->ErrLog, "Cannot obtain raw CPU data");
-		goto fail;
-	}
-	if (cpu_identify_all(raw, id) < 0)
-	{
-		NWL_NodeAppendMultiSz(&NWLC->ErrLog, cpuid_error());
-		goto fail;
-	}
 	PrintHypervisor(node, &id->cpu_types[0]);
 	NWL_NodeAttrSetf(node, "Processor Count", NAFLG_FMT_NUMERIC, "%u", id->num_cpu_types);
 	if (id->l1_data_total_instances >= 0)
@@ -441,8 +414,7 @@ PNODE NW_Cpuid(BOOL bAppend)
 		NWL_NodeAttrSetf(node, "L3 Cache Instances", NAFLG_FMT_NUMERIC, "%d", id->l3_total_instances);
 	if (id->l4_total_instances >= 0)
 		NWL_NodeAttrSetf(node, "L4 Cache Instances", NAFLG_FMT_NUMERIC, "%d", id->l4_total_instances);
-	NWL_NodeAttrSetf(node, "CPU Clock (MHz)", NAFLG_FMT_NUMERIC, "%lu", NWL_GetCpuFreq());
-	for (i = 0; i < id->num_cpu_types; i++)
+	for (uint8_t i = 0; i < id->num_cpu_types; i++)
 	{
 		CHAR name[32];
 		PNODE cpu = NULL;
@@ -450,6 +422,85 @@ PNODE NW_Cpuid(BOOL bAppend)
 		cpu = NWL_NodeAppendNew(node, name, 0);
 		PrintCpuInfo(cpu, &id->cpu_types[i]);
 	}
-fail:
+}
+
+static inline void
+PrintCpuidDump(PNODE node)
+{
+	struct cpu_raw_data_array_t* raw = calloc(1, sizeof(struct cpu_raw_data_array_t));
+	struct system_id_t* id = calloc(1, sizeof(struct system_id_t));
+	if (!raw || !id)
+		goto out;
+
+	if (cpuid_deserialize_all_raw_data(raw, NWLC->CpuDump) != 0)
+	{
+		NWL_NodeAppendMultiSz(&NWLC->ErrLog, "Cannot deserialize raw CPU data");
+		goto out;
+	}
+
+	if (cpu_identify_all(raw, id) != 0)
+	{
+		NWL_NodeAppendMultiSz(&NWLC->ErrLog, cpuid_error());
+		goto out;
+	}
+
+	PrintAllCpuInfo(node, id);
+
+out:
+	if (id)
+	{
+		cpuid_free_system_id(id);
+		free(id);
+	}
+	if (raw)
+	{
+		cpuid_free_raw_data_array(raw);
+		free(raw);
+	}
+}
+
+static inline void
+PrintCpuidMachine(PNODE node)
+{
+	struct cpu_raw_data_array_t* raw = NWLC->NwCpuRaw;
+	struct system_id_t* id = NWLC->NwCpuid;
+
+	NWL_NodeAttrSetf(node, "Total CPUs", NAFLG_FMT_NUMERIC, "%d", cpuid_get_total_cpus());
+	NWL_NodeAttrSetf(node, "CPU Clock (MHz)", NAFLG_FMT_NUMERIC, "%lu", NWL_GetCpuFreq());
+
+	if (raw->num_raw <= 0)
+	{
+		// no cached raw data
+		if (cpuid_get_all_raw_data(raw) != 0)
+		{
+			NWL_NodeAppendMultiSz(&NWLC->ErrLog, "Cannot obtain raw CPU data");
+			return;
+		}
+	}
+
+	if (id->num_cpu_types <= 0)
+	{
+		// no cached id data
+		if (cpu_identify_all(raw, id) != 0)
+		{
+			NWL_NodeAppendMultiSz(&NWLC->ErrLog, cpuid_error());
+			return;
+		}
+	}
+
+	PrintAllCpuInfo(node, id);
+}
+
+PNODE NW_Cpuid(BOOL bAppend)
+{
+	PNODE node = NWL_NodeAlloc("CPUID", 0);
+	if (bAppend)
+		NWL_NodeAppendChild(NWLC->NwRoot, node);
+
+	if (NWLC->CpuDump)
+		PrintCpuidDump(node);
+	else
+		PrintCpuidMachine(node);
+
 	return node;
 }

@@ -84,6 +84,9 @@ VOID NW_Init(PNWLIB_CONTEXT pContext)
 	NWLC->NwCpuid = calloc(1, sizeof(struct system_id_t));
 	if (!NWLC->NwCpuRaw || !NWLC->NwCpuid)
 		NWL_ErrExit(ERROR_OUTOFMEMORY, "Cannot allocate memory");
+	if (NWLC->Debug)
+		cpuid_set_verbosiness_level(2);
+	cpuid_set_warn_function(NWL_Debug);
 	NWLC->NwSmartInit = FALSE;
 	NWLC->NwUnits = NWL_HS_BYTE;
 	NWLC->NwPciIds.Ids = NWL_LoadIdsToMemory(L"pci.ids", &NWLC->NwPciIds.Size);

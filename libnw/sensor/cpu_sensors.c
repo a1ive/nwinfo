@@ -8,8 +8,7 @@
 
 static struct
 {
-	struct cpu_raw_data_t raw;
-	struct cpu_id_t id;
+	struct cpu_id_t* id;
 	ULONGLONG ticks;
 	double power;
 	double vid;
@@ -22,9 +21,24 @@ static struct
 
 static bool cpu_init(void)
 {
-	cpuid_set_warn_function(NWL_Debug);
-	cpuid_get_raw_data(&ctx.raw);
-	cpu_identify(&ctx.raw, &ctx.id);
+	struct cpu_raw_data_array_t* raw = NWLC->NwCpuRaw;
+	struct system_id_t* id = NWLC->NwCpuid;
+	if (raw->num_raw <= 0)
+	{
+		if (cpuid_get_all_raw_data(raw) != 0)
+			return false;
+	}
+
+	if (id->num_cpu_types <= 0)
+	{
+		if (cpu_identify_all(raw, id) != 0)
+			return false;
+	}
+
+	if (id->num_cpu_types < 1)
+		return false;
+
+	ctx.id = &id->cpu_types[0];
 	ctx.ticks = GetTickCount64();
 
 	if (NWLC->NwDrv)
