@@ -51,11 +51,11 @@
 #if !defined(PLATFORM_X86)
 #	define PLATFORM_X86
 #endif
-#elif defined(__arm__)
+#elif defined(__arm__) || defined(_M_ARM)
 #if !defined(PLATFORM_ARM)
 #	define PLATFORM_ARM
 #endif
-#elif defined(__aarch64__)
+#elif defined(__aarch64__) || defined(_M_ARM64)
 #if !defined(PLATFORM_AARCH64)
 #	define PLATFORM_AARCH64
 #endif
