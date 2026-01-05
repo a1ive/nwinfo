@@ -14,9 +14,15 @@
     <ClCompile Include="cditest.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="disklib.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\libcdi\libcdi.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="disklib.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

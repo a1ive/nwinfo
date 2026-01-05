@@ -132,6 +132,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="cditest.c" />
+    <ClCompile Include="disklib.c" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\libcdi\libcdi.vcxproj">
@@ -140,6 +141,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\libcdi\libcdi.h" />
+    <ClInclude Include="disklib.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
