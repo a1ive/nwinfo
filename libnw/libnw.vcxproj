@@ -309,6 +309,7 @@
     <ClCompile Include="sensor\gpuz_shmem.c" />
     <ClCompile Include="sensor\gpu_sensors.c" />
     <ClCompile Include="sensor\hwinfo_shmem.c" />
+    <ClCompile Include="sensor\imc.c" />
     <ClCompile Include="sensor\lhm.c" />
     <ClCompile Include="sensor\net_traffic.c" />
     <ClCompile Include="smb.c" />
