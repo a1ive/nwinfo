@@ -160,6 +160,11 @@ fail:
 	return 0;
 }
 
+static int get_tdp_nominal(struct msr_info_t* info)
+{
+	return CPU_INVALID_VALUE;
+}
+
 struct msr_fn_t msr_fn_centaur =
 {
 	.get_min_multiplier = get_min_multiplier,
@@ -175,4 +180,5 @@ struct msr_fn_t msr_fn_centaur =
 	.get_igpu_temperature = get_igpu_temperature,
 	.get_igpu_energy = get_igpu_energy,
 	.get_microcode_ver = get_microcode_ver,
+	.get_tdp_nominal = get_tdp_nominal,
 };

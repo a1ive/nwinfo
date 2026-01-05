@@ -139,6 +139,9 @@ int cpu_msrinfo(struct wr0_drv_t* handle, logical_cpu_t cpu, cpu_msrinfo_request
 		case INFO_MICROCODE_VER:
 			ret = (int) (fn->get_microcode_ver(&info));
 			break;
+		case INFO_TDP_NOMINAL:
+			ret = (int) fn->get_tdp_nominal(&info);
+			break;
 	}
 	// Restore AffinityMask
 	SetThreadGroupAffinity(thread, &saved_aff, NULL);

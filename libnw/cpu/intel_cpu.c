@@ -23,6 +23,8 @@
 #define MSR_IA32_BIOS_SIGN_ID  0x8B
 #define MSR_FSB_FREQ           0xCD
 
+#define MSR_PKG_POWER_INFO     0x614
+
 static inline int
 read_intel_msr(struct wr0_drv_t* handle, uint32_t msr_index, uint8_t highbit, uint8_t lowbit, uint64_t* result)
 {
@@ -271,6 +273,18 @@ fail:
 	return 0;
 }
 
+static int get_tdp_nominal(struct msr_info_t* info)
+{
+	uint64_t raw_tdp, pu;
+	if (read_intel_msr(info->handle, MSR_PKG_POWER_INFO, 14, 0, &raw_tdp))
+		goto fail;
+	if (read_intel_msr(info->handle, MSR_RAPL_POWER_UNIT, 3, 0, &pu))
+		goto fail;
+	return (int)raw_tdp / (1ULL << pu);
+fail:
+	return CPU_INVALID_VALUE;
+}
+
 struct msr_fn_t msr_fn_intel =
 {
 	.get_min_multiplier = get_min_multiplier,
@@ -286,4 +300,5 @@ struct msr_fn_t msr_fn_intel =
 	.get_igpu_temperature = get_igpu_temperature,
 	.get_igpu_energy = get_igpu_energy,
 	.get_microcode_ver = get_microcode_ver,
+	.get_tdp_nominal = get_tdp_nominal,
 };

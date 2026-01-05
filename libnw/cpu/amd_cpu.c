@@ -614,6 +614,25 @@ fail:
 	return 0;
 }
 
+#define F17H_ZEN2_MCM_TDP        0x0005D2B8 // [11:3]
+
+static int get_tdp_nominal(struct msr_info_t* info)
+{
+#if 0
+	int ret = CPU_INVALID_VALUE;
+	WR0_WaitPciBus(10);
+	if (info->id->x86.ext_family < 0x17)
+		goto fail;
+	DWORD raw_tdp = WR0_RdAmdSmn(info->handle, WR0_SMN_AMD17H, F17H_ZEN2_MCM_TDP);
+	ret = (int)((raw_tdp >> 3) & 0x1FF);
+fail:
+	WR0_ReleasePciBus();
+	return ret;
+#else
+	return CPU_INVALID_VALUE;
+#endif
+}
+
 struct msr_fn_t msr_fn_amd =
 {
 	.get_min_multiplier = get_min_multiplier,
@@ -629,4 +648,5 @@ struct msr_fn_t msr_fn_amd =
 	.get_igpu_temperature = get_igpu_temperature,
 	.get_igpu_energy = get_igpu_energy,
 	.get_microcode_ver = get_microcode_ver,
+	.get_tdp_nominal = get_tdp_nominal,
 };
