@@ -165,17 +165,17 @@ gnwinfo_ctx_update_smb(void)
 static void
 gnwinfo_ctx_update_display(void)
 {
-	PNWLIB_GPU_INFO gpu = NWL_InitGpu();
 	PNODE edid = NW_Edid(FALSE);
 
 	AcquireSRWLockExclusive(&g_ctx.lock);
-	PNWLIB_GPU_INFO old_gpu = g_ctx.lib.NwGpu;
-	g_ctx.lib.NwGpu = gpu;
+	PNWLIB_GPU_INFO gpu = g_ctx.lib.NwGpu;
+	g_ctx.lib.NwGpu = NULL;
+	NWL_FreeGpu(gpu);
 	PNODE old_edid = g_ctx.edid;
 	g_ctx.edid = edid;
 	ReleaseSRWLockExclusive(&g_ctx.lock);
 
-	NWL_FreeGpu(old_gpu);
+	g_ctx.lib.NwGpu = NWL_InitGpu();
 	NWL_NodeFree(old_edid, 1);
 }
 

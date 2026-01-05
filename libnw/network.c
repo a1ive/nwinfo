@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: Unlicense
 
 #include <winsock2.h>
+#include <windows.h>
 #include <iphlpapi.h>
 #include <ws2tcpip.h>
 #include <netioapi.h>
@@ -21,6 +22,7 @@ static const char* BIT_UINTS[6] =
 { "b", "kb", "Mb", "Gb", "Tb", "Pb", };
 
 static UINT64 mTotalRecv = 0, mTotalSend = 0, mTicks = 0;
+static SRWLOCK s_net_lock = SRWLOCK_INIT;
 
 VOID
 NWL_GetNetTraffic(NWLIB_NET_TRAFFIC* info, BOOL bit)
@@ -30,8 +32,10 @@ NWL_GetNetTraffic(NWLIB_NET_TRAFFIC* info, BOOL bit)
 	static UINT64 oldTicks = 0;
 	UINT64 diffTicks = 0;
 
+	AcquireSRWLockExclusive(&s_net_lock);
 	info->Recv = 0;
 	info->Send = 0;
+
 	if (mTicks > oldTicks)
 	{
 		diffTicks = mTicks - oldTicks;
@@ -43,6 +47,7 @@ NWL_GetNetTraffic(NWLIB_NET_TRAFFIC* info, BOOL bit)
 	oldRecv = mTotalRecv;
 	oldSend = mTotalSend;
 	oldTicks = mTicks;
+	ReleaseSRWLockExclusive(&s_net_lock);
 
 	if (bit)
 	{
@@ -272,9 +277,11 @@ PNODE NW_Network(BOOL bAppend)
 	BOOL bLonghornOrLater;
 	PNODE node = NWL_NodeAlloc("Network", NFLG_TABLE);
 
+	AcquireSRWLockExclusive(&s_net_lock);
 	mTotalRecv = 0;
 	mTotalSend = 0;
 	mTicks = GetTickCount64();
+	ReleaseSRWLockExclusive(&s_net_lock);
 
 	if (bAppend)
 		NWL_NodeAppendChild(NWLC->NwRoot, node);
@@ -445,9 +452,11 @@ PNODE NW_Network(BOOL bAppend)
 		if (GetIfEntry(&ifRow) == NO_ERROR)
 		{
 			NWL_NodeAttrSetf(nic, "Received (Octets)", NAFLG_FMT_NUMERIC, "%lu", ifRow.dwInOctets);
-			mTotalRecv += ifRow.dwInOctets;
 			NWL_NodeAttrSetf(nic, "Sent (Octets)", NAFLG_FMT_NUMERIC, "%lu", ifRow.dwOutOctets);
+			AcquireSRWLockExclusive(&s_net_lock);
+			mTotalRecv += ifRow.dwInOctets;
 			mTotalSend += ifRow.dwOutOctets;
+			ReleaseSRWLockExclusive(&s_net_lock);
 		}
 next_addr:
 		pCurrAddresses = pCurrAddresses->Next;

@@ -12,6 +12,14 @@
 #include <libcpuid.h>
 #include <winring0.h>
 
+#if defined(_MSC_VER)
+#define NWL_TLS __declspec(thread)
+#elif defined(__GNUC__) || defined(__clang__)
+#define NWL_TLS __thread
+#else
+#define NWL_TLS
+#endif
+
 BOOL NWL_IsAdmin(void)
 {
 	BOOL b;
@@ -49,7 +57,7 @@ LPCSTR NWL_GetHumanSize(UINT64 size, LPCSTR human_sizes[6], UINT64 base)
 {
 	UINT64 fsize = size, frac = 0;
 	unsigned units = 0;
-	static char buf[48];
+	static NWL_TLS char buf[48];
 	const char* umsg;
 
 	if (!NWLC->HumanSize)
@@ -81,7 +89,7 @@ LPCSTR NWL_GetHumanSize(UINT64 size, LPCSTR human_sizes[6], UINT64 base)
 LPCSTR NWL_GetHumanTime(UINT64 ullSecond)
 {
 	// 213503982334d 23h 59m 59s
-	static char s_szBuffer[64];
+	static NWL_TLS char s_szBuffer[64];
 
 	if (ullSecond == 0)
 		return "Off";
@@ -478,7 +486,7 @@ LPCSTR NWL_GetBusTypeString(STORAGE_BUS_TYPE Type)
 LPCSTR
 NWL_GuidToStr(UCHAR Guid[16])
 {
-	static CHAR GuidStr[37] = { 0 };
+	static NWL_TLS CHAR GuidStr[37] = { 0 };
 	snprintf(GuidStr, 37, "%02X%02X%02X%02X-%02X%02X-%02X%02X-%02X%02X-%02X%02X%02X%02X%02X%02X",
 		Guid[0], Guid[1], Guid[2], Guid[3], Guid[4], Guid[5], Guid[6], Guid[7],
 		Guid[8], Guid[9], Guid[10], Guid[11], Guid[12], Guid[13], Guid[14], Guid[15]);
@@ -488,7 +496,7 @@ NWL_GuidToStr(UCHAR Guid[16])
 LPCSTR
 NWL_WinGuidToStr(BOOL bBracket, GUID* pGuid)
 {
-	static CHAR GuidStr[39] = { 0 };
+	static NWL_TLS CHAR GuidStr[39] = { 0 };
 	snprintf(GuidStr, 39, "%s%08lX-%04X-%04X-%02X%02X-%02X%02X%02X%02X%02X%02X%s",
 		bBracket ? "{" : "",
 		pGuid->Data1, pGuid->Data2, pGuid->Data3,
@@ -623,7 +631,7 @@ out:
 LPCSTR
 NWL_UnixTimeToStr(INT nix)
 {
-	static CHAR buf[28];
+	static NWL_TLS CHAR buf[28];
 	UINT8 months[12] = { 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
 	INT daysEpoch;
 	UINT32 days;
@@ -660,7 +668,7 @@ NWL_UnixTimeToStr(INT nix)
 	return buf;
 }
 
-static CHAR Utf8Buf[NWINFO_BUFSZ + 1];
+static NWL_TLS CHAR Utf8Buf[NWINFO_BUFSZ + 1];
 
 LPCSTR
 NWL_Ucs2ToUtf8(LPCWSTR src)
@@ -694,7 +702,7 @@ NWL_Ucs2ToUtf8(LPCWSTR src)
 	return Utf8Buf;
 }
 
-static WCHAR Ucs2Buf[NWINFO_BUFSZ + 1];
+static NWL_TLS WCHAR Ucs2Buf[NWINFO_BUFSZ + 1];
 
 LPCWSTR NWL_Utf8ToUcs2(LPCSTR src)
 {
