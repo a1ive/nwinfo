@@ -78,6 +78,7 @@ static const struct
 	bool blk;
 } i801_devices[] =
 {
+	// https://github.com/torvalds/linux/blob/master/drivers/i2c/busses/i2c-i801.c
 	{ 0x2413, false, false },   // 82801AA (ICH)
 	{ 0x2423, false, false },   // 82801AB (ICH0)
 	{ 0x2443, false, false },   // 82801BA (ICH2)
@@ -145,6 +146,9 @@ static const struct
 	{ 0x7722, true , true  },   // Arrow Lake-H (SOC)
 	{ 0xe322, true , true  },   // Panther Lake-H (SOC)
 	{ 0xe422, true , true  },   // Panther Lake-P (SOC)
+	{ 0x4d22, true , true  },   // Wildcat Lake-U (SOC)
+	{ 0x5827, true , true  },   // Diamond Rapids (SOC)
+	{ 0x6e23, true , true  },   // Nova Lake-S (PCH)
 };
 
 static int I801Detect(smbus_t* ctx)
