@@ -58,6 +58,13 @@ struct msr_info_t
 	struct msr_fn_t* fn;
 	GROUP_AFFINITY aff;
 	ry_handle_t* ry;
+
+	int cached_min_multiplier;
+	int cached_max_multiplier;
+	int cached_pl1;
+	int cached_pl2;
+	int cached_microcode;
+	int cached_tdp;
 };
 
 void NWL_GetCpuIndexStr(struct cpu_id_t* id, char* buf, size_t buf_len);

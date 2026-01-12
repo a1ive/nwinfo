@@ -15,6 +15,7 @@ NWL_GetCpuIndexStr(struct cpu_id_t* id, char* buf, size_t buf_len)
 	switch (id->purpose)
 	{
 	case PURPOSE_GENERAL:
+		purpose = "-G";
 		break;
 	case PURPOSE_PERFORMANCE:
 		purpose = "-P";
@@ -121,13 +122,17 @@ NWL_MsrGet(struct msr_info_t* info, cpu_msrinfo_request_t which)
 	switch (which)
 	{
 	case INFO_MIN_MULTIPLIER:
-		ret = (int)(fn->get_min_multiplier(info) * 100);
+		if (info->cached_min_multiplier <= 0)
+			info->cached_min_multiplier = (int)(fn->get_min_multiplier(info) * 100);
+		ret = info->cached_min_multiplier;
 		break;
 	case INFO_CUR_MULTIPLIER:
 		ret = (int)(fn->get_cur_multiplier(info) * 100);
 		break;
 	case INFO_MAX_MULTIPLIER:
-		ret = (int)(fn->get_max_multiplier(info) * 100);
+		if (info->cached_max_multiplier <= 0)
+			info->cached_max_multiplier = (int)(fn->get_max_multiplier(info) * 100);
+		ret = info->cached_max_multiplier;
 		break;
 	case INFO_TEMPERATURE:
 		ret = fn->get_temperature(info);
@@ -155,10 +160,14 @@ NWL_MsrGet(struct msr_info_t* info, cpu_msrinfo_request_t which)
 	}
 		break;
 	case INFO_PKG_PL1:
-		ret = (int)(fn->get_pkg_pl1(info) * 100);
+		if (info->cached_pl1 <= 0)
+			info->cached_pl1 = (int)(fn->get_pkg_pl1(info) * 100);
+		ret = info->cached_pl1;
 		break;
 	case INFO_PKG_PL2:
-		ret = (int)(fn->get_pkg_pl2(info) * 100);
+		if (info->cached_pl2 <= 0)
+			info->cached_pl2 = (int)(fn->get_pkg_pl2(info) * 100);
+		ret = info->cached_pl2;
 		break;
 	case INFO_BUS_CLOCK:
 		ret = (int)(fn->get_bus_clock(info) * 100);
@@ -170,10 +179,14 @@ NWL_MsrGet(struct msr_info_t* info, cpu_msrinfo_request_t which)
 		ret = (int)(fn->get_igpu_energy(info) * 100);
 		break;
 	case INFO_MICROCODE_VER:
-		ret = (int)(fn->get_microcode_ver(info));
+		if (info->cached_microcode == 0)
+			info->cached_microcode = (int)(fn->get_microcode_ver(info));
+		ret = info->cached_microcode;
 		break;
 	case INFO_TDP_NOMINAL:
-		ret = (int)fn->get_tdp_nominal(info);
+		if (info->cached_tdp <= 0)
+			info->cached_tdp = (int)fn->get_tdp_nominal(info);
+		ret = info->cached_tdp;
 		break;
 	}
 
