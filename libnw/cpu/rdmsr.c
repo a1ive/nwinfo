@@ -3,74 +3,43 @@
 #include "rdmsr.h"
 
 #include <windows.h>
-#include <winioctl.h>
-#include <winerror.h>
-#include <pathcch.h>
 
 extern struct msr_fn_t msr_fn_intel;
 extern struct msr_fn_t msr_fn_amd;
 extern struct msr_fn_t msr_fn_centaur;
 
-static bool set_cpu_affinity(logical_cpu_t logical_cpu)
+void
+NWL_GetCpuIndexStr(struct cpu_id_t* id, char* buf, size_t buf_len)
 {
-	int groups = GetActiveProcessorGroupCount();
-	int total_processors = 0;
-	int group = 0;
-	int number = 0;
-	int found = 0;
-	HANDLE thread = GetCurrentThread();
-	GROUP_AFFINITY group_aff;
-
-	for (int i = 0; i < groups; i++)
+	const char* purpose = "";
+	switch (id->purpose)
 	{
-		int processors = GetActiveProcessorCount(i);
-		if (total_processors + processors > logical_cpu)
-		{
-			group = i;
-			number = logical_cpu - total_processors;
-			found = 1;
-			break;
-		}
-		total_processors += processors;
+	case PURPOSE_GENERAL:
+		break;
+	case PURPOSE_PERFORMANCE:
+		purpose = "-P";
+		break;
+	case PURPOSE_EFFICIENCY:
+		purpose = "-E";
+		break;
+	case PURPOSE_LP_EFFICIENCY:
+		purpose = "-LPE";
+		break;
+	case PURPOSE_U_PERFORMANCE:
+		purpose = "-UP";
+		break;
 	}
-	if (!found)
-		return 0; // logical CPU # too large, does not exist
-
-	memset(&group_aff, 0, sizeof(group_aff));
-	group_aff.Group = (WORD)group;
-	group_aff.Mask = (KAFFINITY)(1ULL << number);
-	return SetThreadGroupAffinity(thread, &group_aff, NULL);
+	snprintf(buf, buf_len, "CPU%u%s", id->index, purpose);
 }
 
-int cpu_msrinfo(struct wr0_drv_t* handle, logical_cpu_t cpu, cpu_msrinfo_request_t which)
+bool
+NWL_MsrInit(struct msr_info_t* info, struct wr0_drv_t* drv, struct cpu_id_t* id)
 {
-	static int err = 0, init = 0;
-	struct cpu_raw_data_t raw;
-	static struct cpu_id_t id;
-	static struct internal_id_info_t internal;
-	static struct msr_info_t info = { 0 };
+	if (!info || !id || !drv)
+		return false;
+
 	struct msr_fn_t* fn = NULL;
-
-	if (handle == NULL)
-	{
-		cpuid_set_error(ERR_HANDLE);
-		return CPU_INVALID_VALUE;
-	}
-
-	info.handle = handle;
-	if (!init)
-	{
-		err  = cpuid_get_raw_data(&raw);
-		err += cpu_ident_internal(&raw, &id, &internal);
-		info.cpu_clock = cpu_clock_measure(250, 1);
-		info.id = &id;
-		info.internal = &internal;
-		init = 1;
-	}
-
-	if (err)
-		return CPU_INVALID_VALUE;
-	switch (info.id->vendor)
+	switch (id->vendor)
 	{
 	case VENDOR_INTEL:
 		fn = &msr_fn_intel;
@@ -85,65 +54,138 @@ int cpu_msrinfo(struct wr0_drv_t* handle, logical_cpu_t cpu, cpu_msrinfo_request
 		fn = &msr_fn_centaur;
 		break;
 	default:
-		return CPU_INVALID_VALUE;
+		return false;
 	}
 
-	// Save AffinityMask
+	info->ticks = GetTickCount64();
+	info->id = id;
+	info->handle = drv;
+	info->fn = fn;
+	info->valid = 1;
+
+	NWL_GetCpuIndexStr(id, info->name, ARRAYSIZE(info->name));
+
 	GROUP_AFFINITY saved_aff;
 	HANDLE thread = GetCurrentThread();
-	if (!GetThreadGroupAffinity(thread, &saved_aff))
-		return cpuid_set_error(ERR_INVCNB);
-	// Set AffinityMask
-	set_cpu_affinity(cpu);
 
-	int ret = CPU_INVALID_VALUE;
+	// cpu->affinity_mask to GROUP_AFFINITY
+	ZeroMemory(&info->aff, sizeof(info->aff));
+	const cpu_affinity_mask_t* affinity_mask = &id->affinity_mask;
+	WORD group_count = GetActiveProcessorGroupCount();
+	DWORD total_processors = 0;
+	for (WORD group = 0; group < group_count; group++)
+	{
+		DWORD processors = GetActiveProcessorCount(group);
+		KAFFINITY mask = 0;
+		for (DWORD cpu_index = 0; cpu_index < processors; cpu_index++)
+		{
+			uint32_t logical_cpu = total_processors + cpu_index;
+			uint32_t byte_index = logical_cpu / __MASK_NCPUBITS;
+			uint8_t bit = (uint8_t)(1U << (logical_cpu % __MASK_NCPUBITS));
+			if (affinity_mask->__bits[byte_index] & bit)
+				mask |= ((KAFFINITY)1) << cpu_index;
+		}
+		if (mask != 0)
+		{
+			info->aff.Group = group;
+			info->aff.Mask = mask;
+			break;
+		}
+		total_processors += processors;
+	}
+	if (!info->aff.Mask)
+	{
+		info->aff.Group = 0;
+		info->aff.Mask = 1;
+	}
+
+	SetThreadGroupAffinity(thread, &info->aff, &saved_aff);
+	info->clock = cpu_clock_measure(250, 1);
+	SetThreadGroupAffinity(thread, &saved_aff, NULL);
+	return true;
+}
+
+int
+NWL_MsrGet(struct msr_info_t* info, cpu_msrinfo_request_t which)
+{
+	if (!info || !info->valid)
+		return 0;
+
+	GROUP_AFFINITY saved_aff;
+	HANDLE thread = GetCurrentThread();
+	SetThreadGroupAffinity(thread, &info->aff, &saved_aff);
+
+	int ret = 0;
+	struct msr_fn_t* fn = info->fn;
+
 	switch (which)
 	{
-		case INFO_MIN_MULTIPLIER:
-			ret = (int) (fn->get_min_multiplier(&info) * 100);
-			break;
-		case INFO_CUR_MULTIPLIER:
-			ret = (int) (fn->get_cur_multiplier(&info) * 100);
-			break;
-		case INFO_MAX_MULTIPLIER:
-			ret = (int) (fn->get_max_multiplier(&info) * 100);
-			break;
-		case INFO_TEMPERATURE:
-			ret = fn->get_temperature(&info);
-			break;
-		case INFO_PKG_TEMPERATURE:
-			ret = fn->get_pkg_temperature(&info);
-			break;
-		case INFO_VOLTAGE:
-			ret = (int) (fn->get_voltage(&info) * 100);
-			break;
-		case INFO_PKG_ENERGY:
-			ret = (int) (fn->get_pkg_energy(&info) * 100);
-			break;
-		case INFO_PKG_PL1:
-			ret = (int)(fn->get_pkg_pl1(&info) * 100);
-			break;
-		case INFO_PKG_PL2:
-			ret = (int)(fn->get_pkg_pl2(&info) * 100);
-			break;
-		case INFO_BCLK:
-		case INFO_BUS_CLOCK:
-			ret = (int) (fn->get_bus_clock(&info) * 100);
-			break;
-		case INFO_IGPU_TEMPERATURE:
-			ret = fn->get_igpu_temperature(&info);
-			break;
-		case INFO_IGPU_ENERGY:
-			ret = (int) (fn->get_igpu_energy(&info) * 100);
-			break;
-		case INFO_MICROCODE_VER:
-			ret = (int) (fn->get_microcode_ver(&info));
-			break;
-		case INFO_TDP_NOMINAL:
-			ret = (int) fn->get_tdp_nominal(&info);
-			break;
+	case INFO_MIN_MULTIPLIER:
+		ret = (int)(fn->get_min_multiplier(info) * 100);
+		break;
+	case INFO_CUR_MULTIPLIER:
+		ret = (int)(fn->get_cur_multiplier(info) * 100);
+		break;
+	case INFO_MAX_MULTIPLIER:
+		ret = (int)(fn->get_max_multiplier(info) * 100);
+		break;
+	case INFO_TEMPERATURE:
+		ret = fn->get_temperature(info);
+		break;
+	case INFO_PKG_TEMPERATURE:
+		ret = fn->get_pkg_temperature(info);
+		break;
+	case INFO_VOLTAGE:
+		ret = (int)(fn->get_voltage(info) * 100);
+		break;
+	case INFO_PKG_ENERGY:
+		ret = (int)(fn->get_pkg_energy(info) * 100);
+		break;
+	case INFO_PKG_POWER:
+	{
+		ULONGLONG ticks = GetTickCount64();
+		ULONGLONG delta_ticks = 0;
+		if (ticks > info->ticks)
+			delta_ticks = ticks - info->ticks;
+		int pkg_energy = (int)(fn->get_pkg_energy(info) * 100);
+		if (pkg_energy > info->pkg_energy && delta_ticks > 0)
+			ret = (int)((pkg_energy - info->pkg_energy) * 1000 / delta_ticks);
+		info->pkg_energy = pkg_energy;
+		info->ticks = ticks;
 	}
-	// Restore AffinityMask
+		break;
+	case INFO_PKG_PL1:
+		ret = (int)(fn->get_pkg_pl1(info) * 100);
+		break;
+	case INFO_PKG_PL2:
+		ret = (int)(fn->get_pkg_pl2(info) * 100);
+		break;
+	case INFO_BUS_CLOCK:
+		ret = (int)(fn->get_bus_clock(info) * 100);
+		break;
+	case INFO_IGPU_TEMPERATURE:
+		ret = fn->get_igpu_temperature(info);
+		break;
+	case INFO_IGPU_ENERGY:
+		ret = (int)(fn->get_igpu_energy(info) * 100);
+		break;
+	case INFO_MICROCODE_VER:
+		ret = (int)(fn->get_microcode_ver(info));
+		break;
+	case INFO_TDP_NOMINAL:
+		ret = (int)fn->get_tdp_nominal(info);
+		break;
+	}
+
 	SetThreadGroupAffinity(thread, &saved_aff, NULL);
 	return ret;
+}
+
+void
+NWL_MsrFini(struct msr_info_t* info)
+{
+	if (!info)
+		return;
+	ryzen_smu_free(info->ry);
+	ZeroMemory(info, sizeof(struct msr_info_t));
 }

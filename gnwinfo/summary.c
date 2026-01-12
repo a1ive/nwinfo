@@ -178,9 +178,6 @@ draw_computer(struct nk_context* ctx)
 static VOID
 draw_processor(struct nk_context* ctx)
 {
-	INT i;
-	CHAR name[32];
-
 	nk_layout_row(ctx, NK_DYNAMIC, 0, 4, (float[4]) { 0.3f, 0.4f, 0.3f - g_ctx.gui_ratio, g_ctx.gui_ratio });
 	nk_image_label(ctx, GET_PNG(IDR_PNG_CPU), N_(N__CPU), NK_TEXT_LEFT, g_color_text_d);
 	nk_lhcf(ctx, NK_TEXT_LEFT, gnwinfo_get_color(g_ctx.cpu_usage, 70.0, 90.0),
@@ -191,15 +188,14 @@ draw_processor(struct nk_context* ctx)
 	if (quick_access_button(ctx, GET_PNG(IDR_PNG_CPUID), "CPUID"))
 		g_ctx.window_flag |= GUI_WINDOW_CPUID;
 
-	for (i = 0; i < g_ctx.cpu_count; i++)
+	for (INT i = 0; i < g_ctx.cpu_count; i++)
 	{
-		snprintf(name, sizeof(name), "CPU%d", i);
-		PNODE cpu = NWL_NodeGetChild(g_ctx.cpuid, name);
+		PNODE cpu = NWL_NodeEnumChild(g_ctx.cpuid, i);
 		LPCSTR brand = NWL_NodeAttrGet(cpu, "Brand");
-		LPCSTR purpose = NWL_NodeAttrGet(cpu, "Purpose");
-
+		if (cpu == NULL)
+			break;
 		nk_layout_row(ctx, NK_DYNAMIC, 0, 2, (float[2]) { 0.3f, 0.7f });
-		nk_lhscf(ctx, NK_TEXT_LEFT, g_color_text_d, nk_false, nk_true, "%s-%c", name, toupper(purpose[0]));
+		nk_lhsc(ctx, cpu->name, NK_TEXT_LEFT, g_color_text_d, nk_false, nk_true);
 		nk_lhc(ctx, brand, NK_TEXT_LEFT, g_color_text_l);
 
 		if (!(g_ctx.main_flag & MAIN_CPU_DETAIL))

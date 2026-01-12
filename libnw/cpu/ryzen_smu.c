@@ -802,6 +802,11 @@ ry_handle_t* ryzen_smu_init(struct wr0_drv_t* drv_handle, struct cpu_id_t* id)
 		handle->pm_table_base_addr = (uint64_t)out[1];
 		SMU_DEBUG("PM Version %X", handle->pm_table_version);
 		SMU_DEBUG("PM Table Base: %llX", (unsigned long long)handle->pm_table_base_addr);
+
+		handle->pm_table_size = get_pm_table_size_from_version(handle, handle->pm_table_version);
+		SMU_DEBUG("PM Table Size: %zu", handle->pm_table_size);
+
+		ZeroMemory(&handle->pm_table_buffer, sizeof(handle->pm_table_buffer));
 		return handle;
 	}
 
@@ -818,46 +823,34 @@ ry_handle_t* ryzen_smu_init(struct wr0_drv_t* drv_handle, struct cpu_id_t* id)
 	if (get_smu_version(handle) != RYZEN_SMU_OK)
 		goto fail;
 
+	if (handle->rsmu_cmd_addr == 0)
+		goto fail;
+
+	uint64_t base_addr = 0;
+	if (get_pm_table_base(handle, &base_addr) != RYZEN_SMU_OK)
+		goto fail;
+	handle->pm_table_base_addr = base_addr;
+
+	ry_err_t rc = get_pm_table_version(handle, &handle->pm_table_version);
+	if (rc != RYZEN_SMU_OK && rc != RYZEN_SMU_UNSUPPORTED)
+		goto fail;
+
+	handle->pm_table_size = get_pm_table_size_from_version(handle, handle->pm_table_version);
+	SMU_DEBUG("PM Table Size: %zu", handle->pm_table_size);
+
+	ZeroMemory(&handle->pm_table_buffer, sizeof(handle->pm_table_buffer));
+
 	return handle;
 fail:
 	ryzen_smu_free(handle);
 	return NULL;
 }
 
-void ryzen_smu_free(ry_handle_t* handle) 
+void ryzen_smu_free(ry_handle_t* handle)
 {
 	if (!handle)
 		return;
 	free(handle);
-}
-
-ry_err_t ryzen_smu_init_pm_table(ry_handle_t* handle)
-{
-	if (handle->drv_handle->type == WR0_DRIVER_PAWNIO)
-		goto out;
-
-	if (handle->rsmu_cmd_addr == 0)
-		return RYZEN_SMU_UNSUPPORTED;
-
-	uint64_t base_addr = 0;
-	ry_err_t rc;
-
-	rc = get_pm_table_base(handle, &base_addr);
-	if (rc != RYZEN_SMU_OK)
-		return rc;
-	handle->pm_table_base_addr = base_addr;
-
-	rc = get_pm_table_version(handle, &handle->pm_table_version);
-	if (rc != RYZEN_SMU_OK && rc != RYZEN_SMU_UNSUPPORTED)
-		return rc;
-
-out:
-	handle->pm_table_size = get_pm_table_size_from_version(handle, handle->pm_table_version);
-	SMU_DEBUG("PM Table Size: %zu", handle->pm_table_size);
-
-	ZeroMemory(&handle->pm_table_buffer, sizeof(handle->pm_table_buffer));
-
-	return RYZEN_SMU_OK;
 }
 
 ry_err_t ryzen_smu_update_pm_table(ry_handle_t* handle)
@@ -910,7 +903,6 @@ ry_err_t ryzen_smu_get_stapm_value(ry_handle_t* handle, float* data)
 	return ryzen_smu_get_pm_table_float(handle, 0x04, data);
 }
 
-// PL2
 ry_err_t ryzen_smu_get_fast_limit(ry_handle_t* handle, float* data)
 {
 	return ryzen_smu_get_pm_table_float(handle, 0x08, data);
@@ -921,7 +913,6 @@ ry_err_t ryzen_smu_get_fast_value(ry_handle_t* handle, float* data)
 	return ryzen_smu_get_pm_table_float(handle, 0x0C, data);
 }
 
-// PL1
 ry_err_t ryzen_smu_get_slow_limit(ry_handle_t* handle, float* data)
 {
 	return ryzen_smu_get_pm_table_float(handle, 0x10, data);

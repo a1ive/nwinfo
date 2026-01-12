@@ -254,101 +254,55 @@ PrintFeatures(PNODE node, const struct cpu_id_t* data)
 	free(str);
 }
 
-static void
-GetMsrData(NWLIB_CPU_INFO* info, struct cpu_id_t* data)
+NWLIB_CPU_INFO*
+NWL_GetCpuMsr(VOID)
 {
-	logical_cpu_t i;
-	int value = CPU_INVALID_VALUE;
-	if (!data->flags[CPU_FEATURE_MSR] || NWLC->NwDrv == NULL)
-		return;
-	for (i = 0; i < data->num_logical_cpus; i++)
+	NWLIB_CPU_INFO* info = NULL;
+	if (!NWLC->NwCpuid || NWLC->NwCpuid->num_cpu_types <= 0)
+		return NULL;
+	info = calloc(NWLC->NwCpuid->num_cpu_types, sizeof(NWLIB_CPU_INFO));
+	if (info == NULL)
+		return NULL;
+	for (uint8_t i = 0; i < NWLC->NwCpuid->num_cpu_types; i++)
 	{
-		int min_multi = cpu_msrinfo(NWLC->NwDrv, i, INFO_MIN_MULTIPLIER);
-		int max_multi = cpu_msrinfo(NWLC->NwDrv, i, INFO_MAX_MULTIPLIER);
-		int cur_multi = cpu_msrinfo(NWLC->NwDrv, i, INFO_CUR_MULTIPLIER);
-		if (min_multi == CPU_INVALID_VALUE)
-			min_multi = 0;
-		if (max_multi == CPU_INVALID_VALUE)
-			max_multi = 0;
-		if (cur_multi == CPU_INVALID_VALUE)
-			cur_multi = 0;
-		snprintf(info->MsrMulti, NWL_STR_SIZE, "%.1lf (%d - %d)",
-			cur_multi / 100.0, min_multi / 100, max_multi / 100);
-		value = cpu_msrinfo(NWLC->NwDrv, i, INFO_TEMPERATURE);
-		if (value != CPU_INVALID_VALUE && value > 0)
-			info->MsrTemp = value; // Core Temperature
-		value = cpu_msrinfo(NWLC->NwDrv, i, INFO_PKG_TEMPERATURE);
-		if (value != CPU_INVALID_VALUE && value > 0)
-			info->MsrTemp = value; // Package Temperature
-		value = cpu_msrinfo(NWLC->NwDrv, i, INFO_VOLTAGE);
-		if (value != CPU_INVALID_VALUE && value > 0)
-			info->MsrVolt = value / 100.0;
-		ULONGLONG ticks = GetTickCount64();
-		value = cpu_msrinfo(NWLC->NwDrv, i, INFO_PKG_ENERGY);
-		if (value != CPU_INVALID_VALUE && value > info->MsrEnergy)
-		{
-			if (ticks > info->Ticks)
-			{
-				ULONGLONG delta_ticks = ticks - info->Ticks; // in milliseconds
-				double delta_energy = (double)(value - info->MsrEnergy); // in Joules, multiplied by 100
-				info->MsrPower = delta_energy / (double)delta_ticks * 10.0; // in Watts
-			}
-			info->MsrEnergy = value;
-		}
-		info->Ticks = ticks;
-		value = cpu_msrinfo(NWLC->NwDrv, i, INFO_BUS_CLOCK);
-		if (value != CPU_INVALID_VALUE && value > 0)
-		{
-			info->MsrBus = value / 100.0;
-			info->MsrFreq = info->MsrBus * cur_multi / 100.0;
-		}
-		value = cpu_msrinfo(NWLC->NwDrv, i, INFO_PKG_PL1);
-		if (value != CPU_INVALID_VALUE && value > 0)
-			info->MsrPl1 = value / 100.0;
-		value = cpu_msrinfo(NWLC->NwDrv, i, INFO_PKG_PL2);
-		if (value != CPU_INVALID_VALUE && value > 0)
-			info->MsrPl2 = value / 100.0;
-#ifdef ENABLE_IGPU_MONITOR
-		value = cpu_msrinfo(NWLC->NwDrv, i, INFO_IGPU_TEMPERATURE);
-		if (value != CPU_INVALID_VALUE && value > 0)
-			info->GpuTemp = value;
-		value = cpu_msrinfo(NWLC->NwDrv, i, INFO_IGPU_ENERGY);
-		if (value != CPU_INVALID_VALUE && value > info->GpuEnergy)
-		{
-			info->GpuPower = (value - info->GpuEnergy) / 100.0;
-			info->GpuEnergy = value;
-		}
-#endif
-		value = cpu_msrinfo(NWLC->NwDrv, i, INFO_MICROCODE_VER);
-		info->BiosRev = (UINT32)value;
-		break;
+		struct msr_info_t* msr = &NWLC->NwMsr[i];
+		NWLIB_CPU_INFO* p = &info[i];
+		double multiplier = NWL_MsrGet(msr, INFO_CUR_MULTIPLIER) / 100.0;
+		snprintf(p->MsrMulti, NWL_STR_SIZE, "%.1lf (%d - %d)",
+			multiplier,
+			NWL_MsrGet(msr, INFO_MIN_MULTIPLIER) / 100,
+			NWL_MsrGet(msr, INFO_MAX_MULTIPLIER) / 100);
+		p->MsrTemp = NWL_MsrGet(msr, INFO_PKG_TEMPERATURE);
+		if (p->MsrTemp <= 0)
+			p->MsrTemp = NWL_MsrGet(msr, INFO_TEMPERATURE);
+		p->MsrVolt = NWL_MsrGet(msr, INFO_VOLTAGE) / 100.0;
+		p->MsrPower = NWL_MsrGet(msr, INFO_PKG_POWER) / 100.0;
+		p->MsrPl1 = NWL_MsrGet(msr, INFO_PKG_PL1) / 100.0;
+		p->MsrPl2 = NWL_MsrGet(msr, INFO_PKG_PL2) / 100.0;
+		p->MsrBus = NWL_MsrGet(msr, INFO_BUS_CLOCK) / 100.0;
+		p->BiosRev = (UINT32)NWL_MsrGet(msr, INFO_MICROCODE_VER);
+		p->MsrFreq = multiplier * p->MsrBus;
 	}
-}
-
-VOID
-NWL_GetCpuMsr(int count, NWLIB_CPU_INFO* info)
-{
-	int i;
-	if (count > NWLC->NwCpuid->num_cpu_types)
-		return;
-	for (i = 0; i < count; i++)
-		GetMsrData(&info[i], &NWLC->NwCpuid->cpu_types[i]);
+	return info;
 }
 
 static void
-PrintCpuMsr(PNODE node, struct cpu_id_t* data)
+PrintCpuMsr(PNODE node, uint8_t index)
 {
-	NWLIB_CPU_INFO info = { 0 };
-	GetMsrData(&info, data);
-	NWL_NodeAttrSet(node, "Multiplier", info.MsrMulti, 0);
-	NWL_NodeAttrSetf(node, "Temperature (C)", NAFLG_FMT_NUMERIC, "%d", info.MsrTemp);
-	NWL_NodeAttrSetf(node, "Core Voltage (V)", NAFLG_FMT_NUMERIC, "%.2lf", info.MsrVolt);
-	NWL_NodeAttrSetf(node, "Bus Clock (MHz)", NAFLG_FMT_NUMERIC, "%.2lf", info.MsrBus);
-	NWL_NodeAttrSetf(node, "Energy (J)", NAFLG_FMT_NUMERIC, "%.2lf", info.MsrEnergy / 100.0);
-	NWL_NodeAttrSetf(node, "Power (W)", NAFLG_FMT_NUMERIC, "%.2lf", info.MsrPower);
-	NWL_NodeAttrSetf(node, "PL1 (W)", NAFLG_FMT_NUMERIC, "%.2lf", info.MsrPl1);
-	NWL_NodeAttrSetf(node, "PL2 (W)", NAFLG_FMT_NUMERIC, "%.2lf", info.MsrPl2);
-	NWL_NodeAttrSetf(node, "Microcode Rev", 0, "0x%X", info.BiosRev);
+	if (NWLC->NwMsr == NULL)
+		return;
+	struct msr_info_t* msr = &NWLC->NwMsr[index];
+
+	NWL_NodeAttrSetf(node, "Multiplier", 0, "%.1lf (%d - %d)",
+		NWL_MsrGet(msr, INFO_CUR_MULTIPLIER) / 100.0,
+		NWL_MsrGet(msr, INFO_MIN_MULTIPLIER) / 100,
+		NWL_MsrGet(msr, INFO_MAX_MULTIPLIER) / 100);
+	NWL_NodeAttrSetf(node, "Temperature (C)", NAFLG_FMT_NUMERIC, "%d", NWL_MsrGet(msr, INFO_PKG_TEMPERATURE));
+	NWL_NodeAttrSetf(node, "Core Voltage (V)", NAFLG_FMT_NUMERIC, "%.2lf", NWL_MsrGet(msr, INFO_VOLTAGE) / 100.0);
+	NWL_NodeAttrSetf(node, "Bus Clock (MHz)", NAFLG_FMT_NUMERIC, "%.2lf", NWL_MsrGet(msr, INFO_BUS_CLOCK) / 100.0);
+	NWL_NodeAttrSetf(node, "PL1 (W)", NAFLG_FMT_NUMERIC, "%.2lf", NWL_MsrGet(msr, INFO_PKG_PL1) / 100.0);
+	NWL_NodeAttrSetf(node, "PL2 (W)", NAFLG_FMT_NUMERIC, "%.2lf", NWL_MsrGet(msr, INFO_PKG_PL2) / 100.0);
+	NWL_NodeAttrSetf(node, "Microcode Rev", 0, "0x%X", (UINT32)NWL_MsrGet(msr, INFO_MICROCODE_VER));
 }
 
 // Get DMI Processor Information (Type 4) Table
@@ -370,7 +324,7 @@ PrintCpuDmi(PNODE node, const char* name)
 }
 
 static void
-PrintCpuInfo(PNODE node, struct cpu_id_t* data)
+PrintCpuInfo(PNODE node, struct cpu_id_t* data, uint8_t index)
 {
 	NWL_NodeAttrSet(node, "Purpose", cpu_purpose_str(data->purpose), 0);
 	NWL_NodeAttrSet(node, "Vendor", data->vendor_str, 0);
@@ -395,7 +349,7 @@ PrintCpuInfo(PNODE node, struct cpu_id_t* data)
 	if (!NWLC->CpuDump)
 	{
 		PrintCpuDmi(node, data->brand_str);
-		PrintCpuMsr(node, data);
+		PrintCpuMsr(node, index);
 	}
 }
 
@@ -418,9 +372,9 @@ PrintAllCpuInfo(PNODE node, struct system_id_t* id)
 	{
 		CHAR name[32];
 		PNODE cpu = NULL;
-		snprintf(name, sizeof(name), "CPU%u", i);
+		NWL_GetCpuIndexStr(&id->cpu_types[i], name, ARRAYSIZE(name));
 		cpu = NWL_NodeAppendNew(node, name, 0);
-		PrintCpuInfo(cpu, &id->cpu_types[i]);
+		PrintCpuInfo(cpu, &id->cpu_types[i], i);
 	}
 }
 
@@ -485,6 +439,16 @@ PrintCpuidMachine(PNODE node)
 		{
 			NWL_NodeAppendMultiSz(&NWLC->ErrLog, cpuid_error());
 			return;
+		}
+	}
+
+	if (NWLC->NwMsr == NULL && id->num_cpu_types > 0)
+	{
+		NWLC->NwMsr = calloc(id->num_cpu_types, sizeof(struct msr_info_t));
+		if (NWLC->NwMsr)
+		{
+			for (uint8_t i = 0; i < id->num_cpu_types; i++)
+				NWL_MsrInit(&NWLC->NwMsr[i], NWLC->NwDrv, &id->cpu_types[i]);
 		}
 	}
 

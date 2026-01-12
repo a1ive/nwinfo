@@ -99,7 +99,6 @@ draw_msr(struct nk_context* ctx, int index, PNODE cpu)
 VOID
 gnwinfo_draw_cpuid_window(struct nk_context* ctx, float width, float height)
 {
-	CHAR name[32];
 	CHAR buf[MAX_PATH];
 	PNODE cpu = NULL;
 	static int cpu_index = 0;
@@ -129,8 +128,9 @@ gnwinfo_draw_cpuid_window(struct nk_context* ctx, float width, float height)
 	nk_l(ctx, buf, NK_TEXT_CENTERED);
 	CPUID_ROW_END;
 
-	snprintf(name, sizeof(name), "CPU%d", cpu_index);
-	cpu = NWL_NodeGetChild(g_ctx.cpuid, name);
+	cpu = NWL_NodeEnumChild(g_ctx.cpuid, cpu_index);
+	if (cpu == NULL)
+		goto out;
 
 	CPUID_ROW_BEGIN(2, 0.2f);
 	nk_l(ctx, N_(N__BRAND), NK_TEXT_LEFT);

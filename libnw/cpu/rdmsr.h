@@ -1,64 +1,32 @@
 // SPDX-License-Identifier: Unlicense
 #pragma once
 
-#define _XOPEN_SOURCE 600
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "libcpuid.h"
-#include "asm-bits.h"
-#include "libcpuid_util.h"
-#include "libcpuid_internal.h"
+#include <libcpuid.h>
 #include <winring0.h>
+#include "ryzen_smu.h"
+#include "../nwapi.h"
 
 typedef enum
 {
-	INFO_MIN_MULTIPLIER,       /*!< Minimum CPU:FSB ratio for this CPU,
-									multiplied by 100. */
-	INFO_CUR_MULTIPLIER,       /*!< Current CPU:FSB ratio, multiplied by 100.
-									e.g., a CPU:FSB value of 18.5 reads as
-									"1850". */
-	INFO_MAX_MULTIPLIER,       /*!< Maximum CPU:FSB ratio for this CPU,
-									multiplied by 100. */
-	INFO_TEMPERATURE,          /*!< The current core temperature in Celsius. */
-	INFO_PKG_TEMPERATURE,      /*!< The current package temperature in Celsius. */
-	INFO_THROTTLING,           /*!< 1 if the current logical processor is
-									throttling. 0 if it is running normally. */
-	INFO_VOLTAGE,              /*!< The current core voltage in Volt,
-									multiplied by 100. */
-	INFO_PKG_ENERGY,           /*!< The current package energy consumption in Joules,
-									multiplied by 100. */
-	INFO_PKG_PL1,              /*!< The current package power limit #1 in Watts,
-									multiplied by 100. */
-	INFO_PKG_PL2,              /*!< The current package power limit #2 in Watts,
-									multiplied by 100. */
-	INFO_BCLK,                 /*!< See \ref INFO_BUS_CLOCK. */
-	INFO_BUS_CLOCK,            /*!< The main bus clock in MHz,
-									e.g., FSB/QPI/DMI/HT base clock,
-									multiplied by 100. */
-	INFO_IGPU_TEMPERATURE,     /*!< The current integrated GPU temperature in Celsius. */
-	INFO_IGPU_ENERGY,          /*!< The current integrated GPU energy consumption in Joules,
-									multiplied by 100. */
-	INFO_MICROCODE_VER,        /*!< The microcode revision number */
-	INFO_TDP_NOMINAL,          /*!< The TDP in Watts. */
+	INFO_MIN_MULTIPLIER,       // Minimum CPU:FSB ratio * 100
+	INFO_CUR_MULTIPLIER,       // Current CPU:FSB ratio * 100
+	INFO_MAX_MULTIPLIER,       // Maximum CPU:FSB ratio * 100
+	INFO_TEMPERATURE,          // Core temperature in Celsius
+	INFO_PKG_TEMPERATURE,      // Package temperature in Celsius
+	INFO_VOLTAGE,              // Core voltage in Volt * 100
+	INFO_PKG_ENERGY,           // Package energy consumption in Joules * 100.
+	INFO_PKG_POWER,            // Package power in Watts * 100.
+	INFO_PKG_PL1,              // Package power limit #1 in Watts * 100
+	INFO_PKG_PL2,              // Package power limit #2 in Watts * 100
+	INFO_BUS_CLOCK,            // Bus clock in MHz * 100
+	INFO_IGPU_TEMPERATURE,     // Integrated GPU temperature in Celsius
+	INFO_IGPU_ENERGY,          // Integrated GPU energy consumption in Joules * 100
+	INFO_MICROCODE_VER,        // Microcode revision number
+	INFO_TDP_NOMINAL,          // TDP in Watts
 } cpu_msrinfo_request_t;
-
-/**
- * @brief Reads extended CPU information from Model-Specific Registers.
- * @param handle - a handle to an open MSR driver, @see WR0_OpenDriver
- * @param cpu - the logical CPU number, where the MSR is read.
- * @param which - which info field should be returned. A list of
- *                available information entities is listed in the
- *                cpu_msrinfo_request_t enum.
- * @retval - if the requested information is available for the current
- *           processor model, the respective value is returned.
- *           if no information is available, or the CPU doesn't support
- *           the query, the special value CPU_INVALID_VALUE is returned
- * @note This function is not MT-safe. If you intend to call it from multiple
- *       threads, guard it through a mutex or a similar primitive.
- */
-int cpu_msrinfo(struct wr0_drv_t* handle, logical_cpu_t cpu, cpu_msrinfo_request_t which);
-#define CPU_INVALID_VALUE 0x3fffffff
 
 struct msr_fn_t
 {
@@ -80,8 +48,19 @@ struct msr_fn_t
 
 struct msr_info_t
 {
-	int cpu_clock;
+	int valid;
+	int clock;
+	int pkg_energy;
+	char name[32];
+	ULONGLONG ticks;
 	struct wr0_drv_t* handle;
 	struct cpu_id_t* id;
-	struct internal_id_info_t* internal;
+	struct msr_fn_t* fn;
+	GROUP_AFFINITY aff;
+	ry_handle_t* ry;
 };
+
+void NWL_GetCpuIndexStr(struct cpu_id_t* id, char* buf, size_t buf_len);
+LIBNW_API bool NWL_MsrInit(struct msr_info_t* info, struct wr0_drv_t* drv, struct cpu_id_t* id);
+LIBNW_API int NWL_MsrGet(struct msr_info_t* info, cpu_msrinfo_request_t which);
+LIBNW_API void NWL_MsrFini(struct msr_info_t* info);

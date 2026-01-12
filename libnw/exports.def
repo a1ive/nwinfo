@@ -40,5 +40,3 @@ cpuid_get_cpu_list
 cpuid_free_cpu_list
 cpuid_free_raw_data_array
 cpuid_free_system_id
-
-cpu_msrinfo

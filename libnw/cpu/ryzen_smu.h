@@ -111,8 +111,6 @@ ry_handle_t* ryzen_smu_init(struct wr0_drv_t* drv_handle, struct cpu_id_t* id);
 
 void ryzen_smu_free(ry_handle_t* handle);
 
-ry_err_t ryzen_smu_init_pm_table(ry_handle_t* handle);
-
 ry_err_t ryzen_smu_update_pm_table(ry_handle_t* handle);
 
 ry_err_t ryzen_smu_get_pm_table_float(ry_handle_t* handle, size_t offset, float* value);

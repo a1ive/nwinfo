@@ -233,13 +233,14 @@ try {
 	$outputText += ""
 
 	$outputText += "CPU:"
-	$cpuTable = $parsedJson.'CPUID'.'CPU0'
-	$outputText += "`t$($cpuTable.'Brand')"
-	$outputText += "`t`t$($cpuTable.'Code Name')"
-	$outputText += "`t`t$($cpuTable.'Cores') cores $($cpuTable.'Logical CPUs') threads"
-	$outputText += "`t`t$($cpuTable.'Temperature (C)')$([char]0xB0)C $($cpuTable.'Core Voltage (V)')V"
-	if ($null -ne $dmiTable[4]) {
-		$outputText += "`t`t$($dmiTable[4][0].'Processor Upgrade') ($($dmiTable[4][0].'Socket Designation'))"
+	foreach ($cpuTable in $parsedJson.'CPUID'.PSObject.Properties) {
+		if ($null -ne $cpuTable.Value.'Vendor') {
+			$outputText += "`t$($cpuTable.Name) $($cpuTable.Value.'Brand')"
+			$outputText += "`t`t$($cpuTable.Value.'Code Name')"
+			$outputText += "`t`t$($cpuTable.Value.'Cores') cores $($cpuTable.Value.'Logical CPUs') threads"
+			$outputText += "`t`t$($cpuTable.Value.'Temperature (C)')$([char]0xB0)C $($cpuTable.Value.'Core Voltage (V)')V"
+			$outputText += "`t`t$($cpuTable.Value.'Socket Type')"
+		}
 	}
 	$outputText += ""
 

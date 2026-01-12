@@ -114,7 +114,7 @@ static int get_amd_multipliers(struct msr_info_t* info, uint32_t pstate, double*
 		{ 0x7, 12 },
 		{ 0x8, 16 },
 	};
-	const int num_dids = (int)COUNT_OF(divisor_t);
+	const int num_dids = (int)ARRAYSIZE(divisor_t);
 
 	/* Constant values for common families */
 	const int magic_constant = (info->id->x86.ext_family == 0x11) ? 0x8 : 0x10;
@@ -154,7 +154,7 @@ static int get_amd_multipliers(struct msr_info_t* info, uint32_t pstate, double*
 		Note: This family contains only APUs */
 		err = read_amd_msr(info, pstate, 8, 4, &cpu_did);
 		err += read_amd_msr(info, pstate, 3, 0, &cpu_did_lsd);
-		*multiplier = (double)(((info->cpu_clock + 5LL) / 100 + magic_constant) / (cpu_did + cpu_did_lsd * 0.25 + 1));
+		*multiplier = (double)(((info->clock + 5LL) / 100 + magic_constant) / (cpu_did + cpu_did_lsd * 0.25 + 1));
 		break;
 	case 0x10: /* K10 */
 		/* BKDG 10h, page 429
@@ -214,7 +214,6 @@ static int get_amd_multipliers(struct msr_info_t* info, uint32_t pstate, double*
 		*multiplier = ((double)cpu_fid) * 0.05;
 		break;
 	default:
-		warnf("get_amd_multipliers(): unsupported CPU extended family: %xh\n", info->id->x86.ext_family);
 		err = 1;
 		break;
 	}
@@ -250,7 +249,7 @@ static double get_min_multiplier(struct msr_info_t* info)
 	return mult;
 
 fail:
-	return (double)CPU_INVALID_VALUE / 100;
+	return 0.0;
 }
 
 static double get_cur_multiplier(struct msr_info_t* info)
@@ -267,7 +266,7 @@ static double get_cur_multiplier(struct msr_info_t* info)
 	return mult;
 
 fail:
-	return (double)CPU_INVALID_VALUE / 100;
+	return 0.0;
 }
 
 static double get_max_multiplier(struct msr_info_t* info)
@@ -282,30 +281,26 @@ static double get_max_multiplier(struct msr_info_t* info)
 	return mult;
 
 fail:
-	return (double)CPU_INVALID_VALUE / 100;
+	return 0.0;
 }
 
 static int get_temperature(struct msr_info_t* info)
 {
 	float value = 0.0f;
 	WR0_WaitPciBus(500);
-	ry_handle_t* ry = ryzen_smu_init(info->handle, info->id);
-	if (ry == NULL)
+	if (info->ry == NULL)
+		info->ry = ryzen_smu_init(info->handle, info->id);
+	if (info->ry == NULL)
 		goto fail;
-	if (ryzen_smu_init_pm_table(ry) != RYZEN_SMU_OK)
+	if (ryzen_smu_update_pm_table(info->ry) != RYZEN_SMU_OK)
 		goto fail;
-	if (ryzen_smu_update_pm_table(ry) != RYZEN_SMU_OK)
+	if (ryzen_smu_get_core_temperature(info->ry, 0, &value) != RYZEN_SMU_OK)
 		goto fail;
-	if (ryzen_smu_get_core_temperature(ry, 0, &value) != RYZEN_SMU_OK)
-		goto fail;
-	ryzen_smu_free(ry);
 	WR0_ReleasePciBus();
 	return (int)value;
 fail:
-	if (ry != NULL)
-		ryzen_smu_free(ry);
 	WR0_ReleasePciBus();
-	return CPU_INVALID_VALUE;
+	return 0;
 }
 
 #define THERMTRIP_STATUS_REGISTER       0xE4
@@ -328,7 +323,7 @@ static int amd_k8_temperature(struct msr_info_t* info)
 		addr = WR0_FindPciById(info->handle, AMD_PCI_VENDOR_ID, AMD_PCI_CONTROL_DEVICE_ID, info->id->index);
 
 		if (addr == 0xFFFFFFFF)
-			return CPU_INVALID_VALUE;
+			return 0;
 
 		WR0_WrPciConf32(info->handle, addr, THERMTRIP_STATUS_REGISTER, 0);
 		value = WR0_RdPciConf32(info->handle, addr, THERMTRIP_STATUS_REGISTER);
@@ -339,7 +334,7 @@ static int amd_k8_temperature(struct msr_info_t* info)
 		ULONG64 in[2] = { 0, 0 }; // cpu index, core index
 		ULONG64 out;
 		if (WR0_ExecPawn(info->handle, pio, "ioctl_get_thermtrip", in, 2, &out, 1, NULL))
-			return CPU_INVALID_VALUE;
+			return 0;
 		value = (uint32_t)out;
 	}
 	
@@ -441,7 +436,7 @@ static float amd_17h_temperature(struct msr_info_t* info)
 
 static int get_pkg_temperature(struct msr_info_t* info)
 {
-	int ret = CPU_INVALID_VALUE;
+	int ret = 0;
 	WR0_WaitPciBus(10);
 	if (info->id->x86.ext_family >= 0x17)
 		ret = (int)amd_17h_temperature(info);
@@ -467,53 +462,45 @@ static double get_pkg_energy(struct msr_info_t* info)
 		goto fail;
 	return (double)total_energy / (1ULL << energy_units);
 fail:
-	return (double)CPU_INVALID_VALUE / 100;
+	return 0.0;
 }
 
 static double get_pkg_pl1(struct msr_info_t* info)
 {
 	float value = 0.0f;
 	WR0_WaitPciBus(500);
-	ry_handle_t* ry = ryzen_smu_init(info->handle, info->id);
-	if (ry == NULL)
+	if (info->ry == NULL)
+		info->ry = ryzen_smu_init(info->handle, info->id);
+	if (info->ry == NULL)
 		goto fail;
-	if (ryzen_smu_init_pm_table(ry) != RYZEN_SMU_OK)
+	if (ryzen_smu_update_pm_table(info->ry) != RYZEN_SMU_OK)
 		goto fail;
-	if (ryzen_smu_update_pm_table(ry) != RYZEN_SMU_OK)
+	if (ryzen_smu_get_slow_limit(info->ry, &value) != RYZEN_SMU_OK)
 		goto fail;
-	if (ryzen_smu_get_slow_limit(ry, &value) != RYZEN_SMU_OK)
-		goto fail;
-	ryzen_smu_free(ry);
 	WR0_ReleasePciBus();
 	return (double)value;
 fail:
-	if (ry != NULL)
-		ryzen_smu_free(ry);
 	WR0_ReleasePciBus();
-	return (double)CPU_INVALID_VALUE / 100;
+	return 0.0;
 }
 
 static double get_pkg_pl2(struct msr_info_t* info)
 {
 	float value = 0.0f;
 	WR0_WaitPciBus(500);
-	ry_handle_t* ry = ryzen_smu_init(info->handle, info->id);
-	if (ry == NULL)
+	if (info->ry == NULL)
+		info->ry = ryzen_smu_init(info->handle, info->id);
+	if (info->ry == NULL)
 		goto fail;
-	if (ryzen_smu_init_pm_table(ry) != RYZEN_SMU_OK)
+	if (ryzen_smu_update_pm_table(info->ry) != RYZEN_SMU_OK)
 		goto fail;
-	if (ryzen_smu_update_pm_table(ry) != RYZEN_SMU_OK)
+	if (ryzen_smu_get_fast_limit(info->ry, &value) != RYZEN_SMU_OK)
 		goto fail;
-	if (ryzen_smu_get_fast_limit(ry, &value) != RYZEN_SMU_OK)
-		goto fail;
-	ryzen_smu_free(ry);
 	WR0_ReleasePciBus();
 	return (double)value;
 fail:
-	if (ry != NULL)
-		ryzen_smu_free(ry);
 	WR0_ReleasePciBus();
-	return (double)CPU_INVALID_VALUE / 100;
+	return 0.0;
 }
 
 static double get_voltage(struct msr_info_t* info)
@@ -553,7 +540,7 @@ static double get_voltage(struct msr_info_t* info)
 	if (MSR_PSTATE_0 + (uint32_t)reg <= MSR_PSTATE_7)
 		return 1.550 - vid_step * vid;
 fail:
-	return (double)CPU_INVALID_VALUE / 100;
+	return 0.0;
 }
 
 static double get_bus_clock(struct msr_info_t* info)
@@ -569,37 +556,33 @@ static double get_bus_clock(struct msr_info_t* info)
 		goto fail;
 	if (get_amd_multipliers(info, addr - (uint32_t)reg, &mult))
 		goto fail;
-	return (double)info->cpu_clock / mult;
+	return (double)info->clock / mult;
 fail:
-	return (double)CPU_INVALID_VALUE / 100;
+	return 0.0;
 }
 
 static int get_igpu_temperature(struct msr_info_t* info)
 {
 	float value = 0.0f;
 	WR0_WaitPciBus(500);
-	ry_handle_t* ry = ryzen_smu_init(info->handle, info->id);
-	if (ry == NULL)
+	if (info->ry == NULL)
+		info->ry = ryzen_smu_init(info->handle, info->id);
+	if (info->ry == NULL)
 		goto fail;
-	if (ryzen_smu_init_pm_table(ry) != RYZEN_SMU_OK)
+	if (ryzen_smu_update_pm_table(info->ry) != RYZEN_SMU_OK)
 		goto fail;
-	if (ryzen_smu_update_pm_table(ry) != RYZEN_SMU_OK)
+	if (ryzen_smu_get_apu_temperature(info->ry, &value) != RYZEN_SMU_OK)
 		goto fail;
-	if (ryzen_smu_get_apu_temperature(ry, &value) != RYZEN_SMU_OK)
-		goto fail;
-	ryzen_smu_free(ry);
 	WR0_ReleasePciBus();
 	return (int)value;
 fail:
-	if (ry != NULL)
-		ryzen_smu_free(ry);
 	WR0_ReleasePciBus();
-	return CPU_INVALID_VALUE;
+	return 0;
 }
 
 static double get_igpu_energy(struct msr_info_t* info)
 {
-	return (double)CPU_INVALID_VALUE / 100;
+	return 0.0;
 }
 
 #define MSR_IA32_BIOS_SIGN_ID  0x8B
@@ -619,7 +602,7 @@ fail:
 static int get_tdp_nominal(struct msr_info_t* info)
 {
 #if 0
-	int ret = CPU_INVALID_VALUE;
+	int ret = 0;
 	WR0_WaitPciBus(10);
 	if (info->id->x86.ext_family < 0x17)
 		goto fail;
@@ -629,7 +612,7 @@ fail:
 	WR0_ReleasePciBus();
 	return ret;
 #else
-	return CPU_INVALID_VALUE;
+	return 0;
 #endif
 }
 

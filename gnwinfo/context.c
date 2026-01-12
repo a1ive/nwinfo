@@ -44,7 +44,6 @@ static void
 gnwinfo_ctx_update_1s(void)
 {
 	PNODE network = NULL;
-	PNODE sensors = NULL;
 	NWLIB_MEM_INFO mem_status = { 0 };
 	NWLIB_NET_TRAFFIC net_traffic = { 0 };
 	double cpu_usage = 0.0;
@@ -56,19 +55,24 @@ gnwinfo_ctx_update_1s(void)
 	CHAR sys_uptime[NWL_STR_SIZE] = { 0 };
 	DWORD main_flag = 0;
 	DWORD window_flag = 0;
-	int cpu_count = 0;
 	NWLIB_MEM_SENSORS mem_sensors = { 0 };
 
 	AcquireSRWLockShared(&g_ctx.lock);
-	main_flag = g_ctx.main_flag;
 	window_flag = g_ctx.window_flag;
-	cpu_count = g_ctx.cpu_count;
-	if (cpu_count > 0 && g_ctx.cpu_info)
+	ReleaseSRWLockShared(&g_ctx.lock);
+	if (window_flag & GUI_WINDOW_SENSOR)
 	{
-		cpu_info = malloc((size_t)cpu_count * sizeof(NWLIB_CPU_INFO));
-		if (cpu_info)
-			memcpy(cpu_info, g_ctx.cpu_info, (size_t)cpu_count * sizeof(NWLIB_CPU_INFO));
+		PNODE sensors = NW_Sensors(FALSE);
+		AcquireSRWLockExclusive(&g_ctx.lock);
+		PNODE old_sensors = g_ctx.sensors;
+		g_ctx.sensors = sensors;
+		ReleaseSRWLockExclusive(&g_ctx.lock);
+		NWL_NodeFree(old_sensors, 1);
+		return;
 	}
+
+	AcquireSRWLockShared(&g_ctx.lock);
+	main_flag = g_ctx.main_flag;
 	mem_sensors = g_ctx.mem_sensors;
 	ReleaseSRWLockShared(&g_ctx.lock);
 
@@ -79,14 +83,11 @@ gnwinfo_ctx_update_1s(void)
 	NWL_GetNetTraffic(&net_traffic, !(main_flag & MAIN_NET_UNIT_B));
 	cpu_usage = NWL_GetCpuUsage();
 	cpu_freq = NWL_GetCpuFreq();
-	if (cpu_info && cpu_count > 0)
-		NWL_GetCpuMsr(cpu_count, cpu_info);
+	cpu_info = NWL_GetCpuMsr();
 	NWL_GetCurDisplay(g_ctx.wnd, &cur_display);
 	if (main_flag & MAIN_INFO_AUDIO)
 		audio = NWL_GetAudio(&audio_count);
 	NWL_GetMemSensors(g_ctx.lib.NwSmbus, &mem_sensors);
-	if (window_flag & GUI_WINDOW_SENSOR)
-		sensors = NW_Sensors(FALSE);
 
 	AcquireSRWLockExclusive(&g_ctx.lock);
 	PNODE old_network = g_ctx.network;
@@ -96,22 +97,19 @@ gnwinfo_ctx_update_1s(void)
 	g_ctx.net_traffic = net_traffic;
 	g_ctx.cpu_usage = cpu_usage;
 	g_ctx.cpu_freq = cpu_freq;
-	if (cpu_info && g_ctx.cpu_info && cpu_count == g_ctx.cpu_count)
-		memcpy(g_ctx.cpu_info, cpu_info, (size_t)cpu_count * sizeof(NWLIB_CPU_INFO));
+	NWLIB_CPU_INFO* old_cpu = g_ctx.cpu_info;
+	g_ctx.cpu_info = cpu_info;
 	g_ctx.cur_display = cur_display;
 	NWL_GetGpuInfo(g_ctx.lib.NwGpu);
 	NWLIB_AUDIO_DEV* old_audio = g_ctx.audio;
 	g_ctx.audio = audio;
 	g_ctx.audio_count = audio_count;
 	g_ctx.mem_sensors = mem_sensors;
-	PNODE old_sensors = g_ctx.sensors;
-	g_ctx.sensors = sensors;
 	ReleaseSRWLockExclusive(&g_ctx.lock);
 
 	NWL_NodeFree(old_network, 1);
-	NWL_NodeFree(old_sensors, 1);
 	free(old_audio);
-	free(cpu_info);
+	free(old_cpu);
 }
 
 static void
@@ -349,10 +347,7 @@ gnwinfo_ctx_init(HINSTANCE inst, HWND wnd, struct nk_context* ctx, float width, 
 	g_ctx.sys_disk = NWL_NodeAttrGet(g_ctx.system, "System Device");
 
 	g_ctx.cpu_count = (int)g_ctx.lib.NwCpuid->num_cpu_types;
-	if (g_ctx.cpu_count > 0)
-		g_ctx.cpu_info = calloc((size_t)g_ctx.cpu_count, sizeof(NWLIB_CPU_INFO));
-	else
-		g_ctx.cpu_info = NULL;
+	g_ctx.cpu_info = NWL_GetCpuMsr();
 
 	NWL_GetHostname(g_ctx.sys_hostname);
 

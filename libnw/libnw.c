@@ -8,6 +8,7 @@
 #include "../libcdi/libcdi.h"
 #include "smbus/smbus.h"
 #include "gpu/gpu.h"
+#include "cpu/rdmsr.h"
 #include "sensor/sensors.h"
 
 PNWLIB_CONTEXT NWLC = NULL;
@@ -159,6 +160,12 @@ VOID NW_Fini(VOID)
 		cdi_destroy_smart(NWLC->NwSmart);
 	SM_Free(NWLC->NwSmbus);
 	NWL_FreeGpu(NWLC->NwGpu);
+	if (NWLC->NwMsr)
+	{
+		for (uint8_t i = 0; i < NWLC->NwCpuid->num_cpu_types; i++)
+			NWL_MsrFini(&NWLC->NwMsr[i]);
+		free(NWLC->NwMsr);
+	}
 	cpuid_free_system_id(NWLC->NwCpuid);
 	free(NWLC->NwCpuid);
 	cpuid_free_raw_data_array(NWLC->NwCpuRaw);

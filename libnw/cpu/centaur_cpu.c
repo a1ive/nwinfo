@@ -48,17 +48,17 @@ read_centaur_msr(struct wr0_drv_t* handle, uint32_t msr_index, uint8_t highbit, 
 
 static double get_min_multiplier(struct msr_info_t* info)
 {
-	return (double)CPU_INVALID_VALUE / 100;
+	return 0.0;
 }
 
 static double get_cur_multiplier(struct msr_info_t* info)
 {
-	return (double)CPU_INVALID_VALUE / 100;
+	return 0.0;
 }
 
 static double get_max_multiplier(struct msr_info_t* info)
 {
-	return (double)CPU_INVALID_VALUE / 100;
+	return 0.0;
 }
 
 // https://github.com/deepin-community/kernel/blob/linux-6.6.y/drivers/hwmon/zhaoxin-cputemp.c
@@ -74,23 +74,23 @@ static int get_temperature(struct msr_info_t* info)
 		case 0x0A:
 		case 0x0D:
 			if (read_centaur_msr(info->handle, MSR_VIA_TEMP_0A_0D, 23, 0, &reg))
-				return CPU_INVALID_VALUE;
+				return 0;
 			break;
 		case 0x0F:
 			if (read_centaur_msr(info->handle, MSR_VIA_TEMP_0F, 23, 0, &reg))
-				return CPU_INVALID_VALUE;
+				return 0;
 			break;
 		default:
-			return CPU_INVALID_VALUE;
+			return 0;
 		}
 	}
 		break;
 	case 0x07: // Zhaoxin
 		if (read_centaur_msr(info->handle, MSR_ZX_TEMP, 23, 0, &reg))
-			return CPU_INVALID_VALUE;
+			return 0;
 		break;
 	default:
-		return CPU_INVALID_VALUE;
+		return 0;
 	}
 
 	return (int)reg;
@@ -98,27 +98,27 @@ static int get_temperature(struct msr_info_t* info)
 
 static int get_pkg_temperature(struct msr_info_t* info)
 {
-	return CPU_INVALID_VALUE;
+	return 0;
 }
 
 static double get_pkg_energy(struct msr_info_t* info)
 {
-	return (double)CPU_INVALID_VALUE / 100;
+	return 0.0;
 }
 
 static double get_pkg_pl1(struct msr_info_t* info)
 {
-	return (double)CPU_INVALID_VALUE / 100;
+	return 0.0;
 }
 
 static double get_pkg_pl2(struct msr_info_t* info)
 {
-	return (double)CPU_INVALID_VALUE / 100;
+	return 0.0;
 }
 
 static double get_voltage(struct msr_info_t* info)
 {
-	return (double)CPU_INVALID_VALUE / 100;
+	return 0.0;
 }
 
 static double get_bus_clock(struct msr_info_t* info)
@@ -137,17 +137,17 @@ static double get_bus_clock(struct msr_info_t* info)
 	case 6: return 400.00;
 	}
 fail:
-	return (double)CPU_INVALID_VALUE / 100;
+	return 0.0;
 }
 
 static int get_igpu_temperature(struct msr_info_t* info)
 {
-	return CPU_INVALID_VALUE;
+	return 0;
 }
 
 static double get_igpu_energy(struct msr_info_t* info)
 {
-	return (double)CPU_INVALID_VALUE / 100;
+	return 0.0;
 }
 
 static int get_microcode_ver(struct msr_info_t* info)
@@ -162,7 +162,7 @@ fail:
 
 static int get_tdp_nominal(struct msr_info_t* info)
 {
-	return CPU_INVALID_VALUE;
+	return 0;
 }
 
 struct msr_fn_t msr_fn_centaur =

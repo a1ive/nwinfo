@@ -8,41 +8,44 @@
 
 static struct
 {
-	struct cpu_id_t* id;
+	struct system_id_t* id;
+	struct msr_info_t* msr;
 	ULONGLONG ticks;
-	double power;
-	double vid;
-	double multiplier;
-	double bus_clk;
-	int core_temp;
-	int pkg_temp;
-	int energy;
 } ctx;
 
 static bool cpu_init(void)
 {
-	struct cpu_raw_data_array_t* raw = NWLC->NwCpuRaw;
-	struct system_id_t* id = NWLC->NwCpuid;
-	if (raw->num_raw <= 0)
-	{
-		if (cpuid_get_all_raw_data(raw) != 0)
-			return false;
-	}
-
-	if (id->num_cpu_types <= 0)
-	{
-		if (cpu_identify_all(raw, id) != 0)
-			return false;
-	}
-
-	if (id->num_cpu_types < 1)
+	if (NWLC->NwDrv == NULL)
 		return false;
 
-	ctx.id = &id->cpu_types[0];
-	ctx.ticks = GetTickCount64();
+	if (NWLC->NwCpuRaw->num_raw <= 0)
+	{
+		if (cpuid_get_all_raw_data(NWLC->NwCpuRaw) != 0)
+			return false;
+	}
 
-	if (NWLC->NwDrv)
-		ctx.energy = cpu_msrinfo(NWLC->NwDrv, 0, INFO_PKG_ENERGY);
+	if (NWLC->NwCpuid->num_cpu_types <= 0)
+	{
+		if (cpu_identify_all(NWLC->NwCpuRaw, NWLC->NwCpuid) != 0)
+			return false;
+	}
+
+	if (NWLC->NwCpuid->num_cpu_types <= 0)
+		return false;
+
+	if (NWLC->NwMsr == NULL)
+	{
+		NWLC->NwMsr = calloc(NWLC->NwCpuid->num_cpu_types, sizeof(struct msr_info_t));
+		if (NWLC->NwMsr == NULL)
+			return false;
+
+		for (uint8_t i = 0; i < NWLC->NwCpuid->num_cpu_types; i++)
+			NWL_MsrInit(&NWLC->NwMsr[i], NWLC->NwDrv, &NWLC->NwCpuid->cpu_types[i]);
+	}
+
+	ctx.id = NWLC->NwCpuid;
+	ctx.msr = NWLC->NwMsr;
+	ctx.ticks = GetTickCount64();
 
 	NWL_GetCpuUsage();
 	NWL_GetCpuFreq();
@@ -58,46 +61,52 @@ static void cpu_get(PNODE node)
 {
 	NWL_NodeAttrSetf(node, "Utilization", NAFLG_FMT_NUMERIC, "%.2f", NWL_GetCpuUsage());
 	NWL_NodeAttrSetf(node, "Frequency", NAFLG_FMT_NUMERIC, "%u", NWL_GetCpuFreq());
+	NWL_NodeAttrSetf(node, "Ticks", NAFLG_FMT_NUMERIC, "%llu", GetTickCount64());
 
-	ULONGLONG ticks = GetTickCount64();
-	if (NWLC->NwDrv)
+	if (ctx.msr == NULL)
+		return;
+
+	for (uint8_t i = 0; i < ctx.id->num_cpu_types; i++)
 	{
-		int value = cpu_msrinfo(NWLC->NwDrv, 0, INFO_PKG_ENERGY);
-		if (value != CPU_INVALID_VALUE && value > 0)
-		{
-			if (value > ctx.energy && ticks > ctx.ticks)
-			{
-				ULONGLONG delta_ticks = ticks - ctx.ticks;
-				double delta_energy = (double)(value - ctx.energy);
-				ctx.power = delta_energy / (double)delta_ticks * 10.0;
-			}
-			ctx.energy = value;
-		}
-		value = cpu_msrinfo(NWLC->NwDrv, 0, INFO_PKG_TEMPERATURE);
-		if (value != CPU_INVALID_VALUE && value > 0)
-			ctx.pkg_temp = value;
-		value = cpu_msrinfo(NWLC->NwDrv, 0, INFO_TEMPERATURE);
-		if (value != CPU_INVALID_VALUE && value > 0)
-			ctx.core_temp = value;
-		value = cpu_msrinfo(NWLC->NwDrv, 0, INFO_VOLTAGE);
-		if (value != CPU_INVALID_VALUE && value > 0)
-			ctx.vid = value / 100.0;
-		value = cpu_msrinfo(NWLC->NwDrv, 0, INFO_BUS_CLOCK);
-		if (value != CPU_INVALID_VALUE && value > 0)
-			ctx.bus_clk = value / 100.0;
-		value = cpu_msrinfo(NWLC->NwDrv, 0, INFO_CUR_MULTIPLIER);
-		if (value != CPU_INVALID_VALUE && value > 0)
-			ctx.multiplier = value / 100.0;
+		struct msr_info_t* msr = &ctx.msr[i];
+		PNODE p = NWL_NodeAppendNew(node, msr->name, NFLG_ATTGROUP);
+		int value = NWL_MsrGet(msr, INFO_CUR_MULTIPLIER);
+		if (value > 0)
+			NWL_NodeAttrSetf(p, "Multiplier", NAFLG_FMT_NUMERIC, "%.2lf", value / 100.0);
+		value = NWL_MsrGet(msr, INFO_MIN_MULTIPLIER);
+		if (value > 0)
+			NWL_NodeAttrSetf(p, "Min Multiplier", NAFLG_FMT_NUMERIC, "%.2lf", value / 100.0);
+		value = NWL_MsrGet(msr, INFO_MAX_MULTIPLIER);
+		if (value > 0)
+			NWL_NodeAttrSetf(p, "Max Multiplier", NAFLG_FMT_NUMERIC, "%.2lf", value / 100.0);
+		value = NWL_MsrGet(msr, INFO_TEMPERATURE);
+		if (value > 0)
+			NWL_NodeAttrSetf(p, "Core Temperature", NAFLG_FMT_NUMERIC, "%d", value);
+		value = NWL_MsrGet(msr, INFO_PKG_TEMPERATURE);
+		if (value > 0)
+			NWL_NodeAttrSetf(p, "Package Temperature", NAFLG_FMT_NUMERIC, "%d", value);
+		value = NWL_MsrGet(msr, INFO_VOLTAGE);
+		if (value > 0)
+			NWL_NodeAttrSetf(p, "Core Voltage", NAFLG_FMT_NUMERIC, "%.2lf", value / 100.0);
+		value = NWL_MsrGet(msr, INFO_PKG_POWER);
+		if (value > 0)
+			NWL_NodeAttrSetf(p, "Package Power", NAFLG_FMT_NUMERIC, "%.2lf", value / 100.0);
+		value = NWL_MsrGet(msr, INFO_BUS_CLOCK);
+		if (value > 0)
+			NWL_NodeAttrSetf(p, "Bus Clock", NAFLG_FMT_NUMERIC, "%.2lf", value / 100.0);
+		value = NWL_MsrGet(msr, INFO_PKG_PL1);
+		if (value > 0)
+			NWL_NodeAttrSetf(p, "PL1", NAFLG_FMT_NUMERIC, "%.2lf", value / 100.0);
+		value = NWL_MsrGet(msr, INFO_PKG_PL2);
+		if (value > 0)
+			NWL_NodeAttrSetf(p, "PL2", NAFLG_FMT_NUMERIC, "%.2lf", value / 100.0);
+		value = NWL_MsrGet(msr, INFO_TDP_NOMINAL);
+		if (value > 0)
+			NWL_NodeAttrSetf(p, "TDP", NAFLG_FMT_NUMERIC, "%d", value);
+		value = NWL_MsrGet(msr, INFO_MICROCODE_VER);
+		if (value > 0)
+			NWL_NodeAttrSetf(p, "Microcode Rev", 0, "0x%X", (UINT32)value);
 	}
-	ctx.ticks = ticks;
-	NWL_NodeAttrSetf(node, "Ticks", NAFLG_FMT_NUMERIC, "%llu", ctx.ticks);
-	NWL_NodeAttrSetf(node, "Package Temperature", NAFLG_FMT_NUMERIC, "%d", ctx.pkg_temp);
-	NWL_NodeAttrSetf(node, "Core Temperature", NAFLG_FMT_NUMERIC, "%d", ctx.core_temp);
-	NWL_NodeAttrSetf(node, "Core Voltage", NAFLG_FMT_NUMERIC, "%.2lf", ctx.vid);
-	NWL_NodeAttrSetf(node, "Energy", NAFLG_FMT_NUMERIC, "%.2lf", ctx.energy / 100.0);
-	NWL_NodeAttrSetf(node, "Power", NAFLG_FMT_NUMERIC, "%.2lf", ctx.power);
-	NWL_NodeAttrSetf(node, "Bus Clock", NAFLG_FMT_NUMERIC, "%.2lf", ctx.bus_clk);
-	NWL_NodeAttrSetf(node, "Multiplier", NAFLG_FMT_NUMERIC, "%.2lf", ctx.multiplier);
 }
 
 sensor_t sensor_cpu =

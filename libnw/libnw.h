@@ -25,6 +25,7 @@ struct wr0_drv_t;
 struct _CDI_SMART;
 struct cpu_raw_data_array_t;
 struct system_id_t;
+struct msr_info_t;
 struct smbus_context;
 struct _NWLIB_GPU_INFO;
 
@@ -110,6 +111,7 @@ typedef struct _NWLIB_CONTEXT
 
 	struct cpu_raw_data_array_t* NwCpuRaw;
 	struct system_id_t* NwCpuid;
+	struct msr_info_t* NwMsr;
 
 	struct ACPI_RSDP_V2* NwRsdp;
 	struct ACPI_RSDT* NwRsdt;
@@ -233,17 +235,12 @@ typedef struct _NWLIB_CPU_INFO
 	double MsrVolt;
 	double MsrFreq;
 	double MsrBus;
-	ULONGLONG Ticks;
-	int MsrEnergy;
 	double MsrPower;
 	double MsrPl1;
 	double MsrPl2;
-	int GpuTemp;
-	int GpuEnergy;
-	double GpuPower;
 	UINT32 BiosRev;
 }NWLIB_CPU_INFO;
-LIBNW_API VOID NWL_GetCpuMsr(int count, NWLIB_CPU_INFO* info);
+LIBNW_API NWLIB_CPU_INFO* NWL_GetCpuMsr(VOID);
 
 typedef struct _NWLIB_NET_TRAFFIC
 {

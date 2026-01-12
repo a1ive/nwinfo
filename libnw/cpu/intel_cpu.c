@@ -64,7 +64,7 @@ static double get_min_multiplier(struct msr_info_t* info)
 		goto fail;
 	return (double)reg;
 fail:
-	return (double)CPU_INVALID_VALUE / 100;
+	return 0.0;
 }
 
 static double get_cur_multiplier(struct msr_info_t* info)
@@ -78,7 +78,7 @@ static double get_cur_multiplier(struct msr_info_t* info)
 fail:
 	if (!read_intel_msr(info->handle, MSR_IA32_EBL_CR_POWERON, 26, 22, &reg))
 		return (double)reg;
-	return (double)CPU_INVALID_VALUE / 100;
+	return 0.0;
 }
 
 static double get_max_multiplier(struct msr_info_t* info)
@@ -109,7 +109,7 @@ static double get_max_multiplier(struct msr_info_t* info)
 fail:
 	if (!read_intel_msr(info->handle, MSR_IA32_PERF_STATUS, 44, 40, &reg))
 		return (double)reg;
-	return (double)CPU_INVALID_VALUE / 100;
+	return 0.0;
 }
 
 static int get_temperature(struct msr_info_t* info)
@@ -141,7 +141,7 @@ static int get_temperature(struct msr_info_t* info)
 		return (int)(tj - delta);
 
 fail:
-	return CPU_INVALID_VALUE;
+	return 0;
 }
 
 static int get_pkg_temperature(struct msr_info_t* info)
@@ -155,7 +155,7 @@ static int get_pkg_temperature(struct msr_info_t* info)
 		tj = 100;
 	return (int)(tj - delta);
 fail:
-	return CPU_INVALID_VALUE;
+	return 0;
 }
 
 static double get_pkg_energy(struct msr_info_t* info)
@@ -167,7 +167,7 @@ static double get_pkg_energy(struct msr_info_t* info)
 		goto fail;
 	return (double)total_energy / (1ULL << energy_units);
 fail:
-	return (double)CPU_INVALID_VALUE / 100;
+	return 0.0;
 }
 
 static double get_pkg_pl1(struct msr_info_t* info)
@@ -179,7 +179,7 @@ static double get_pkg_pl1(struct msr_info_t* info)
 		goto fail;
 	return (double)pl / (1ULL << pu);
 fail:
-	return (double)CPU_INVALID_VALUE / 100;
+	return 0.0;
 }
 
 static double get_pkg_pl2(struct msr_info_t* info)
@@ -191,7 +191,7 @@ static double get_pkg_pl2(struct msr_info_t* info)
 		goto fail;
 	return (double)pl / (1ULL << pu);
 fail:
-	return (double)CPU_INVALID_VALUE / 100;
+	return 0.0;
 }
 
 static double get_voltage(struct msr_info_t* info)
@@ -208,7 +208,7 @@ static double get_voltage(struct msr_info_t* info)
 		goto fail;
 	return (double)reg / (1ULL << 13ULL);
 fail:
-	return (double)CPU_INVALID_VALUE / 100;
+	return 0.0;
 }
 
 static double get_bus_clock(struct msr_info_t* info)
@@ -228,7 +228,7 @@ static double get_bus_clock(struct msr_info_t* info)
 		goto fail;
 	if (read_intel_msr(info->handle, MSR_PLATFORM_INFO, 15, 8, &reg))
 		goto fail;
-	return (double)info->cpu_clock / reg;
+	return (double)info->clock / reg;
 fail:
 	if (!read_intel_msr(info->handle, MSR_FSB_FREQ, 2, 0, &reg))
 	{
@@ -243,12 +243,12 @@ fail:
 		case 6: return 400.00;
 		}
 	}
-	return (double)CPU_INVALID_VALUE / 100;
+	return 0.0;
 }
 
 static int get_igpu_temperature(struct msr_info_t* info)
 {
-	return CPU_INVALID_VALUE;
+	return 0;
 }
 
 static double get_igpu_energy(struct msr_info_t* info)
@@ -260,7 +260,7 @@ static double get_igpu_energy(struct msr_info_t* info)
 		goto fail;
 	return (double)total_energy / (1ULL << energy_units);
 fail:
-	return (double)CPU_INVALID_VALUE / 100;
+	return 0.0;
 }
 
 static int get_microcode_ver(struct msr_info_t* info)
@@ -282,7 +282,7 @@ static int get_tdp_nominal(struct msr_info_t* info)
 		goto fail;
 	return (int)raw_tdp / (1ULL << pu);
 fail:
-	return CPU_INVALID_VALUE;
+	return 0;
 }
 
 struct msr_fn_t msr_fn_intel =
