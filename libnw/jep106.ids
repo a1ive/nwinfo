@@ -1,6 +1,6 @@
 
-# JEP106BM
-# Version: 2025.06.12
+# JEP106BN
+# Version: 2026.01.06
 1
 	1 AMD
 	2 AMI
@@ -198,7 +198,7 @@
 	67 Suwa Electronics
 	68 Transmeta
 	69 Micron CMS
-	70 American Computer & Digital Components Inc
+	70 American Computer Digital Components
 	71 Enhance 3000 Inc
 	72 Tower Semiconductor
 	73 CPU Design
@@ -1453,7 +1453,7 @@
 	52 Acacia Communications
 	53 Beijinjinshengyihe Technology Co Ltd
 	54 Zyzyx
-	55 C-SKY Microsystems Co Ltd
+	55 C-SKY Microsystems Co Ltd (XuanTie)
 	56 Shenzhen Hystou Technology Co Ltd
 	57 Syzexion
 	58 Kembona
@@ -1907,7 +1907,7 @@
 	125 Beijing Future Signet Technology Co Ltd
 	126 Fine Made Microelectronics Group Co Ltd
 16
-	1 Changxin Memory Technology (Shanghai)
+	1 CXSH
 	2 Synconv
 	3 MULTIUNIT
 	4 Zero ASIC Corporation
@@ -2092,3 +2092,67 @@
 	56 Shanghai Yunsilicon Technology Co Ltd
 	57 Shenzhen Wolongtai Technology Co Ltd.
 	58 Vervesemi Microelectronics
+	59 HRDWYR Ventures Private Limited
+	60 ENE Technology Inc
+	61 GOFATOO
+	62 Shenzhen Jingchu Technology Co Ltd
+	63 NEVETA
+	64 RZX
+	65 Shenzhen Zhongcheng Qingcong Technology Co
+	66 Shenzhen Heyloo Electronic Technology Co
+	67 Shenzhen Shanghaowang Electronic Technology
+	68 Shanghai Qimingxin Semiconductor Technology
+	69 Henan Great Wall Computer System Co Ltd
+	70 Beijing Memsilicon Technology Co Ltd
+	71 Openchip & Software Technologies S L
+	72 FlashLeap Tech (Shenzhen) Co Ltd
+	73 Shenzhen JinShanDe Technology Co Ltd
+	74 RUIBOHU
+	75 ETA Semiconductor Ltd
+	76 L&T Semiconductor Technologies Limited
+	77 RAYSMEM
+	78 Sichuan Zhongzhao Yongye Semiconductor
+	79 Shenzhen Ruiyuanchuangxin Technology
+	80 CSSI South Africa (Pty) Ltd
+	81 Jeju Semiconductor Corp
+	82 Origin Code LLC
+	83 Chengdu Masscore Microelectronics Tech
+	84 Shenzhen Whalekom Technology Co Ltd
+	85 femtoAI
+	86 Shanghai Chip4Tao Technology Co Ltd
+	87 Shenzhenshijimokkejiyouxiangongsi
+	88 DEGUA
+	89 TENGYIN CELESTIALSTORAGE
+	90 Shenzhen Minder Semiconductor Co Ltd
+	91 GUANGSUJIE
+	92 HVLANYN Technology
+	93 Theo End (Shenzhen) Computing Tech Co
+	94 Shenzhen Heroje Electronics Co Ltd
+	95 Guangdong Yuecun Microelectronics Co
+	96 Foxin Technology
+	97 JinTech Semiconductor Co Limited
+	98 Shenzhen Hongred Information Technology Co
+	99 ZST Inc
+	100 Veris Danismanlik Limited Sirketi
+	101 Starblaze
+	102 Siptechx
+	103 Djelec
+	104 Ambarella Corporation
+	105 SiliconX
+	106 Shenzhen Tencent Computer System Co
+	107 Shenzhen Econo Electronic Co Ltd (China)
+	108 Pu Sl Technology (Shenzhen) Co Limited
+	109 Shenzhen Kimviking Technology Co Ltd
+	110 Shenzhen Touch Think Intelligence Co Ltd
+	111 Beijing Institute of Open Source Chip
+	112 BYTE International Co Ltd
+	113 Shenzhen ITZR Technology Co Ltd
+	114 Centre Development Advanced Computing
+	115 Overlord Labs
+	116 Shenzhen Chaocun Technology Co Ltd
+	117 Shenzhen Yuqi Electronics Co Ltd
+	118 Transsemi Miceoelectronics Co Ltd
+	119 Pu Sl Technology (Shenzhen) Co Limited
+	120 Shenzhen Xingjiachen Electronics Co Ltd
+	121 Shenzhen Xingjiachen Electronics Co Ltd
+	122 Shenyang Lianxin Chuangxiang Technology
