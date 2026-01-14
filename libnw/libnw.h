@@ -196,6 +196,7 @@ LIBNW_API PNODE NW_Sensors(BOOL bAppend);
 
 LIBNW_API VOID NWL_GetUptime(CHAR* szUptime, DWORD dwSize);
 LIBNW_API VOID NWL_GetHostname(CHAR* szHostname);
+LIBNW_API LPCSTR NWL_GetJoinInfo(CHAR* szName);
 
 #define NWL_STR_SIZE 64
 

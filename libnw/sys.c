@@ -14,6 +14,8 @@
 #include <psapi.h>
 #pragma comment(lib, "psapi.lib")
 
+#include <lm.h>
+
 static const CHAR* Win10BuildNumber(DWORD dwBuildNumber)
 {
 	if (dwBuildNumber >= 26200U)
@@ -267,6 +269,45 @@ VOID NWL_GetHostname(CHAR* szHostname)
 	memcpy(szHostname, NWL_Ucs2ToUtf8(szHostnameW), MAX_COMPUTERNAME_LENGTH + 1);
 }
 
+LPCSTR NWL_GetJoinInfo(CHAR* szName)
+{
+	szName[0] = '\0';
+
+	LPWSTR joinName = NULL;
+	NETSETUP_JOIN_STATUS joinStatus = NetSetupUnknownStatus;
+	NET_API_STATUS (NET_API_FUNCTION * OsGetJoinInformation)(LPCWSTR, LPWSTR *, PNETSETUP_JOIN_STATUS) = NULL;
+	NET_API_STATUS (NET_API_FUNCTION * OsNetApiBufferFree)(LPVOID) = NULL;
+	HMODULE hModule = LoadLibraryW(L"Netapi32.dll");
+	if (hModule == NULL)
+		goto fail;
+	*(FARPROC*)&OsGetJoinInformation = GetProcAddress(hModule, "NetGetJoinInformation");
+	*(FARPROC*)&OsNetApiBufferFree = GetProcAddress(hModule, "NetApiBufferFree");
+	if (OsGetJoinInformation == NULL || OsNetApiBufferFree == NULL)
+		goto fail;
+	if (OsGetJoinInformation(NULL, &joinName, &joinStatus) != NERR_Success)
+		goto fail;
+	if (joinName)
+	{
+		strcpy_s(szName, MAX_PATH, NWL_Ucs2ToUtf8(joinName));
+		OsNetApiBufferFree(joinName);
+	}
+fail:
+	if (hModule)
+		FreeLibrary(hModule);
+	switch (joinStatus)
+	{
+	case NetSetupUnjoined:
+		return "Unjoined";
+	case NetSetupWorkgroupName:
+		return "Workgroup";
+	case NetSetupDomainName:
+		return "Domain";
+	case NetSetupUnknownStatus:
+	default:
+		return "Unknown";
+	}
+}
+
 static void PrintOsInfo(PNODE node)
 {
 	DWORD dwType;
@@ -284,6 +325,12 @@ static void PrintOsInfo(PNODE node)
 	bufCharCount = NWINFO_BUFSZW;
 	if (GetComputerNameExW(ComputerNameDnsHostname, infoBuf, &bufCharCount))
 		NWL_NodeAttrSet(node, "DNS Hostname", NWL_Ucs2ToUtf8(infoBuf), 0);
+
+	LPCSTR joinStatus = NWL_GetJoinInfo((CHAR*)NWLC->NwBuf);
+	NWL_NodeAttrSet(node, "Join Status", joinStatus, 0);
+	if (NWLC->NwBuf[0] != '\0')
+		NWL_NodeAttrSet(node, "Join Name", NWLC->NwBuf, NAFLG_FMT_NEED_QUOTE);
+
 	if (GetSystemDirectoryW(infoBuf, NWINFO_BUFSZW))
 		NWL_NodeAttrSet(node, "System Directory", NWL_Ucs2ToUtf8(infoBuf), 0);
 	if (GetWindowsDirectoryW(infoBuf, NWINFO_BUFSZW))
