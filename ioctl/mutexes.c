@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <windows.h>
-#include "winring0.h"
+#include "ioctl.h"
 
 static HANDLE mutex_pci = NULL;
 static HANDLE mutex_smbus = NULL;

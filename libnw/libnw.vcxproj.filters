@@ -25,9 +25,6 @@
     <Filter Include="cpu">
       <UniqueIdentifier>{3dff91f6-583e-4d94-af65-8245ca9017f2}</UniqueIdentifier>
     </Filter>
-    <Filter Include="winring0">
-      <UniqueIdentifier>{9bee2e3b-71a4-48c0-b6f0-58a760a7b8c4}</UniqueIdentifier>
-    </Filter>
     <Filter Include="stb">
       <UniqueIdentifier>{c3f9e0d1-b521-4ce5-824c-6fd7db11d96d}</UniqueIdentifier>
     </Filter>
@@ -36,6 +33,9 @@
     </Filter>
     <Filter Include="sensor">
       <UniqueIdentifier>{e67eaae9-a4e8-4cc1-8b97-6ae0102f3596}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ioctl">
+      <UniqueIdentifier>{9bee2e3b-71a4-48c0-b6f0-58a760a7b8c4}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -96,14 +96,14 @@
     <ClInclude Include="cpu\ryzen_smu.h">
       <Filter>cpu</Filter>
     </ClInclude>
-    <ClInclude Include="..\winring0\shmem.h">
-      <Filter>winring0</Filter>
+    <ClInclude Include="..\ioctl\shmem.h">
+      <Filter>ioctl</Filter>
     </ClInclude>
-    <ClInclude Include="..\winring0\winring0.h">
-      <Filter>winring0</Filter>
+    <ClInclude Include="..\ioctl\ioctl.h">
+      <Filter>ioctl</Filter>
     </ClInclude>
-    <ClInclude Include="..\winring0\winring0_priv.h">
-      <Filter>winring0</Filter>
+    <ClInclude Include="..\ioctl\ioctl_priv.h">
+      <Filter>ioctl</Filter>
     </ClInclude>
     <ClInclude Include="..\stb\stb_ds.h">
       <Filter>stb</Filter>
@@ -248,17 +248,17 @@
     <ClCompile Include="cpu\ryzen_smu.c">
       <Filter>cpu</Filter>
     </ClCompile>
-    <ClCompile Include="..\winring0\mutexes.c">
-      <Filter>winring0</Filter>
+    <ClCompile Include="..\ioctl\mutexes.c">
+      <Filter>ioctl</Filter>
     </ClCompile>
-    <ClCompile Include="..\winring0\shmem.c">
-      <Filter>winring0</Filter>
+    <ClCompile Include="..\ioctl\shmem.c">
+      <Filter>ioctl</Filter>
     </ClCompile>
-    <ClCompile Include="..\winring0\winring0.c">
-      <Filter>winring0</Filter>
+    <ClCompile Include="..\ioctl\ioctl.c">
+      <Filter>ioctl</Filter>
     </ClCompile>
-    <ClCompile Include="..\winring0\pawnio.c">
-      <Filter>winring0</Filter>
+    <ClCompile Include="..\ioctl\pawnio.c">
+      <Filter>ioctl</Filter>
     </ClCompile>
     <ClCompile Include="smbus\smbus.c">
       <Filter>smbus</Filter>
@@ -307,25 +307,25 @@
     <CopyFileToFolders Include="jep106.ids">
       <Filter>Binary Files</Filter>
     </CopyFileToFolders>
-    <CopyFileToFolders Include="..\winring0\pawn\AMDFamily0F.bin">
+    <CopyFileToFolders Include="..\ioctl\pawn\AMDFamily0F.bin">
       <Filter>Binary Files</Filter>
     </CopyFileToFolders>
-    <CopyFileToFolders Include="..\winring0\pawn\AMDFamily10.bin">
+    <CopyFileToFolders Include="..\ioctl\pawn\AMDFamily10.bin">
       <Filter>Binary Files</Filter>
     </CopyFileToFolders>
-    <CopyFileToFolders Include="..\winring0\pawn\AMDFamily17.bin">
+    <CopyFileToFolders Include="..\ioctl\pawn\AMDFamily17.bin">
       <Filter>Binary Files</Filter>
     </CopyFileToFolders>
-    <CopyFileToFolders Include="..\winring0\pawn\IntelMSR.bin">
+    <CopyFileToFolders Include="..\ioctl\pawn\IntelMSR.bin">
       <Filter>Binary Files</Filter>
     </CopyFileToFolders>
-    <CopyFileToFolders Include="..\winring0\pawn\RyzenSMU.bin">
+    <CopyFileToFolders Include="..\ioctl\pawn\RyzenSMU.bin">
       <Filter>Binary Files</Filter>
     </CopyFileToFolders>
-    <CopyFileToFolders Include="..\winring0\pawn\SmbusI801.bin">
+    <CopyFileToFolders Include="..\ioctl\pawn\SmbusI801.bin">
       <Filter>Binary Files</Filter>
     </CopyFileToFolders>
-    <CopyFileToFolders Include="..\winring0\pawn\SmbusPIIX4.bin">
+    <CopyFileToFolders Include="..\ioctl\pawn\SmbusPIIX4.bin">
       <Filter>Binary Files</Filter>
     </CopyFileToFolders>
   </ItemGroup>

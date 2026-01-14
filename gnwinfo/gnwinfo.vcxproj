@@ -96,7 +96,7 @@
       <LanguageStandard>stdcpp20</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
       <TreatWarningAsError>true</TreatWarningAsError>
-      <AdditionalIncludeDirectories>$(SolutionDir)libnw;$(SolutionDir)winring0;$(SolutionDir)nuklear;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)libnw;$(SolutionDir)ioctl;$(SolutionDir)nuklear;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <DisableSpecificWarnings>5287;%(DisableSpecificWarnings)</DisableSpecificWarnings>
     </ClCompile>
@@ -125,7 +125,7 @@
       <LanguageStandard>stdcpp20</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
       <TreatWarningAsError>true</TreatWarningAsError>
-      <AdditionalIncludeDirectories>$(SolutionDir)libnw;$(SolutionDir)winring0;$(SolutionDir)nuklear;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)libnw;$(SolutionDir)ioctl;$(SolutionDir)nuklear;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <DisableSpecificWarnings>5287;%(DisableSpecificWarnings)</DisableSpecificWarnings>
     </ClCompile>
@@ -154,7 +154,7 @@
       <LanguageStandard>stdcpp20</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
       <TreatWarningAsError>true</TreatWarningAsError>
-      <AdditionalIncludeDirectories>$(SolutionDir)libnw;$(SolutionDir)winring0;$(SolutionDir)nuklear;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)libnw;$(SolutionDir)ioctl;$(SolutionDir)nuklear;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <DisableSpecificWarnings>5287;%(DisableSpecificWarnings)</DisableSpecificWarnings>
     </ClCompile>

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: Unlicense
-#include "winring0.h"
-#include "winring0_priv.h"
+#include "ioctl.h"
+#include "ioctl_priv.h"
 #include "../libnw/libnw.h"
 #include "../libnw/utils.h"
 #include <pathcch.h>

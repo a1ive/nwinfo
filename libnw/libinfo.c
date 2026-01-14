@@ -2,8 +2,8 @@
 
 #include "libnw.h"
 #include "utils.h"
-#include <libcpuid.h>
-#include <winring0.h>
+#include "libcpuid.h"
+#include "ioctl.h"
 #include "../libcdi/libcdi.h"
 #include "version.h"
 

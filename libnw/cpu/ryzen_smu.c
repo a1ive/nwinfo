@@ -6,7 +6,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <intrin.h>
-#include <winring0.h>
+#include "ioctl.h"
 #include "../libnw.h"
 
 #define SMU_PCI_ADDR_REG 0xC4

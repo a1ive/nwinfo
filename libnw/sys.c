@@ -8,7 +8,7 @@
 #include "libnw.h"
 #include "utils.h"
 #include "efivars.h"
-#include <winring0.h>
+#include "ioctl.h"
 
 #define PSAPI_VERSION 1
 #include <psapi.h>

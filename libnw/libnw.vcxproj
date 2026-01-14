@@ -168,7 +168,7 @@
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
-      <AdditionalIncludeDirectories>$(SolutionDir)libcpuid;$(SolutionDir)winring0;$(SolutionDir)stb;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)libcpuid;$(SolutionDir)ioctl;$(SolutionDir)stb;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
     </ClCompile>
@@ -197,7 +197,7 @@
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
-      <AdditionalIncludeDirectories>$(SolutionDir)libcpuid;$(SolutionDir)winring0;$(SolutionDir)stb;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)libcpuid;$(SolutionDir)ioctl;$(SolutionDir)stb;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
     </ClCompile>
@@ -227,7 +227,7 @@
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
-      <AdditionalIncludeDirectories>$(SolutionDir)libcpuid;$(SolutionDir)winring0;$(SolutionDir)stb;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)libcpuid;$(SolutionDir)ioctl;$(SolutionDir)stb;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
     </ClCompile>
@@ -256,7 +256,7 @@
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
-      <AdditionalIncludeDirectories>$(SolutionDir)libcpuid;$(SolutionDir)winring0;$(SolutionDir)stb;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)libcpuid;$(SolutionDir)ioctl;$(SolutionDir)stb;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
     </ClCompile>
@@ -285,7 +285,7 @@
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
-      <AdditionalIncludeDirectories>$(SolutionDir)libcpuid;$(SolutionDir)winring0;$(SolutionDir)stb;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)libcpuid;$(SolutionDir)ioctl;$(SolutionDir)stb;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
     </ClCompile>
@@ -315,7 +315,7 @@
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
-      <AdditionalIncludeDirectories>$(SolutionDir)libcpuid;$(SolutionDir)winring0;$(SolutionDir)stb;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)libcpuid;$(SolutionDir)ioctl;$(SolutionDir)stb;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
     </ClCompile>
@@ -343,9 +343,9 @@
   <ItemGroup>
     <ClInclude Include="..\libcdi\libcdi.h" />
     <ClInclude Include="..\stb\stb_ds.h" />
-    <ClInclude Include="..\winring0\shmem.h" />
-    <ClInclude Include="..\winring0\winring0.h" />
-    <ClInclude Include="..\winring0\winring0_priv.h" />
+    <ClInclude Include="..\ioctl\shmem.h" />
+    <ClInclude Include="..\ioctl\ioctl.h" />
+    <ClInclude Include="..\ioctl\ioctl_priv.h" />
     <ClInclude Include="acpi.h" />
     <ClInclude Include="audio.h" />
     <ClInclude Include="base64.h" />
@@ -371,10 +371,10 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\libcdi\CDIWrapper.c" />
-    <ClCompile Include="..\winring0\mutexes.c" />
-    <ClCompile Include="..\winring0\pawnio.c" />
-    <ClCompile Include="..\winring0\shmem.c" />
-    <ClCompile Include="..\winring0\winring0.c" />
+    <ClCompile Include="..\ioctl\mutexes.c" />
+    <ClCompile Include="..\ioctl\pawnio.c" />
+    <ClCompile Include="..\ioctl\shmem.c" />
+    <ClCompile Include="..\ioctl\ioctl.c" />
     <ClCompile Include="acpi.c" />
     <ClCompile Include="audio.cpp" />
     <ClCompile Include="base64.c" />
@@ -433,25 +433,25 @@
     <CopyFileToFolders Include="jep106.ids">
       <FileType>Document</FileType>
     </CopyFileToFolders>
-    <CopyFileToFolders Include="..\winring0\pawn\AMDFamily0F.bin">
+    <CopyFileToFolders Include="..\ioctl\pawn\AMDFamily0F.bin">
       <FileType>Document</FileType>
     </CopyFileToFolders>
-    <CopyFileToFolders Include="..\winring0\pawn\AMDFamily10.bin">
+    <CopyFileToFolders Include="..\ioctl\pawn\AMDFamily10.bin">
       <FileType>Document</FileType>
     </CopyFileToFolders>
-    <CopyFileToFolders Include="..\winring0\pawn\AMDFamily17.bin">
+    <CopyFileToFolders Include="..\ioctl\pawn\AMDFamily17.bin">
       <FileType>Document</FileType>
     </CopyFileToFolders>
-    <CopyFileToFolders Include="..\winring0\pawn\IntelMSR.bin">
+    <CopyFileToFolders Include="..\ioctl\pawn\IntelMSR.bin">
       <FileType>Document</FileType>
     </CopyFileToFolders>
-    <CopyFileToFolders Include="..\winring0\pawn\RyzenSMU.bin">
+    <CopyFileToFolders Include="..\ioctl\pawn\RyzenSMU.bin">
       <FileType>Document</FileType>
     </CopyFileToFolders>
-    <CopyFileToFolders Include="..\winring0\pawn\SmbusI801.bin">
+    <CopyFileToFolders Include="..\ioctl\pawn\SmbusI801.bin">
       <FileType>Document</FileType>
     </CopyFileToFolders>
-    <CopyFileToFolders Include="..\winring0\pawn\SmbusPIIX4.bin">
+    <CopyFileToFolders Include="..\ioctl\pawn\SmbusPIIX4.bin">
       <FileType>Document</FileType>
     </CopyFileToFolders>
     <None Include="exports.def" />

@@ -4,7 +4,7 @@
 #include "../utils.h"
 #include "sensors.h"
 #include "libcpuid.h"
-#include "winring0.h"
+#include "ioctl.h"
 
 #define SLOT_NAME_SIZE 16
 #define SLOT_COUNT 8

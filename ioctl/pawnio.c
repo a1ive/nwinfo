@@ -4,8 +4,8 @@
 #include <pathcch.h>
 #include <winternl.h>
 #include <shlobj.h>
-#include "winring0.h"
-#include "winring0_priv.h"
+#include "ioctl.h"
+#include "ioctl_priv.h"
 #include "../libnw/libnw.h"
 
 BOOL

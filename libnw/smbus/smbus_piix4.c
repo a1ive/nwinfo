@@ -3,7 +3,7 @@
 #include "smbus.h"
 #include <windows.h>
 #include <stdio.h>
-#include <winring0.h>
+#include "ioctl.h"
 
 #define PCI_VID_INTEL       0x8086
 #define PCI_VID_AMD         0x1022

@@ -9,8 +9,8 @@
 #include "utils.h"
 #include "smbios.h"
 #include "acpi.h"
-#include <libcpuid.h>
-#include <winring0.h>
+#include "libcpuid.h"
+#include "ioctl.h"
 
 #if defined(_MSC_VER)
 #define NWL_TLS __declspec(thread)

@@ -3,8 +3,8 @@
 #include "gnwinfo.h"
 #include "gettext.h"
 
-#include <winring0.h>
-#include <version.h>
+#include "ioctl.h"
+#include "version.h"
 
 LPCSTR NWL_Ucs2ToUtf8(LPCWSTR src);
 

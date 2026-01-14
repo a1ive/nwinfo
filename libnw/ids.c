@@ -8,7 +8,7 @@
 #include "libnw.h"
 #include "utils.h"
 #include <libcpuid.h>
-#include <winring0.h>
+#include "ioctl.h"
 
 static CHAR*
 IdsGetline(PNWLIB_IDS Ids, DWORD* Offset)

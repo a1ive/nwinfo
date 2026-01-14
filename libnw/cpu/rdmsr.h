@@ -4,8 +4,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <libcpuid.h>
-#include <winring0.h>
+#include "libcpuid.h"
+#include "ioctl.h"
 #include "ryzen_smu.h"
 #include "../nwapi.h"
 
