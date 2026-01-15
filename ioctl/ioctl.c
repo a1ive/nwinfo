@@ -6,6 +6,12 @@
 #include <pathcch.h>
 #include <shlobj.h>
 
+#define WR0_ENABLE_CPUZ_161     0
+#define WR0_ENABLE_CPUZ_162     1
+#define WR0_ENABLE_NWHWIO       1
+#define WR0_ENABLE_HWRWDRV      0
+#define WR0_ENABLE_WINRING0_120 0
+
 static BOOL load_wr0(struct wr0_drv_t* drv)
 {
 	drv->handle = CreateFileW(drv->obj, GENERIC_WRITE | GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING, 0, NULL);
@@ -101,20 +107,38 @@ static void uninstall_wr0(struct wr0_drv_t* drv)
 	}
 }
 
+#if WR0_ENABLE_CPUZ_161
 static struct wr0_drv_t drv_cpuz161 =
 {
-	.name = CPUZDRV_NAME,
+	.name = CPUZ161DRV_NAME,
 	.type = WR0_DRIVER_CPUZ161,
-	.id = CPUZDRV_ID,
-	.obj = CPUZDRV_OBJ,
+	.id = CPUZ161DRV_ID,
+	.obj = CPUZ161DRV_OBJ,
 	.handle = INVALID_HANDLE_VALUE,
 
 	.load = load_wr0,
 	.install = install_wr0,
 	.uninstall = uninstall_wr0,
 };
+#endif
 
-static struct wr0_drv_t drv_hwio =
+#if WR0_ENABLE_CPUZ_162
+static struct wr0_drv_t drv_cpuz162 =
+{
+	.name = CPUZ162DRV_NAME,
+	.type = WR0_DRIVER_CPUZ162,
+	.id = CPUZ162DRV_ID,
+	.obj = CPUZ162DRV_OBJ,
+	.handle = INVALID_HANDLE_VALUE,
+
+	.load = load_wr0,
+	.install = install_wr0,
+	.uninstall = uninstall_wr0,
+};
+#endif
+
+#if WR0_ENABLE_NWHWIO
+static struct wr0_drv_t drv_nwhwio =
 {
 	.name = HWIODRV_NAME,
 	.type = WR0_DRIVER_HWIO,
@@ -126,7 +150,9 @@ static struct wr0_drv_t drv_hwio =
 	.install = install_wr0,
 	.uninstall = uninstall_wr0,
 };
+#endif
 
+#if WR0_ENABLE_HWRWDRV
 static struct wr0_drv_t drv_hwrwdrv =
 {
 	.name = HWRWDRV_NAME,
@@ -139,7 +165,9 @@ static struct wr0_drv_t drv_hwrwdrv =
 	.install = install_wr0,
 	.uninstall = uninstall_wr0,
 };
+#endif
 
+#if WR0_ENABLE_WINRING0_120
 static struct wr0_drv_t drv_winring0 =
 {
 	.name = WINRING0_NAME,
@@ -152,6 +180,7 @@ static struct wr0_drv_t drv_winring0 =
 	.install = install_wr0,
 	.uninstall = uninstall_wr0,
 };
+#endif
 
 static int load_pio_mod(struct pio_mod_t* mod, LPCWSTR name)
 {
@@ -303,12 +332,23 @@ static struct wr0_drv_t drv_pawnio =
 	.uninstall = uninstall_pio,
 };
 
-static struct wr0_drv_t* drv_list[WR0_DRIVER_MAX] =
+static struct wr0_drv_t* drv_list[] =
 {
+#if WR0_ENABLE_CPUZ_161
 	&drv_cpuz161,
-	&drv_hwio,
+#endif
+#if WR0_ENABLE_CPUZ_162
+	&drv_cpuz162,
+#endif
+#if WR0_ENABLE_NWHWIO
+	&drv_nwhwio,
+#endif
+#if WR0_ENABLE_HWRWDRV
 	&drv_hwrwdrv,
+#endif
+#if WR0_ENABLE_WINRING0_120
 	&drv_winring0,
+#endif
 	&drv_pawnio,
 };
 
@@ -367,6 +407,7 @@ int WR0_RdMsr(struct wr0_drv_t* drv, uint32_t msr_index, uint64_t* result)
 		ctlCode = IOCTL_OLS_READ_MSR;
 		break;
 	case WR0_DRIVER_CPUZ161:
+	case WR0_DRIVER_CPUZ162:
 		ctlCode = IOCTL_CPUZ_READ_MSR;
 		break;
 	case WR0_DRIVER_HWIO:
@@ -401,6 +442,7 @@ int WR0_WrMsr(struct wr0_drv_t* drv, uint32_t msr_index, DWORD eax, DWORD edx)
 		ctlCode = IOCTL_OLS_WRITE_MSR;
 		break;
 	case WR0_DRIVER_CPUZ161:
+	case WR0_DRIVER_CPUZ162:
 		ctlCode = IOCTL_CPUZ_WRITE_MSR;
 		break;
 	case WR0_DRIVER_HWIO:
@@ -441,6 +483,7 @@ uint8_t WR0_RdIo8(struct wr0_drv_t* drv, uint16_t port)
 	}
 		break;
 	case WR0_DRIVER_CPUZ161:
+	case WR0_DRIVER_CPUZ162:
 	{
 		UINT64 inBuf = port;
 		DWORD outBuf[2] = { 0 };
@@ -483,6 +526,7 @@ uint16_t WR0_RdIo16(struct wr0_drv_t* drv, uint16_t port)
 	}
 		break;
 	case WR0_DRIVER_CPUZ161:
+	case WR0_DRIVER_CPUZ162:
 	{
 		UINT64 inBuf = port;
 		DWORD outBuf[2] = { 0 };
@@ -524,6 +568,7 @@ uint32_t WR0_RdIo32(struct wr0_drv_t* drv, uint16_t port)
 	}
 		break;
 	case WR0_DRIVER_CPUZ161:
+	case WR0_DRIVER_CPUZ162:
 	{
 		UINT64 inBuf = port;
 		DWORD outBuf[2] = { 0 };
@@ -569,6 +614,7 @@ void WR0_WrIo8(struct wr0_drv_t* drv, uint16_t port, uint8_t value)
 	}
 		break;
 	case WR0_DRIVER_CPUZ161:
+	case WR0_DRIVER_CPUZ162:
 	{
 		OLS_WRITE_IO_PORT_INPUT inBuf = { 0 };
 		UINT64 outBuf;
@@ -618,6 +664,7 @@ void WR0_WrIo16(struct wr0_drv_t* drv, uint16_t port, uint16_t value)
 	}
 		break;
 	case WR0_DRIVER_CPUZ161:
+	case WR0_DRIVER_CPUZ162:
 	{
 		OLS_WRITE_IO_PORT_INPUT inBuf = { 0 };
 		UINT64 outBuf;
@@ -667,6 +714,7 @@ void WR0_WrIo32(struct wr0_drv_t* drv, uint16_t port, uint32_t value)
 	}
 		break;
 	case WR0_DRIVER_CPUZ161:
+	case WR0_DRIVER_CPUZ162:
 	{
 		OLS_WRITE_IO_PORT_INPUT inBuf = { 0 };
 		UINT64 outBuf;
@@ -724,6 +772,7 @@ int WR0_RdPciConf(struct wr0_drv_t* drv, uint32_t addr, uint32_t reg, void* valu
 	}
 		break;
 	case WR0_DRIVER_CPUZ161:
+	case WR0_DRIVER_CPUZ162:
 	{
 		CPUZ_READ_PCI_CONFIG_INPUT inBuf = { 0 };
 		inBuf.Bus = PciGetBus(addr);
@@ -805,6 +854,7 @@ int WR0_WrPciConf(struct wr0_drv_t* drv, uint32_t addr, uint32_t reg, void* valu
 	}
 		break;
 	case WR0_DRIVER_CPUZ161:
+	case WR0_DRIVER_CPUZ162:
 	{
 		CPUZ_WRITE_PCI_CONFIG_INPUT inBuf = { 0 };
 		inBuf.Bus = PciGetBus(addr);
@@ -1008,6 +1058,7 @@ DWORD WR0_RdMem(struct wr0_drv_t* drv,
 	}
 		break;
 	case WR0_DRIVER_CPUZ161:
+	case WR0_DRIVER_CPUZ162:
 	{
 		DWORD inBuf[3];
 		CPUZ_READ_MEMORY_OUTPUT* outBuf = malloc(sizeof(CPUZ_READ_MEMORY_OUTPUT) + size);
@@ -1046,6 +1097,28 @@ DWORD WR0_RdMem(struct wr0_drv_t* drv,
 #define FAMILY_17H_PCI_CONTROL_REGISTER     0x60
 #define FAMILY_17H_PCI_DATA_REGISTER        0x64
 
+static inline BOOL
+read_smn(struct wr0_drv_t* drv, uint32_t port[2], uint32_t address, uint32_t* value)
+{
+	WR0_WrPciConf32(drv, 0, port[0], address);
+	uint32_t ret = WR0_RdPciConf32(drv, 0, port[1]);
+	if (ret == 0xFFFFFFFF)
+	{
+		NWL_Debug("SMN", "Address 0x%X Read ERROR", address);
+		return FALSE;
+	}
+	*value = ret;
+	return TRUE;
+}
+
+static inline void
+write_smn(struct wr0_drv_t* drv, uint32_t port[2], uint32_t address, uint32_t value)
+{
+	WR0_WrPciConf32(drv, 0, port[0], address);
+	WR0_WrPciConf32(drv, 0, port[1], value);
+	NWL_Debug("SMN", "Address 0x%X Write: 0x%X", address, value);
+}
+
 DWORD WR0_RdAmdSmn(struct wr0_drv_t* drv, enum wr0_smn_type smn, DWORD reg)
 {
 	DWORD returnedLength = 0;
@@ -1076,7 +1149,7 @@ DWORD WR0_RdAmdSmn(struct wr0_drv_t* drv, enum wr0_smn_type smn, DWORD reg)
 	switch (drv->type)
 	{
 	case WR0_DRIVER_CPUZ161:
-#if 1
+	case WR0_DRIVER_CPUZ162:
 	{
 		DWORD inBuf[3];
 		inBuf[0] = 0; // BDF, (bus << 16) | (dev << 11) | (fn << 8)
@@ -1086,14 +1159,9 @@ DWORD WR0_RdAmdSmn(struct wr0_drv_t* drv, enum wr0_smn_type smn, DWORD reg)
 			inBuf, sizeof(inBuf), &value, sizeof(value), &returnedLength, NULL);
 	}
 		break;
-#endif
 	case WR0_DRIVER_HWIO:
 	case WR0_DRIVER_WINRING0:
-	{
-		WR0_WrPciConf32(drv, 0, addr[0], reg);
-		value = WR0_RdPciConf32(drv, 0, addr[1]);
-		result = TRUE;
-	}
+		result = read_smn(drv, addr, reg, &value);
 		break;
 	default:
 		return 0;
@@ -1104,32 +1172,97 @@ DWORD WR0_RdAmdSmn(struct wr0_drv_t* drv, enum wr0_smn_type smn, DWORD reg)
 	return value;
 }
 
+#define SMU_COMMAND_MAX_RETRIES 8096
+
 int
-WR0_SendSmuCmd(struct wr0_drv_t* drv, uint32_t cmd, uint32_t rsp, uint32_t arg, uint32_t fn, uint32_t args[6])
+WR0_SendSmuCmd(struct wr0_drv_t* drv, uint32_t cmd, uint32_t rsp, uint32_t arg, uint32_t fn, uint32_t args[SMU_MAX_ARGS])
 {
 	DWORD returnedLength = 0;
 	BOOL result = FALSE;
 	uint32_t inBuf[17] = { 0 };
 	uint32_t outBuf[7] = { 0 };
 
-	if (!drv || !drv->handle || drv->handle == INVALID_HANDLE_VALUE || drv->type != WR0_DRIVER_CPUZ161)
+	if (!drv || !drv->handle || drv->handle == INVALID_HANDLE_VALUE)
 		return -1;
-
-	inBuf[0] = 0; // BDF, (bus << 16) | (dev << 11) | (fn << 8)
-	inBuf[1] = 2; // Zen SMU
-	inBuf[2] = fn;
-	inBuf[3] = cmd;
-	inBuf[4] = rsp;
-	for (uint32_t i = 0; i < 6; i++)
+	switch (drv->type)
 	{
-		inBuf[5 + i] = arg + i * 4;
-		inBuf[11 + i] = args[i];
+	case WR0_DRIVER_CPUZ161:
+	case WR0_DRIVER_CPUZ162:
+	{
+		inBuf[0] = 0; // BDF, (bus << 16) | (dev << 11) | (fn << 8)
+		inBuf[1] = WR0_SMN_ZENSMU; // Zen SMU
+		inBuf[2] = fn;
+		inBuf[3] = cmd;
+		inBuf[4] = rsp;
+		for (uint32_t i = 0; i < SMU_MAX_ARGS; i++)
+		{
+			inBuf[5 + i] = arg + i * 4;
+			inBuf[11 + i] = args[i];
+		}
+		result = DeviceIoControl(drv->handle, IOCTL_CPUZ_SEND_SMN_CMD,
+			inBuf, sizeof(inBuf), outBuf, sizeof(outBuf), &returnedLength, NULL);
+		NWL_Debug("SMU", "Send SMU fn=%08xh %d -> %u", fn, result, outBuf[0]);
+		memcpy(args, &outBuf[1], 6 * sizeof(uint32_t));
+		if (result && outBuf[0] == 1)
+			return 0;
+		return -2;
 	}
-	result = DeviceIoControl(drv->handle, IOCTL_CPUZ_SEND_SMN_CMD,
-		inBuf, sizeof(inBuf), outBuf, sizeof(outBuf), &returnedLength, NULL);
-	NWL_Debug("SMU", "Send SMU fn=%08xh %d -> %u", fn, result, outBuf[0]);
-	memcpy(args, &outBuf[1], 6 * sizeof(uint32_t));
-	if (result && outBuf[0] == 1)
+	case WR0_DRIVER_HWIO:
+	case WR0_DRIVER_WINRING0:
+	{
+		uint32_t i;
+		uint32_t response;
+		uint32_t port[2] = { SMU_PCI_ADDR_REG , SMU_PCI_DATA_REG };
+
+		// Wait until the RSP register is non-zero.
+		for (i = 0, response = 0; i < SMU_COMMAND_MAX_RETRIES; i++)
+		{
+			if (!read_smn(drv, port, rsp, &response))
+			{
+				NWL_Debug("SMU", "Failed to read RSP register");
+				return -2;
+			}
+			if (response != 0)
+				break;
+		}
+
+		if (response == 0)
+			return -3;
+
+		// Write zero to the RSP register
+		write_smn(drv, port, rsp, 0);
+
+		// Write the arguments into the argument registers
+		for (i = 0; i < SMU_MAX_ARGS; i++)
+		{
+			write_smn(drv, port, arg + (i * 4), args[i]);
+		}
+
+		// Write the message Id into the Message ID register
+		write_smn(drv, port, cmd, fn);
+
+		// Wait until the Response register is non-zero.
+		for (i = 0, response = 0; i < SMU_COMMAND_MAX_RETRIES; i++)
+		{
+			if (!read_smn(drv, port, rsp, &response))
+				return -2;
+			if (response != 0)
+				break;
+		}
+
+		if (response == 0)
+			return -3;
+
+		// Read the response value
+		for (i = 0; i < SMU_MAX_ARGS; i++)
+		{
+			if (!read_smn(drv, port, arg + (i * 4), &args[i]))
+				return -2;
+		}
+
 		return 0;
-	return -2;
+	}
+	default:
+		return -1;
+	}
 }

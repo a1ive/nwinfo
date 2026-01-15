@@ -341,6 +341,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\ioctl\ryzen_smu.h" />
     <ClInclude Include="..\libcdi\libcdi.h" />
     <ClInclude Include="..\stb\stb_ds.h" />
     <ClInclude Include="..\ioctl\shmem.h" />
@@ -350,7 +351,6 @@
     <ClInclude Include="audio.h" />
     <ClInclude Include="base64.h" />
     <ClInclude Include="cpu\rdmsr.h" />
-    <ClInclude Include="cpu\ryzen_smu.h" />
     <ClInclude Include="devtree.h" />
     <ClInclude Include="disk.h" />
     <ClInclude Include="efivars.h" />
@@ -370,6 +370,7 @@
     <ClInclude Include="version.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\ioctl\ryzen_smu.c" />
     <ClCompile Include="..\libcdi\CDIWrapper.c" />
     <ClCompile Include="..\ioctl\mutexes.c" />
     <ClCompile Include="..\ioctl\pawnio.c" />
@@ -384,7 +385,6 @@
     <ClCompile Include="cpu\centaur_cpu.c" />
     <ClCompile Include="cpu\intel_cpu.c" />
     <ClCompile Include="cpu\rdmsr.c" />
-    <ClCompile Include="cpu\ryzen_smu.c" />
     <ClCompile Include="devtree.c" />
     <ClCompile Include="disk.c" />
     <ClCompile Include="display.c" />

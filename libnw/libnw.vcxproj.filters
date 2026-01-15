@@ -93,9 +93,6 @@
     <ClInclude Include="cpu\rdmsr.h">
       <Filter>cpu</Filter>
     </ClInclude>
-    <ClInclude Include="cpu\ryzen_smu.h">
-      <Filter>cpu</Filter>
-    </ClInclude>
     <ClInclude Include="..\ioctl\shmem.h">
       <Filter>ioctl</Filter>
     </ClInclude>
@@ -119,6 +116,9 @@
     </ClInclude>
     <ClInclude Include="sensor\sensors.h">
       <Filter>sensor</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ioctl\ryzen_smu.h">
+      <Filter>ioctl</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -245,9 +245,6 @@
     <ClCompile Include="cpu\rdmsr.c">
       <Filter>cpu</Filter>
     </ClCompile>
-    <ClCompile Include="cpu\ryzen_smu.c">
-      <Filter>cpu</Filter>
-    </ClCompile>
     <ClCompile Include="..\ioctl\mutexes.c">
       <Filter>ioctl</Filter>
     </ClCompile>
@@ -295,6 +292,9 @@
     </ClCompile>
     <ClCompile Include="sensor\imc.c">
       <Filter>sensor</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ioctl\ryzen_smu.c">
+      <Filter>ioctl</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

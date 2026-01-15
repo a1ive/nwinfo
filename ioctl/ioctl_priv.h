@@ -8,7 +8,7 @@
 
 // WinRing0.sys
 #define WINRING0_ID							L"WinRing0_1_2_0"
-#ifdef _WIN64
+#if defined(_M_AMD64)
 #define WINRING0_NAME						L"WinRing0x64.sys"
 #else
 #define WINRING0_NAME						L"WinRing0.sys"
@@ -83,7 +83,7 @@
 
 // HwRwDrv.sys
 #define HWRWDRV_ID							L"HwRwDrv"
-#ifdef _WIN64
+#if defined(_M_AMD64)
 #define HWRWDRV_NAME						L"HwRwDrvx64.sys"
 #else
 #define HWRWDRV_NAME						L"HwRwDrv.sys"
@@ -148,13 +148,13 @@ typedef struct _OLS_WRITE_MEMORY_INPUT
 #pragma pack(pop)
 
 // HwIo.sys
-#define HWIODRV_ID							L"HwIo"
-#ifdef _WIN64
-#define HWIODRV_NAME						L"HwIox64.sys"
+#define HWIODRV_ID							L"NwHwIo"
+#if defined(_M_AMD64)
+#define HWIODRV_NAME						L"NwHwIox64.sys"
 #else
-#define HWIODRV_NAME						L"HwIo.sys"
+#define HWIODRV_NAME						L"NwHwIo.sys"
 #endif
-#define HWIODRV_OBJ							L"\\\\.\\HwIo"
+#define HWIODRV_OBJ							L"\\\\.\\NwHwIo"
 
 // HwIo
 
@@ -183,13 +183,21 @@ typedef struct _OLS_WRITE_MEMORY_INPUT
 #define IOCTL_HIO_WRITE_PCI_CONFIG 0x80006420
 
 // CPUZ.sys
-#define CPUZDRV_ID							L"cpuz161"
-#ifdef _WIN64
-#define CPUZDRV_NAME						L"cpuidx64.sys"
+#define CPUZ161DRV_ID						L"cpuz161"
+#if defined(_M_AMD64)
+#define CPUZ161DRV_NAME						L"cpuz161x64.sys"
 #else
-#define CPUZDRV_NAME						L"cpuid.sys"
+#define CPUZ161DRV_NAME						L"cpuz161.sys"
 #endif
-#define CPUZDRV_OBJ							L"\\\\.\\CPUZ161"
+#define CPUZ161DRV_OBJ						L"\\\\.\\CPUZ161"
+
+#define CPUZ162DRV_ID						L"cpuz162"
+#if defined(_M_AMD64)
+#define CPUZ162DRV_NAME						L"cpuz162x64.sys"
+#else
+#define CPUZ162DRV_NAME						L"cpuz162.sys"
+#endif
+#define CPUZ162DRV_OBJ						L"\\\\.\\CPUZ162"
 
 // CPUZ
 #pragma pack(push,1)

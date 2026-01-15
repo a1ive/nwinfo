@@ -7,12 +7,7 @@
 #include <string.h>
 #include <intrin.h>
 #include "ioctl.h"
-#include "../libnw.h"
-
-#define SMU_PCI_ADDR_REG 0xC4
-#define SMU_PCI_DATA_REG 0xC8
-#define SMU_COMMAND_MAX_RETRIES 8096
-#define SMU_MAX_ARGS 6
+#include "../libnw/libnw.h"
 
 typedef struct
 {
@@ -326,98 +321,16 @@ static ry_err_t get_rsmu_addr(ry_handle_t* handle)
 	return RYZEN_SMU_OK;
 }
 
-static ry_err_t read_smn(ry_handle_t* handle, uint32_t address, uint32_t* value)
-{
-	WR0_WrPciConf32(handle->drv_handle, 0, SMU_PCI_ADDR_REG, address);
-	uint32_t ret = WR0_RdPciConf32(handle->drv_handle, 0, SMU_PCI_DATA_REG);
-	if (ret == 0xFFFFFFFF)
-	{
-		SMU_DEBUG("SMN 0x%X Read ERROR", address);
-		return RYZEN_SMU_FAILED;
-	}
-	*value = ret;
-	SMU_DEBUG("SMN 0x%X Read: 0x%X", address, *value);
-	return RYZEN_SMU_OK;
-}
-
-static ry_err_t write_smn(ry_handle_t* handle, uint32_t address, uint32_t value)
-{
-	WR0_WrPciConf32(handle->drv_handle, 0, SMU_PCI_ADDR_REG, address);
-	WR0_WrPciConf32(handle->drv_handle, 0, SMU_PCI_DATA_REG, value);
-	SMU_DEBUG("SMN 0x%X Write: 0x%X", address, value);
-	return RYZEN_SMU_OK;
-}
-
 static ry_err_t send_command(ry_handle_t* handle, uint32_t fn, ry_args_t* args)
 {
-	int i;
-	ry_err_t rc;
-	uint32_t response;
-
 	if (handle->rsmu_cmd_addr == 0)
 		return RYZEN_SMU_UNSUPPORTED;
 
 	SMU_DEBUG("Send RSMU Fn %Xh", fn);
 
-	if (handle->drv_handle->type == WR0_DRIVER_CPUZ161)
-	{
-		int err = WR0_SendSmuCmd(handle->drv_handle, handle->rsmu_cmd_addr,
-			handle->rsmu_rsp_addr, handle->rsmu_arg_addr, fn, args->args);
-		if (err != 0)
-			return RYZEN_SMU_DRIVER_ERROR;
-		return RYZEN_SMU_OK;
-	}
-
-	// Wait until the RSP register is non-zero.
-	for (i = 0, response = 0; i < SMU_COMMAND_MAX_RETRIES; i++)
-	{
-		rc = read_smn(handle, handle->rsmu_rsp_addr, &response);
-		if (rc != RYZEN_SMU_OK)
-		{
-			SMU_DEBUG("Failed to read RSP register: %s", get_ry_err_str(rc));
-			return rc;
-		}
-		if (response != 0)
-			break;
-	}
-
-	if (response == 0)
-		return RYZEN_SMU_CMD_TIMEOUT;
-
-	// Write zero to the RSP register
-	write_smn(handle, handle->rsmu_rsp_addr, 0);
-
-	// Write the arguments into the argument registers
-	for (i = 0; i < SMU_MAX_ARGS; i++)
-	{
-		rc = write_smn(handle, handle->rsmu_arg_addr + (i * 4), args->args[i]);
-		if (rc != RYZEN_SMU_OK)
-			return rc;
-	}
-
-	// Write the message Id into the Message ID register
-	write_smn(handle, handle->rsmu_cmd_addr, fn);
-
-	// Wait until the Response register is non-zero.
-	for (i = 0, response = 0; i < SMU_COMMAND_MAX_RETRIES; i++)
-	{
-		rc = read_smn(handle, handle->rsmu_rsp_addr, &response);
-		if (rc != RYZEN_SMU_OK)
-			return rc;
-		if (response != 0)
-			break;
-	}
-
-	if (response == 0)
-		return RYZEN_SMU_CMD_TIMEOUT;
-
-	// Read the response value
-	for (i = 0; i < SMU_MAX_ARGS; i++)
-	{
-		rc = read_smn(handle, handle->rsmu_arg_addr + (i * 4), &args->args[i]);
-		if (rc != RYZEN_SMU_OK)
-			return rc;
-	}
+	if (WR0_SendSmuCmd(handle->drv_handle,
+		handle->rsmu_cmd_addr, handle->rsmu_rsp_addr, handle->rsmu_arg_addr, fn, args->args) != 0)
+		return RYZEN_SMU_DRIVER_ERROR;
 
 	return RYZEN_SMU_OK;
 }

@@ -11,6 +11,7 @@ enum wr0_driver_type
 	WR0_DRIVER_WINRING0,
 	WR0_DRIVER_HWIO,
 	WR0_DRIVER_CPUZ161,
+	WR0_DRIVER_CPUZ162,
 	WR0_DRIVER_PAWNIO,
 
 	WR0_DRIVER_MAX
@@ -88,8 +89,9 @@ enum wr0_smn_type
 	WR0_SMN_ZENSMU = 2, // 0xC4/0xC8
 	WR0_SMN_AMD17H = 3, // 0x60/0x64
 };
+#define SMU_MAX_ARGS 6
 LIBNW_API DWORD WR0_RdAmdSmn(struct wr0_drv_t* drv, enum wr0_smn_type smn, DWORD reg);
-LIBNW_API int WR0_SendSmuCmd(struct wr0_drv_t* drv, uint32_t cmd, uint32_t rsp, uint32_t arg, uint32_t fn, uint32_t args[6]);
+LIBNW_API int WR0_SendSmuCmd(struct wr0_drv_t* drv, uint32_t cmd, uint32_t rsp, uint32_t arg, uint32_t fn, uint32_t args[SMU_MAX_ARGS]);
 
 LIBNW_API int WR0_ExecPawn(struct wr0_drv_t* drv, struct pio_mod_t* mod, LPCSTR fn, const ULONG64* in, SIZE_T in_size, PULONG64 out, SIZE_T out_size, PSIZE_T return_size);
 

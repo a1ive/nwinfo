@@ -220,15 +220,13 @@ Note: NVMe requires Windows 10 or later.
 
 ## Supported Drivers
 
-The program searches for and loads drivers in the following order: **CPUZ161 -> EVGA -> HwRwDrv -> WinRing0 -> PawnIO**.
+The program searches for and loads drivers in the following order: **CPUZ162 -> NwHwIo -> PawnIO**.
 
-| Driver | Filename | Security Status | Bundled | CPU Sensor | SPD | ACPI |
-|--------|----------|-----------------|---------|------------|-----|------|
-| [PawnIO](https://github.com/namazso/PawnIO)           | PawnIO.sys      | ✅ Safe to use   | ✅ | ⚠️ | ✅ | ❌ |
-| [HwRwDrv](https://hwrwdrv.phpnet.us/?i=1)             | HwRwDrvx64.sys  | ❌ Vulnerable    | ❌ | ✅ | ✅ | ✅ |
-| [WinRing0](http://openlibsys.org/)                    | WinRing0x64.sys | ❌ Blocked by AV | ❌ | ✅ | ✅ | ⚠️ |
-| [CPUZ161](https://www.cpuid.com/softwares/cpu-z.html) | cpuidx64.sys    | ✅ Safe to use   | ❌ | ✅ | ✅ | ✅ |
-| [EVGA](https://www.evga.com/precisionx1/)             | HwIox64.sys     | ✅ Safe to use   | ❌ | ✅ | ✅ | ❌ |
+| Driver | Filename | Bundled | CPU Sensor | SPD | ACPI | IMC |
+|--------|----------|---------|------------|-----|------|-----|
+| [PawnIO](https://github.com/namazso/PawnIO)           | PawnIO.sys     | ✅ | ⚠️ | ✅ | ❌ | ❌ |
+| [CPUZ162](https://www.cpuid.com/softwares/cpu-z.html) | cpuz162x64.sys | ❌ | ✅ | ✅ | ✅ | ✅ |
+| [NwHwIo](https://www.evga.com/precisionx1/)           | NwHwIox64.sys  | ❌ | ✅ | ✅ | ❌ | ✅ |
 
 **Note:** The program can still run normally even without drivers, but some hardware information may not be accessible.
 
