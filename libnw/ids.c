@@ -37,84 +37,156 @@ IdsGetline(PNWLIB_IDS Ids, DWORD* Offset)
 	return Line;
 }
 
+static BOOL
+NWL_FindVendor(PNODE nd, PNWLIB_IDS Ids, CONST CHAR* v, CONST CHAR* key, DWORD* outOffset)
+{
+	DWORD Offset = 0;
+	CHAR* Line = NULL;
+	if (outOffset)
+		*outOffset = 0;
+	if (!v || !v[0])
+		return FALSE;
+	Line = IdsGetline(Ids, &Offset);
+	while (Line)
+	{
+		size_t Len = 0;
+		if (!Line[0] || Line[0] == '#' || Line[0] == '\t')
+		{
+			free(Line);
+			Line = IdsGetline(Ids, &Offset);
+			continue;
+		}
+		Len = strlen(Line);
+		if (Len < 7)
+		{
+			free(Line);
+			Line = IdsGetline(Ids, &Offset);
+			continue;
+		}
+		if (_strnicmp(v, Line, 4) == 0)
+		{
+			if (key)
+				NWL_NodeAttrSet(nd, key, Line + 6, 0);
+			free(Line);
+			if (outOffset)
+				*outOffset = Offset;
+			return TRUE;
+		}
+		free(Line);
+		Line = IdsGetline(Ids, &Offset);
+	}
+	return FALSE;
+}
+
 static void
 NWL_FindId(PNODE nd, PNWLIB_IDS Ids, CONST CHAR* v, CONST CHAR* d, CONST CHAR* s, INT usb)
 {
 	DWORD Offset = 0;
-	CHAR* vLine = NULL;
-	CHAR* dLine = NULL;
-	CHAR* sLine = NULL;
-	if (!v || !d)
+	CHAR* Line = NULL;
+	BOOL FoundDevice = FALSE;
+	if (!v || !v[0] || !d || !d[0])
 		return;
-	vLine = IdsGetline(Ids, &Offset);
-	while (vLine)
+
+	if (!NWL_FindVendor(nd, Ids, v, "Vendor", &Offset))
+		return;
+
+	Line = IdsGetline(Ids, &Offset);
+	while (Line)
 	{
-		if (!vLine[0] || vLine[0] == '#' || strlen(vLine) < 7)
+		size_t Len = 0;
+		if (!Line[0] || Line[0] == '#')
 		{
-			free(vLine);
-			vLine = IdsGetline(Ids, &Offset);
+			free(Line);
+			Line = IdsGetline(Ids, &Offset);
 			continue;
 		}
-		if (_strnicmp(v, vLine, 4) != 0)
+
+		Len = strlen(Line);
+		if (!FoundDevice)
 		{
-			free(vLine);
-			vLine = IdsGetline(Ids, &Offset);
-			continue;
-		}
-		NWL_NodeAttrSet(nd, "Vendor", vLine + 6, 0);
-		free(vLine);
-		dLine = IdsGetline(Ids, &Offset);
-		while (dLine)
-		{
-			if (!dLine[0] || dLine[0] == '#')
+			if (Line[0] != '\t')
 			{
-				free(dLine);
-				dLine = IdsGetline(Ids, &Offset);
-				continue;
-			}
-			if (dLine[0] != '\t' || strlen(dLine) < 8)
-			{
-				free(dLine);
+				free(Line);
 				break;
 			}
-			if (_strnicmp(d, dLine + 1, 4) != 0)
+			if (Line[1] == '\t' || Len < 8)
 			{
-				free(dLine);
-				dLine = IdsGetline(Ids, &Offset);
+				free(Line);
+				Line = IdsGetline(Ids, &Offset);
 				continue;
 			}
-			NWL_NodeAttrSet(nd, "Device", dLine + 7, 0);
-			free(dLine);
+			if (_strnicmp(d, Line + 1, 4) != 0)
+			{
+				free(Line);
+				Line = IdsGetline(Ids, &Offset);
+				continue;
+			}
+			NWL_NodeAttrSet(nd, "Device", Line + 7, 0);
+			FoundDevice = TRUE;
+			free(Line);
 			if (!s)
 				break;
-			sLine = IdsGetline(Ids, &Offset);
-			while (sLine)
-			{
-				if (!sLine[0] || sLine[0] == '#')
-				{
-					free(sLine);
-					sLine = IdsGetline(Ids, &Offset);
-					continue;
-				}
-				if (sLine[0] != '\t' || !sLine[1] || sLine[1] != '\t' || strlen(sLine) < 14)
-				{
-					free(sLine);
-					break;
-				}
-				if (_strnicmp(s, sLine + 2, 9) != 0)
-				{
-					free(sLine);
-					sLine = IdsGetline(Ids, &Offset);
-					continue;
-				}
-				NWL_NodeAttrSet(nd, usb ? "Interface" : "Subsys", sLine + 13, 0);
-				free(sLine);
-				break;
-			}
+			Line = IdsGetline(Ids, &Offset);
+			continue;
+		}
+
+		if (Line[0] != '\t' || Line[1] != '\t' || Len < 14)
+		{
+			free(Line);
 			break;
 		}
+		if (_strnicmp(s, Line + 2, 9) != 0)
+		{
+			free(Line);
+			Line = IdsGetline(Ids, &Offset);
+			continue;
+		}
+		NWL_NodeAttrSet(nd, usb ? "Interface" : "Subsys", Line + 13, 0);
+		free(Line);
 		break;
 	}
+}
+
+static BOOL
+NWL_ParseHwidId(LPCWSTR Hwid, LPCWSTR Needle, CHAR out[5], LPCWSTR* Next)
+{
+	LPCWSTR p = wcsstr(Hwid, Needle);
+	size_t i;
+	if (p == NULL)
+		return FALSE;
+	p += 3;
+	if (p[0] == L'_')
+		p++;
+	for (i = 0; i < 4 && p[i]; i++)
+		out[i] = (CHAR)p[i];
+	out[i] = 0;
+	if (Next)
+		*Next = p + i;
+	return TRUE;
+}
+
+static BOOL
+NWL_ParseSubsys(LPCWSTR Hwid, CHAR subsys[10], CHAR subvendor[5])
+{
+	LPCWSTR p = wcsstr(Hwid, L"SUBSYS_");
+	size_t i;
+	if (p == NULL)
+		return FALSE;
+	p += 7;
+	for (i = 0; i < 8 && p[i]; i++)
+		;
+	if (i < 8)
+		return FALSE;
+	for (i = 0; i < 4; i++)
+	{
+		subvendor[i] = (CHAR)p[i + 4];
+		subsys[i] = (CHAR)p[i + 4];
+		subsys[i + 5] = (CHAR)p[i];
+	}
+	subvendor[4] = 0;
+	subsys[4] = ' ';
+	subsys[9] = 0;
+	return TRUE;
 }
 
 BOOL
@@ -124,49 +196,38 @@ NWL_ParseHwid(PNODE nd, struct _NWLIB_IDS* Ids, LPCWSTR Hwid, INT usb)
 	// PCI\VEN_XXXX&DEV_XXXX&SUBSYS_XXXXXXXX
 	// USB\VID_XXXX&PID_XXXX
 	// USB\ROOT_HUBXX&VIDXXXX&PIDXXXX
-	size_t i;
 	CHAR vid[5] = { 0 };
 	CHAR did[5] = { 0 };
 	CHAR subsys[10] = { 0 };
+	CHAR subvendor[5] = { 0 };
 	LPCWSTR p = Hwid;
 	LPCWSTR vidNeedle = L"VEN";
 	LPCWSTR didNeedle = L"DEV";
+	BOOL hasSubsys = FALSE;
 	if (usb)
 	{
 		vidNeedle = L"VID";
 		didNeedle = L"PID";
 	}
 
-	p = wcsstr(p, vidNeedle);
-	if (p == NULL)
+	if (!Hwid)
 		return FALSE;
-	p += 3;
-	if (p[0] == '_')
-		p++;
-	for (i = 0; i < 4 && p[i]; i++)
-		vid[i] = (CHAR)p[i];
-	p = wcsstr(p, didNeedle);
-	if (p == NULL)
+	if (!NWL_ParseHwidId(p, vidNeedle, vid, &p))
 		return FALSE;
-	p += 3;
-	if (p[0] == '_')
-		p++;
-	for (i = 0; i < 4 && p[i]; i++)
-		did[i] = (CHAR)p[i];
-	p = wcsstr(p, L"SUBSYS_");
-	if (p != NULL)
+	if (!NWL_ParseHwidId(p, didNeedle, did, &p))
+		return FALSE;
+	if (!usb)
 	{
-		p += 7;
-		for (i = 0; i < 4 && p[i]; i++)
-			subsys[i + 5] = (CHAR)p[i];
-		subsys[4] = ' ';
-		for (i = 4; i < 8 && p[i]; i++)
-			subsys[i - 4] = (CHAR)p[i];
+		hasSubsys = NWL_ParseSubsys(p, subsys, subvendor);
 	}
 
 	NWL_NodeAttrSet(nd, "Vendor ID", vid, 0);
 	NWL_NodeAttrSet(nd, "Device ID", did, 0);
-	NWL_FindId(nd, Ids, vid, did, p ? subsys : NULL, usb);
+	if (!usb && hasSubsys)
+		NWL_NodeAttrSet(nd, "Subvendor ID", subvendor, 0);
+	NWL_FindId(nd, Ids, vid, did, hasSubsys ? subsys : NULL, usb);
+	if (!usb && hasSubsys && subvendor[0])
+		NWL_FindVendor(nd, Ids, subvendor, "Subvendor", NULL);
 	return 1;
 }
 
@@ -174,84 +235,92 @@ VOID
 NWL_FindClass(PNODE nd, struct _NWLIB_IDS* Ids, CONST CHAR* Class, INT usb)
 {
 	DWORD Offset = 0;
-	CHAR* vLine = NULL;
-	CHAR* dLine = NULL;
-	CHAR* sLine = NULL;
-	if (!Class)
+	CHAR* Line = NULL;
+	BOOL FoundClass = FALSE;
+	BOOL FoundSubclass = FALSE;
+	size_t ClassLen = 0;
+	if (!Class || !Class[0])
 		return;
+	ClassLen = strlen(Class);
 	CONST CHAR* v = Class;
-	CONST CHAR* d = strlen(Class) >= 4 ? Class + 2 : NULL;
-	CONST CHAR* s = strlen(Class) >= 6 ? Class + 4 : NULL;
-	vLine = IdsGetline(Ids, &Offset);
-	while (vLine)
+	CONST CHAR* d = ClassLen >= 4 ? Class + 2 : NULL;
+	CONST CHAR* s = ClassLen >= 6 ? Class + 4 : NULL;
+	Line = IdsGetline(Ids, &Offset);
+	while (Line)
 	{
-		if (!vLine[0] || vLine[0] != 'C' || strlen(vLine) < 7 || vLine[1] != ' ')
+		size_t Len = 0;
+		if (!Line[0] || Line[0] == '#')
 		{
-			free(vLine);
-			vLine = IdsGetline(Ids, &Offset);
+			free(Line);
+			Line = IdsGetline(Ids, &Offset);
 			continue;
 		}
-		if (_strnicmp(v, vLine + 2, 2) != 0)
+
+		Len = strlen(Line);
+		if (!FoundClass)
 		{
-			free(vLine);
-			vLine = IdsGetline(Ids, &Offset);
-			continue;
-		}
-		NWL_NodeAttrSet(nd, "Class", vLine + 6, 0);
-		free(vLine);
-		if (!d)
-			goto out;
-		dLine = IdsGetline(Ids, &Offset);
-		while (dLine)
-		{
-			if (!dLine[0] || dLine[0] == '#')
+			if (Len < 7 || Line[0] != 'C' || Line[1] != ' ')
 			{
-				free(dLine);
-				dLine = IdsGetline(Ids, &Offset);
+				free(Line);
+				Line = IdsGetline(Ids, &Offset);
 				continue;
 			}
-			if (dLine[0] != '\t' || strlen(dLine) < 6)
+			if (_strnicmp(v, Line + 2, 2) != 0)
 			{
-				free(dLine);
+				free(Line);
+				Line = IdsGetline(Ids, &Offset);
+				continue;
+			}
+			NWL_NodeAttrSet(nd, "Class", Line + 6, 0);
+			FoundClass = TRUE;
+			free(Line);
+			if (!d)
+				break;
+			Line = IdsGetline(Ids, &Offset);
+			continue;
+		}
+
+		if (!FoundSubclass)
+		{
+			if (Line[0] != '\t' || Len < 6)
+			{
+				free(Line);
 				break;
 			}
-			if (_strnicmp(d, dLine + 1, 2) != 0)
+			if (Line[1] == '\t')
 			{
-				free(dLine);
-				dLine = IdsGetline(Ids, &Offset);
+				free(Line);
+				Line = IdsGetline(Ids, &Offset);
 				continue;
 			}
-			NWL_NodeAttrSet(nd, "Subclass", dLine + 5, 0);
-			free(dLine);
+			if (_strnicmp(d, Line + 1, 2) != 0)
+			{
+				free(Line);
+				Line = IdsGetline(Ids, &Offset);
+				continue;
+			}
+			NWL_NodeAttrSet(nd, "Subclass", Line + 5, 0);
+			FoundSubclass = TRUE;
+			free(Line);
 			if (!s)
 				break;
-			sLine = IdsGetline(Ids, &Offset);
-			while (sLine)
-			{
-				if (!sLine[0] || sLine[0] == '#')
-				{
-					free(sLine);
-					sLine = IdsGetline(Ids, &Offset);
-					continue;
-				}
-				if (sLine[0] != '\t' || !sLine[1] || sLine[1] != '\t' || strlen(sLine) < 7)
-				{
-					free(sLine);
-					break;
-				}
-				if (_strnicmp(s, sLine + 2, 2) != 0)
-				{
-					free(sLine);
-					sLine = IdsGetline(Ids, &Offset);
-					continue;
-				}
-				NWL_NodeAttrSet(nd, usb ? "Protocol" : "Prog IF", sLine + 6, 0);
-				free(sLine);
-				break;
-			}
+			Line = IdsGetline(Ids, &Offset);
+			continue;
+		}
+
+		if (Line[0] != '\t' || Line[1] != '\t' || Len < 7)
+		{
+			free(Line);
 			break;
 		}
-	out:
+		if (_strnicmp(s, Line + 2, 2) != 0)
+		{
+			free(Line);
+			Line = IdsGetline(Ids, &Offset);
+			continue;
+		}
+		NWL_NodeAttrSet(nd, usb ? "Protocol" : "Prog IF", Line + 6, 0);
+		free(Line);
 		break;
 	}
 }
@@ -261,11 +330,14 @@ NWL_GetPnpManufacturer(PNODE nd, struct _NWLIB_IDS* Ids, CONST CHAR* Code)
 {
 	DWORD Offset = 0;
 	CHAR* Line = NULL;
+	if (!Code || !Code[0])
+		return;
 
 	Line = IdsGetline(Ids, &Offset);
 	while (Line)
 	{
-		if (isalpha(Line[0]) && isalpha(Line[1]) && isalpha(Line[2]) && isspace(Line[3])
+		size_t Len = strlen(Line);
+		if (Len >= 4 && isalpha(Line[0]) && isalpha(Line[1]) && isalpha(Line[2]) && isspace(Line[3])
 			&& _strnicmp(Code, Line, 3) == 0)
 		{
 			NWL_NodeAttrSet(nd, "Manufacturer", Line + 4, 0);
@@ -285,14 +357,13 @@ NWL_GetSpdManufacturer(PNODE nd, LPCSTR Key, struct _NWLIB_IDS* Ids, UINT Bank, 
 	CHAR* bLine = NULL;
 	CHAR* iLine = NULL;
 	CHAR* p = NULL;
-
-	Bank++;
+	UINT targetBank = Bank + 1;
 
 	bLine = IdsGetline(Ids, &Offset);
 	while (bLine)
 	{
 		if (isdigit(bLine[0])
-			&& Bank == strtoul(bLine, NULL, 10))
+			&& targetBank == strtoul(bLine, NULL, 10))
 		{
 			iLine = IdsGetline(Ids, &Offset);
 			while (iLine)
@@ -318,7 +389,7 @@ NWL_GetSpdManufacturer(PNODE nd, LPCSTR Key, struct _NWLIB_IDS* Ids, UINT Bank, 
 		bLine = IdsGetline(Ids, &Offset);
 	}
 fail:
-	NWL_NodeAttrSetf(nd, Key, 0, "%02X%02X", --Bank, Item);
+	NWL_NodeAttrSetf(nd, Key, 0, "%02X%02X", Bank, Item);
 }
 
 static HANDLE
@@ -392,8 +463,16 @@ const CHAR* NWL_GetIdsDate(struct _NWLIB_IDS* Ids)
 	Line = IdsGetline(Ids, &Offset);
 	while (Line)
 	{
+		size_t Len = 0;
+		if (Line[0] != '#')
+		{
+			free(Line);
+			Line = IdsGetline(Ids, &Offset);
+			continue;
+		}
+		Len = strlen(Line);
 		// # Version: 2022.09.09
-		if (Line[0] == '#' && isspace(Line[1])
+		if (Len >= 21 && isspace(Line[1])
 			&& _strnicmp("Version:", &Line[2], 8) == 0 && isspace(Line[10])
 			&& isdigit(Line[11]) && isdigit(Line[12]) && isdigit(Line[13]) && isdigit(Line[14])
 			&& Line[15] == '.' && isdigit(Line[16]) && isdigit(Line[17])
