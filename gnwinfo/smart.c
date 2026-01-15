@@ -61,7 +61,7 @@ draw_health(struct nk_context* ctx, CDI_SMART* smart, int disk, float height)
 		if (alarm <= 0)
 			alarm = 60;
 		n = cdi_get_int(smart, disk, CDI_INT_TEMPERATURE);
-		snprintf(tmp, sizeof(tmp), u8"%d \u2103", n);
+		snprintf(tmp, sizeof(tmp), u8"%d "TEMP_CELSIUS_SYMBOL, n);
 		nk_block(ctx, gnwinfo_get_color((double)n, (double) alarm, 90.0), tmp);
 		nk_group_end(ctx);
 	}

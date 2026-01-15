@@ -29,6 +29,8 @@
 
 #include <audio.h>
 
+#define TEMP_CELSIUS_SYMBOL u8"\u00b0C" // \u2103 or \u00b0C
+
 GdipFont*
 nk_gdip_load_font(LPCWSTR name, int size);
 
