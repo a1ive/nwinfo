@@ -30,11 +30,8 @@
     <PlatformToolset>v143</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
-    <DisableAdvancedSupport>true</DisableAdvancedSupport>
     <SupportLTL>msvcrt</SupportLTL>
-    <CleanImport>true</CleanImport>
     <WindowsTargetPlatformMinVersion>5.1.2600.0</WindowsTargetPlatformMinVersion>
-    <YY_Thunks_File>YY_Thunks_for_WinXP.obj</YY_Thunks_File>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
@@ -42,11 +39,8 @@
     <PlatformToolset>v143</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
-    <DisableAdvancedSupport>true</DisableAdvancedSupport>
     <SupportLTL>msvcrt</SupportLTL>
-    <CleanImport>true</CleanImport>
     <WindowsTargetPlatformMinVersion>5.1.2600.0</WindowsTargetPlatformMinVersion>
-    <YY_Thunks_File>YY_Thunks_for_WinXP.obj</YY_Thunks_File>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
@@ -54,11 +48,8 @@
     <PlatformToolset>v143</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
-    <DisableAdvancedSupport>true</DisableAdvancedSupport>
     <SupportLTL>false</SupportLTL>
-    <CleanImport>true</CleanImport>
     <WindowsTargetPlatformMinVersion>10.0.10240.0</WindowsTargetPlatformMinVersion>
-    <YY_Thunks_File>YY_Thunks_for_WinXP.obj</YY_Thunks_File>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
@@ -99,6 +90,7 @@
       <AdditionalIncludeDirectories>$(SolutionDir)libnw;$(SolutionDir)ioctl;$(SolutionDir)nuklear;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <DisableSpecificWarnings>5287;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <AdditionalOptions>/Zc:threadSafeInit- %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -128,6 +120,7 @@
       <AdditionalIncludeDirectories>$(SolutionDir)libnw;$(SolutionDir)ioctl;$(SolutionDir)nuklear;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <DisableSpecificWarnings>5287;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <AdditionalOptions>/Zc:threadSafeInit- %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -157,6 +150,7 @@
       <AdditionalIncludeDirectories>$(SolutionDir)libnw;$(SolutionDir)ioctl;$(SolutionDir)nuklear;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <DisableSpecificWarnings>5287;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <AdditionalOptions>/Zc:threadSafeInit- %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>

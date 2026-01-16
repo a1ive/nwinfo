@@ -42,11 +42,8 @@
     <PlatformToolset>v143</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
-    <DisableAdvancedSupport>true</DisableAdvancedSupport>
     <SupportLTL>msvcrt</SupportLTL>
-    <CleanImport>true</CleanImport>
     <WindowsTargetPlatformMinVersion>5.1.2600.0</WindowsTargetPlatformMinVersion>
-    <YY_Thunks_File>YY_Thunks_for_WinXP.obj</YY_Thunks_File>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DLLRelease|Win32'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
@@ -54,11 +51,8 @@
     <PlatformToolset>v143</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
-    <DisableAdvancedSupport>true</DisableAdvancedSupport>
     <SupportLTL>msvcrt</SupportLTL>
-    <CleanImport>true</CleanImport>
     <WindowsTargetPlatformMinVersion>5.1.2600.0</WindowsTargetPlatformMinVersion>
-    <YY_Thunks_File>YY_Thunks_for_WinXP.obj</YY_Thunks_File>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
@@ -66,11 +60,8 @@
     <PlatformToolset>v143</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
-    <DisableAdvancedSupport>true</DisableAdvancedSupport>
     <SupportLTL>msvcrt</SupportLTL>
-    <CleanImport>true</CleanImport>
     <WindowsTargetPlatformMinVersion>5.1.2600.0</WindowsTargetPlatformMinVersion>
-    <YY_Thunks_File>YY_Thunks_for_WinXP.obj</YY_Thunks_File>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
@@ -78,11 +69,8 @@
     <PlatformToolset>v143</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
-    <DisableAdvancedSupport>true</DisableAdvancedSupport>
     <SupportLTL>false</SupportLTL>
-    <CleanImport>true</CleanImport>
     <WindowsTargetPlatformMinVersion>10.0.10240.0</WindowsTargetPlatformMinVersion>
-    <YY_Thunks_File>YY_Thunks_for_WinXP.obj</YY_Thunks_File>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DLLRelease|x64'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
@@ -90,11 +78,8 @@
     <PlatformToolset>v143</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
-    <DisableAdvancedSupport>true</DisableAdvancedSupport>
     <SupportLTL>msvcrt</SupportLTL>
-    <CleanImport>true</CleanImport>
     <WindowsTargetPlatformMinVersion>5.1.2600.0</WindowsTargetPlatformMinVersion>
-    <YY_Thunks_File>YY_Thunks_for_WinXP.obj</YY_Thunks_File>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DLLRelease|ARM64'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
@@ -102,11 +87,8 @@
     <PlatformToolset>v143</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
-    <DisableAdvancedSupport>true</DisableAdvancedSupport>
     <SupportLTL>msvcrt</SupportLTL>
-    <CleanImport>true</CleanImport>
     <WindowsTargetPlatformMinVersion>5.1.2600.0</WindowsTargetPlatformMinVersion>
-    <YY_Thunks_File>YY_Thunks_for_WinXP.obj</YY_Thunks_File>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
@@ -171,6 +153,7 @@
       <AdditionalIncludeDirectories>$(SolutionDir)libcpuid;$(SolutionDir)ioctl;$(SolutionDir)stb;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <AdditionalOptions>/Zc:threadSafeInit- %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -200,6 +183,7 @@
       <AdditionalIncludeDirectories>$(SolutionDir)libcpuid;$(SolutionDir)ioctl;$(SolutionDir)stb;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <AdditionalOptions>/Zc:threadSafeInit- %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -230,6 +214,7 @@
       <AdditionalIncludeDirectories>$(SolutionDir)libcpuid;$(SolutionDir)ioctl;$(SolutionDir)stb;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <AdditionalOptions>/Zc:threadSafeInit- %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -259,6 +244,7 @@
       <AdditionalIncludeDirectories>$(SolutionDir)libcpuid;$(SolutionDir)ioctl;$(SolutionDir)stb;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <AdditionalOptions>/Zc:threadSafeInit- %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -288,6 +274,7 @@
       <AdditionalIncludeDirectories>$(SolutionDir)libcpuid;$(SolutionDir)ioctl;$(SolutionDir)stb;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <AdditionalOptions>/Zc:threadSafeInit- %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -318,6 +305,7 @@
       <AdditionalIncludeDirectories>$(SolutionDir)libcpuid;$(SolutionDir)ioctl;$(SolutionDir)stb;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <AdditionalOptions>/Zc:threadSafeInit- %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
