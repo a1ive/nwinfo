@@ -47,11 +47,15 @@ GuidToStr(BOOL bBracket, GUID* pGuid)
 }
 
 static LPCWSTR
-GetGptFlag(GUID* pGuid)
+GetGptFlag(GUID* pGuid, BOOL* pBootable)
 {
 	LPCWSTR lpszGuid = GuidToStr(FALSE, pGuid);
+	*pBootable = FALSE;
 	if (_wcsicmp(lpszGuid, L"c12a7328-f81f-11d2-ba4b-00a0c93ec93b") == 0)
+	{
+		*pBootable = TRUE;
 		return L"ESP";
+	}
 	else if (_wcsicmp(lpszGuid, L"e3c9e316-0b5c-4db8-817d-f92df00215ae") == 0)
 		return L"MSR";
 	else if (_wcsicmp(lpszGuid, L"de94bba4-06d1-4d40-a16a-bfd50179d6ac") == 0)
@@ -105,8 +109,7 @@ FillPartitionInfo(DISK_VOL_INFO* pInfo, LPCWSTR lpszPath, PHY_DRIVE_INFO* pParen
 	case PARTITION_STYLE_GPT:
 		wcscpy_s(pInfo->PartType, DISK_PROP_STR_LEN, GuidToStr(TRUE, &partInfo.Gpt.PartitionType));
 		wcscpy_s(pInfo->PartId, DISK_PROP_STR_LEN, GuidToStr(TRUE, &partInfo.Gpt.PartitionId));
-		wcscpy_s(pInfo->PartFlag, DISK_PROP_STR_LEN, GetGptFlag(&partInfo.Gpt.PartitionType));
-		pInfo->BootIndicator = (wcscmp(pInfo->PartFlag, L"ESP") == 0) ? TRUE : FALSE;
+		wcscpy_s(pInfo->PartFlag, DISK_PROP_STR_LEN, GetGptFlag(&partInfo.Gpt.PartitionType, &pInfo->BootIndicator));
 		break;
 	}
 }

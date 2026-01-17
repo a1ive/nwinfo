@@ -22,11 +22,15 @@ static LPCSTR GetRealVolumePath(LPCWSTR lpszVolume)
 }
 
 static LPCSTR
-GetGptFlag(GUID* pGuid)
+GetGptFlag(GUID* pGuid, BOOL* pBootable)
 {
 	LPCSTR lpszGuid = NWL_WinGuidToStr(FALSE, pGuid);
+	*pBootable = FALSE;
 	if (_stricmp(lpszGuid, "c12a7328-f81f-11d2-ba4b-00a0c93ec93b") == 0)
+	{
+		*pBootable = TRUE;
 		return "ESP";
+	}
 	else if (_stricmp(lpszGuid, "e3c9e316-0b5c-4db8-817d-f92df00215ae") == 0)
 		return "MSR";
 	else if (_stricmp(lpszGuid, "de94bba4-06d1-4d40-a16a-bfd50179d6ac") == 0)
@@ -52,7 +56,7 @@ GetMbrFlag(LONGLONG llStartingOffset, PHY_DRIVE_INFO* pParent)
 }
 
 static void
-PrintPartitionInfo(PNODE pNode, LPCWSTR lpszPath, PHY_DRIVE_INFO* pParent)
+FillPartitionInfo(DISK_VOL_INFO* pInfo, LPCWSTR lpszPath, PHY_DRIVE_INFO* pParent)
 {
 	BOOL bRet;
 	HANDLE hDevice = INVALID_HANDLE_VALUE;
@@ -67,118 +71,152 @@ PrintPartitionInfo(PNODE pNode, LPCWSTR lpszPath, PHY_DRIVE_INFO* pParent)
 		return;
 	if (partInfo.StartingOffset.QuadPart == 0) // CDROM
 		return;
-	NWL_NodeAttrSetf(pNode, "Starting LBA", NAFLG_FMT_NUMERIC, "%llu", partInfo.StartingOffset.QuadPart >> 9);
-	NWL_NodeAttrSetf(pNode, "Partition Number", NAFLG_FMT_NUMERIC, "%lu", partInfo.PartitionNumber);
+	pInfo->StartLba = partInfo.StartingOffset.QuadPart >> 9;
+	pInfo->PartNum = partInfo.PartitionNumber;
 	switch (partInfo.PartitionStyle)
 	{
 	case PARTITION_STYLE_MBR:
-		NWL_NodeAttrSetf(pNode, "Partition Type", 0, "0x%02X", partInfo.Mbr.PartitionType);
-		NWL_NodeAttrSet(pNode, "Partition ID", NWL_WinGuidToStr(TRUE, &partInfo.Mbr.PartitionId), NAFLG_FMT_GUID);
-		NWL_NodeAttrSetBool(pNode, "Boot Indicator", partInfo.Mbr.BootIndicator, 0);
-		NWL_NodeAttrSet(pNode, "Partition Flag", GetMbrFlag(partInfo.StartingOffset.QuadPart, pParent), 0);
+		snprintf(pInfo->PartType, DISK_PROP_STR_LEN, "0x%02X", partInfo.Mbr.PartitionType);
+		strcpy_s(pInfo->PartId, DISK_PROP_STR_LEN, NWL_WinGuidToStr(TRUE, &partInfo.Mbr.PartitionId));
+		strcpy_s(pInfo->PartFlag, DISK_PROP_STR_LEN, GetMbrFlag(partInfo.StartingOffset.QuadPart, pParent));
+		pInfo->Bootable = partInfo.Mbr.BootIndicator;
 		break;
 	case PARTITION_STYLE_GPT:
-		NWL_NodeAttrSet(pNode, "Partition Type", NWL_WinGuidToStr(TRUE, &partInfo.Gpt.PartitionType), NAFLG_FMT_GUID);
-		NWL_NodeAttrSet(pNode, "Partition ID", NWL_WinGuidToStr(TRUE, &partInfo.Gpt.PartitionId), NAFLG_FMT_GUID);
-		NWL_NodeAttrSet(pNode, "Partition Flag", GetGptFlag(&partInfo.Gpt.PartitionType), 0);
+		strcpy_s(pInfo->PartType, DISK_PROP_STR_LEN, NWL_WinGuidToStr(TRUE, &partInfo.Gpt.PartitionType));
+		strcpy_s(pInfo->PartId, DISK_PROP_STR_LEN, NWL_WinGuidToStr(TRUE, &partInfo.Gpt.PartitionId));
+		strcpy_s(pInfo->PartFlag, DISK_PROP_STR_LEN, GetGptFlag(&partInfo.Gpt.PartitionType, &pInfo->Bootable));
 		break;
 	}
 }
 
-static const char*
-GetVolumeFsUuid(LPCWSTR lpszVolume)
+static void
+PrintPartitionInfo(PNODE pNode, const DISK_VOL_INFO* pInfo)
 {
-	static char cchUuid[17] = "";
+	if (pInfo->StartLba == 0 && pInfo->PartNum == 0 &&
+		pInfo->PartType[0] == '\0' && pInfo->PartId[0] == '\0')
+		return;
+	NWL_NodeAttrSetf(pNode, "Starting LBA", NAFLG_FMT_NUMERIC, "%llu", pInfo->StartLba);
+	NWL_NodeAttrSetf(pNode, "Partition Number", NAFLG_FMT_NUMERIC, "%lu", pInfo->PartNum);
+	NWL_NodeAttrSet(pNode, "Partition Type", pInfo->PartType, NAFLG_FMT_NEED_QUOTE);
+	NWL_NodeAttrSet(pNode, "Partition ID", pInfo->PartId, NAFLG_FMT_GUID);
+	NWL_NodeAttrSet(pNode, "Partition Flag", pInfo->PartFlag, 0);
+	NWL_NodeAttrSetBool(pNode, "Boot Indicator", pInfo->Bootable, 0);
+}
+
+static void
+GetVolumeFsUuid(LPCWSTR lpszVolume, CHAR cchUuid[DISK_UUID_STR_LEN])
+{
+	ZeroMemory(cchUuid, DISK_UUID_STR_LEN);
+
 	union VOLUME_BOOT_RECORD vbrData;
 	FILE* fd = _wfopen(lpszVolume, L"rb");
 
 	if (fd == NULL)
-		return "";
+		return;
 
 	if (fread(&vbrData, sizeof(vbrData), 1, fd) != 1)
 		goto out;
 
 	if (memcmp(vbrData.Exfat.oem_name, "EXFAT", 5) == 0)
 	{
-		snprintf(cchUuid, 17, "%04x-%04x",
+		snprintf(cchUuid, DISK_UUID_STR_LEN, "%04x-%04x",
 			(uint16_t)(vbrData.Exfat.num_serial >> 16),
 			(uint16_t)vbrData.Exfat.num_serial);
 	}
 	else if (memcmp(vbrData.Ntfs.oem_name, "NTFS", 4) == 0)
 	{
-		snprintf(cchUuid, 17, "%016llx", (unsigned long long) vbrData.Ntfs.num_serial);
+		snprintf(cchUuid, DISK_UUID_STR_LEN, "%016llx", (unsigned long long) vbrData.Ntfs.num_serial);
 	}
 	else if (memcmp(vbrData.Fat.version.fat12_or_fat16.fstype, "FAT12", 5) == 0)
 	{
-		snprintf(cchUuid, 17, "%04x-%04x",
+		snprintf(cchUuid, DISK_UUID_STR_LEN, "%04x-%04x",
 			(uint16_t)(vbrData.Fat.version.fat12_or_fat16.num_serial >> 16),
 			(uint16_t)vbrData.Fat.version.fat12_or_fat16.num_serial);
 	}
 	else if (memcmp(vbrData.Fat.version.fat12_or_fat16.fstype, "FAT16", 5) == 0)
 	{
-		snprintf(cchUuid, 17, "%04x-%04x",
+		snprintf(cchUuid, DISK_UUID_STR_LEN, "%04x-%04x",
 			(uint16_t)(vbrData.Fat.version.fat12_or_fat16.num_serial >> 16),
 			(uint16_t)vbrData.Fat.version.fat12_or_fat16.num_serial);
 	}
 	else if (memcmp(vbrData.Fat.version.fat32.fstype, "FAT32", 5) == 0)
 	{
-		snprintf(cchUuid, 17, "%04x-%04x",
+		snprintf(cchUuid, DISK_UUID_STR_LEN, "%04x-%04x",
 			(uint16_t)(vbrData.Fat.version.fat32.num_serial >> 16),
 			(uint16_t)vbrData.Fat.version.fat32.num_serial);
 	}
 
 out:
 	fclose(fd);
-	return cchUuid;
 }
 
 static void
-PrintVolumeInfo(PNODE pNode, LPCWSTR lpszVolume, PHY_DRIVE_INFO* pParent)
+FillVolumeInfo(DISK_VOL_INFO* pInfo, LPCWSTR lpszVolume, PHY_DRIVE_INFO* pParent)
 {
-	WCHAR cchLabel[MAX_PATH];
-	WCHAR cchFs[MAX_PATH];
-	WCHAR cchPath[MAX_PATH];
-	LPWCH lpszVolumePathNames = NULL;
 	DWORD dwSize = 0;
-	ULARGE_INTEGER ulFreeSpace = { 0 };
-	ULARGE_INTEGER ulTotalSpace = { 0 };
 
-	swprintf(cchPath, MAX_PATH, L"%s\\", lpszVolume);
-	NWL_NodeAttrSet(pNode, "Path", GetRealVolumePath(lpszVolume), 0);
-	NWL_NodeAttrSet(pNode, "Volume GUID", NWL_Ucs2ToUtf8(lpszVolume), 0);
+	swprintf(pInfo->VolPath, MAX_PATH, L"%s\\", lpszVolume);
+	strcpy_s(pInfo->VolRealPath, MAX_PATH, GetRealVolumePath(lpszVolume));
+	GetVolumeFsUuid(lpszVolume, pInfo->VolFsUuid);
 
-	if (GetVolumeInformationW(cchPath, cchLabel, MAX_PATH, NULL, NULL, NULL, cchFs, MAX_PATH))
+	if (GetVolumeInformationW(pInfo->VolPath, pInfo->VolLabel, MAX_PATH,
+		NULL, NULL, NULL, pInfo->VolFs, MAX_PATH))
 	{
-		PrintPartitionInfo(pNode, lpszVolume, pParent);
-		NWL_NodeAttrSet(pNode, "Label", NWL_Ucs2ToUtf8(cchLabel), 0);
-		NWL_NodeAttrSet(pNode, "Filesystem", NWL_Ucs2ToUtf8(cchFs), 0);
+		FillPartitionInfo(pInfo, lpszVolume, pParent);
 	}
-	NWL_NodeAttrSet(pNode, "FS UUID", GetVolumeFsUuid(lpszVolume), 0);
-	if (GetDiskFreeSpaceExW(cchPath, NULL, NULL, &ulFreeSpace))
-		NWL_NodeAttrSet(pNode, "Free Space",
-			NWL_GetHumanSize(ulFreeSpace.QuadPart, NWLC->NwUnits, 1024), NAFLG_FMT_HUMAN_SIZE);
-	if (GetDiskFreeSpaceExW(cchPath, NULL, &ulTotalSpace, NULL))
-		NWL_NodeAttrSet(pNode, "Total Space",
-			NWL_GetHumanSize(ulTotalSpace.QuadPart, NWLC->NwUnits, 1024), NAFLG_FMT_HUMAN_SIZE);
-	if (ulTotalSpace.QuadPart != 0)
-		NWL_NodeAttrSetf(pNode, "Usage", 0, "%.2f%%",
-			100.0 - (ulFreeSpace.QuadPart * 100.0) / ulTotalSpace.QuadPart);
-	GetVolumePathNamesForVolumeNameW(cchPath, NULL, 0, &dwSize);
+	GetDiskFreeSpaceExW(pInfo->VolPath, NULL, &pInfo->VolTotalSpace, &pInfo->VolFreeSpace);
+	if (pInfo->VolTotalSpace.QuadPart != 0)
+		pInfo->VolUsage = 100.0 - (pInfo->VolFreeSpace.QuadPart * 100.0) / pInfo->VolTotalSpace.QuadPart;
+	GetVolumePathNamesForVolumeNameW(pInfo->VolPath, NULL, 0, &dwSize);
 	if (GetLastError() == ERROR_MORE_DATA && dwSize)
 	{
-		lpszVolumePathNames = calloc(dwSize, sizeof(WCHAR));
-		if (lpszVolumePathNames)
+		pInfo->VolNames = calloc(dwSize, sizeof(WCHAR));
+		if (pInfo->VolNames)
 		{
-			if (GetVolumePathNamesForVolumeNameW(cchPath, lpszVolumePathNames, dwSize, &dwSize))
+			if (!GetVolumePathNamesForVolumeNameW(pInfo->VolPath, pInfo->VolNames, dwSize, &dwSize))
 			{
-				PNODE mp = NWL_NodeAppendNew(pNode, "Volume Path Names", NFLG_TABLE);
-				for (WCHAR* p = lpszVolumePathNames; p[0] != L'\0'; p += wcslen(p) + 1)
-				{
-					PNODE mnt = NWL_NodeAppendNew(mp, "Mount Point", NFLG_TABLE_ROW);
-					NWL_NodeAttrSet(mnt, wcslen(p) > 3 ? "Path" : "Drive Letter", NWL_Ucs2ToUtf8(p), 0);
-				}
+				free(pInfo->VolNames);
+				pInfo->VolNames = NULL;
 			}
-			free(lpszVolumePathNames);
+		}
+	}
+}
+
+static void
+PrintVolumeInfo(PNODE pNode, const DISK_VOL_INFO* pInfo)
+{
+	WCHAR cchGuid[MAX_PATH];
+
+	if (pInfo->VolRealPath[0])
+		NWL_NodeAttrSet(pNode, "Path", pInfo->VolRealPath, 0);
+	else
+		NWL_NodeAttrSet(pNode, "Path", NWL_Ucs2ToUtf8(pInfo->VolPath), 0);
+	if (pInfo->VolPath[0])
+	{
+		wcsncpy_s(cchGuid, MAX_PATH, pInfo->VolPath, MAX_PATH);
+		size_t len = wcslen(cchGuid);
+		if (len > 0 && cchGuid[len - 1] == L'\\')
+			cchGuid[len - 1] = L'\0';
+		NWL_NodeAttrSet(pNode, "Volume GUID", NWL_Ucs2ToUtf8(cchGuid), 0);
+	}
+
+	PrintPartitionInfo(pNode, pInfo);
+	NWL_NodeAttrSet(pNode, "Label", NWL_Ucs2ToUtf8(pInfo->VolLabel), 0);
+	NWL_NodeAttrSet(pNode, "Filesystem", NWL_Ucs2ToUtf8(pInfo->VolFs), 0);
+	NWL_NodeAttrSet(pNode, "FS UUID", pInfo->VolFsUuid, 0);
+	NWL_NodeAttrSet(pNode, "Free Space",
+		NWL_GetHumanSize(pInfo->VolFreeSpace.QuadPart, NWLC->NwUnits, 1024), NAFLG_FMT_HUMAN_SIZE);
+	NWL_NodeAttrSet(pNode, "Total Space",
+		NWL_GetHumanSize(pInfo->VolTotalSpace.QuadPart, NWLC->NwUnits, 1024), NAFLG_FMT_HUMAN_SIZE);
+	if (pInfo->VolTotalSpace.QuadPart != 0)
+		NWL_NodeAttrSetf(pNode, "Usage", 0, "%.2f%%", pInfo->VolUsage);
+	if (pInfo->VolNames)
+	{
+		PNODE mp = NWL_NodeAppendNew(pNode, "Volume Path Names", NFLG_TABLE);
+		for (WCHAR* p = pInfo->VolNames; p[0] != L'\0'; p += wcslen(p) + 1)
+		{
+			PNODE mnt = NWL_NodeAppendNew(mp, "Mount Point", NFLG_TABLE_ROW);
+			NWL_NodeAttrSet(mnt, wcslen(p) > 3 ? "Path" : "Drive Letter", NWL_Ucs2ToUtf8(p), 0);
 		}
 	}
 }
@@ -258,6 +296,28 @@ fail:
 	return FALSE;
 }
 
+static BOOL
+CheckSsd(HANDLE hDisk, PHY_DRIVE_INFO* pInfo)
+{
+	if (NWLC->NwOsInfo.dwMajorVersion >= 6)
+	{
+		DWORD dwBytes;
+		STORAGE_PROPERTY_QUERY propQuery = { .QueryType = PropertyStandardQuery, .PropertyId = StorageDeviceSeekPenaltyProperty };
+		DEVICE_SEEK_PENALTY_DESCRIPTOR dspd = { 0 };
+		if (hDisk && hDisk != INVALID_HANDLE_VALUE)
+		{
+			if (DeviceIoControl(hDisk, IOCTL_STORAGE_QUERY_PROPERTY, &propQuery, sizeof(propQuery),
+				&dspd, sizeof(dspd), &dwBytes, NULL))
+			{
+				return (dspd.IncursSeekPenalty == FALSE);
+			}
+		}
+	}
+	if (pInfo->BusType == BusTypeNvme)
+		return TRUE;
+	return FALSE;
+}
+
 static VOID
 RemoveTrailingBackslash(WCHAR* lpszPath)
 {
@@ -298,7 +358,7 @@ typedef struct
 	WCHAR  DevicePath[512];
 } MY_DEVIF_DETAIL_DATA;
 
-static DWORD GetDriveInfoList(BOOL bIsCdRom, PHY_DRIVE_INFO** pDriveList)
+DWORD GetDriveInfoList(BOOL bIsCdRom, PHY_DRIVE_INFO** pDriveList)
 {
 	DWORD i;
 	BOOL bRet;
@@ -394,6 +454,8 @@ static DWORD GetDriveInfoList(BOOL bIsCdRom, PHY_DRIVE_INFO** pDriveList)
 		pInfo[i].DeviceType = pDevDesc->DeviceType;
 		pInfo[i].RemovableMedia = pDevDesc->RemovableMedia;
 		pInfo[i].BusType = pDevDesc->BusType;
+		if (!bIsCdRom)
+			pInfo[i].Ssd = CheckSsd(hDrive, &pInfo[i]);
 
 		if (pDevDesc->VendorIdOffset)
 		{
@@ -455,16 +517,41 @@ next_drive:
 			if (dwBytes == pInfo[dwIndex].Index)
 				break;
 		}
-		if (dwIndex >= dwCount || pInfo[dwIndex].VolumeCount >= 32)
+		if (dwIndex >= dwCount)
 			continue;
-		wcscpy_s(pInfo[dwIndex].Volumes[pInfo[dwIndex].VolumeCount], MAX_PATH, cchVolume);
-		pInfo[dwIndex].VolumeCount++;
+		if (pInfo[dwIndex].VolCount % 4 == 0)
+		{
+			DISK_VOL_INFO* volInfo = realloc(pInfo[dwIndex].VolInfo,
+				sizeof(DISK_VOL_INFO) * (pInfo[dwIndex].VolCount + 4));
+			if (!volInfo)
+				continue;
+			pInfo[dwIndex].VolInfo = volInfo;
+		}
+		ZeroMemory(&pInfo[dwIndex].VolInfo[pInfo[dwIndex].VolCount], sizeof(DISK_VOL_INFO));
+		FillVolumeInfo(&pInfo[dwIndex].VolInfo[pInfo[dwIndex].VolCount], cchVolume, &pInfo[dwIndex]);
+		pInfo[dwIndex].VolCount++;
 	}
 
 	if (hSearch != INVALID_HANDLE_VALUE)
 		FindVolumeClose(hSearch);
 
 	return dwCount;
+}
+
+VOID
+DestoryDriveInfoList(PHY_DRIVE_INFO* pInfo, DWORD dwCount)
+{
+	if (pInfo == NULL)
+		return;
+	for (DWORD i = 0; i < dwCount; i++)
+	{
+		for (DWORD j = 0; j < pInfo[i].VolCount; j++)
+		{
+			free(pInfo[i].VolInfo[j].VolNames);
+		}
+		free(pInfo[i].VolInfo);
+	}
+	free(pInfo);
 }
 
 static VOID
@@ -607,31 +694,6 @@ PrintSmartInfo(PNODE node, CDI_SMART* ptr, INT index)
 	}
 }
 
-static VOID
-PrintIsSsd(PNODE node, PHY_DRIVE_INFO* info, DWORD index)
-{
-	if (NWLC->NwOsInfo.dwMajorVersion >= 6)
-	{
-		DWORD dwBytes;
-		STORAGE_PROPERTY_QUERY propQuery = { .QueryType = PropertyStandardQuery, .PropertyId = StorageDeviceSeekPenaltyProperty };
-		DEVICE_SEEK_PENALTY_DESCRIPTOR dspd = { 0 };
-		HANDLE hDisk = NWL_GetDiskHandleById(FALSE, FALSE, index);
-		if (hDisk && hDisk != INVALID_HANDLE_VALUE)
-		{
-			if (DeviceIoControl(hDisk, IOCTL_STORAGE_QUERY_PROPERTY, &propQuery, sizeof(propQuery),
-				&dspd, sizeof(dspd), &dwBytes, NULL))
-			{
-				NWL_NodeAttrSetBool(node, "SSD", (dspd.IncursSeekPenalty == FALSE), 0);
-				CloseHandle(hDisk);
-				return;
-			}
-			CloseHandle(hDisk);
-		}
-	}
-	if (info->BusType == BusTypeNvme)
-		NWL_NodeAttrSetBool(node, "SSD", TRUE, 0);
-}
-
 static int __cdecl
 CompareDiskId(const void* a, const void* b)
 {
@@ -714,26 +776,25 @@ PrintDiskInfo(BOOL cdrom, PNODE node, CDI_SMART* smart)
 			break;
 		}
 		if (!cdrom)
-			PrintIsSsd(nd, &PhyDriveList[i], PhyDriveList[i].Index);
+			NWL_NodeAttrSetBool(nd, "SSD", PhyDriveList[i].Ssd, 0);
 		for (INT j = 0; j < SmartCount; j++)
 		{
 			if (cdi_get_int(smart, j, CDI_INT_DISK_ID) == PhyDriveList[i].Index)
 				PrintSmartInfo(nd, smart, j);
 		}
-		if (PhyDriveList[i].VolumeCount)
+		if (PhyDriveList[i].VolCount)
 		{
 			PNODE nv = NWL_NodeAppendNew(nd, "Volumes", NFLG_TABLE);
-			for (DWORD j = 0; j < PhyDriveList[i].VolumeCount; j++)
+			for (DWORD j = 0; j < PhyDriveList[i].VolCount; j++)
 			{
 				PNODE vol = NWL_NodeAppendNew(nv, "Volume", NFLG_TABLE_ROW);
-				PrintVolumeInfo(vol, PhyDriveList[i].Volumes[j], &PhyDriveList[i]);
+				PrintVolumeInfo(vol, &PhyDriveList[i].VolInfo[j]);
 			}
 		}
 	}
 
 out:
-	if (PhyDriveList)
-		free(PhyDriveList);
+	DestoryDriveInfoList(PhyDriveList, PhyDriveCount);
 	if (NWLC->DiskPath)
 		return;
 	for (INT i = 0; i < SmartCount; i++)

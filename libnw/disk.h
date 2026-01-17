@@ -4,13 +4,40 @@
 #define VC_EXTRALEAN
 #include <windows.h>
 
+#include "nwapi.h"
+
+#define DISK_PROP_STR_LEN 42
+#define DISK_UUID_STR_LEN 17
+
+typedef struct _DISK_VOL_INFO
+{
+	// Volume Info
+	WCHAR VolPath[MAX_PATH];
+	WCHAR VolLabel[MAX_PATH];
+	WCHAR VolFs[MAX_PATH];
+	ULARGE_INTEGER VolFreeSpace;
+	ULARGE_INTEGER VolTotalSpace;
+	double VolUsage;
+	LPWCH VolNames;
+	CHAR VolRealPath[MAX_PATH];
+	CHAR VolFsUuid[DISK_UUID_STR_LEN];
+	// Partition Info
+	UINT64 StartLba;
+	DWORD PartNum;
+	CHAR PartType[DISK_PROP_STR_LEN];
+	CHAR PartId[DISK_PROP_STR_LEN];
+	CHAR PartFlag[DISK_PROP_STR_LEN];
+	BOOL Bootable;
+}DISK_VOL_INFO;
+
 typedef struct _PHY_DRIVE_INFO
 {
 	DWORD Index;
-	DWORD PartMap; // 0:MBR 1:GPT 2:RAW
+	PARTITION_STYLE PartMap; // 0:MBR 1:GPT 2:RAW
 	UINT64 SizeInBytes;
 	BYTE DeviceType;
 	BOOL RemovableMedia;
+	BOOL Ssd;
 	WCHAR HwID[MAX_PATH];
 	WCHAR HwName[MAX_PATH];
 	CHAR VendorId[MAX_PATH];
@@ -24,6 +51,9 @@ typedef struct _PHY_DRIVE_INFO
 	// GPT
 	UCHAR GptGuid[16];
 
-	DWORD VolumeCount;
-	WCHAR Volumes[32][MAX_PATH];
+	DWORD VolCount;
+	DISK_VOL_INFO* VolInfo;
 }PHY_DRIVE_INFO;
+
+LIBNW_API DWORD GetDriveInfoList(BOOL bIsCdRom, PHY_DRIVE_INFO** pDriveList);
+LIBNW_API VOID DestoryDriveInfoList(PHY_DRIVE_INFO* pInfo, DWORD dwCount);
