@@ -885,6 +885,7 @@ ry_err_t ryzen_smu_get_core_temperature(ry_handle_t* handle, uint32_t core, floa
 		base_offset = 0x360;
 		break;
 	case 0x5D0008:
+	case 0x5D0009:
 		base_offset = 0xA38;
 		break;
 	case 0x64020C:
@@ -923,6 +924,7 @@ ry_err_t ryzen_smu_get_apu_temperature(ry_handle_t* handle, float* data)
 	case 0x4C0008:
 	case 0x4C0009:
 	case 0x5D0008:
+	case 0x5D0009:
 	case 0x64020c:
 		offset = 0x5C;
 		break;
