@@ -50,11 +50,8 @@ cdi_init_smart(CDI_SMART * ptr, UINT64 flags)
 {
 	BOOL change_disk = TRUE;
 
-	ptr->FlagNoWakeUp = check_flag(flags, CDI_FLAG_NO_WAKEUP);
 	ptr->SetAtaPassThroughSmart(check_flag(flags, CDI_FLAG_ATA_PASS_THROUGH));
 
-	ptr->FlagNvidiaController = check_flag(flags, CDI_FLAG_ENABLE_NVIDIA);
-	ptr->FlagMarvellController = check_flag(flags, CDI_FLAG_ENABLE_MARVELL);
 	ptr->FlagUsbSat = check_flag(flags, CDI_FLAG_ENABLE_USB_SAT);
 	ptr->FlagUsbSunplus = check_flag(flags, CDI_FLAG_ENABLE_USB_SUNPLUS);
 	ptr->FlagUsbIodata = check_flag(flags, CDI_FLAG_ENABLE_USB_IODATA);

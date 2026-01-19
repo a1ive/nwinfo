@@ -173,10 +173,6 @@ gnwinfo_draw_settings_window(struct nk_context* ctx, float width, float height)
 	nk_spacer(ctx);
 	nk_checkbox_flags_label(ctx, N_(N__ATA_PASS_THROUGH), &g_ctx.smart_flag, CDI_FLAG_ATA_PASS_THROUGH);
 	nk_spacer(ctx);
-	nk_checkbox_flags_label(ctx, N_(N__ENABLE_NVIDIA_CTRL), &g_ctx.smart_flag, CDI_FLAG_ENABLE_NVIDIA);
-	nk_spacer(ctx);
-	nk_checkbox_flags_label(ctx, N_(N__ENABLE_MARVELL_CTRL), &g_ctx.smart_flag, CDI_FLAG_ENABLE_MARVELL);
-	nk_spacer(ctx);
 	nk_checkbox_flags_label(ctx, N_(N__ENABLE_USB_SAT), &g_ctx.smart_flag, CDI_FLAG_ENABLE_USB_SAT);
 	nk_spacer(ctx);
 	nk_checkbox_flags_label(ctx, N_(N__ENABLE_USB_IO_DATA), &g_ctx.smart_flag, CDI_FLAG_ENABLE_USB_IODATA);

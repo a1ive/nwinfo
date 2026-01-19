@@ -116,10 +116,12 @@ Exports active physical network interfaces with IPv4 addresses to `report.html` 
 - --smart=`FLAG,...`  
   Specify S.M.A.R.T. features.  
   Features enabled by default:  
-  `WMI`, `ATA`, `NVIDIA`, `MARVELL`, `SAT`, `SUNPLUS`, `IODATA`, `LOGITEC`, `PROLIFIC`, `USBJMICRON`,
-  `CYPRESS`, `MEMORY`, `JMICRON`, `ASMEDIA`, `REALTEK`, `MEGARAID`, `VROC`, `ASM1352R` and `HIDERAID`.  
+  `WMI`, `ADATA`, `HIDENOSMART`, `ATA`, `SAT`, `SUNPLUS`, `IODATA`, `LOGITEC`,  
+  `PROLIFIC`, `USBJMICRON`, `CYPRESS`, `JMICRON`, `ASMEDIA`, `REALTEK`,  
+  `MEGARAID`, `VROC`, `HIDERAID` and `CSMIAUTO`.  
   Use `DEFAULT` to specify the above features.  
-  Other features are `ADVANCED`, `HD204UI`, `ADATA`, `NOWAKEUP` and `RTK9220DP`.  
+  Other features are `ADVANCED`, `HD204UI`, `MEMORY`, `RTK9220DP`,  
+  `ASM1352R`, `AMDRC2`, `NOCSMI` and `CSMIRAID`.  
 - --display[=`FILE`]  
   Print EDID info.  
   `FILE` specifies the file name of the SPD dump.  

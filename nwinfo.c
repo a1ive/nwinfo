@@ -131,15 +131,15 @@ static void nwinfo_help(void)
 		"      SAS          Include SAS devices.\n"
 		"      USB          Include USB devices.\n"
 		"  --smart=FLAG,... Specify S.M.A.R.T. features.\n"
-		"                   Features enabled by default: 'WMI', 'ATA',\n"
-		"                   'NVIDIA', 'MARVELL', 'SAT', 'SUNPLUS',\n"
+		"                   Features enabled by default: 'WMI', 'ADATA',\n"
+		"                   'HIDENOSMART', 'ATA', 'SAT', 'SUNPLUS',\n"
 		"                   'IODATA', 'LOGITEC', 'PROLIFIC', 'USBJMICRON',\n"
-		"                   'CYPRESS', 'MEMORY', 'JMICRON', 'ASMEDIA',\n"
-		"                   'REALTEK', 'MEGARAID', 'VROC', 'ASM1352R',\n"
+		"                   'CYPRESS', 'JMICRON', 'ASMEDIA',\n"
+		"                   'REALTEK', 'MEGARAID', 'VROC',\n"
 		"                   'HIDERAID' and 'CSMIAUTO'.\n"
 		"                   Use 'DEFAULT' to specify the above features.\n"
 		"                   Other features are 'ADVANCED', 'HD204UI',\n"
-		"                   'ADATA', 'NOWAKEUP', 'RTK9220DP',\n"
+		"                   'MEMORY', 'RTK9220DP', 'ASM1352R', 'AMDRC2',\n"
 		"                   'NOCSMI' and 'CSMIRAID'.\n"
 		"  --display[=FILE] Print EDID info.\n"
 		"    FILE           Specify the file name of the EDID dump.\n"
@@ -345,12 +345,10 @@ int main(int argc, char* argv[])
 			{
 				{"WMI", CDI_FLAG_USE_WMI},
 				{"ADVANCED", CDI_FLAG_ADVANCED_SEARCH},
+				{"HIDENOSMART", CDI_FLAG_HIDE_NO_SMART},
 				{"HD204UI", CDI_FLAG_WORKAROUND_HD204UI},
 				{"ADATA", CDI_FLAG_WORKAROUND_ADATA},
-				{"NOWAKEUP", CDI_FLAG_NO_WAKEUP},
 				{"ATA", CDI_FLAG_ATA_PASS_THROUGH},
-				{"NVIDIA", CDI_FLAG_ENABLE_NVIDIA	},
-				{"MARVELL", CDI_FLAG_ENABLE_MARVELL},
 				{"SAT", CDI_FLAG_ENABLE_USB_SAT},
 				{"SUNPLUS", CDI_FLAG_ENABLE_USB_SUNPLUS},
 				{"IODATA", CDI_FLAG_ENABLE_USB_IODATA},
@@ -366,6 +364,7 @@ int main(int argc, char* argv[])
 				{"VROC", CDI_FLAG_ENABLE_INTEL_VROC},
 				{"ASM1352R", CDI_FLAG_ENABLE_ASM1352R},
 				{"RTK9220DP", CDI_FLAG_ENABLE_REALTEK_9220DP},
+				{"AMDRC2", CDI_FLAG_ENABLE_AMD_RC2},
 				{"HIDERAID", CDI_FLAG_HIDE_RAID_VOLUME},
 				{"NOCSMI", CDI_FLAG_CSMI_DISABLE},
 				{"CSMIAUTO", CDI_FLAG_CSMI_AUTO},

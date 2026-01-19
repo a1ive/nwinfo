@@ -2,6 +2,7 @@
 
 #include "libcdi.h"
 #include <pathcch.h>
+#include "../libnw/libnw.h"
 
 static struct
 {
@@ -84,13 +85,16 @@ VOID WINAPI cdi_init_smart(CDI_SMART* ptr, UINT64 flags)
 {
 	if (m_cdi.cdi_init_smart == NULL)
 		return;
+	NWL_Debug("SMART", "[%llu] Init %llX", GetTickCount64(), NWLC->NwSmartFlags);
 	m_cdi.cdi_init_smart(ptr, flags);
+	NWL_Debug("SMART", "[%llu] Init OK", GetTickCount64());
 }
 
 DWORD WINAPI cdi_update_smart(CDI_SMART* ptr, INT index)
 {
 	if (m_cdi.cdi_update_smart == NULL)
 		return 0;
+	NWL_Debug("SMART", "[%llu] Update %d", GetTickCount64(), index);
 	return m_cdi.cdi_update_smart(ptr, index);
 }
 
