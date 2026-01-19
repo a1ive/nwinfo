@@ -5,6 +5,7 @@
   <div align="center">
     <img src="https://img.shields.io/github/license/a1ive/nwinfo?label=LICENSE&color=ad1453">
     <img src="https://img.shields.io/github/downloads/a1ive/nwinfo/total?label=DOWNLOADS&color=blue">
+    <a href="https://deepwiki.com/a1ive/nwinfo"><img src="https://deepwiki.com/badge.svg" alt="Ask DeepWiki"></a>
   </div>
 </div>
 <br />

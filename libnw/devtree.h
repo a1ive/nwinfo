@@ -16,11 +16,11 @@ typedef struct _DEVTREE_ENUM_CTX
 	size_t filterLen;
 	const char* hub;
 	void* data;
-	void (*GetDeviceInfo)(PNODE node, void* data, DEVINST devInst, LPCSTR hwIds);
+	void (*GetDeviceInfo)(PNODE node, void* data, DEVINST devInst, DEVINST parentDevInst, LPCSTR hwIds);
 } DEVTREE_ENUM_CTX;
 
 BOOL NWL_SetDevPropString(CHAR* strBuf, size_t strSize, DEVINST devHandle, const DEVPROPKEY* devProperty);
 CONFIGRET NWL_CMGetDevIfProp(LPCWSTR pszDevIf, CONST DEVPROPKEY* propKey, DEVPROPTYPE* propType, PBYTE propBuf, PULONG propBufSize, ULONG ulFlags);
 
 void
-NWL_EnumerateDevices(PNODE parent, DEVTREE_ENUM_CTX* ctx, DEVINST devInst);
+NWL_EnumerateDevices(PNODE parent, DEVTREE_ENUM_CTX* ctx, DEVINST devInst, DEVINST parentDevInst);

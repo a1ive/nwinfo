@@ -176,9 +176,10 @@ fail:
 }
 
 static void
-GetDeviceInfoDefault(PNODE node, void* data, DEVINST devInst, LPCSTR hwIds)
+GetDeviceInfoDefault(PNODE node, void* data, DEVINST devInst, DEVINST parentDevInst, LPCSTR hwIds)
 {
 	(void)data;
+	(void)parentDevInst;
 	NWL_NodeAttrSet(node, "HWID", hwIds, 0);
 
 	CHAR buf[DEVTREE_MAX_STR_LEN];
@@ -204,6 +205,8 @@ GetDeviceInfoDefault(PNODE node, void* data, DEVINST devInst, LPCSTR hwIds)
 	if (NWL_SetDevPropString(buf, DEVTREE_MAX_STR_LEN, devInst, &DEVPKEY_Device_LocationInfo))
 		NWL_NodeAttrSet(node, "Location", buf, 0);
 
+	if (NWL_SetDevPropString(buf, DEVTREE_MAX_STR_LEN, devInst, &DEVPKEY_Device_LocationPaths))
+		NWL_NodeAttrSet(node, "Location Paths", buf, 0);
 }
 
 static PNODE AppendDevices(PNODE parent, const char* hub)
@@ -217,7 +220,7 @@ static PNODE AppendDevices(PNODE parent, const char* hub)
 }
 
 void
-NWL_EnumerateDevices(PNODE parent, DEVTREE_ENUM_CTX* ctx, DEVINST devInst)
+NWL_EnumerateDevices(PNODE parent, DEVTREE_ENUM_CTX* ctx, DEVINST devInst, DEVINST parentDevInst)
 {
 	PNODE node = parent;
 	DEVINST childInst;
@@ -228,16 +231,16 @@ NWL_EnumerateDevices(PNODE parent, DEVTREE_ENUM_CTX* ctx, DEVINST devInst)
 		if (ctx->filter[0] == L'\0' || _strnicmp(hwIds, ctx->filter, ctx->filterLen) == 0)
 		{
 			node = NWL_NodeAppendNew(AppendDevices(parent, ctx->hub), "Device", NFLG_TABLE_ROW);
-			ctx->GetDeviceInfo(node, ctx->data, devInst, hwIds);
+			ctx->GetDeviceInfo(node, ctx->data, devInst, parentDevInst, hwIds);
 		}
 	}
 
 	if (CM_Get_Child(&childInst, devInst, 0) == CR_SUCCESS)
 	{
-		NWL_EnumerateDevices(node, ctx, childInst);
+		NWL_EnumerateDevices(node, ctx, childInst, devInst);
 		DEVINST siblingInst = childInst;
 		while (CM_Get_Sibling(&siblingInst, siblingInst, 0) == CR_SUCCESS)
-			NWL_EnumerateDevices(node, ctx, siblingInst);
+			NWL_EnumerateDevices(node, ctx, siblingInst, devInst);
 	}
 }
 
@@ -269,7 +272,7 @@ PNODE NW_DevTree(BOOL bAppend)
 		goto fail;
 	}
 
-	NWL_EnumerateDevices(node, &ctx, devRoot);
+	NWL_EnumerateDevices(node, &ctx, devRoot, 0);
 
 fail:
 	return node;
