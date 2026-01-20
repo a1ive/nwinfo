@@ -293,3 +293,12 @@ NVAPI_INTERFACE NvAPI_GPU_ClientPowerTopologyGetStatus(NvPhysicalGpuHandle hPhys
 		return NVAPI_NO_IMPLEMENTATION;
 	return pfn(hPhysicalGPU, pPowerTopology);
 }
+
+NVAPI_INTERFACE NvAPI_GPU_ClientVoltRailsGetStatus(NvPhysicalGpuHandle hPhysicalGPU, NV_GPU_CLIENT_VOLT_RAILS_STATUS_V1* pStatus)
+{
+	NVAPI_INTERFACE(__cdecl * pfn)(NvPhysicalGpuHandle, NV_GPU_CLIENT_VOLT_RAILS_STATUS_V1*) = NULL;
+	*(NVAPI_PROC*)&pfn = gNvDll.NvApiQuery(0x465f9bcf);
+	if (pfn == NULL)
+		return NVAPI_NO_IMPLEMENTATION;
+	return pfn(hPhysicalGPU, pStatus);
+}

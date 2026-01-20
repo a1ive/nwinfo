@@ -1532,4 +1532,19 @@ typedef struct
 // Removed
 NVAPI_INTERFACE NvAPI_GPU_ClientPowerTopologyGetStatus(NvPhysicalGpuHandle hPhysicalGPU, NV_POWER_TOPOLOGY* pPowerTopology);
 
+typedef struct NV_GPU_CLIENT_VOLT_RAILS_STATUS_V1
+{
+	NvU32 version;
+	NvU32 Reserved04[9];
+	NvU32 CoreMicrovolts;
+	NvU32 CoreMicrovoltsHigh;
+	NvU32 Reserved30[7];
+} NV_GPU_CLIENT_VOLT_RAILS_STATUS_V1;
+
+#define NV_GPU_CLIENT_VOLT_RAILS_STATUS_VER1  MAKE_NVAPI_VERSION(NV_GPU_CLIENT_VOLT_RAILS_STATUS_V1,1)
+
+#define NV_GPU_CLIENT_VOLT_RAILS_STATUS_VER   NV_GPU_CLIENT_VOLT_RAILS_STATUS_VER1
+
+NVAPI_INTERFACE NvAPI_GPU_ClientVoltRailsGetStatus(NvPhysicalGpuHandle hPhysicalGPU, NV_GPU_CLIENT_VOLT_RAILS_STATUS_V1* pStatus);
+
 #pragma pack(pop)

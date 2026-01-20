@@ -29,6 +29,7 @@ struct NV_GPU_DATA
 	NV_USAGES Usages;
 	NV_POWER_TOPOLOGY Power;
 	NV_GPU_CLOCK_FREQUENCIES Clock;
+	NV_GPU_CLIENT_VOLT_RAILS_STATUS_V1 Volt1;
 
 	NV_GPU_PERF_PSTATE_ID CurPstate;
 	NV_GPU_PERF_PSTATES20_INFO Pstates20;
@@ -98,6 +99,7 @@ static void* nv_gpu_init(PNWLIB_GPU_INFO info)
 		ctx->List[i].Power.version = NV_POWER_TOPOLOGY_VER;
 		// ctx->List[i].Clock -> 1, 2, 3
 		ctx->List[i].Clock.ClockType = NV_GPU_CLOCK_FREQUENCIES_CURRENT_FREQ;
+		ctx->List[i].Volt1.version = NV_GPU_CLIENT_VOLT_RAILS_STATUS_VER;
 		// ctx->List[i].Thermal -> 1, 2
 		ctx->List[i].ThermalSensors.Version = NV_THERMAL_SENSORS_VER;
 		ctx->List[i].FanStatus.Version = NV_FAN_COOLER_STATUS_VER;
@@ -172,6 +174,8 @@ calc_pstatel_uv_voltage(NV_GPU_PERF_PSTATES_INFO* pstatesl, NV_GPU_PERF_PSTATE_I
 static NvS32
 get_uv_voltage(NvPhysicalGpuHandle gpu, struct NV_GPU_DATA* data)
 {
+	if (NvAPI_GPU_ClientVoltRailsGetStatus(gpu, &data->Volt1) == NVAPI_OK)
+		return (NvS32)((((NvU64)data->Volt1.CoreMicrovoltsHigh) << 32) | (NvU64)data->Volt1.CoreMicrovolts);
 	if (NvAPI_GPU_GetCurrentPstate(gpu, &data->CurPstate) != NVAPI_OK)
 		return 0;
 	data->Pstates20.version = NV_GPU_PERF_PSTATES20_INFO_VER;
