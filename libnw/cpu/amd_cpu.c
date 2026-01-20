@@ -612,6 +612,20 @@ fail:
 	WR0_ReleasePciBus();
 	return ret;
 #else
+	float value = 0.0f;
+	WR0_WaitPciBus(500);
+	if (info->ry == NULL)
+		info->ry = ryzen_smu_init(info->handle, info->id);
+	if (info->ry == NULL)
+		goto fail;
+	if (ryzen_smu_update_pm_table(info->ry) != RYZEN_SMU_OK)
+		goto fail;
+	if (ryzen_smu_get_stapm_limit(info->ry, &value) != RYZEN_SMU_OK)
+		goto fail;
+	WR0_ReleasePciBus();
+	return (int)value;
+fail:
+	WR0_ReleasePciBus();
 	return 0;
 #endif
 }

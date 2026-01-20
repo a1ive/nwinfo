@@ -884,12 +884,19 @@ ry_err_t ryzen_smu_get_core_temperature(ry_handle_t* handle, uint32_t core, floa
 	case 0x400005:
 		base_offset = 0x360;
 		break;
+	case 0x4C0006:
+		base_offset = 0x840;
+		max_cores = 8;
+		break;
 	case 0x5D0008:
 	case 0x5D0009:
 		base_offset = 0xA38;
 		break;
 	case 0x64020C:
 		base_offset = 0xC10;
+		break;
+	case 0x620205:
+		base_offset = 0x534;
 		break;
 	}
 
@@ -910,23 +917,36 @@ ry_err_t ryzen_smu_get_apu_temperature(ry_handle_t* handle, float* data)
 	case 0x370002:
 	case 0x370003:
 	case 0x370004:
+		offset = 0x5AC;
+		break;
 	case 0x370005:
-	case 0x3F0000:
+		offset = 0x5C8;
+		break;
 	case 0x400001:
+		offset = 0x604;
+		break;
 	case 0x400002:
+		offset = 0x61C;
+		break;
 	case 0x400003:
+		offset = 0x63C;
+		break;
 	case 0x400004:
 	case 0x400005:
-	case 0x450004:
-	case 0x450005:
+		offset = 0x640;
+		break;
+	case 0x3F0000:
+		offset = 0x380;
+		break;
 	case 0x4C0006:
-	case 0x4C0007:
-	case 0x4C0008:
-	case 0x4C0009:
+		offset = 0x358;
+		break;
 	case 0x5D0008:
 	case 0x5D0009:
-	case 0x64020c:
-		offset = 0x5C;
+		offset = 0x4C8;
+		break;
+	case 0x64020C:
+		offset = 0x550;
 		break;
 	}
 
