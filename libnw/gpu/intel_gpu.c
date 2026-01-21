@@ -8,7 +8,8 @@
 #include <windows.h>
 #include "igcl.h"
 #include "gpu.h"
-#include "../libnw.h"
+#include "libnw.h"
+#include "pci_ids.h"
 
 #define IGCL "IGCL"
 
@@ -82,7 +83,7 @@ static void* igcl_gpu_init(PNWLIB_GPU_INFO info)
 			continue;
 
 		if (gpu->Props.device_type != CTL_DEVICE_TYPE_GRAPHICS
-			|| gpu->Props.pci_vendor_id != 0x8086)
+			|| gpu->Props.pci_vendor_id != PCI_VID_INTEL)
 		{
 			NWL_Debug(IGCL, "Skip [%u] TYPE %u VID %04X", i, gpu->Props.device_type, gpu->Props.pci_vendor_id);
 			continue;

@@ -7,7 +7,7 @@
 #include "libcpuid.h"
 #include "ioctl.h"
 #include "ryzen_smu.h"
-#include "../nwapi.h"
+#include "nwapi.h"
 
 typedef enum
 {

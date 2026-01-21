@@ -4,51 +4,26 @@
 #include "utils.h"
 #include "efivars.h"
 
-#include <libcpuid.h>
+#include "libcpuid.h"
 #include "../libcdi/libcdi.h"
 #include "smbus/smbus.h"
 #include "gpu/gpu.h"
 #include "cpu/rdmsr.h"
 #include "sensor/sensors.h"
+#include "pci_ids.h"
+#include "pnp_ids.h"
+#include "usb_ids.h"
+#include "spd_ids.h"
 
 PNWLIB_CONTEXT NWLC = NULL;
 
 static const char* NWL_HS_BYTE[] =
 { "B", "KB", "MB", "GB", "TB", "PB", "EB", "ZB" };
 
-static const char NWL_DEFAULT_PCI_IDS[] =
-	"1002  AMD/ATI\n"
-	"101e  AMI\n"
-	"1022  AMD\n"
-	"106b  Apple\n"
-	"108e  Oracle/SUN\n"
-	"10b5  PLX\n"
-	"10de  NVIDIA\n"
-	"10ec  Realtek\n"
-	"1414  Microsoft\n"
-	"144d  Samsung\n"
-	"15ad  VMware\n"
-	"1ae0  Google\n"
-	"1af4  Red Hat\n"
-	"1b21  ASMedia\n"
-	"1b36  Red Hat\n"
-	"8086  Intel\n"
-	"\n"
-	"C 00  Unclassified device\n"
-	"C 01  Mass storage controller\n"
-	"C 02  Network controller\n"
-	"C 03  Display controller\n"
-	"C 04  Multimedia controller\n"
-	"C 05  Memory controller\n"
-	"C 06  Bridge\n"
-	"C 07  Communication controller\n"
-	"C 08  Generic system peripheral\n"
-	"C 09  Input device controller\n"
-	"C 0a  Docking station\n"
-	"C 0b  Processor\n"
-	"C 0c  Serial bus controller\n"
-	"C 0d  Wireless controller\n"
-	"\n";
+static char NWL_DEFAULT_PCI_IDS[] = PCI_IDS_DEFAULT;
+static char NWL_DEFAULT_PNP_IDS[] = PNP_IDS_DEFAULT;
+static char NWL_DEFAULT_USB_IDS[] = USB_IDS_DEFAULT;
+static char NWL_DEFAULT_SPD_IDS[] = SPD_IDS_DEFAULT;
 
 noreturn VOID NWL_ErrExit(INT nExitCode, LPCSTR lpszText)
 {
@@ -124,16 +99,30 @@ VOID NW_Init(PNWLIB_CONTEXT pContext)
 	cpuid_set_warn_function(NWL_Debug);
 	NWLC->NwSmartInit = FALSE;
 	NWLC->NwUnits = NWL_HS_BYTE;
-	NWLC->NwPciIds.Ids = NWL_LoadIdsToMemory(L"pci.ids", &NWLC->NwPciIds.Size);
-	if (NWLC->NwPciIds.Ids == NULL)
+	if (!NWL_LoadIdsToMemory(L"pci.ids", &NWLC->NwPciIds))
 	{
-		NWLC->NwPciIds.Ids = _strdup(NWL_DEFAULT_PCI_IDS);
-		if (NWLC->NwPciIds.Ids)
-			NWLC->NwPciIds.Size = ARRAYSIZE(NWL_DEFAULT_PCI_IDS);
+		NWLC->NwPciIds.Ids = NWL_DEFAULT_PCI_IDS;
+		NWLC->NwPciIds.Size = ARRAYSIZE(NWL_DEFAULT_PCI_IDS);
+		NWLC->NwPciIds.Alloc = FALSE;
 	}
-	NWLC->NwUsbIds.Ids = NWL_LoadIdsToMemory(L"usb.ids", &NWLC->NwUsbIds.Size);
-	NWLC->NwPnpIds.Ids = NWL_LoadIdsToMemory(L"pnp.ids", &NWLC->NwPnpIds.Size);
-	NWLC->NwJep106.Ids = NWL_LoadIdsToMemory(L"jep106.ids", &NWLC->NwJep106.Size);
+	if (!NWL_LoadIdsToMemory(L"usb.ids", &NWLC->NwUsbIds))
+	{
+		NWLC->NwUsbIds.Ids = NWL_DEFAULT_USB_IDS;
+		NWLC->NwUsbIds.Size = ARRAYSIZE(NWL_DEFAULT_USB_IDS);
+		NWLC->NwUsbIds.Alloc = FALSE;
+	}
+	if (!NWL_LoadIdsToMemory(L"pnp.ids", &NWLC->NwPnpIds))
+	{
+		NWLC->NwPnpIds.Ids = NWL_DEFAULT_PNP_IDS;
+		NWLC->NwPnpIds.Size = ARRAYSIZE(NWL_DEFAULT_PNP_IDS);
+		NWLC->NwPnpIds.Alloc = FALSE;
+	}
+	if (!NWL_LoadIdsToMemory(L"jep106.ids", &NWLC->NwJep106))
+	{
+		NWLC->NwJep106.Ids = NWL_DEFAULT_SPD_IDS;
+		NWLC->NwJep106.Size = ARRAYSIZE(NWL_DEFAULT_SPD_IDS);
+		NWLC->NwJep106.Alloc = FALSE;
+	}
 }
 
 VOID NW_Print(LPCSTR lpFileName)
@@ -217,10 +206,10 @@ VOID NW_Fini(VOID)
 	if (NWLC->NwFile && NWLC->NwFile != stdout)
 		fclose(NWLC->NwFile);
 	free(NWLC->ErrLog);
-	free(NWLC->NwPciIds.Ids);
-	free(NWLC->NwUsbIds.Ids);
-	free(NWLC->NwPnpIds.Ids);
-	free(NWLC->NwJep106.Ids);
+	NWL_UnloadIds(&NWLC->NwPciIds);
+	NWL_UnloadIds(&NWLC->NwUsbIds);
+	NWL_UnloadIds(&NWLC->NwPnpIds);
+	NWL_UnloadIds(&NWLC->NwJep106);
 	NWL_Debug("NW", "Exit");
 	NWL_Debug = FakeDebugPrint;
 	ZeroMemory(NWLC, sizeof(NWLIB_CONTEXT));

@@ -6,7 +6,7 @@
 #include <shlobj.h>
 #include "ioctl.h"
 #include "ioctl_priv.h"
-#include "../libnw/libnw.h"
+#include "libnw.h"
 
 BOOL
 WR0_CheckPawnIO(void)

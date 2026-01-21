@@ -33,6 +33,7 @@ typedef struct _NWLIB_IDS
 {
 	CHAR* Ids;
 	DWORD Size;
+	BOOL Alloc;
 } NWLIB_IDS, * PNWLIB_IDS;
 
 typedef struct _NWLIB_CONTEXT

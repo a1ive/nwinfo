@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: Unlicense
 #include "ioctl.h"
 #include "ioctl_priv.h"
-#include "../libnw/libnw.h"
-#include "../libnw/utils.h"
+#include "libnw.h"
+#include "utils.h"
 #include <pathcch.h>
 #include <shlobj.h>
 

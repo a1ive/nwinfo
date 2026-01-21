@@ -8,8 +8,8 @@
 #include <d3dkmthk.h>
 #include <dxgi.h>
 #include "gpu.h"
-#include "../utils.h"
-#include "../libnw.h"
+#include "utils.h"
+#include "libnw.h"
 
 #pragma comment(lib, "dxguid.lib")
 

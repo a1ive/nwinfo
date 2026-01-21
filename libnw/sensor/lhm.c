@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: Unlicense
 
-#include "../libnw.h"
-#include "../utils.h"
+#include "libnw.h"
+#include "utils.h"
 #include "sensors.h"
-#include "../../liblhm/lhm.h"
+#include "../liblhm/lhm.h"
 #include <pathcch.h>
 
 static struct

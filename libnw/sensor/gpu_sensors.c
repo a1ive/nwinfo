@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: Unlicense
 
-#include "../libnw.h"
-#include "../utils.h"
+#include "libnw.h"
+#include "utils.h"
 #include "sensors.h"
-#include "../gpu/gpu.h"
+#include "gpu/gpu.h"
 
 static bool gpu_init(void)
 {

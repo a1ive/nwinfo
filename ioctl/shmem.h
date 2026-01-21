@@ -4,7 +4,7 @@
 #define VC_EXTRALEAN
 #include <windows.h>
 
-#include "../libnw/nwapi.h"
+#include "nwapi.h"
 
 struct wr0_shmem_t
 {

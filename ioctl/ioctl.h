@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 #include <windows.h>
-#include "../libnw/nwapi.h"
+#include "nwapi.h"
 
 enum wr0_driver_type
 {

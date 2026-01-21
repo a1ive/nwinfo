@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: Unlicense
 
-#include "../libnw.h"
-#include "../utils.h"
+#include "libnw.h"
+#include "utils.h"
 #include "sensors.h"
 #include "libcpuid.h"
-#include "../cpu/rdmsr.h"
+#include "cpu/rdmsr.h"
 
 static struct
 {

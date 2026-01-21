@@ -8,7 +8,8 @@
 #include <windows.h>
 #include "gpu.h"
 #include "adl.h"
-#include "../libnw.h"
+#include "libnw.h"
+#include "pci_ids.h"
 
 #define ATIADL "ADL"
 
@@ -268,7 +269,7 @@ static void* adl_gpu_init(PNWLIB_GPU_INFO info)
 			adapter->iVendorID = (int)strtol(id_start, NULL, 16);
 			NWL_Debug(ATIADL, "Correct VID %04X", adapter->iVendorID);
 		}
-		if (adapter->iVendorID != 0x1002)
+		if (adapter->iVendorID != PCI_VID_ATI)
 			continue;
 
 		// Remove duplicated devices

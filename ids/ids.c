@@ -7,8 +7,10 @@
 #include <pathcch.h>
 #include "libnw.h"
 #include "utils.h"
-#include <libcpuid.h>
+#include "libcpuid.h"
 #include "ioctl.h"
+
+#pragma comment(lib, "pathcch.lib")
 
 static CHAR*
 IdsGetline(PNWLIB_IDS Ids, DWORD* Offset)
@@ -337,7 +339,7 @@ NWL_GetPnpManufacturer(PNODE nd, struct _NWLIB_IDS* Ids, CONST CHAR* Code)
 	while (Line)
 	{
 		size_t Len = strlen(Line);
-		if (Len >= 4 && isalpha(Line[0]) && isalpha(Line[1]) && isalpha(Line[2]) && isspace(Line[3])
+		if (Len >= 4 && isprint(Line[0]) && isprint(Line[1]) && isprint(Line[2]) && isspace(Line[3])
 			&& _strnicmp(Code, Line, 3) == 0)
 		{
 			NWL_NodeAttrSet(nd, "Manufacturer", Line + 4, 0);
@@ -411,45 +413,58 @@ GetIdsHandle(LPCWSTR lpFileName)
 	return Fp;
 }
 
-CHAR* NWL_LoadIdsToMemory(LPCWSTR lpFileName, LPDWORD lpSize)
+BOOL NWL_LoadIdsToMemory(LPCWSTR lpFileName, struct _NWLIB_IDS* lpIds)
 {
-	HANDLE Fp = INVALID_HANDLE_VALUE;
-	CHAR* Ids = NULL;
+	HANDLE hFile = INVALID_HANDLE_VALUE;
+	CHAR* szIds = NULL;
 	DWORD dwSize = 0;
 	BOOL bRet = TRUE;
-	Fp = GetIdsHandle(lpFileName);
-	if (Fp == INVALID_HANDLE_VALUE)
+	lpIds->Ids = NULL;
+	lpIds->Size = 0;
+	hFile = GetIdsHandle(lpFileName);
+	if (hFile == INVALID_HANDLE_VALUE)
 		goto fail;
-	dwSize = GetFileSize(Fp, NULL);
+	dwSize = GetFileSize(hFile, NULL);
 	if (dwSize == INVALID_FILE_SIZE || dwSize == 0)
 	{
 		snprintf(NWLC->NwBuf, NWINFO_BUFSZ, "Bad %s file", NWL_Ucs2ToUtf8(lpFileName));
 		NWL_NodeAppendMultiSz(&NWLC->ErrLog, NWLC->NwBuf);
 		goto fail;
 	}
-	Ids = malloc(dwSize);
-	if (!Ids)
+	szIds = malloc(dwSize);
+	if (!szIds)
 	{
 		NWL_NodeAppendMultiSz(&NWLC->ErrLog, "Memory allocation failed in "__FUNCTION__);
 		goto fail;
 	}
-	bRet = ReadFile(Fp, Ids, dwSize, &dwSize, NULL);
+	bRet = ReadFile(hFile, szIds, dwSize, &dwSize, NULL);
 	if (bRet == FALSE)
 	{
 		snprintf(NWLC->NwBuf, NWINFO_BUFSZ, "%s read error", NWL_Ucs2ToUtf8(lpFileName));
 		NWL_NodeAppendMultiSz(&NWLC->ErrLog, NWLC->NwBuf);
 		goto fail;
 	}
-	CloseHandle(Fp);
-	*lpSize = dwSize;
-	return Ids;
+	CloseHandle(hFile);
+	lpIds->Ids = szIds;
+	lpIds->Size = dwSize;
+	lpIds->Alloc = TRUE;
+	return TRUE;
 fail:
-	if (Fp && Fp != INVALID_HANDLE_VALUE)
-		CloseHandle(Fp);
-	if (Ids)
-		free(Ids);
-	*lpSize = 0;
-	return NULL;
+	if (hFile && hFile != INVALID_HANDLE_VALUE)
+		CloseHandle(hFile);
+	if (szIds)
+		free(szIds);
+	return FALSE;
+}
+
+VOID NWL_UnloadIds(struct _NWLIB_IDS* lpIds)
+{
+	if (!lpIds->Alloc)
+		return;
+	if (lpIds->Ids)
+		free(lpIds->Ids);
+	lpIds->Ids = NULL;
+	lpIds->Size = 0;
 }
 
 const CHAR* NWL_GetIdsDate(struct _NWLIB_IDS* Ids)

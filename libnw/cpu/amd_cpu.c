@@ -2,6 +2,7 @@
 
 #include "rdmsr.h"
 #include "ryzen_smu.h"
+#include "pci_ids.h"
 
 /*
   AMD BIOS and Kernel Developer's Guide (BKDG)
@@ -304,8 +305,6 @@ fail:
 }
 
 #define THERMTRIP_STATUS_REGISTER       0xE4
-#define AMD_PCI_VENDOR_ID               0x1022
-#define AMD_PCI_CONTROL_DEVICE_ID       0x1103
 
 static int amd_k8_temperature(struct msr_info_t* info)
 {
@@ -320,7 +319,7 @@ static int amd_k8_temperature(struct msr_info_t* info)
 
 	if (info->handle->type != WR0_DRIVER_PAWNIO)
 	{
-		addr = WR0_FindPciById(info->handle, AMD_PCI_VENDOR_ID, AMD_PCI_CONTROL_DEVICE_ID, info->id->index);
+		addr = WR0_FindPciById(info->handle, PCI_VID_AMD, PCI_DID_AMD_K8_CTRL, info->id->index);
 
 		if (addr == 0xFFFFFFFF)
 			return 0;

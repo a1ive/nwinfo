@@ -37,6 +37,9 @@
     <Filter Include="ioctl">
       <UniqueIdentifier>{9bee2e3b-71a4-48c0-b6f0-58a760a7b8c4}</UniqueIdentifier>
     </Filter>
+    <Filter Include="ids">
+      <UniqueIdentifier>{9db8ae4d-0343-4efe-8bac-965e6fee2d34}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="node.h">
@@ -120,6 +123,18 @@
     <ClInclude Include="..\ioctl\ryzen_smu.h">
       <Filter>ioctl</Filter>
     </ClInclude>
+    <ClInclude Include="..\ids\pci_ids.h">
+      <Filter>ids</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ids\usb_ids.h">
+      <Filter>ids</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ids\pnp_ids.h">
+      <Filter>ids</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ids\spd_ids.h">
+      <Filter>ids</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="acpi.c">
@@ -165,9 +180,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="libinfo.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="ids.c">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="efivars.c">
@@ -296,6 +308,9 @@
     <ClCompile Include="..\ioctl\ryzen_smu.c">
       <Filter>ioctl</Filter>
     </ClCompile>
+    <ClCompile Include="..\ids\ids.c">
+      <Filter>ids</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
@@ -304,9 +319,6 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <CopyFileToFolders Include="jep106.ids">
-      <Filter>Binary Files</Filter>
-    </CopyFileToFolders>
     <CopyFileToFolders Include="..\ioctl\pawn\AMDFamily0F.bin">
       <Filter>Binary Files</Filter>
     </CopyFileToFolders>
@@ -326,6 +338,9 @@
       <Filter>Binary Files</Filter>
     </CopyFileToFolders>
     <CopyFileToFolders Include="..\ioctl\pawn\SmbusPIIX4.bin">
+      <Filter>Binary Files</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="..\ids\jep106.ids">
       <Filter>Binary Files</Filter>
     </CopyFileToFolders>
   </ItemGroup>

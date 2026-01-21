@@ -3,8 +3,7 @@
 #include "smbus.h"
 #include <windows.h>
 #include <stdio.h>
-
-#define PCI_VID_INTEL   0x8086
+#include "pci_ids.h"
 
 #define SMBHSTSTS       (0U + ctx->base_addr)
 #define SMBHSTCNT       (2U + ctx->base_addr)

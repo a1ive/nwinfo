@@ -7,7 +7,8 @@
 #include <string.h>
 #include <intrin.h>
 #include "ioctl.h"
-#include "../libnw/libnw.h"
+#include "libnw.h"
+#include "pci_ids.h"
 
 typedef struct
 {
@@ -727,7 +728,7 @@ ry_handle_t* ryzen_smu_init(struct wr0_drv_t* drv_handle, struct cpu_id_t* id)
 		goto fail;
 
 	handle->pci_id = WR0_RdPciConf32(handle->drv_handle, 0, 0);
-	if ((handle->pci_id & 0xFFFF) != 0x1022)
+	if ((handle->pci_id & 0xFFFF) != PCI_VID_AMD)
 		goto fail;
 
 	if (get_rsmu_addr(handle) != RYZEN_SMU_OK)

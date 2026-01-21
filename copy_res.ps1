@@ -11,7 +11,7 @@ $FilesToCopy = @(
 	"LICENSE",
 	"README.pdf",
 	"hw_report.ps1",
-	"libnw\jep106.ids",
+	"ids\jep106.ids",
 	"gnwinfo\gnwinfo.ini",
 	"ioctl\pawn\PawnIOSetup.exe",
 	"ioctl\pawn\AMDFamily0F.bin",

@@ -150,7 +150,7 @@
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
-      <AdditionalIncludeDirectories>$(SolutionDir)libcpuid;$(SolutionDir)ioctl;$(SolutionDir)stb;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)libcpuid;$(SolutionDir)libnw;$(SolutionDir)ioctl;$(SolutionDir)stb;$(SolutionDir)ids;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <AdditionalOptions>/Zc:threadSafeInit- %(AdditionalOptions)</AdditionalOptions>
@@ -180,7 +180,7 @@
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
-      <AdditionalIncludeDirectories>$(SolutionDir)libcpuid;$(SolutionDir)ioctl;$(SolutionDir)stb;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)libcpuid;$(SolutionDir)libnw;$(SolutionDir)ioctl;$(SolutionDir)stb;$(SolutionDir)ids;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <AdditionalOptions>/Zc:threadSafeInit- %(AdditionalOptions)</AdditionalOptions>
@@ -211,7 +211,7 @@
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
-      <AdditionalIncludeDirectories>$(SolutionDir)libcpuid;$(SolutionDir)ioctl;$(SolutionDir)stb;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)libcpuid;$(SolutionDir)libnw;$(SolutionDir)ioctl;$(SolutionDir)stb;$(SolutionDir)ids;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <AdditionalOptions>/Zc:threadSafeInit- %(AdditionalOptions)</AdditionalOptions>
@@ -241,7 +241,7 @@
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
-      <AdditionalIncludeDirectories>$(SolutionDir)libcpuid;$(SolutionDir)ioctl;$(SolutionDir)stb;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)libcpuid;$(SolutionDir)libnw;$(SolutionDir)ioctl;$(SolutionDir)stb;$(SolutionDir)ids;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <AdditionalOptions>/Zc:threadSafeInit- %(AdditionalOptions)</AdditionalOptions>
@@ -271,7 +271,7 @@
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
-      <AdditionalIncludeDirectories>$(SolutionDir)libcpuid;$(SolutionDir)ioctl;$(SolutionDir)stb;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)libcpuid;$(SolutionDir)libnw;$(SolutionDir)ioctl;$(SolutionDir)stb;$(SolutionDir)ids;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <AdditionalOptions>/Zc:threadSafeInit- %(AdditionalOptions)</AdditionalOptions>
@@ -302,7 +302,7 @@
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
-      <AdditionalIncludeDirectories>$(SolutionDir)libcpuid;$(SolutionDir)ioctl;$(SolutionDir)stb;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)libcpuid;$(SolutionDir)libnw;$(SolutionDir)ioctl;$(SolutionDir)stb;$(SolutionDir)ids;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <AdditionalOptions>/Zc:threadSafeInit- %(AdditionalOptions)</AdditionalOptions>
@@ -329,6 +329,10 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\ids\pci_ids.h" />
+    <ClInclude Include="..\ids\pnp_ids.h" />
+    <ClInclude Include="..\ids\spd_ids.h" />
+    <ClInclude Include="..\ids\usb_ids.h" />
     <ClInclude Include="..\ioctl\ryzen_smu.h" />
     <ClInclude Include="..\libcdi\libcdi.h" />
     <ClInclude Include="..\stb\stb_ds.h" />
@@ -358,6 +362,7 @@
     <ClInclude Include="version.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\ids\ids.c" />
     <ClCompile Include="..\ioctl\ryzen_smu.c" />
     <ClCompile Include="..\libcdi\CDIWrapper.c" />
     <ClCompile Include="..\ioctl\mutexes.c" />
@@ -387,7 +392,6 @@
     <ClCompile Include="gpu\intel_gpu.c" />
     <ClCompile Include="gpu\nvapi.c" />
     <ClCompile Include="gpu\nvidia_gpu.c" />
-    <ClCompile Include="ids.c" />
     <ClCompile Include="iplookup.c" />
     <ClCompile Include="libinfo.c" />
     <ClCompile Include="libnw.c" />
@@ -418,9 +422,6 @@
     <ClCompile Include="utils.c" />
   </ItemGroup>
   <ItemGroup>
-    <CopyFileToFolders Include="jep106.ids">
-      <FileType>Document</FileType>
-    </CopyFileToFolders>
     <CopyFileToFolders Include="..\ioctl\pawn\AMDFamily0F.bin">
       <FileType>Document</FileType>
     </CopyFileToFolders>
@@ -440,6 +441,9 @@
       <FileType>Document</FileType>
     </CopyFileToFolders>
     <CopyFileToFolders Include="..\ioctl\pawn\SmbusPIIX4.bin">
+      <FileType>Document</FileType>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="..\ids\jep106.ids">
       <FileType>Document</FileType>
     </CopyFileToFolders>
     <None Include="exports.def" />

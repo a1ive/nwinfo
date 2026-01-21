@@ -2,7 +2,7 @@
 
 #include "libcdi.h"
 #include <pathcch.h>
-#include "../libnw/libnw.h"
+#include "libnw.h"
 
 static struct
 {

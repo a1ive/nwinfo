@@ -8,7 +8,8 @@
 #include <windows.h>
 #include "gpu.h"
 #include "nvapi.h"
-#include "../libnw.h"
+#include "libnw.h"
+#include "pci_ids.h"
 
 #define NVDL "NV"
 
@@ -83,7 +84,7 @@ static void* nv_gpu_init(PNWLIB_GPU_INFO info)
 		ctx->List[i].VendorId = ctx->List[i].DeviceId & 0xFFFF;
 		NWL_Debug(NVDL, "Found [%d] %s (%08X-%04X-REV_%02X-EXT_%X)", i, ctx->List[i].Name,
 			ctx->List[i].DeviceId, ctx->List[i].Subsys, ctx->List[i].RevId, ctx->List[i].ExtDeviceId);
-		if (ctx->List[i].Name[0] != '\0' && ctx->List[i].VendorId == 0x10DE)
+		if (ctx->List[i].Name[0] != '\0' && ctx->List[i].VendorId == PCI_VID_NVIDIA)
 			ctx->List[i].Valid = NV_TRUE;
 		NvAPI_GPU_GetBusId(ctx->GpuHandle[i], &ctx->List[i].BusId);
 		NvAPI_GPU_GetBusSlotId(ctx->GpuHandle[i], &ctx->List[i].SlotId);
