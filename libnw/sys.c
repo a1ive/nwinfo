@@ -18,8 +18,10 @@
 
 static const CHAR* Win10BuildNumber(DWORD dwBuildNumber)
 {
+	if (dwBuildNumber >= 28000U)
+		return "11 26H1"; // TBA
 	if (dwBuildNumber >= 26200U)
-		return "11 25H2";  // TBA
+		return "11 25H2";
 	if (dwBuildNumber >= 26100U)
 		return "11 24H2"; // Hudson Valley
 	if (dwBuildNumber >= 22631U)
