@@ -47,6 +47,18 @@ typedef struct _NODE
 	int flags;
 } NODE, * PNODE;
 
+typedef union _NWL_ARG_KEY
+{
+	UINT64 U64;
+	CHAR Str[8];
+} NWL_ARG_KEY, * PNWL_ARG_KEY;
+
+typedef struct _NWL_ARG_SET
+{
+	NWL_ARG_KEY key;
+	int value;
+} NWL_ARG_SET, * PNWL_ARG_SET;
+
 // Functions
 LIBNW_API PNODE NWL_NodeAlloc(LPCSTR name, INT flags);
 LIBNW_API VOID NWL_NodeFree(PNODE node, INT deep);
@@ -72,3 +84,9 @@ LIBNW_API PNODE_ATT NWL_NodeAttrSetMulti(PNODE node, LPCSTR key, LPCSTR value, i
 LIBNW_API VOID NWL_NodeAppendMultiSz(LPSTR* lpmszMulti, LPCSTR szNew);
 
 LIBNW_API VOID NWL_NodeAttrSetRaw(PNODE node, LPCSTR key, void* value, size_t len);
+
+LIBNW_API VOID NWL_ArgSetFree(PNWL_ARG_SET set);
+LIBNW_API VOID NWL_ArgSetAddU64(PNWL_ARG_SET* set, UINT64 value);
+LIBNW_API VOID NWL_ArgSetAddStr(PNWL_ARG_SET* set, const char* value);
+LIBNW_API BOOL NWL_ArgSetHasU64(PNWL_ARG_SET set, UINT64 value);
+LIBNW_API BOOL NWL_ArgSetHasStr(PNWL_ARG_SET set, const char* value);

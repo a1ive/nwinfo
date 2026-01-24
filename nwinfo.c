@@ -114,9 +114,9 @@ static void nwinfo_help(void)
 		"  --acpi[=SGN]     Print ACPI info.\n"
 		"                   SGN specifies the signature of the ACPI table,\n"
 		"                   e.g. 'FACP' (Fixed ACPI Description Table).\n"
-		"  --smbios[=TYPE]  Print SMBIOS info.\n"
-		"                   TYPE specifies the type of the SMBIOS table,\n"
-		"                   e.g. '2' (Base Board Information).\n"
+		"  --smbios[=TYPE,] Print SMBIOS info.\n"
+		"                   TYPE specifies the types of the SMBIOS table,\n"
+		"                   e.g. '2' or '2,4,17'.\n"
 		"  --disk[=FLAG,..] Print disk info.\n"
 		"    PATH           Specify the path of the disk,\n"
 		"                   e.g. '\\\\.\\PhysicalDrive0', '\\\\.\\CdRom0'.\n"
@@ -223,6 +223,44 @@ nwinfo_get_opts(const char* arg, UINT64* flag, int count, const NW_ARG_FILTER* f
 	return str;
 }
 
+static void
+nwinfo_parse_arg_set(const char* arg, PNWL_ARG_SET* set, BOOL useString)
+{
+	char* dup;
+	char* token;
+
+	if (!set || !arg || !*arg)
+		return;
+
+	dup = _strdup(arg);
+	if (!dup)
+		return;
+
+	for (token = dup; token && *token; )
+	{
+		char* next = strchr(token, ',');
+		if (next)
+			*next++ = '\0';
+
+		if (*token)
+		{
+			if (useString)
+			{
+				NWL_ArgSetAddStr(set, token);
+			}
+			else
+			{
+				char* end = NULL;
+				UINT64 value = _strtoui64(token, &end, 0);
+				if (end && *end == '\0')
+					NWL_ArgSetAddU64(set, value);
+			}
+		}
+		token = next;
+	}
+	free(dup);
+}
+
 int main(int argc, char* argv[])
 {
 	BOOL bSetCodePage = FALSE;
@@ -235,7 +273,7 @@ int main(int argc, char* argv[])
 	nwContext.BinaryFormat = BIN_FMT_NONE;
 	nwContext.NwFile = stdout;
 	nwContext.AcpiTable = 0;
-	nwContext.SmbiosType = 127;
+	nwContext.SmbiosTypes = NULL;
 	nwContext.DiskPath = NULL;
 
 	struct optparse options;
@@ -317,7 +355,7 @@ int main(int argc, char* argv[])
 			break;
 		case NW_OPT_SMBIOS:
 			if (options.optarg && options.optarg[0])
-				nwContext.SmbiosType = (UINT8)strtoul(options.optarg, NULL, 0);
+				nwinfo_parse_arg_set(options.optarg, &nwContext.SmbiosTypes, FALSE);
 			nwContext.DmiInfo = TRUE;
 			break;
 		case NW_OPT_DISK:

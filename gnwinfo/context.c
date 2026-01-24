@@ -321,7 +321,7 @@ gnwinfo_ctx_init(HINSTANCE inst, HWND wnd, struct nk_context* ctx, float width, 
 	g_ctx.lib.NetFlags = NW_NET_PHYS | ((g_ctx.main_flag & MAIN_NET_INACTIVE) ? 0 : NW_NET_ACTIVE);
 	g_ctx.lib.NwFile = stdout;
 	g_ctx.lib.AcpiTable = 0;
-	g_ctx.lib.SmbiosType = 127;
+	g_ctx.lib.SmbiosTypes = NULL;
 	g_ctx.lib.DiskPath = NULL;
 
 	g_ctx.lib.CpuInfo = TRUE;

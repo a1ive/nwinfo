@@ -72,7 +72,7 @@ typedef struct _NWLIB_CONTEXT
 
 	LPCSTR DevTreeFilter;
 	DWORD AcpiTable;
-	UINT8 SmbiosType;
+	PNWL_ARG_SET SmbiosTypes;
 	LPCSTR PciClass;
 	LPSTR DiskPath;
 	LPSTR NetGuid;

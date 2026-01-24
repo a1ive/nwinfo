@@ -426,3 +426,75 @@ NWL_NodeAttrSetRaw(PNODE node, LPCSTR key, void* value, size_t len)
 		return;
 	}
 }
+
+static NWL_ARG_KEY NWL_ArgKeyFromU64(UINT64 value)
+{
+	NWL_ARG_KEY key;
+	key.U64 = value;
+	return key;
+}
+
+static NWL_ARG_KEY NWL_ArgKeyFromStr(const char* value)
+{
+	NWL_ARG_KEY key;
+	size_t len;
+
+	ZeroMemory(&key, sizeof(key));
+	if (!value || !*value)
+		return key;
+
+	len = strlen(value);
+	if (len > sizeof(key.Str))
+		len = sizeof(key.Str);
+	memcpy(key.Str, value, len);
+	return key;
+}
+
+VOID NWL_ArgSetFree(PNWL_ARG_SET set)
+{
+	hmfree(set);
+}
+
+VOID NWL_ArgSetAddU64(PNWL_ARG_SET* set, UINT64 value)
+{
+	NWL_ARG_KEY key;
+
+	if (!set)
+		return;
+
+	key = NWL_ArgKeyFromU64(value);
+	hmput(*set, key, 1);
+}
+
+VOID NWL_ArgSetAddStr(PNWL_ARG_SET* set, const char* value)
+{
+	NWL_ARG_KEY key;
+
+	if (!set || !value || !*value)
+		return;
+
+	key = NWL_ArgKeyFromStr(value);
+	hmput(*set, key, 1);
+}
+
+BOOL NWL_ArgSetHasU64(PNWL_ARG_SET set, UINT64 value)
+{
+	NWL_ARG_KEY key;
+
+	if (!set)
+		return FALSE;
+
+	key = NWL_ArgKeyFromU64(value);
+	return hmgetp_null(set, key) != NULL;
+}
+
+BOOL NWL_ArgSetHasStr(PNWL_ARG_SET set, const char* value)
+{
+	NWL_ARG_KEY key;
+
+	if (!set || !value || !*value)
+		return FALSE;
+
+	key = NWL_ArgKeyFromStr(value);
+	return hmgetp_null(set, key) != NULL;
+}

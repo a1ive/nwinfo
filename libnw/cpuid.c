@@ -312,8 +312,9 @@ PrintCpuDmi(PNODE node, const char* name)
 	LPBYTE p = (LPBYTE)NWLC->NwSmbios->Data;
 	const LPBYTE lastAddress = p + NWLC->NwSmbios->Length;
 	PProcessorInfo pInfo;
-
-	while ((pInfo = (PProcessorInfo)NWL_GetNextDmiTable(&p, lastAddress, 4)) != NULL)
+	PNWL_ARG_SET dmiSet = NULL;
+	NWL_ArgSetAddU64(&dmiSet, 4);
+	while ((pInfo = (PProcessorInfo)NWL_GetNextDmiTable(&p, lastAddress, dmiSet)) != NULL)
 	{
 		if (strcmp(name, NWL_GetDmiString((UINT8*)pInfo, pInfo->Version)) != 0)
 			continue;
@@ -321,6 +322,7 @@ PrintCpuDmi(PNODE node, const char* name)
 		NWL_NodeAttrSet(node, "Socket Designation", NWL_GetDmiString((UINT8*)pInfo, pInfo->SocketDesignation), 0);
 		NWL_NodeAttrSet(node, "Socket Type", NWL_GetDmiProcessorSocket(pInfo), 0);
 	}
+	NWL_ArgSetFree(dmiSet);
 }
 
 static void

@@ -2308,13 +2308,14 @@ static LPBYTE SkipDmiStrings(LPBYTE p, const LPBYTE lastAddress)
 	return lastAddress;
 }
 
-PSMBIOSHEADER NWL_GetNextDmiTable(LPBYTE* pCur, const LPBYTE lastAddr, UINT8 Type)
+PSMBIOSHEADER NWL_GetNextDmiTable(LPBYTE* pCur, const LPBYTE lastAddr, PNWL_ARG_SET typeSet)
 {
 	LPBYTE p = *pCur;
 
 	while (p + sizeof(SMBIOSHEADER) <= lastAddr)
 	{
 		PSMBIOSHEADER pHeader = (PSMBIOSHEADER)p;
+		BOOL bInclude = (typeSet == NULL) || NWL_ArgSetHasU64(typeSet, pHeader->Type);
 
 		if (pHeader->Length < sizeof(SMBIOSHEADER))
 			break;
@@ -2326,12 +2327,12 @@ PSMBIOSHEADER NWL_GetNextDmiTable(LPBYTE* pCur, const LPBYTE lastAddr, UINT8 Typ
 		if (pHeader->Type == 127 && pHeader->Length == 4)
 		{
 			*pCur = lastAddr;
-			if (Type == 127 || pHeader->Type == Type)
+			if (bInclude)
 				return pHeader;
 			return NULL;
 		}
 
-		if (Type == 127 || pHeader->Type == Type)
+		if (bInclude)
 		{
 			*pCur = next;
 			return pHeader;
@@ -2362,7 +2363,7 @@ PNODE NW_Smbios(BOOL bAppend)
 	const LPBYTE lastAddress = p + NWLC->NwSmbios->Length;
 	PSMBIOSHEADER pHeader;
 
-	while ((pHeader = NWL_GetNextDmiTable(&p, lastAddress, NWLC->SmbiosType)) != NULL)
+	while ((pHeader = NWL_GetNextDmiTable(&p, lastAddress, NWLC->SmbiosTypes)) != NULL)
 	{
 		PNODE tab = NWL_NodeAppendNew(node, "Table", NFLG_TABLE_ROW);
 		NWL_NodeAttrSetf(tab, "Table Type", NAFLG_FMT_NUMERIC, "%u", pHeader->Type);

@@ -96,9 +96,9 @@ Exports active physical network interfaces with IPv4 addresses to `report.html` 
   Print ACPI info.  
   Driver is required to access some ACPI tables.  
   `SGN` specifies the signature of the ACPI table, e.g. `FACP` (Fixed ACPI Description Table).  
-- --smbios[=`TYPE`]  
+- --smbios[=`TYPE,...`]  
   Print SMBIOS info.  
-  `TYPE` specifies the type of the SMBIOS table, e.g. `2` (Base Board Information).  
+  `TYPE` specifies the types of the SMBIOS table, e.g. `2` or `2,4,17`.  
 - --disk[=`FLAG,..`]  
   Print disk info.  
   - `PATH`  
