@@ -9,6 +9,7 @@
 	"ATL\tArcus Tech\n" \
 	"AUO\tAU Optronics\n" \
 	"AUS\tASUSTek\n" \
+	"BNQ\tBenQ\n" \
 	"BOE\tBOE Display\n" \
 	"CMN\tChimei Innolux\n" \
 	"CMO\tChi Mei\n" \
@@ -24,6 +25,7 @@
 	"HKC\tHKC OVERSEAS\n" \
 	"HWP\tHewlett Packard\n" \
 	"HWV\tHuawei\n" \
+	"IVO\tInfoVision Opto.\n" \
 	"KGN\tKOGAN\n" \
 	"LEN\tLenovo\n" \
 	"LGD\tLG\n" \

@@ -406,10 +406,7 @@ GetIdsHandle(LPCWSTR lpFileName)
 	if (Fp == NULL)
 		Fp = INVALID_HANDLE_VALUE;
 	if (Fp == INVALID_HANDLE_VALUE)
-	{
-		snprintf(NWLC->NwBuf, NWINFO_BUFSZ, "Cannot open %s", NWL_Ucs2ToUtf8(FilePath));
-		NWL_NodeAppendMultiSz(&NWLC->ErrLog, NWLC->NwBuf);
-	}
+		NWL_Debug("IDS", "Cannot open %s", NWL_Ucs2ToUtf8(FilePath));
 	return Fp;
 }
 
