@@ -68,6 +68,8 @@ PrintProductPolicyEntry(PNODE node, PPRODUCT_POLICY_VALUE ppValue)
 		default:
 		{
 			CHAR* tmp = calloc(ppValue->wDataSize, 3);
+			if (tmp == NULL)
+				break;
 			for (UINT i = 0; i < ppValue->wDataSize; i++)
 			{
 				tmp[i * 3] = hex[(pValueData[i] & 0xF0) >> 4];
