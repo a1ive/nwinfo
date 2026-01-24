@@ -11,6 +11,7 @@
 #include "lang/ko_KR.h"
 #include "lang/pl_PL.h"
 #include "lang/pt_BR.h"
+#include "lang/sl_SI.h"
 #include "lang/sv_SE.h"
 #include "lang/tr_TR.h"
 #include "lang/zh_CN.h"
@@ -51,6 +52,9 @@ N_(GETTEXT_STR_ID id)
 	case 1046: // Portuguese - Brazil
 		str = lang_pt_br[id];
 		break;
+	case 1060: // Slovenian
+		str = lang_sl_si[id];
+		break;	
 	case 1053: // Swedish
 		str = lang_sv_se[id];
 		break;
