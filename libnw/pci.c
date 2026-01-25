@@ -8,6 +8,7 @@
 
 #include "libnw.h"
 #include "utils.h"
+#include "stb_ds.h"
 
 static void
 PrintDriverInfo(PNODE pNode, HDEVINFO hInfo, SP_DEVINFO_DATA* spData)
@@ -38,7 +39,25 @@ PrintDriverInfo(PNODE pNode, HDEVINFO hInfo, SP_DEVINFO_DATA* spData)
 		NWL_NodeAttrSet(pNode, "Inf Section", NWL_Ucs2ToUtf8(NWLC->NwBufW), 0);
 }
 
-PNODE NWL_EnumPci(PNODE pNode, LPCSTR pciClass)
+static BOOL
+MatchPciClass(PNWL_ARG_SET pciClasses, const char* hwClass)
+{
+	if (!pciClasses)
+		return TRUE;
+
+	for (ptrdiff_t i = 0; i < hmlen(pciClasses); i++)
+	{
+		const char* pciClass = pciClasses[i].key.Str;
+		size_t classLen = strnlen_s(pciClass, 6);
+
+		if (_strnicmp(pciClass, hwClass, classLen) == 0)
+			return TRUE;
+	}
+
+	return FALSE;
+}
+
+PNODE NWL_EnumPci(PNODE pNode, PNWL_ARG_SET pciClasses)
 {
 	HDEVINFO hInfo = NULL;
 	DWORD i = 0;
@@ -67,14 +86,8 @@ PNODE NWL_EnumPci(PNODE pNode, LPCSTR pciClass)
 				break;
 			}
 		}
-		if (pciClass)
-		{
-			size_t PciClassLen = strlen(pciClass);
-			if (PciClassLen > 6)
-				PciClassLen = 6;
-			if (_strnicmp(pciClass, hwClass, PciClassLen) != 0)
-				continue;
-		}
+		if (!MatchPciClass(pciClasses, hwClass))
+			continue;
 		npci = NWL_NodeAppendNew(pNode, "Device", NFLG_TABLE_ROW);
 
 		NWL_NodeAttrSet(npci, "HWID", NWL_Ucs2ToUtf8(NWLC->NwBufW), 0);
@@ -107,5 +120,5 @@ PNODE NW_Pci(BOOL bAppend)
 	PNODE node = NWL_NodeAlloc("PCI", NFLG_TABLE);
 	if (bAppend)
 		NWL_NodeAppendChild(NWLC->NwRoot, node);
-	return NWL_EnumPci(node, NWLC->PciClass);
+	return NWL_EnumPci(node, NWLC->PciClasses);
 }

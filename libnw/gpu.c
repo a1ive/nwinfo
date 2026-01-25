@@ -41,7 +41,10 @@ PNWLIB_GPU_INFO NWL_InitGpu(VOID)
 	info->Initialized = 1;
 
 	// TODO: Get GPU vendor/device from pci.ids
-	info->PciList = NWL_EnumPci(NWL_NodeAlloc("PCI", NFLG_TABLE), "03");
+	PNWL_ARG_SET pciClasses = NULL;
+	NWL_ArgSetAddStr(&pciClasses, "03");
+	info->PciList = NWL_EnumPci(NWL_NodeAlloc("PCI", NFLG_TABLE), pciClasses);
+	NWL_ArgSetFree(pciClasses);
 	return info;
 }
 

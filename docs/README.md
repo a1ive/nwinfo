@@ -125,9 +125,9 @@ Exports active physical network interfaces with IPv4 addresses to `report.html` 
 - --display[=`FILE`]  
   Print EDID info.  
   `FILE` specifies the file name of the SPD dump.  
-- --pci[=`CLASS`]  
+- --pci[=`CLASS,..`]  
   Print PCI info.  
-  `CLASS` specifies the class code of PCI devices, e.g. `0C05` (SMBus).  
+  `CLASS` specifies the class codes of PCI devices, e.g. `0c05` or `03,0c05`..  
 - --spd[=`FILE`]  
   Print DIMM SPD info.  
   Driver is required to access SPD data.  
