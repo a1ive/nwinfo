@@ -40,24 +40,48 @@ PrintDriverInfo(PNODE pNode, HDEVINFO hInfo, SP_DEVINFO_DATA* spData)
 }
 
 static BOOL
-MatchPciClass(PNWL_ARG_SET pciClasses, const char* hwClass)
+MatchPciFilter(PNWL_ARG_SET pciFilters, const char* hwClass, const char* vendorId)
 {
-	if (!pciClasses)
+	BOOL hasVendor = FALSE;
+	BOOL hasClass = FALSE;
+	BOOL matchVendor = FALSE;
+	BOOL matchClass = FALSE;
+
+	if (!pciFilters)
 		return TRUE;
 
-	for (ptrdiff_t i = 0; i < hmlen(pciClasses); i++)
+	for (ptrdiff_t i = 0; i < hmlen(pciFilters); i++)
 	{
-		const char* pciClass = pciClasses[i].key.Str;
-		size_t classLen = strnlen_s(pciClass, 6);
+		const char* token = pciFilters[i].key.Str;
+		if (!token || !*token)
+			continue;
 
-		if (_strnicmp(pciClass, hwClass, classLen) == 0)
-			return TRUE;
+		if ((token[0] == 'v' || token[0] == 'V') && token[1])
+		{
+			size_t vendorLen = strnlen_s(token + 1, 4);
+			hasVendor = TRUE;
+			if (vendorId && *vendorId && vendorLen == 4
+				&& _strnicmp(token + 1, vendorId, vendorLen) == 0)
+				matchVendor = TRUE;
+		}
+		else
+		{
+			size_t classLen = strnlen_s(token, 6);
+			hasClass = TRUE;
+			if (_strnicmp(token, hwClass, classLen) == 0)
+				matchClass = TRUE;
+		}
 	}
 
-	return FALSE;
+	if (hasVendor && !matchVendor)
+		return FALSE;
+	if (hasClass && !matchClass)
+		return FALSE;
+
+	return TRUE;
 }
 
-PNODE NWL_EnumPci(PNODE pNode, PNWL_ARG_SET pciClasses)
+PNODE NWL_EnumPci(PNODE pNode, PNWL_ARG_SET pciFilters)
 {
 	HDEVINFO hInfo = NULL;
 	DWORD i = 0;
@@ -72,6 +96,7 @@ PNODE NWL_EnumPci(PNODE pNode, PNWL_ARG_SET pciClasses)
 	for (i = 0; SetupDiEnumDeviceInfo(hInfo, i, &spData); i++)
 	{
 		CHAR hwClass[7] = { 0 };
+		CHAR vendorId[5] = { 0 };
 		PNODE npci;
 		if (!SetupDiGetDeviceRegistryPropertyW(hInfo, &spData,
 			SPDRP_HARDWAREID, NULL, (PBYTE)NWLC->NwBufW, NWINFO_BUFSZB, NULL))
@@ -79,6 +104,16 @@ PNODE NWL_EnumPci(PNODE pNode, PNWL_ARG_SET pciClasses)
 		for (LPCWSTR p = NWLC->NwBufW; p[0]; p += wcslen(p) + 1)
 		{
 			//PCI\VEN_XXXX&DEV_XXXX&CC_XXXXXX
+			if (!vendorId[0])
+			{
+				LPCWSTR v = wcsstr(p, L"VEN_");
+				if (v && v[4] && v[5] && v[6] && v[7])
+				{
+					for (int j = 0; j < 4; j++)
+						vendorId[j] = (CHAR)v[4 + j];
+					vendorId[4] = '\0';
+				}
+			}
 			LPCWSTR s = wcsstr(p, L"&CC_");
 			if (s != NULL)
 			{
@@ -86,7 +121,7 @@ PNODE NWL_EnumPci(PNODE pNode, PNWL_ARG_SET pciClasses)
 				break;
 			}
 		}
-		if (!MatchPciClass(pciClasses, hwClass))
+		if (!MatchPciFilter(pciFilters, hwClass, vendorId))
 			continue;
 		npci = NWL_NodeAppendNew(pNode, "Device", NFLG_TABLE_ROW);
 
@@ -120,5 +155,5 @@ PNODE NW_Pci(BOOL bAppend)
 	PNODE node = NWL_NodeAlloc("PCI", NFLG_TABLE);
 	if (bAppend)
 		NWL_NodeAppendChild(NWLC->NwRoot, node);
-	return NWL_EnumPci(node, NWLC->PciClasses);
+	return NWL_EnumPci(node, NWLC->PciFilters);
 }

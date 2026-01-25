@@ -178,7 +178,7 @@ VOID NW_Print(LPCSTR lpFileName)
 VOID NW_Fini(VOID)
 {
 	NWL_ArgSetFree(NWLC->SmbiosTypes);
-	NWL_ArgSetFree(NWLC->PciClasses);
+	NWL_ArgSetFree(NWLC->PciFilters);
 	if (NWLC->NwRsdp)
 		free(NWLC->NwRsdp);
 	if (NWLC->NwRsdt)

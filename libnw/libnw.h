@@ -73,7 +73,7 @@ typedef struct _NWLIB_CONTEXT
 	LPCSTR DevTreeFilter;
 	DWORD AcpiTable;
 	PNWL_ARG_SET SmbiosTypes;
-	PNWL_ARG_SET PciClasses;
+	PNWL_ARG_SET PciFilters;
 	LPSTR DiskPath;
 	LPSTR NetGuid;
 	LPCSTR ProductPolicy;
@@ -253,7 +253,7 @@ typedef struct _NWLIB_NET_TRAFFIC
 } NWLIB_NET_TRAFFIC;
 LIBNW_API VOID NWL_GetNetTraffic(NWLIB_NET_TRAFFIC* info, BOOL bit);
 
-LIBNW_API PNODE NWL_EnumPci(PNODE pNode, PNWL_ARG_SET pciClasses);
+LIBNW_API PNODE NWL_EnumPci(PNODE pNode, PNWL_ARG_SET pciFilters);
 
 typedef struct _NWLIB_CUR_DISPLAY
 {

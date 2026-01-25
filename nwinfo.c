@@ -143,9 +143,10 @@ static void nwinfo_help(void)
 		"                   'NOCSMI' and 'CSMIRAID'.\n"
 		"  --display[=FILE] Print EDID info.\n"
 		"    FILE           Specify the file name of the EDID dump.\n"
-		"  --pci[=CLASS,..] Print PCI info.\n"
-		"                   CLASS specifies the class codes of PCI devices,\n"
-		"                   e.g. '0c05' or '03,0c05'.\n"
+		"  --pci[=FILTER,..] Print PCI info.\n"
+		"                   FILTER specifies PCI class codes or vendor IDs,\n"
+		"                   e.g. '0c05', '03,0c05', 'v8086',\n"
+		"                   or 'v8086,03'.\n"
 		"  --usb            Print USB info.\n"
 		"  --spd[=FILE]     Print DIMM SPD info.\n"
 		"                   WARNING: This option may damage the hardware.\n"
@@ -275,7 +276,7 @@ int main(int argc, char* argv[])
 	nwContext.AcpiTable = 0;
 	nwContext.SmbiosTypes = NULL;
 	nwContext.DiskPath = NULL;
-	nwContext.PciClasses = NULL;
+	nwContext.PciFilters = NULL;
 
 	struct optparse options;
 	optparse_init(&options, argv);
@@ -420,7 +421,7 @@ int main(int argc, char* argv[])
 			nwContext.EdidInfo = TRUE;
 			break;
 		case NW_OPT_PCI:
-			nwinfo_parse_arg_set(options.optarg, &nwContext.PciClasses, TRUE);
+			nwinfo_parse_arg_set(options.optarg, &nwContext.PciFilters, TRUE);
 			nwContext.PciInfo = TRUE;
 			break;
 		case NW_OPT_USB:
