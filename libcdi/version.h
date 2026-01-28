@@ -14,8 +14,7 @@
 #define LIBCDI_VERSION_STR  QUOTE(LIBCDI_MAJOR_VERSION.LIBCDI_MINOR_VERSION.LIBCDI_MICRO_VERSION.LIBCDI_BUILD_VERSION)
 
 #define LIBCDI_COMPANY      "A1ive"
-#define LIBCDI_COPYRIGHT    "(C) 2025 A1ive, (C) 2008-2025 hiyohiyo"
+#define LIBCDI_COPYRIGHT    "(C) 2026 A1ive, (C) 2008-2026 hiyohiyo"
 #define LIBCDI_FILEDESC     "CrystalDiskInfo DLL"
 
 #define LIBCDI_DLL          "libcdi"
-
