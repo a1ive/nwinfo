@@ -33,6 +33,7 @@ typedef struct _DISK_VOL_INFO
 typedef struct _PHY_DRIVE_INFO
 {
 	DWORD Index;
+	HANDLE Handle;
 	PARTITION_STYLE PartMap; // 0:MBR 1:GPT 2:RAW
 	UINT64 SizeInBytes;
 	BYTE DeviceType;
@@ -55,5 +56,5 @@ typedef struct _PHY_DRIVE_INFO
 	DISK_VOL_INFO* VolInfo;
 }PHY_DRIVE_INFO;
 
-LIBNW_API DWORD GetDriveInfoList(BOOL bIsCdRom, PHY_DRIVE_INFO** pDriveList);
-LIBNW_API VOID DestoryDriveInfoList(PHY_DRIVE_INFO* pInfo, DWORD dwCount);
+LIBNW_API DWORD NWL_GetDriveInfoList(BOOL bIsCdRom, PHY_DRIVE_INFO** pDriveList);
+LIBNW_API VOID NWL_DestoryDriveInfoList(PHY_DRIVE_INFO* pInfo, DWORD dwCount);

@@ -155,6 +155,7 @@ FillVolumeInfo(DISK_VOL_INFO* pInfo, LPCWSTR lpszVolume, PHY_DRIVE_INFO* pParent
 {
 	DWORD dwSize = 0;
 
+	pInfo->VolNames = NULL;
 	swprintf(pInfo->VolPath, MAX_PATH, L"%s\\", lpszVolume);
 	strcpy_s(pInfo->VolRealPath, MAX_PATH, GetRealVolumePath(lpszVolume));
 	GetVolumeFsUuid(lpszVolume, pInfo->VolFsUuid);
@@ -358,7 +359,7 @@ typedef struct
 	WCHAR  DevicePath[512];
 } MY_DEVIF_DETAIL_DATA;
 
-DWORD GetDriveInfoList(BOOL bIsCdRom, PHY_DRIVE_INFO** pDriveList)
+DWORD NWL_GetDriveInfoList(BOOL bIsCdRom, PHY_DRIVE_INFO** pDriveList)
 {
 	DWORD i;
 	BOOL bRet;
@@ -429,7 +430,7 @@ DWORD GetDriveInfoList(BOOL bIsCdRom, PHY_DRIVE_INFO** pDriveList)
 			wcsncpy_s(pInfo[i].HwName, MAX_PATH, NWLC->NwBufW, MAX_PATH);
 
 		hDrive = NWL_GetDiskHandleById(bIsCdRom, FALSE, pInfo[i].Index);
-
+		pInfo[i].Handle = hDrive;
 		if (!hDrive || hDrive == INVALID_HANDLE_VALUE)
 			goto next_drive;
 
@@ -490,8 +491,6 @@ DWORD GetDriveInfoList(BOOL bIsCdRom, PHY_DRIVE_INFO** pDriveList)
 next_drive:
 		if (pDevDesc)
 			free(pDevDesc);
-		if (hDrive && hDrive != INVALID_HANDLE_VALUE)
-			CloseHandle(hDrive);
 	}
 	SetupDiDestroyDeviceInfoList(hDevInfo);
 
@@ -539,17 +538,22 @@ next_drive:
 }
 
 VOID
-DestoryDriveInfoList(PHY_DRIVE_INFO* pInfo, DWORD dwCount)
+NWL_DestoryDriveInfoList(PHY_DRIVE_INFO* pInfo, DWORD dwCount)
 {
 	if (pInfo == NULL)
 		return;
 	for (DWORD i = 0; i < dwCount; i++)
 	{
-		for (DWORD j = 0; j < pInfo[i].VolCount; j++)
+		if (pInfo[i].VolInfo != NULL)
 		{
-			free(pInfo[i].VolInfo[j].VolNames);
+			for (DWORD j = 0; j < pInfo[i].VolCount; j++)
+			{
+				free(pInfo[i].VolInfo[j].VolNames);
+			}
+			free(pInfo[i].VolInfo);
 		}
-		free(pInfo[i].VolInfo);
+		if (pInfo[i].Handle && pInfo[i].Handle != INVALID_HANDLE_VALUE)
+			CloseHandle(pInfo[i].Handle);
 	}
 	free(pInfo);
 }
@@ -727,7 +731,7 @@ PrintDiskInfo(BOOL cdrom, PNODE node, CDI_SMART* smart)
 	DWORD PhyDriveCount = 0;
 	INT SmartCount = 0;
 	CHAR DiskPath[64];
-	PhyDriveCount = GetDriveInfoList(cdrom, &PhyDriveList);
+	PhyDriveCount = NWL_GetDriveInfoList(cdrom, &PhyDriveList);
 	if (!(NWLC->DiskFlags & NW_DISK_NO_SMART) && smart && !cdrom)
 		SmartCount = cdi_get_disk_count(smart);
 	if (PhyDriveCount == 0)
@@ -794,7 +798,7 @@ PrintDiskInfo(BOOL cdrom, PNODE node, CDI_SMART* smart)
 	}
 
 out:
-	DestoryDriveInfoList(PhyDriveList, PhyDriveCount);
+	NWL_DestoryDriveInfoList(PhyDriveList, PhyDriveCount);
 	if (NWLC->DiskPath)
 		return;
 	for (INT i = 0; i < SmartCount; i++)

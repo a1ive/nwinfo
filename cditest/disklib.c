@@ -119,6 +119,7 @@ FillVolumeInfo(DISK_VOL_INFO* pInfo, LPCWSTR lpszVolume, PHY_DRIVE_INFO* pParent
 {
 	DWORD dwSize = 0;
 
+	pInfo->VolNames = NULL;
 	swprintf(pInfo->VolPath, MAX_PATH, L"%s\\", lpszVolume);
 
 	if (GetVolumeInformationW(pInfo->VolPath, pInfo->VolLabel, MAX_PATH,
@@ -451,10 +452,14 @@ next_drive:
 		if (dwIndex >= dwCount)
 			continue;
 		if (pInfo[dwIndex].VolCount % 4 == 0)
-			pInfo[dwIndex].VolInfo = realloc(pInfo[dwIndex].VolInfo,
+		{
+			DISK_VOL_INFO* volInfo = realloc(pInfo[dwIndex].VolInfo,
 				sizeof(DISK_VOL_INFO) * (pInfo[dwIndex].VolCount + 4));
-		if (pInfo[dwIndex].VolInfo == NULL)
-			ErrorMsg("out of memory", -1);
+			if (!volInfo)
+				continue;
+			pInfo[dwIndex].VolInfo = volInfo;
+		}
+		ZeroMemory(&pInfo[dwIndex].VolInfo[pInfo[dwIndex].VolCount], sizeof(DISK_VOL_INFO));
 		FillVolumeInfo(&pInfo[dwIndex].VolInfo[pInfo[dwIndex].VolCount], cchVolume, &pInfo[dwIndex]);
 		pInfo[dwIndex].VolCount++;
 	}
@@ -473,11 +478,14 @@ DestoryDriveInfoList(PHY_DRIVE_INFO* pInfo, DWORD dwCount)
 		return;
 	for (DWORD i = 0; i < dwCount; i++)
 	{
-		for (DWORD j = 0; j < pInfo[i].VolCount; j++)
+		if (pInfo[i].VolInfo != NULL)
 		{
-			free(pInfo[i].VolInfo[j].VolNames);
+			for (DWORD j = 0; j < pInfo[i].VolCount; j++)
+			{
+				free(pInfo[i].VolInfo[j].VolNames);
+			}
+			free(pInfo[i].VolInfo);
 		}
-		free(pInfo[i].VolInfo);
 	}
 	free(pInfo);
 }
