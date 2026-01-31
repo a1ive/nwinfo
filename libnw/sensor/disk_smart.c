@@ -71,12 +71,33 @@ static void disk_get(PNODE node)
 			cdi_update_smart(NWLC->NwSmart, i);
 		struct disk_info* d = &ctx.disks[i];
 		PNODE disk = NWL_NodeAppendNew(node, d->name, NFLG_ATTGROUP | NAFLG_FMT_KEY_QUOTE);
-		INT n = cdi_get_int(NWLC->NwSmart, i, CDI_INT_LIFE);
+		INT n;
+		DWORD dw;
+		n = cdi_get_int(NWLC->NwSmart, i, CDI_INT_DISK_STATUS);
+		NWL_NodeAttrSet(disk, "Status", cdi_get_health_status(n), 0);
+		n = cdi_get_int(NWLC->NwSmart, i, CDI_INT_LIFE);
 		if (n >= 0)
 			NWL_NodeAttrSetf(disk, "Life", NAFLG_FMT_NUMERIC, "%d", n);
 		n = cdi_get_int(NWLC->NwSmart, i, CDI_INT_TEMPERATURE);
 		if (n >= 0)
 			NWL_NodeAttrSetf(disk, "Temperature", NAFLG_FMT_NUMERIC, "%d", n);
+		n = cdi_get_int(NWLC->NwSmart, i, CDI_INT_TEMPERATURE_ALARM);
+		if (n >= 0)
+			NWL_NodeAttrSetf(disk, "Alarm Temperature", NAFLG_FMT_NUMERIC, "%d", n);
+		n = cdi_get_int(NWLC->NwSmart, i, CDI_INT_WEAR_LEVELING_COUNT);
+		if (n >= 0)
+			NWL_NodeAttrSetf(disk, "Wear Leveling Count", NAFLG_FMT_NUMERIC, "%d", n);
+		n = cdi_get_int(NWLC->NwSmart, i, CDI_INT_POWER_ON_HOURS);
+		if (n >= 0)
+			NWL_NodeAttrSetf(disk, "Power on Hours", NAFLG_FMT_NUMERIC, "%d", n);
+		dw = cdi_get_dword(NWLC->NwSmart, i, CDI_DWORD_POWER_ON_COUNT);
+		NWL_NodeAttrSetf(disk, "Power on Count", NAFLG_FMT_NUMERIC, "%lu", dw);
+		n = cdi_get_int(NWLC->NwSmart, i, CDI_INT_HOST_READS);
+		if (n >= 0)
+			NWL_NodeAttrSetf(disk, "Total Host Reads GB", NAFLG_FMT_NUMERIC, "%d", n);
+		n = cdi_get_int(NWLC->NwSmart, i, CDI_INT_HOST_WRITES);
+		if (n >= 0)
+			NWL_NodeAttrSetf(disk, "Total Host Writes GB", NAFLG_FMT_NUMERIC, "%d", n);
 	}
 }
 
