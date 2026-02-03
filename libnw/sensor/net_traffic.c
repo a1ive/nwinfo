@@ -29,8 +29,8 @@ static void net_get(PNODE node)
 	ctx.network = NW_Network(FALSE);
 	NWL_GetNetTraffic(&ctx.traffic, FALSE);
 
-	NWL_NodeAttrSetf(node, "Upload Speed", NAFLG_FMT_NUMERIC, "%.2f", ctx.traffic.Send);
-	NWL_NodeAttrSetf(node, "Download Speed", NAFLG_FMT_NUMERIC, "%.2f", ctx.traffic.Recv);
+	NWL_NodeAttrSet(node, "Upload Speed", ctx.traffic.StrSend, NAFLG_FMT_HUMAN_SIZE);
+	NWL_NodeAttrSet(node, "Download Speed", ctx.traffic.StrRecv, NAFLG_FMT_HUMAN_SIZE);
 
 	INT count = NWL_NodeChildCount(ctx.network);
 	for (INT i = 0; i < count; i++)
@@ -45,10 +45,10 @@ static void net_get(PNODE node)
 
 		str = NWL_NodeAttrGet(nic, "Received (Octets)");
 		if (isdigit(str[0]))
-			NWL_NodeAttrSet(n, "Upload", str, NAFLG_FMT_NUMERIC);
+			NWL_NodeAttrSet(n, "Upload", str, NAFLG_FMT_HUMAN_SIZE);
 		str = NWL_NodeAttrGet(nic, "Sent (Octets)");
 		if (isdigit(str[0]))
-			NWL_NodeAttrSet(n, "Download", str, NAFLG_FMT_NUMERIC);
+			NWL_NodeAttrSet(n, "Download", str, NAFLG_FMT_HUMAN_SIZE);
 		str = NWL_NodeAttrGet(nic, "WLAN Signal Quality");
 		if (isdigit(str[0]))
 			NWL_NodeAttrSet(n, "Signal Quality", str, NAFLG_FMT_NUMERIC);

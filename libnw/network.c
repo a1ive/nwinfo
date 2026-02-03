@@ -451,8 +451,8 @@ PNODE NW_Network(BOOL bAppend)
 		ifRow.dwIndex = pCurrAddresses->IfIndex;
 		if (GetIfEntry(&ifRow) == NO_ERROR)
 		{
-			NWL_NodeAttrSetf(nic, "Received (Octets)", NAFLG_FMT_NUMERIC, "%lu", ifRow.dwInOctets);
-			NWL_NodeAttrSetf(nic, "Sent (Octets)", NAFLG_FMT_NUMERIC, "%lu", ifRow.dwOutOctets);
+			NWL_NodeAttrSet(nic, "Received (Octets)", NWL_GetHumanSize(ifRow.dwInOctets, NWLC->NwUnits, 1024), NAFLG_FMT_HUMAN_SIZE);
+			NWL_NodeAttrSet(nic, "Sent (Octets)", NWL_GetHumanSize(ifRow.dwOutOctets, NWLC->NwUnits, 1024), NAFLG_FMT_HUMAN_SIZE);
 			AcquireSRWLockExclusive(&s_net_lock);
 			mTotalRecv += ifRow.dwInOctets;
 			mTotalSend += ifRow.dwOutOctets;

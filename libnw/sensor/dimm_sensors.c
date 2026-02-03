@@ -32,13 +32,13 @@ static void dimm_get(PNODE node)
 	if (mem == NULL)
 		mem = NWL_NodeAppendNew(node, "Memory", NFLG_ATTGROUP);
 	NWL_NodeAttrSetf(mem, "Load", NAFLG_FMT_NUMERIC, "%u", ctx.statex.dwMemoryLoad);
-	NWL_NodeAttrSetf(mem, "Total Physical", NAFLG_FMT_NUMERIC, "%llu", ctx.statex.ullTotalPhys);
-	NWL_NodeAttrSetf(mem, "Available Physical", NAFLG_FMT_NUMERIC, "%llu", ctx.statex.ullAvailPhys);
-	NWL_NodeAttrSetf(mem, "Total Page File", NAFLG_FMT_NUMERIC, "%llu", ctx.statex.ullTotalPageFile);
-	NWL_NodeAttrSetf(mem, "Available Page File", NAFLG_FMT_NUMERIC, "%llu", ctx.statex.ullAvailPageFile);
-	NWL_NodeAttrSetf(mem, "Total Virtual", NAFLG_FMT_NUMERIC, "%llu", ctx.statex.ullTotalVirtual);
-	NWL_NodeAttrSetf(mem, "Available Virtual", NAFLG_FMT_NUMERIC, "%llu", ctx.statex.ullAvailVirtual);
-	NWL_NodeAttrSetf(mem, "Available Extended Virtual", NAFLG_FMT_NUMERIC, "%llu", ctx.statex.ullAvailExtendedVirtual);
+	NWL_NodeAttrSet(mem, "Total Physical", NWL_GetHumanSize(ctx.statex.ullTotalPhys, NWLC->NwUnits, 1024), NAFLG_FMT_HUMAN_SIZE);
+	NWL_NodeAttrSet(mem, "Available Physical", NWL_GetHumanSize(ctx.statex.ullAvailPhys, NWLC->NwUnits, 1024), NAFLG_FMT_HUMAN_SIZE);
+	NWL_NodeAttrSet(mem, "Total Page File", NWL_GetHumanSize(ctx.statex.ullTotalPageFile, NWLC->NwUnits, 1024), NAFLG_FMT_HUMAN_SIZE);
+	NWL_NodeAttrSet(mem, "Available Page File", NWL_GetHumanSize(ctx.statex.ullAvailPageFile, NWLC->NwUnits, 1024), NAFLG_FMT_HUMAN_SIZE);
+	NWL_NodeAttrSet(mem, "Total Virtual", NWL_GetHumanSize(ctx.statex.ullTotalVirtual, NWLC->NwUnits, 1024), NAFLG_FMT_HUMAN_SIZE);
+	NWL_NodeAttrSet(mem, "Available Virtual", NWL_GetHumanSize(ctx.statex.ullAvailVirtual, NWLC->NwUnits, 1024), NAFLG_FMT_HUMAN_SIZE);
+	NWL_NodeAttrSet(mem, "Available Extended Virtual", NWL_GetHumanSize(ctx.statex.ullAvailExtendedVirtual, NWLC->NwUnits, 1024), NAFLG_FMT_HUMAN_SIZE);
 
 	if (!NWLC->NwSmbus)
 		return;

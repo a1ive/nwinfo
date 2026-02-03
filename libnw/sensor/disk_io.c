@@ -125,8 +125,8 @@ static void disk_get(PNODE node)
 			split_rate = (perf.SplitCount - st->perf.SplitCount) * 10000000.0 / dt_100ns;
 		}
 
-		NWL_NodeAttrSetf(disk, "Read Speed", NAFLG_FMT_NUMERIC, "%llu", read_speed);
-		NWL_NodeAttrSetf(disk, "Write Speed", NAFLG_FMT_NUMERIC, "%llu", write_speed);
+		NWL_NodeAttrSet(disk, "Read Speed", NWL_GetHumanSize(read_speed, NWLC->NwUnits, 1024), NAFLG_FMT_HUMAN_SIZE);
+		NWL_NodeAttrSet(disk, "Write Speed", NWL_GetHumanSize(write_speed, NWLC->NwUnits, 1024), NAFLG_FMT_HUMAN_SIZE);
 		NWL_NodeAttrSetf(disk, "Read IOPS", NAFLG_FMT_NUMERIC, "%.2f", read_iops);
 		NWL_NodeAttrSetf(disk, "Write IOPS", NAFLG_FMT_NUMERIC, "%.2f", write_iops);
 		NWL_NodeAttrSetf(disk, "Read Latency ms", NAFLG_FMT_NUMERIC, "%.2f", read_latency);
@@ -134,8 +134,8 @@ static void disk_get(PNODE node)
 		NWL_NodeAttrSetf(disk, "Utilization", NAFLG_FMT_NUMERIC, "%.2f", percent);
 		NWL_NodeAttrSetf(disk, "Split Rate", NAFLG_FMT_NUMERIC, "%.2f", split_rate);
 
-		NWL_NodeAttrSetf(disk, "Bytes Read", NAFLG_FMT_NUMERIC, "%llu", perf.BytesRead.QuadPart);
-		NWL_NodeAttrSetf(disk, "Bytes Written", NAFLG_FMT_NUMERIC, "%llu", perf.BytesWritten.QuadPart);
+		NWL_NodeAttrSet(disk, "Bytes Read", NWL_GetHumanSize(perf.BytesRead.QuadPart, NWLC->NwUnits, 1024), NAFLG_FMT_HUMAN_SIZE);
+		NWL_NodeAttrSet(disk, "Bytes Written", NWL_GetHumanSize(perf.BytesWritten.QuadPart, NWLC->NwUnits, 1024), NAFLG_FMT_HUMAN_SIZE);
 		NWL_NodeAttrSetf(disk, "Queue Depth", NAFLG_FMT_NUMERIC, "%lu", perf.QueueDepth);
 		NWL_NodeAttrSetf(disk, "Split Count", NAFLG_FMT_NUMERIC, "%lu", perf.SplitCount);
 
