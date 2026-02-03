@@ -40,7 +40,10 @@ static bool disk_init(void)
 	{
 		struct disk_info* d = &ctx.disks[i];
 		WCHAR* str = cdi_get_string(NWLC->NwSmart, i, CDI_STRING_MODEL);
-		snprintf(d->name, sizeof(d->name), "(%d) %s", i, NWL_Ucs2ToUtf8(str));
+		INT n = cdi_get_int(NWLC->NwSmart, i, CDI_INT_DISK_ID);
+		if (n < 0)
+			n = -i;
+		snprintf(d->name, sizeof(d->name), "(%d) %s", n, NWL_Ucs2ToUtf8(str));
 		NWL_Debug("SMART", "Add %s", d->name);
 		cdi_free_string(str);
 	}
