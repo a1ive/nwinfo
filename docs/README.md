@@ -105,6 +105,7 @@ Exports active physical network interfaces with IPv4 addresses to `report.html` 
     Specify the path of the disk, e.g. `\\.\PhysicalDrive0`, `\\.\CdRom0`.  
   - `FLAGS`  
     `NO-SMART` Don't print disk S.M.A.R.T. info.  
+    `NO-VOL`   Don't print volume info.  
     `PHYS`     Exclude virtual drives.  
     `CD`       Include CD-ROM devices.  
     `HD`       Include hard drives.  

@@ -122,6 +122,7 @@ static void nwinfo_help(void)
 		"                   e.g. '\\\\.\\PhysicalDrive0', '\\\\.\\CdRom0'.\n"
 		"    FLAGS:\n"
 		"      NO-SMART     Don't print disk S.M.A.R.T. info.\n"
+		"      NO-VOL       Don't print volume info.\n"
 		"      PHYS         Exclude virtual drives.\n"
 		"      CD           Include CD-ROM devices.\n"
 		"      HD           Include hard drives.\n"
@@ -366,6 +367,7 @@ int main(int argc, char* argv[])
 				{"phys", NW_DISK_PHYS},
 				{"cd", NW_DISK_CD},
 				{"hd", NW_DISK_HD},
+				{"no-vol", NW_DISK_NO_VOL},
 				{"nvme", NW_DISK_NVME},
 				{"sata", NW_DISK_SATA},
 				{"scsi", NW_DISK_SCSI},

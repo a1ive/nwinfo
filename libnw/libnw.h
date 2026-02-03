@@ -92,6 +92,7 @@ typedef struct _NWLIB_CONTEXT
 #define NW_DISK_PHYS     (1 << 1)
 #define NW_DISK_HD       (1 << 2)
 #define NW_DISK_CD       (1 << 3)
+#define NW_DISK_NO_VOL   (1 << 4)
 #define NW_DISK_NVME     (1 << 11)
 #define NW_DISK_SATA     (1 << 12)
 #define NW_DISK_SCSI     (1 << 13)

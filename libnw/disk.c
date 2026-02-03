@@ -359,7 +359,7 @@ typedef struct
 	WCHAR  DevicePath[512];
 } MY_DEVIF_DETAIL_DATA;
 
-DWORD NWL_GetDriveInfoList(BOOL bIsCdRom, PHY_DRIVE_INFO** pDriveList)
+DWORD NWL_GetDriveInfoList(BOOL bIsCdRom, BOOL bGetVolume, PHY_DRIVE_INFO** pDriveList)
 {
 	DWORD i;
 	BOOL bRet;
@@ -493,6 +493,9 @@ next_drive:
 			free(pDevDesc);
 	}
 	SetupDiDestroyDeviceInfoList(hDevInfo);
+
+	if (!bGetVolume)
+		return dwCount;
 
 	for (bRet = TRUE, hSearch = FindFirstVolumeW(cchVolume, MAX_PATH);
 		bRet && hSearch != INVALID_HANDLE_VALUE;
@@ -725,13 +728,13 @@ MatchBusType(STORAGE_BUS_TYPE bus)
 }
 
 static VOID
-PrintDiskInfo(BOOL cdrom, PNODE node, CDI_SMART* smart)
+PrintDiskInfo(BOOL cdrom, BOOL volinfo, PNODE node, CDI_SMART* smart)
 {
 	PHY_DRIVE_INFO* PhyDriveList = NULL;
 	DWORD PhyDriveCount = 0;
 	INT SmartCount = 0;
 	CHAR DiskPath[64];
-	PhyDriveCount = NWL_GetDriveInfoList(cdrom, &PhyDriveList);
+	PhyDriveCount = NWL_GetDriveInfoList(cdrom, volinfo, &PhyDriveList);
 	if (!(NWLC->DiskFlags & NW_DISK_NO_SMART) && smart && !cdrom)
 		SmartCount = cdi_get_disk_count(smart);
 	if (PhyDriveCount == 0)
@@ -829,6 +832,7 @@ PNODE NW_Disk(BOOL bAppend)
 	PNODE node = NWL_NodeAlloc("Disks", NFLG_TABLE);
 	if (bAppend)
 		NWL_NodeAppendChild(NWLC->NwRoot, node);
+	BOOL volinfo = !(NWLC->DiskFlags & NW_DISK_NO_VOL);
 	if (!(NWLC->DiskFlags & NW_DISK_NO_SMART) && NWLC->NwSmart && NWLC->NwSmartInit == FALSE)
 	{
 		cdi_init_smart(NWLC->NwSmart, NWLC->NwSmartFlags);
@@ -837,8 +841,8 @@ PNODE NW_Disk(BOOL bAppend)
 	if (!(NWLC->DiskFlags & NW_DISK_DEFAULT))
 		NWLC->DiskFlags |= NW_DISK_DEFAULT;
 	if (NWLC->DiskFlags & NW_DISK_HD)
-		PrintDiskInfo(FALSE, node, NWLC->NwSmart);
+		PrintDiskInfo(FALSE, volinfo, node, NWLC->NwSmart);
 	if (NWLC->DiskFlags & NW_DISK_CD)
-		PrintDiskInfo(TRUE, node, NWLC->NwSmart);
+		PrintDiskInfo(TRUE, volinfo, node, NWLC->NwSmart);
 	return node;
 }

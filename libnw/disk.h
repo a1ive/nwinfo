@@ -56,5 +56,5 @@ typedef struct _PHY_DRIVE_INFO
 	DISK_VOL_INFO* VolInfo;
 }PHY_DRIVE_INFO;
 
-LIBNW_API DWORD NWL_GetDriveInfoList(BOOL bIsCdRom, PHY_DRIVE_INFO** pDriveList);
+LIBNW_API DWORD NWL_GetDriveInfoList(BOOL bIsCdRom, BOOL bGetVolume, PHY_DRIVE_INFO** pDriveList);
 LIBNW_API VOID NWL_DestoryDriveInfoList(PHY_DRIVE_INFO* pInfo, DWORD dwCount);
