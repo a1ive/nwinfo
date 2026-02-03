@@ -440,10 +440,14 @@ PNODE NW_Network(BOOL bAppend)
 #endif
 		if (bLonghornOrLater)
 		{
-			NWL_NodeAttrSet(nic, "Transmit Link Speed",
-				NWL_GetHumanSize(pCurrAddressesLH->TransmitLinkSpeed, BPS_UNITS, 1000), NAFLG_FMT_HUMAN_SIZE);
-			NWL_NodeAttrSet(nic, "Receive Link Speed",
-				NWL_GetHumanSize(pCurrAddressesLH->ReceiveLinkSpeed, BPS_UNITS, 1000), NAFLG_FMT_HUMAN_SIZE);
+			UINT64 speed = pCurrAddressesLH->TransmitLinkSpeed;
+			if (speed == ~0ULL)
+				speed = 0;
+			NWL_NodeAttrSet(nic, "Transmit Link Speed", NWL_GetHumanSize(speed, BPS_UNITS, 1000), NAFLG_FMT_HUMAN_SIZE);
+			speed = pCurrAddressesLH->ReceiveLinkSpeed;
+			if (speed == ~0ULL)
+				speed = 0;
+			NWL_NodeAttrSet(nic, "Receive Link Speed", NWL_GetHumanSize(speed, BPS_UNITS, 1000), NAFLG_FMT_HUMAN_SIZE);
 		}
 		NWL_NodeAttrSetf(nic, "MTU (Byte)", NAFLG_FMT_NUMERIC, "%lu", pCurrAddresses->Mtu);
 
