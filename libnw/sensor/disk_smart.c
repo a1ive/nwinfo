@@ -104,10 +104,10 @@ static void disk_get(PNODE node)
 	}
 }
 
-sensor_t sensor_disk =
+sensor_t sensor_disk_smart =
 {
-	.name = "DISK",
-	.flag = NWL_SENSOR_DISK,
+	.name = "SMART",
+	.flag = NWL_SENSOR_SMART,
 	.init = disk_init,
 	.get = disk_get,
 	.fini = disk_fini,

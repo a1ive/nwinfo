@@ -14,7 +14,7 @@ extern sensor_t sensor_gpuz;
 extern sensor_t sensor_cpu;
 extern sensor_t sensor_dimm;
 extern sensor_t sensor_gpu;
-extern sensor_t sensor_disk;
+extern sensor_t sensor_disk_smart;
 extern sensor_t sensor_net;
 extern sensor_t sensor_imc;
 
@@ -26,7 +26,7 @@ static sensor_t* sensor_list[] =
 	&sensor_cpu,
 	&sensor_dimm,
 	&sensor_gpu,
-	&sensor_disk,
+	&sensor_disk_smart,
 	&sensor_net,
 	&sensor_imc,
 };

@@ -482,7 +482,7 @@ int main(int argc, char* argv[])
 				{"CPU", NWL_SENSOR_CPU},
 				{"DIMM", NWL_SENSOR_DIMM},
 				{"GPU", NWL_SENSOR_GPU},
-				{"SMART", NWL_SENSOR_DISK},
+				{"SMART", NWL_SENSOR_SMART},
 				{"NET", NWL_SENSOR_NET},
 				{"IMC", NWL_SENSOR_IMC},
 			};
