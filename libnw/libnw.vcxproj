@@ -402,6 +402,7 @@
     <ClCompile Include="sensors.c" />
     <ClCompile Include="sensor\cpu_sensors.c" />
     <ClCompile Include="sensor\dimm_sensors.c" />
+    <ClCompile Include="sensor\disk_io.c" />
     <ClCompile Include="sensor\disk_smart.c" />
     <ClCompile Include="sensor\gpuz_shmem.c" />
     <ClCompile Include="sensor\gpu_sensors.c" />

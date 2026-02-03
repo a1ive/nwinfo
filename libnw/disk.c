@@ -701,8 +701,8 @@ PrintSmartInfo(PNODE node, CDI_SMART* ptr, INT index)
 	}
 }
 
-static int __cdecl
-CompareDiskId(const void* a, const void* b)
+int __cdecl
+NWL_CompareDiskId(const void* a, const void* b)
 {
 	return ((int)((const PHY_DRIVE_INFO*)a)->Index) - ((int)((const PHY_DRIVE_INFO*)b)->Index);
 }
@@ -739,7 +739,7 @@ PrintDiskInfo(BOOL cdrom, BOOL volinfo, PNODE node, CDI_SMART* smart)
 		SmartCount = cdi_get_disk_count(smart);
 	if (PhyDriveCount == 0)
 		goto out;
-	qsort(PhyDriveList, PhyDriveCount, sizeof(PHY_DRIVE_INFO), CompareDiskId);
+	qsort(PhyDriveList, PhyDriveCount, sizeof(PHY_DRIVE_INFO), NWL_CompareDiskId);
 	for (DWORD i = 0; i < PhyDriveCount; i++)
 	{
 		snprintf(DiskPath, sizeof(DiskPath),

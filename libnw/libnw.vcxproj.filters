@@ -311,6 +311,9 @@
     <ClCompile Include="..\ids\ids.c">
       <Filter>ids</Filter>
     </ClCompile>
+    <ClCompile Include="sensor\disk_io.c">
+      <Filter>sensor</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
