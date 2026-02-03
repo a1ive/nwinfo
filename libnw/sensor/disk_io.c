@@ -68,6 +68,14 @@ static void disk_fini(void)
 
 static void disk_get(PNODE node)
 {
+	DWORD current = NWL_GetDriveCount(FALSE);
+	if (current != ctx.count)
+	{
+		disk_fini();
+		if (!disk_init())
+			return;
+	}
+
 	for (DWORD i = 0; i < ctx.count; i++)
 	{
 		struct disk_stats* st = &ctx.stats[i];

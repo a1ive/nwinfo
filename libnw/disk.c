@@ -359,6 +359,22 @@ typedef struct
 	WCHAR  DevicePath[512];
 } MY_DEVIF_DETAIL_DATA;
 
+DWORD NWL_GetDriveCount(BOOL bIsCdRom)
+{
+	DWORD dwCount = 0;
+	SP_DEVICE_INTERFACE_DATA ifData = { .cbSize = sizeof(SP_DEVICE_INTERFACE_DATA) };
+	GUID devGuid = bIsCdRom ? GUID_DEVINTERFACE_CDROM : GUID_DEVINTERFACE_DISK;
+	HDEVINFO hDevInfo = SetupDiGetClassDevsW(&devGuid, NULL, NULL, DIGCF_PRESENT | DIGCF_DEVICEINTERFACE);
+	if (hDevInfo == INVALID_HANDLE_VALUE)
+		return 0;
+
+	while (SetupDiEnumDeviceInterfaces(hDevInfo, NULL, &devGuid, dwCount, &ifData))
+		dwCount++;
+
+	SetupDiDestroyDeviceInfoList(hDevInfo);
+	return dwCount;
+}
+
 DWORD NWL_GetDriveInfoList(BOOL bIsCdRom, BOOL bGetVolume, PHY_DRIVE_INFO** pDriveList)
 {
 	DWORD i;
