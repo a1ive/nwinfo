@@ -52,6 +52,15 @@ static void net_get(PNODE node)
 		str = NWL_NodeAttrGet(nic, "WLAN Signal Quality");
 		if (isdigit(str[0]))
 			NWL_NodeAttrSet(n, "Signal Quality", str, NAFLG_FMT_NUMERIC);
+		str = NWL_NodeAttrGet(nic, "Transmit Link Speed");
+		if (isdigit(str[0]))
+			NWL_NodeAttrSet(n, "Transmit Link Speed", str, NAFLG_FMT_HUMAN_SIZE);
+		str = NWL_NodeAttrGet(nic, "Receive Link Speed");
+		if (isdigit(str[0]))
+			NWL_NodeAttrSet(n, "Receive Link Speed", str, NAFLG_FMT_HUMAN_SIZE);
+		str = NWL_NodeAttrGet(nic, "MTU (Byte)");
+		if (isdigit(str[0]))
+			NWL_NodeAttrSet(n, "MTU", str, NAFLG_FMT_HUMAN_SIZE);
 	}
 }
 
