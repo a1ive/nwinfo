@@ -1,18 +1,17 @@
 // SPDX-License-Identifier: Unlicense
 
 #define NK_INCLUDE_FIXED_TYPES
-#define NK_INCLUDE_STANDARD_IO
 #define NK_INCLUDE_STANDARD_VARARGS
 #define NK_INCLUDE_DEFAULT_ALLOCATOR
 
-#pragma warning(disable:4996)
 #pragma warning(disable:4116)
 #pragma warning(disable:4244)
 
+#include <stdio.h>
 #include <assert.h>
 #include <math.h>
 #define NK_ASSERT(expr) assert(expr)
-
+#define NK_VSNPRINTF(s,n,f,a) vsnprintf(s,f,a)
 #define NK_MEMSET memset
 #define NK_MEMCPY memcpy
 #define NK_SIN sinf
