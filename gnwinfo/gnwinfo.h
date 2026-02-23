@@ -23,6 +23,7 @@
 #include <nuklear_gdip.h>
 
 #include <libnw.h>
+#include <network.h>
 #include <gpu/gpu.h>
 
 #include "resource.h"

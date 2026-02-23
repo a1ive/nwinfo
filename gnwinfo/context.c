@@ -77,10 +77,10 @@ gnwinfo_ctx_update_1s(void)
 	ReleaseSRWLockShared(&g_ctx.lock);
 
 	g_ctx.lib.NetFlags = NW_NET_PHYS | ((main_flag & MAIN_NET_INACTIVE) ? 0 : NW_NET_ACTIVE);
-	network = NW_Network(FALSE);
 	NWL_GetUptime(sys_uptime, NWL_STR_SIZE);
 	NWL_GetMemInfo(&mem_status);
-	NWL_GetNetTraffic(&net_traffic, !(main_flag & MAIN_NET_UNIT_B));
+	network = NW_Network(FALSE);
+	NWL_GetNetTraffic(&net_traffic, !(main_flag & MAIN_NET_UNIT_B), NWLC->NwNetAdapters);
 	cpu_usage = NWL_GetCpuUsage();
 	cpu_freq = NWL_GetCpuFreq();
 	cpu_info = NWL_GetCpuMsr();

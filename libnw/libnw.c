@@ -3,6 +3,7 @@
 #include "libnw.h"
 #include "utils.h"
 #include "efivars.h"
+#include "network.h"
 
 #include "libcpuid.h"
 #include "../libcdi/libcdi.h"
@@ -202,6 +203,8 @@ VOID NW_Fini(VOID)
 	cpuid_free_raw_data_array(NWLC->NwCpuRaw);
 	free(NWLC->NwCpuRaw);
 	NWL_FreeSensors();
+	NWL_FreeNetAdapters(NWLC->NwNetAdapters);
+	NWLC->NwNetAdapters = NULL;
 	WR0_CloseDriver(NWLC->NwDrv);
 	WR0_CloseMutexes();
 	NWL_NodeFree(NWLC->NwRoot, 1);

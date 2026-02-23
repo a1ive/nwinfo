@@ -28,6 +28,7 @@ struct system_id_t;
 struct msr_info_t;
 struct smbus_context;
 struct _NWLIB_GPU_INFO;
+struct _NWLIB_NET_ADAPTER_MAP;
 
 typedef struct _NWLIB_IDS
 {
@@ -88,6 +89,7 @@ typedef struct _NWLIB_CONTEXT
 #define NW_NET_ETH    (1 << 4)
 #define NW_NET_WLAN   (1 << 5)
 	UINT64 NetFlags;
+	struct _NWLIB_NET_ADAPTER_MAP* NwNetAdapters;
 #define NW_DISK_NO_SMART (1 << 0)
 #define NW_DISK_PHYS     (1 << 1)
 #define NW_DISK_HD       (1 << 2)
@@ -201,7 +203,6 @@ LIBNW_API VOID NWL_GetHostname(CHAR* szHostname);
 LIBNW_API LPCSTR NWL_GetJoinInfo(CHAR* szName);
 
 #define NWL_STR_SIZE 64
-
 typedef struct _NWLIB_MEM_INFO
 {
 	DWORD PhysUsage;
@@ -244,15 +245,6 @@ typedef struct _NWLIB_CPU_INFO
 	UINT32 BiosRev;
 }NWLIB_CPU_INFO;
 LIBNW_API NWLIB_CPU_INFO* NWL_GetCpuMsr(VOID);
-
-typedef struct _NWLIB_NET_TRAFFIC
-{
-	double Recv;
-	double Send;
-	CHAR StrRecv[NWL_STR_SIZE];
-	CHAR StrSend[NWL_STR_SIZE];
-} NWLIB_NET_TRAFFIC;
-LIBNW_API VOID NWL_GetNetTraffic(NWLIB_NET_TRAFFIC* info, BOOL bit);
 
 LIBNW_API PNODE NWL_EnumPci(PNODE pNode, PNWL_ARG_SET pciClasses);
 

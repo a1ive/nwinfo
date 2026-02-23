@@ -346,6 +346,7 @@
     <ClInclude Include="devtree.h" />
     <ClInclude Include="disk.h" />
     <ClInclude Include="efivars.h" />
+    <ClInclude Include="network.h" />
     <ClInclude Include="node.h" />
     <ClInclude Include="gpu\adl.h" />
     <ClInclude Include="gpu\gpu.h" />
