@@ -225,11 +225,17 @@ NWL_ParseHwid(PNODE nd, struct _NWLIB_IDS* Ids, LPCWSTR Hwid, INT usb)
 
 	NWL_NodeAttrSet(nd, "Vendor ID", vid, 0);
 	NWL_NodeAttrSet(nd, "Device ID", did, 0);
-	if (!usb && hasSubsys)
-		NWL_NodeAttrSet(nd, "Subvendor ID", subvendor, 0);
-	NWL_FindId(nd, Ids, vid, did, hasSubsys ? subsys : NULL, usb);
-	if (!usb && hasSubsys && subvendor[0])
-		NWL_FindVendor(nd, Ids, subvendor, "Subvendor", NULL);
+	if (hasSubsys)
+	{
+		NWL_NodeAttrSet(nd, "Subsystem ID", subsys, 0);
+		if (!usb)
+			NWL_NodeAttrSet(nd, "Subvendor ID", subvendor, 0);
+		NWL_FindId(nd, Ids, vid, did, subsys, usb);
+		if (!usb && subvendor[0])
+			NWL_FindVendor(nd, Ids, subvendor, "Subvendor", NULL);
+	}
+	else
+		NWL_FindId(nd, Ids, vid, did, NULL, usb);
 	return 1;
 }
 
