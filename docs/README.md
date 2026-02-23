@@ -152,7 +152,7 @@ Exports active physical network interfaces with IPv4 addresses to `report.html` 
 - --device[=`TYPE`]  
   Print device tree.  
   `TYPE` specifies the type of the devices, e.g. `ACPI`, `SWD`, `PCI`, or `USB`.  
-- --sensors[=SRC,..]  
+- --sensors[=`SRC,..`]  
   Print sensors.  
   `SRC` specifies the provider of sensors.  
   Available providers are:  
