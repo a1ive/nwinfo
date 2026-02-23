@@ -932,6 +932,7 @@ VOID CAtaSmart::Init(BOOL useWmi, BOOL advancedDiskSearch, PBOOL flagChangeDisk,
 
 					SAFE_RELEASE(pCOMDev);
 				}
+				SAFE_RELEASE(pEnumCOMDevs);
 			}
 			catch (...)
 			{
@@ -2011,15 +2012,15 @@ VOID CAtaSmart::Init(BOOL useWmi, BOOL advancedDiskSearch, PBOOL flagChangeDisk,
 				DebugPrint(_T("EX:Drive Letter Mapping"));
 			}
 		*/
-safeRelease:
+		}
+	safeRelease:
 
-			SAFE_RELEASE(pCOMDev);
-			SAFE_RELEASE(pEnumCOMDevs);
-			SAFE_RELEASE(pEnumCOMDevs2);
-			SAFE_RELEASE(pIWbemServices);
+		SAFE_RELEASE(pCOMDev);
+		SAFE_RELEASE(pEnumCOMDevs);
+		SAFE_RELEASE(pEnumCOMDevs2);
+		SAFE_RELEASE(pIWbemServices);
 		//	CoUninitialize();
 		//  DebugPrint(_T("OK:CoUninitialize()"));
-		}
 	}
 	else
 	{
@@ -3957,7 +3958,7 @@ BOOL CAtaSmart::AddDiskNVMe(INT physicalDriveId, INT scsiPort, INT scsiTargetId,
 		asi.HostReads = static_cast<INT>((B8toB64le_ptr(&asi.SmartReadData[0x20]) * 1000) >> 21);// * 512 * 1000 / 1024 / 1024 / 1024);
 		asi.HostWrites = static_cast<INT>((B8toB64le_ptr(&asi.SmartReadData[0x30]) * 1000) >> 21);// * 512 * 1000 / 1024 / 1024 / 1024);
 		asi.PowerOnCount = B8toB32le_ptr(&asi.SmartReadData[0x70]);
-		asi.MeasuredPowerOnHours = asi.DetectedPowerOnHours = B8toINTle_ptr(&asi.SmartReadData[0x80]);
+		asi.MeasuredPowerOnHours = asi.DetectedPowerOnHours = B8toINTle_ptr(&asi.SmartReadData[0x80]); 
 
 		NVMeSmartToATASmart(asi.SmartReadData, &asi.Attribute);
 
