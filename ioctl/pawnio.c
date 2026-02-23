@@ -13,7 +13,7 @@ WR0_CheckPawnIO(void)
 {
 #ifdef _WIN64
 	WCHAR path[MAX_PATH];
-	// Program Files\\PawnIO\\PawnIO.sys
+	// Program Files\\PawnIO\\PawnIOLib.dll
 	SHGetFolderPathW(NULL, CSIDL_PROGRAM_FILES, NULL, 0, path);
 	PathCchAppend(path, MAX_PATH, L"PawnIO\\" PAWNIO_NAME);
 	HANDLE hFile = CreateFileW(path, GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING, 0, NULL);

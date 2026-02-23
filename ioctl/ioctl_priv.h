@@ -288,8 +288,8 @@ typedef struct _CPUZ_WRITE_PCI_CONFIG_INPUT
 
 // PawnIO.sys
 #define PAWNIO_ID							L"PawnIO"
-#define PAWNIO_NAME							L"PawnIO.sys" // PawnIO.sys for x86 is not provided
-#define PAWNIO_OBJ							L"\\\\.\\PawnIO"
+#define PAWNIO_NAME							L"PawnIOLib.dll"
+#define PAWNIO_OBJ							L"\\\\?\\GLOBALROOT\\Device\\PawnIO"
 
 #define PAWNIO_SETUP_EXE					L"PawnIOSetup.exe"
 #define PAWNIO_SETUP_CMD					PAWNIO_SETUP_EXE L" -install -silent"
