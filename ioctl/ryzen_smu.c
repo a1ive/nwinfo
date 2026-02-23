@@ -306,6 +306,7 @@ static ry_err_t get_rsmu_addr(ry_handle_t* handle)
 	case CODENAME_STRIXPOINT:
 	case CODENAME_STRIXHALO:
 	case CODENAME_KRACKANPOINT:
+	case CODENAME_KRACKANPOINT2:
 		handle->rsmu_cmd_addr = 0x3B10A20;
 		handle->rsmu_rsp_addr = 0x3B10A80;
 		handle->rsmu_arg_addr = 0x3B10A88;
@@ -395,6 +396,7 @@ static ry_err_t get_pm_table_base(ry_handle_t* handle, uint64_t* addr)
 	case CODENAME_STRIXHALO:
 	case CODENAME_STRIXPOINT:
 	case CODENAME_KRACKANPOINT:
+	case CODENAME_KRACKANPOINT2:
 	case CODENAME_LUCIENNE:
 		fn[0] = 0x66;
 		goto base_addr_class_1;
@@ -498,6 +500,7 @@ static ry_err_t get_pm_table_version(ry_handle_t* handle, uint32_t* version)
 	case CODENAME_STRIXHALO:
 	case CODENAME_STRIXPOINT:
 	case CODENAME_KRACKANPOINT:
+	case CODENAME_KRACKANPOINT2:
 	case CODENAME_LUCIENNE:
 		fn = 0x06;
 		break;
@@ -672,6 +675,7 @@ static ry_err_t transfer_table_to_dram(ry_handle_t* handle)
 	case CODENAME_STRIXHALO:
 	case CODENAME_STRIXPOINT:
 	case CODENAME_KRACKANPOINT:
+	case CODENAME_KRACKANPOINT2:
 	case CODENAME_LUCIENNE:
 		args.u32.arg0 = 3;
 		fn = 0x65;
