@@ -627,6 +627,26 @@ PrintWPBT(PNODE pNode, DESC_HEADER* Hdr)
 }
 
 static PNODE
+PrintMCFG(PNODE pNode, DESC_HEADER* Hdr)
+{
+	ACPI_MCFG* mcfg = (ACPI_MCFG*)Hdr;
+	if (Hdr->Length < offsetof(ACPI_MCFG, TableEntry))
+		return pNode;
+	UINT32 count = (Hdr->Length - offsetof(ACPI_MCFG, TableEntry)) / sizeof(MCFG_ENTRY);
+	PNODE entries = NWL_NodeAppendNew(pNode, "Entries", NFLG_TABLE);
+	for (UINT32 i = 0; i < count; i++)
+	{
+		MCFG_ENTRY* entry = &mcfg->TableEntry[i];
+		PNODE sub = NWL_NodeAppendNew(entries, "Entry", NFLG_TABLE_ROW);
+		NWL_NodeAttrSetf(sub, "Base Address", 0, "0x%016llX", entry->BaseAddress);
+		NWL_NodeAttrSetf(sub, "Segment Group", NAFLG_FMT_NUMERIC, "%u", entry->SegmentNumber);
+		NWL_NodeAttrSetf(sub, "Start Bus", NAFLG_FMT_NUMERIC, "%u", entry->StartBusNumber);
+		NWL_NodeAttrSetf(sub, "End Bus", NAFLG_FMT_NUMERIC, "%u", entry->EndBusNumber);
+	}
+	return pNode;
+}
+
+static PNODE
 PrintTableInfo(PNODE pNode, DESC_HEADER* Hdr)
 {
 	if (!Hdr)
@@ -640,6 +660,7 @@ PrintTableInfo(PNODE pNode, DESC_HEADER* Hdr)
 	case ACPI_SIG('A', 'P', 'I', 'C'): return PrintMADT(tab, Hdr);
 	case ACPI_SIG('B', 'G', 'R', 'T'): return PrintBGRT(tab, Hdr);
 	case ACPI_SIG('F', 'A', 'C', 'P'): return PrintFADT(tab, Hdr);
+	case ACPI_SIG('M', 'C', 'F', 'G'): return PrintMCFG(tab, Hdr);
 	case ACPI_SIG('R', 'S', 'D', 'T'): return PrintRSDT(tab, Hdr);
 	case ACPI_SIG('W', 'P', 'B', 'T'): return PrintWPBT(tab, Hdr);
 	case ACPI_SIG('X', 'S', 'D', 'T'): return PrintXSDT(tab, Hdr);
