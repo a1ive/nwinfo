@@ -533,6 +533,9 @@ static size_t get_pm_table_size_from_version(ry_handle_t* handle, uint32_t versi
 {
 	switch (version)
 	{
+	case 0x190001: return 0x280;
+	case 0x190101: return 0x45C;
+	case 0x190201: return 0x814;
 	case 0x1E0001: return 0x570;
 	case 0x1E0002: return 0x580;
 	case 0x1E0003:
@@ -574,6 +577,11 @@ static size_t get_pm_table_size_from_version(ry_handle_t* handle, uint32_t versi
 	case 0x400005: return 0x944;  // CODENAME_CEZANNE
 	case 0x450004: return 0xAA4;  // CODENAME_REMBRANDT
 	case 0x450005: return 0xAB0;  // CODENAME_REMBRANDT
+	//case 0x470004: return 0x1E48;
+	//case 0x470104: return 0x1A20;
+	//case 0x470204: return 0x1554;
+	case 0x470304: return 0xDA8;
+	case 0x470404: return 0x980;
 	case 0x4C0003: return 0xB18;  // CODENAME_PHOENIX, CODENAME_HAWKPOINT
 	case 0x4C0004: return 0xB1C;  // CODENAME_PHOENIX, CODENAME_HAWKPOINT
 	case 0x4C0005: return 0xAF8;  // CODENAME_PHOENIX, CODENAME_HAWKPOINT
@@ -607,6 +615,9 @@ static size_t get_pm_table_size_from_version(ry_handle_t* handle, uint32_t versi
 	case 0x5C0403: return 0x980;  // CODENAME_STORMPEAK
 	case 0x5D0008: return 0xD54;  // CODENAME_STRIXPOINT
 	case 0x5D0009: return 0xD58;  // CODENAME_STRIXPOINT
+	case 0x5D000A: return 0xD60;
+	//case 0x5E0801: return 0x16EC;
+	//case 0x5E0802: return 0x289C;
 	case 0x620105: return 0x724;  // CODENAME_GRANITERIDGE
 	case 0x620205: return 0x994;  // CODENAME_GRANITERIDGE
 	case 0x621101:
@@ -625,6 +636,15 @@ static size_t get_pm_table_size_from_version(ry_handle_t* handle, uint32_t versi
 	//case 0x64020C: return 0x1028; // CODENAME_STRIXHALO
 	case 0x650004: return 0xB74;  // CODENAME_KRACKANPOINT
 	case 0x650005: return 0xB78;  // CODENAME_KRACKANPOINT
+	case 0x650006: return 0xB80;
+	//case 0x730A04: return 0x1EBC;
+	case 0x730204: return 0xB1C;
+	//case 0x730404: return 0x1004;
+	//case 0x730604: return 0x14EC;
+	//case 0x730804: return 0x19D4;
+	//case 0x730C04: return 0x23A4;
+	//case 0x730E04: return 0x288C;
+	//case 0x731004: return 0x2D74;
 	}
 	return SMU_TABLE_MAX_SIZE;
 }
