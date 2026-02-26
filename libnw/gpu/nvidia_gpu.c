@@ -24,6 +24,7 @@ struct NV_GPU_DATA
 	NvU32 VendorId;
 	NvU32 BusId;
 	NvU32 SlotId;
+	NV_GPU_TYPE GpuType;
 	NV_GPU_MEMORY_INFO_EX MemEx;
 	NV_DISPLAY_DRIVER_MEMORY_INFO Mem;
 	NV_GPU_DYNAMIC_PSTATES_INFO_EX Pstates;
@@ -90,6 +91,9 @@ static void* nv_gpu_init(PNWLIB_GPU_INFO info)
 		NvAPI_GPU_GetBusSlotId(ctx->GpuHandle[i], &ctx->List[i].SlotId);
 		NWL_Debug(NVDL, "Valid GPU [%d] %04X:%04X Bus %X Slot %X", i,
 			ctx->List[i].VendorId, ctx->List[i].ExtDeviceId, ctx->List[i].BusId, ctx->List[i].SlotId);
+
+		if (NvAPI_GPU_GetGPUType(ctx->GpuHandle[i], &ctx->List[i].GpuType) != NVAPI_OK)
+			ctx->List[i].GpuType = NV_SYSTEM_TYPE_DGPU; // NVIDIA iGPU is very rare
 
 		ctx->List[i].MemEx.version = NV_GPU_MEMORY_INFO_EX_VER;
 		// ctx->List[i].Mem -> 2, 3
@@ -318,6 +322,9 @@ static uint32_t nv_gpu_get(void* data, NWLIB_GPU_DEV* dev, uint32_t dev_count)
 		info->PciBus = (uint32_t)ctx->List[i].BusId;
 		info->PciDevice = (uint32_t)ctx->List[i].SlotId;
 		info->PciFunction = 0; // ?
+
+		if (ctx->List[i].GpuType == NV_SYSTEM_TYPE_IGPU)
+			info->Flags |= NWLIB_GPU_FLAG_INTEGRATED;
 
 		if (NvAPI_GPU_GetMemoryInfoEx(ctx->GpuHandle[i], &ctx->List[i].MemEx) == NVAPI_OK)
 		{

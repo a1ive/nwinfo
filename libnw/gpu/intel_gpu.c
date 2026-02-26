@@ -147,6 +147,13 @@ static uint32_t igcl_gpu_get(void* data, NWLIB_GPU_DEV* dev, uint32_t dev_count)
 		info->PciDevice = gpu->Pci.address.device;
 		info->PciFunction = gpu->Pci.address.function;
 
+		if (gpu->Props.graphics_adapter_properties & CTL_ADAPTER_PROPERTIES_FLAG_INTEGRATED)
+			info->Flags |= NWLIB_GPU_FLAG_INTEGRATED;
+		if (gpu->Pci.resizable_bar_supported)
+			info->Flags |= NWLIB_GPU_FLAG_REBAR_SUPPORT;
+		if (gpu->Pci.resizable_bar_enabled)
+			info->Flags |= NWLIB_GPU_FLAG_REBAR_ENABLED;
+
 		ctx->Result = IGCL_PowerTelemetryGet(ctx->Devices[i], &ctx->Pt);
 		if (ctx->Result != CTL_RESULT_SUCCESS)
 			continue;

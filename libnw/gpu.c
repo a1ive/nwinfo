@@ -101,6 +101,8 @@ PNODE NW_Gpu(BOOL bAppend)
 		NWL_NodeAttrSetf(gpu, "PnP ID", 0, "PCI\\VEN_%04X&DEV_%04X&SUBSYS_%08X&REV_%02X",
 			dev->VendorId, dev->DeviceId, dev->Subsys, dev->RevId);
 
+		NWL_NodeAttrSetBool(gpu, "Integrated GPU", (dev->Flags & NWLIB_GPU_FLAG_INTEGRATED), 0);
+
 		NWL_NodeAttrSetf(gpu, "GPU Utilization", 0, "%.1f%%", dev->UsagePercent);
 		NWL_NodeAttrSetf(gpu, "Temperature (C)", NAFLG_FMT_NUMERIC, "%.1f", dev->Temperature);
 		NWL_NodeAttrSet(gpu, "Total Memory", NWL_GetHumanSize(dev->TotalMemory, NWLC->NwUnits, 1024), NAFLG_FMT_HUMAN_SIZE);

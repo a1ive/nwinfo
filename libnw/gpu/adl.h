@@ -560,6 +560,23 @@ enum GCNFamilies
 	FAMILY_GC_10_3_7 = 151,
 };
 
+// values for ASIC family
+///\defgroup define_Asic_type Detailed asic types
+/// Defines for Adapter ASIC family type
+/// @{
+#define ADL_ASIC_UNDEFINED      0
+#define ADL_ASIC_DISCRETE       (1 << 0)
+#define ADL_ASIC_INTEGRATED     (1 << 1)
+#define ADL_ASIC_WORKSTATION    (1 << 2)
+#define ADL_ASIC_FIREMV         (1 << 3)
+#define ADL_ASIC_XGP            (1 << 4)
+#define ADL_ASIC_FUSION         (1 << 5)
+#define ADL_ASIC_FIRESTREAM     (1 << 6)
+#define ADL_ASIC_EMBEDDED       (1 << 7)
+// Backward compatibility
+#define ADL_ASIC_FIREGL  ADL_ASIC_WORKSTATION
+/// @}
+
 int ADL2_Main_Control_Create(int enumConnectedAdapters, void** ppContext);
 int ADL2_Main_Control_Destroy(void* pContext);
 int ADL2_Adapter_NumberOfAdapters_Get(void* pContext, int* numAdapters);
@@ -585,3 +602,4 @@ int ADL2_Adapter_PMLog_Start(void* pContext, int iAdapterIndex, ADLPMLogStartInp
 int ADL2_Adapter_PMLog_Stop(void* pContext, int iAdapterIndex, unsigned int iDevice);
 int ADL2_Adapter_MemoryInfoX4_Get(void* pContext, int iAdapterIndex, ADLMemoryInfoX4* lpMemoryInfoX4);
 int ADL2_Adapter_MemoryInfo2_Get(void* pContext, int iAdapterIndex, ADLMemoryInfo2* lpMemoryInfo2);
+int ADL2_Adapter_ASICFamilyType_Get(void* pContext, int iAdapterIndex, int* lpAsicTypes, int* lpValids);

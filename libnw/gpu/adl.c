@@ -28,6 +28,7 @@ typedef int (*ADL2_ADAPTER_PMLOG_START)(void*, int, ADLPMLogStartInput*, ADLPMLo
 typedef int (*ADL2_ADAPTER_PMLOG_STOP)(void*, int, unsigned int);
 typedef int (*ADL2_ADAPTER_MEMORYINFOX4_GET)(void*, int, ADLMemoryInfoX4*);
 typedef int (*ADL2_ADAPTER_MEMORYINFO2_GET)(void*, int, ADLMemoryInfo2*);
+typedef int (*ADL2_ADAPTER_ASICFAMILYTYPE_GET)(void*, int, int*, int*);
 
 HINSTANCE g_DLL = NULL;
 
@@ -290,4 +291,14 @@ int ADL2_Adapter_MemoryInfo2_Get(void* pContext, int iAdapterIndex, ADLMemoryInf
 	if (!pfn)
 		return ADL_ERR_NOT_SUPPORTED;
 	return pfn(pContext, iAdapterIndex, lpMemoryInfo2);
+}
+
+int ADL2_Adapter_ASICFamilyType_Get(void* pContext, int iAdapterIndex, int* lpAsicTypes, int* lpValids)
+{
+	if (!g_DLL)
+		return ADL_ERR;
+	ADL2_ADAPTER_ASICFAMILYTYPE_GET pfn = (ADL2_ADAPTER_ASICFAMILYTYPE_GET)GetProcAddress(g_DLL, "ADL2_Adapter_ASICFamilyType_Get");
+	if (!pfn)
+		return ADL_ERR_NOT_SUPPORTED;
+	return pfn(pContext, iAdapterIndex, lpAsicTypes, lpValids);
 }

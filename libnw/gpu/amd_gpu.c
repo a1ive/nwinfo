@@ -18,6 +18,9 @@ typedef struct ADL_GPU_INFO
 	AdapterInfo* AdapterInfo;
 	ADLGcnInfo GcnInfo;
 
+	int AsicType;
+	int AsicTypeValid;
+
 	uint32_t DeviceId;
 	uint32_t Subsys;
 	uint32_t RevId;
@@ -325,6 +328,12 @@ static void* adl_gpu_init(PNWLIB_GPU_INFO info)
 		get_overdrive_version(ctx, gpu, adapter->iAdapterIndex);
 		NWL_Debug(ATIADL, "Overdrive API supported: %d, version %d", gpu->OdSupported, gpu->OdApiLevel);
 
+		// Get ASIC types
+		if (ADL2_Adapter_ASICFamilyType_Get(ctx->AdlHandle, adapter->iAdapterIndex, &gpu->AsicType, &gpu->AsicTypeValid) != ADL_OK)
+			NWL_Debug(ATIADL, "ADL2_Adapter_ASICFamilyType_Get failed");
+		else
+			NWL_Debug(ATIADL, "ASIC type %x valid %x", gpu->AsicType, gpu->AsicTypeValid);
+
 		ctx->GpuCount++;
 	}
 
@@ -365,6 +374,13 @@ static uint32_t adl_gpu_get(void* data, NWLIB_GPU_DEV* dev, uint32_t dev_count)
 		info->PciBus = (uint32_t)gpu->AdapterInfo->iBusNumber;
 		info->PciDevice = (uint32_t)gpu->AdapterInfo->iDeviceNumber;
 		info->PciFunction = (uint32_t)gpu->AdapterInfo->iFunctionNumber;
+
+		if ((gpu->AsicTypeValid & ADL_ASIC_INTEGRATED) && (gpu->AsicType & ADL_ASIC_INTEGRATED))
+			info->Flags |= NWLIB_GPU_FLAG_INTEGRATED;
+		if ((gpu->AsicTypeValid & ADL_ASIC_FUSION) && (gpu->AsicType & ADL_ASIC_FUSION))
+			info->Flags |= NWLIB_GPU_FLAG_INTEGRATED;
+		if ((gpu->AsicTypeValid & ADL_ASIC_DISCRETE) && (gpu->AsicType & ADL_ASIC_DISCRETE))
+			info->Flags &= ~NWLIB_GPU_FLAG_INTEGRATED;
 
 		get_gpu_mem(ctx->AdlHandle, adapter_index, gpu, info);
 

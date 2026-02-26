@@ -8,6 +8,10 @@
 
 typedef struct _NWLIB_GPU_INFO NWLIB_GPU_INFO, * PNWLIB_GPU_INFO;
 
+#define NWLIB_GPU_FLAG_INTEGRATED (1 << 0)
+#define NWLIB_GPU_FLAG_REBAR_SUPPORT (1 << 1)
+#define NWLIB_GPU_FLAG_REBAR_ENABLED (1 << 2)
+
 typedef struct _NWLIB_GPU_DEV
 {
 	char Name[MAX_GPU_STR];
@@ -31,6 +35,7 @@ typedef struct _NWLIB_GPU_DEV
 	double Voltage;
 	double Temperature;
 	uint64_t FanSpeed;
+	uint64_t Flags;
 } NWLIB_GPU_DEV;
 
 typedef struct _NWLIB_GPU_DRV
