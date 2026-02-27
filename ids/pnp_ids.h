@@ -2,9 +2,11 @@
 #pragma once
 
 #define PNP_IDS_DEFAULT \
-	"ACI\tAncor / ASUS\n" \
+	"AAA\tAvolites\n" \
+	"ACI\tAncor\n" \
 	"ACR\tAcer\n" \
-	"AOC\tAOC Monitor\n" \
+	"AIC\tArnos Inst. & Comp.\n" \
+	"AOC\tAOC\n" \
 	"APP\tApple\n" \
 	"ATL\tArcus Tech\n" \
 	"AUO\tAU Optronics\n" \
@@ -19,23 +21,34 @@
 	"DVT\tData Video\n" \
 	"DWE\tDaewoo\n" \
 	"ELO\tElo TouchSystems\n" \
+	"ENC\tEizo\n" \
+	"FUS\tFujitsu Siemens\n" \
 	"GBT\tGigabyte\n" \
 	"GSM\tLG\n" \
+	"GWY\tGateway\n" \
 	"HEC\tHisense\n" \
 	"HKC\tHKC OVERSEAS\n" \
-	"HWP\tHewlett Packard\n" \
+	"HPN\tHP\n" \
+	"HSD\tHannStar\n" \
+	"HSP\tHannStar\n" \
+	"HWP\tHP\n" \
 	"HWV\tHuawei\n" \
-	"IVO\tInfoVision Opto.\n" \
+	"INL\tInnoLux\n" \
+	"IVM\tIiyama\n" \
+	"IVO\tInfoVision\n" \
 	"KGN\tKOGAN\n" \
 	"LEN\tLenovo\n" \
 	"LGD\tLG\n" \
+	"LPL\tLG Philips\n" \
 	"MEI\tPanasonic\n" \
 	"MIT\tMCM Industrial Tech\n" \
 	"MSG\tMSI\n" \
 	"MS_\tMicrosoft\n" \
 	"MSH\tMicrosoft\n" \
 	"MTX\tMatrox\n" \
+	"NCP\tNajing CEC Panda\n" \
 	"NEC\tNEC\n" \
+	"NVD\tNvidia\n" \
 	"ONK\tONKYO\n" \
 	"OVR\tOculus VR\n" \
 	"PHI\tPHI\n" \
@@ -57,5 +70,6 @@
 	"UBU\tCanonical\n" \
 	"VIZ\tVIZIO\n" \
 	"VSC\tViewSonic\n" \
+	"WAC\tWacom\n" \
 	"XMI\tXiaomi\n" \
 	"\n" \
