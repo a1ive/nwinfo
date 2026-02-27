@@ -25,6 +25,7 @@ enum
 	NW_OPT_SYS,
 	NW_OPT_CPU,
 	NW_OPT_NET,
+	NW_OPT_MAINBOARD,
 	NW_OPT_ACPI,
 	NW_OPT_SMBIOS,
 	NW_OPT_DISK,
@@ -59,6 +60,7 @@ static struct optparse_option nwOptions[] =
 	{ "sys", 0, OPTPARSE_NONE },
 	{ "cpu", 0, OPTPARSE_OPTIONAL },
 	{ "net", 0, OPTPARSE_OPTIONAL },
+	{ "board", 0, OPTPARSE_NONE },
 	{ "acpi", 0, OPTPARSE_OPTIONAL },
 	{ "smbios", 0, OPTPARSE_OPTIONAL },
 	{ "disk", 0, OPTPARSE_OPTIONAL },
@@ -111,6 +113,7 @@ static void nwinfo_help(void)
 		"      WLAN         Include IEEE 802.11 wireless addresses.\n"
 		"      IPV4         Show IPv4 addresses only.\n"
 		"      IPV6         Show IPv6 addresses only.\n"
+		"  --board          Print mainboard info.\n"
 		"  --acpi[=SGN]     Print ACPI info.\n"
 		"                   SGN specifies the signature of the ACPI table,\n"
 		"                   e.g. 'FACP' (Fixed ACPI Description Table).\n"
@@ -351,6 +354,9 @@ int main(int argc, char* argv[])
 			nwContext.NetInfo = TRUE;
 			break;
 		}
+		case NW_OPT_MAINBOARD:
+			nwContext.MainboardInfo = TRUE;
+			break;
 		case NW_OPT_ACPI:
 			if (options.optarg && strlen(options.optarg) == 4)
 				memcpy(&nwContext.AcpiTable, options.optarg, 4);

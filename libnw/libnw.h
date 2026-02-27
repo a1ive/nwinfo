@@ -51,6 +51,7 @@ typedef struct _NWLIB_CONTEXT
 	BOOL CpuInfo;
 	BOOL AcpiInfo;
 	BOOL NetInfo;
+	BOOL MainboardInfo;
 	BOOL DmiInfo;
 	BOOL DiskInfo;
 	BOOL EdidInfo;
@@ -181,6 +182,7 @@ LIBNW_API PNODE NW_Cpuid(BOOL bAppend);
 LIBNW_API PNODE NW_Disk(BOOL bAppend);
 LIBNW_API PNODE NW_Edid(BOOL bAppend);
 LIBNW_API PNODE NW_Network(BOOL bAppend);
+LIBNW_API PNODE NW_Mainboard(BOOL bAppend);
 LIBNW_API PNODE NW_Pci(BOOL bAppend);
 LIBNW_API PNODE NW_Smbios(BOOL bAppend);
 LIBNW_API PNODE NW_Spd(BOOL bAppend);

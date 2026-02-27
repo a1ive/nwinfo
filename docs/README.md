@@ -92,6 +92,8 @@ Exports active physical network interfaces with IPv4 addresses to `report.html` 
     `WLAN`   Include IEEE 802.11 wireless addresses.  
     `IPV4`   Show IPv4 addresses only.  
     `IPV6`   Show IPv6 addresses only.  
+- --board  
+  Print mainboard info.  
 - --acpi[=`SGN`]  
   Print ACPI info.  
   Driver is required to access some ACPI tables.  

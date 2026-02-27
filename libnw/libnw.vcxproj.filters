@@ -317,6 +317,9 @@
     <ClCompile Include="sensor\disk_io.c">
       <Filter>sensor</Filter>
     </ClCompile>
+    <ClCompile Include="mainboard.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

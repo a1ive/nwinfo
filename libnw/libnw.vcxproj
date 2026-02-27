@@ -396,6 +396,7 @@
     <ClCompile Include="iplookup.c" />
     <ClCompile Include="libinfo.c" />
     <ClCompile Include="libnw.c" />
+    <ClCompile Include="mainboard.c" />
     <ClCompile Include="network.c" />
     <ClCompile Include="nt.c" />
     <ClCompile Include="pci.c" />

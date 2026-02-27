@@ -103,7 +103,7 @@ typedef struct _TYPE_2_
 	UINT16 ChassisHandle;
 	UINT8 Type;
 	UINT8 NumObjHandle;
-	UINT16* pObjHandle;
+	UINT16 pObjHandle[];
 } BoardInfo, *PBoardInfo;
 
 typedef struct _TYPE_3_

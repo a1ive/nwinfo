@@ -142,6 +142,8 @@ VOID NW_Print(LPCSTR lpFileName)
 		NW_Edid(TRUE);
 	if (NWLC->NetInfo)
 		NW_Network(TRUE);
+	if (NWLC->MainboardInfo)
+		NW_Mainboard(TRUE);
 	if (NWLC->PciInfo)
 		NW_Pci(TRUE);
 	if (NWLC->DmiInfo)
