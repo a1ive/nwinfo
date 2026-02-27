@@ -36,7 +36,7 @@ jobs:
         table_of_contents: false
 
     - name: Upload PDF
-      uses: actions/upload-artifact@v6
+      uses: actions/upload-artifact@v7
       with:
         name: README.pdf
         path: build/README.pdf
@@ -102,13 +102,13 @@ jobs:
         Compress-Archive -Path "PKG\*" -DestinationPath "NWinfo.zip" -Force
 
     - name: Upload Application
-      uses: actions/upload-artifact@v6
+      uses: actions/upload-artifact@v7
       with:
         name: NWinfo
         path: PKG/
 
     - name: Upload Library
-      uses: actions/upload-artifact@v6
+      uses: actions/upload-artifact@v7
       with:
         name: NWinfo Library
         path: |
