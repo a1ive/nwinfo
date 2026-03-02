@@ -350,7 +350,7 @@ PrintDDR5(PNODE nd, UINT8* rawSpd)
 	DDR345Manufacturer(nd, rawSpd[512], rawSpd[513]);
 	NWL_NodeAttrSet(nd, "Date", SDRDDR12345Date(rawSpd[515], rawSpd[516]), 0);
 	NWL_NodeAttrSet(nd, "Serial Number", SDRDDR12345SN(rawSpd, 517), NAFLG_FMT_SENSITIVE);
-	NWL_NodeAttrSet(nd, "Part Number", SDRDDR12345SKU(rawSpd, 521, 20), NAFLG_FMT_SENSITIVE);
+	NWL_NodeAttrSet(nd, "Part Number", SDRDDR12345SKU(rawSpd, 521, 30), NAFLG_FMT_SENSITIVE);
 
 	bool xmp = false;
 	UINT32 mhzFreq = 0;
