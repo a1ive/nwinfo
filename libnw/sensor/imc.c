@@ -32,6 +32,7 @@ static struct
 
 // https://doc.coreboot.org/northbridge/intel/sandybridge/nri_registers.html
 // https://github.com/remittor/pyhwinfo
+// https://github.com/cyring/CoreFreq/blob/master/x86_64/intel_reg.h
 
 #define MCHBAR_BASE_REG_LOW     0x48
 #define MCHBAR_BASE_REG_HIGH    0x4C
@@ -372,6 +373,61 @@ get_intel_mchbar_10_11(void)
 	ctx.width = (ch_size[0] && ch_size[1]) ? 128 : 64;
 }
 
+#define TGL_H_MMR_MC1_OFFSET      0x10000
+#define TGL_H_MMR_CH1_OFFSET      0x800
+
+#define TGL_H_MMR_CH0_DIMM_REG    0xD80C
+
+#define TGL_H_MMR_MC0_REG         0xE000
+#define TGL_H_MMR_ODT_TCL_REG     0xE070
+#define TGL_H_MMR_MC_INIT_REG     0xE454
+#define TGL_H_MMR_SA_PERF_REG     0x5918
+#define TGL_H_MMR_MC_BIOS_REG     0x5E04
+#define TGL_H_MMR_BLCK_REG        0x5F60
+
+static void
+get_intel_mchbar_11_tgl_h(void)
+{
+	uint64_t ofs_5f60 = get_mmio_64(TGL_H_MMR_BLCK_REG);
+	uint64_t ofs_5918 = get_mmio_64(TGL_H_MMR_SA_PERF_REG);
+	uint64_t ofs_5e04 = get_mmio_32(TGL_H_MMR_MC_BIOS_REG);
+
+	float bclk = (ofs_5f60 & 0xFFFFFFFF) / 1000.0f;
+	ctx.freq = (uint16_t)(((ofs_5918 >> 2) & 0xFF) * bclk);
+	ctx.freq <<= (ofs_5e04 >> 12) & 0x3;
+	if ((ofs_5e04 & 0xF00) == 0)
+		ctx.freq = (uint16_t)((133.34f / 100.0f) * ctx.freq);
+
+	ctx.ddr = 4;
+
+	uint32_t ch_size[2] = { 0 };
+
+	for (uint64_t mc = 0; mc < 2; mc++)
+	{
+		uint64_t mc_ofs = mc * TGL_H_MMR_MC1_OFFSET;
+		uint32_t ofs_d80c = get_mmio_32(mc_ofs + TGL_H_MMR_CH0_DIMM_REG);
+		ch_size[mc] = ((ofs_d80c >> 16) & 0x7F) + (ofs_d80c & 0x7F);
+		if (ch_size[mc] == 0)
+			continue;
+
+		for (uint64_t ch = 0; ch < 2; ch++)
+		{
+			uint64_t ch_ofs = mc_ofs + ch * TGL_H_MMR_CH1_OFFSET;
+			uint64_t ofs_e070 = get_mmio_64(ch_ofs + TGL_H_MMR_ODT_TCL_REG);
+			uint64_t ofs_e000 = get_mmio_64(ch_ofs + TGL_H_MMR_MC0_REG);
+			struct dimm_slot* p = &ctx.slot[mc * 2 + ch];
+			snprintf(p->name, SLOT_NAME_SIZE, "MC%lluCH%llu", mc, ch);
+			p->tCL = (ofs_e070 >> 16) & 0x7F;
+			p->tRP = ofs_e000 & 0x7F;
+			p->tRAS = (ofs_e000 >> 33) & 0xFF;
+			p->tRCD = (ofs_e000 >> 41) & 0x7F;
+			p->tRC = p->tRAS + p->tRP;
+		}
+	}
+
+	ctx.width = (ch_size[0] && ch_size[1]) ? 64 : 128;
+}
+
 #define ADL_MMR_MC1_OFFSET      0x10000
 #define ADL_MMR_CH1_OFFSET      0x800
 
@@ -624,6 +680,11 @@ detect_intel_mchbar(void)
 	case 0xA7: // Core 11th Gen (Rocket Lake)
 		ctx.mmio_reg = get_intel_reg_64(0x7FFFFF0000); // 38:16
 		ctx.get = get_intel_mchbar_10_11;
+		break;
+	//case 0x8C: // Core 11th Gen (Tiger Lake-U) // ???
+	case 0x8D: // Core 11th Gen (Tiger Lake-H)
+		ctx.mmio_reg = get_intel_reg_64(0x7FFFFE0000); // 38:17
+		ctx.get = get_intel_mchbar_11_tgl_h;
 		break;
 	case 0x97: // Core 12th Gen (Alder Lake)
 	case 0x9A: // Core 12th Gen (Alder Lake)
