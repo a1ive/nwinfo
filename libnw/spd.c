@@ -227,14 +227,14 @@ SDRCapacity(UINT8* rawSpd)
 }
 
 static void
-DDR345Manufacturer(PNODE nd, UINT8 Lsb, UINT8 Msb)
+DDR345Manufacturer(PNODE nd, LPCSTR Key, UINT8 Lsb, UINT8 Msb)
 {
 	if (Msb == 0x00 || Msb == 0xFF)
 	{
-		NWL_NodeAttrSet(nd, "Manufacturer", "UNKNOWN", 0);
+		NWL_NodeAttrSet(nd, Key, "UNKNOWN", 0);
 		return;
 	}
-	NWL_GetSpdManufacturer(nd, "Manufacturer", &NWLC->NwJep106, Lsb & 0x7f, Msb & 0x7f);
+	NWL_GetSpdManufacturer(nd, Key, &NWLC->NwJep106, Lsb & 0x7f, Msb & 0x7f);
 }
 
 static void
@@ -347,10 +347,13 @@ PrintDDR5(PNODE nd, UINT8* rawSpd)
 	NWL_NodeAttrSet(nd, "Module Type", DDR5ModuleType(rawSpd[3]), 0);
 	NWL_NodeAttrSet(nd, "Capacity", DDR5Capacity(rawSpd), 0);
 	NWL_NodeAttrSetBool(nd, "ECC", ((rawSpd[235] >> 3) & 3), 0);
-	DDR345Manufacturer(nd, rawSpd[512], rawSpd[513]);
+	DDR345Manufacturer(nd, "Manufacturer", rawSpd[512], rawSpd[513]);
 	NWL_NodeAttrSet(nd, "Date", SDRDDR12345Date(rawSpd[515], rawSpd[516]), 0);
 	NWL_NodeAttrSet(nd, "Serial Number", SDRDDR12345SN(rawSpd, 517), NAFLG_FMT_SENSITIVE);
 	NWL_NodeAttrSet(nd, "Part Number", SDRDDR12345SKU(rawSpd, 521, 30), NAFLG_FMT_SENSITIVE);
+	NWL_NodeAttrSetf(nd, "Revision Code", 0, "0x%02X", rawSpd[551]);
+	DDR345Manufacturer(nd, "DRAM Manufacturer", rawSpd[552], rawSpd[553]);
+	NWL_NodeAttrSetf(nd, "DRAM Stepping", 0, "0x%02X", rawSpd[554]);
 
 	bool xmp = false;
 	UINT32 mhzFreq = 0;
@@ -481,10 +484,13 @@ PrintDDR4(PNODE nd, UINT8* rawSpd)
 	NWL_NodeAttrSet(nd, "Module Type", DDR34ModuleType(rawSpd[3]), 0);
 	NWL_NodeAttrSet(nd, "Capacity", DDR4Capacity(rawSpd), 0);
 	NWL_NodeAttrSetBool(nd, "ECC", ((rawSpd[13] >> 3) & 1), 0);
-	DDR345Manufacturer(nd, rawSpd[320], rawSpd[321]);
+	DDR345Manufacturer(nd, "Manufacturer", rawSpd[320], rawSpd[321]);
 	NWL_NodeAttrSet(nd, "Date", SDRDDR12345Date(rawSpd[323], rawSpd[324]), 0);
 	NWL_NodeAttrSet(nd, "Serial Number", SDRDDR12345SN(rawSpd, 325), NAFLG_FMT_SENSITIVE);
 	NWL_NodeAttrSet(nd, "Part Number", SDRDDR12345SKU(rawSpd, 329, 20), NAFLG_FMT_SENSITIVE);
+	NWL_NodeAttrSetf(nd, "Revision Code", 0, "0x%02X", rawSpd[349]);
+	DDR345Manufacturer(nd, "DRAM Manufacturer", rawSpd[350], rawSpd[351]);
+	NWL_NodeAttrSetf(nd, "DRAM Stepping", 0, "0x%02X", rawSpd[352]);
 
 	bool xmp = false;
 	float mhzFreq = 0.0f;
@@ -609,10 +615,12 @@ PrintDDR3(PNODE nd, UINT8* rawSpd)
 	NWL_NodeAttrSet(nd, "Module Type", DDR34ModuleType(rawSpd[3]), 0);
 	NWL_NodeAttrSet(nd, "Capacity", DDR3Capacity(rawSpd), 0);
 	NWL_NodeAttrSetBool(nd, "ECC", ((rawSpd[8] >> 3) & 1), 0);
-	DDR345Manufacturer(nd, rawSpd[117], rawSpd[118]);
+	DDR345Manufacturer(nd, "Manufacturer", rawSpd[117], rawSpd[118]);
 	NWL_NodeAttrSet(nd, "Date", SDRDDR12345Date(rawSpd[120], rawSpd[121]), 0);
 	NWL_NodeAttrSet(nd, "Serial Number", SDRDDR12345SN(rawSpd, 122), NAFLG_FMT_SENSITIVE);
 	NWL_NodeAttrSet(nd, "Part Number", SDRDDR12345SKU(rawSpd, 128, 18), NAFLG_FMT_SENSITIVE);
+	NWL_NodeAttrSetf(nd, "Revision Code", 0, "%02X-%02X", rawSpd[146], rawSpd[147]);
+	DDR345Manufacturer(nd, "DRAM Manufacturer", rawSpd[148], rawSpd[149]);
 	NWL_NodeAttrSet(nd, "Voltage", DDR3Voltage(rawSpd), 0);
 
 	bool xmp = false;
