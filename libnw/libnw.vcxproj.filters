@@ -138,6 +138,12 @@
     <ClInclude Include="network.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\ids\mb_vendor.h">
+      <Filter>ids</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ids\chipset_ids.h">
+      <Filter>ids</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="acpi.c">

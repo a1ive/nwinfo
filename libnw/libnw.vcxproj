@@ -329,6 +329,8 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\ids\chipset_ids.h" />
+    <ClInclude Include="..\ids\mb_vendor.h" />
     <ClInclude Include="..\ids\pci_ids.h" />
     <ClInclude Include="..\ids\pnp_ids.h" />
     <ClInclude Include="..\ids\spd_ids.h" />

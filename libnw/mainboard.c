@@ -8,187 +8,10 @@
 #include "utils.h"
 #include "smbios.h"
 
-// https://github.com/lpereira/hardinfo/blob/master/data/vendor.ids
-// https://github.com/LibreHardwareMonitor/LibreHardwareMonitor/blob/master/LibreHardwareMonitorLib/Hardware/Motherboard/Identification.cs
-
-enum DMI_VENDOR_ID
-{
-	VENDOR_UNKNOWN = 0,
-	VENDOR_ACER,
-	VENDOR_AMD,
-	VENDOR_ALIENWARE,
-	VENDOR_AOPEN,
-	VENDOR_APPLE,
-	VENDOR_ASROCK,
-	VENDOR_ASUS,
-	VENDOR_AZW,
-	VENDOR_BIOSTAR,
-	VENDOR_CLEVO,
-	VENDOR_COLORFUL,
-	VENDOR_DELL,
-	VENDOR_DFI,
-	VENDOR_ECS,
-	VENDOR_EPOX,
-	VENDOR_EVGA,
-	VENDOR_FIC,
-	VENDOR_FOXCONN,
-	VENDOR_FRAMEWORK,
-	VENDOR_FUJITSU,
-	VENDOR_GATEWAY,
-	VENDOR_GIGABYTE,
-	VENDOR_HP,
-	VENDOR_HPE,
-	VENDOR_HUANANZHI,
-	VENDOR_IBM,
-	VENDOR_INTEL,
-	VENDOR_JETWAY,
-	VENDOR_JGINYUE,
-	VENDOR_LATTEPANDA,
-	VENDOR_LENOVO,
-	VENDOR_MAXSUN,
-	VENDOR_MEDION,
-	VENDOR_MICROSOFT,
-	VENDOR_MSI,
-	VENDOR_NEC,
-	VENDOR_ONDA,
-	VENDOR_PEGATRON,
-	VENDOR_SAMSUNG,
-	VENDOR_SAPPHIRE,
-	VENDOR_SHUTTLE,
-	VENDOR_SONY,
-	VENDOR_SOYO,
-	VENDOR_SUPERMICRO,
-	VENDOR_TOSHIBA,
-	VENDOR_XFX,
-	VENDOR_ZOTAC,
-
-	VENDOR__MAX
-};
-
-static const char* DMI_VENDOR_NAME[VENDOR__MAX] =
-{
-	[VENDOR_UNKNOWN] = NULL,
-	[VENDOR_ACER] = "Acer",
-	[VENDOR_AMD] = "AMD",
-	[VENDOR_ALIENWARE] = "Alienware",
-	[VENDOR_AOPEN] = "AOpen",
-	[VENDOR_APPLE] = "Apple",
-	[VENDOR_ASROCK] = "ASRock",
-	[VENDOR_ASUS] = "ASUS",
-	[VENDOR_AZW] = "Beelink",
-	[VENDOR_BIOSTAR] = "Biostar",
-	[VENDOR_CLEVO] = "Clevo",
-	[VENDOR_COLORFUL] = "Colorful",
-	[VENDOR_DELL] = "Dell",
-	[VENDOR_DFI] = "DFI",
-	[VENDOR_ECS] = "ECS",
-	[VENDOR_EPOX] = "EPoX",
-	[VENDOR_EVGA] = "EVGA",
-	[VENDOR_FIC] = "FIC",
-	[VENDOR_FOXCONN] = "Foxconn",
-	[VENDOR_FRAMEWORK] = "Framework",
-	[VENDOR_FUJITSU] = "Fujitsu",
-	[VENDOR_GATEWAY] = "Gateway",
-	[VENDOR_GIGABYTE] = "Gigabyte",
-	[VENDOR_HP] = "HP",
-	[VENDOR_HPE] = "HPE",
-	[VENDOR_HUANANZHI] = "HUANANZHI",
-	[VENDOR_IBM] = "IBM",
-	[VENDOR_INTEL] = "Intel",
-	[VENDOR_JGINYUE] = "JGINYUE",
-	[VENDOR_JETWAY] = "Jetway",
-	[VENDOR_LATTEPANDA] = "LattePanda",
-	[VENDOR_LENOVO] = "Lenovo",
-	[VENDOR_MAXSUN] = "MAXSUN",
-	[VENDOR_MEDION] = "Medion",
-	[VENDOR_MICROSOFT] = "Microsoft",
-	[VENDOR_MSI] = "MSI",
-	[VENDOR_NEC] = "NEC",
-	[VENDOR_ONDA] = "ONDA",
-	[VENDOR_PEGATRON] = "Pegatron",
-	[VENDOR_SAMSUNG] = "Samsung",
-	[VENDOR_SAPPHIRE] = "Sapphire",
-	[VENDOR_SHUTTLE] = "Shuttle",
-	[VENDOR_SONY] = "Sony",
-	[VENDOR_SOYO] = "SOYO",
-	[VENDOR_SUPERMICRO] = "Supermicro",
-	[VENDOR_TOSHIBA] = "Toshiba",
-	[VENDOR_XFX] = "XFX",
-	[VENDOR_ZOTAC] = "Zotac",
-};
-
-enum DMI_VENDOR_MATCH
-{
-	MATCH_EQUAL = 1,
-	MATCH_START,
-	MATCH_SEARCH,
-};
-
-static const struct
-{
-	const char* str;
-	enum DMI_VENDOR_ID id;
-	enum DMI_VENDOR_MATCH match;
-} DMI_VENDOR_LIST[] =
-{
-	{ "abit.com.tw", VENDOR_ACER, MATCH_SEARCH },
-	{ "Acer", VENDOR_ACER, MATCH_START },
-	{ "AMD", VENDOR_AMD, MATCH_START },
-	{ "Alienware", VENDOR_ALIENWARE, MATCH_EQUAL },
-	{ "AOpen", VENDOR_AOPEN, MATCH_START },
-	{ "Apple", VENDOR_APPLE, MATCH_START },
-	{ "ASRock", VENDOR_ASROCK, MATCH_EQUAL },
-	{ "ASUSTek", VENDOR_ASUS, MATCH_START },
-	{ "ASUS ", VENDOR_ASUS, MATCH_START },
-	{ "AZW", VENDOR_AZW, MATCH_EQUAL },
-	{ "Biostar", VENDOR_BIOSTAR, MATCH_START },
-	{ "Clevo", VENDOR_CLEVO, MATCH_START },
-	{ "COLORFUL", VENDOR_COLORFUL, MATCH_EQUAL },
-	{ "Dell", VENDOR_DELL, MATCH_START },
-	{ "DFI", VENDOR_DFI, MATCH_EQUAL },
-	{ "DFI Inc", VENDOR_DFI, MATCH_START },
-	{ "ECS", VENDOR_ECS, MATCH_EQUAL },
-	{ "ELITEGROUP", VENDOR_ECS, MATCH_START },
-	{ "EPoX COMPUTER CO., LTD", VENDOR_EPOX, MATCH_EQUAL },
-	{ "EVGA", VENDOR_EVGA, MATCH_START },
-	{ "FIC", VENDOR_FIC, MATCH_EQUAL },
-	{ "First International Computer", VENDOR_FIC, MATCH_START },
-	{ "Foxconn", VENDOR_FOXCONN, MATCH_EQUAL },
-	{ "Framework", VENDOR_FRAMEWORK, MATCH_START },
-	{ "Fujitsu", VENDOR_FUJITSU, MATCH_START },
-	{ "Gigabyte", VENDOR_GIGABYTE, MATCH_START },
-	{ "GIGA-BYTE", VENDOR_GIGABYTE, MATCH_START },
-	{ "HP", VENDOR_HP, MATCH_EQUAL },
-	{ "Hewlett-Packard", VENDOR_HP, MATCH_START },
-	{ "HPE", VENDOR_HPE, MATCH_EQUAL },
-	{ "Hewlett Packard Enterprise", VENDOR_HPE, MATCH_START },
-	{ "HUANANZHI", VENDOR_HUANANZHI, MATCH_EQUAL },
-	{ "IBM", VENDOR_IBM, MATCH_EQUAL },
-	{ "Intel", VENDOR_INTEL, MATCH_EQUAL },
-	{ "Intel Corp", VENDOR_INTEL, MATCH_START },
-	{ "JGINYUE", VENDOR_JGINYUE, MATCH_EQUAL },
-	{ "Jetway", VENDOR_JETWAY, MATCH_START },
-	{ "LattePanda", VENDOR_LATTEPANDA, MATCH_EQUAL },
-	{ "Lenovo", VENDOR_LENOVO, MATCH_START },
-	{ "MAXSUN", VENDOR_MAXSUN, MATCH_EQUAL },
-	{ "Medion", VENDOR_MEDION, MATCH_START },
-	{ "Microsoft", VENDOR_MICROSOFT, MATCH_START },
-	{ "Micro-Star International", VENDOR_MSI, MATCH_START },
-	{ "MSI", VENDOR_MSI, MATCH_EQUAL },
-	{ "NEC", VENDOR_NEC, MATCH_EQUAL },
-	{ "NEC ", VENDOR_NEC, MATCH_START },
-	{ "ONDA", VENDOR_ONDA, MATCH_EQUAL },
-	{ "Pegatron", VENDOR_PEGATRON, MATCH_START },
-	{ "Samsung", VENDOR_SAMSUNG, MATCH_START },
-	{ "Sapphire", VENDOR_SAPPHIRE, MATCH_START },
-	{ "Shuttle", VENDOR_SHUTTLE, MATCH_START },
-	{ "Sony", VENDOR_SONY, MATCH_START },
-	{ "SOYO", VENDOR_SOYO, MATCH_EQUAL },
-	{ "Supermicro", VENDOR_SUPERMICRO, MATCH_START },
-	{ "Toshiba", VENDOR_TOSHIBA, MATCH_START },
-	{ "XFX", VENDOR_XFX, MATCH_EQUAL },
-	{ "Zotac", VENDOR_ZOTAC, MATCH_START },
-};
+#define MB_VENDOR_IMPL
+#include "mb_vendor.h"
+#define CHIPSET_IDS_IMPL
+#include "chipset_ids.h"
 
 static PBoardInfo
 GetDMIType2(PNODE node)
@@ -247,6 +70,162 @@ out:
 	return id;
 }
 
+static LPCSTR
+GetPciDeviceName(PNODE dev)
+{
+	const char* name = NWL_NodeAttrGet(dev, "Device");
+	if (name[0] == '-' && name[1] == '\0')
+		name = NWL_NodeAttrGet(dev, "Description");
+	if (name[0] == '-' && name[1] == '\0')
+		name = NWL_NodeAttrGet(dev, "HWID");
+	return name;
+}
+
+static LPCSTR
+GetChipsetInfo(PNODE node, LPCSTR board)
+{
+	LPCSTR chipset = NULL;
+	PNWL_ARG_SET pciSet = NULL;
+	NWL_ArgSetAddStr(&pciSet, "0600"); // Host Bridge
+	NWL_ArgSetAddStr(&pciSet, "0601"); // ISA Bridge
+	NWL_ArgSetAddStr(&pciSet, "0C05"); // SMBus
+
+	PNODE root = NWL_NodeAlloc("Root", NFLG_TABLE);
+	NWL_EnumPci(root, pciSet);
+
+	PNODE pciHost = NULL;
+	PNODE pciIsa = NULL;
+	PNODE pciSmbus = NULL;
+	INT pciCount = NWL_NodeChildCount(root);
+	for (INT i = 0; i < pciCount; i++)
+	{
+		PNODE dev = NWL_NodeEnumChild(root, i);
+		const char* cc = NWL_NodeAttrGet(dev, "Class Code");
+		if (strncmp(cc, "0600", 4) == 0)
+		{
+			if (pciHost == NULL)
+				pciHost = dev;
+			else if (strcmp(NWL_NodeAttrGet(dev, "BDF"), "00:00.0") == 0)
+				pciHost = dev;
+		}
+		else if (strncmp(cc, "0601", 4) == 0)
+		{
+			pciIsa = dev;
+		}
+		else if (strncmp(cc, "0C05", 4) == 0)
+		{
+			pciSmbus = dev;
+		}
+	}
+
+	LPCSTR vid = NULL;
+	LPCSTR did = NULL;
+	if (pciHost)
+	{
+		vid = NWL_NodeAttrGet(pciHost, "Vendor ID");
+		NWL_NodeAttrSet(node, "Host Bridge", GetPciDeviceName(pciHost), 0);
+		NWL_NodeAttrSet(node, "Host Bridge VID", vid, 0);
+		NWL_NodeAttrSet(node, "Host Bridge DID", NWL_NodeAttrGet(pciHost, "Device ID"), 0);
+		NWL_NodeAttrSet(node, "Host Bridge BDF", NWL_NodeAttrGet(pciHost, "BDF"), 0);
+	}
+	if (pciSmbus)
+	{
+		vid = NWL_NodeAttrGet(pciSmbus, "Vendor ID");
+		NWL_NodeAttrSet(node, "SMBus", GetPciDeviceName(pciSmbus), 0);
+		NWL_NodeAttrSet(node, "SMBus VID", vid, 0);
+		NWL_NodeAttrSet(node, "SMBus DID", NWL_NodeAttrGet(pciSmbus, "Device ID"), 0);
+		NWL_NodeAttrSet(node, "SMBus BDF", NWL_NodeAttrGet(pciSmbus, "BDF"), 0);
+	}
+	if (pciIsa)
+	{
+		vid = NWL_NodeAttrGet(pciIsa, "Vendor ID");
+		did = NWL_NodeAttrGet(pciIsa, "Device ID");
+		NWL_NodeAttrSet(node, "ISA Bridge", GetPciDeviceName(pciIsa), 0);
+		NWL_NodeAttrSet(node, "ISA Bridge VID", vid, 0);
+		NWL_NodeAttrSet(node, "ISA Bridge DID", did, 0);
+		NWL_NodeAttrSet(node, "ISA Bridge BDF", NWL_NodeAttrGet(pciIsa, "BDF"), 0);
+	}
+
+	if (vid == NULL)
+	{
+		chipset = "Unknown";
+	}
+	else if (strcmp(vid, "8086") == 0) // Intel
+	{
+#if 1
+		if (pciIsa)
+		{
+			for (size_t i = 0; i < ARRAYSIZE(INTEL_ISA_LIST); i++)
+			{
+				if (strcmp(did, INTEL_ISA_LIST[i].id) == 0)
+				{
+					chipset = INTEL_ISA_LIST[i].name;
+					break;
+				}
+			}
+		}
+#endif
+		if (chipset == NULL)
+		{
+			for (size_t i = 0; i < ARRAYSIZE(INTEL_CHIPSET_LIST); i++)
+			{
+				if (strstr(board, INTEL_CHIPSET_LIST[i]) != NULL)
+				{
+					chipset = INTEL_CHIPSET_LIST[i];
+					break;
+				}
+			}
+		}
+		if (chipset == NULL)
+			chipset = "INTEL";
+	}
+	else if (strcmp(vid, "1022") == 0 || strcmp(vid, "1002") == 0) // AMD/ATI
+	{
+		for (size_t i = 0; i < ARRAYSIZE(AMD_CHIPSET_LIST); i++)
+		{
+			if (strstr(board, AMD_CHIPSET_LIST[i]) != NULL)
+			{
+				chipset = AMD_CHIPSET_LIST[i];
+				break;
+			}
+		}
+		if (chipset == NULL)
+			chipset = "AMD";
+	}
+	else if (strcmp(vid, "1039") == 0) // SiS
+	{
+		chipset = "SiS";
+	}
+	else if (strcmp(vid, "10B9") == 0) // ULi
+	{
+		chipset = "ULi";
+	}
+	else if (strcmp(vid, "10DE") == 0) // NVIDIA
+	{
+		chipset = "NVIDIA";
+	}
+	else if (strcmp(vid, "1106") == 0) // VIA
+	{
+		chipset = "VIA";
+	}
+	else if (strcmp(vid, "1D17") == 0) // Zhaoxin
+	{
+		chipset = "Zhaoxin";
+	}
+	else if (strcmp(vid, "1D94") == 0) // Hygon
+	{
+		chipset = "Hygon";
+	}
+	else
+	{
+		chipset = "Unknown";
+	}
+
+	NWL_ArgSetFree(pciSet);
+	NWL_NodeFree(root, TRUE);
+	return chipset;
+}
+
 PNODE NW_Mainboard(BOOL bAppend)
 {
 	PNODE node = NWL_NodeAlloc("Mainboard", NFLG_TABLE);
@@ -257,15 +236,19 @@ PNODE NW_Mainboard(BOOL bAppend)
 	if (!pBoard)
 		return node;
 	const char* vendorStr = NWL_GetDmiString((UINT8*)pBoard, pBoard->Manufacturer);
+	const char* productStr = NWL_GetDmiString((UINT8*)pBoard, pBoard->Product);
 	enum DMI_VENDOR_ID vendorId = GetBoardVendor(vendorStr);
 	if (vendorId == VENDOR_UNKNOWN)
 		NWL_NodeAttrSet(node, "Manufacturer", vendorStr, 0);
 	else
 		NWL_NodeAttrSet(node, "Manufacturer", DMI_VENDOR_NAME[vendorId], 0);
 
-	NWL_NodeAttrSet(node, "Board Name", NWL_GetDmiString((UINT8*)pBoard, pBoard->Product), 0);
+	NWL_NodeAttrSet(node, "Board Name", productStr, 0);
 	NWL_NodeAttrSet(node, "Board Version", NWL_GetDmiString((UINT8*)pBoard, pBoard->Version), 0);
 	NWL_NodeAttrSet(node, "Serial Number", NWL_GetDmiString((UINT8*)pBoard, pBoard->SN), NAFLG_FMT_SENSITIVE);
+
+	const char* chipset = GetChipsetInfo(node, productStr);
+	NWL_NodeAttrSet(node, "Chipset", chipset, 0);
 
 	return node;
 }
