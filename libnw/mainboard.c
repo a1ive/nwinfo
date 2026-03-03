@@ -4,12 +4,11 @@
 #include <stdlib.h>
 #include <string.h>
 
+#define MB_VENDOR_IMPL
 #include "libnw.h"
 #include "utils.h"
 #include "smbios.h"
 
-#define MB_VENDOR_IMPL
-#include "mb_vendor.h"
 #define CHIPSET_IDS_IMPL
 #include "chipset_ids.h"
 
@@ -68,6 +67,17 @@ GetBoardVendor(const char* vendor)
 	}
 out:
 	return id;
+}
+
+LIBNW_API enum DMI_VENDOR_ID
+NWL_GetBoardVendor(VOID)
+{
+	if (!NWLC->NwSmbios)
+		return VENDOR_UNKNOWN;
+	PBoardInfo pBoard = GetDMIType2(NULL);
+	if (!pBoard)
+		return VENDOR_UNKNOWN;
+	return GetBoardVendor(NWL_GetDmiString((UINT8*)pBoard, pBoard->Manufacturer));
 }
 
 static LPCSTR
@@ -237,7 +247,7 @@ PNODE NW_Mainboard(BOOL bAppend)
 		return node;
 	const char* vendorStr = NWL_GetDmiString((UINT8*)pBoard, pBoard->Manufacturer);
 	const char* productStr = NWL_GetDmiString((UINT8*)pBoard, pBoard->Product);
-	enum DMI_VENDOR_ID vendorId = GetBoardVendor(vendorStr);
+	enum DMI_VENDOR_ID vendorId = NWL_GetBoardVendor();
 	if (vendorId == VENDOR_UNKNOWN)
 		NWL_NodeAttrSet(node, "Manufacturer", vendorStr, 0);
 	else

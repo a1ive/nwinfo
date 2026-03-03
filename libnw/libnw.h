@@ -7,6 +7,7 @@
 #include <stdnoreturn.h>
 
 #include "nwapi.h"
+#include "mb_vendor.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -199,6 +200,8 @@ LIBNW_API PNODE NW_Gpu(BOOL bAppend);
 LIBNW_API PNODE NW_Font(BOOL bAppend);
 LIBNW_API PNODE NW_DevTree(BOOL bAppend);
 LIBNW_API PNODE NW_Sensors(BOOL bAppend);
+
+LIBNW_API enum DMI_VENDOR_ID NWL_GetBoardVendor(VOID);
 
 LIBNW_API VOID NWL_GetUptime(CHAR* szUptime, DWORD dwSize);
 LIBNW_API VOID NWL_GetHostname(CHAR* szHostname);
