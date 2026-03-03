@@ -329,6 +329,7 @@ gnwinfo_ctx_init(HINSTANCE inst, HWND wnd, struct nk_context* ctx, float width, 
 	g_ctx.lib.DmiInfo = TRUE;
 	g_ctx.lib.UefiInfo = TRUE;
 	g_ctx.lib.PciInfo = TRUE;
+	g_ctx.lib.MainboardInfo = TRUE;
 
 	if (g_debug)
 		g_ctx.lib.Debug = TRUE;
@@ -340,6 +341,7 @@ gnwinfo_ctx_init(HINSTANCE inst, HWND wnd, struct nk_context* ctx, float width, 
 	g_ctx.cpuid = NW_Cpuid(TRUE);
 	g_ctx.system = NW_System(TRUE);
 	g_ctx.smbios = NW_Smbios(TRUE);
+	g_ctx.board = NW_Mainboard(TRUE);
 	g_ctx.uefi = NW_Uefi(TRUE);
 	g_ctx.pci = NW_Pci(TRUE);
 

@@ -104,13 +104,6 @@ draw_bios(struct nk_context* ctx)
 	}
 }
 
-static BOOL
-is_motherboard(PNODE node, const PVOID ctx)
-{
-	LPCSTR str = NWL_NodeAttrGet(node, "Board Type");
-	return (strcmp(str, "Motherboard") == 0);
-}
-
 static VOID
 draw_computer(struct nk_context* ctx)
 {
@@ -133,11 +126,11 @@ draw_computer(struct nk_context* ctx)
 		gnwinfo_get_smbios_attr("3", "Type", NULL, NULL),
 		gnwinfo_get_smbios_attr("1", "Serial Number", NULL, NULL));
 
-	nk_lhsc(ctx, gnwinfo_get_smbios_attr("2", "Manufacturer", NULL, is_motherboard), NK_TEXT_LEFT, g_color_text_d, nk_true, nk_true);
+	nk_lhsc(ctx, NWL_NodeAttrGet(g_ctx.board, "Manufacturer"), NK_TEXT_LEFT, g_color_text_d, nk_true, nk_true);
 	nk_lhcf(ctx, NK_TEXT_LEFT, g_color_text_l,
 		"%s %s",
-		gnwinfo_get_smbios_attr("2", "Product Name", NULL, is_motherboard),
-		gnwinfo_get_smbios_attr("2", "Serial Number", NULL, is_motherboard));
+		NWL_NodeAttrGet(g_ctx.board, "Board Name"),
+		NWL_NodeAttrGet(g_ctx.board, "Serial Number"));
 
 	if (strcmp(bat, "Charging") == 0)
 	{

@@ -128,6 +128,7 @@ typedef struct _GNW_CONTEXT
 	PNODE system;
 	PNODE cpuid;
 	PNODE smbios;
+	PNODE board;
 	PNODE network;
 	PNODE disk;
 	PNODE edid;
