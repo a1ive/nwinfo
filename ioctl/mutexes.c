@@ -7,6 +7,7 @@
 
 static HANDLE mutex_pci = NULL;
 static HANDLE mutex_smbus = NULL;
+static HANDLE mutex_isa = NULL;
 
 static HANDLE open_mutex(LPCWSTR name)
 {
@@ -58,6 +59,7 @@ void WR0_OpenMutexes(void)
 {
 	mutex_pci = open_mutex(L"Global\\Access_PCI");
 	mutex_smbus = open_mutex(L"Global\\Access_SMBUS.HTP.Method");
+	mutex_isa = open_mutex(L"Global\\Access_ISABUS.HTP.Method");
 }
 
 void WR0_CloseMutexes(void)
@@ -66,6 +68,8 @@ void WR0_CloseMutexes(void)
 		CloseHandle(mutex_pci);
 	if (mutex_smbus != NULL)
 		CloseHandle(mutex_smbus);
+	if (mutex_isa != NULL)
+		CloseHandle(mutex_isa);
 }
 
 BOOL WR0_WaitPciBus(DWORD timeout)
@@ -88,6 +92,17 @@ void WR0_ReleaseSmBus(void)
 {
 	if (mutex_smbus != NULL)
 		ReleaseMutex(mutex_smbus);
+}
+
+BOOL WR0_WaitIsaBus(DWORD timeout)
+{
+	return wait_mutex(mutex_isa, timeout);
+}
+
+void WR0_ReleaseIsaBus(void)
+{
+	if (mutex_isa != NULL)
+		ReleaseMutex(mutex_isa);
 }
 
 typedef BOOL(WINAPI* LPFN_ISWOW64PROCESS) (HANDLE, PBOOL);

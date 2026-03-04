@@ -106,6 +106,8 @@ LIBNW_API BOOL WR0_WaitPciBus(DWORD timeout);
 LIBNW_API void WR0_ReleasePciBus(void);
 LIBNW_API BOOL WR0_WaitSmBus(DWORD timeout);
 LIBNW_API void WR0_ReleaseSmBus(void);
+LIBNW_API BOOL WR0_WaitIsaBus(DWORD timeout);
+LIBNW_API void WR0_ReleaseIsaBus(void);
 
 LIBNW_API BOOL WR0_IsWoW64(void);
 LPCSTR WR0_GetWineVersion(void);
