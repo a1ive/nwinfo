@@ -2351,8 +2351,8 @@ PNODE NW_Smbios(BOOL bAppend)
 	PNODE info = NWL_NodeAppendNew(node, "DMI", NFLG_TABLE_ROW);
 	if (bAppend)
 		NWL_NodeAppendChild(NWLC->NwRoot, node);
-	if (!NWLC->NwSmbios)
-		NWLC->NwSmbios = NWL_GetSmbios();
+	//if (!NWLC->NwSmbios)
+		//NWLC->NwSmbios = NWL_GetSmbios();
 	if (!NWLC->NwSmbios)
 		return node;
 	NWL_NodeAttrSetf(info, "SMBIOS Version", 0, "%u.%u", NWLC->NwSmbios->MajorVersion, NWLC->NwSmbios->MinorVersion);

@@ -309,6 +309,8 @@ PrintCpuMsr(PNODE node, uint8_t index)
 static void
 PrintCpuDmi(PNODE node, const char* name)
 {
+	if (NWLC->NwSmbios == NULL)
+		return;
 	LPBYTE p = (LPBYTE)NWLC->NwSmbios->Data;
 	const LPBYTE lastAddress = p + NWLC->NwSmbios->Length;
 	PProcessorInfo pInfo;

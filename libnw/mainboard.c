@@ -14,7 +14,7 @@
 #include "chipset_ids.h"
 
 static PBoardInfo
-GetDMIType2(PNODE node)
+GetDMIType2(void)
 {
 	LPBYTE p = (LPBYTE)NWLC->NwSmbios->Data;
 	const LPBYTE lastAddress = p + NWLC->NwSmbios->Length;
@@ -226,28 +226,43 @@ GetChipsetInfo(PNODE node, LPCSTR board)
 	return chipset;
 }
 
+BOOL NWL_GetMainboardInfo(NWLIB_MAINBOARD_INFO* info)
+{
+	if (info == NULL || NWLC->NwSmbios == NULL)
+		return FALSE;
+
+	PBoardInfo pBoard = GetDMIType2();
+	if (pBoard == NULL)
+		return FALSE;
+
+	info->VendorStr = NWL_GetDmiString((UINT8*)pBoard, pBoard->Manufacturer);
+	info->ProductStr = NWL_GetDmiString((UINT8*)pBoard, pBoard->Product);
+	info->VersionStr = NWL_GetDmiString((UINT8*)pBoard, pBoard->Version);
+	info->SerialStr = NWL_GetDmiString((UINT8*)pBoard, pBoard->SN);
+	info->VendorId = GetBoardVendor(info->VendorStr);
+	if (info->VendorId == VENDOR_UNKNOWN)
+		info->VendorName = info->VendorStr;
+	else
+		info->VendorName = DMI_VENDOR_NAME[info->VendorId];
+
+	return TRUE;
+}
+
 PNODE NW_Mainboard(BOOL bAppend)
 {
 	PNODE node = NWL_NodeAlloc("Mainboard", NFLG_TABLE);
 	if (bAppend)
 		NWL_NodeAppendChild(NWLC->NwRoot, node);
 
-	PBoardInfo pBoard = GetDMIType2(node);
-	if (!pBoard)
+	NWLIB_MAINBOARD_INFO info = { 0 };
+	if (!NWL_GetMainboardInfo(&info))
 		return node;
-	const char* vendorStr = NWL_GetDmiString((UINT8*)pBoard, pBoard->Manufacturer);
-	const char* productStr = NWL_GetDmiString((UINT8*)pBoard, pBoard->Product);
-	enum DMI_VENDOR_ID vendorId = GetBoardVendor(vendorStr);
-	if (vendorId == VENDOR_UNKNOWN)
-		NWL_NodeAttrSet(node, "Manufacturer", vendorStr, 0);
-	else
-		NWL_NodeAttrSet(node, "Manufacturer", DMI_VENDOR_NAME[vendorId], 0);
+	NWL_NodeAttrSet(node, "Manufacturer", info.VendorName, 0);
+	NWL_NodeAttrSet(node, "Board Name", info.ProductStr, 0);
+	NWL_NodeAttrSet(node, "Board Version", info.VersionStr, 0);
+	NWL_NodeAttrSet(node, "Serial Number", info.SerialStr, NAFLG_FMT_SENSITIVE);
 
-	NWL_NodeAttrSet(node, "Board Name", productStr, 0);
-	NWL_NodeAttrSet(node, "Board Version", NWL_GetDmiString((UINT8*)pBoard, pBoard->Version), 0);
-	NWL_NodeAttrSet(node, "Serial Number", NWL_GetDmiString((UINT8*)pBoard, pBoard->SN), NAFLG_FMT_SENSITIVE);
-
-	const char* chipset = GetChipsetInfo(node, productStr);
+	const char* chipset = GetChipsetInfo(node, info.ProductStr);
 	NWL_NodeAttrSet(node, "Chipset", chipset, 0);
 
 	return node;
