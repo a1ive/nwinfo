@@ -144,6 +144,9 @@
     <ClInclude Include="..\ids\chipset_ids.h">
       <Filter>ids</Filter>
     </ClInclude>
+    <ClInclude Include="..\ioctl\superio.h">
+      <Filter>ioctl</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="acpi.c">
