@@ -272,14 +272,26 @@ typedef struct _NWLIB_MEM_SENSORS
 } NWLIB_MEM_SENSORS;
 LIBNW_API VOID NWL_GetMemSensors(struct smbus_context* ctx, NWLIB_MEM_SENSORS* info);
 
+typedef struct _NWLIB_PCI_DEV_INFO
+{
+	CHAR Name[NWL_STR_SIZE];
+	CHAR VendorId[5];
+	CHAR DeviceId[5];
+	CHAR BDF[8];
+} NWLIB_PCI_DEV_INFO;
+
 typedef struct _NWLIB_MAINBOARD_INFO
 {
 	DWORD VendorId;
 	LPCSTR VendorName;
+	LPCSTR Chipset;
 	LPCSTR VendorStr;
 	LPCSTR ProductStr;
 	LPCSTR VersionStr;
 	LPCSTR SerialStr;
+	NWLIB_PCI_DEV_INFO HostBridge;
+	NWLIB_PCI_DEV_INFO IsaBridge;
+	NWLIB_PCI_DEV_INFO Smbus;
 } NWLIB_MAINBOARD_INFO;
 LIBNW_API BOOL NWL_GetMainboardInfo(NWLIB_MAINBOARD_INFO* info);
 
