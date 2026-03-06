@@ -30,6 +30,13 @@ BOOL
 WR0_InstallPawnIO(void)
 {
 #ifdef _WIN64
+	if (NWLC->NwOsInfo.dwMajorVersion < 10)
+		return FALSE;
+	if (NWLC->NwOsInfo.dwMajorVersion == 10
+		&& NWLC->NwOsInfo.dwMinorVersion == 0
+		&& NWLC->NwOsInfo.dwBuildNumber < 19041U) // Windows 10 2004
+		return FALSE;
+
 	WCHAR path[MAX_PATH];
 	WCHAR cmdline[] = PAWNIO_SETUP_CMD;
 	STARTUPINFOW si = { .cb = sizeof(STARTUPINFOW) };
