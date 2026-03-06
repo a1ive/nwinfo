@@ -1,0 +1,150 @@
+// SPDX-License-Identifier: Unlicense
+#pragma once
+
+#include <stdint.h>
+
+enum CHIP_ID
+{
+	CHIP_UNKNOWN = 0,
+	//CHIP_ATK0110 = 0x0110,
+	CHIP_F71808E = 0x0901,
+	CHIP_F71811 = 0x1007,
+	CHIP_F71858 = 0x0507,
+	CHIP_F71862 = 0x0601,
+	CHIP_F71869 = 0x0814,
+	CHIP_F71869A = 0x1007,
+	CHIP_F71878AD = 0x1106,
+	CHIP_F71882 = 0x0541,
+	CHIP_F71889AD = 0x1005,
+	CHIP_F71889ED = 0x0909,
+	CHIP_F71889F = 0x0723,
+	CHIP_IT8613E = 0x8613,
+	CHIP_IT8620E = 0x8620,
+	CHIP_IT8625E = 0x8625,
+	CHIP_IT8628E = 0x8628,
+	CHIP_IT8631E = 0x8631,
+	CHIP_IT8638E = 0x8638,
+	CHIP_IT8655E = 0x8655,
+	CHIP_IT8665E = 0x8665,
+	CHIP_IT8686E = 0x8686,
+	CHIP_IT8688E = 0x8688,
+	CHIP_IT8689E = 0x8689,
+	CHIP_IT8696E = 0x8696,
+	CHIP_IT8705F = 0x8705,
+	CHIP_IT8712F = 0x8712,
+	CHIP_IT8716F = 0x8716,
+	CHIP_IT8718F = 0x8718,
+	CHIP_IT8720F = 0x8720,
+	CHIP_IT8721F = 0x8721,
+	CHIP_IT8726F = 0x8726,
+	CHIP_IT8728F = 0x8728,
+	CHIP_IT8771E = 0x8771,
+	CHIP_IT8772E = 0x8772,
+	CHIP_IT8790E = 0x8790,
+	CHIP_IT8792E = 0x8733, // Could also be IT8791E, IT8795E
+	CHIP_IT87952E = 0x8695,
+	CHIP_NCT5585D = 0xFFF0, // Chip reports 0xD42A but that's in use
+	CHIP_NCT610XD = 0xC452,
+	CHIP_NCT6771F = 0xB470,
+	CHIP_NCT6776F = 0xC330,
+	CHIP_NCT6779D = 0xC560,
+	CHIP_NCT6791D = 0xC803,
+	CHIP_NCT6792D = 0xC911,
+	CHIP_NCT6792DA = 0xC913,
+	CHIP_NCT6793D = 0xD121,
+	CHIP_NCT6795D = 0xD352,
+	CHIP_NCT6796D = 0xD423,
+	CHIP_NCT6796DR = 0xD42A,
+	CHIP_NCT6796DS = 0xFFF1, // Chip reports 0xD802 but that's in use
+	CHIP_NCT6797D = 0xD451,
+	CHIP_NCT6798D = 0xD42B,
+	CHIP_NCT6686D = 0xD440,
+	CHIP_NCT6687D = 0xD592,
+	CHIP_NCT6687DR = 0xFFFF, // Dummy Entry for MSI AM5/LGA1851 Motherboards
+	CHIP_NCT6683D = 0xC732,
+	CHIP_NCT6799D = 0xD802,
+	CHIP_NCT6701D = 0xD806,
+	CHIP_W83627DHG = 0xA020,
+	CHIP_W83627DHGP = 0xB070,
+	CHIP_W83627EHF = 0x8800,
+	CHIP_W83627HF = 0x5200,
+	CHIP_W83627THF = 0x8280,
+	CHIP_W83667HG = 0xA510,
+	CHIP_W83667HGB = 0xB350,
+	CHIP_W83687THF = 0x8541,
+	//CHIP_IPMI = 0x4764,
+};
+
+static inline const char* CHIP_ID_TO_NAME(enum CHIP_ID id)
+{
+	switch (id)
+	{
+	//case CHIP_ATK0110: return "Asus ATK0110";
+	case CHIP_F71858: return "Fintek F71858";
+	case CHIP_F71862: return "Fintek F71862";
+	case CHIP_F71869: return "Fintek F71869";
+	case CHIP_F71878AD: return "Fintek F71878AD";
+	case CHIP_F71869A: return "Fintek F71869A/F71811";
+	case CHIP_F71882: return "Fintek F71882";
+	case CHIP_F71889AD: return "Fintek F71889AD";
+	case CHIP_F71889ED: return "Fintek F71889ED";
+	case CHIP_F71889F: return "Fintek F71889F";
+	case CHIP_F71808E: return "Fintek F71808E";
+	case CHIP_IT8613E: return "ITE IT8613E";
+	case CHIP_IT8620E: return "ITE IT8620E";
+	case CHIP_IT8625E: return "ITE IT8625E";
+	case CHIP_IT8628E: return "ITE IT8628E";
+	case CHIP_IT8631E: return "ITE IT8631E";
+	case CHIP_IT8638E: return "ITE IT8638E";
+	case CHIP_IT8655E: return "ITE IT8655E";
+	case CHIP_IT8665E: return "ITE IT8665E";
+	case CHIP_IT8686E: return "ITE IT8686E";
+	case CHIP_IT8688E: return "ITE IT8688E";
+	case CHIP_IT8689E: return "ITE IT8689E";
+	case CHIP_IT8696E: return "ITE IT8696E";
+	case CHIP_IT8705F: return "ITE IT8705F";
+	case CHIP_IT8712F: return "ITE IT8712F";
+	case CHIP_IT8716F: return "ITE IT8716F";
+	case CHIP_IT8718F: return "ITE IT8718F";
+	case CHIP_IT8720F: return "ITE IT8720F";
+	case CHIP_IT8721F: return "ITE IT8721F";
+	case CHIP_IT8726F: return "ITE IT8726F";
+	case CHIP_IT8728F: return "ITE IT8728F";
+	case CHIP_IT8771E: return "ITE IT8771E";
+	case CHIP_IT8772E: return "ITE IT8772E";
+	case CHIP_IT8790E: return "ITE IT8790E";
+	case CHIP_IT8792E: return "ITE IT8791E/IT8792E/IT8795E";
+	case CHIP_IT87952E: return "ITE IT87952E";
+	case CHIP_NCT5585D: return "Nuvoton NCT5585D";
+	case CHIP_NCT610XD: return "Nuvoton NCT6102D/NCT6104D/NCT6106D";
+	case CHIP_NCT6771F: return "Nuvoton NCT6771F";
+	case CHIP_NCT6776F: return "Nuvoton NCT6776F";
+	case CHIP_NCT6779D: return "Nuvoton NCT6779D";
+	case CHIP_NCT6791D: return "Nuvoton NCT6791D";
+	case CHIP_NCT6792D: return "Nuvoton NCT6792D";
+	case CHIP_NCT6792DA: return "Nuvoton NCT6792D-A";
+	case CHIP_NCT6793D: return "Nuvoton NCT6793D";
+	case CHIP_NCT6795D: return "Nuvoton NCT6795D";
+	case CHIP_NCT6796D: return "Nuvoton NCT6796D";
+	case CHIP_NCT6796DR: return "Nuvoton NCT6796D-R";
+	case CHIP_NCT6796DS: return "Nuvoton NCT6796D-S";
+	case CHIP_NCT6797D: return "Nuvoton NCT6797D";
+	case CHIP_NCT6798D: return "Nuvoton NCT6798D";
+	case CHIP_NCT6799D: return "Nuvoton NCT6799D";
+	case CHIP_NCT6686D: return "Nuvoton NCT6686D";
+	case CHIP_NCT6687D: return "Nuvoton NCT6687D";
+	case CHIP_NCT6687DR: return "Nuvoton NCT6687D-R";
+	case CHIP_NCT6683D: return "Nuvoton NCT6683D";
+	case CHIP_NCT6701D: return "Nuvoton NCT6701D";
+	case CHIP_W83627DHG: return "Winbond W83627DHG";
+	case CHIP_W83627DHGP: return "Winbond W83627DHG-P";
+	case CHIP_W83627EHF: return "Winbond W83627EHF";
+	case CHIP_W83627HF: return "Winbond W83627HF";
+	case CHIP_W83627THF: return "Winbond W83627THF";
+	case CHIP_W83667HG: return "Winbond W83667HG";
+	case CHIP_W83667HGB: return "Winbond W83667HG-B";
+	case CHIP_W83687THF: return "Winbond W83687THF";
+	//case CHIP_IPMI: return "IPMI";
+	default: return "Unknown";
+	}
+}

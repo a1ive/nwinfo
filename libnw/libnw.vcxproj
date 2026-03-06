@@ -330,11 +330,13 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\ids\chipset_ids.h" />
+    <ClInclude Include="..\ids\chip_ids.h" />
     <ClInclude Include="..\ids\mb_vendor.h" />
     <ClInclude Include="..\ids\pci_ids.h" />
     <ClInclude Include="..\ids\pnp_ids.h" />
     <ClInclude Include="..\ids\spd_ids.h" />
     <ClInclude Include="..\ids\usb_ids.h" />
+    <ClInclude Include="..\ioctl\lpcio.h" />
     <ClInclude Include="..\ioctl\ryzen_smu.h" />
     <ClInclude Include="..\ioctl\superio.h" />
     <ClInclude Include="..\libcdi\libcdi.h" />
@@ -349,6 +351,7 @@
     <ClInclude Include="devtree.h" />
     <ClInclude Include="disk.h" />
     <ClInclude Include="efivars.h" />
+    <ClInclude Include="lpc\lpc.h" />
     <ClInclude Include="network.h" />
     <ClInclude Include="node.h" />
     <ClInclude Include="gpu\adl.h" />
@@ -367,6 +370,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\ids\ids.c" />
+    <ClCompile Include="..\ioctl\lpcio.c" />
     <ClCompile Include="..\ioctl\ryzen_smu.c" />
     <ClCompile Include="..\libcdi\CDIWrapper.c" />
     <ClCompile Include="..\ioctl\mutexes.c" />
@@ -399,6 +403,11 @@
     <ClCompile Include="iplookup.c" />
     <ClCompile Include="libinfo.c" />
     <ClCompile Include="libnw.c" />
+    <ClCompile Include="lpc\lpc.c" />
+    <ClCompile Include="lpc\lpc_fintek.c" />
+    <ClCompile Include="lpc\lpc_ite.c" />
+    <ClCompile Include="lpc\lpc_nuvoton.c" />
+    <ClCompile Include="lpc\lpc_winbond.c" />
     <ClCompile Include="mainboard.c" />
     <ClCompile Include="network.c" />
     <ClCompile Include="nt.c" />
@@ -450,6 +459,9 @@
       <FileType>Document</FileType>
     </CopyFileToFolders>
     <CopyFileToFolders Include="..\ids\jep106.ids">
+      <FileType>Document</FileType>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="..\ioctl\pawn\LpcIO.bin">
       <FileType>Document</FileType>
     </CopyFileToFolders>
     <None Include="exports.def" />

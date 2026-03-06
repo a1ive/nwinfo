@@ -276,6 +276,7 @@ This section describes all files included in the final release package.
 | `RyzenSMU.bin` | PawnIO Module | AMD Ryzen SMU module for PawnIO driver |
 | `SmbusPIIX4.bin` | PawnIO Module | PIIX4 SMBus module for PawnIO driver |
 | `SmbusI801.bin` | PawnIO Module | I801 SMBus module for PawnIO driver |
+| `LpcIO.bin` | PawnIO Module | LPC I/O module for PawnIO driver |
 
 <div style="page-break-after: always;"></div>
 

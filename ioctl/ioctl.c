@@ -260,6 +260,7 @@ static BOOL load_pio(struct wr0_drv_t* drv)
 	load_pio_mod(&drv->pio_rysmu, L"RyzenSMU.bin");
 	load_pio_mod(&drv->pio_smi801, L"SmbusI801.bin");
 	load_pio_mod(&drv->pio_smpiix4, L"SmbusPIIX4.bin");
+	load_pio_mod(&drv->pio_lpcio, L"LpcIO.bin");
 	return TRUE;
 #else
 	return FALSE;
@@ -295,6 +296,7 @@ static void uninstall_pio(struct wr0_drv_t* drv)
 	unload_pio_mod(&drv->pio_rysmu);
 	unload_pio_mod(&drv->pio_smi801);
 	unload_pio_mod(&drv->pio_smpiix4);
+	unload_pio_mod(&drv->pio_lpcio);
 	if (drv->handle != INVALID_HANDLE_VALUE)
 	{
 		CloseHandle(drv->handle);

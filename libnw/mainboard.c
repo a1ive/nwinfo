@@ -13,6 +13,10 @@
 #define CHIPSET_IDS_IMPL
 #include "chipset_ids.h"
 
+#include "chip_ids.h"
+
+#include "lpc/lpc.h"
+
 static PBoardInfo
 GetDMIType2(void)
 {
@@ -282,6 +286,20 @@ PNODE NW_Mainboard(BOOL bAppend)
 		NWL_NodeAttrSet(node, "ISA Bridge BDF", info.IsaBridge.BDF, 0);
 	}
 	NWL_NodeAttrSet(node, "Chipset", info.Chipset, 0);
+
+	PNWLIB_LPC lpc = NWL_InitLpc(&info);
+	if (lpc)
+	{
+		for (enum LPCIO_CHIP_SLOT i = 0; i < LPCIO_SLOT_MAX; i++)
+		{
+			if (lpc->slots[i].chip == CHIP_UNKNOWN)
+				continue;
+			CHAR buf[5];
+			snprintf(buf, sizeof(buf), "LPC%d", i);
+			NWL_NodeAttrSet(node, buf, lpc->slots[i].name, 0);
+		}
+		NWL_FreeLpc(lpc);
+	}
 
 	return node;
 }
