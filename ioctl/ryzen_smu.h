@@ -107,6 +107,8 @@ typedef struct
 	uint32_t rsmu_arg_addr;
 } ry_handle_t;
 
+ry_codename_t ryzen_smu_get_codename(struct cpu_id_t* id);
+
 ry_handle_t* ryzen_smu_init(struct wr0_drv_t* drv_handle, struct cpu_id_t* id);
 
 void ryzen_smu_free(ry_handle_t* handle);

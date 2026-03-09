@@ -99,12 +99,15 @@ static const char* get_ry_err_str(ry_err_t code)
 	}
 }
 
-static ry_err_t get_codename(ry_handle_t* handle, struct cpu_id_t* id)
+ry_codename_t ryzen_smu_get_codename(struct cpu_id_t* id)
 {
-	if (id->vendor != VENDOR_AMD)
-		return RYZEN_SMU_CPU_NOT_SUPPORTED;
+	ry_codename_t codename = CODENAME_UNKNOWN;
 
-	handle->codename = CODENAME_UNKNOWN;
+	if (id->vendor != VENDOR_AMD)
+	{
+		SMU_DEBUG("Not an AMD CPU");
+		return codename;
+	}
 
 	switch (id->x86.ext_family)
 	{
@@ -113,57 +116,57 @@ static ry_err_t get_codename(ry_handle_t* handle, struct cpu_id_t* id)
 		{
 		case 0x01:
 			if (id->x86.pkg_type == 3)
-				handle->codename = CODENAME_NAPLES;
+				codename = CODENAME_NAPLES;
 			else if (id->x86.pkg_type == 7)
-				handle->codename = CODENAME_THREADRIPPER;
+				codename = CODENAME_THREADRIPPER;
 			else
-				handle->codename = CODENAME_SUMMITRIDGE;
+				codename = CODENAME_SUMMITRIDGE;
 			break;
 		case 0x08:
 			if (id->x86.pkg_type == 3 || id->x86.pkg_type == 7)
-				handle->codename = CODENAME_COLFAX;
+				codename = CODENAME_COLFAX;
 			else
-				handle->codename = CODENAME_PINNACLERIDGE;
+				codename = CODENAME_PINNACLERIDGE;
 			break;
 		case 0x11:
-			handle->codename = CODENAME_RAVENRIDGE;
+			codename = CODENAME_RAVENRIDGE;
 			break;
 		case 0x18:
 			if (id->x86.pkg_type == 7)
-				handle->codename = CODENAME_RAVENRIDGE2;
+				codename = CODENAME_RAVENRIDGE2;
 			else
-				handle->codename = CODENAME_PICASSO;
+				codename = CODENAME_PICASSO;
 			break;
 		case 0x20:
-			handle->codename = CODENAME_DALI;
+			codename = CODENAME_DALI;
 			break;
 		case 0x31:
 			if (id->x86.pkg_type == 7)
-				handle->codename = CODENAME_CASTLEPEAK;
+				codename = CODENAME_CASTLEPEAK;
 			else
-				handle->codename = CODENAME_ROME;
+				codename = CODENAME_ROME;
 			break;
 		case 0x50:
-			handle->codename = CODENAME_FIREFLIGHT;
+			codename = CODENAME_FIREFLIGHT;
 			break;
 		case 0x60:
-			handle->codename = CODENAME_RENOIR;
+			codename = CODENAME_RENOIR;
 			break;
 		case 0x68:
-			handle->codename = CODENAME_LUCIENNE;
+			codename = CODENAME_LUCIENNE;
 			break;
 		case 0x71:
-			handle->codename = CODENAME_MATISSE;
+			codename = CODENAME_MATISSE;
 			break;
 		case 0x90:
 		case 0x91:
-			handle->codename = CODENAME_VANGOGH;
+			codename = CODENAME_VANGOGH;
 			break;
 		case 0x98:
-			handle->codename = CODENAME_MERO;
+			codename = CODENAME_MERO;
 			break;
 		case 0xA0:
-			handle->codename = CODENAME_MENDOCINO;
+			codename = CODENAME_MENDOCINO;
 			break;
 		}
 		break;
@@ -172,43 +175,43 @@ static ry_err_t get_codename(ry_handle_t* handle, struct cpu_id_t* id)
 		{
 		case 0x00:
 		case 0x01:
-			handle->codename = CODENAME_MILAN;
+			codename = CODENAME_MILAN;
 			break;
 		case 0x08:
-			handle->codename = CODENAME_CHAGALL;
+			codename = CODENAME_CHAGALL;
 			break;
 		case 0x11:
-			handle->codename = CODENAME_GENOA;
+			codename = CODENAME_GENOA;
 			break;
 		case 0x18:
-			handle->codename = CODENAME_STORMPEAK;
+			codename = CODENAME_STORMPEAK;
 			break;
 		case 0x20:
 		case 0x21:
-			handle->codename = CODENAME_VERMEER;
+			codename = CODENAME_VERMEER;
 			break;
 		case 0x40:
 		case 0x44:
-			handle->codename = CODENAME_REMBRANDT;
+			codename = CODENAME_REMBRANDT;
 			break;
 		case 0x50:
-			handle->codename = CODENAME_CEZANNE;
+			codename = CODENAME_CEZANNE;
 			break;
 		case 0x61:
 			if (id->x86.pkg_type == 1)
-				handle->codename = CODENAME_DRAGONRANGE;
+				codename = CODENAME_DRAGONRANGE;
 			else
-				handle->codename = CODENAME_RAPHAEL;
+				codename = CODENAME_RAPHAEL;
 			break;
 		case 0x74:
 		case 0x75:
-			handle->codename = CODENAME_PHOENIX;
+			codename = CODENAME_PHOENIX;
 			break;
 		case 0x78:
-			handle->codename = CODENAME_PHOENIX2;
+			codename = CODENAME_PHOENIX2;
 			break;
 		case 0x7C:
-			handle->codename = CODENAME_HAWKPOINT;
+			codename = CODENAME_HAWKPOINT;
 			break;
 		}
 		break;
@@ -216,45 +219,43 @@ static ry_err_t get_codename(ry_handle_t* handle, struct cpu_id_t* id)
 		switch (id->x86.ext_model)
 		{
 		case 0x02:
-			handle->codename = CODENAME_TURIN;
+			codename = CODENAME_TURIN;
 			break;
 		case 0x08:
-			handle->codename = CODENAME_SHIMADAPEAK;
+			codename = CODENAME_SHIMADAPEAK;
 			break;
 		case 0x11:
-			handle->codename = CODENAME_TURIND;
+			codename = CODENAME_TURIND;
 			break;
 		case 0x20:
 		case 0x24:
-			handle->codename = CODENAME_STRIXPOINT;
+			codename = CODENAME_STRIXPOINT;
 			break;
 		case 0x44:
-			handle->codename = CODENAME_GRANITERIDGE;
+			codename = CODENAME_GRANITERIDGE;
 			break;
 		case 0x60:
-			handle->codename = CODENAME_KRACKANPOINT;
+			codename = CODENAME_KRACKANPOINT;
 			break;
 		case 0x68:
-			handle->codename = CODENAME_KRACKANPOINT2;
+			codename = CODENAME_KRACKANPOINT2;
 			break;
 		case 0x70:
-			handle->codename = CODENAME_STRIXHALO;
+			codename = CODENAME_STRIXHALO;
 			break;
 		case 0xA0:
-			handle->codename = CODENAME_BERGAMO;
+			codename = CODENAME_BERGAMO;
 			break;
 		}
 		break;
 	}
-	if (handle->codename == CODENAME_UNKNOWN)
-	{
+	if (codename == CODENAME_UNKNOWN)
 		SMU_DEBUG("Unsupported CPU: Family %Xh, Model %Xh, Package %Xh",
 			id->x86.ext_family, id->x86.ext_model, id->x86.pkg_type);
-		return RYZEN_SMU_CPU_NOT_SUPPORTED;
-	}
-	SMU_DEBUG("Detected CPU: %s (Family %Xh, Model %Xh, Package %Xh)",
-		get_codename_str(handle->codename), id->x86.ext_family, id->x86.ext_model, id->x86.pkg_type);
-	return RYZEN_SMU_OK;
+	else
+		SMU_DEBUG("Detected CPU: %s (Family %Xh, Model %Xh, Package %Xh)",
+			get_codename_str(codename), id->x86.ext_family, id->x86.ext_model, id->x86.pkg_type);
+	return codename;
 }
 
 static ry_err_t get_rsmu_addr(ry_handle_t* handle)
@@ -748,7 +749,8 @@ ry_handle_t* ryzen_smu_init(struct wr0_drv_t* drv_handle, struct cpu_id_t* id)
 		return handle;
 	}
 
-	if (get_codename(handle, id) != RYZEN_SMU_OK)
+	handle->codename = ryzen_smu_get_codename(id);
+	if (handle->codename == CODENAME_UNKNOWN)
 		goto fail;
 
 	handle->pci_id = WR0_RdPciConf32(handle->drv_handle, 0, 0);
