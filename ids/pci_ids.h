@@ -81,4 +81,12 @@
 	"C 0b  Processor\n" \
 	"C 0c  Serial bus controller\n" \
 	"C 0d  Wireless controller\n" \
+	"C 0e  Intelligent controller\n" \
+	"C 0f  Satellite communication controller\n" \
+	"C 10  Encryption controller\n" \
+	"C 11  Signal processing controller\n" \
+	"C 12  Processing accelerator\n" \
+	"C 13  Non-Essential Instrumentation\n" \
+	"C 40  Coprocessor\n" \
+	"C ff  Unassigned class\n" \
 	"\n"
