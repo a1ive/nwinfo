@@ -211,7 +211,7 @@ Notes:
 
 ### Memory Module SPD
 
-- SMBus: Intel PCH, PIIX4 / AMD SB / Hygon 
+- SMBus: Intel PCH, PIIX4 / AMD SB / Hygon
 - Memory Module: SDR, DDR, DDR2, DDR3, DDR4, DDR5
 - Thermal Sensor: DDR4, DDR5
 
@@ -229,7 +229,7 @@ The program searches for and loads drivers in the following order: **CPUZ162 -> 
 
 | Driver | Filename | Bundled | CPU Sensor | SPD | ACPI | IMC | PCH |
 |--------|----------|---------|------------|-----|------|-----|-----|
-| [PawnIO](https://github.com/namazso/PawnIO)           | PawnIO.sys     | ✅ | ⚠️ | ✅ | ❌ | ❌ | ❌ |
+| [PawnIO](https://github.com/namazso/PawnIO)           | PawnIO.sys     | ✅ | ✅ | ✅ | ❌ | ⚠️ | ❌ |
 | [CPUZ162](https://www.cpuid.com/softwares/cpu-z.html) | cpuz162x64.sys | ❌ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | [NwHwIo](https://www.evga.com/precisionx1/)           | NwHwIox64.sys  | ❌ | ✅ | ✅ | ❌ | ✅ | ✅ |
 

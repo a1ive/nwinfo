@@ -1127,6 +1127,8 @@ DWORD WR0_RdAmdSmn(struct wr0_drv_t* drv, enum wr0_smn_type smn, DWORD reg)
 	BOOL result = FALSE;
 	DWORD value = 0;
 	uint32_t addr[2];
+	const char* pif = NULL;
+	struct pio_mod_t* pio = NULL;
 
 	if (!drv || !drv->handle || drv->handle == INVALID_HANDLE_VALUE)
 		return 0;
@@ -1135,14 +1137,20 @@ DWORD WR0_RdAmdSmn(struct wr0_drv_t* drv, enum wr0_smn_type smn, DWORD reg)
 	case WR0_SMN_AMD15H:
 		addr[0] = NB_PCI_REG_ADDR_ADDR;
 		addr[1] = NB_PCI_REG_DATA_ADDR;
+		pio = &drv->pio_amd10;
+		pif = "ioctl_read_smu";
 		break;
 	case WR0_SMN_ZENSMU:
 		addr[0] = SMU_PCI_ADDR_REG;
 		addr[1] = SMU_PCI_DATA_REG;
+		pio = &drv->pio_rysmu;
+		pif = "ioctl_read_smu_register";
 		break;
 	case WR0_SMN_AMD17H:
 		addr[0] = FAMILY_17H_PCI_CONTROL_REGISTER;
 		addr[1] = FAMILY_17H_PCI_DATA_REGISTER;
+		pio = &drv->pio_amd17;
+		pif = "ioctl_read_smn";
 		break;
 	default:
 		return 0;
@@ -1164,6 +1172,14 @@ DWORD WR0_RdAmdSmn(struct wr0_drv_t* drv, enum wr0_smn_type smn, DWORD reg)
 	case WR0_DRIVER_HWIO:
 	case WR0_DRIVER_WINRING0:
 		result = read_smn(drv, addr, reg, &value);
+		break;
+	case WR0_DRIVER_PAWNIO:
+	{
+		ULONG64 in = reg;
+		ULONG64 out = 0;
+		result = (WR0_ExecPawn(drv, pio, pif, &in, 1, &out, 1, NULL) == 0);
+		value = (DWORD)out;
+	}
 		break;
 	default:
 		return 0;

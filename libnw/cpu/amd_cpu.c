@@ -360,18 +360,7 @@ static int amd_k10_temperature(struct msr_info_t* info)
 
 	if (info->id->x86.ext_family = 0x15)
 	{
-		if (info->handle->type == WR0_DRIVER_PAWNIO)
-		{
-			struct pio_mod_t* pio = &info->handle->pio_amd10;
-			ULONG64 in = SMU_REPORTED_TEMP_CTRL_OFFSET;
-			ULONG64 out;
-			if (WR0_ExecPawn(info->handle, pio, "ioctl_read_smu", &in, 1, &out, 1, NULL) == 0)
-				value = (uint32_t)out;
-		}
-		else
-		{
-			value = WR0_RdAmdSmn(info->handle, WR0_SMN_AMD15H, SMU_REPORTED_TEMP_CTRL_OFFSET);
-		}
+		value = WR0_RdAmdSmn(info->handle, WR0_SMN_AMD15H, SMU_REPORTED_TEMP_CTRL_OFFSET);
 	}
 	else
 	{
@@ -405,17 +394,8 @@ static float amd_17h_temperature(struct msr_info_t* info)
 	uint32_t temperature;
 	float offset = 0.0f;
 
-	if (info->handle->type == WR0_DRIVER_PAWNIO)
-	{
-		ULONG64 in = F17H_M01H_THM_TCON_CUR_TMP;
-		ULONG64 out = 0;
-		WR0_ExecPawn(info->handle, &info->handle->pio_amd17, "ioctl_read_smn", &in, 1, &out, 1, NULL);
-		temperature = (uint32_t)out;
-	}
-	else
-	{
-		temperature = WR0_RdAmdSmn(info->handle, WR0_SMN_AMD17H, F17H_M01H_THM_TCON_CUR_TMP);
-	}
+
+	temperature = WR0_RdAmdSmn(info->handle, WR0_SMN_AMD17H, F17H_M01H_THM_TCON_CUR_TMP);
 
 	if (strstr(info->id->brand_str, "1600X") ||
 		strstr(info->id->brand_str, "1700X") ||
