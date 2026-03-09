@@ -516,6 +516,20 @@ enum nk_popup_type      {NK_POPUP_STATIC, NK_POPUP_DYNAMIC};
 enum nk_layout_format   {NK_DYNAMIC, NK_STATIC};
 enum nk_tree_type       {NK_TREE_NODE, NK_TREE_TAB};
 
+enum nk_tooltip_pos {
+    NK_TOP_LEFT,
+    NK_TOP_CENTER,
+    NK_TOP_RIGHT,
+
+    NK_MIDDLE_LEFT,
+    NK_MIDDLE_CENTER,
+    NK_MIDDLE_RIGHT,
+
+    NK_BOTTOM_LEFT,
+    NK_BOTTOM_CENTER,
+    NK_BOTTOM_RIGHT
+};
+
 typedef void*(*nk_plugin_alloc)(nk_handle, void *old, nk_size);
 typedef void (*nk_plugin_free)(nk_handle, void *old);
 typedef nk_bool(*nk_plugin_filter)(const struct nk_text_edit*, nk_rune unicode);
@@ -3580,7 +3594,7 @@ NK_API nk_bool nk_color_pick(struct nk_context*, struct nk_colorf*, enum nk_colo
  *     a `#` at the beginning. It will not be shown but guarantees correct behavior.
  *
  * ```c
- * void nk_property_int(struct nk_context *ctx, const char *name, int min, int *val, int max, int step, float inc_per_pixel);
+ * nk_bool nk_property_int(struct nk_context *ctx, const char *name, int min, int *val, int max, int step, float inc_per_pixel);
  * ```
  *
  * Parameter           | Description
@@ -3592,8 +3606,10 @@ NK_API nk_bool nk_color_pick(struct nk_context*, struct nk_colorf*, enum nk_colo
  * \param[in] max             | Maximum value not allowed to be overflown
  * \param[in] step            | Increment added and subtracted on increment and decrement button
  * \param[in] inc_per_pixel   | Value per pixel added or subtracted on dragging
+ *
+ * \returns `true(1)` if the value changed
  */
-NK_API void nk_property_int(struct nk_context*, const char *name, int min, int *val, int max, int step, float inc_per_pixel);
+NK_API nk_bool nk_property_int(struct nk_context*, const char *name, int min, int *val, int max, int step, float inc_per_pixel);
 
 /**
  * # # nk_property_float
@@ -3603,7 +3619,7 @@ NK_API void nk_property_int(struct nk_context*, const char *name, int min, int *
  *     a `#` at the beginning. It will not be shown but guarantees correct behavior.
  *
  * ```c
- * void nk_property_float(struct nk_context *ctx, const char *name, float min, float *val, float max, float step, float inc_per_pixel);
+ * nk_bool nk_property_float(struct nk_context *ctx, const char *name, float min, float *val, float max, float step, float inc_per_pixel);
  * ```
  *
  * Parameter           | Description
@@ -3615,8 +3631,10 @@ NK_API void nk_property_int(struct nk_context*, const char *name, int min, int *
  * \param[in] max             | Maximum value not allowed to be overflown
  * \param[in] step            | Increment added and subtracted on increment and decrement button
  * \param[in] inc_per_pixel   | Value per pixel added or subtracted on dragging
+ *
+ * \returns `true(1)` if the value changed
  */
-NK_API void nk_property_float(struct nk_context*, const char *name, float min, float *val, float max, float step, float inc_per_pixel);
+NK_API nk_bool nk_property_float(struct nk_context*, const char *name, float min, float *val, float max, float step, float inc_per_pixel);
 
 /**
  * # # nk_property_double
@@ -3626,7 +3644,7 @@ NK_API void nk_property_float(struct nk_context*, const char *name, float min, f
  *     a `#` at the beginning. It will not be shown but guarantees correct behavior.
  *
  * ```c
- * void nk_property_double(struct nk_context *ctx, const char *name, double min, double *val, double max, double step, double inc_per_pixel);
+ * nk_bool nk_property_double(struct nk_context *ctx, const char *name, double min, double *val, double max, double step, double inc_per_pixel);
  * ```
  *
  * Parameter           | Description
@@ -3638,8 +3656,10 @@ NK_API void nk_property_float(struct nk_context*, const char *name, float min, f
  * \param[in] max             | Maximum value not allowed to be overflown
  * \param[in] step            | Increment added and subtracted on increment and decrement button
  * \param[in] inc_per_pixel   | Value per pixel added or subtracted on dragging
+ *
+ * \returns `true(1)` if the value changed
  */
-NK_API void nk_property_double(struct nk_context*, const char *name, double min, double *val, double max, double step, float inc_per_pixel);
+NK_API nk_bool nk_property_double(struct nk_context*, const char *name, double min, double *val, double max, double step, float inc_per_pixel);
 
 /**
  * # # nk_propertyi
@@ -3781,10 +3801,10 @@ NK_API int nk_combo(struct nk_context*, const char *const *items, int count, int
 NK_API int nk_combo_separator(struct nk_context*, const char *items_separated_by_separator, int separator, int selected, int count, int item_height, struct nk_vec2 size);
 NK_API int nk_combo_string(struct nk_context*, const char *items_separated_by_zeros, int selected, int count, int item_height, struct nk_vec2 size);
 NK_API int nk_combo_callback(struct nk_context*, void(*item_getter)(void*, int, const char**), void *userdata, int selected, int count, int item_height, struct nk_vec2 size);
-NK_API void nk_combobox(struct nk_context*, const char *const *items, int count, int *selected, int item_height, struct nk_vec2 size);
-NK_API void nk_combobox_string(struct nk_context*, const char *items_separated_by_zeros, int *selected, int count, int item_height, struct nk_vec2 size);
-NK_API void nk_combobox_separator(struct nk_context*, const char *items_separated_by_separator, int separator, int *selected, int count, int item_height, struct nk_vec2 size);
-NK_API void nk_combobox_callback(struct nk_context*, void(*item_getter)(void*, int, const char**), void*, int *selected, int count, int item_height, struct nk_vec2 size);
+NK_API nk_bool nk_combobox(struct nk_context*, const char *const *items, int count, int *selected, int item_height, struct nk_vec2 size);
+NK_API nk_bool nk_combobox_string(struct nk_context*, const char *items_separated_by_zeros, int *selected, int count, int item_height, struct nk_vec2 size);
+NK_API nk_bool nk_combobox_separator(struct nk_context*, const char *items_separated_by_separator, int separator, int *selected, int count, int item_height, struct nk_vec2 size);
+NK_API nk_bool nk_combobox_callback(struct nk_context*, void(*item_getter)(void*, int, const char**), void*, int *selected, int count, int item_height, struct nk_vec2 size);
 /* =============================================================================
  *
  *                                  ABSTRACT COMBOBOX
@@ -3827,11 +3847,15 @@ NK_API void nk_contextual_end(struct nk_context*);
  *
  * ============================================================================= */
 NK_API void nk_tooltip(struct nk_context*, const char*);
+NK_API void nk_tooltip_offset(struct nk_context *ctx, const char *text, enum nk_tooltip_pos position, struct nk_vec2 offset);
 #ifdef NK_INCLUDE_STANDARD_VARARGS
 NK_API void nk_tooltipf(struct nk_context*, NK_PRINTF_FORMAT_STRING const char*, ...) NK_PRINTF_VARARG_FUNC(2);
 NK_API void nk_tooltipfv(struct nk_context*, NK_PRINTF_FORMAT_STRING const char*, va_list) NK_PRINTF_VALIST_FUNC(2);
+NK_API void nk_tooltipf_offset(struct nk_context*, enum nk_tooltip_pos, struct nk_vec2, NK_PRINTF_FORMAT_STRING const char*, ...) NK_PRINTF_VARARG_FUNC(4);
+NK_API void nk_tooltipfv_offset(struct nk_context*, enum nk_tooltip_pos, struct nk_vec2, NK_PRINTF_FORMAT_STRING const char*, va_list) NK_PRINTF_VALIST_FUNC(4);
 #endif
 NK_API nk_bool nk_tooltip_begin(struct nk_context*, float width);
+NK_API nk_bool nk_tooltip_begin_offset(struct nk_context*, float, enum nk_tooltip_pos, struct nk_vec2);
 NK_API void nk_tooltip_end(struct nk_context*);
 /* =============================================================================
  *
@@ -5581,6 +5605,9 @@ struct nk_style_window {
     struct nk_vec2 contextual_padding;
     struct nk_vec2 menu_padding;
     struct nk_vec2 tooltip_padding;
+
+    enum nk_tooltip_pos tooltip_origin;
+    struct nk_vec2 tooltip_offset;
 };
 
 struct nk_style {
@@ -19228,6 +19255,15 @@ nk_style_from_table(struct nk_context *ctx, const struct nk_color *table)
     win->contextual_padding = nk_vec2(4,4);
     win->menu_padding = nk_vec2(4,4);
     win->tooltip_padding = nk_vec2(4,4);
+
+    /* default tooltip just down and to the right of the cursor
+     * so it doesn't cover the text
+     *
+     * TODO might be worth consolidating tooltip styling
+     * into its own style structure, though it is a
+     * type of window...*/
+    win->tooltip_origin = NK_TOP_LEFT;
+    win->tooltip_offset = nk_vec2(12, 12);
 }
 NK_API void
 nk_style_set_font(struct nk_context *ctx, const struct nk_user_font *font)
@@ -29149,47 +29185,56 @@ nk_property(struct nk_context *ctx, const char *name, struct nk_property_variant
         win->edit.active = nk_false;
     }
 }
-NK_API void
+NK_API nk_bool
 nk_property_int(struct nk_context *ctx, const char *name,
     int min, int *val, int max, int step, float inc_per_pixel)
 {
     struct nk_property_variant variant;
+    nk_bool changed;
     NK_ASSERT(ctx);
     NK_ASSERT(name);
     NK_ASSERT(val);
 
-    if (!ctx || !ctx->current || !name || !val) return;
+    if (!ctx || !ctx->current || !name || !val) return nk_false;
     variant = nk_property_variant_int(*val, min, max, step);
     nk_property(ctx, name, &variant, inc_per_pixel, NK_FILTER_INT);
+    changed = variant.value.i != *val;
     *val = variant.value.i;
+    return changed;
 }
-NK_API void
+NK_API nk_bool
 nk_property_float(struct nk_context *ctx, const char *name,
     float min, float *val, float max, float step, float inc_per_pixel)
 {
     struct nk_property_variant variant;
+    nk_bool changed;
     NK_ASSERT(ctx);
     NK_ASSERT(name);
     NK_ASSERT(val);
 
-    if (!ctx || !ctx->current || !name || !val) return;
+    if (!ctx || !ctx->current || !name || !val) return nk_false;
     variant = nk_property_variant_float(*val, min, max, step);
     nk_property(ctx, name, &variant, inc_per_pixel, NK_FILTER_FLOAT);
+    changed = variant.value.f != *val;
     *val = variant.value.f;
+    return changed;
 }
-NK_API void
+NK_API nk_bool
 nk_property_double(struct nk_context *ctx, const char *name,
     double min, double *val, double max, double step, float inc_per_pixel)
 {
     struct nk_property_variant variant;
+    nk_bool changed;
     NK_ASSERT(ctx);
     NK_ASSERT(name);
     NK_ASSERT(val);
 
-    if (!ctx || !ctx->current || !name || !val) return;
+    if (!ctx || !ctx->current || !name || !val) return nk_false;
     variant = nk_property_variant_double(*val, min, max, step);
     nk_property(ctx, name, &variant, inc_per_pixel, NK_FILTER_FLOAT);
+    changed = variant.value.d != *val;
     *val = variant.value.d;
+    return changed;
 }
 NK_API int
 nk_propertyi(struct nk_context *ctx, const char *name, int min, int val,
@@ -30594,31 +30639,39 @@ nk_combo_callback(struct nk_context *ctx, void(*item_getter)(void*, int, const c
         nk_combo_end(ctx);
     } return selected;
 }
-NK_API void
+NK_API nk_bool
 nk_combobox(struct nk_context *ctx, const char *const *items, int count,
     int *selected, int item_height, struct nk_vec2 size)
 {
+    int tmp = *selected;
     *selected = nk_combo(ctx, items, count, *selected, item_height, size);
+    return tmp != *selected;
 }
-NK_API void
+NK_API nk_bool
 nk_combobox_string(struct nk_context *ctx, const char *items_separated_by_zeros,
     int *selected, int count, int item_height, struct nk_vec2 size)
 {
+    int tmp = *selected;
     *selected = nk_combo_string(ctx, items_separated_by_zeros, *selected, count, item_height, size);
+    return tmp != *selected;
 }
-NK_API void
+NK_API nk_bool
 nk_combobox_separator(struct nk_context *ctx, const char *items_separated_by_separator,
     int separator, int *selected, int count, int item_height, struct nk_vec2 size)
 {
+    int tmp = *selected;
     *selected = nk_combo_separator(ctx, items_separated_by_separator, separator,
                                     *selected, count, item_height, size);
+    return tmp != *selected;
 }
-NK_API void
+NK_API nk_bool
 nk_combobox_callback(struct nk_context *ctx,
     void(*item_getter)(void* data, int id, const char **out_text),
     void *userdata, int *selected, int count, int item_height, struct nk_vec2 size)
 {
+    int tmp = *selected;
     *selected = nk_combo_callback(ctx, item_getter, userdata,  *selected, count, item_height, size);
+    return tmp != *selected;
 }
 
 
@@ -30631,6 +30684,13 @@ nk_combobox_callback(struct nk_context *ctx,
  * ===============================================================*/
 NK_API nk_bool
 nk_tooltip_begin(struct nk_context *ctx, float width)
+{
+    NK_ASSERT(ctx);
+    return nk_tooltip_begin_offset(ctx, width, ctx->style.window.tooltip_origin, ctx->style.window.tooltip_offset);
+}
+
+NK_API nk_bool
+nk_tooltip_begin_offset(struct nk_context *ctx, float width, enum nk_tooltip_pos position, struct nk_vec2 offset)
 {
     int x,y,w,h;
     struct nk_window *win;
@@ -30651,14 +30711,55 @@ nk_tooltip_begin(struct nk_context *ctx, float width)
         return 0;
 
     w = nk_iceilf(width);
-    h = nk_iceilf(nk_null_rect.h);
-    x = nk_ifloorf(in->mouse.pos.x + 1) - (int)win->layout->clip.x;
-    y = nk_ifloorf(in->mouse.pos.y + 1) - (int)win->layout->clip.y;
+    h = NK_MAX(win->layout->row.min_height, ctx->style.font->height+2*ctx->style.window.padding.y);
+
+    /* Default origin is top left, plus user offset */
+    x = nk_ifloorf(in->mouse.pos.x + 1) - (int)win->layout->clip.x + offset.x;
+    y = nk_ifloorf(in->mouse.pos.y + 1) - (int)win->layout->clip.y + offset.y;
+
+    /* Adjust origin based on enum */
+    switch (position) {
+    case NK_TOP_LEFT:
+        /* no change */
+        break;
+    case NK_TOP_CENTER:
+        x -= w/2;
+        break;
+    case NK_TOP_RIGHT:
+        x -= w;
+        break;
+
+    case NK_MIDDLE_LEFT:
+        y -= h/2;
+        break;
+    case NK_MIDDLE_CENTER:
+        x -= w/2;
+        y -= h/2;
+        break;
+    case NK_MIDDLE_RIGHT:
+        x -= w;
+        y -= h/2;
+        break;
+
+    case NK_BOTTOM_LEFT:
+        y -= h;
+        break;
+    case NK_BOTTOM_CENTER:
+        x -= w/2;
+        y -= h;
+        break;
+    case NK_BOTTOM_RIGHT:
+        x -= w;
+        y -= h;
+        break;
+    default:
+        NK_ASSERT(0 && "Invalid tooltip position");
+    }
 
     bounds.x = (float)x;
     bounds.y = (float)y;
     bounds.w = (float)w;
-    bounds.h = (float)h;
+    bounds.h = (float)nk_iceilf(nk_null_rect.h);
 
     ret = nk_popup_begin(ctx, NK_POPUP_DYNAMIC,
         "__##Tooltip##__", NK_WINDOW_NO_SCROLLBAR|NK_WINDOW_BORDER, bounds);
@@ -30678,8 +30779,9 @@ nk_tooltip_end(struct nk_context *ctx)
     nk_popup_close(ctx);
     nk_popup_end(ctx);
 }
+
 NK_API void
-nk_tooltip(struct nk_context *ctx, const char *text)
+nk_tooltip_offset(struct nk_context *ctx, const char *text, enum nk_tooltip_pos position, struct nk_vec2 offset)
 {
     const struct nk_style *style;
     struct nk_vec2 padding;
@@ -30707,13 +30809,28 @@ nk_tooltip(struct nk_context *ctx, const char *text)
     text_height = (style->font->height + 2 * padding.y);
 
     /* execute tooltip and fill with text */
-    if (nk_tooltip_begin(ctx, (float)text_width)) {
+    if (nk_tooltip_begin_offset(ctx, (float)text_width, position, offset)) {
         nk_layout_row_dynamic(ctx, (float)text_height, 1);
         nk_text(ctx, text, text_len, NK_TEXT_LEFT);
         nk_tooltip_end(ctx);
     }
 }
+
+NK_API void
+nk_tooltip(struct nk_context *ctx, const char *text)
+{
+    NK_ASSERT(ctx);
+    nk_tooltip_offset(ctx, text, ctx->style.window.tooltip_origin, ctx->style.window.tooltip_offset);
+}
 #ifdef NK_INCLUDE_STANDARD_VARARGS
+NK_API void
+nk_tooltipf_offset(struct nk_context *ctx, enum nk_tooltip_pos position, struct nk_vec2 offset, const char *fmt, ...)
+{
+    va_list args;
+    va_start(args, fmt);
+    nk_tooltipfv_offset(ctx, position, offset, fmt, args);
+    va_end(args);
+}
 NK_API void
 nk_tooltipf(struct nk_context *ctx, const char *fmt, ...)
 {
@@ -30721,6 +30838,13 @@ nk_tooltipf(struct nk_context *ctx, const char *fmt, ...)
     va_start(args, fmt);
     nk_tooltipfv(ctx, fmt, args);
     va_end(args);
+}
+NK_API void
+nk_tooltipfv_offset(struct nk_context *ctx, enum nk_tooltip_pos position, struct nk_vec2 offset, const char *fmt, va_list args)
+{
+    char buf[256];
+    nk_strfmt(buf, NK_LEN(buf), fmt, args);
+    nk_tooltip_offset(ctx, buf, position, offset);
 }
 NK_API void
 nk_tooltipfv(struct nk_context *ctx, const char *fmt, va_list args)
