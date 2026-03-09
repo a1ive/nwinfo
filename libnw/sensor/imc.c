@@ -698,9 +698,11 @@ detect_intel_mchbar(void)
 	case 0xAA: // Ultra (Meteor Lake)
 	case 0xAB: // Ultra (Meteor Lake)
 	case 0xAC: // Ultra (Meteor Lake)
-	case 0xB5: // Ultra (Arrow Lake)
-	case 0xC5: // Ultra (Arrow Lake)
-	case 0xC6: // Ultra (Arrow Lake)
+	case 0xB5: // Ultra (Arrow Lake-U)
+	case 0xBD: // Ultra (Lunar Lake-V)
+	case 0xC5: // Ultra (Arrow Lake-H)
+	case 0xC6: // Ultra (Arrow Lake-S)
+	//case 0xCC: // Ultra (Panther Lake)
 		ctx.mmio_reg = get_intel_reg_64(0x3FFFFFE0000); // 41:17
 		ctx.get = get_intel_mchbar_15;
 		break;
