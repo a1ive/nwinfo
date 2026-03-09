@@ -119,20 +119,26 @@ get_mmio_bar(uint32_t addr, uint32_t mask)
 	return mmio_reg;
 }
 
-static const uint32_t INTEL_PMC_IDS[] =
-{
-	0x7F218086, // 800 Series
-	0x7A218086, // 700 Series
-	0x7AA18086, // 600 Series
-	0x43A18086, // 500 Series
-};
-
 static const uint32_t INTEL_SMBUS_IDS[] =
 {
-	0x7F238086, // 800 Series
-	0x7A238086, // 700 Series
-	0x7AA38086, // 600 Series
-	0x43A38086, // 500 Series
+	0x6E238086, // Nova Lake-S
+	0x58278086, // Diamond Rapids
+	0x4D228086, // Wildcat Lake-U
+	0xE4228086, // Panther Lake-P
+	0xE3228086, // Panther Lake-H
+	0x77228086, // Arrow Lake-H
+	0x57968086, // Birch Stream
+	0x7F238086, // Meteor Lake PCH-S
+	0xAE228086, // Meteor Lake SoC-S
+	0x7E228086, // Meteor Lake-P
+	0x7A238086, // Raptor Lake-S
+	0x54A38086, // Alder Lake-M
+	0x51A38086, // Alder Lake-P
+	0x7AA38086, // Alder Lake-S
+	//0xA3A38086, // Comet Lake-V ?
+	0x4DA38086, // Jasper Lake ?
+	0x43A38086, // Tiger Lake-H
+	0xA0A38086, // Tiger Lake-LP ?
 };
 
 #define PMC_TSS0 0x1560
@@ -140,24 +146,11 @@ static const uint32_t INTEL_SMBUS_IDS[] =
 
 static bool detect_pmc(void)
 {
-	uint32_t pci_addr = PciBusDevFunc(0, 31, 2);
+	uint32_t pci_addr = WR0_FindPciByClass(NWLC->NwDrv, 0x0C, 0x05, 0x00, 0);
+	if (pci_addr == 0xFFFFFFFF)
+		return false;
 	uint32_t id = WR0_RdPciConf32(NWLC->NwDrv, pci_addr, 0);
-	NWL_Debug("PCH", "Found device at D31:F2 with ID %08X", id);
-	for (size_t i = 0; i < ARRAYSIZE(INTEL_PMC_IDS); i++)
-	{
-		if (id == INTEL_PMC_IDS[i])
-		{
-			NWL_Debug("PCH", "Found PMC with ID %08X", id);
-			ctx.pci_addr = pci_addr;
-			ctx.mmio_lo_mask = 0xFFFFE000;
-			ctx.mmio_reg = get_mmio_bar(pci_addr, ctx.mmio_lo_mask);
-			return true;
-		}
-	}
-
-	pci_addr = PciBusDevFunc(0, 31, 4);
-	id = WR0_RdPciConf32(NWLC->NwDrv, pci_addr, 0);
-	NWL_Debug("PCH", "Found SMBus at D31:F4 with ID %08X", id);
+	NWL_Debug("PCH", "Found SMBus ID %08X", id);
 	for (size_t i = 0; i < ARRAYSIZE(INTEL_SMBUS_IDS); i++)
 	{
 		if (id == INTEL_SMBUS_IDS[i])
@@ -172,7 +165,6 @@ static bool detect_pmc(void)
 		return false;
 	}
 
-	NWL_Debug("PCH", "PCI access failed, try fallback address");
 	uint32_t data = get_mmio_32(PMC_TSS0);
 	NWL_Debug("PCH", "Try reading TSS0: %08X", data);
 	if (data == 0xFFFFFFFF || !(data & (1 << 9)))
