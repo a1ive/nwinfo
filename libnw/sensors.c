@@ -18,6 +18,7 @@ extern sensor_t sensor_disk_smart;
 extern sensor_t sensor_disk_io;
 extern sensor_t sensor_net;
 extern sensor_t sensor_imc;
+extern sensor_t sensor_pch;
 
 static sensor_t* sensor_list[] =
 {
@@ -31,6 +32,7 @@ static sensor_t* sensor_list[] =
 	&sensor_disk_io,
 	&sensor_net,
 	&sensor_imc,
+	&sensor_pch,
 };
 
 static bool sensor_initialized = false;

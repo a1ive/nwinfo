@@ -26,6 +26,7 @@ typedef struct
 #define NWL_SENSOR_NET      (1 << 7)
 #define NWL_SENSOR_IMC      (1 << 8)
 #define NWL_SENSOR_DISK     (1 << 9)
+#define NWL_SENSOR_PCH      (1 << 10)
 
 void NWL_InitSensors(uint64_t flags);
 void NWL_FreeSensors(void);

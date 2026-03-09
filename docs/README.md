@@ -158,7 +158,7 @@ Exports active physical network interfaces with IPv4 addresses to `report.html` 
   Print sensors.  
   `SRC` specifies the provider of sensors.  
   Available providers are:  
-  `LHM`, `HWINFO`, `GPU-Z`, `CPU`, `DIMM`, `GPU`, `SMART`, `DISK`, `NET` and `IMC`.  
+  `LHM`, `HWINFO`, `GPU-Z`, `CPU`, `DIMM`, `GPU`, `SMART`, `DISK`, `NET`, `IMC` and `PCH`.  
 
 ### System Information
 
@@ -227,11 +227,11 @@ Note: NVMe requires Windows 10 or later.
 
 The program searches for and loads drivers in the following order: **CPUZ162 -> NwHwIo -> PawnIO**.
 
-| Driver | Filename | Bundled | CPU Sensor | SPD | ACPI | IMC |
-|--------|----------|---------|------------|-----|------|-----|
-| [PawnIO](https://github.com/namazso/PawnIO)           | PawnIO.sys     | ✅ | ⚠️ | ✅ | ❌ | ❌ |
-| [CPUZ162](https://www.cpuid.com/softwares/cpu-z.html) | cpuz162x64.sys | ❌ | ✅ | ✅ | ✅ | ✅ |
-| [NwHwIo](https://www.evga.com/precisionx1/)           | NwHwIox64.sys  | ❌ | ✅ | ✅ | ❌ | ✅ |
+| Driver | Filename | Bundled | CPU Sensor | SPD | ACPI | IMC | PCH |
+|--------|----------|---------|------------|-----|------|-----|-----|
+| [PawnIO](https://github.com/namazso/PawnIO)           | PawnIO.sys     | ✅ | ⚠️ | ✅ | ❌ | ❌ | ❌ |
+| [CPUZ162](https://www.cpuid.com/softwares/cpu-z.html) | cpuz162x64.sys | ❌ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| [NwHwIo](https://www.evga.com/precisionx1/)           | NwHwIox64.sys  | ❌ | ✅ | ✅ | ❌ | ✅ | ✅ |
 
 **Note:** The program can still run normally even without drivers, but some hardware information may not be accessible.
 
