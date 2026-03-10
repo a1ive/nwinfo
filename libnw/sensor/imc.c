@@ -7,7 +7,7 @@
 #include "ioctl.h"
 
 #define SLOT_NAME_SIZE 16
-#define SLOT_COUNT 8
+#define SLOT_COUNT 12
 
 struct dimm_slot
 {
@@ -127,7 +127,7 @@ get_intel_mchbar_2_3(void)
 //                   These 4 bits are the data for the request. The only possible request type
 //                   is MC frequency request.The encoding of this field is the 133 / 266 MHz multiplier for
 //                   DCLK / QCLK: Binary Dec DCLK Equation DCLK Freq QCLK Equation QCLK Freq
-//                   0000b 0d---------------------------- - MC PLL ¨C shutdown------------------------------
+//                   0000b 0d---------------------------- - MC PLL - shutdown------------------------------
 //                   0011b 3d 3 * 133.33 400.00 MHz 3 * 266.67 MHz 800.00 MHz
 //                   0100b 4d 4 * 133.33 533.33 MHz 4 * 266.67 MHz 1066.67 MHz
 //                   0101b 5d 5 * 133.33 666.67 MHz 5 * 266.67 MHz 1333.33 MHz
@@ -217,7 +217,7 @@ get_intel_mchbar_4_5(void)
 //                   These 4 bits are the data for the request. The only possible request type
 //                   is MC frequency request.The encoding of this field is the 133 / 266 MHz multiplier for
 //                   DCLK / QCLK: Binary Dec DCLK Equation DCLK Freq QCLK Equation QCLK Freq
-//                   0000b 0d---------------------------- - MC PLL ¨C shutdown------------------------------
+//                   0000b 0d---------------------------- - MC PLL - shutdown------------------------------
 //                   0011b 3d 3 * 133.33 400.00 MHz 3 * 266.67 MHz 800.00 MHz
 //                   0100b 4d 4 * 133.33 533.33 MHz 4 * 266.67 MHz 1066.67 MHz
 //                   0101b 5d 5 * 133.33 666.67 MHz 5 * 266.67 MHz 1333.33 MHz
@@ -724,10 +724,13 @@ get_smn_umc_32(uint32_t offset)
 #define AMD_SMN_UMC_CHA(_cha)       (_cha << 20) // 0x100000
 #define AMD_SMN_UMC_NUM(_num)       (_num << 8)  // 0x100
 
+#define AMD_SMN_UMC_DIMM1_CFG       0x000
+#define AMD_SMN_UMC_DIMM2_CFG       0x008
 #define AMD_SMN_UMC_DRAM_CONFIG     0x100
 #define AMD_SMN_UMC_DRAM_MISC       0x200
 #define AMD_SMN_UMC_DRAM_TIMINGS1   0x204
 #define AMD_SMN_UMC_DRAM_TIMINGS2   0x208
+#define AMD_SMN_UMC_CH_DISABLE      0xDF0
 
 // 0x{0,1,2,3,4,5,6,7}50100 AMD_ZEN_UMC_CONFIG
 //  31    DramReady
@@ -784,10 +787,22 @@ get_amd_umc_zen(void)
 		break;
 	}
 
-	uint32_t memclk[8] = { 0 };
-	for (uint32_t ch = 0; ch < 8; ch++)
+	uint32_t memclk[SLOT_COUNT] = { 0 };
+	for (uint32_t ch = 0; ch < SLOT_COUNT; ch++)
 	{
 		uint32_t ch_ofs = AMD_SMN_UMC_CHA(ch);
+
+		// Check channel disabled: 0x50DF0[19] == 1 means disabled
+		uint32_t ofs_df0 = get_smn_umc_32(ch_ofs + AMD_SMN_UMC_CH_DISABLE);
+		if ((ofs_df0 >> 19) & 0x01)
+			continue;
+
+		// Check DIMM presence: 0x50000[0] or 0x50008[0]
+		uint32_t ofs_000 = get_smn_umc_32(ch_ofs + AMD_SMN_UMC_DIMM1_CFG);
+		uint32_t ofs_008 = get_smn_umc_32(ch_ofs + AMD_SMN_UMC_DIMM2_CFG);
+		if (!(ofs_000 & 0x01) && !(ofs_008 & 0x01))
+			continue;
+
 		uint32_t ofs_100 = get_smn_umc_32(ch_ofs + AMD_SMN_UMC_DRAM_CONFIG);
 
 		if (ofs_100 == 0 || ofs_100 == 0xFFFFFFFF)
@@ -807,7 +822,7 @@ get_amd_umc_zen(void)
 
 		if (ctx.ddr == 4)
 		{
-			memclk[ch] = ofs_200 & 0x3F;
+			memclk[ch] = ofs_200 & 0x7F;
 			NWL_Debug("UMC", "200: D4 %08X %u %u %u", ofs_200,
 				(ofs_200 >> 11) & 0x01, (ofs_200 >> 9) & 0x03, memclk[ch]);
 			if (memclk[ch] == 0)
@@ -821,7 +836,7 @@ get_amd_umc_zen(void)
 				(ofs_200 >> 18) & 0x01, (ofs_200 >> 16) & 0x03, memclk[ch]);
 			if (memclk[ch] == 0)
 				continue;
-			ctx.freq = (uint16_t)(memclk[ch] << ((ofs_200 >> 18) & 0x01));
+			ctx.freq = (uint16_t)(memclk[ch] * 2);
 		}
 
 		struct dimm_slot* p = &ctx.slot[ch];
