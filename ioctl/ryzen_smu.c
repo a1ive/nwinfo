@@ -115,7 +115,7 @@ ry_codename_t ryzen_smu_get_codename(struct cpu_id_t* id)
 		switch (id->x86.ext_model)
 		{
 		case 0x01:
-			if (id->x86.pkg_type == 3)
+			if (id->x86.pkg_type == 4)
 				codename = CODENAME_NAPLES;
 			else if (id->x86.pkg_type == 7)
 				codename = CODENAME_THREADRIPPER;
@@ -123,7 +123,7 @@ ry_codename_t ryzen_smu_get_codename(struct cpu_id_t* id)
 				codename = CODENAME_SUMMITRIDGE;
 			break;
 		case 0x08:
-			if (id->x86.pkg_type == 3 || id->x86.pkg_type == 7)
+			if (id->x86.pkg_type == 4 || id->x86.pkg_type == 7)
 				codename = CODENAME_COLFAX;
 			else
 				codename = CODENAME_PINNACLERIDGE;
