@@ -182,7 +182,13 @@ static void* d3d_gpu_init(PNWLIB_GPU_INFO info)
 		if (!NT_SUCCESS(ctx->Result))
 			continue;
 
-		NWL_Debug(GDID3D, "BDF %u:%u:%u", gpu->Bdf.BusNumber, gpu->Bdf.DeviceNumber, gpu->Bdf.FunctionNumber);
+		if (gpu->Bdf.BusNumber > 0xFF || gpu->Bdf.DeviceNumber > 0x1F || gpu->Bdf.FunctionNumber > 0x7)
+		{
+			NWL_Debug(GDID3D, "Skipping invalid BDF %u:%u:%u", gpu->Bdf.BusNumber, gpu->Bdf.DeviceNumber, gpu->Bdf.FunctionNumber);
+			continue;
+		}
+		else
+			NWL_Debug(GDID3D, "BDF %u:%u:%u", gpu->Bdf.BusNumber, gpu->Bdf.DeviceNumber, gpu->Bdf.FunctionNumber);
 
 		// KMTQAITYPE_PHYSICALADAPTERDEVICEIDS requires Windows 10 or later
 		ctx->Result = query_adapter_info(ctx, gpu, KMTQAITYPE_PHYSICALADAPTERDEVICEIDS, &gpu->DeviceIds, sizeof(D3DKMT_QUERY_DEVICE_IDS));
