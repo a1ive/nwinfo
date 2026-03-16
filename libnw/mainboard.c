@@ -252,7 +252,7 @@ BOOL NWL_GetMainboardInfo(NWLIB_MAINBOARD_INFO* info)
 
 PNODE NW_Mainboard(BOOL bAppend)
 {
-	PNODE node = NWL_NodeAlloc("Mainboard", NFLG_TABLE);
+	PNODE node = NWL_NodeAlloc("Mainboard", 0);
 	if (bAppend)
 		NWL_NodeAppendChild(NWLC->NwRoot, node);
 
