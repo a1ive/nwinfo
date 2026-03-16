@@ -6,32 +6,32 @@
 
 #pragma pack(1)
 
-struct smbios_ieps
+struct SMBIOS_IEPS
 {
-	UINT8 anchor[5]; /* "_DMI_" */
-	UINT8 checksum;
-	UINT16 table_length;
-	UINT32 table_address;
-	UINT16 structures;
-	UINT8 revision;
+	UINT8 Anchor[5]; /* "_DMI_" */
+	UINT8 Checksum;
+	UINT16 TableLength;
+	UINT32 TableAddress;
+	UINT16 Structures;
+	UINT8 Revision;
 };
 
-struct smbios_eps
+struct SMBIOS_EPS
 {
-	UINT8 anchor[4]; /* "_SM_" */
-	UINT8 checksum;
-	UINT8 length; /* 0x1f */
-	UINT8 version_major;
-	UINT8 version_minor;
-	UINT16 maximum_structure_size;
-	UINT8 revision;
-	UINT8 formatted[5];
-	struct smbios_ieps intermediate;
+	UINT8 Anchor[4]; /* "_SM_" */
+	UINT8 Checksum;
+	UINT8 Length; /* 0x1f */
+	UINT8 VersionMajor;
+	UINT8 VersionMinor;
+	UINT16 MaxStructureSize;
+	UINT8 Revision;
+	UINT8 Formatted[5];
+	struct SMBIOS_IEPS intermediate;
 };
 
-struct smbios_eps3
+struct SMBIOS_EPS3
 {
-	UINT8 anchor[5]; /* "_SM3_" */
+	UINT8 Anchor[5]; /* "_SM3_" */
 	UINT8 checksum;
 	UINT8 length; /* 0x18 */
 	UINT8 version_major;
@@ -39,8 +39,8 @@ struct smbios_eps3
 	UINT8 docrev;
 	UINT8 revision;
 	UINT8 reserved;
-	UINT32 maximum_table_length;
-	UINT64 table_address;
+	UINT32 MaxTableLength;
+	UINT64 TableAddress;
 };
 
 struct RAW_SMBIOS_DATA

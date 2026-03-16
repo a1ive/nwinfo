@@ -1778,7 +1778,7 @@ static void ProcVoltageProbe(PNODE tab, void* p)
 	NWL_NodeAttrSet(tab, "Description", "Voltage Probe", 0);
 	if (pVoltage->Header.Length < 0x14)
 		return;
-	NWL_NodeAttrSet(tab, "Description", NWL_GetDmiString(p, pVoltage->Description), 0);
+	NWL_NodeAttrSet(tab, "Probe Information", NWL_GetDmiString(p, pVoltage->Description), 0);
 	NWL_NodeAttrSetf(tab, "Location and Status", 0, "%02Xh", pVoltage->LocationStatus);
 	NWL_NodeAttrSetf(tab, "Maximum Value", NAFLG_FMT_NUMERIC, "%u", pVoltage->MaxValue);
 	NWL_NodeAttrSetf(tab, "Minimum Value", NAFLG_FMT_NUMERIC, "%u", pVoltage->MinValue);

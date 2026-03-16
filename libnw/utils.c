@@ -199,29 +199,29 @@ NT5GetSmbios(struct RAW_SMBIOS_DATA* buf, DWORD buflen)
 		goto fail;
 	for (ptr = bios; ptr < bios + 0x10000; ptr += 16)
 	{
-		if (memcmp(ptr, "_SM_", 4) == 0 && NWL_AcpiChecksum(ptr, sizeof(struct smbios_eps)) == 0)
+		if (memcmp(ptr, "_SM_", 4) == 0 && NWL_AcpiChecksum(ptr, sizeof(struct SMBIOS_EPS)) == 0)
 		{
-			struct smbios_eps* eps = (struct smbios_eps*)ptr;
-			smbios_len = eps->intermediate.table_length;
+			struct SMBIOS_EPS* eps = (struct SMBIOS_EPS*)ptr;
+			smbios_len = eps->intermediate.TableLength;
 			if (!buf || buflen < smbios_len + sizeof(struct RAW_SMBIOS_DATA))
 				goto fail;
 			buf->Length = smbios_len;
-			buf->MajorVersion = eps->version_major;
-			buf->MinorVersion = eps->version_minor;
-			buf->DmiRevision = eps->intermediate.revision;
-			NWL_ReadMemory(buf->Data, eps->intermediate.table_address, smbios_len);
+			buf->MajorVersion = eps->VersionMajor;
+			buf->MinorVersion = eps->VersionMinor;
+			buf->DmiRevision = eps->intermediate.Revision;
+			NWL_ReadMemory(buf->Data, eps->intermediate.TableAddress, smbios_len);
 			goto fail;
 		}
-		if (memcmp(ptr, "_SM3_", 5) == 0 && NWL_AcpiChecksum(ptr, sizeof(struct smbios_eps3)) == 0)
+		if (memcmp(ptr, "_SM3_", 5) == 0 && NWL_AcpiChecksum(ptr, sizeof(struct SMBIOS_EPS3)) == 0)
 		{
-			struct smbios_eps3* eps3 = (struct smbios_eps3*)ptr;
-			smbios_len = eps3->maximum_table_length;
+			struct SMBIOS_EPS3* eps3 = (struct SMBIOS_EPS3*)ptr;
+			smbios_len = eps3->MaxTableLength;
 			if (!buf || buflen < smbios_len + sizeof(struct RAW_SMBIOS_DATA))
 				goto fail;
 			buf->Length = smbios_len;
 			buf->MajorVersion = eps3->version_major;
 			buf->MinorVersion = eps3->version_minor;
-			NWL_ReadMemory(buf->Data, (DWORD_PTR)eps3->table_address, smbios_len);
+			NWL_ReadMemory(buf->Data, (DWORD_PTR)eps3->TableAddress, smbios_len);
 			goto fail;
 		}
 	}
