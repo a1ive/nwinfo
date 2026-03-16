@@ -230,7 +230,7 @@ fail:
 	return smbios_len + sizeof(struct RAW_SMBIOS_DATA);
 }
 
-static UINT
+UINT
 NWL_GetSystemFirmwareTable(DWORD FirmwareTableProviderSignature, DWORD FirmwareTableID,
 	PVOID pFirmwareTableBuffer, DWORD BufferSize)
 {
