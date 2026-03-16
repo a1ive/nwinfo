@@ -7,7 +7,7 @@
 #define OLS_TYPE 40000
 
 // WinRing0.sys
-#define WINRING0_ID							L"WinRing0_1_2_0"
+#define WINRING0_ID							L"WinRing0"
 #if defined(_M_AMD64)
 #define WINRING0_NAME						L"WinRing0x64.sys"
 #else

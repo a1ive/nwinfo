@@ -134,6 +134,7 @@ typedef struct _NWLIB_CONTEXT
 
 	UINT64 NwSensorFlags;
 
+	LPCSTR DriverName;
 	struct wr0_drv_t* NwDrv;
 	UINT CodePage;
 	struct _NODE* NwRoot;

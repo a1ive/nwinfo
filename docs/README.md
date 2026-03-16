@@ -73,6 +73,11 @@ Exports active physical network interfaces with IPv4 addresses to `report.html` 
   Print debug info to stdout.  
 - --hide-sensitive  
   Hide sensitive data (MAC & S/N).  
+- --driver=`NAME`  
+  Specify the driver name.  
+  Available drivers are `CPUZ162`, `NwHwIo` and `PawnIO`.  
+  Use `NONE` to disable driver usage.  
+  By default, the program will search for and load drivers in the above order, see [Supported Drivers](#supported-drivers) for details.  
 
 ### Hardware Details
 
