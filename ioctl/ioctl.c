@@ -866,15 +866,9 @@ int WR0_WrPciConf(struct wr0_drv_t* drv, uint32_t addr, uint32_t reg, void* valu
 		uint32_t ioAddr = 0x80000000U | (inBuf.Bus << 16) | (inBuf.Device << 11) | (inBuf.Function << 8) | (reg & 0xFC);
 		if (size == sizeof(DWORD))
 		{
-#if 0
-			// Use port IO
-			WR0_WrIo32(drv, 0xCF8, ioAddr);
-			WR0_WrIo32(drv, 0xCFC + (reg & 3), *(uint32_t*)value);
-#else
 			memcpy(&inBuf.Value, value, sizeof(DWORD));
 			result = DeviceIoControl(drv->handle, IOCTL_CPUZ_WRITE_PCI_CONFIG,
 				&inBuf, sizeof(inBuf), &inBuf, sizeof(inBuf), &returnedLength, NULL);
-#endif
 		}
 		else if (size == sizeof(uint16_t))
 		{
@@ -891,6 +885,7 @@ int WR0_WrPciConf(struct wr0_drv_t* drv, uint32_t addr, uint32_t reg, void* valu
 			result = TRUE;
 		}
 	}
+		break;
 	default:
 		return -1;
 	}
