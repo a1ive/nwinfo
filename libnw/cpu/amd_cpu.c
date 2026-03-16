@@ -550,7 +550,7 @@ static int get_igpu_temperature(struct msr_info_t* info)
 		goto fail;
 	if (ryzen_smu_update_pm_table(info->ry) != RYZEN_SMU_OK)
 		goto fail;
-	if (ryzen_smu_get_apu_temperature(info->ry, &value) != RYZEN_SMU_OK)
+	if (ryzen_smu_get_gfx_temperature(info->ry, &value) != RYZEN_SMU_OK)
 		goto fail;
 	WR0_ReleasePciBus();
 	return (int)value;

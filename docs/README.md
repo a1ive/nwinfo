@@ -158,7 +158,8 @@ Exports active physical network interfaces with IPv4 addresses to `report.html` 
   Print sensors.  
   `SRC` specifies the provider of sensors.  
   Available providers are:  
-  `LHM`, `HWINFO`, `GPU-Z`, `CPU`, `DIMM`, `GPU`, `SMART`, `DISK`, `NET`, `IMC` and `PCH`.  
+  `LHM`, `HWINFO`, `GPU-Z`,  
+  `CPU`, `DIMM`, `GPU`, `SMART`, `DISK`, `NET`, `IMC`, `PCH` and `ZEN`.  
 
 ### System Information
 

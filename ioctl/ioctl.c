@@ -1204,6 +1204,19 @@ WR0_SendSmuCmd(struct wr0_drv_t* drv, uint32_t cmd, uint32_t rsp, uint32_t arg, 
 		return -1;
 	switch (drv->type)
 	{
+	case WR0_DRIVER_PAWNIO:
+	{
+		ULONG64 in[7] = { 0 };
+		ULONG64 out[6] = { 0 };
+		in[0] = fn;
+		for (uint32_t i = 0; i < SMU_MAX_ARGS; i++)
+			in[1 + i] = args[i];
+		if (WR0_ExecPawn(drv, &drv->pio_rysmu, "ioctl_send_smu_command", in, 7, out, 6, NULL) != 0)
+			return -2;
+		for (uint32_t i = 0; i < SMU_MAX_ARGS; i++)
+			args[i] = (uint32_t)out[i];
+		return 0;
+	}
 	case WR0_DRIVER_CPUZ161:
 	case WR0_DRIVER_CPUZ162:
 	{

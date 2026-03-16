@@ -176,7 +176,7 @@ static void nwinfo_help(void)
 		"                   Available providers are:\n"
 		"                   'LHM', 'HWINFO', 'GPU-Z',\n"
 		"                   'CPU', 'DIMM', 'GPU', 'SMART',\n"
-		"                   'DISK', 'NET', 'IMC' and 'PCH'.\n");
+		"                   'DISK', 'NET', 'IMC', 'PCH' and 'ZEN'.\n");
 }
 
 typedef struct _NW_ARG_FILTER
@@ -494,6 +494,7 @@ int main(int argc, char* argv[])
 				{"NET", NWL_SENSOR_NET},
 				{"IMC", NWL_SENSOR_IMC},
 				{"PCH", NWL_SENSOR_PCH},
+				{"ZEN", NWL_SENSOR_ZEN},
 			};
 			nwinfo_get_opts(options.optarg, &nwContext.NwSensorFlags, ARRAYSIZE(filter), filter, NULL);
 			nwContext.Sensors = TRUE;

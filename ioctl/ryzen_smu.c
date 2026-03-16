@@ -863,7 +863,249 @@ ry_err_t ryzen_smu_get_slow_value(ry_handle_t* handle, float* data)
 	return ryzen_smu_get_pm_table_float(handle, 0x14, data);
 }
 
-#define SMU_MAX_CORE 16
+ry_err_t ryzen_smu_get_apu_slow_limit(ry_handle_t* handle, float* data)
+{
+	size_t offset = OFFSET_INVALID;
+	switch (handle->pm_table_version)
+	{
+	case 0x00370000:
+	case 0x00370001:
+	case 0x00370002:
+	case 0x00370003:
+	case 0x00370004:
+	case 0x00370005:
+	case 0x003F0000:
+	case 0x00400001:
+	case 0x00400002:
+	case 0x00400003:
+	case 0x00400004:
+	case 0x00400005:
+	case 0x00450004:
+	case 0x00450005:
+	case 0x004C0006:
+	case 0x004C0007:
+	case 0x004C0008:
+	case 0x004C0009:
+	case 0x005D0008:
+	case 0x005D0009:
+	case 0x0064020c:
+	case 0x00650005:
+		offset = 0x18;
+		break;
+	}
+	if (offset == OFFSET_INVALID)
+		return RYZEN_SMU_UNSUPPORTED;
+	return ryzen_smu_get_pm_table_float(handle, offset, data);
+}
+
+ry_err_t ryzen_smu_get_apu_slow_value(ry_handle_t* handle, float* data)
+{
+	size_t offset = OFFSET_INVALID;
+	switch (handle->pm_table_version)
+	{
+	case 0x00370000:
+	case 0x00370001:
+	case 0x00370002:
+	case 0x00370003:
+	case 0x00370004:
+	case 0x00370005:
+	case 0x003F0000:
+	case 0x00400001:
+	case 0x00400002:
+	case 0x00400003:
+	case 0x00400004:
+	case 0x00400005:
+	case 0x00450004:
+	case 0x00450005:
+	case 0x004C0006:
+	case 0x004C0009:
+	case 0x005D0008:
+	case 0x005D0009:
+	case 0x0064020c:
+	case 0x00650005:
+		offset = 0x1C;
+		break;
+	}
+	if (offset == OFFSET_INVALID)
+		return RYZEN_SMU_UNSUPPORTED;
+	return ryzen_smu_get_pm_table_float(handle, offset, data);
+}
+
+ry_err_t ryzen_smu_get_vrm_current(ry_handle_t* handle, float* data)
+{
+	size_t offset = OFFSET_INVALID;
+	switch (handle->pm_table_version)
+	{
+	case 0x001E0001:
+	case 0x001E0002:
+	case 0x001E0003:
+	case 0x001E0004:
+	case 0x001E0005:
+	case 0x001E000A:
+	case 0x001E0101:
+		offset = 0x18;
+		break;
+	case 0x00370000:
+	case 0x00370001:
+	case 0x00370002:
+	case 0x00370003:
+	case 0x00370004:
+	case 0x00370005:
+	case 0x00400001:
+	case 0x00400002:
+	case 0x00400003:
+	case 0x00400004:
+	case 0x00400005:
+	case 0x00450004:
+	case 0x00450005:
+	case 0x004C0006:
+	case 0x004C0007:
+	case 0x004C0008:
+	case 0x004C0009:
+		offset = 0x20;
+		break;
+	case 0x005D0008:
+	case 0x005D0009:
+	case 0x00650005:
+		offset = 0x30;
+		break;
+	}
+	if (offset == OFFSET_INVALID)
+		return RYZEN_SMU_UNSUPPORTED;
+	return ryzen_smu_get_pm_table_float(handle, offset, data);
+}
+
+ry_err_t ryzen_smu_get_vrm_current_value(ry_handle_t* handle, float* data)
+{
+	size_t offset = OFFSET_INVALID;
+	switch (handle->pm_table_version)
+	{
+	case 0x001E0001:
+	case 0x001E0002:
+	case 0x001E0003:
+	case 0x001E0004:
+	case 0x001E0005:
+	case 0x001E000A:
+	case 0x001E0101:
+		offset = 0x1C;
+		break;
+	case 0x00370000:
+	case 0x00370001:
+	case 0x00370002:
+	case 0x00370003:
+	case 0x00370004:
+	case 0x00370005:
+	case 0x00400001:
+	case 0x00400002:
+	case 0x00400003:
+	case 0x00400004:
+	case 0x00400005:
+	case 0x00450004:
+	case 0x00450005:
+	case 0x004C0006:
+	case 0x004C0007:
+	case 0x004C0008:
+	case 0x004C0009:
+		offset = 0x24;
+		break;
+	case 0x005D0008:
+	case 0x005D0009:
+	case 0x00650005:
+		offset = 0x34;
+		break;
+	}
+	if (offset == OFFSET_INVALID)
+		return RYZEN_SMU_UNSUPPORTED;
+	return ryzen_smu_get_pm_table_float(handle, offset, data);
+}
+
+ry_err_t ryzen_smu_get_vrmsoc_current(ry_handle_t* handle, float* data)
+{
+	size_t offset = OFFSET_INVALID;
+	switch (handle->pm_table_version)
+	{
+	case 0x001E0001:
+	case 0x001E0002:
+	case 0x001E0003:
+	case 0x001E0004:
+	case 0x001E0005:
+	case 0x001E000A:
+	case 0x001E0101:
+		offset = 0x20;
+		break;
+	case 0x00370000:
+	case 0x00370001:
+	case 0x00370002:
+	case 0x00370003:
+	case 0x00370004:
+	case 0x00370005:
+	case 0x00400001:
+	case 0x00400002:
+	case 0x00400003:
+	case 0x00400004:
+	case 0x00400005:
+	case 0x00450004:
+	case 0x00450005:
+	case 0x004C0006:
+	case 0x004C0007:
+	case 0x004C0008:
+	case 0x004C0009:
+		offset = 0x28;
+		break;
+	case 0x005D0008:
+	case 0x005D0009:
+	case 0x00650005:
+		offset = 0x38;
+		break;
+	}
+	if (offset == OFFSET_INVALID)
+		return RYZEN_SMU_UNSUPPORTED;
+	return ryzen_smu_get_pm_table_float(handle, offset, data);
+}
+
+ry_err_t ryzen_smu_get_vrmsoc_current_value(ry_handle_t* handle, float* data)
+{
+	size_t offset = OFFSET_INVALID;
+	switch (handle->pm_table_version)
+	{
+	case 0x001E0001:
+	case 0x001E0002:
+	case 0x001E0003:
+	case 0x001E0004:
+	case 0x001E0005:
+	case 0x001E000A:
+	case 0x001E0101:
+		offset = 0x24;
+		break;
+	case 0x00370000:
+	case 0x00370001:
+	case 0x00370002:
+	case 0x00370003:
+	case 0x00370004:
+	case 0x00370005:
+	case 0x00400001:
+	case 0x00400002:
+	case 0x00400003:
+	case 0x00400004:
+	case 0x00400005:
+	case 0x00450004:
+	case 0x00450005:
+	case 0x004C0006:
+	case 0x004C0007:
+	case 0x004C0008:
+	case 0x004C0009:
+		offset = 0x2C;
+		break;
+	case 0x005D0008:
+	case 0x005D0009:
+	case 0x00650005:
+		offset = 0x3C;
+		break;
+	}
+	if (offset == OFFSET_INVALID)
+		return RYZEN_SMU_UNSUPPORTED;
+	return ryzen_smu_get_pm_table_float(handle, offset, data);
+}
 
 ry_err_t ryzen_smu_get_core_temperature(ry_handle_t* handle, uint32_t core, float* data)
 {
@@ -933,7 +1175,130 @@ ry_err_t ryzen_smu_get_core_temperature(ry_handle_t* handle, uint32_t core, floa
 	return ryzen_smu_get_pm_table_float(handle, base_offset + (core * sizeof(float)), data);
 }
 
-ry_err_t ryzen_smu_get_apu_temperature(ry_handle_t* handle, float* data)
+ry_err_t ryzen_smu_get_core_volt(ry_handle_t* handle, uint32_t core, float* data)
+{
+	size_t base_offset = OFFSET_INVALID;
+	uint32_t max_cores = SMU_MAX_CORE;
+
+	switch (handle->pm_table_version)
+	{
+	case 0x00370000:
+	case 0x00370001:
+	case 0x00370002:
+	case 0x00370003:
+	case 0x00370004:
+		base_offset = 0x320;
+		break;
+	case 0x00370005:
+		base_offset = 0x33C;
+		break;
+	case 0x003F0000:
+		base_offset = 0x248;
+		max_cores = 4;
+		break;
+	case 0x00400004:
+	case 0x00400005:
+		base_offset = 0x340;
+		break;
+	case 0x005D0008:
+	case 0x005D0009:
+		base_offset = 0xA08;
+		break;
+	case 0x0064020C:
+		base_offset = 0xBD0;
+		break;
+	}
+
+	if (base_offset == OFFSET_INVALID || core >= max_cores)
+		return RYZEN_SMU_UNSUPPORTED;
+
+	return ryzen_smu_get_pm_table_float(handle, base_offset + (core * sizeof(float)), data);
+}
+
+ry_err_t ryzen_smu_get_core_clk(ry_handle_t* handle, uint32_t core, float* data)
+{
+	size_t base_offset = OFFSET_INVALID;
+	uint32_t max_cores = SMU_MAX_CORE;
+
+	switch (handle->pm_table_version)
+	{
+	case 0x00370000:
+	case 0x00370001:
+	case 0x00370002:
+	case 0x00370003:
+	case 0x00370004:
+		base_offset = 0x3A0;
+		break;
+	case 0x00370005:
+		base_offset = 0x3BC;
+		break;
+	case 0x003F0000:
+		base_offset = 0x288;
+		max_cores = 4;
+		break;
+	case 0x00400004:
+	case 0x00400005:
+		base_offset = 0x3C0;
+		break;
+	case 0x005D0008:
+	case 0x005D0009:
+		base_offset = 0xA68;
+		break;
+	case 0x0064020C:
+		base_offset = 0xC50;
+		break;
+	}
+
+	if (base_offset == OFFSET_INVALID || core >= max_cores)
+		return RYZEN_SMU_UNSUPPORTED;
+
+	return ryzen_smu_get_pm_table_float(handle, base_offset + (core * sizeof(float)), data);
+}
+
+ry_err_t ryzen_smu_get_core_power(ry_handle_t* handle, uint32_t core, float* data)
+{
+	size_t base_offset = OFFSET_INVALID;
+	uint32_t max_cores = SMU_MAX_CORE;
+
+	switch (handle->pm_table_version)
+	{
+	case 0x00370000:
+	case 0x00370001:
+	case 0x00370002:
+	case 0x00370003:
+	case 0x00370004:
+		base_offset = 0x300;
+		break;
+	case 0x00370005:
+		base_offset = 0x31C;
+		break;
+	case 0x003F0000:
+		base_offset = 0x238;
+		max_cores = 4;
+		break;
+	case 0x00400001:
+		base_offset = 0x304;
+		break;
+	case 0x00400004:
+	case 0x00400005:
+		base_offset = 0x320;
+		break;
+	case 0x005D0008:
+	case 0x005D0009:
+		base_offset = 0x9D8;
+		break;
+	case 0x0064020C:
+		base_offset = 0xB90;
+		break;
+	}
+
+	if (base_offset == OFFSET_INVALID || core >= max_cores)
+		return RYZEN_SMU_UNSUPPORTED;
+
+	return ryzen_smu_get_pm_table_float(handle, base_offset + (core * sizeof(float)), data);
+}
+
+ry_err_t ryzen_smu_get_gfx_temperature(ry_handle_t* handle, float* data)
 {
 	size_t offset = OFFSET_INVALID;
 
@@ -980,5 +1345,1016 @@ ry_err_t ryzen_smu_get_apu_temperature(ry_handle_t* handle, float* data)
 	if (offset == OFFSET_INVALID)
 		return RYZEN_SMU_UNSUPPORTED;
 
+	return ryzen_smu_get_pm_table_float(handle, offset, data);
+}
+
+ry_err_t ryzen_smu_get_gfx_volt(ry_handle_t* handle, float* data)
+{
+	size_t offset = OFFSET_INVALID;
+
+	switch (handle->pm_table_version)
+	{
+	case 0x370000:
+	case 0x370001:
+	case 0x370002:
+	case 0x370003:
+	case 0x370004:
+		offset = 0x5A8;
+		break;
+	case 0x370005:
+		offset = 0x5C4;
+		break;
+	case 0x400001:
+		offset = 0x600;
+		break;
+	case 0x400002:
+		offset = 0x618;
+		break;
+	case 0x400003:
+		offset = 0x638;
+		break;
+	case 0x400004:
+	case 0x400005:
+		offset = 0x63C;
+		break;
+	case 0x3F0000:
+		offset = 0x37C;
+		break;
+	case 0x5D0008:
+	case 0x5D0009:
+		offset = 0x4B8;
+		break;
+	case 0x64020C:
+		offset = 0x54C;
+		break;
+	}
+
+	if (offset == OFFSET_INVALID)
+		return RYZEN_SMU_UNSUPPORTED;
+
+	return ryzen_smu_get_pm_table_float(handle, offset, data);
+}
+
+ry_err_t ryzen_smu_get_gfx_clk(ry_handle_t* handle, float* data)
+{
+	size_t offset = OFFSET_INVALID;
+
+	switch (handle->pm_table_version)
+	{
+	case 0x370000:
+	case 0x370001:
+	case 0x370002:
+	case 0x370003:
+	case 0x370004:
+		offset = 0x5B4;
+		break;
+	case 0x370005:
+		offset = 0x5D0;
+		break;
+	case 0x400001:
+		offset = 0x60C;
+		break;
+	case 0x400002:
+		offset = 0x624;
+		break;
+	case 0x400003:
+		offset = 0x644;
+		break;
+	case 0x400004:
+	case 0x400005:
+		offset = 0x648;
+		break;
+	case 0x3F0000:
+		offset = 0x388;
+		break;
+	case 0x5D0008:
+	case 0x5D0009:
+		offset = 0x4C0;
+		break;
+	case 0x64020C:
+		offset = 0x588;
+		break;
+	}
+
+	if (offset == OFFSET_INVALID)
+		return RYZEN_SMU_UNSUPPORTED;
+
+	return ryzen_smu_get_pm_table_float(handle, offset, data);
+}
+
+ry_err_t ryzen_smu_get_fclk(ry_handle_t* handle, float* data)
+{
+	size_t offset = OFFSET_INVALID;
+	switch (handle->pm_table_version)
+	{
+	case 0x001E0001:
+		offset = 0x460;
+		break;
+	case 0x001E0002:
+		offset = 0x474;
+		break;
+	case 0x001E0003:
+	case 0x001E0004:
+	case 0x001E0005:
+	case 0x001E000A:
+	case 0x001E0101:
+		offset = 0x298;
+		break;
+	case 0x00240003:
+		offset = 0xB0;
+		break;
+	case 0x00240503:
+	case 0x00240603:
+	case 0x00240703:
+		offset = 0xC0;
+		break;
+	case 0x00240802:
+		offset = 0xBC;
+		break;
+	case 0x00240803:
+		offset = 0xC0;
+		break;
+	case 0x00240902:
+		offset = 0xBC;
+		break;
+	case 0x00240903:
+		offset = 0xC0;
+		break;
+	case 0x00260001:
+		offset = 0x28;
+		break;
+	case 0x002D0008:
+	case 0x002D0803:
+	case 0x002D0903:
+		offset = 0xBC;
+		break;
+	case 0x00370000:
+		offset = 0x4B4;
+		break;
+	case 0x00370001:
+		offset = 0x5A4;
+		break;
+	case 0x00370002:
+		offset = 0x5AC;
+		break;
+	case 0x00370003:
+	case 0x00370004:
+		offset = 0x5CC;
+		break;
+	case 0x00370005:
+		offset = 0x5E8;
+		break;
+	case 0x00380005:
+	case 0x00380505:
+	case 0x00380605:
+	case 0x00380705:
+	case 0x00380804:
+	case 0x00380805:
+	case 0x00380904:
+	case 0x00380905:
+		offset = 0xC0;
+		break;
+	case 0x003F0000:
+		offset = 0x3C5;
+		break;
+	case 0x00400001:
+		offset = 0x624;
+		break;
+	case 0x00400002:
+		offset = 0x63C;
+		break;
+	case 0x00400003:
+		offset = 0x660;
+		break;
+	case 0x00400004:
+	case 0x00400005:
+		offset = 0x664;
+		break;
+	case 0x00450004:
+		offset = 0x664;
+		break;
+	case 0x00450005:
+		offset = 0x6B0;
+		break;
+	case 0x004C0003:
+	case 0x004C0004:
+	case 0x004C0005:
+	case 0x004C0006:
+	case 0x004C0007:
+		offset = 0x174;
+		break;
+	case 0x004C0008:
+	case 0x004C0009:
+		offset = 0x164;
+		break;
+	case 0x00540000:
+	case 0x00540001:
+	case 0x00540002:
+	case 0x00540003:
+	case 0x00540004:
+	case 0x00540005:
+	case 0x00540100:
+	case 0x00540101:
+	case 0x00540102:
+	case 0x00540103:
+	case 0x00540104:
+	case 0x00540105:
+	case 0x00540108:
+		offset = 0x118;
+		break;
+	case 0x00540208:
+		offset = 0x11C;
+		break;
+	case 0x005C0002:
+	case 0x005C0003:
+	case 0x005C0102:
+	case 0x005C0103:
+	case 0x005C0202:
+	case 0x005C0203:
+	case 0x005C0302:
+		offset = 0x194;
+		break;
+	case 0x005C0303:
+	case 0x005C0402:
+	case 0x005C0403:
+		offset = 0x19C;
+		break;
+	case 0x005D0008:
+	case 0x005D0009:
+		offset = 0x4E0;
+		break;
+	case 0x00620105:
+	case 0x00620205:
+	case 0x00621101:
+	case 0x00621102:
+	case 0x00621201:
+	case 0x00621202:
+		offset = 0x11C;
+		break;
+	case 0x00730204:
+	case 0x00730404:
+	case 0x00730604:
+	case 0x00730804:
+	case 0x00730A04:
+	case 0x00730C04:
+	case 0x00730E04:
+	case 0x00731004:
+		offset = 0x20C;
+		break;
+	}
+	if (offset == OFFSET_INVALID)
+		return RYZEN_SMU_UNSUPPORTED;
+	return ryzen_smu_get_pm_table_float(handle, offset, data);
+}
+
+ry_err_t ryzen_smu_get_uclk(ry_handle_t* handle, float* data)
+{
+	size_t offset = OFFSET_INVALID;
+	switch (handle->pm_table_version)
+	{
+	case 0x001E0001:
+		offset = 0x464;
+		break;
+	case 0x001E0002:
+		offset = 0x478;
+		break;
+	case 0x001E0003:
+	case 0x001E0004:
+		offset = 0x29C;
+		break;
+	case 0x00240003:
+		offset = 0xB8;
+		break;
+	case 0x00240503:
+	case 0x00240603:
+	case 0x00240703:
+		offset = 0xC8;
+		break;
+	case 0x00240802:
+		offset = 0xC4;
+		break;
+	case 0x00240803:
+		offset = 0xC8;
+		break;
+	case 0x00240902:
+		offset = 0xC4;
+		break;
+	case 0x00240903:
+		offset = 0xC8;
+		break;
+	case 0x00260001:
+		offset = 0x2C;
+		break;
+	case 0x002D0008:
+	case 0x002D0803:
+	case 0x002D0903:
+		offset = 0xC4;
+		break;
+	case 0x00370000:
+		offset = 0x4B8;
+		break;
+	case 0x00370001:
+		offset = 0x5A8;
+		break;
+	case 0x00370002:
+		offset = 0x5B0;
+		break;
+	case 0x00370003:
+	case 0x00370004:
+		offset = 0x5D0;
+		break;
+	case 0x00370005:
+		offset = 0x5EC;
+		break;
+	case 0x00380005:
+	case 0x00380505:
+	case 0x00380605:
+	case 0x00380705:
+	case 0x00380804:
+	case 0x00380805:
+	case 0x00380904:
+	case 0x00380905:
+		offset = 0xC8;
+		break;
+	case 0x00400001:
+		offset = 0x628;
+		break;
+	case 0x00400002:
+		offset = 0x640;
+		break;
+	case 0x00400003:
+		offset = 0x664;
+		break;
+	case 0x00400004:
+	case 0x00400005:
+	case 0x00450004:
+		offset = 0x668;
+		break;
+	case 0x00450005:
+		offset = 0x6B4;
+		break;
+	case 0x004C0003:
+	case 0x004C0004:
+	case 0x004C0005:
+	case 0x004C0006:
+	case 0x004C0007:
+		offset = 0x184;
+		break;
+	case 0x004C0008:
+	case 0x004C0009:
+		offset = 0x174;
+		break;
+	case 0x00540000:
+	case 0x00540001:
+	case 0x00540002:
+	case 0x00540003:
+	case 0x00540004:
+	case 0x00540005:
+	case 0x00540100:
+	case 0x00540101:
+	case 0x00540102:
+	case 0x00540103:
+	case 0x00540104:
+	case 0x00540105:
+	case 0x00540108:
+		offset = 0x128;
+		break;
+	case 0x00540208:
+		offset = 0x12C;
+		break;
+	case 0x005C0002:
+	case 0x005C0003:
+	case 0x005C0102:
+	case 0x005C0103:
+	case 0x005C0202:
+	case 0x005C0203:
+	case 0x005C0302:
+		offset = 0x1A8;
+		break;
+	case 0x005C0303:
+	case 0x005C0402:
+	case 0x005C0403:
+		offset = 0x1B0;
+		break;
+	case 0x00620105:
+	case 0x00620205:
+	case 0x00621102:
+	case 0x00621202:
+		offset = 0x12C;
+		break;
+	case 0x00730204:
+	case 0x00730404:
+	case 0x00730604:
+	case 0x00730804:
+	case 0x00730A04:
+	case 0x00730C04:
+	case 0x00730E04:
+	case 0x00731004:
+		offset = 0x21C;
+		break;
+	}
+	if (offset == OFFSET_INVALID)
+		return RYZEN_SMU_UNSUPPORTED;
+	return ryzen_smu_get_pm_table_float(handle, offset, data);
+}
+
+ry_err_t ryzen_smu_get_mclk(ry_handle_t* handle, float* data)
+{
+	size_t offset = OFFSET_INVALID;
+	switch (handle->pm_table_version)
+	{
+	case 0x001E0001:
+		offset = 0x468;
+		break;
+	case 0x001E0002:
+		offset = 0x47C;
+		break;
+	case 0x001E0003:
+	case 0x001E0004:
+		offset = 0x2A0;
+		break;
+	case 0x00240003:
+		offset = 0xBC;
+		break;
+	case 0x00240503:
+	case 0x00240603:
+	case 0x00240703:
+		offset = 0xCC;
+		break;
+	case 0x00240802:
+		offset = 0xC8;
+		break;
+	case 0x00240803:
+		offset = 0xCC;
+		break;
+	case 0x00240902:
+		offset = 0xC8;
+		break;
+	case 0x00240903:
+		offset = 0xCC;
+		break;
+	case 0x00260001:
+		offset = 0x30;
+		break;
+	case 0x002D0008:
+	case 0x002D0803:
+	case 0x002D0903:
+		offset = 0xC8;
+		break;
+	case 0x00370000:
+		offset = 0x4BC;
+		break;
+	case 0x00370001:
+		offset = 0x5AC;
+		break;
+	case 0x00370002:
+		offset = 0x5B4;
+		break;
+	case 0x00370003:
+	case 0x00370004:
+		offset = 0x5D4;
+		break;
+	case 0x00370005:
+		offset = 0x5F0;
+		break;
+	case 0x00380005:
+	case 0x00380505:
+	case 0x00380605:
+	case 0x00380705:
+	case 0x00380804:
+	case 0x00380805:
+	case 0x00380904:
+	case 0x00380905:
+		offset = 0xCC;
+		break;
+	case 0x00400001:
+		offset = 0x62C;
+		break;
+	case 0x00400002:
+		offset = 0x644;
+		break;
+	case 0x00400003:
+		offset = 0x668;
+		break;
+	case 0x00400004:
+	case 0x00400005:
+	case 0x00450004:
+		offset = 0x66C;
+		break;
+	case 0x00450005:
+		offset = 0x6B8;
+		break;
+	case 0x004C0003:
+	case 0x004C0004:
+	case 0x004C0005:
+	case 0x004C0006:
+	case 0x004C0007:
+		offset = 0x194;
+		break;
+	case 0x004C0008:
+	case 0x004C0009:
+		offset = 0x184;
+		break;
+	case 0x00540000:
+	case 0x00540001:
+	case 0x00540002:
+	case 0x00540003:
+	case 0x00540004:
+	case 0x00540005:
+	case 0x00540100:
+	case 0x00540101:
+	case 0x00540102:
+	case 0x00540103:
+	case 0x00540104:
+	case 0x00540105:
+	case 0x00540108:
+		offset = 0x138;
+		break;
+	case 0x00540208:
+		offset = 0x13C;
+		break;
+	case 0x005C0002:
+	case 0x005C0003:
+	case 0x005C0102:
+	case 0x005C0103:
+	case 0x005C0202:
+	case 0x005C0203:
+	case 0x005C0302:
+		offset = 0x1BC;
+		break;
+	case 0x005C0303:
+	case 0x005C0402:
+	case 0x005C0403:
+		offset = 0x1C4;
+		break;
+	case 0x00620105:
+	case 0x00620205:
+	case 0x00621102:
+	case 0x00621202:
+		offset = 0x13C;
+		break;
+	case 0x00730204:
+	case 0x00730404:
+	case 0x00730604:
+	case 0x00730804:
+	case 0x00730A04:
+	case 0x00730C04:
+	case 0x00730E04:
+	case 0x00731004:
+		offset = 0x22C;
+		break;
+	}
+	if (offset == OFFSET_INVALID)
+		return RYZEN_SMU_UNSUPPORTED;
+	return ryzen_smu_get_pm_table_float(handle, offset, data);
+}
+
+ry_err_t ryzen_smu_get_soc_volt(ry_handle_t* handle, float* data)
+{
+	size_t offset = OFFSET_INVALID;
+	switch (handle->pm_table_version)
+	{
+	case 0x001E0001:
+	case 0x001E0002:
+		offset = 0x10C;
+		break;
+	case 0x001E0003:
+	case 0x001E0004:
+		offset = 0x104;
+		break;
+	case 0x00240003:
+		offset = 0xA4;
+		break;
+	case 0x00240503:
+	case 0x00240603:
+	case 0x00240703:
+		offset = 0xB4;
+		break;
+	case 0x00240802:
+		offset = 0xB0;
+		break;
+	case 0x00240803:
+		offset = 0xB4;
+		break;
+	case 0x00240902:
+		offset = 0xB0;
+		break;
+	case 0x00240903:
+		offset = 0xB4;
+		break;
+	case 0x00260001:
+		offset = 0x10;
+		break;
+	case 0x002D0008:
+	case 0x002D0803:
+	case 0x002D0903:
+		offset = 0xB0;
+		break;
+	case 0x00370000:
+	case 0x00370001:
+		offset = 0x190;
+		break;
+	case 0x00370002:
+	case 0x00370003:
+	case 0x00370004:
+	case 0x00370005:
+		offset = 0x198;
+		break;
+	case 0x00380005:
+	case 0x00380505:
+	case 0x00380605:
+	case 0x00380705:
+	case 0x00380804:
+	case 0x00380805:
+	case 0x00380904:
+	case 0x00380905:
+		offset = 0xB4;
+		break;
+	case 0x00400001:
+	case 0x00400002:
+	case 0x00400003:
+	case 0x00400004:
+	case 0x00400005:
+	case 0x00450004:
+		offset = 0x19C;
+		break;
+	case 0x00450005:
+		offset = 0x1C8;
+		break;
+	case 0x004C0003:
+	case 0x004C0004:
+	case 0x004C0005:
+	case 0x004C0006:
+	case 0x004C0007:
+		offset = 0x74;
+		break;
+	case 0x004C0008:
+	case 0x004C0009:
+		offset = 0x194;
+		break;
+	case 0x00540000:
+	case 0x00540001:
+	case 0x00540002:
+	case 0x00540003:
+	case 0x00540004:
+	case 0x00540005:
+	case 0x00540100:
+	case 0x00540101:
+	case 0x00540102:
+	case 0x00540103:
+	case 0x00540104:
+	case 0x00540105:
+	case 0x00540108:
+		offset = 0xD0;
+		break;
+	case 0x00540208:
+		offset = 0xD4;
+		break;
+	case 0x005C0002:
+	case 0x005C0003:
+	case 0x005C0102:
+	case 0x005C0103:
+	case 0x005C0202:
+	case 0x005C0203:
+	case 0x005C0302:
+		offset = 0x11C;
+		break;
+	case 0x005C0303:
+	case 0x005C0402:
+	case 0x005C0403:
+		offset = 0x124;
+		break;
+	case 0x00620105:
+	case 0x00620205:
+	case 0x00621102:
+	case 0x00621202:
+		offset = 0x14C;
+		break;
+	case 0x00730204:
+	case 0x00730404:
+	case 0x00730604:
+	case 0x00730804:
+	case 0x00730A04:
+	case 0x00730C04:
+	case 0x00730E04:
+	case 0x00731004:
+		offset = 0x23C;
+		break;
+	}
+	if (offset == OFFSET_INVALID)
+		return RYZEN_SMU_UNSUPPORTED;
+	return ryzen_smu_get_pm_table_float(handle, offset, data);
+}
+
+ry_err_t ryzen_smu_get_cldo_vddp(ry_handle_t* handle, float* data)
+{
+	size_t offset = OFFSET_INVALID;
+	switch (handle->pm_table_version)
+	{
+	case 0x001E0001:
+	case 0x001E0002:
+		offset = 0xF8;
+		break;
+	case 0x001E0003:
+	case 0x001E0004:
+		offset = 0xF0;
+		break;
+	case 0x00240003:
+		offset = 0x1E4;
+		break;
+	case 0x00240503:
+	case 0x00240603:
+	case 0x00240703:
+	case 0x00240803:
+	case 0x00240903:
+		offset = 0x1F4;
+		break;
+	case 0x00240802:
+	case 0x00240902:
+		offset = 0x1F0;
+		break;
+	case 0x002D0008:
+	case 0x002D0803:
+	case 0x002D0903:
+		offset = 0x220;
+		break;
+	case 0x00370000:
+		offset = 0x72C;
+		break;
+	case 0x00370001:
+		offset = 0x81C;
+		break;
+	case 0x00370002:
+		offset = 0x824;
+		break;
+	case 0x00370003:
+	case 0x00370004:
+		offset = 0x844;
+		break;
+	case 0x00370005:
+		offset = 0x86C;
+		break;
+	case 0x00380005:
+	case 0x00380505:
+	case 0x00380605:
+	case 0x00380705:
+	case 0x00380804:
+	case 0x00380805:
+	case 0x00380904:
+	case 0x00380905:
+		offset = 0x224;
+		break;
+	case 0x00400001:
+		offset = 0x89C;
+		break;
+	case 0x00400002:
+		offset = 0x8B4;
+		break;
+	case 0x00400003:
+		offset = 0x8D0;
+		break;
+	case 0x00400004:
+	case 0x00400005:
+	case 0x00450004:
+	case 0x00450005:
+		offset = 0x8D4;
+		break;
+	case 0x004C0003:
+	case 0x004C0004:
+	case 0x004C0005:
+	case 0x004C0006:
+	case 0x004C0007:
+	case 0x004C0008:
+		offset = 0x768;
+		break;
+	case 0x004C0009:
+		offset = 0x774;
+		break;
+	case 0x00540000:
+	case 0x00540001:
+	case 0x00540002:
+	case 0x00540003:
+	case 0x00540004:
+	case 0x00540005:
+	case 0x00540100:
+	case 0x00540101:
+	case 0x00540102:
+	case 0x00540103:
+	case 0x00540104:
+	case 0x00540105:
+	case 0x00540108:
+		offset = 0x430;
+		break;
+	case 0x00540208:
+		offset = 0x434;
+		break;
+	case 0x00620105:
+	case 0x00620205:
+	case 0x00621102:
+	case 0x00621202:
+		offset = 0x434;
+		break;
+	case 0x00730204:
+	case 0x00730404:
+	case 0x00730604:
+	case 0x00730804:
+	case 0x00730A04:
+	case 0x00730C04:
+	case 0x00730E04:
+	case 0x00731004:
+		offset = 0x5CC;
+		break;
+	}
+	if (offset == OFFSET_INVALID)
+		return RYZEN_SMU_UNSUPPORTED;
+	return ryzen_smu_get_pm_table_float(handle, offset, data);
+}
+
+ry_err_t ryzen_smu_get_psi0_current(ry_handle_t* handle, float* data)
+{
+	size_t offset = OFFSET_INVALID;
+	switch (handle->pm_table_version)
+	{
+	case 0x001E0001:
+	case 0x001E0002:
+	case 0x001E0003:
+	case 0x001E0004:
+	case 0x001E0005:
+	case 0x001E000A:
+	case 0x001E0101:
+		offset = 0x40;
+		break;
+	case 0x00370000:
+	case 0x00370001:
+	case 0x00370002:
+	case 0x00370003:
+	case 0x00370004:
+	case 0x00370005:
+	case 0x00400001:
+	case 0x00400002:
+	case 0x00400003:
+	case 0x00400004:
+	case 0x00400005:
+	case 0x004C0006:
+	case 0x004C0007:
+	case 0x004C0008:
+	case 0x004C0009:
+		offset = 0x78;
+		break;
+	}
+	if (offset == OFFSET_INVALID)
+		return RYZEN_SMU_UNSUPPORTED;
+	return ryzen_smu_get_pm_table_float(handle, offset, data);
+}
+
+ry_err_t ryzen_smu_get_psi0soc_current(ry_handle_t* handle, float* data)
+{
+	size_t offset = OFFSET_INVALID;
+	switch (handle->pm_table_version)
+	{
+	case 0x001E0001:
+	case 0x001E0002:
+	case 0x001E0003:
+	case 0x001E0004:
+	case 0x001E0005:
+	case 0x001E000A:
+	case 0x001E0101:
+		offset = 0x48;
+		break;
+	case 0x00370000:
+	case 0x00370001:
+	case 0x00370002:
+	case 0x00370003:
+	case 0x00370004:
+	case 0x00370005:
+	case 0x00400001:
+	case 0x00400002:
+	case 0x00400003:
+	case 0x00400004:
+	case 0x00400005:
+	case 0x004C0006:
+	case 0x004C0007:
+	case 0x004C0008:
+	case 0x004C0009:
+		offset = 0x80;
+		break;
+	}
+	if (offset == OFFSET_INVALID)
+		return RYZEN_SMU_UNSUPPORTED;
+	return ryzen_smu_get_pm_table_float(handle, offset, data);
+}
+
+ry_err_t ryzen_smu_get_l3_clk(ry_handle_t* handle, float* data)
+{
+	size_t offset = OFFSET_INVALID;
+	switch (handle->pm_table_version)
+	{
+	case 0x00370000:
+	case 0x00370001:
+	case 0x00370002:
+	case 0x00370003:
+	case 0x00370004:
+		offset = 0x568;
+		break;
+	case 0x00370005:
+		offset = 0x584;
+		break;
+	case 0x003F0000:
+		offset = 0x35C;
+		break;
+	case 0x00400004:
+	case 0x00400005:
+		offset = 0x614;
+		break;
+	}
+	if (offset == OFFSET_INVALID)
+		return RYZEN_SMU_UNSUPPORTED;
+	return ryzen_smu_get_pm_table_float(handle, offset, data);
+}
+
+ry_err_t ryzen_smu_get_l3_vddm(ry_handle_t* handle, float* data)
+{
+	size_t offset = OFFSET_INVALID;
+	switch (handle->pm_table_version)
+	{
+	case 0x00370000:
+	case 0x00370001:
+	case 0x00370002:
+	case 0x00370003:
+	case 0x00370004:
+		offset = 0x548;
+		break;
+	case 0x00370005:
+		offset = 0x564;
+		break;
+	case 0x003F0000:
+		offset = 0x34C;
+		break;
+	case 0x00400004:
+	case 0x00400005:
+		offset = 0x604;
+		break;
+	}
+	if (offset == OFFSET_INVALID)
+		return RYZEN_SMU_UNSUPPORTED;
+	return ryzen_smu_get_pm_table_float(handle, offset, data);
+}
+
+ry_err_t ryzen_smu_get_l3_temperature(ry_handle_t* handle, float* data)
+{
+	size_t offset = OFFSET_INVALID;
+	switch (handle->pm_table_version)
+	{
+	case 0x00370000:
+	case 0x00370001:
+	case 0x00370002:
+	case 0x00370003:
+	case 0x00370004:
+		offset = 0x550;
+		break;
+	case 0x00370005:
+		offset = 0x56C;
+		break;
+	case 0x003F0000:
+		offset = 0x350;
+		break;
+	case 0x00400004:
+	case 0x00400005:
+		offset = 0x608;
+		break;
+	}
+	if (offset == OFFSET_INVALID)
+		return RYZEN_SMU_UNSUPPORTED;
+	return ryzen_smu_get_pm_table_float(handle, offset, data);
+}
+
+ry_err_t ryzen_smu_get_socket_power(ry_handle_t* handle, float* data)
+{
+	size_t offset = OFFSET_INVALID;
+	switch (handle->pm_table_version)
+	{
+	case 0x00370000:
+	case 0x00370001:
+	case 0x00370002:
+	case 0x00370003:
+	case 0x00370004:
+	case 0x00370005:
+	case 0x00400001:
+	case 0x00400002:
+	case 0x00400003:
+	case 0x00400004:
+	case 0x00400005:
+		offset = 0x98;
+		break;
+	case 0x003F0000:
+		offset = 0xA8;
+		break;
+	case 0x005D0008:
+	case 0x005D0009:
+		offset = 0xD0;
+		break;
+	}
+	if (offset == OFFSET_INVALID)
+		return RYZEN_SMU_UNSUPPORTED;
 	return ryzen_smu_get_pm_table_float(handle, offset, data);
 }

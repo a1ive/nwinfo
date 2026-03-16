@@ -117,6 +117,8 @@ ry_err_t ryzen_smu_update_pm_table(ry_handle_t* handle);
 
 ry_err_t ryzen_smu_get_pm_table_float(ry_handle_t* handle, size_t offset, float* value);
 
+#define SMU_MAX_CORE 16
+
 ry_err_t ryzen_smu_get_stapm_limit(ry_handle_t* handle, float* data);
 
 ry_err_t ryzen_smu_get_stapm_value(ry_handle_t* handle, float* data);
@@ -129,6 +131,50 @@ ry_err_t ryzen_smu_get_slow_limit(ry_handle_t* handle, float* data);
 
 ry_err_t ryzen_smu_get_slow_value(ry_handle_t* handle, float* data);
 
+ry_err_t ryzen_smu_get_apu_slow_limit(ry_handle_t* handle, float* data);
+
+ry_err_t ryzen_smu_get_apu_slow_value(ry_handle_t* handle, float* data);
+
+ry_err_t ryzen_smu_get_vrm_current(ry_handle_t* handle, float* data);
+
+ry_err_t ryzen_smu_get_vrm_current_value(ry_handle_t* handle, float* data);
+
+ry_err_t ryzen_smu_get_vrmsoc_current(ry_handle_t* handle, float* data);
+
+ry_err_t ryzen_smu_get_vrmsoc_current_value(ry_handle_t* handle, float* data);
+
 ry_err_t ryzen_smu_get_core_temperature(ry_handle_t* handle, uint32_t core, float* data);
 
-ry_err_t ryzen_smu_get_apu_temperature(ry_handle_t* handle, float* data);
+ry_err_t ryzen_smu_get_core_power(ry_handle_t* handle, uint32_t core, float* data);
+
+ry_err_t ryzen_smu_get_core_volt(ry_handle_t* handle, uint32_t core, float* data);
+
+ry_err_t ryzen_smu_get_core_clk(ry_handle_t* handle, uint32_t core, float* data);
+
+ry_err_t ryzen_smu_get_gfx_temperature(ry_handle_t* handle, float* data);
+
+ry_err_t ryzen_smu_get_gfx_volt(ry_handle_t* handle, float* data);
+
+ry_err_t ryzen_smu_get_gfx_clk(ry_handle_t* handle, float* data);
+
+ry_err_t ryzen_smu_get_psi0_current(ry_handle_t* handle, float* data);
+
+ry_err_t ryzen_smu_get_psi0soc_current(ry_handle_t* handle, float* data);
+
+ry_err_t ryzen_smu_get_fclk(ry_handle_t* handle, float* data);
+
+ry_err_t ryzen_smu_get_uclk(ry_handle_t* handle, float* data);
+
+ry_err_t ryzen_smu_get_mclk(ry_handle_t* handle, float* data);
+
+ry_err_t ryzen_smu_get_soc_volt(ry_handle_t* handle, float* data);
+
+ry_err_t ryzen_smu_get_cldo_vddp(ry_handle_t* handle, float* data);
+
+ry_err_t ryzen_smu_get_l3_clk(ry_handle_t* handle, float* data);
+
+ry_err_t ryzen_smu_get_l3_vddm(ry_handle_t* handle, float* data);
+
+ry_err_t ryzen_smu_get_l3_temperature(ry_handle_t* handle, float* data);
+
+ry_err_t ryzen_smu_get_socket_power(ry_handle_t* handle, float* data);
