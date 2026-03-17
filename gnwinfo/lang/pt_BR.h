@@ -7,7 +7,7 @@ static const char*
 lang_pt_br[N__MAX_] =
 {
 	[N__FONT_] = u8"Consolas", // The font name used in the GUI, should not be translated
-	[N__LANG_NAME_] = u8"Português (Brasil)", // The language name used in the GUI
+	[N__LANG_NAME_] = u8"Português", // Português (Brasil)
 	[N__LOADING] = u8"Carregando",
 	[N__PLS_WAIT] = u8"Aguarde ...",
 	[N__OS] = u8"SO", // Sistema Operacional

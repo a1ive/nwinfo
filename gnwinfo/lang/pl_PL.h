@@ -7,7 +7,7 @@ static const char*
 lang_pl_pl[N__MAX_] =
 {
 	[N__FONT_] = u8"Consolas", // Nazwa czcionki używanej w GUI, nie tłumaczyć
-	[N__LANG_NAME_] = u8"Polski (Polska)", // Nazwa języka używana w GUI
+	[N__LANG_NAME_] = u8"Polski", // Nazwa języka używana w GUI
 	[N__LOADING] = u8"Wczytywanie",
 	[N__PLS_WAIT] = u8"Proszę czekać ...",
 	[N__OS] = u8"System operacyjny",

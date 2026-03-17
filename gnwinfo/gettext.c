@@ -21,16 +21,30 @@
 // https://learn.microsoft.com/en-us/openspecs/office_standards/ms-oe376/6c085406-a698-4e12-9d4d-c3b0ee3dbc4a
 LANGID g_lang_id;
 
-const char*
-N_(GETTEXT_STR_ID id)
+LANGID g_supported_lang_ids[] =
 {
-	if (g_lang_id == 0)
-		g_lang_id = GetUserDefaultUILanguage();
+	1033, // English - United States
+	2052, // Chinese - People's Republic of China
+	1028, // Chinese - Taiwan
+	1040, // Italian
+	1041, // Japanese
+	1042, // Korean
+	1045, // Polish
+	1046, // Portuguese - Brazil
+	1053, // Swedish
+	1055, // Turkish
+	1060, // Slovenian
+	3076, // Chinese - Hong Kong SAR
+};
+const size_t g_supported_lang_num = ARRAYSIZE(g_supported_lang_ids);
+
+const char*
+gnwinfo_get_lang_str(LANGID lang, GETTEXT_STR_ID id)
+{
 	if (id < 0 || id >= N__MAX_)
 		return INVALID_N_ID;
-
 	const char* str = NULL;
-	switch (g_lang_id)
+	switch (lang)
 	{
 	case 2052: // Chinese - People's Republic of China
 	case 4100: // Chinese - Singapore
@@ -81,4 +95,12 @@ N_(GETTEXT_STR_ID id)
 	if (str == NULL || str[0] == '\0')
 		str = lang_en_us[id];
 	return str;
+}
+
+const char*
+N_(GETTEXT_STR_ID id)
+{
+	if (g_lang_id == 0)
+		g_lang_id = GetUserDefaultUILanguage();
+	return gnwinfo_get_lang_str(g_lang_id, id);
 }

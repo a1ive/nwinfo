@@ -74,24 +74,17 @@ draw_color_picker(struct nk_context* ctx, struct nk_color* color)
 static void
 nk_font_list(struct nk_context* ctx, float item_height)
 {
-	float max_height;
-	struct nk_vec2 item_spacing;
-	struct nk_vec2 window_padding;
 	struct nk_vec2 size;
 
-	item_spacing = ctx->style.window.spacing;
-	window_padding = ctx->style.window.combo_padding;
-	max_height = 8 * (item_height + item_spacing.y);
-	max_height += item_spacing.y * 2 + window_padding.y * 2;
-	size.y = max_height;
-
+	size.y = 8 * (item_height + ctx->style.window.spacing.y);
+	size.y += ctx->style.window.spacing.y * 2 + ctx->style.window.combo_padding.y * 2;
 	size.x = nk_widget_width(ctx);
 
 	if (nk_combo_begin_text(ctx, g_font_name, nk_strlen(g_font_name), size))
 	{
 		PNODE node = NW_Font(FALSE);
 		INT count = NWL_NodeChildCount(node);
-		nk_layout_row_dynamic(ctx, (float)item_height, 1);
+		nk_layout_row_dynamic(ctx, item_height, 1);
 		for (INT i = 0; i < count; i++)
 		{
 			PNODE item = NWL_NodeEnumChild(node, i);
@@ -108,13 +101,37 @@ nk_font_list(struct nk_context* ctx, float item_height)
 	}
 }
 
+static void
+nk_lang_list(struct nk_context* ctx, float item_height)
+{
+	struct nk_vec2 size;
+
+	size.y = 8 * (item_height + ctx->style.window.spacing.y);
+	size.y += ctx->style.window.spacing.y * 2 + ctx->style.window.combo_padding.y * 2;
+	size.x = nk_widget_width(ctx);
+
+	const char* lang_name = N_(N__LANG_NAME_);
+	if (nk_combo_begin_text(ctx, lang_name, nk_strlen(lang_name), size))
+	{
+		nk_layout_row_dynamic(ctx, item_height, 1);
+		for (size_t i = 0; i < g_supported_lang_num; i++)
+		{
+			LANGID lang = g_supported_lang_ids[i];
+			const char* name = gnwinfo_get_lang_str(lang, N__LANG_NAME_);
+			if (nk_combo_item_label(ctx, name, NK_TEXT_LEFT))
+				g_lang_id = lang;
+		}
+		nk_combo_end(ctx);
+	}
+}
+
 VOID
 gnwinfo_draw_settings_window(struct nk_context* ctx, float width, float height)
 {
 	if (!(g_ctx.window_flag & GUI_WINDOW_SETTINGS))
 		return;
 	if (!nk_begin_ex(ctx, N_(N__SETTINGS),
-		nk_rect(width / 4.0f, height / 3.0f, width / 2.0f, height / 3.0f),
+		nk_rect(width / 6.0f, height / 6.0f, width * 2.0f / 3.0f, height * 2.0f / 3.0f),
 		NK_WINDOW_BORDER | NK_WINDOW_MOVABLE | NK_WINDOW_SCALABLE | NK_WINDOW_CLOSABLE,
 		GET_PNG(IDR_PNG_SETTINGS), GET_PNG(IDR_PNG_CLOSE)))
 	{
@@ -138,8 +155,11 @@ gnwinfo_draw_settings_window(struct nk_context* ctx, float width, float height)
 
 	nk_layout_row(ctx, NK_DYNAMIC, g_col_height, 3, (float[3]) { 0.1f, 0.4f, 0.5f });
 	nk_spacer(ctx);
+	set_label(ctx, "Language");
+	nk_lang_list(ctx, g_col_height);
+
+	nk_spacer(ctx);
 	set_label(ctx, N_(N__FONT_NAME));
-	//nk_edit_string_zero_terminated(ctx, NK_EDIT_FIELD, g_font_name, NWL_STR_SIZE, nk_filter_default);
 	nk_font_list(ctx, g_col_height);
 
 	nk_layout_row(ctx, NK_DYNAMIC, 0, 3, (float[3]) { 0.1f, 0.4f, 0.5f });
@@ -317,6 +337,7 @@ gnwinfo_draw_settings_window(struct nk_context* ctx, float width, float height)
 		gnwinfo_set_ini_value(L"Window", L"HideSensitive", L"%u", g_ctx.lib.HideSensitive);
 		gnwinfo_set_ini_value(L"Window", L"DpiScaling", L"%d", g_dpi_scaling);
 		gnwinfo_set_ini_value(L"Window", L"AntiAliasing", L"%u", g_ctx.gui_aa);
+		gnwinfo_set_ini_value(L"Window", L"Language", L"%u", g_lang_id);
 		if (g_font_name[0] != '\0')
 			gnwinfo_set_ini_value(L"Window", L"Font", L"%s", NWL_Utf8ToUcs2(g_font_name));
 		gnwinfo_set_ini_value(L"Window", L"FontSize", L"%d", g_font_size_cached);

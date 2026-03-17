@@ -161,6 +161,11 @@ typedef enum _GETTEXT_STR_ID
 } GETTEXT_STR_ID;
 
 extern LANGID g_lang_id;
+extern LANGID g_supported_lang_ids[];
+const size_t g_supported_lang_num;
+
+const char*
+gnwinfo_get_lang_str(LANGID lang, GETTEXT_STR_ID id);
 
 const char*
 N_(GETTEXT_STR_ID id);
