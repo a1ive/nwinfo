@@ -71,6 +71,43 @@ draw_color_picker(struct nk_context* ctx, struct nk_color* color)
 	}
 }
 
+static void
+nk_font_list(struct nk_context* ctx, float item_height)
+{
+	float max_height;
+	struct nk_vec2 item_spacing;
+	struct nk_vec2 window_padding;
+	struct nk_vec2 size;
+
+	item_spacing = ctx->style.window.spacing;
+	window_padding = ctx->style.window.combo_padding;
+	max_height = 8 * (item_height + item_spacing.y);
+	max_height += item_spacing.y * 2 + window_padding.y * 2;
+	size.y = max_height;
+
+	size.x = nk_widget_width(ctx);
+
+	if (nk_combo_begin_text(ctx, g_font_name, nk_strlen(g_font_name), size))
+	{
+		PNODE node = NW_Font(FALSE);
+		INT count = NWL_NodeChildCount(node);
+		nk_layout_row_dynamic(ctx, (float)item_height, 1);
+		for (INT i = 0; i < count; i++)
+		{
+			PNODE item = NWL_NodeEnumChild(node, i);
+			if (!item)
+				continue;
+			const char* name = NWL_NodeAttrGet(item, "Name");
+			if (name[0] == '@')
+				continue;
+			if (nk_combo_item_label(ctx, name, NK_TEXT_LEFT))
+				strcpy_s(g_font_name, NWL_STR_SIZE, name);
+		}
+		nk_combo_end(ctx);
+		NWL_NodeFree(node, 1);
+	}
+}
+
 VOID
 gnwinfo_draw_settings_window(struct nk_context* ctx, float width, float height)
 {
@@ -102,7 +139,8 @@ gnwinfo_draw_settings_window(struct nk_context* ctx, float width, float height)
 	nk_layout_row(ctx, NK_DYNAMIC, g_col_height, 3, (float[3]) { 0.1f, 0.4f, 0.5f });
 	nk_spacer(ctx);
 	set_label(ctx, N_(N__FONT_NAME));
-	nk_edit_string_zero_terminated(ctx, NK_EDIT_FIELD, g_font_name, NWL_STR_SIZE, nk_filter_default);
+	//nk_edit_string_zero_terminated(ctx, NK_EDIT_FIELD, g_font_name, NWL_STR_SIZE, nk_filter_default);
+	nk_font_list(ctx, g_col_height);
 
 	nk_layout_row(ctx, NK_DYNAMIC, 0, 3, (float[3]) { 0.1f, 0.4f, 0.5f });
 	nk_spacer(ctx);
