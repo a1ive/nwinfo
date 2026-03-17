@@ -9,7 +9,6 @@
 static struct
 {
 	char hostname[MAX_COMPUTERNAME_LENGTH + 1];
-	float col_height;
 	char prefix[MAX_COMPUTERNAME_LENGTH + 1];
 } m_ctx;
 
@@ -41,7 +40,6 @@ gnwinfo_init_hostname_window(struct nk_context* ctx)
 	time_t t;
 	g_ctx.window_flag |= GUI_WINDOW_HOSTNAME;
 	memcpy(m_ctx.hostname, g_ctx.sys_hostname, MAX_COMPUTERNAME_LENGTH + 1);
-	m_ctx.col_height = 1.5f * g_font_size + 2.0f * ctx->style.edit.padding.y;
 	strcpy_s(m_ctx.prefix, MAX_COMPUTERNAME_LENGTH + 1, gnwinfo_get_ini_value(L"Widgets", L"HostnamePrefix", L"DESKTOP-"));
 	srand((unsigned)time(&t));
 }
@@ -118,7 +116,7 @@ gnwinfo_draw_hostname_window(struct nk_context* ctx, float width, float height)
 	if (!(g_ctx.window_flag & GUI_WINDOW_HOSTNAME))
 		return;
 	if (!nk_begin_ex(ctx, N_(N__HOSTNAME),
-		nk_rect(width / 8.0f, height / 4.0f, width * 0.75f, NK_MIN(height / 2.0f, 6 * m_ctx.col_height)),
+		nk_rect(width / 8.0f, height / 4.0f, width * 0.75f, NK_MIN(height / 2.0f, 6 * g_col_height)),
 		NK_WINDOW_BORDER | NK_WINDOW_MOVABLE | NK_WINDOW_SCALABLE | NK_WINDOW_CLOSABLE,
 		GET_PNG(IDR_PNG_EDIT), GET_PNG(IDR_PNG_CLOSE)))
 	{
@@ -129,7 +127,7 @@ gnwinfo_draw_hostname_window(struct nk_context* ctx, float width, float height)
 	nk_layout_row_dynamic(ctx, 0, 1);
 	nk_spacer(ctx);
 
-	nk_layout_row(ctx, NK_DYNAMIC, m_ctx.col_height, 3, (float[3]) { 0.1f, 0.8f, 0.1f });
+	nk_layout_row(ctx, NK_DYNAMIC, g_col_height, 3, (float[3]) { 0.1f, 0.8f, 0.1f });
 	nk_spacer(ctx);
 	nk_edit_string_zero_terminated(ctx, NK_EDIT_FIELD, m_ctx.hostname, MAX_COMPUTERNAME_LENGTH + 1, nk_filter_hostname);
 	nk_spacer(ctx);
@@ -137,7 +135,7 @@ gnwinfo_draw_hostname_window(struct nk_context* ctx, float width, float height)
 	nk_layout_row_dynamic(ctx, 0, 1);
 	nk_spacer(ctx);
 
-	nk_layout_row(ctx, NK_DYNAMIC, m_ctx.col_height, 5, (float[5]) { 0.15f, 0.3f, 0.1f, 0.3f, 0.15f });
+	nk_layout_row(ctx, NK_DYNAMIC, g_col_height, 5, (float[5]) { 0.15f, 0.3f, 0.1f, 0.3f, 0.15f });
 	nk_spacer(ctx);
 	if (nk_button_label(ctx, N_(N__RANDOM)))
 		gen_hostname();

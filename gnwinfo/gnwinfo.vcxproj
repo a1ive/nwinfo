@@ -187,6 +187,7 @@
     <ClInclude Include="lang\sv_SE.h" />
     <ClInclude Include="lang\tr_TR.h" />
     <ClInclude Include="lang\zh_CN.h" />
+    <ClInclude Include="lang\zh_HK.h" />
     <ClInclude Include="lang\zh_TW.h" />
     <ClInclude Include="resource.h" />
   </ItemGroup>

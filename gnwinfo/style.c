@@ -183,4 +183,6 @@ gnwinfo_set_style(struct nk_context* ctx)
 	ctx->style.contextual_button.text_hover = g_color_text_d;
 	ctx->style.contextual_button.text_active = g_color_text_d;
 	ctx->style.contextual_button.border_color = back_p8;
+
+	g_col_height = 1.5f * g_font_size + 2.0f * ctx->style.edit.padding.y;
 }

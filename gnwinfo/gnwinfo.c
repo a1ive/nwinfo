@@ -16,7 +16,10 @@ unsigned int g_init_height = 800;
 unsigned int g_init_alpha = 255;
 GdipFont* g_font = NULL;
 int g_font_size = 12;
+int g_font_size_cached = 0;
+char g_font_name[NWL_STR_SIZE] = "-";
 double g_dpi_factor = 1.0;
+float g_col_height = 0;
 nk_bool g_dpi_scaling = 1;
 nk_bool g_bginfo = 0;
 nk_bool g_debug = 0;
@@ -31,10 +34,10 @@ static UINT m_dpi = USER_DEFAULT_SCREEN_DPI;
 static void
 set_dpi_scaling(HWND wnd)
 {
-	WCHAR font_name[64];
-	GetPrivateProfileStringW(L"Window", L"Font", L"-", font_name, 64, g_ini_path);
+	WCHAR font_name[NWL_STR_SIZE];
+	GetPrivateProfileStringW(L"Window", L"Font", L"-", font_name, NWL_STR_SIZE, g_ini_path);
 	if (wcscmp(font_name, L"-") == 0)
-		wcscpy_s(font_name, 64, NWL_Utf8ToUcs2(N_(N__FONT_)));
+		wcscpy_s(font_name, NWL_STR_SIZE, NWL_Utf8ToUcs2(N_(N__FONT_)));
 	if (g_bginfo)
 		g_dpi_scaling = 0;
 	else
@@ -59,6 +62,7 @@ set_dpi_scaling(HWND wnd)
 	}
 	g_font = nk_gdip_load_font(font_name, g_font_size);
 	nk_gdip_set_font(g_font);
+	strcpy_s(g_font_name, NWL_STR_SIZE, NWL_Ucs2ToUtf8(font_name));
 }
 
 static LRESULT CALLBACK
@@ -243,6 +247,8 @@ wWinMain(_In_ HINSTANCE hInstance,
 	g_init_height = strtoul(gnwinfo_get_ini_value(L"Window", L"Height", L"800"), NULL, 10);
 	g_init_alpha = strtoul(gnwinfo_get_ini_value(L"Window", L"Alpha", L"255"), NULL, 10);
 	g_font_size = strtol(gnwinfo_get_ini_value(L"Window", L"FontSize", L"12"), NULL, 10);
+	g_font_size_cached = g_font_size;
+	g_lang_id = (LANGID)strtoul(gnwinfo_get_ini_value(L"Window", L"Language", L"0"), NULL, 10);
 	str = gnwinfo_get_ini_value(L"Window", L"BGInfo", L"0");
 	if (str[0] != '0')
 	{

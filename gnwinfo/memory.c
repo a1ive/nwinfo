@@ -22,7 +22,6 @@ static struct
 	nk_size page_drive_mb;
 	nk_size page_file_size;
 	int page_rc;
-	float col_height;
 } m_ctx;
 
 VOID
@@ -35,7 +34,6 @@ gnwinfo_init_mm_window(struct nk_context* ctx)
 	m_ctx.page_drive_mb = 0;
 	m_ctx.page_file_size = 8192;
 	m_ctx.page_rc = 0;
-	m_ctx.col_height = g_font_size + ctx->style.edit.padding.y * 2;
 }
 
 static UINT64
@@ -142,13 +140,13 @@ draw_drive_list(struct nk_context* ctx)
 	static int count = 0;
 	static int selected = 2;
 	int i = 0;
-	if (nk_combo_begin_label(ctx, items[selected], nk_vec2(nk_widget_width(ctx), m_ctx.col_height * 4)))
+	if (nk_combo_begin_label(ctx, items[selected], nk_vec2(nk_widget_width(ctx), g_col_height * 4)))
 	{
 		DWORD mask = GetLogicalDrives();
 		if (mask == 0)
 			mask = 1 << 2;
 		m_ctx.page_drive_change = TRUE;
-		nk_layout_row_dynamic(ctx, m_ctx.col_height, 1);
+		nk_layout_row_dynamic(ctx, g_col_height, 1);
 		for (i = 0; i < 26; ++i)
 		{
 			if (mask & (1 << i))
@@ -218,7 +216,7 @@ draw_page_file(struct nk_context* ctx)
 	nk_layout_row_dynamic(ctx, 8, 1);
 	nk_spacer(ctx);
 
-	nk_layout_row(ctx, NK_DYNAMIC, m_ctx.col_height, 3, (float[3]) { 0.05f, 0.20f, 0.75f });
+	nk_layout_row(ctx, NK_DYNAMIC, g_col_height, 3, (float[3]) { 0.05f, 0.20f, 0.75f });
 	nk_spacer(ctx);
 	drive = draw_drive_list(ctx);
 	nk_lf(ctx, NK_TEXT_LEFT, "%lC:\\pagefile.sys", drive);
@@ -226,7 +224,7 @@ draw_page_file(struct nk_context* ctx)
 	nk_layout_row_dynamic(ctx, 10, 1);
 	nk_spacer(ctx);
 
-	nk_layout_row(ctx, NK_DYNAMIC, m_ctx.col_height, 4, (float[4]) { 0.05f, 0.20f, 0.3f, 0.45f });
+	nk_layout_row(ctx, NK_DYNAMIC, g_col_height, 4, (float[4]) { 0.05f, 0.20f, 0.3f, 0.45f });
 	nk_spacer(ctx);
 	draw_size_editor(ctx, drive);
 	nk_lf(ctx, NK_TEXT_LEFT, "MB / %" PRIuPTR " MB", m_ctx.page_drive_mb);
@@ -234,7 +232,7 @@ draw_page_file(struct nk_context* ctx)
 	nk_layout_row_dynamic(ctx, 10, 1);
 	nk_spacer(ctx);
 
-	nk_layout_row(ctx, NK_DYNAMIC, m_ctx.col_height, 3, (float[3]) { 0.45f, 0.1f, 0.45f });
+	nk_layout_row(ctx, NK_DYNAMIC, g_col_height, 3, (float[3]) { 0.45f, 0.1f, 0.45f });
 	nk_spacer(ctx);
 	if (nk_button_label(ctx, N_(N__OK)))
 	{
@@ -293,7 +291,7 @@ gnwinfo_draw_mm_window(struct nk_context* ctx, float width, float height)
 	nk_layout_row_dynamic(ctx, 8, 1);
 	nk_spacer(ctx);
 
-	nk_layout_row_dynamic(ctx, m_ctx.col_height, 3);
+	nk_layout_row_dynamic(ctx, g_col_height, 3);
 	nk_spacer(ctx);
 	if (nk_button_label(ctx, N_(N__CLEAN_MEMORY)))
 		m_ctx.clean_size = clean_memory(m_ctx.clean_flag);
@@ -305,7 +303,7 @@ gnwinfo_draw_mm_window(struct nk_context* ctx, float width, float height)
 	nk_layout_row_dynamic(ctx, 8, 1);
 	nk_spacer(ctx);
 
-	nk_layout_row_dynamic(ctx, m_ctx.col_height * 9, 1);
+	nk_layout_row_dynamic(ctx, g_col_height * 9, 1);
 	draw_page_file(ctx);
 
 out:

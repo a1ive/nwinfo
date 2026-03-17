@@ -111,6 +111,8 @@ typedef enum _GETTEXT_STR_ID
 	N__SHOW_SENSITIVE_DATA,
 	N__DISABLE_DPI_SCALING,
 	N__DISABLE_ANTIALIASING,
+	N__FONT_NAME,
+	N__FONT_SIZE,
 	N__WIDTH,
 	N__HEIGHT,
 	N__ALPHA,
@@ -158,7 +160,7 @@ typedef enum _GETTEXT_STR_ID
 	N__MAX_,
 } GETTEXT_STR_ID;
 
-LANGID g_lang_id;
+extern LANGID g_lang_id;
 
 const char*
 N_(GETTEXT_STR_ID id);
