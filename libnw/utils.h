@@ -31,7 +31,7 @@ LIBNW_API struct ACPI_RSDP_V2* NWL_GetRsdp(VOID);
 LIBNW_API struct ACPI_RSDT* NWL_GetRsdt(VOID);
 LIBNW_API struct ACPI_XSDT* NWL_GetXsdt(VOID);
 LIBNW_API PVOID NWL_GetSysAcpi(DWORD TableId);
-LIBNW_API PVOID NWL_GetAcpiByAddr(DWORD_PTR Addr);
+LIBNW_API PVOID NWL_GetAcpiByAddr(DWORD_PTR Addr, DWORD TableId);
 
 LIBNW_API UINT8 NWL_AcpiChecksum(VOID* base, UINT size);
 INT NWL_GetRegDwordValue(HKEY Key, LPCWSTR SubKey, LPCWSTR ValueName, DWORD* pValue);

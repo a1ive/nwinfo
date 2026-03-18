@@ -685,7 +685,7 @@ PNODE NW_Acpi(BOOL bAppend)
 		count = (NWLC->NwXsdt->Header.Length - sizeof(DESC_HEADER)) / sizeof(NWLC->NwXsdt->Entry[0]);
 		for (i = 0; i < count; i++)
 		{
-			DESC_HEADER* t = NWL_GetAcpiByAddr((DWORD_PTR)NWLC->NwXsdt->Entry[i]);
+			DESC_HEADER* t = NWL_GetAcpiByAddr((DWORD_PTR)NWLC->NwXsdt->Entry[i], NWLC->AcpiTable);
 			if (t)
 			{
 				PrintTableInfo(pNode, t);
@@ -698,7 +698,7 @@ PNODE NW_Acpi(BOOL bAppend)
 		count = (NWLC->NwRsdt->Header.Length - sizeof(DESC_HEADER)) / sizeof(NWLC->NwRsdt->Entry[0]);
 		for (i = 0; i < count; i++)
 		{
-			DESC_HEADER* t = NWL_GetAcpiByAddr((DWORD_PTR)NWLC->NwRsdt->Entry[i]);
+			DESC_HEADER* t = NWL_GetAcpiByAddr((DWORD_PTR)NWLC->NwRsdt->Entry[i], NWLC->AcpiTable);
 			if (t)
 			{
 				PrintTableInfo(pNode, t);
