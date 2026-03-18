@@ -3,6 +3,7 @@
 #include "libnw.h"
 #include "utils.h"
 #include "acpi.h"
+#include <ioctl.h>
 
 #define ACPI_FIELD_CHK(Hdr, Type, Field) \
 	((Hdr)->Length >= (offsetof(Type, Field) + sizeof(((Type *)0)->Field)))
@@ -231,14 +232,11 @@ PrintXSDT(PNODE pNode, DESC_HEADER* Hdr)
 	{
 		PNODE entry;
 		CHAR name[5];
-		DESC_HEADER* t = NWL_GetAcpiByAddr((DWORD_PTR)xsdt->Entry[i]);
-		if (!t)
+		if (WR0_RdMmIo(NWLC->NwDrv, (uint64_t)xsdt->Entry[i], name, 4) != 0)
 			continue;
-		snprintf(name, 5, "%c%c%c%c",
-			t->Signature[0], t->Signature[1], t->Signature[2], t->Signature[3]);
+		name[4] = '\0';
 		entry = NWL_NodeAppendNew(entries, name, NFLG_TABLE_ROW);
 		NWL_NodeAttrSetf(entry, "Address", 0, "0x%016llx", xsdt->Entry[i]);
-		free(t);
 	}
 	return pNode;
 }
@@ -253,14 +251,11 @@ PrintRSDT(PNODE pNode, DESC_HEADER* Hdr)
 	{
 		PNODE entry;
 		CHAR name[5];
-		DESC_HEADER* t = NWL_GetAcpiByAddr((DWORD_PTR)rsdt->Entry[i]);
-		if (!t)
+		if (WR0_RdMmIo(NWLC->NwDrv, (uint64_t)rsdt->Entry[i], name, 4) != 0)
 			continue;
-		snprintf(name, 5, "%c%c%c%c",
-			t->Signature[0], t->Signature[1], t->Signature[2], t->Signature[3]);
+		name[4] = '\0';
 		entry = NWL_NodeAppendNew(entries, name, NFLG_TABLE_ROW);
 		NWL_NodeAttrSetf(entry, "Address", 0, "0x%08x", rsdt->Entry[i]);
-		free(t);
 	}
 	return pNode;
 }
