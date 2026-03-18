@@ -18,6 +18,7 @@ enum CHIP_ID
 	CHIP_F71889AD = 0x1005,
 	CHIP_F71889ED = 0x0909,
 	CHIP_F71889F = 0x0723,
+	CHIP_IT5571E = 0x5571,
 	CHIP_IT8613E = 0x8613,
 	CHIP_IT8620E = 0x8620,
 	CHIP_IT8625E = 0x8625,
@@ -90,6 +91,7 @@ static inline const char* CHIP_ID_TO_NAME(enum CHIP_ID id)
 	case CHIP_F71889ED: return "Fintek F71889ED";
 	case CHIP_F71889F: return "Fintek F71889F";
 	case CHIP_F71808E: return "Fintek F71808E";
+	case CHIP_IT5571E: return "ITE IT5571E";
 	case CHIP_IT8613E: return "ITE IT8613E";
 	case CHIP_IT8620E: return "ITE IT8620E";
 	case CHIP_IT8625E: return "ITE IT8625E";

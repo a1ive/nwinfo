@@ -136,6 +136,7 @@ static bool detect_nuvoton(plpcio io, NWLIB_MAINBOARD_INFO* board, NWLIB_LPC_SLO
 			if (board->VendorId == VENDOR_MSI &&
 				(strcmp(board->Chipset, "B840") == 0 ||
 				 strcmp(board->Chipset, "B850") == 0 ||
+				 strcmp(board->Chipset, "B860") == 0 ||
 				 strcmp(board->Chipset, "X870") == 0 ||
 				 strcmp(board->Chipset, "Z890") == 0))
 				chip = CHIP_NCT6687DR;
