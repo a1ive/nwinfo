@@ -476,7 +476,7 @@ const CHAR* NWL_GetIdsDate(struct _NWLIB_IDS* Ids)
 	DWORD Offset = 0;
 	CHAR* Line = NULL;
 
-	strcpy_s(Date, sizeof(Date), "UNKNOWN");
+	strncpy_s(Date, sizeof(Date), "UNKNOWN", _TRUNCATE);
 
 	Line = IdsGetline(Ids, &Offset);
 	while (Line)

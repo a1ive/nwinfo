@@ -88,10 +88,10 @@ GetPciDeviceName(PNODE dev)
 static void
 FillPciDevInfo(NWLIB_PCI_DEV_INFO* pci, PNODE dev)
 {
-	strcpy_s(pci->Name, sizeof(pci->Name), GetPciDeviceName(dev));
-	strcpy_s(pci->VendorId, sizeof(pci->VendorId), NWL_NodeAttrGet(dev, "Vendor ID"));
-	strcpy_s(pci->DeviceId, sizeof(pci->DeviceId), NWL_NodeAttrGet(dev, "Device ID"));
-	strcpy_s(pci->BDF, sizeof(pci->BDF), NWL_NodeAttrGet(dev, "BDF"));
+	strncpy_s(pci->Name, sizeof(pci->Name), GetPciDeviceName(dev), _TRUNCATE);
+	strncpy_s(pci->VendorId, sizeof(pci->VendorId), NWL_NodeAttrGet(dev, "Vendor ID"), _TRUNCATE);
+	strncpy_s(pci->DeviceId, sizeof(pci->DeviceId), NWL_NodeAttrGet(dev, "Device ID"), _TRUNCATE);
+	strncpy_s(pci->BDF, sizeof(pci->BDF), NWL_NodeAttrGet(dev, "BDF"), _TRUNCATE);
 }
 
 static void
@@ -223,7 +223,7 @@ GetChipsetInfo(NWLIB_MAINBOARD_INFO* info)
 	}
 
 	NWL_ArgSetFree(pciSet);
-	NWL_NodeFree(root, TRUE);
+	NWL_NodeFree(root, 1);
 }
 
 BOOL NWL_GetMainboardInfo(NWLIB_MAINBOARD_INFO* info)

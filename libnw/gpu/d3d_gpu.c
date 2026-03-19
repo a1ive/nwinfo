@@ -171,10 +171,10 @@ static void* d3d_gpu_init(PNWLIB_GPU_INFO info)
 
 		ctx->Result = query_adapter_info(ctx, gpu, KMTQAITYPE_DRIVER_DESCRIPTION, &gpu->DriverDesc, sizeof(D3DKMT_DRIVER_DESCRIPTION));
 		if (NT_SUCCESS(ctx->Result) && gpu->DriverDesc.DriverDescription[0] != L'\0')
-			strcpy_s(gpu->Name, D3D_ADAPTER_NAME_LEN, NWL_Ucs2ToUtf8(gpu->DriverDesc.DriverDescription));
+			strncpy_s(gpu->Name, D3D_ADAPTER_NAME_LEN, NWL_Ucs2ToUtf8(gpu->DriverDesc.DriverDescription), _TRUNCATE);
 		ctx->Result = query_adapter_info(ctx, gpu, KMTQAITYPE_ADAPTERREGISTRYINFO, &gpu->RegInfo, sizeof(D3DKMT_ADAPTERREGISTRYINFO));
 		if (NT_SUCCESS(ctx->Result) && gpu->Name[0] == L'\0')
-			strcpy_s(gpu->Name, D3D_ADAPTER_NAME_LEN, NWL_Ucs2ToUtf8(gpu->RegInfo.AdapterString));
+			strncpy_s(gpu->Name, D3D_ADAPTER_NAME_LEN, NWL_Ucs2ToUtf8(gpu->RegInfo.AdapterString), _TRUNCATE);
 		
 		NWL_Debug(GDID3D, "Querying adapter [%u]: %s", i, gpu->Name);
 
@@ -320,7 +320,7 @@ static uint32_t d3d_gpu_get(void* data, NWLIB_GPU_DEV* dev, uint32_t dev_count)
 		NWLIB_GPU_DEV* info = &dev[count];
 		count++;
 
-		strcpy_s(info->Name, MAX_GPU_STR, gpu->Name);
+		strncpy_s(info->Name, MAX_GPU_STR, gpu->Name, _TRUNCATE);
 		info->VendorId = gpu->DeviceIds.DeviceIds.VendorID;
 		info->DeviceId = gpu->DeviceIds.DeviceIds.DeviceID;
 		info->Subsys = gpu->DeviceIds.DeviceIds.SubSystemID;

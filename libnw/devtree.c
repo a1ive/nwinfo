@@ -127,7 +127,7 @@ NWL_SetDevPropString(CHAR* strBuf, size_t strSize, DEVINST devHandle, const DEVP
 	{
 	case DEVPROP_TYPE_STRING:
 	case DEVPROP_TYPE_STRING_LIST: // TODO: add multi sz support
-		strcpy_s(strBuf, strSize, NWL_Ucs2ToUtf8(NWLC->NwBufW));
+		strncpy_s(strBuf, strSize, NWL_Ucs2ToUtf8(NWLC->NwBufW), _TRUNCATE);
 		break;
 	case DEVPROP_TYPE_FILETIME:
 	{
@@ -261,7 +261,7 @@ PNODE NW_DevTree(BOOL bAppend)
 
 	if (NWLC->DevTreeFilter)
 	{
-		strcpy_s(ctx.filter, DEVTREE_MAX_STR_LEN, NWLC->DevTreeFilter);
+		strncpy_s(ctx.filter, DEVTREE_MAX_STR_LEN, NWLC->DevTreeFilter, _TRUNCATE);
 		ctx.filterLen = strlen(ctx.filter);
 	}
 

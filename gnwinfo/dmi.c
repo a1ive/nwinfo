@@ -10,7 +10,7 @@ static void draw_dmi_node(struct nk_context* ctx, PNODE node)
 	if (!node || !node->attributes || node->name[0] != 'T')
 		return;
 
-	strcpy_s(name, sizeof(name), NWL_NodeAttrGet(node, "Description"));
+	strncpy_s(name, sizeof(name), NWL_NodeAttrGet(node, "Description"), _TRUNCATE);
 	if (name[0] == '-' && name[1] == '\0')
 		snprintf(name, sizeof(name), "Type %s", NWL_NodeAttrGet(node, "Table Type"));
 

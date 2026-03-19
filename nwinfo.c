@@ -269,8 +269,17 @@ nwinfo_parse_arg_set(const char* arg, PNWL_ARG_SET* set, BOOL useString)
 	free(dup);
 }
 
+static void
+nwinfo_invalid_param_handler(const wchar_t* expr, const wchar_t* func, const wchar_t* file, unsigned int line, uintptr_t reserved)
+{
+	fwprintf(stderr, L"Invalid parameter in %s (line %u): %s\n", func, line, expr);
+	abort();
+}
+
 int main(int argc, char* argv[])
 {
+	_set_invalid_parameter_handler(nwinfo_invalid_param_handler);
+
 	BOOL bSetCodePage = FALSE;
 	LPCSTR lpFileName = NULL;
 	ZeroMemory(&nwContext, sizeof(NWLIB_CONTEXT));

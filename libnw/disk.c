@@ -77,14 +77,14 @@ FillPartitionInfo(DISK_VOL_INFO* pInfo, LPCWSTR lpszPath, PHY_DRIVE_INFO* pParen
 	{
 	case PARTITION_STYLE_MBR:
 		snprintf(pInfo->PartType, DISK_PROP_STR_LEN, "0x%02X", partInfo.Mbr.PartitionType);
-		strcpy_s(pInfo->PartId, DISK_PROP_STR_LEN, NWL_WinGuidToStr(TRUE, &partInfo.Mbr.PartitionId));
-		strcpy_s(pInfo->PartFlag, DISK_PROP_STR_LEN, GetMbrFlag(partInfo.StartingOffset.QuadPart, pParent));
+		strncpy_s(pInfo->PartId, DISK_PROP_STR_LEN, NWL_WinGuidToStr(TRUE, &partInfo.Mbr.PartitionId), _TRUNCATE);
+		strncpy_s(pInfo->PartFlag, DISK_PROP_STR_LEN, GetMbrFlag(partInfo.StartingOffset.QuadPart, pParent), _TRUNCATE);
 		pInfo->Bootable = partInfo.Mbr.BootIndicator;
 		break;
 	case PARTITION_STYLE_GPT:
-		strcpy_s(pInfo->PartType, DISK_PROP_STR_LEN, NWL_WinGuidToStr(TRUE, &partInfo.Gpt.PartitionType));
-		strcpy_s(pInfo->PartId, DISK_PROP_STR_LEN, NWL_WinGuidToStr(TRUE, &partInfo.Gpt.PartitionId));
-		strcpy_s(pInfo->PartFlag, DISK_PROP_STR_LEN, GetGptFlag(&partInfo.Gpt.PartitionType, &pInfo->Bootable));
+		strncpy_s(pInfo->PartType, DISK_PROP_STR_LEN, NWL_WinGuidToStr(TRUE, &partInfo.Gpt.PartitionType), _TRUNCATE);
+		strncpy_s(pInfo->PartId, DISK_PROP_STR_LEN, NWL_WinGuidToStr(TRUE, &partInfo.Gpt.PartitionId), _TRUNCATE);
+		strncpy_s(pInfo->PartFlag, DISK_PROP_STR_LEN, GetGptFlag(&partInfo.Gpt.PartitionType, &pInfo->Bootable), _TRUNCATE);
 		break;
 	}
 }
@@ -157,7 +157,7 @@ FillVolumeInfo(DISK_VOL_INFO* pInfo, LPCWSTR lpszVolume, PHY_DRIVE_INFO* pParent
 
 	pInfo->VolNames = NULL;
 	swprintf(pInfo->VolPath, MAX_PATH, L"%s\\", lpszVolume);
-	strcpy_s(pInfo->VolRealPath, MAX_PATH, GetRealVolumePath(lpszVolume));
+	strncpy_s(pInfo->VolRealPath, MAX_PATH, GetRealVolumePath(lpszVolume), _TRUNCATE);
 	GetVolumeFsUuid(lpszVolume, pInfo->VolFsUuid);
 
 	if (GetVolumeInformationW(pInfo->VolPath, pInfo->VolLabel, MAX_PATH,
@@ -476,29 +476,29 @@ DWORD NWL_GetDriveInfoList(BOOL bIsCdRom, BOOL bGetVolume, PHY_DRIVE_INFO** pDri
 
 		if (pDevDesc->VendorIdOffset)
 		{
-			strcpy_s(pInfo[i].VendorId, MAX_PATH,
-				(char*)pDevDesc + pDevDesc->VendorIdOffset);
+			strncpy_s(pInfo[i].VendorId, MAX_PATH,
+				(char*)pDevDesc + pDevDesc->VendorIdOffset, _TRUNCATE);
 			TrimString(pInfo[i].VendorId);
 		}
 
 		if (pDevDesc->ProductIdOffset)
 		{
-			strcpy_s(pInfo[i].ProductId, MAX_PATH,
-				(char*)pDevDesc + pDevDesc->ProductIdOffset);
+			strncpy_s(pInfo[i].ProductId, MAX_PATH,
+				(char*)pDevDesc + pDevDesc->ProductIdOffset, _TRUNCATE);
 			TrimString(pInfo[i].ProductId);
 		}
 
 		if (pDevDesc->ProductRevisionOffset)
 		{
-			strcpy_s(pInfo[i].ProductRev, MAX_PATH,
-				(char*)pDevDesc + pDevDesc->ProductRevisionOffset);
+			strncpy_s(pInfo[i].ProductRev, MAX_PATH,
+				(char*)pDevDesc + pDevDesc->ProductRevisionOffset, _TRUNCATE);
 			TrimString(pInfo[i].ProductRev);
 		}
 
 		if (pDevDesc->SerialNumberOffset)
 		{
-			strcpy_s(pInfo[i].SerialNumber, MAX_PATH,
-				(char*)pDevDesc + pDevDesc->SerialNumberOffset);
+			strncpy_s(pInfo[i].SerialNumber, MAX_PATH,
+				(char*)pDevDesc + pDevDesc->SerialNumberOffset, _TRUNCATE);
 			TrimString(pInfo[i].SerialNumber);
 		}
 
@@ -708,7 +708,7 @@ PrintSmartInfo(PNODE node, CDI_SMART* ptr, INT index)
 		if (id == 0)
 			continue;
 		str = cdi_get_smart_name(ptr, index, id);
-		strcpy_s(name, sizeof(name), NWL_Ucs2ToUtf8(str));
+		strncpy_s(name, sizeof(name), NWL_Ucs2ToUtf8(str), _TRUNCATE);
 		cdi_free_string(str);
 		str = cdi_get_smart_value(ptr, index, i, TRUE);
 		snprintf(key, sizeof(key), "SMART %02X", id);

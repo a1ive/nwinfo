@@ -40,7 +40,7 @@ gnwinfo_init_hostname_window(struct nk_context* ctx)
 	time_t t;
 	g_ctx.window_flag |= GUI_WINDOW_HOSTNAME;
 	memcpy(m_ctx.hostname, g_ctx.sys_hostname, MAX_COMPUTERNAME_LENGTH + 1);
-	strcpy_s(m_ctx.prefix, MAX_COMPUTERNAME_LENGTH + 1, gnwinfo_get_ini_value(L"Widgets", L"HostnamePrefix", L"DESKTOP-"));
+	strncpy_s(m_ctx.prefix, MAX_COMPUTERNAME_LENGTH + 1, gnwinfo_get_ini_value(L"Widgets", L"HostnamePrefix", L"DESKTOP-"), _TRUNCATE);
 	srand((unsigned)time(&t));
 }
 

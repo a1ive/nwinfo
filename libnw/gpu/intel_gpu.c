@@ -138,7 +138,7 @@ static uint32_t igcl_gpu_get(void* data, NWLIB_GPU_DEV* dev, uint32_t dev_count)
 		NWLIB_GPU_DEV* info = &dev[count];
 		count++;
 
-		strcpy_s(info->Name, MAX_GPU_STR, gpu->Props.name);
+		strncpy_s(info->Name, MAX_GPU_STR, gpu->Props.name, _TRUNCATE);
 		info->VendorId = gpu->Props.pci_vendor_id;
 		info->DeviceId = gpu->Props.pci_device_id;
 		info->Subsys = (((uint32_t)gpu->Props.pci_subsys_id) << 16) | gpu->Props.pci_subsys_vendor_id;

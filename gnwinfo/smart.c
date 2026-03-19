@@ -53,7 +53,7 @@ draw_health(struct nk_context* ctx, CDI_SMART* smart, int disk, float height)
 		if (n >= 0)
 			snprintf(tmp, sizeof(tmp), "%s\n%d%%", get_health_status(health), n);
 		else
-			strcpy_s(tmp, sizeof(tmp), get_health_status(health));
+			strncpy_s(tmp, sizeof(tmp), get_health_status(health), _TRUNCATE);
 		nk_block(ctx, get_attr_color(health), tmp);
 
 		nk_l(ctx, N_(N__TEMPERATURE), NK_TEXT_CENTERED);

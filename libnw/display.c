@@ -365,7 +365,7 @@ static void DecodeDescriptorBlocks(const BYTE* edid, PNODE node, struct MONITOR_
 				char* serial = DecodeAsciiDescriptor(block, desc, "Serial Number");
 				if (serial)
 				{
-					strcpy_s(mi->Serial, sizeof(mi->Serial), serial);
+					strncpy_s(mi->Serial, sizeof(mi->Serial), serial, _TRUNCATE);
 					free(serial);
 				}
 				break;
@@ -384,7 +384,7 @@ static void DecodeDescriptorBlocks(const BYTE* edid, PNODE node, struct MONITOR_
 				char* name = DecodeAsciiDescriptor(block, desc, "Display Name");
 				if (name)
 				{
-					strcpy_s(mi->Name, sizeof(mi->Name), name);
+					strncpy_s(mi->Name, sizeof(mi->Name), name, _TRUNCATE);
 					free(name);
 				}
 				break;

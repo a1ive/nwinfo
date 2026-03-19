@@ -71,7 +71,7 @@ int WR0_ExecPawn(struct wr0_drv_t* drv, struct pio_mod_t* mod, LPCSTR fn,
 	if (inBuf == NULL)
 		return -1;
 
-	strcpy_s(inBuf->Fn, PIO_FN_NAME_LEN, fn);
+	strncpy_s(inBuf->Fn, PIO_FN_NAME_LEN, fn, _TRUNCATE);
 
 	if (in)
 		memcpy(inBuf->Params, in, in_size * sizeof(ULONG64));

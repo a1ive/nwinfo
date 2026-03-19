@@ -260,7 +260,7 @@ PrintProductKey(PNODE node)
 
 VOID NWL_GetUptime(CHAR* szUptime, DWORD dwSize)
 {
-	strcpy_s(szUptime, dwSize, NWL_GetHumanTime(GetTickCount64() / 1000ULL));
+	strncpy_s(szUptime, dwSize, NWL_GetHumanTime(GetTickCount64() / 1000ULL), _TRUNCATE);
 }
 
 VOID NWL_GetHostname(CHAR* szHostname)
@@ -290,7 +290,7 @@ LPCSTR NWL_GetJoinInfo(CHAR* szName)
 		goto fail;
 	if (joinName)
 	{
-		strcpy_s(szName, MAX_PATH, NWL_Ucs2ToUtf8(joinName));
+		strncpy_s(szName, MAX_PATH, NWL_Ucs2ToUtf8(joinName), _TRUNCATE);
 		OsNetApiBufferFree(joinName);
 	}
 fail:

@@ -366,7 +366,7 @@ static uint32_t adl_gpu_get(void* data, NWLIB_GPU_DEV* dev, uint32_t dev_count)
 		NWLIB_GPU_DEV* info = &dev[count];
 		count++;
 
-		strcpy_s(info->Name, MAX_GPU_STR, gpu->AdapterInfo->strAdapterName);
+		strncpy_s(info->Name, MAX_GPU_STR, gpu->AdapterInfo->strAdapterName, _TRUNCATE);
 		info->VendorId = (uint32_t)gpu->AdapterInfo->iVendorID;
 		info->DeviceId = gpu->DeviceId;
 		info->Subsys = gpu->Subsys;

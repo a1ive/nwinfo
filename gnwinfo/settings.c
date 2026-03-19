@@ -94,7 +94,7 @@ nk_font_list(struct nk_context* ctx, float item_height)
 			if (name[0] == '@')
 				continue;
 			if (nk_combo_item_label(ctx, name, NK_TEXT_LEFT))
-				strcpy_s(g_font_name, NWL_STR_SIZE, name);
+				strncpy_s(g_font_name, NWL_STR_SIZE, name, _TRUNCATE);
 		}
 		nk_combo_end(ctx);
 		NWL_NodeFree(node, 1);

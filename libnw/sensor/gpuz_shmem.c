@@ -71,7 +71,7 @@ static void gpuz_get(PNODE node)
 		GPUZ_RECORD* r = &ctx.data->data[i];
 		if (r->key[0] == L'\0')
 			continue;
-		strcpy_s(ctx.key, GPUZ_STR_LEN, NWL_Ucs2ToUtf8(r->key));
+		strncpy_s(ctx.key, GPUZ_STR_LEN, NWL_Ucs2ToUtf8(r->key), _TRUNCATE);
 		NWL_NodeAttrSet(node, ctx.key, NWL_Ucs2ToUtf8(r->value), NAFLG_FMT_KEY_QUOTE);
 	}
 	for (size_t i = 0; i < GPUZ_MAX_RECORDS; i++)
@@ -79,7 +79,7 @@ static void gpuz_get(PNODE node)
 		GPUZ_SENSOR_RECORD* r = &ctx.data->sensors[i];
 		if (r->name[0] == L'\0')
 			continue;
-		strcpy_s(ctx.key, GPUZ_STR_LEN, NWL_Ucs2ToUtf8(r->name));
+		strncpy_s(ctx.key, GPUZ_STR_LEN, NWL_Ucs2ToUtf8(r->name), _TRUNCATE);
 		NWL_NodeAttrSetf(node, ctx.key, NAFLG_FMT_KEY_QUOTE | NAFLG_FMT_NUMERIC, "%.2f", r->value);
 	}
 }

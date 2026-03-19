@@ -391,29 +391,29 @@ DWORD GetDriveInfoList(BOOL bIsCdRom, PHY_DRIVE_INFO** pDriveList)
 
 		if (pDevDesc->VendorIdOffset)
 		{
-			strcpy_s(pInfo[i].VendorId, MAX_PATH,
-				(char*)pDevDesc + pDevDesc->VendorIdOffset);
+			strncpy_s(pInfo[i].VendorId, MAX_PATH,
+				(char*)pDevDesc + pDevDesc->VendorIdOffset, _TRUNCATE);
 			TrimString(pInfo[i].VendorId);
 		}
 
 		if (pDevDesc->ProductIdOffset)
 		{
-			strcpy_s(pInfo[i].ProductId, MAX_PATH,
-				(char*)pDevDesc + pDevDesc->ProductIdOffset);
+			strncpy_s(pInfo[i].ProductId, MAX_PATH,
+				(char*)pDevDesc + pDevDesc->ProductIdOffset, _TRUNCATE);
 			TrimString(pInfo[i].ProductId);
 		}
 
 		if (pDevDesc->ProductRevisionOffset)
 		{
-			strcpy_s(pInfo[i].ProductRev, MAX_PATH,
-				(char*)pDevDesc + pDevDesc->ProductRevisionOffset);
+			strncpy_s(pInfo[i].ProductRev, MAX_PATH,
+				(char*)pDevDesc + pDevDesc->ProductRevisionOffset, _TRUNCATE);
 			TrimString(pInfo[i].ProductRev);
 		}
 
 		if (pDevDesc->SerialNumberOffset)
 		{
-			strcpy_s(pInfo[i].SerialNumber, MAX_PATH,
-				(char*)pDevDesc + pDevDesc->SerialNumberOffset);
+			strncpy_s(pInfo[i].SerialNumber, MAX_PATH,
+				(char*)pDevDesc + pDevDesc->SerialNumberOffset, _TRUNCATE);
 			TrimString(pInfo[i].SerialNumber);
 		}
 

@@ -62,7 +62,7 @@ set_dpi_scaling(HWND wnd)
 	}
 	g_font = nk_gdip_load_font(font_name, g_font_size);
 	nk_gdip_set_font(g_font);
-	strcpy_s(g_font_name, NWL_STR_SIZE, NWL_Ucs2ToUtf8(font_name));
+	strncpy_s(g_font_name, NWL_STR_SIZE, NWL_Ucs2ToUtf8(font_name), _TRUNCATE);
 }
 
 static LRESULT CALLBACK
@@ -219,6 +219,17 @@ parse_cmdline(LPWSTR cmdline)
 	LocalFree(argv);
 }
 
+static void
+invalid_param_handler(const wchar_t* expr, const wchar_t* func, const wchar_t* file, unsigned int line, uintptr_t reserved)
+{
+	wchar_t msg[512];
+	_snwprintf_s(msg, _countof(msg), _TRUNCATE,
+		L"Function : %s\nFile     : %s\nLine     : %u\nDetail   : %s",
+		func, file, line, expr);
+	MessageBoxW(NULL, msg, L"FATAL ERROR", MB_OK | MB_ICONERROR | MB_TASKMODAL);
+	abort();
+}
+
 int APIENTRY
 wWinMain(_In_ HINSTANCE hInstance,
 	_In_opt_ HINSTANCE hPrevInstance,
@@ -235,6 +246,8 @@ wWinMain(_In_ HINSTANCE hInstance,
 	int running = 1;
 	int needs_refresh = 1;
 	DWORD layered_flag = LWA_ALPHA;
+
+	_set_invalid_parameter_handler(invalid_param_handler);
 
 	parse_cmdline(lpCmdLine);
 

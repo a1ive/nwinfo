@@ -162,7 +162,7 @@ PNODE NWL_EnumPci(PNODE pNode, PNWL_ARG_SET pciClasses)
 			LPCWSTR s = wcsstr(p, L"&CC_");
 			if (s != NULL)
 			{
-				strcpy_s(hwClass, sizeof(hwClass), NWL_Ucs2ToUtf8(s + 4));
+				strncpy_s(hwClass, sizeof(hwClass), NWL_Ucs2ToUtf8(s + 4), _TRUNCATE);
 				break;
 			}
 		}
