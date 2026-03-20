@@ -194,6 +194,14 @@ BYTE		WINAPI cdi_get_smart_id(CDI_SMART* ptr, INT index, INT attr);
 WCHAR*		WINAPI cdi_get_smart_value(CDI_SMART* ptr, INT index, INT attr, BOOL hex);
 INT			WINAPI cdi_get_smart_status(CDI_SMART* ptr, INT index, INT attr);
 WCHAR*		WINAPI cdi_get_smart_name(CDI_SMART* ptr, INT index, BYTE id);
+BYTE		WINAPI cdi_get_current_aam(CDI_SMART* ptr, INT index);
+BYTE		WINAPI cdi_get_recommend_aam(CDI_SMART* ptr, INT index);
+BOOL		WINAPI cdi_enable_aam(CDI_SMART* ptr, INT index, BYTE value);
+BOOL		WINAPI cdi_disable_aam(CDI_SMART* ptr, INT index);
+BYTE		WINAPI cdi_get_current_apm(CDI_SMART* ptr, INT index);
+BYTE		WINAPI cdi_get_recommend_apm(CDI_SMART* ptr, INT index);
+BOOL		WINAPI cdi_enable_apm(CDI_SMART* ptr, INT index, BYTE value);
+BOOL		WINAPI cdi_disable_apm(CDI_SMART* ptr, INT index);
 
 static inline LPCSTR
 cdi_get_health_status(enum CDI_DISK_STATUS status)

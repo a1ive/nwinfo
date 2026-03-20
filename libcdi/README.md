@@ -171,7 +171,7 @@ Gets the status of a specific S.M.A.R.T. attribute.
 - **Return Value:** The status of the S.M.A.R.T. attribute. See the **Disk Health Status** section.
 
 ---
-### `WCHAR* WINAPI *cdi_get_smart_name(CDI_SMART* ptr, INT index, BYTE id)`
+### `WCHAR* WINAPI cdi_get_smart_name(CDI_SMART* ptr, INT index, BYTE id)`
 Gets the name of a S.M.A.R.T. attribute by its ID.
 
 - **Parameters:**
@@ -179,6 +179,80 @@ Gets the name of a S.M.A.R.T. attribute by its ID.
     - `index`: The disk index.
     - `id`: The ID of the S.M.A.R.T. attribute, obtained from `cdi_get_smart_id`.
 - **Return Value:** The name of the S.M.A.R.T. attribute. Use `cdi_free_string` to release the memory.
+
+---
+### `BYTE WINAPI cdi_get_current_aam(CDI_SMART* ptr, INT index)`
+Gets the current AAM value from the drive identify data.
+
+- **Parameters:**
+    - `ptr`: A pointer to the `CDI_SMART` structure.
+    - `index`: The disk index.
+- **Return Value:** The current AAM value. Returns `0` when AAM is unavailable or disabled on the device.
+
+---
+### `BYTE WINAPI cdi_get_recommend_aam(CDI_SMART* ptr, INT index)`
+Gets the recommended AAM value from the drive identify data.
+
+- **Parameters:**
+    - `ptr`: A pointer to the `CDI_SMART` structure.
+    - `index`: The disk index.
+- **Return Value:** The recommended AAM value reported by the device.
+
+---
+### `BOOL WINAPI cdi_enable_aam(CDI_SMART* ptr, INT index, BYTE value)`
+Enables AAM with the specified value and refreshes the cached identify data.
+
+- **Parameters:**
+    - `ptr`: A pointer to the `CDI_SMART` structure.
+    - `index`: The disk index.
+    - `value`: The AAM value to apply. In practice this should be a device-supported value, typically `cdi_get_recommend_aam()`.
+- **Return Value:** `TRUE` if the ATA command was sent successfully; otherwise `FALSE`.
+
+---
+### `BOOL WINAPI cdi_disable_aam(CDI_SMART* ptr, INT index)`
+Disables AAM and refreshes the cached identify data.
+
+- **Parameters:**
+    - `ptr`: A pointer to the `CDI_SMART` structure.
+    - `index`: The disk index.
+- **Return Value:** `TRUE` if the ATA command was sent successfully; otherwise `FALSE`.
+
+---
+### `BYTE WINAPI cdi_get_current_apm(CDI_SMART* ptr, INT index)`
+Gets the current APM value from the drive identify data.
+
+- **Parameters:**
+    - `ptr`: A pointer to the `CDI_SMART` structure.
+    - `index`: The disk index.
+- **Return Value:** The current APM value. Returns `0` when APM is unavailable or disabled on the device.
+
+---
+### `BYTE WINAPI cdi_get_recommend_apm(CDI_SMART* ptr, INT index)`
+Gets the recommended APM value from the drive identify data.
+
+- **Parameters:**
+    - `ptr`: A pointer to the `CDI_SMART` structure.
+    - `index`: The disk index.
+- **Return Value:** The recommended APM value reported by the device.
+
+---
+### `BOOL WINAPI cdi_enable_apm(CDI_SMART* ptr, INT index, BYTE value)`
+Enables APM with the specified value and refreshes the cached identify data.
+
+- **Parameters:**
+    - `ptr`: A pointer to the `CDI_SMART` structure.
+    - `index`: The disk index.
+    - `value`: The APM value to apply. In practice this should be a device-supported value, typically `cdi_get_recommend_apm()`.
+- **Return Value:** `TRUE` if the ATA command was sent successfully; otherwise `FALSE`.
+
+---
+### `BOOL WINAPI cdi_disable_apm(CDI_SMART* ptr, INT index)`
+Disables APM and refreshes the cached identify data.
+
+- **Parameters:**
+    - `ptr`: A pointer to the `CDI_SMART` structure.
+    - `index`: The disk index.
+- **Return Value:** `TRUE` if the ATA command was sent successfully; otherwise `FALSE`.
 
 
 ## Disk Processing Options

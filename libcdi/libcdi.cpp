@@ -630,3 +630,63 @@ cdi_get_smart_name(CDI_SMART * ptr, INT index, BYTE id)
 	}
 	return cs_to_wcs(_T("Vendor Specific"));
 }
+
+extern "C" BYTE WINAPI
+cdi_get_current_aam(CDI_SMART * ptr, INT index)
+{
+	return ptr->GetAamValue(index);
+}
+
+extern "C" BYTE WINAPI
+cdi_get_recommend_aam(CDI_SMART * ptr, INT index)
+{
+	return ptr->GetRecommendAamValue(index);
+}
+
+extern "C" BOOL WINAPI
+cdi_enable_aam(CDI_SMART * ptr, INT index, BYTE value)
+{
+	if (!ptr->EnableAam(index, value))
+		return FALSE;
+	ptr->UpdateIdInfo(index);
+	return TRUE;
+}
+
+extern "C" BOOL WINAPI
+cdi_disable_aam(CDI_SMART* ptr, INT index)
+{
+	if (!ptr->DisableAam(index))
+		return FALSE;
+	ptr->UpdateIdInfo(index);
+	return TRUE;
+}
+
+extern "C" BYTE WINAPI
+cdi_get_current_apm(CDI_SMART * ptr, INT index)
+{
+	return ptr->GetApmValue(index);
+}
+
+extern "C" BYTE WINAPI
+cdi_get_recommend_apm(CDI_SMART * ptr, INT index)
+{
+	return ptr->GetRecommendApmValue(index);
+}
+
+extern "C" BOOL WINAPI
+cdi_enable_apm(CDI_SMART * ptr, INT index, BYTE value)
+{
+	if (!ptr->EnableApm(index, value))
+		return FALSE;
+	ptr->UpdateIdInfo(index);
+	return TRUE;
+}
+
+extern "C" BOOL WINAPI
+cdi_disable_apm(CDI_SMART* ptr, INT index)
+{
+	if (!ptr->DisableApm(index))
+		return FALSE;
+	ptr->UpdateIdInfo(index);
+	return TRUE;
+}

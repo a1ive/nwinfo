@@ -18,3 +18,12 @@ cdi_get_smart_id
 cdi_get_smart_value
 cdi_get_smart_status
 cdi_get_smart_name
+
+cdi_get_current_aam
+cdi_get_recommend_aam
+cdi_enable_aam
+cdi_disable_aam
+cdi_get_current_apm
+cdi_get_recommend_apm
+cdi_enable_apm
+cdi_disable_apm
