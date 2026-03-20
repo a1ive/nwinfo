@@ -28,6 +28,8 @@ GetDMIType2(void)
 	NWL_ArgSetAddU64(&dmiSet, 2);
 	while ((pInfo = (PBoardInfo)NWL_GetNextDmiTable(&p, lastAddress, dmiSet)) != NULL)
 	{
+		if (pInfo->Header.Length < 0x08)
+			continue;
 		if (pInfo->Header.Length >= 0x0E && pInfo->Type != 0x0A)
 			continue;
 		ret = pInfo;
