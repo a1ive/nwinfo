@@ -252,7 +252,7 @@ GetWlanInfo(NWLIB_NET_ADAPTER* adapter, PIP_ADAPTER_ADDRESSES_XP ipAdapter)
 	adapter->WLANState = wlanAttr->isState;
 	if (adapter->WLANState == wlan_interface_state_connected)
 	{
-		snprintf(adapter->WLANProfile, sizeof(adapter->WLANProfile), "%s", NWL_Ucs2ToUtf8(wlanAttr->strProfileName));
+		strncpy_s(adapter->WLANProfile, NWL_NET_WLAN_PROFILE_LEN, NWL_Ucs2ToUtf8(wlanAttr->strProfileName), _TRUNCATE);
 		adapter->WLANSignalQuality = wlanAttr->wlanAssociationAttributes.wlanSignalQuality;
 		adapter->WLANAuth = wlanAttr->wlanSecurityAttributes.dot11AuthAlgorithm;
 		adapter->WLANCipher = wlanAttr->wlanSecurityAttributes.dot11CipherAlgorithm;
@@ -548,13 +548,17 @@ NWL_GetNetTraffic(NWLIB_NET_TRAFFIC* info, BOOL bit, const NWLIB_NET_ADAPTER_MAP
 
 	if (bit)
 	{
-		memcpy(info->StrRecv, NWL_GetHumanSize((UINT64)(info->Recv * 8.0), BIT_UINTS, 1000), NWL_STR_SIZE);
-		memcpy(info->StrSend, NWL_GetHumanSize((UINT64)(info->Send * 8.0), BIT_UINTS, 1000), NWL_STR_SIZE);
+		strncpy_s(info->StrRecv, sizeof(info->StrRecv),
+			NWL_GetHumanSize((UINT64)(info->Recv * 8.0), BIT_UINTS, 1000), _TRUNCATE);
+		strncpy_s(info->StrSend, sizeof(info->StrSend),
+			NWL_GetHumanSize((UINT64)(info->Send * 8.0), BIT_UINTS, 1000), _TRUNCATE);
 	}
 	else
 	{
-		memcpy(info->StrRecv, NWL_GetHumanSize((UINT64)info->Recv, NWLC->NwUnits, 1024), NWL_STR_SIZE);
-		memcpy(info->StrSend, NWL_GetHumanSize((UINT64)info->Send, NWLC->NwUnits, 1024), NWL_STR_SIZE);
+		strncpy_s(info->StrRecv, sizeof(info->StrRecv),
+			NWL_GetHumanSize((UINT64)info->Recv, NWLC->NwUnits, 1024), _TRUNCATE);
+		strncpy_s(info->StrSend, sizeof(info->StrSend),
+			NWL_GetHumanSize((UINT64)info->Send, NWLC->NwUnits, 1024), _TRUNCATE);
 	}
 }
 
