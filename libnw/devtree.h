@@ -4,9 +4,12 @@
 #define VC_EXTRALEAN
 #include <windows.h>
 #include <cfgmgr32.h>
-#include "node.h"
 
-//typedef void* DEVTREE_CTX;
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+typedef struct _NODE* PNODE;
 
 #define DEVTREE_MAX_STR_LEN MAX_PATH
 
@@ -16,7 +19,7 @@ typedef struct _DEVTREE_ENUM_CTX
 	size_t filterLen;
 	const char* hub;
 	void* data;
-	void (*GetDeviceInfo)(PNODE node, void* data, DEVINST devInst, DEVINST parentDevInst, LPCSTR hwIds);
+	void (CALLBACK *GetDeviceInfo)(PNODE node, void* data, DEVINST devInst, DEVINST parentDevInst, LPCSTR hwIds);
 } DEVTREE_ENUM_CTX;
 
 BOOL NWL_SetDevPropString(CHAR* strBuf, size_t strSize, DEVINST devHandle, const DEVPROPKEY* devProperty);
@@ -24,3 +27,7 @@ CONFIGRET NWL_CMGetDevIfProp(LPCWSTR pszDevIf, CONST DEVPROPKEY* propKey, DEVPRO
 
 void
 NWL_EnumerateDevices(PNODE parent, DEVTREE_ENUM_CTX* ctx, DEVINST devInst, DEVINST parentDevInst);
+
+#ifdef __cplusplus
+}
+#endif

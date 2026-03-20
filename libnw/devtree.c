@@ -175,7 +175,7 @@ fail:
 	return rc;
 }
 
-static void
+static void CALLBACK
 GetDeviceInfoDefault(PNODE node, void* data, DEVINST devInst, DEVINST parentDevInst, LPCSTR hwIds)
 {
 	(void)data;

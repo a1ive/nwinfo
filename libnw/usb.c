@@ -340,7 +340,7 @@ ParseHwClass(PNODE nd, PNWLIB_IDS ids, LPCWSTR compId)
 
 #define INVALID_USB_PORT 0xFFFFFFFF
 
-static void
+static void CALLBACK
 GetDeviceInfoUsb(PNODE node, void* data, DEVINST devInst, DEVINST parentDevInst, LPCSTR hwIds)
 {
 	ULONG port = INVALID_USB_PORT;
