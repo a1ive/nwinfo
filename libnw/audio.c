@@ -1,17 +1,24 @@
 // SPDX-License-Identifier: Unlicense
 
+#include <initguid.h>
+
 #include "libnw.h"
 #include "audio.h"
 #include "devtree.h"
+#include "utils.h"
 #include <mmdeviceapi.h>
 #include <endpointvolume.h>
-#include <stdlib.h>
 #include <functiondiscoverykeys_devpkey.h>
 
 #define HDA_IDS_IMPL
 #include <hda_ids.h>
 
-extern "C" LPCSTR NWL_Ucs2ToUtf8(LPCWSTR src);
+DEFINE_GUID(IID_IMMDeviceEnumerator,
+	0xa95664d2, 0x9614, 0x4f35, 0xa7, 0x46, 0xde, 0x8d, 0xb6, 0x36, 0x17, 0xe6);
+DEFINE_GUID(CLSID_MMDeviceEnumerator,
+	0xbcde0395, 0xe52f, 0x467c, 0x8e, 0x3d, 0xc4, 0x57, 0x92, 0x91, 0x69, 0x2e);
+DEFINE_GUID(IID_IAudioEndpointVolume,
+	0x5cdf2c82, 0x841e, 0x4546, 0x97, 0x22, 0x0c, 0xf7, 0x40, 0x78, 0x22, 0x9a);
 
 typedef struct _AUDIO_CODEC_ENUM_CTX
 {
@@ -120,14 +127,14 @@ AudioSetCodecHwid(PNODE node, LPCSTR hwid, DEVINST devRoot)
 
 static LPWSTR AudioGetDefaultId(IMMDeviceEnumerator* p)
 {
-	HRESULT hr = NULL;
+	HRESULT hr = S_OK;
 	IMMDevice* dev = NULL;
 	LPWSTR id = NULL;
-	hr = p->GetDefaultAudioEndpoint(eRender, eConsole, &dev);
+	hr = p->lpVtbl->GetDefaultAudioEndpoint(p, eRender, eConsole, &dev);
 	if (FAILED(hr))
 		return NULL;
-	hr = dev->GetId(&id);
-	dev->Release();
+	hr = dev->lpVtbl->GetId(dev, &id);
+	dev->lpVtbl->Release(dev);
 	return SUCCEEDED(hr) ? id : NULL;
 }
 
@@ -135,13 +142,13 @@ static float
 AudioGetDeviceVolume(IMMDevice* p)
 {
 	float ret = 0.0f;
-	HRESULT hr = NULL;
+	HRESULT hr = S_OK;
 	IAudioEndpointVolume* vol = NULL;
-	hr = p->Activate(__uuidof(IAudioEndpointVolume), CLSCTX_INPROC_SERVER, NULL, (LPVOID*)&vol);
+	hr = p->lpVtbl->Activate(p, &IID_IAudioEndpointVolume, CLSCTX_INPROC_SERVER, NULL, (LPVOID*)&vol);
 	if (FAILED(hr))
 		return 0.0f;
-	hr = vol->GetMasterVolumeLevelScalar(&ret);
-	vol->Release();
+	hr = vol->lpVtbl->GetMasterVolumeLevelScalar(vol, &ret);
+	vol->lpVtbl->Release(vol);
 	return SUCCEEDED(hr) ? ret : 0.0f;
 }
 
@@ -154,18 +161,21 @@ NWL_GetAudio(UINT* count)
 	NWLIB_AUDIO_DEV* dev = NULL;
 	LPWSTR default_id = NULL;
 
+	if (count == NULL)
+		return NULL;
+
 	*count = 0;
 
-	hr = CoCreateInstance(__uuidof(MMDeviceEnumerator), NULL,
-		CLSCTX_ALL, __uuidof(IMMDeviceEnumerator), (void**)&p_enum);
+	hr = CoCreateInstance(&CLSID_MMDeviceEnumerator, NULL,
+		CLSCTX_ALL, &IID_IMMDeviceEnumerator, (void**)&p_enum);
 	if (FAILED(hr))
 		goto fail;
 
-	hr = p_enum->EnumAudioEndpoints(eRender, DEVICE_STATE_ACTIVE, &p_collection);
+	hr = p_enum->lpVtbl->EnumAudioEndpoints(p_enum, eRender, DEVICE_STATE_ACTIVE, &p_collection);
 	if (FAILED(hr))
 		goto fail;
 
-	hr = p_collection->GetCount(count);
+	hr = p_collection->lpVtbl->GetCount(p_collection, count);
 	if (FAILED(hr))
 		goto fail;
 
@@ -181,48 +191,48 @@ NWL_GetAudio(UINT* count)
 		IPropertyStore* props = NULL;
 		PROPVARIANT var;
 		LPWSTR id = NULL;
-		hr = p_collection->Item(i, &end_point);
+		hr = p_collection->lpVtbl->Item(p_collection, i, &end_point);
 		if (FAILED(hr))
 			goto clean;
 
 		dev[i].volume = AudioGetDeviceVolume(end_point);
 
-		hr = end_point->GetId(&id);
+		hr = end_point->lpVtbl->GetId(end_point, &id);
 		if (SUCCEEDED(hr))
 		{
-			wcscpy_s(dev[i].id, id);
+			wcscpy_s(dev[i].id, _countof(dev[i].id), id);
 			if (default_id)
 				dev[i].is_default = wcscmp(id, default_id) == 0;
 			CoTaskMemFree(id);
 		}
 
-		hr = end_point->OpenPropertyStore(STGM_READ, &props);
+		hr = end_point->lpVtbl->OpenPropertyStore(end_point, STGM_READ, &props);
 		if (FAILED(hr))
 			goto clean;
 
 		PropVariantInit(&var);
-		hr = props->GetValue(PKEY_Device_FriendlyName, &var);
-		if (SUCCEEDED(hr) && var.vt != VT_EMPTY)
-			wcscpy_s(dev[i].name, var.pwszVal);
+		hr = props->lpVtbl->GetValue(props, &PKEY_Device_FriendlyName, &var);
+		if (SUCCEEDED(hr) && var.vt == VT_LPWSTR && var.pwszVal != NULL)
+			wcscpy_s(dev[i].name, _countof(dev[i].name), var.pwszVal);
 		PropVariantClear(&var);
 	clean:
 		if (end_point)
-			end_point->Release();
+			end_point->lpVtbl->Release(end_point);
 		if (props)
-			props->Release();
+			props->lpVtbl->Release(props);
 	}
 
 fail:
 	if (default_id)
 		CoTaskMemFree(default_id);
 	if (p_enum)
-		p_enum->Release();
+		p_enum->lpVtbl->Release(p_enum);
 	if (p_collection)
-		p_collection->Release();
+		p_collection->lpVtbl->Release(p_collection);
 	return dev;
 }
 
-inline void PrintMMDevices(PNODE node)
+static void PrintMMDevices(PNODE node)
 {
 	UINT count, i;
 	NWLIB_AUDIO_DEV* dev = NWL_GetAudio(&count);
@@ -243,7 +253,7 @@ inline void PrintMMDevices(PNODE node)
 	free(dev);
 }
 
-inline void PrintSoundCards(PNODE node)
+static void PrintSoundCards(PNODE node)
 {
 	PNODE sdc = NWL_NodeAppendNew(node, "Sound Cards", NFLG_TABLE);
 	DEVINST devRoot = 0;

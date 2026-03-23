@@ -218,7 +218,7 @@
     <ClCompile Include="smb.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="audio.cpp">
+    <ClCompile Include="audio.c">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="iplookup.c">

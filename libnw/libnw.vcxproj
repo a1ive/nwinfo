@@ -379,7 +379,7 @@
     <ClCompile Include="..\ioctl\shmem.c" />
     <ClCompile Include="..\ioctl\ioctl.c" />
     <ClCompile Include="acpi.c" />
-    <ClCompile Include="audio.cpp" />
+    <ClCompile Include="audio.c" />
     <ClCompile Include="base64.c" />
     <ClCompile Include="battery.c" />
     <ClCompile Include="cpuid.c" />
