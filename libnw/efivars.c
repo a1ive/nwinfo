@@ -175,8 +175,11 @@ AllocPrintf(LPCSTR _Printf_format_string_ format, ...)
 	int sz;
 	CHAR* buf = NULL;
 	va_list ap;
+	va_list ap_copy;
 	va_start(ap, format);
-	sz = _vscprintf(format, ap) + 1;
+	va_copy(ap_copy, ap);
+	sz = _vscprintf(format, ap_copy) + 1;
+	va_end(ap_copy);
 	if (sz <= 0)
 	{
 		va_end(ap);
