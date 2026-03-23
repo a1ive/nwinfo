@@ -745,22 +745,37 @@ draw_network(struct nk_context* ctx)
 static VOID
 draw_audio(struct nk_context* ctx)
 {
-	UINT i;
-	if (!g_ctx.audio)
-		return;
-
 	nk_layout_row(ctx, NK_DYNAMIC, 0, 2, (float[2]) { 1.0f - g_ctx.gui_ratio, g_ctx.gui_ratio });
 	nk_image_label(ctx, GET_PNG(IDR_PNG_MM), N_(N__AUDIO), NK_TEXT_LEFT, g_color_text_d);
 	if (quick_access_button(ctx, GET_PNG(IDR_PNG_SETTINGS), NULL))
 		ShellExecuteW(NULL, NULL, L"::{26EE0668-A00A-44D7-9371-BEB064C98683}\\2\\::{F2DDFC82-8F12-4CDD-B7DC-D4FE1425AA4D}", NULL, NULL, SW_NORMAL);
-	nk_layout_row(ctx, NK_DYNAMIC, 0, 2, (float[2]) { 0.7f, 0.3f });
-	for (i = 0; i < g_ctx.audio_count; i++)
+
+	if (g_ctx.sdc)
 	{
-		nk_lhsc(ctx, NWL_Ucs2ToUtf8(g_ctx.audio[i].name), NK_TEXT_LEFT, g_color_text_d, nk_true, nk_true);
-		nk_lhcf(ctx, NK_TEXT_LEFT, g_color_text_l,
-			"%s %.0f%%",
-			g_ctx.audio[i].is_default ? "*" : " ",
-			100.0f * g_ctx.audio[i].volume);
+		nk_layout_row(ctx, NK_DYNAMIC, 0, 2, (float[2]) { 0.7f, 0.3f });
+		INT count = NWL_NodeChildCount(g_ctx.sdc);
+		for (INT i = 0; i < count; i++)
+		{
+			PNODE sdc = NWL_NodeEnumChild(g_ctx.sdc, i);
+			if (!sdc)
+				continue;
+			nk_lhscf(ctx, NK_TEXT_LEFT, g_color_text_d, nk_true, nk_true, "%s %s", NWL_NodeAttrGet(sdc, "Vendor"), NWL_NodeAttrGet(sdc, "Device"));
+			nk_lhcf(ctx, NK_TEXT_LEFT, g_color_text_l, "%s %s", NWL_NodeAttrGet(sdc, "Codec Vendor"), NWL_NodeAttrGet(sdc, "Codec Device"));
+		}
+	}
+
+
+	if (g_ctx.audio)
+	{
+		nk_layout_row(ctx, NK_DYNAMIC, 0, 2, (float[2]) { 0.7f, 0.3f });
+		for (UINT i = 0; i < g_ctx.audio_count; i++)
+		{
+			nk_lhsc(ctx, NWL_Ucs2ToUtf8(g_ctx.audio[i].name), NK_TEXT_LEFT, g_color_text_d, nk_true, nk_true);
+			nk_lhcf(ctx, NK_TEXT_LEFT, g_color_text_l,
+				"%s %.0f%%",
+				g_ctx.audio[i].is_default ? "*" : " ",
+				100.0f * g_ctx.audio[i].volume);
+		}
 	}
 }
 

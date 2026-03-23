@@ -345,6 +345,9 @@ gnwinfo_ctx_init(HINSTANCE inst, HWND wnd, struct nk_context* ctx, float width, 
 	g_ctx.uefi = NW_Uefi(TRUE);
 	g_ctx.pci = NW_Pci(TRUE);
 
+	PNODE audio = NW_Audio(TRUE);
+	g_ctx.sdc = NWL_NodeGetChild(audio, "Sound Cards");
+
 	g_ctx.sys_boot = NWL_NodeAttrGet(g_ctx.system, "Boot Device");
 	g_ctx.sys_disk = NWL_NodeAttrGet(g_ctx.system, "System Device");
 
