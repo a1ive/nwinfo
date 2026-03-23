@@ -153,6 +153,9 @@
     <ClInclude Include="..\ids\chip_ids.h">
       <Filter>ids</Filter>
     </ClInclude>
+    <ClInclude Include="..\ids\hda_ids.h">
+      <Filter>ids</Filter>
+    </ClInclude>
     <ClInclude Include="..\ioctl\lpcio.h">
       <Filter>ioctl</Filter>
     </ClInclude>

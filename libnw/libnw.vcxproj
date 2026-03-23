@@ -331,6 +331,7 @@
   <ItemGroup>
     <ClInclude Include="..\ids\chipset_ids.h" />
     <ClInclude Include="..\ids\chip_ids.h" />
+    <ClInclude Include="..\ids\hda_ids.h" />
     <ClInclude Include="..\ids\mb_vendor.h" />
     <ClInclude Include="..\ids\pci_ids.h" />
     <ClInclude Include="..\ids\pnp_ids.h" />
