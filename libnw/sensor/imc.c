@@ -597,7 +597,7 @@ get_intel_mchbar_15(void)
 			struct dimm_slot* p = &ctx.slot[mc * 2 + ch];
 			snprintf(p->name, SLOT_NAME_SIZE, "MC%lluCH%llu", mc, ch);
 			p->tCL = (ofs_e070 >> 16) & 0x7F;
-			p->tRP = (ofs_e000 >> 10) & 0xFF;
+			p->tRP = ofs_e000 & 0xFF;
 			p->tRAS = (ofs_e000 >> 45) & 0x1FF;
 			p->tRCD = (ofs_e138 >> 22) & 0xFF;
 			p->tRC = p->tRAS + p->tRP;
@@ -702,7 +702,7 @@ detect_intel_mchbar(void)
 	case 0xBD: // Ultra (Lunar Lake-V)
 	case 0xC5: // Ultra (Arrow Lake-H)
 	case 0xC6: // Ultra (Arrow Lake-S)
-	//case 0xCC: // Ultra (Panther Lake)
+	case 0xCC: // Ultra (Panther Lake)
 		ctx.mmio_reg = get_intel_reg_64(0x3FFFFFE0000); // 41:17
 		ctx.get = get_intel_mchbar_15;
 		break;
