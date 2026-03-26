@@ -1,12 +1,44 @@
 // SPDX-License-Identifier: Unlicense
 
 #include <windows.h>
+#include <pathcch.h>
 #include <shellapi.h>
 #include "gnwinfo.h"
 #include "gettext.h"
 #include "utils.h"
 
 static CHAR m_buf[MAX_PATH];
+
+static nk_bool
+select_summary_report_path(WCHAR path[MAX_PATH])
+{
+	OPENFILENAMEW ofn = { 0 };
+	WCHAR file_name[32];
+	SYSTEMTIME st = { 0 };
+
+	GetLocalTime(&st);
+	if (_snwprintf_s(file_name, _countof(file_name), _TRUNCATE,
+		L"report_%04u%02u%02u_%02u%02u%02u.txt",
+		st.wYear, st.wMonth, st.wDay,
+		st.wHour, st.wMinute, st.wSecond) < 0)
+		return nk_false;
+
+	if (!GetModuleFileNameW(NULL, path, MAX_PATH))
+		return nk_false;
+	if (FAILED(PathCchRemoveFileSpec(path, MAX_PATH)))
+		return nk_false;
+	if (FAILED(PathCchAppend(path, MAX_PATH, file_name)))
+		return nk_false;
+
+	ofn.lStructSize = sizeof(ofn);
+	ofn.hwndOwner = g_ctx.wnd;
+	ofn.lpstrFilter = L"Text Files (*.txt)\0*.txt\0All Files (*.*)\0*.*\0\0";
+	ofn.lpstrFile = path;
+	ofn.nMaxFile = MAX_PATH;
+	ofn.lpstrDefExt = L"txt";
+	ofn.Flags = OFN_OVERWRITEPROMPT | OFN_PATHMUSTEXIST | OFN_NOCHANGEDIR;
+	return GetSaveFileNameW(&ofn) ? nk_true : nk_false;
+}
 
 static inline nk_bool
 quick_access_button(struct nk_context* ctx, struct nk_image img, const char* str)
@@ -792,7 +824,10 @@ gnwinfo_draw_main_window(struct nk_context* ctx, float width, float height)
 		return;
 	}
 
-	nk_layout_row_begin(ctx, NK_DYNAMIC, 0, 5);
+	WCHAR report_path[MAX_PATH] = L"";
+	enum nk_report_state report_state = NK_REPORT_STATE_IDLE;
+
+	nk_layout_row_begin(ctx, NK_DYNAMIC, 0, 6);
 
 	struct nk_rect rect = nk_layout_widget_bounds(ctx);
 	g_ctx.gui_ratio = rect.h / rect.w;
@@ -818,6 +853,12 @@ gnwinfo_draw_main_window(struct nk_context* ctx, float width, float height)
 		gnwinfo_ctx_update(IDT_TIMER_DISK);
 		gnwinfo_ctx_update(IDT_TIMER_DISPLAY);
 		gnwinfo_ctx_update(IDT_TIMER_SMB);
+	}
+	nk_layout_row_push(ctx, g_ctx.gui_ratio);
+	if (nk_button_image_hover(ctx, GET_PNG(IDR_PNG_REPORT), N_(N__SAVE_REPORT)))
+	{
+		if (select_summary_report_path(report_path))
+			report_state = nk_report_begin_capture(report_path);
 	}
 	nk_layout_row_push(ctx, g_ctx.gui_ratio);
 	if (nk_button_image_hover(ctx, GET_PNG(IDR_PNG_INFO), N_(N__ABOUT)))
@@ -853,5 +894,11 @@ gnwinfo_draw_main_window(struct nk_context* ctx, float width, float height)
 		draw_audio(ctx);
 
 out:
+	if (report_state == NK_REPORT_STATE_ACTIVE)
+		report_state = nk_report_end_capture();
+
 	nk_end(ctx);
+
+	if (report_state == NK_REPORT_STATE_FAILED)
+		MessageBoxW(g_ctx.wnd, L"Failed to export summary report.", L"NWinfo", MB_OK | MB_ICONERROR);
 }

@@ -66,6 +66,7 @@ lang_pl_pl[N__MAX_] =
 	[N__EXT_MODEL] = u8"Model ext.", // Rozszerzony model
 	[N__AFF_MASK] = u8"Maska aff.", // Maska przypisania
 	[N__ABOUT] = u8"O programie",
+	[N__SAVE_REPORT] = u8"Zapisz raport",
 	[N__SENSOR_VIEW] = u8"Widok czujników",
 	[N__SUMMARY_VIEW] = u8"Widok podsumowania",
 	[N__SETTINGS] = u8"Ustawienia",

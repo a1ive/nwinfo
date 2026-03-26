@@ -219,6 +219,9 @@
     <Image Include="icons\sensor.png">
       <Filter>Resource Files</Filter>
     </Image>
+    <Image Include="icons\report.png">
+      <Filter>Resource Files</Filter>
+    </Image>
   </ItemGroup>
   <ItemGroup>
     <CopyFileToFolders Include="gnwinfo.ini" />

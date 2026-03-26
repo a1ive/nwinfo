@@ -64,6 +64,7 @@ lang_zh_tw[N__MAX_] =
 	[N__EXT_MODEL] = u8"延伸型號",
 	[N__AFF_MASK] = u8"親和性遮罩",
 	[N__ABOUT] = u8"關於",
+	[N__SAVE_REPORT] = u8"儲存報告",
 	[N__SENSOR_VIEW] = u8"感測器視圖",
 	[N__SUMMARY_VIEW] = u8"概要視圖",
 	[N__SETTINGS] = u8"設定",

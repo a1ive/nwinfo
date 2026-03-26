@@ -66,6 +66,7 @@ lang_ja_jp[N__MAX_] =
 	[N__EXT_MODEL] = u8"拡張モデル",
 	[N__AFF_MASK] = u8"アフィニティマスク",
 	[N__ABOUT] = u8"バージョン情報",
+	[N__SAVE_REPORT] = u8"レポートを保存",
 	[N__SENSOR_VIEW] = u8"センサー表示",
 	[N__SUMMARY_VIEW] = u8"全体表示",
 	[N__SETTINGS] = u8"設定",

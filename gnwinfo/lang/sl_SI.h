@@ -66,6 +66,7 @@ lang_sl_si[N__MAX_] =
 	[N__EXT_MODEL] = u8"Razširjeni model", // Extended model
 	[N__AFF_MASK] = u8"Maska afinitete", // Affinity mask
 	[N__ABOUT] = u8"O",
+	[N__SAVE_REPORT] = u8"Shrani poročilo",
 	[N__SENSOR_VIEW] = u8"Pogled senzorja",
 	[N__SUMMARY_VIEW] = u8"Pogled povzeteka",
 	[N__SETTINGS] = u8"Nastavitve",

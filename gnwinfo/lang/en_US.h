@@ -66,6 +66,7 @@ lang_en_us[N__MAX_] =
 	[N__EXT_MODEL] = u8"Ext.Model", // Extended model
 	[N__AFF_MASK] = u8"Aff.Mask", // Affinity mask
 	[N__ABOUT] = u8"About",
+	[N__SAVE_REPORT] = u8"Save Report",
 	[N__SENSOR_VIEW] = u8"Sensor View",
 	[N__SUMMARY_VIEW] = u8"Summary View",
 	[N__SETTINGS] = u8"Settings",

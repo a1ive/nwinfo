@@ -11,7 +11,7 @@ draw_node(struct nk_context* ctx, int level, int* id, PNODE node)
 	if (node == NULL)
 		return;
 	(*id)++;
-	if (nk_tree_image_push_id(ctx, NK_TREE_TAB, GET_PNG(IDR_PNG_SENSOR), node->name, NK_MAXIMIZED, *id))
+	if (nk_tree_image_push_ex(ctx, NK_TREE_TAB, GET_PNG(IDR_PNG_SENSOR), node->name, NK_MAXIMIZED, *id))
 	{
 		int count = NWL_NodeAttrCount(node);
 		for (int i = 0; i < count; i++)

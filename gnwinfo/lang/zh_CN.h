@@ -64,6 +64,7 @@ lang_zh_cn[N__MAX_] =
 	[N__EXT_MODEL] = u8"扩展型号",
 	[N__AFF_MASK] = u8"亲和性掩码",
 	[N__ABOUT] = u8"关于",
+	[N__SAVE_REPORT] = u8"保存报告",
 	[N__SENSOR_VIEW] = u8"传感器视图",
 	[N__SUMMARY_VIEW] = u8"概要视图",
 	[N__SETTINGS] = u8"设置",

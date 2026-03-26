@@ -66,6 +66,7 @@ lang_pt_br[N__MAX_] =
 	[N__EXT_MODEL] = u8"Modelo Ext.",
 	[N__AFF_MASK] = u8"Máscara de Afinidade",
 	[N__ABOUT] = u8"Sobre",
+	[N__SAVE_REPORT] = u8"Salvar relatório",
 	[N__SENSOR_VIEW] = u8"Visão de sensores",
 	[N__SUMMARY_VIEW] = u8"Visão geral",
 	[N__SETTINGS] = u8"Opções",

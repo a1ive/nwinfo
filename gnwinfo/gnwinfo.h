@@ -2,8 +2,6 @@
 
 #pragma once
 
-#define GNWINFO_TRANSPARENT
-
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <stdio.h>
@@ -21,14 +19,6 @@
 #include <nuklear.h>
 #include <nuklear_gdip.h>
 
-#include <libnw.h>
-#include <network.h>
-#include <gpu/gpu.h>
-
-#include "resource.h"
-
-#include <audio.h>
-
 #define TEMP_CELSIUS_SYMBOL u8"\u00b0C" // \u2103 or \u00b0C
 
 GdipFont*
@@ -41,6 +31,10 @@ nk_begin_ex(struct nk_context* ctx, const char* title,
 void
 nk_image_label(struct nk_context* ctx, struct nk_image img,
 	const char* str, nk_flags align, struct nk_color color);
+
+nk_bool
+nk_tree_image_push_ex(struct nk_context* ctx, enum nk_tree_type type,
+	struct nk_image img, const char* title, enum nk_collapse_states state, int id);
 
 void
 nk_lhsc(struct nk_context* ctx, const char* str,
@@ -64,6 +58,33 @@ nk_combo_begin_color_dynamic(struct nk_context* ctx, struct nk_color color);
 
 void
 nk_block(struct nk_context* ctx, struct nk_color color, const char* str);
+
+enum nk_report_state
+{
+	NK_REPORT_STATE_IDLE = 0,
+	NK_REPORT_STATE_FAILED,
+	NK_REPORT_STATE_ACTIVE,
+	NK_REPORT_STATE_ACTIVE_ROW_OPEN,
+	NK_REPORT_STATE_ACTIVE_READY,
+};
+
+enum nk_report_state
+nk_report_begin_capture(LPCWSTR path);
+
+enum nk_report_state
+nk_report_end_capture(void);
+
+#ifndef NUKLEAR_C_INCLUDE
+
+#define GNWINFO_TRANSPARENT
+
+#include <libnw.h>
+#include <network.h>
+#include <gpu/gpu.h>
+
+#include "resource.h"
+
+#include <audio.h>
 
 #define MAIN_INFO_OS        (1U << 0)
 #define MAIN_INFO_BIOS      (1U << 1)
@@ -231,3 +252,5 @@ void gnwinfo_set_ini_value(LPCWSTR section, LPCWSTR key, LPCWSTR _Printf_format_
 LPCSTR gnwinfo_get_smbios_attr(LPCSTR type, LPCSTR key, PVOID ctx, BOOL(*cond)(PNODE node, PVOID ctx));
 struct nk_color gnwinfo_get_color(double value, double warn, double err);
 void gnwinfo_draw_percent_prog(struct nk_context* ctx, double percent);
+
+#endif

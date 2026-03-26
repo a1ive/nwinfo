@@ -64,6 +64,7 @@ lang_sv_se[N__MAX_] =
 	[N__EXT_MODEL] = u8"Modello est.",
 	[N__AFF_MASK] = u8"Maschera aff.",
 	[N__ABOUT] = u8"Om",
+	[N__SAVE_REPORT] = u8"Spara rapport",
 	[N__SENSOR_VIEW] = u8"Sensorvy",
 	[N__SUMMARY_VIEW] = u8"Sammanfattningsvy",
 	[N__SETTINGS] = u8"Inställningar",

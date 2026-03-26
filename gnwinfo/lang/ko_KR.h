@@ -66,6 +66,7 @@ lang_ko_kr[N__MAX_] =
 	[N__EXT_MODEL] = u8"확장 모델",
 	[N__AFF_MASK] = u8"Aff.Mask",
 	[N__ABOUT] = u8"정보",
+	[N__SAVE_REPORT] = u8"보고서 저장",
 	[N__SENSOR_VIEW] = u8"센서 보기",
 	[N__SUMMARY_VIEW] = u8"요약 보기",
 	[N__SETTINGS] = u8"설정",

@@ -7,24 +7,20 @@
 #pragma warning(disable:4116)
 #pragma warning(disable:4244)
 
-#include <stdio.h>
-#include <assert.h>
+#pragma comment(lib, "gdiplus.lib")
+
+#define NUKLEAR_C_INCLUDE
+#define NK_IMPLEMENTATION
+#define NK_GDIP_IMPLEMENTATION
+
 #include <math.h>
-#define NK_ASSERT(expr) assert(expr)
 #define NK_VSNPRINTF(s,n,f,a) vsnprintf(s,f,a)
 #define NK_MEMSET memset
 #define NK_MEMCPY memcpy
 #define NK_SIN sinf
 #define NK_COS cosf
 #define NK_STRTOD strtod
-
-#define NK_IMPLEMENTATION
-#include <nuklear.h>
-
-#pragma comment(lib, "gdiplus.lib")
-
-#define NK_GDIP_IMPLEMENTATION
-#include <nuklear_gdip.h>
+#include "../gnwinfo/gnwinfo.h"
 
 #include <VersionHelpers.h>
 
@@ -57,6 +53,132 @@ nk_gdip_load_font(LPCWSTR name, int size)
 fail:
 	MessageBoxW(NULL, L"Failed to load font", L"Error", MB_OK);
 	exit(1);
+}
+
+static FILE* m_report_file = NULL;
+static enum nk_report_state m_report_state = NK_REPORT_STATE_IDLE;
+static float m_report_row_y = -1.0f;
+
+static void
+nk_report_reset_state(void)
+{
+	m_report_state = NK_REPORT_STATE_IDLE;
+	m_report_row_y = -1.0f;
+}
+
+static nk_bool
+nk_report_write(const char* text, size_t len)
+{
+	if (fwrite(text, 1, len, m_report_file) == len)
+		return nk_true;
+	fclose(m_report_file);
+	m_report_file = NULL;
+	m_report_state = NK_REPORT_STATE_FAILED;
+	m_report_row_y = -1.0f;
+	return nk_false;
+}
+
+static int
+nk_report_get_indent(const struct nk_context* ctx, nk_bool minimum_one)
+{
+	int indent = ctx->current->layout->row.tree_depth;
+	if (minimum_one && indent < 1)
+		indent = 1;
+	return indent;
+}
+
+static void
+nk_report_capture_text(float y, int indent, const char* text, int len)
+{
+	if (m_report_state == NK_REPORT_STATE_IDLE || m_report_state == NK_REPORT_STATE_FAILED || len <= 0)
+		return;
+
+	if (m_report_state == NK_REPORT_STATE_ACTIVE_ROW_OPEN && fabsf(y - m_report_row_y) > 0.5f)
+	{
+		if (!nk_report_write("\r\n", 2))
+			return;
+		m_report_state = NK_REPORT_STATE_ACTIVE_READY;
+	}
+
+	if (m_report_state != NK_REPORT_STATE_ACTIVE_ROW_OPEN)
+	{
+		if (indent == 0 && m_report_state == NK_REPORT_STATE_ACTIVE_READY && !nk_report_write("\r\n", 2))
+			return;
+		m_report_row_y = y;
+		m_report_state = NK_REPORT_STATE_ACTIVE_ROW_OPEN;
+		while (indent-- > 0)
+		{
+			if (!nk_report_write("\t", 1))
+				return;
+		}
+	}
+	else
+	{
+		if (!nk_report_write("\t", 1))
+			return;
+	}
+
+	nk_report_write(text, (size_t)len);
+}
+
+enum nk_report_state
+nk_report_begin_capture(LPCWSTR path)
+{
+	static const unsigned char utf8_bom[] = { 0xEF, 0xBB, 0xBF };
+
+	nk_report_reset_state();
+
+	if (!path || !path[0])
+	{
+		m_report_state = NK_REPORT_STATE_FAILED;
+		return m_report_state;
+	}
+
+	if (m_report_file)
+	{
+		fclose(m_report_file);
+		m_report_file = NULL;
+	}
+
+	if (_wfopen_s(&m_report_file, path, L"wb") != 0 || !m_report_file)
+	{
+		m_report_state = NK_REPORT_STATE_FAILED;
+		return m_report_state;
+	}
+
+	m_report_state = NK_REPORT_STATE_ACTIVE;
+	if (!nk_report_write((const char*)utf8_bom, sizeof(utf8_bom)))
+		return m_report_state;
+
+	return m_report_state;
+}
+
+enum nk_report_state
+nk_report_end_capture(void)
+{
+	if (!m_report_file)
+	{
+		m_report_state = NK_REPORT_STATE_FAILED;
+		return m_report_state;
+	}
+
+	if (m_report_state == NK_REPORT_STATE_ACTIVE_ROW_OPEN && !nk_report_write("\r\n", 2))
+		return m_report_state;
+
+	if (m_report_file)
+	{
+		if (fclose(m_report_file) != 0)
+		{
+			m_report_file = NULL;
+			m_report_state = NK_REPORT_STATE_FAILED;
+			m_report_row_y = -1.0f;
+			return m_report_state;
+		}
+		m_report_file = NULL;
+	}
+
+	nk_report_reset_state();
+	return m_report_state;
 }
 
 static nk_bool
@@ -500,6 +622,8 @@ nk_image_label(struct nk_context* ctx, struct nk_image img,
 	win = ctx->current;
 	style = &ctx->style;
 	len = nk_strlen(str);
+	nk_layout_peek(&bounds, ctx);
+	nk_report_capture_text(bounds.y, 0, str, len);
 	if (!nk_widget(&bounds, ctx))
 		return;
 
@@ -517,6 +641,24 @@ nk_image_label(struct nk_context* ctx, struct nk_image img,
 	text.background = style->window.background;
 	text.text = color;
 	nk_widget_text(&win->buffer, bounds, str, len, &text, align, style->font);
+}
+
+nk_bool
+nk_tree_image_push_ex(struct nk_context* ctx, enum nk_tree_type type,
+	struct nk_image img, const char* title, enum nk_collapse_states state, int id)
+{
+	struct nk_rect bounds;
+
+	NK_ASSERT(ctx);
+	NK_ASSERT(ctx->current);
+	NK_ASSERT(ctx->current->layout);
+	NK_ASSERT(title);
+	if (!ctx || !ctx->current || !ctx->current->layout || !title)
+		return nk_false;
+
+	nk_layout_peek(&bounds, ctx);
+	nk_report_capture_text(bounds.y, nk_report_get_indent(ctx, nk_false), title, nk_strlen(title));
+	return nk_tree_image_push_hashed(ctx, type, img, title, state, NK_FILE_LINE, nk_strlen(NK_FILE_LINE), id);
 }
 
 static inline nk_bool
@@ -598,6 +740,9 @@ nk_lhsc(struct nk_context* ctx, const char* str,
 
 	win = ctx->current;
 	style = &ctx->style;
+	text_len = nk_strlen(str);
+	nk_layout_peek(&bounds, ctx);
+	nk_report_capture_text(bounds.y, nk_report_get_indent(ctx, nk_true), str, text_len);
 	if (space)
 	{
 		if (!nk_widget(&bounds, ctx))
@@ -610,7 +755,6 @@ nk_lhsc(struct nk_context* ctx, const char* str,
 		nk_panel_alloc_space(&bounds, ctx);
 	}
 
-	text_len = nk_strlen(str);
 	text.padding.x = style->text.padding.x;
 	text.padding.y = style->text.padding.y;
 	text.background = style->window.background;

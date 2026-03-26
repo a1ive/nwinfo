@@ -242,6 +242,7 @@
     <Image Include="icons\pc.png" />
     <Image Include="icons\pci.png" />
     <Image Include="icons\refresh.png" />
+    <Image Include="icons\report.png" />
     <Image Include="icons\rocket.png" />
     <Image Include="icons\sensor.png" />
     <Image Include="icons\settings.png" />

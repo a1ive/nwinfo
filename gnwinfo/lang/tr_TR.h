@@ -64,6 +64,7 @@ lang_tr_tr[N__MAX_] =
 	[N__EXT_MODEL] = u8"Genişletilmiş Model",
 	[N__AFF_MASK] = u8"Affinite Maske",
 	[N__ABOUT] = u8"Hakkında",
+	[N__SAVE_REPORT] = u8"Raporu kaydet",
 	[N__SENSOR_VIEW] = u8"Sensör Görünümü",
 	[N__SUMMARY_VIEW] = u8"Özet Görünümü",
 	[N__SETTINGS] = u8"Ayarlar",
