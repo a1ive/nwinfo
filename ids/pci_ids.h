@@ -33,6 +33,9 @@
 #define PCI_DID_VIA_8237S       0x3372
 
 #define PCI_IDS_DEFAULT \
+	"0014  Loongson\n" \
+	"025e  Solidigm\n" \
+	"0731  Jingjia Micro\n" \
 	"1002  AMD/ATI\n" \
 	"101e  AMI\n" \
 	"1022  AMD\n" \
@@ -55,8 +58,12 @@
 	"1458  Gigabyte\n" \
 	"1462  MSI\n" \
 	"15ad  VMware\n" \
+	"168c  Qualcomm Atheros\n" \
+	"17aa  Lenovo\n" \
+	"17cb  Qualcomm\n" \
 	"1849  ASRock\n" \
 	"19e5  Huawei\n" \
+	"1a03  ASPEED\n" \
 	"1ae0  Google\n" \
 	"1af4  Red Hat\n" \
 	"1b21  ASMedia\n" \
@@ -65,7 +72,13 @@
 	"1bb1  Seagate\n" \
 	"1d17  Zhaoxin\n" \
 	"1d94  Hygon\n" \
+	"1ed5  Moore Threads\n" \
+	"4c54  Lisuan\n" \
+	"5333  S3 Graphics\n" \
+	"6766  Glenfly\n" \
 	"8086  Intel\n" \
+	"80ee  InnoTek\n" \
+	"c0a9  Micron/Crucial\n" \
 	"\n" \
 	"C 00  Unclassified device\n" \
 	"C 01  Mass storage controller\n" \
