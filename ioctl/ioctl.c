@@ -360,7 +360,7 @@ struct wr0_drv_t* WR0_OpenDriver(void)
 		return NULL;
 	if (WR0_IsWoW64())
 		return NULL;
-	if (_stricmp(NWLC->DriverName, "none") == 0)
+	if (NWLC->DriverName != NULL && _stricmp(NWLC->DriverName, "none") == 0)
 		return NULL;
 	for (size_t i = 0; i < ARRAYSIZE(drv_list); i++)
 	{
