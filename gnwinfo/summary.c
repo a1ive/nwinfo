@@ -293,15 +293,15 @@ draw_mem_dmi(struct nk_context* ctx)
 		LPCSTR attr = NWL_NodeAttrGet(tab, "Table Type");
 		if (strcmp(attr, "17") != 0)
 			continue;
-		LPCSTR ddr = NWL_NodeAttrGet(tab, "Device Type");
-		if (ddr[0] == '-')
+		LPCSTR sz = NWL_NodeAttrGet(tab, "Device Size");
+		if (sz[0] == '-')
 			continue;
 		nk_lhsc(ctx, NWL_NodeAttrGet(tab, "Bank Locator"), NK_TEXT_LEFT, g_color_text_d, nk_true, nk_true);
 		nk_lhcf(ctx, NK_TEXT_LEFT, g_color_text_l,
 			"%s-%s %s %s %s",
-			ddr,
+			NWL_NodeAttrGet(tab, "Device Type"),
 			NWL_NodeAttrGet(tab, "Speed (MT/s)"),
-			NWL_NodeAttrGet(tab, "Device Size"),
+			sz,
 			NWL_NodeAttrGet(tab, "Manufacturer"),
 			NWL_NodeAttrGet(tab, "Serial Number"));
 	}

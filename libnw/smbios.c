@@ -1469,9 +1469,6 @@ static void ProcMemoryDevice(PNODE tab, void* p)
 
 	NWL_NodeAttrSet(tab, "Description", "Memory Device", 0);
 
-	if (pMD->Size == 0)
-		return; // No memory device installed
-
 	NWL_NodeAttrSetf(tab, "Physical Memory Array Handle", NAFLG_FMT_NUMERIC, "%u", pMD->PhysicalArrayHandle);
 	NWL_NodeAttrSetf(tab, "Memory Error Information Handle", NAFLG_FMT_NUMERIC, "%u", pMD->ErrorInformationHandle);
 	NWL_NodeAttrSetf(tab, "Total Width (bits)", NAFLG_FMT_NUMERIC, "%u", pMD->TotalWidth);
@@ -1483,7 +1480,8 @@ static void ProcMemoryDevice(PNODE tab, void* p)
 		sz = ((UINT64)pMD->Size & 0x7FFFU) * 1024;
 	else // in MiB
 		sz = ((UINT64)pMD->Size) * 1024 * 1024;
-	NWL_NodeAttrSet(tab, "Device Size", NWL_GetHumanSize(sz, NWLC->NwUnits, 1024), NAFLG_FMT_HUMAN_SIZE);
+	if (sz != 0)
+		NWL_NodeAttrSet(tab, "Device Size", NWL_GetHumanSize(sz, NWLC->NwUnits, 1024), NAFLG_FMT_HUMAN_SIZE);
 
 	NWL_NodeAttrSet(tab, "Form Factor", pMDFormFactorToStr(pMD->FormFactor), 0);
 	NWL_NodeAttrSetf(tab, "Device Set", NAFLG_FMT_NUMERIC, "%u", pMD->DeviceSet);
