@@ -9,6 +9,7 @@
 #include "utils.h"
 #include "efivars.h"
 #include "ioctl.h"
+#include "tpm.h"
 
 #define PSAPI_VERSION 1
 #include <psapi.h>
@@ -380,57 +381,18 @@ static void PrintSysMetrics(PNODE node)
 	NWL_NodeAttrSetBool(node, "Network Presence", GetSystemMetrics(SM_NETWORK) & 0x01, 0);
 }
 
-typedef struct _TPM_DEVICE_INFO
-{
-	UINT32 structVersion;
-	UINT32 tpmVersion;
-	UINT32 tpmInterfaceType;
-	UINT32 tpmImpRevision;
-} TPM_DEVICE_INFO, *PTPM_DEVICE_INFO;
-
-static const CHAR*
-TpmVersion(UINT32 ver)
-{
-	switch (ver)
-	{
-	case 1: return "v1.2";
-	case 2: return "v2.0";
-	}
-	return "UNKNOWN";
-}
-
 static void PrintTpmInfo(PNODE node)
 {
-	UINT32 (WINAPI *GetTpmInfo) (UINT32 Size, VOID *Info) = NULL;
-	HMODULE hL = NULL;
 	TPM_DEVICE_INFO tpmInfo = { 0 };
-	struct acpi_table_header* acpiHdr = NULL;
-	acpiHdr = NWL_GetSysAcpi('2MPT');
-	if (acpiHdr)
-		NWL_NodeAttrSet(node, "TPM", "v2.0", 0);
-	else
-	{
-		acpiHdr = NWL_GetSysAcpi('APCT');
-		if (acpiHdr)
-			NWL_NodeAttrSet(node, "TPM", "v1.2", 0);
-	}
-	if (acpiHdr)
-	{
-		free(acpiHdr);
-		return;
-	}
-	hL = LoadLibraryW(L"tbs.dll");
-	if (hL)
-		*(FARPROC*)&GetTpmInfo = GetProcAddress(hL, "Tbsi_GetDeviceInfo");
-	if (GetTpmInfo)
-	{
-		UINT32 dwRet = GetTpmInfo(sizeof(tpmInfo), &tpmInfo);
-		NWL_NodeAttrSetf(node, "TPM", 0, "%s", (dwRet == 0) ? TpmVersion(tpmInfo.tpmVersion) : "NOT FOUND");
-	}
+	tpmInfo.structVersion = TPM_VERSION_20;
+	tpmInfo.tpmVersion = TPM_VERSION_UNKNOWN;
+	TBS_RESULT rc = NWL_TPMGetDeviceInfo(sizeof(tpmInfo), &tpmInfo);
+	if (rc == TBS_SUCCESS)
+		NWL_NodeAttrSet(node, "TPM", NWL_TPMGetVersionStr(tpmInfo.tpmVersion), 0);
+	else if (rc == TBS_E_TPM_NOT_FOUND)
+		NWL_NodeAttrSet(node, "TPM", "NOT FOUND", 0);
 	else
 		NWL_NodeAttrSet(node, "TPM", "UNSUPPORTED", 0);
-	if (hL)
-		FreeLibrary(hL);
 }
 
 static BOOL WINAPI

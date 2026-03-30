@@ -162,6 +162,12 @@
     <ClInclude Include="lpc\lpc.h">
       <Filter>lpc</Filter>
     </ClInclude>
+    <ClInclude Include="tpm.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ids\tpm_ids.h">
+      <Filter>ids</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="acpi.c">
@@ -367,6 +373,9 @@
     </ClCompile>
     <ClCompile Include="sensor\zenpower.c">
       <Filter>sensor</Filter>
+    </ClCompile>
+    <ClCompile Include="tpm.c">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

@@ -336,6 +336,7 @@
     <ClInclude Include="..\ids\pci_ids.h" />
     <ClInclude Include="..\ids\pnp_ids.h" />
     <ClInclude Include="..\ids\spd_ids.h" />
+    <ClInclude Include="..\ids\tpm_ids.h" />
     <ClInclude Include="..\ids\usb_ids.h" />
     <ClInclude Include="..\ioctl\lpcio.h" />
     <ClInclude Include="..\ioctl\ryzen_smu.h" />
@@ -365,6 +366,7 @@
     <ClInclude Include="sensor\sensors.h" />
     <ClInclude Include="smbios.h" />
     <ClInclude Include="smbus\smbus.h" />
+    <ClInclude Include="tpm.h" />
     <ClInclude Include="utils.h" />
     <ClInclude Include="vbr.h" />
     <ClInclude Include="version.h" />
@@ -435,6 +437,7 @@
     <ClCompile Include="spd.c" />
     <ClCompile Include="sys.c" />
     <ClCompile Include="node.c" />
+    <ClCompile Include="tpm.c" />
     <ClCompile Include="uefi.c" />
     <ClCompile Include="usb.c" />
     <ClCompile Include="utils.c" />

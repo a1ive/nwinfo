@@ -7,6 +7,7 @@
 #include "libnw.h"
 #include "utils.h"
 #include "smbios.h"
+#include "tpm.h"
 
 #define MB_VENDOR_IMPL
 #include "mb_vendor.h"
@@ -252,6 +253,91 @@ BOOL NWL_GetMainboardInfo(NWLIB_MAINBOARD_INFO* info)
 	return TRUE;
 }
 
+static BOOL
+FormatTpmSpecDate(const NWL_TPM_INFO* info, CHAR* buffer, size_t bufferSize)
+{
+	static const UINT8 daysInMonth[12] = { 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
+	UINT32 dayOfYear = 0;
+	UINT32 month = 1;
+	UINT32 day = 0;
+	BOOL leapYear = FALSE;
+
+	if (info == NULL || buffer == NULL || bufferSize == 0)
+		return FALSE;
+	if (info->SpecYear == 0 || info->SpecDayOfYear == 0)
+		return FALSE;
+
+	dayOfYear = info->SpecDayOfYear;
+	leapYear = (info->SpecYear % 4U == 0U) &&
+		((info->SpecYear % 100U != 0U) || (info->SpecYear % 400U == 0U));
+	if (dayOfYear > (leapYear ? 366U : 365U))
+	{
+		snprintf(buffer, bufferSize, "%u / day %u", info->SpecYear, info->SpecDayOfYear);
+		return TRUE;
+	}
+
+	for (size_t i = 0; i < ARRAYSIZE(daysInMonth); i++)
+	{
+		UINT32 monthDays = daysInMonth[i];
+		if (i == 1 && leapYear)
+			monthDays++;
+		if (dayOfYear <= monthDays)
+		{
+			day = dayOfYear;
+			break;
+		}
+		dayOfYear -= monthDays;
+		month++;
+	}
+
+	if (day == 0)
+		return FALSE;
+
+	snprintf(buffer, bufferSize, "%04u-%02u-%02u", info->SpecYear, month, day);
+	return TRUE;
+}
+
+static void
+GetTpmInfo(PNODE node)
+{
+	NWL_TPM_INFO tpmInfo = { 0 };
+	CHAR specDate[16] = { 0 };
+	LPSTR algorithms = NULL;
+	TBS_RESULT rc = 0;
+
+	rc = NWL_TPMGetInfo(&tpmInfo);
+	if (rc != TBS_SUCCESS)
+		return;
+	NWL_NodeAttrSet(node, "TPM Version", NWL_TPMGetVersionStr(tpmInfo.TpmVersion), 0);
+	if (tpmInfo.ManufacturerId[0] != '\0')
+		NWL_NodeAttrSet(node, "TPM Manufacturer ID", tpmInfo.ManufacturerId, 0);
+	if (tpmInfo.ManufacturerName != NULL)
+		NWL_NodeAttrSet(node, "TPM Manufacturer", tpmInfo.ManufacturerName, 0);
+	if (tpmInfo.VendorString[0] != '\0')
+		NWL_NodeAttrSet(node, "TPM Vendor String", tpmInfo.VendorString, 0);
+	if (tpmInfo.FirmwareVersion[0] != '\0')
+		NWL_NodeAttrSet(node, "TPM Firmware Version", tpmInfo.FirmwareVersion, 0);
+	if (tpmInfo.SpecFamily[0] != '\0')
+		NWL_NodeAttrSet(node, "TPM Spec Family", tpmInfo.SpecFamily, 0);
+	if (tpmInfo.SpecLevel != 0)
+		NWL_NodeAttrSetf(node, "TPM Spec Level", NAFLG_FMT_NUMERIC, "%u", tpmInfo.SpecLevel);
+	if (tpmInfo.SpecRevision != 0)
+		NWL_NodeAttrSetf(node, "TPM Spec Revision", NAFLG_FMT_NUMERIC, "%u", tpmInfo.SpecRevision);
+	if (FormatTpmSpecDate(&tpmInfo, specDate, sizeof(specDate)))
+		NWL_NodeAttrSet(node, "TPM Spec Date", specDate, 0);
+
+	if (tpmInfo.AlgorithmCount != 0)
+	{
+		for (UINT32 i = 0; i < tpmInfo.AlgorithmCount; i++)
+			NWL_NodeAppendMultiSz(&algorithms, tpmInfo.Algorithms[i].Name);
+		if (algorithms != NULL)
+			NWL_NodeAttrSetMulti(node, "TPM Algorithms", algorithms, 0);
+	}
+
+	free(algorithms);
+	NWL_TPMFreeInfo(&tpmInfo);
+}
+
 PNODE NW_Mainboard(BOOL bAppend)
 {
 	PNODE node = NWL_NodeAlloc("Mainboard", 0);
@@ -302,6 +388,8 @@ PNODE NW_Mainboard(BOOL bAppend)
 		}
 		NWL_FreeLpc(lpc);
 	}
+
+	GetTpmInfo(node);
 
 	return node;
 }
