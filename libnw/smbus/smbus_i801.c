@@ -211,10 +211,20 @@ static int I801Init(smbus_t* ctx)
 	uint8_t hostc = WR0_RdPciConf8(ctx->drv, ctx->pci_addr, SMBHSTCFG);
 	if (!(hostc & SMBHSTCFG_HST_EN))
 	{
-		SMBUS_DBG("SMBus is not enabled");
-		return SM_ERR_BUS_ERROR;
+		WR0_WrPciConf8(ctx->drv, ctx->pci_addr, SMBHSTCFG, hostc | SMBHSTCFG_HST_EN);
+		hostc = WR0_RdPciConf8(ctx->drv, ctx->pci_addr, SMBHSTCFG);
+		if (!(hostc & SMBHSTCFG_HST_EN))
+		{
+			SMBUS_DBG("SMBus is not enabled");
+			return SM_ERR_BUS_ERROR;
+		}
 	}
 	ctx->spd_wd = (hostc & SMBHSTCFG_SPD_WD) ? true : false;
+
+	// Enable IO
+	uint16_t pci_cmd = WR0_RdPciConf16(ctx->drv, ctx->pci_addr, PCICMD);
+	if (!(pci_cmd & PCICMD_IOBIT))
+		WR0_WrPciConf16(ctx->drv, ctx->pci_addr, PCICMD, pci_cmd | PCICMD_IOBIT);
 
 	uint32_t base = WR0_RdPciConf32(ctx->drv, ctx->pci_addr, SMB_BASE);
 	if (!(base & 0x01))
