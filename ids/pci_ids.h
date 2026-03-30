@@ -9,6 +9,8 @@
 #define PCI_VID_NVIDIA      0x10DE
 #define PCI_VID_SERVERWORKS 0x1166
 #define PCI_VID_VIA         0x1106
+#define PCI_VID_MT          0x1ed5
+#define PCI_VID_LISUAN      0x4c54
 
 #define PCI_DID_INTEL_82371AB_3 0x7113
 #define PCI_DID_INTEL_82443MX_3 0x719B
