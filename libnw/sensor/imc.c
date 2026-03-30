@@ -662,10 +662,11 @@ detect_intel_mchbar(void)
 		ctx.get = get_intel_mchbar_2_3;
 		break;
 	case 0x3C: // Core 4th Gen (Haswell)
+	case 0x3F: // Core 4th Gen (Haswell-EP)
 	case 0x45: // Core 4th Gen (Haswell)
 	case 0x46: // Core 4th Gen (Haswell)
 	case 0x47: // Core 5th Gen (Broadwell)
-		ctx.mmio_reg = get_intel_reg_32();
+		ctx.mmio_reg = get_intel_reg_64(0x7FFFFF8000); // 38:15
 		ctx.get = get_intel_mchbar_4_5;
 		break;
 	case 0x4E: // Core 6th Gen (Sky Lake)
