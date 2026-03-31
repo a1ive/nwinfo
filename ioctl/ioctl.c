@@ -928,7 +928,7 @@ uint32_t WR0_FindPciById(struct wr0_drv_t* drv, uint16_t vid, uint16_t did, uint
 		|| vid == 0xFFFF)
 		return addr;
 
-	for (uint8_t bus = 0; bus <= 7; bus++)
+	for (uint8_t bus = 0; bus < 256; bus++)
 	{
 		for (uint8_t dev = 0; dev < 32; dev++)
 		{
@@ -974,7 +974,7 @@ uint32_t WR0_FindPciByClass(struct wr0_drv_t* drv, uint8_t base, uint8_t sub, ui
 	if (!drv || !drv->handle || drv->handle == INVALID_HANDLE_VALUE || drv->type == WR0_DRIVER_PAWNIO)
 		return addr;
 
-	for (bus = 0; bus <= 7; bus++)
+	for (bus = 0; bus < 256; bus++)
 	{
 		for (dev = 0; dev < 32; dev++)
 		{

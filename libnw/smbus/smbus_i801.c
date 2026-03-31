@@ -184,9 +184,9 @@ static int I801Detect(smbus_t* ctx)
 		return SM_ERR_NO_DEVICE;
 
 	SMBUS_DBG("Found i801 SMBus device at PCI %02X:%02X.%X, ID %04X:%04X REV %02X",
-		(ctx->pci_addr >> 16) & 0xFF,
-		(ctx->pci_addr >> 11) & 0x1F,
-		(ctx->pci_addr >> 8) & 0x07,
+		PciGetBus(ctx->pci_addr),
+		PciGetDev(ctx->pci_addr),
+		PciGetFunc(ctx->pci_addr),
 		ctx->pci_id & 0xFFFF,
 		(ctx->pci_id >> 16) & 0xFFFF,
 		ctx->rev_id);
