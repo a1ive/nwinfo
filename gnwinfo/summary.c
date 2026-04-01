@@ -77,13 +77,14 @@ draw_os(struct nk_context* ctx)
 		nk_lhsc(ctx, N_(N__LOGIN), NK_TEXT_LEFT, g_color_text_d, nk_false, nk_true);
 		nk_lhcf(ctx, NK_TEXT_LEFT,
 			g_color_text_l,
-			"%s@%s%s%s%s%s",
+			"%s@%s%s%s%s%s%s",
 			NWL_NodeAttrGet(g_ctx.system, "Username"),
 			g_ctx.sys_hostname,
 			strcmp(NWL_NodeAttrGet(g_ctx.system, "Safe Mode"), NA_BOOL_TRUE) == 0 ? " SafeMode" : "",
 			strcmp(NWL_NodeAttrGet(g_ctx.system, "BitLocker Boot"), NA_BOOL_TRUE) == 0 ? " BitLocker" : "",
 			strcmp(NWL_NodeAttrGet(g_ctx.system, "VHD Boot"), NA_BOOL_TRUE) == 0 ? " VHD" : "",
-			strcmp(NWL_NodeAttrGet(g_ctx.system, "Fast Startup"), NA_BOOL_TRUE) == 0 ? " FastStartup" : "");
+			strcmp(NWL_NodeAttrGet(g_ctx.system, "Fast Startup"), NA_BOOL_TRUE) == 0 ? " FastStartup" : "",
+			strcmp(NWL_NodeAttrGet(g_ctx.system, "HVCI KMCI"), NA_BOOL_TRUE) == 0 ? " HVCI" : "");
 		if (quick_access_button(ctx, GET_PNG(IDR_PNG_EDIT), N_(N__HOSTNAME)))
 			gnwinfo_init_hostname_window(ctx);
 	}
