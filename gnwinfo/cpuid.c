@@ -109,11 +109,13 @@ gnwinfo_draw_cpuid_window(struct nk_context* ctx, float width, float height)
 
 	if (g_ctx.cpu_count <= 0 || !g_ctx.cpu_info)
 		goto out;
-	if (cpu_index >= g_ctx.cpu_count)
-		cpu_index = 0;
 
 	CPUID_ROW_BEGIN(2, 0.16f);
-	nk_property_int(ctx, "#CPU", 0, &cpu_index, g_ctx.cpu_count - 1, 1, 1);
+	nk_property_int(ctx, "#CPU", -1, &cpu_index, g_ctx.cpu_count, 1, 1);
+	if (cpu_index >= g_ctx.cpu_count)
+		cpu_index = 0;
+	else if (cpu_index < 0)
+		cpu_index = g_ctx.cpu_count - 1;
 	CPUID_ROW_PUSH(0.84f);
 	snprintf(buf, MAX_PATH, "%s %d, %s %s, %lu MHz",
 		N_(N__TOTAL), g_ctx.cpu_count,

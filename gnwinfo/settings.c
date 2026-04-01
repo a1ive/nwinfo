@@ -162,7 +162,6 @@ gnwinfo_draw_settings_window(struct nk_context* ctx, float width, float height)
 	set_label(ctx, N_(N__FONT_NAME));
 	nk_font_list(ctx, g_col_height);
 
-	nk_layout_row(ctx, NK_DYNAMIC, 0, 3, (float[3]) { 0.1f, 0.4f, 0.5f });
 	nk_spacer(ctx);
 	set_label(ctx, N_(N__FONT_SIZE));
 	nk_property_int(ctx, "#", 4, &g_font_size_cached, 128, 1, 2);

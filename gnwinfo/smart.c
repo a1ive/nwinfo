@@ -275,7 +275,9 @@ gnwinfo_draw_smart_window(struct nk_context* ctx, float width, float height)
 {
 	INT count;
 	WCHAR* str;
+	CHAR count_str[16];
 	static int cur_disk = 0;
+	int cur_display;
 
 	if (!(g_ctx.window_flag & GUI_WINDOW_SMART))
 		return;
@@ -299,10 +301,18 @@ gnwinfo_draw_smart_window(struct nk_context* ctx, float width, float height)
 		nk_l(ctx, N_(N__NO_DISKS_FOUND), NK_TEXT_CENTERED);
 		goto out;
 	}
+	
+	snprintf(count_str, sizeof(count_str), "#%d/", count);
+	nk_layout_row(ctx, NK_DYNAMIC, g_col_height, 4, (float[4]) { 0.14f, 0.6f, 0.18f, 0.08f });
+
+	cur_display = cur_disk + 1;
+	nk_property_int(ctx, count_str, 0, &cur_display, count + 1, 1, 1);
+	cur_disk = cur_display - 1;
 	if (cur_disk >= count)
 		cur_disk = 0;
-	nk_layout_row(ctx, NK_DYNAMIC, 0, 4, (float[4]) { 0.12f, 0.6f, 0.2f, 0.08f });
-	nk_property_int(ctx, "#", 0, &cur_disk, count - 1, 1, 1);
+	else if (cur_disk < 0)
+		cur_disk = count - 1;
+
 	str = cdi_get_string(NWLC->NwSmart, cur_disk, CDI_STRING_MODEL);
 	nk_lhcf(ctx, NK_TEXT_CENTERED, g_color_text_l,
 		"%s %s",
