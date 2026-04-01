@@ -10,6 +10,8 @@
 #include "utils.h"
 #include "stb_ds.h"
 
+#pragma comment(lib, "setupapi.lib")
+
 static void
 PrintDriverInfo(PNODE pNode, HDEVINFO hInfo, SP_DEVINFO_DATA* spData)
 {

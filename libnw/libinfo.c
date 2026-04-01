@@ -7,6 +7,8 @@
 #include "../libcdi/libcdi.h"
 #include "version.h"
 
+#pragma comment(lib, "version.lib")
+
 static void
 PrintDriverVerison(PNODE node, struct wr0_drv_t* drv)
 {

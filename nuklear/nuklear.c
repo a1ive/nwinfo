@@ -8,6 +8,7 @@
 #pragma warning(disable:4244)
 
 #pragma comment(lib, "gdiplus.lib")
+#pragma comment(lib, "shlwapi.lib")
 
 #define NUKLEAR_C_INCLUDE
 #define NK_IMPLEMENTATION

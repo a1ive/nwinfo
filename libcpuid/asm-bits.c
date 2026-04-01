@@ -123,6 +123,11 @@ void exec_cpuid(uint32_t *regs)
 #  endif /* COMPILER_MICROSOFT */
 #endif
 }
+#elif defined(PLATFORM_AARCH64)
+void exec_cpuid(uint32_t *regs)
+{
+	UNUSED(regs);
+}
 #endif /* INLINE_ASM_SUPPORTED */
 
 #ifdef INLINE_ASM_SUPPORTED
@@ -153,6 +158,11 @@ void cpu_rdtsc(uint64_t* result)
 #  endif /* COMPILER_MICROSOFT */
 #endif /* COMPILER_GCC */
 	*result = (uint64_t)low_part + (((uint64_t) hi_part) << 32);
+}
+#elif defined(PLATFORM_AARCH64)
+void cpu_rdtsc(uint64_t* result)
+{
+	UNUSED(result);
 }
 #endif /* INLINE_ASM_SUPPORTED */
 
@@ -786,5 +796,10 @@ bsLoop:
 #    error "Unsupported compiler"
 #  endif /* COMPILER_MICROSOFT */
 #endif /* COMPILER_GCC */
+}
+#elif defined(PLATFORM_AARCH64)
+void busy_sse_loop(int cycles)
+{
+	UNUSED(cycles);
 }
 #endif /* INLINE_ASM_SUPPORTED */

@@ -11,6 +11,8 @@
 #include "utils.h"
 #include "devtree.h"
 
+#pragma comment(lib, "cfgmgr32.lib")
+
 static CONFIGRET
 GetDevNodeProperty(DEVINST devInst, const DEVPROPKEY* pKey, DEVPROPTYPE* propType, PBYTE propBuffer, PULONG propSize)
 {

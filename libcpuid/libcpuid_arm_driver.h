@@ -93,7 +93,7 @@ typedef enum {
 	REQ_ID_PFR0,
 	REQ_ID_PFR1,
 	REQ_ID_PFR2,
-#if defined(__aarch64__)
+#if defined(PLATFORM_AARCH64)
 	REQ_ID_AA64AFR0,
 	REQ_ID_AA64AFR1,
 	REQ_ID_AA64DFR0,
@@ -114,7 +114,7 @@ typedef enum {
 	REQ_ID_AA64PFR2,
 	REQ_ID_AA64SMFR0,
 	REQ_ID_AA64ZFR0,
-#endif /* __aarch64__ */
+#endif /* PLATFORM_AARCH64 */
 	/* termination: */
 	NUM_REG_REQUESTS,
 	REQ_INVALID = -1
