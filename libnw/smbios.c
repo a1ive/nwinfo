@@ -172,8 +172,8 @@ static void ProcBoardInfo(PNODE tab, void* p)
 	NWL_NodeAttrSet(tab, "Board Type", pBoardTypeToStr(pBoard->Type), 0);
 }
 
-static const CHAR*
-pSystemEnclosureTypeToStr(UCHAR Type)
+const CHAR*
+NWL_SystemEnclosureTypeToStr(UCHAR Type)
 {
 	switch (Type & 0x7f)
 	{
@@ -251,7 +251,7 @@ static void ProcSystemEnclosure(PNODE tab, void* p)
 		return;
 	NWL_NodeAttrSetf(tab, "Type", 0, "%s%s",
 		(pSysEnclosure->Type & 0x80) ? "[LOCK]" : "",
-		pSystemEnclosureTypeToStr(pSysEnclosure->Type));
+		NWL_SystemEnclosureTypeToStr(pSysEnclosure->Type));
 	NWL_NodeAttrSet(tab, "Manufacturer", NWL_GetDmiString(p, pSysEnclosure->Manufacturer), 0);
 	NWL_NodeAttrSet(tab, "Version", NWL_GetDmiString(p, pSysEnclosure->Version), 0);
 	NWL_NodeAttrSet(tab, "Serial Number", NWL_GetDmiString(p, pSysEnclosure->SN), NAFLG_FMT_SENSITIVE);

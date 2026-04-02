@@ -659,4 +659,6 @@ const char* NWL_GetDmiString(UINT8* hdr, UINT8 offset);
 
 PSMBIOSHEADER NWL_GetNextDmiTable(LPBYTE* pCur, const LPBYTE lastAddr, PNWL_ARG_SET typeSet);
 
+const char* NWL_SystemEnclosureTypeToStr(UCHAR Type);
+
 const char* NWL_GetDmiProcessorSocket(PProcessorInfo pProcessor);
