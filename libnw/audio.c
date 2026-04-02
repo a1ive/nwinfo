@@ -19,6 +19,8 @@ DEFINE_GUID(CLSID_MMDeviceEnumerator,
 	0xbcde0395, 0xe52f, 0x467c, 0x8e, 0x3d, 0xc4, 0x57, 0x92, 0x91, 0x69, 0x2e);
 DEFINE_GUID(IID_IAudioEndpointVolume,
 	0x5cdf2c82, 0x841e, 0x4546, 0x97, 0x22, 0x0c, 0xf7, 0x40, 0x78, 0x22, 0x9a);
+DEFINE_GUID(IID_IAudioMeterInformation,
+	0xc02216f6, 0x8c67, 0x4b5b, 0x9d, 0x00, 0xd0, 0x08, 0xe7, 0x3e, 0x00, 0x64);
 
 typedef struct _AUDIO_CODEC_ENUM_CTX
 {
@@ -152,6 +154,33 @@ AudioGetDeviceVolume(IMMDevice* p)
 	return SUCCEEDED(hr) ? ret : 0.0f;
 }
 
+static void
+AudioGetDeviceLoudness(IMMDevice* p, NWLIB_AUDIO_DEV* dev)
+{
+	HRESULT hr = S_OK;
+	IAudioMeterInformation* meter = NULL;
+	float peak = 0.0f;
+
+	if (p == NULL || dev == NULL)
+		return;
+
+	dev->loudness_percent = 0.0f;
+
+	hr = p->lpVtbl->Activate(p, &IID_IAudioMeterInformation, CLSCTX_INPROC_SERVER, NULL, (LPVOID*)&meter);
+	if (FAILED(hr))
+		return;
+
+	hr = meter->lpVtbl->GetPeakValue(meter, &peak);
+	if (FAILED(hr))
+		goto clean;
+
+	dev->loudness_percent = peak * 100.0f;
+
+clean:
+	if (meter)
+		meter->lpVtbl->Release(meter);
+}
+
 NWLIB_AUDIO_DEV*
 NWL_GetAudio(UINT* count)
 {
@@ -205,6 +234,8 @@ NWL_GetAudio(UINT* count)
 				dev[i].is_default = wcscmp(id, default_id) == 0;
 			CoTaskMemFree(id);
 		}
+		if (dev[i].is_default)
+			AudioGetDeviceLoudness(end_point, &dev[i]);
 
 		hr = end_point->lpVtbl->OpenPropertyStore(end_point, STGM_READ, &props);
 		if (FAILED(hr))
@@ -249,6 +280,7 @@ static void PrintMMDevices(PNODE node)
 		NWL_NodeAttrSetf(pChild, "Volume", 0, "%.0f%%", 100.0f * dev[i].volume);
 		if (dev[i].is_default)
 			NWL_NodeAttrSetf(node, "Default", NAFLG_FMT_NUMERIC, "%u", i);
+		NWL_NodeAttrSetf(pChild, "Loudness Percent", 0, "%.2f%%", dev[i].loudness_percent);
 	}
 	free(dev);
 }
