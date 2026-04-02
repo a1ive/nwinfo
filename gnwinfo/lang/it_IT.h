@@ -79,6 +79,7 @@ lang_it_it[N__MAX_] =
 	[N__HIDE_VERSION] = u8"Nascondi versione",
 	[N__HIDE_CACHE] = u8"Nascondi cache",
 	[N__USE_SMBUS_SPD] = u8"Usa SPD",
+	[N__USE_GPU_PCI] = u8"Usa PCI",
 	[N__COMPACT_VIEW] = u8"Vista compatta",
 	[N__USE_BIT_UNITS] = u8"Use unità bit",
 	[N__HIDE_INACTIVE_NETWORK] = u8"Nascondi rete non attiva",

@@ -384,7 +384,7 @@ draw_display(struct nk_context* ctx)
 
 	if (g_ctx.lib.NwGpu)
 	{
-		if (g_ctx.lib.NwGpu->DeviceCount > 0)
+		if ((g_ctx.main_flag2 & MAIN2_GPU_DRIVER) && g_ctx.lib.NwGpu->DeviceCount > 0)
 		{
 			for (i = 0; i < (INT)g_ctx.lib.NwGpu->DeviceCount; i++)
 			{
@@ -398,6 +398,8 @@ draw_display(struct nk_context* ctx)
 				nk_lhcf(ctx, NK_TEXT_LEFT, g_color_text_l, "%s (%u%%)",
 					NWL_GetHumanSize(gpu->TotalMemory, NWLC->NwUnits, 1024), (unsigned)gpu->MemoryPercent);
 
+				if (!(g_ctx.main_flag2 & MAIN2_GPU_DETAIL))
+					continue;
 				nk_spacer(ctx);
 				nk_lhcf(ctx, NK_TEXT_LEFT, g_color_text_l,
 					u8"%.1f%% %.1fW %.1fMHz %.1fV %lluRPM",

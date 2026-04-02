@@ -257,6 +257,14 @@ gnwinfo_draw_settings_window(struct nk_context* ctx, float width, float height)
 	nk_checkbox_flags_label(ctx, N_(N__USE_SMBUS_SPD), &g_ctx.main_flag, MAIN_SMBUS_SPD);
 
 	nk_layout_row_dynamic(ctx, 0, 1);
+	set_label(ctx, N_(N__DISPLAY));
+	nk_layout_row(ctx, NK_DYNAMIC, 0, 2, (float[2]) { 0.1f, 0.9f });
+	nk_spacer(ctx);
+	nk_checkbox_flags_label(ctx, N_(N__HIDE_DETAILS), &g_ctx.main_flag2, MAIN2_GPU_DETAIL);
+	nk_spacer(ctx);
+	nk_checkbox_flags_label(ctx, N_(N__USE_GPU_PCI), &g_ctx.main_flag2, MAIN2_GPU_DRIVER);
+
+	nk_layout_row_dynamic(ctx, 0, 1);
 	set_label(ctx, N_(N__NETWORK));
 	nk_layout_row(ctx, NK_DYNAMIC, 0, 2, (float[2]) { 0.1f, 0.9f });
 	nk_spacer(ctx);
@@ -327,6 +335,7 @@ gnwinfo_draw_settings_window(struct nk_context* ctx, float width, float height)
 	if (nk_button_label(ctx, N_(N__SAVE)))
 	{
 		gnwinfo_set_ini_value(L"Widgets", L"MainFlags", L"0x%08X", g_ctx.main_flag);
+		gnwinfo_set_ini_value(L"Widgets", L"MainFlags2", L"0x%08X", g_ctx.main_flag2);
 		gnwinfo_set_ini_value(L"Widgets", L"SmartFormat", L"%d", g_ctx.smart_hex);
 		gnwinfo_set_ini_value(L"Widgets", L"SmartFlags", L"0x%08X", g_ctx.smart_flag);
 		gnwinfo_set_ini_value(L"Window", L"Width", L"%u", g_init_width);

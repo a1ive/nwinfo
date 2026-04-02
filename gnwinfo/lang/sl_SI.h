@@ -79,6 +79,7 @@ lang_sl_si[N__MAX_] =
 	[N__HIDE_VERSION] = u8"Skrij različico",
 	[N__HIDE_CACHE] = u8"Skrij predpomnilnik",
 	[N__USE_SMBUS_SPD] = u8"Uporabi SPD",
+	[N__USE_GPU_PCI] = u8"Uporabi PCI",
 	[N__COMPACT_VIEW] = u8"Kompaktni pogled",
 	[N__USE_BIT_UNITS] = u8"Uporabi bitne enote",
 	[N__HIDE_INACTIVE_NETWORK] = u8"Skrij neaktivno omrežje",

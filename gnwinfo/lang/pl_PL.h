@@ -79,6 +79,7 @@ lang_pl_pl[N__MAX_] =
 	[N__HIDE_VERSION] = u8"Ukryj wersję",
 	[N__HIDE_CACHE] = u8"Ukryj pamięć podręczną",
 	[N__USE_SMBUS_SPD] = u8"Użyj SPD",
+	[N__USE_GPU_PCI] = u8"Użyj PCI",
 	[N__COMPACT_VIEW] = u8"Widok kompaktowy",
 	[N__USE_BIT_UNITS] = u8"Używaj jednostek bitowych",
 	[N__HIDE_INACTIVE_NETWORK] = u8"Ukryj nieaktywne sieci",

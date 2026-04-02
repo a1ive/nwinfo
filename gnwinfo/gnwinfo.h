@@ -98,7 +98,7 @@ nk_report_end_capture(void);
 
 #define MAIN_NO_QUICK       (1U << 15)
 #define MAIN_NET_INACTIVE   (1U << 16)
-#define MAIN_SMBUS_SPD        (1U << 17)
+#define MAIN_SMBUS_SPD      (1U << 17)
 #define MAIN_NET_DETAIL     (1U << 18)
 #define MAIN_DISK_SMART     (1U << 19)
 #define MAIN_OS_DETAIL      (1U << 20)
@@ -113,6 +113,9 @@ nk_report_end_capture(void);
 #define MAIN_OS_EDITIONID   (1U << 29)
 #define MAIN_OS_BUILD       (1U << 30)
 #define MAIN_VOLUME_PROG    (1U << 31)
+
+#define MAIN2_GPU_DETAIL    (1U << 0)
+#define MAIN2_GPU_DRIVER    (1U << 1)
 
 #define GUI_WINDOW_CPUID    (1U << 0)
 #define GUI_WINDOW_SMART    (1U << 1)
@@ -138,6 +141,7 @@ typedef struct _GNW_CONTEXT
 	float gui_height;
 	float gui_ratio;
 	UINT32 main_flag;
+	UINT32 main_flag2;
 	UINT32 window_flag;
 	nk_bool smart_hex;
 	UINT32 smart_flag;
