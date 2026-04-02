@@ -1012,7 +1012,7 @@ pSysSlotTypeToStr(UCHAR Type)
 	case 0x0b: return "Proprietary Memory Card Slot";
 	case 0x0c: return "I/O Riser Card Slot";
 	case 0x0d: return "NuBus";
-	case 0x0e: return "PCI ¨C 66MHz Capable";
+	case 0x0e: return "PCI - 66MHz Capable";
 	case 0x0f: return "AGP";
 	case 0x10: return "AGP 2X";
 	case 0x11: return "AGP 4X";
