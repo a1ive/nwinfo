@@ -6,6 +6,9 @@
 
 const char* NWL_GetDmiString(UINT8* hdr, UINT8 offset)
 {
+	if (hdr == NULL)
+		goto fail;
+
 	UINT8* ptr = hdr + hdr[1]; // PSMBIOSHEADER->Length
 	UINT8* end = NWLC->NwSmbios->Data + NWLC->NwSmbios->Length;
 	UINT8 i;
