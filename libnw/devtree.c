@@ -227,6 +227,9 @@ NWL_EnumerateDevices(PNODE parent, DEVTREE_ENUM_CTX* ctx, DEVINST devInst, DEVIN
 	PNODE node = parent;
 	DEVINST childInst;
 	CHAR hwIds[DEVTREE_MAX_STR_LEN];
+	ULONG hwIdListSize = 0;
+	DEVPROPTYPE hwIdListType = DEVPROP_TYPE_EMPTY;
+	LPSTR hwIdList = NULL;
 
 	if (NWL_SetDevPropString(hwIds, DEVTREE_MAX_STR_LEN, devInst, &DEVPKEY_Device_HardwareIds))
 	{
@@ -234,6 +237,25 @@ NWL_EnumerateDevices(PNODE parent, DEVTREE_ENUM_CTX* ctx, DEVINST devInst, DEVIN
 		{
 			node = NWL_NodeAppendNew(AppendDevices(parent, ctx->hub), "Device", NFLG_TABLE_ROW);
 			ctx->GetDeviceInfo(node, ctx->data, devInst, parentDevInst, hwIds);
+
+			if (GetDevNodeProperty(devInst, &DEVPKEY_Device_HardwareIds, &hwIdListType, NULL, &hwIdListSize) == CR_BUFFER_SMALL &&
+				hwIdListSize < NWINFO_BUFSZ)
+			{
+				ZeroMemory(NWLC->NwBuf, NWINFO_BUFSZ);
+				if (GetDevNodeProperty(devInst, &DEVPKEY_Device_HardwareIds, &hwIdListType,
+					(PBYTE)NWLC->NwBuf, &hwIdListSize) == CR_SUCCESS &&
+					hwIdListType == DEVPROP_TYPE_STRING_LIST)
+				{
+					for (LPCWSTR p = NWLC->NwBufW; *p != L'\0'; p += wcslen(p) + 1)
+						NWL_NodeAppendMultiSz(&hwIdList, NWL_Ucs2ToUtf8(p));
+				}
+			}
+
+			if (hwIdList)
+			{
+				NWL_NodeAttrSetMulti(node, "HWID List", hwIdList, 0);
+				free(hwIdList);
+			}
 		}
 	}
 
