@@ -70,8 +70,8 @@ static void
 FillPciDevInfo(NWLIB_PCI_DEV_INFO* pci, PNODE dev)
 {
 	strncpy_s(pci->Name, sizeof(pci->Name), GetPciDeviceName(dev), _TRUNCATE);
-	strncpy_s(pci->VendorId, sizeof(pci->VendorId), NWL_NodeAttrGet(dev, "Vendor ID"), _TRUNCATE);
-	strncpy_s(pci->DeviceId, sizeof(pci->DeviceId), NWL_NodeAttrGet(dev, "Device ID"), _TRUNCATE);
+	pci->VendorId = (UINT16)strtoul(NWL_NodeAttrGet(dev, "Vendor ID"), NULL, 16);
+	pci->DeviceId = (UINT16)strtoul(NWL_NodeAttrGet(dev, "Device ID"), NULL, 16);
 	strncpy_s(pci->BDF, sizeof(pci->BDF), NWL_NodeAttrGet(dev, "BDF"), _TRUNCATE);
 }
 
@@ -118,29 +118,29 @@ GetChipsetInfo(NWLIB_MAINBOARD_INFO* info)
 	if (pciIsa)
 		FillPciDevInfo(&info->IsaBridge, pciIsa);
 
-	LPCSTR vid = NULL;
-	LPCSTR did = NULL;
-	if (info->HostBridge.VendorId[0])
+	UINT16 vid = 0;
+	UINT16 did = 0;
+	if (info->HostBridge.VendorId != 0)
 		vid = info->HostBridge.VendorId;
-	if (info->Smbus.VendorId[0])
+	if (info->Smbus.VendorId != 0)
 		vid = info->Smbus.VendorId;
-	if (info->IsaBridge.VendorId[0])
+	if (info->IsaBridge.VendorId != 0)
 	{
 		vid = info->IsaBridge.VendorId;
 		did = info->IsaBridge.DeviceId;
 	}
 
-	if (vid == NULL)
+	if (vid == 0)
 	{
 		info->Chipset = "Unknown";
 	}
-	else if (strcmp(vid, "8086") == 0) // Intel
+	else if (vid == 0x8086U) // Intel
 	{
-		if (did)
+		if (did != 0)
 		{
 			for (size_t i = 0; i < ARRAYSIZE(INTEL_ISA_LIST); i++)
 			{
-				if (strcmp(did, INTEL_ISA_LIST[i].id) == 0)
+				if (INTEL_ISA_LIST[i].id == did)
 				{
 					info->Chipset = INTEL_ISA_LIST[i].name;
 					break;
@@ -149,7 +149,7 @@ GetChipsetInfo(NWLIB_MAINBOARD_INFO* info)
 		}
 		if (info->Chipset == NULL)
 		{
-			for (size_t i = 0; i < ARRAYSIZE(INTEL_CHIPSET_LIST); i++)
+			for (size_t i = 0; info->ProductStr != NULL && i < ARRAYSIZE(INTEL_CHIPSET_LIST); i++)
 			{
 				if (strstr(info->ProductStr, INTEL_CHIPSET_LIST[i]) != NULL)
 				{
@@ -161,9 +161,9 @@ GetChipsetInfo(NWLIB_MAINBOARD_INFO* info)
 		if (info->Chipset == NULL)
 			info->Chipset = "INTEL";
 	}
-	else if (strcmp(vid, "1022") == 0 || strcmp(vid, "1002") == 0) // AMD/ATI
+	else if (vid == 0x1022U || vid == 0x1002U) // AMD/ATI
 	{
-		for (size_t i = 0; i < ARRAYSIZE(AMD_CHIPSET_LIST); i++)
+		for (size_t i = 0; info->ProductStr != NULL && i < ARRAYSIZE(AMD_CHIPSET_LIST); i++)
 		{
 			if (strstr(info->ProductStr, AMD_CHIPSET_LIST[i]) != NULL)
 			{
@@ -174,27 +174,27 @@ GetChipsetInfo(NWLIB_MAINBOARD_INFO* info)
 		if (info->Chipset == NULL)
 			info->Chipset = "AMD";
 	}
-	else if (strcmp(vid, "1039") == 0) // SiS
+	else if (vid == 0x1039U) // SiS
 	{
 		info->Chipset = "SiS";
 	}
-	else if (strcmp(vid, "10B9") == 0) // ULi
+	else if (vid == 0x10B9U) // ULi
 	{
 		info->Chipset = "ULi";
 	}
-	else if (strcmp(vid, "10DE") == 0) // NVIDIA
+	else if (vid == 0x10DEU) // NVIDIA
 	{
 		info->Chipset = "NVIDIA";
 	}
-	else if (strcmp(vid, "1106") == 0) // VIA
+	else if (vid == 0x1106U) // VIA
 	{
 		info->Chipset = "VIA";
 	}
-	else if (strcmp(vid, "1D17") == 0) // Zhaoxin
+	else if (vid == 0x1D17U) // Zhaoxin
 	{
 		info->Chipset = "Zhaoxin";
 	}
-	else if (strcmp(vid, "1D94") == 0) // Hygon
+	else if (vid == 0x1D94U) // Hygon
 	{
 		info->Chipset = "Hygon";
 	}
@@ -438,25 +438,27 @@ PNODE NW_Mainboard(BOOL bAppend)
 	NWL_NodeAttrSet(node, "System UUID", NWL_GuidToStr(info.SystemUuid), NAFLG_FMT_GUID | NAFLG_FMT_SENSITIVE);
 	NWL_NodeAttrSet(node, "Enclosure Type", info.EnclosureType, 0);
 
-	if (info.HostBridge.VendorId[0])
+	if (info.HostBridge.VendorId != 0)
 	{
 		NWL_NodeAttrSet(node, "Host Bridge", info.HostBridge.Name, 0);
-		NWL_NodeAttrSet(node, "Host Bridge VID", info.HostBridge.VendorId, 0);
-		NWL_NodeAttrSet(node, "Host Bridge DID", info.HostBridge.DeviceId, 0);
+		NWL_NodeAttrSetf(node, "Host Bridge VID", 0, "%04X", info.HostBridge.VendorId);
+		NWL_NodeAttrSetf(node, "Host Bridge DID", 0, "%04X", info.HostBridge.DeviceId);
 		NWL_NodeAttrSet(node, "Host Bridge BDF", info.HostBridge.BDF, 0);
 	}
-	if (info.Smbus.VendorId[0])
+
+	if (info.Smbus.VendorId != 0)
 	{
 		NWL_NodeAttrSet(node, "SMBus", info.Smbus.Name, 0);
-		NWL_NodeAttrSet(node, "SMBus VID", info.Smbus.VendorId, 0);
-		NWL_NodeAttrSet(node, "SMBus DID", info.Smbus.DeviceId, 0);
+		NWL_NodeAttrSetf(node, "SMBus VID", 0, "%04X", info.Smbus.VendorId);
+		NWL_NodeAttrSetf(node, "SMBus DID", 0, "%04X", info.Smbus.DeviceId);
 		NWL_NodeAttrSet(node, "SMBus BDF", info.Smbus.BDF, 0);
 	}
-	if (info.IsaBridge.VendorId[0])
+
+	if (info.IsaBridge.VendorId != 0)
 	{
 		NWL_NodeAttrSet(node, "ISA Bridge", info.IsaBridge.Name, 0);
-		NWL_NodeAttrSet(node, "ISA Bridge VID", info.IsaBridge.VendorId, 0);
-		NWL_NodeAttrSet(node, "ISA Bridge DID", info.IsaBridge.DeviceId, 0);
+		NWL_NodeAttrSetf(node, "ISA Bridge VID", 0, "%04X", info.IsaBridge.VendorId);
+		NWL_NodeAttrSetf(node, "ISA Bridge DID", 0, "%04X", info.IsaBridge.DeviceId);
 		NWL_NodeAttrSet(node, "ISA Bridge BDF", info.IsaBridge.BDF, 0);
 	}
 	NWL_NodeAttrSet(node, "Chipset", info.Chipset, 0);

@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: Unlicense
 #pragma once
 
+#include <stdint.h>
+
 // https://en.wikipedia.org/wiki/List_of_Intel_chipsets
 // https://en.wikipedia.org/wiki/List_of_AMD_chipsets
 // https://en.wikipedia.org/wiki/Comparison_of_Nvidia_nForce_chipsets
@@ -9,7 +11,7 @@
 
 struct CHIPSET_ID_ENTRY
 {
-	char id[5];
+	uint16_t id;
 	const char* name;
 };
 
@@ -17,359 +19,359 @@ struct CHIPSET_ID_ENTRY
 
 static const struct CHIPSET_ID_ENTRY INTEL_ISA_LIST[] =
 {
-	{ "0284", "Comet Lake-LP" }, // 400 series
-	{ "0285", "Comet Lake" }, // 400 series
-	{ "0684", "H470" }, // 400 series
-	{ "0685", "Z490" }, // 400 series
-	{ "0687", "Q470" }, // 400 series
-	{ "068C", "QM480" }, // 400 series
-	{ "068D", "HM470" }, // 400 series
-	{ "068E", "WM490" }, // 400 series
-	{ "0697", "W480" }, // 400 series
-	{ "069A", "H420E" },
-	{ "19DC", "Atom C3000" },
-	{ "1C40", "Cougar Point" },
-	{ "1C41", "Cougar Point Mobile SFF" },
-	{ "1C42", "Cougar Point" },
-	{ "1C43", "Cougar Point Mobile" },
-	{ "1C44", "Z68" }, // 6 / C200
-	{ "1C45", "Cougar Point" },
-	{ "1C46", "P67" }, // 6 / C200
-	{ "1C47", "UM67" }, // 6 / C200
-	{ "1C48", "Cougar Point" },
-	{ "1C49", "HM65" }, // 6 / C200
-	{ "1C4A", "H67" }, // 6 / C200
-	{ "1C4B", "HM67" }, // 6 / C200
-	{ "1C4C", "Q65" }, // 6 / C200
-	{ "1C4D", "QS67" }, // 6 / C200
-	{ "1C4E", "Q67" }, // 6 / C200
-	{ "1C4F", "QM67" }, // 6 / C200
-	{ "1C50", "B65" }, // 6 / C200
-	{ "1C51", "Cougar Point" },
-	{ "1C52", "C202" }, // 6 / C200
-	{ "1C53", "Cougar Point" },
-	{ "1C54", "C204" }, // 6 / C200
-	{ "1C55", "Cougar Point" },
-	{ "1C56", "C206" }, // 6 / C200
-	{ "1C57", "Cougar Point" },
-	{ "1C58", "B65" },
-	{ "1C59", "HM67" },
-	{ "1C5A", "Q67" },
-	{ "1C5B", "Cougar Point" },
-	{ "1C5C", "H61" },
-	{ "1C5D", "Cougar Point" },
-	{ "1C5E", "Cougar Point" },
-	{ "1C5F", "Cougar Point" },
-	{ "1D40", "C600/X79" },
-	{ "1D41", "C600/X79" },
-	{ "1E41", "Panther Point" },
-	{ "1E42", "Panther Point" },
-	{ "1E43", "Panther Point" },
-	{ "1E44", "Z77" },
-	{ "1E45", "Panther Point" },
-	{ "1E46", "Z75" },
-	{ "1E47", "Q77" },
-	{ "1E48", "Q75" },
-	{ "1E49", "B75" },
-	{ "1E4A", "H77" },
-	{ "1E4B", "Panther Point" },
-	{ "1E4C", "Panther Point" },
-	{ "1E4D", "Panther Point" },
-	{ "1E4E", "Panther Point" },
-	{ "1E4F", "Panther Point" },
-	{ "1E50", "Panther Point" },
-	{ "1E51", "Panther Point" },
-	{ "1E52", "Panther Point" },
-	{ "1E53", "C216" },
-	{ "1E54", "Panther Point" },
-	{ "1E55", "QM77" },
-	{ "1E56", "QS77" },
-	{ "1E57", "HM77" },
-	{ "1E58", "UM77" },
-	{ "1E59", "HM76" },
-	{ "1E5A", "Panther Point" },
-	{ "1E5B", "UM77" },
-	{ "1E5C", "Panther Point" },
-	{ "1E5D", "HM75" },
-	{ "1E5E", "HM70" },
-	{ "1E5F", "NM70" },
-	{ "2310", "DH89xxCC" },
-	{ "2390", "DH895XCC" },
-	{ "2410", "82801AA" },
-	{ "2420", "82801AB" },
-	{ "2440", "82801BA" },
-	{ "244C", "82801BAM" },
-	{ "2450", "82801E" },
-	{ "2480", "82801CA" },
-	{ "248C", "82801CAM" },
-	{ "24C0", "82801DB/DBL (ICH4/ICH4-L)" },
-	{ "24CC", "82801DBM (ICH4-M)" },
-	{ "24D0", "82801EB/ER (ICH5/ICH5R)" },
-	{ "24DC", "82801EB (ICH5)" },
-	{ "25A1", "6300ESB" },
-	{ "2640", "82801FB/FR (ICH6/ICH6R)" },
-	{ "2641", "82801FBM (ICH6M)" },
-	{ "2642", "82801FW/FRW (ICH6W/ICH6RW)" },
-	{ "2670", "631xESB/632xESB/3100" },
-	{ "27B0", "82801GH (ICH7DH)" },
-	{ "27B8", "82801GB/GR (ICH7)" },
-	{ "27B9", "82801GBM (ICH7-M)" },
-	{ "27BC", "NM10" },
-	{ "27BD", "82801GHM (ICH7-M DH)" },
-	{ "2810", "82801HB/HR (ICH8/R)" },
-	{ "2811", "82801HEM (ICH8M-E)" },
-	{ "2812", "82801HH (ICH8DH)" },
-	{ "2814", "82801HO (ICH8DO)" },
-	{ "2815", "82801HM (ICH8M)" },
-	{ "2912", "82801IH (ICH9DH)" },
-	{ "2914", "82801IO (ICH9DO)" },
-	{ "2916", "82801IR (ICH9R)" },
-	{ "2917", "82801IM (ICH9M-E)" },
-	{ "2918", "82801IB (ICH9)" },
-	{ "2919", "82801IM (ICH9M)" },
-	{ "3197", "Gemini Lake" },
-	{ "31E8", "Gemini Lake" },
-	{ "3482", "Ice Lake-LP" },
-	{ "3882", "Ice Lake" },
-	{ "3A14", "82801JDO (ICH10DO)" },
-	{ "3A16", "82801JIR (ICH10R)" },
-	{ "3A18", "82801JIB (ICH10)" },
-	{ "3A1A", "82801JD (ICH10D)" },
-	{ "3B00", "5/3400" },
-	{ "3B01", "5/ Mobile" },
-	{ "3B02", "P55" },
-	{ "3B03", "PM55" },
-	{ "3B06", "H55" },
-	{ "3B07", "QM57" },
-	{ "3B08", "H57" },
-	{ "3B09", "HM55" },
-	{ "3B0A", "Q57" },
-	{ "3B0B", "HM57" },
-	{ "3B0F", "QS57" },
-	{ "3B10", "5/3400" },
-	{ "3B11", "5/3400" },
-	{ "3B12", "3400" },
-	{ "3B13", "5/3400" },
-	{ "3B14", "3420" },
-	{ "3B15", "5/3400" },
-	{ "3B16", "3450" },
-	{ "3B17", "5/3400" },
-	{ "3B18", "5/3400" },
-	{ "3B19", "5/3400" },
-	{ "3B1A", "5/3400" },
-	{ "3B1B", "5/3400" },
-	{ "3B1C", "5/3400" },
-	{ "3B1D", "5/3400" },
-	{ "3B1E", "5/3400" },
-	{ "3B1F", "5/3400" },
-	{ "4381", "Rocket Lake-S" }, // 500 series
-	{ "4382", "Rocket Lake" }, // 500 series Mobile
-	{ "4383", "Rocket Lake" }, // 500 series Server
-	{ "4384", "Q570" }, // 500 series
-	{ "4385", "Z590" }, // 500 series
-	{ "4386", "H570" }, // 500 series
-	{ "4387", "B560" }, // 500 series
-	{ "4388", "H510" }, // 500 series
-	{ "4389", "WM590" }, // 500 series
-	{ "438A", "QM580" }, // 500 series
-	{ "438B", "HM570" }, // 500 series
-	{ "438C", "C252" }, // 500 series
-	{ "438D", "C256" }, // 500 series
-	{ "438E", "H310D" },
-	{ "438F", "W580" }, // 500 series
-	{ "4390", "RM590E" },
-	{ "4391", "R580E" },
-	{ "4B00", "Elkhart Lake" },
-	{ "4D87", "Jasper Lake" },
-	{ "5031", "EP80579" },
-	{ "5181", "Alder Lake" },
-	{ "5182", "Alder Lake" },
-	{ "5187", "Alder Lake" },
-	{ "519D", "Raptor Lake-P" },
-	{ "519E", "Raptor Lake-PX" },
-	{ "51A4", "Alder Lake-P" },
-	{ "51AA", "Alder Lake" },
-	{ "51AB", "Alder Lake" },
-	{ "5481", "Alder Lake-N" },
-	{ "5795", "Granite Rapids"},
-	{ "7727", "Arrow Lake-H" },
-	{ "7730", "Arrow Lake-H" },
-	{ "7746", "Arrow Lake-H" },
-	{ "7A04", "Z790" }, // 700 series
-	{ "7A05", "H770" }, // 700 series
-	{ "7A06", "B760" }, // 700 series
-	{ "7A0C", "HM770" }, // 700 series
-	{ "7A0D", "WM790" }, // 700 series
-	{ "7A13", "C266" }, // 700 series
-	{ "7A14", "C262" }, // 700 series
-	{ "7A83", "Q670" }, // 600 series
-	{ "7A84", "Z690" }, // 600 series
-	{ "7A85", "H670" }, // 600 series
-	{ "7A86", "B660" }, // 600 series
-	{ "7A87", "H610" }, // 600 series
-	{ "7A88", "W680" }, // 600 series
-	{ "7A8A", "W790" }, // 700 series
-	{ "7A8C", "HM670" }, // 600 series
-	{ "7A8D", "WM690" }, // 600 series
-	{ "7A90", "R680E" },
-	{ "7A91", "Q670E" },
-	{ "7A92", "H610E" },
-	{ "7E01", "Meteor Lake-P" },
-	{ "7F03", "Q870" }, // 800 series
-	{ "7F04", "Z890" }, // 800 series
-	{ "7F06", "B860" }, // 800 series
-	{ "7F07", "H810" }, // 800 series
-	{ "7F08", "W880" }, // 800 series
-	{ "7F0C", "HM870" }, // 800 series
-	{ "7F0D", "WM880" }, // 800 series
-	{ "8186", "Atom E6xx" },
-	{ "8C40", "8/C220" },
-	{ "8C41", "8/C220 Mobile" },
-	{ "8C42", "8/C220 Desktop" },
-	{ "8C43", "8/C220" },
-	{ "8C44", "Z87" },
-	{ "8C45", "8/C220" },
-	{ "8C46", "Z85" },
-	{ "8C47", "8/C220" },
-	{ "8C48", "8/C220" },
-	{ "8C49", "HM86" },
-	{ "8C4A", "H87" },
-	{ "8C4B", "HM87" },
-	{ "8C4C", "Q85" },
-	{ "8C4D", "8/C220" },
-	{ "8C4E", "Q87" },
-	{ "8C4F", "QM87" },
-	{ "8C50", "B85" },
-	{ "8C51", "8/C220" },
-	{ "8C52", "C222" },
-	{ "8C53", "8/C220" },
-	{ "8C54", "C224" },
-	{ "8C55", "8/C220" },
-	{ "8C56", "C226" },
-	{ "8C57", "8/C220" },
-	{ "8C58", "8/C220 WS" },
-	{ "8C59", "8/C220" },
-	{ "8C5A", "8/C220" },
-	{ "8C5B", "8/C220" },
-	{ "8C5C", "H81" },
-	{ "8C5D", "8/C220" },
-	{ "8C5E", "8/C220" },
-	{ "8C5F", "8/C220" },
-	{ "8CC1", "9/ Mobile" }, // 9 Series
-	{ "8CC2", "9/ Desktop" }, // 9 Series
-	{ "8CC3", "HM97" },
-	{ "8CC4", "Z97" },
-	{ "8CC5", "QM97" },
-	{ "8CC6", "H97" },
-	{ "8D40", "C610/X99" },
-	{ "8D41", "C610/X99" },
-	{ "8D42", "C610/X99" },
-	{ "8D43", "C610/X99" },
-	{ "8D44", "C610/X99" },
-	{ "8D45", "C610/X99" },
-	{ "8D46", "C610/X99" },
-	{ "8D47", "C610/X99" },
-	{ "8D48", "C610/X99" },
-	{ "8D49", "C610/X99" },
-	{ "8D4A", "C610/X99" },
-	{ "8D4B", "C610/X99" },
-	{ "8D4C", "C610/X99" },
-	{ "8D4D", "C610/X99" },
-	{ "8D4E", "C610/X99" },
-	{ "8D4F", "C610/X99" },
-	{ "9C40", "Lynx Point" }, // 8 Series
-	{ "9C41", "Lynx Point" },
-	{ "9C42", "Lynx Point" },
-	{ "9C43", "Lynx Point" },
-	{ "9C44", "Lynx Point" },
-	{ "9C45", "Lynx Point" },
-	{ "9C46", "Lynx Point" },
-	{ "9C47", "Lynx Point" },
-	{ "9CC1", "Wildcat Point-LP" },
-	{ "9CC2", "Wildcat Point-LP" },
-	{ "9CC3", "Wildcat Point-LP" },
-	{ "9CC5", "Wildcat Point-LP" },
-	{ "9CC6", "Wildcat Point-LP" },
-	{ "9CC7", "Wildcat Point-LP" },
-	{ "9CC9", "Wildcat Point-LP" },
-	{ "9D43", "Sunrise Point-LP" },
-	{ "9D46", "Sunrise Point-LP" },
-	{ "9D48", "Sunrise Point-LP" },
-	{ "9D4B", "Sunrise Point-LP" },
-	{ "9D4E", "Sunrise Point" },
-	{ "9D50", "Sunrise Point" },
-	{ "9D56", "Sunrise Point-LP" },
-	{ "9D58", "Sunrise Point-LP" },
-	{ "9D4E", "Sunrise Point" },
-	{ "9D84", "Cannon Point-LP" }, // 300 series
-	{ "A082", "Tiger Lake-LP" }, // 500 series
-	{ "A140", "Sunrise Point-H" },
-	{ "A141", "Sunrise Point-H" },
-	{ "A142", "Sunrise Point-H" },
-	{ "A143", "H110" }, // 100 / C230
-	{ "A144", "H170" }, // 100 / C230
-	{ "A145", "Z170" }, // 100 / C230
-	{ "A146", "Q170" }, // 100 / C230
-	{ "A147", "Q150" }, // 100 / C230
-	{ "A148", "B150" }, // 100 / C230
-	{ "A149", "C236" }, // 100 / C230
-	{ "A14A", "C232" }, // 100 / C230
-	{ "A14B", "Sunrise Point-H" },
-	{ "A14C", "Sunrise Point-H" },
-	{ "A14D", "QM170" }, // 100 / C230
-	{ "A14E", "HM170" }, // 100 / C230
-	{ "A14F", "Sunrise Point-H" },
-	{ "A150", "CM236" }, // 100 / C230
-	{ "A151", "QMS180" },
-	{ "A152", "HM175" }, // 100 / C230
-	{ "A153", "QM175" }, // 100 / C230
-	{ "A154", "CM238" }, // 100 / C230
-	{ "A155", "QMU185" },
-	{ "A156", "Sunrise Point-H" },
-	{ "A157", "Sunrise Point-H" },
-	{ "A158", "Sunrise Point-H" },
-	{ "A159", "Sunrise Point-H" },
-	{ "A15A", "Sunrise Point-H" },
-	{ "A15B", "Sunrise Point-H" },
-	{ "A15C", "Sunrise Point-H" },
-	{ "A15D", "Sunrise Point-H" },
-	{ "A15E", "Sunrise Point-H" },
-	{ "A15F", "Sunrise Point-H" },
-	{ "A1C1", "C621" },
-	{ "A1C2", "C622" },
-	{ "A1C3", "C624" },
-	{ "A1C4", "C625" },
-	{ "A1C5", "C626" },
-	{ "A1C6", "C627" },
-	{ "A1C7", "C628" },
-	{ "A1C8", "Lewisburg" },
-	{ "A1CB", "Lewisburg" },
-	{ "A242", "Lewisburg" },
-	{ "A243", "Lewisburg" },
-	{ "A2C4", "H270" }, // 200 / X299 / Z370
-	{ "A2C5", "Z270" }, // 200 / X299 / Z370
-	{ "A2C6", "Q270" }, // 200 / X299 / Z370
-	{ "A2C7", "Q250" }, // 200 / X299 / Z370
-	{ "A2C8", "B250" }, // 200 / X299 / Z370
-	{ "A2C9", "Z370" }, // 200 / X299 / Z370
-	{ "A2CA", "H310" },
-	{ "A2CC", "B365" },
-	{ "A2D2", "X299" }, // 200 / X299 / Z370
-	{ "A2D3", "C422" },
-	{ "A303", "H310" }, // 300 / C240
-	{ "A304", "H370" }, // 300 / C240
-	{ "A305", "Z390" }, // 300 / C240
-	{ "A306", "Q370" }, // 300 / C240
-	{ "A308", "B360" }, // 300 / C240
-	{ "A309", "C246" }, // 300 / C240
-	{ "A30A", "C242" }, // 300 / C240
-	{ "A30C", "QM370" }, // 300 / C240
-	{ "A30D", "HM370" }, // 300 / C240
-	{ "A30E", "CM246" }, // 300 / C240
-	{ "A313", "Cannon Lake" },
-	{ "A3C8", "B460" },
-	{ "A3DA", "H410" },
-	{ "A806", "Lunar Lake-M" },
+	{ 0x0284u, "Comet Lake-LP" }, // 400 series
+	{ 0x0285u, "Comet Lake" }, // 400 series
+	{ 0x0684u, "H470" }, // 400 series
+	{ 0x0685u, "Z490" }, // 400 series
+	{ 0x0687u, "Q470" }, // 400 series
+	{ 0x068Cu, "QM480" }, // 400 series
+	{ 0x068Du, "HM470" }, // 400 series
+	{ 0x068Eu, "WM490" }, // 400 series
+	{ 0x0697u, "W480" }, // 400 series
+	{ 0x069Au, "H420E" },
+	{ 0x19DCu, "Atom C3000" },
+	{ 0x1C40u, "Cougar Point" },
+	{ 0x1C41u, "Cougar Point Mobile SFF" },
+	{ 0x1C42u, "Cougar Point" },
+	{ 0x1C43u, "Cougar Point Mobile" },
+	{ 0x1C44u, "Z68" }, // 6 / C200
+	{ 0x1C45u, "Cougar Point" },
+	{ 0x1C46u, "P67" }, // 6 / C200
+	{ 0x1C47u, "UM67" }, // 6 / C200
+	{ 0x1C48u, "Cougar Point" },
+	{ 0x1C49u, "HM65" }, // 6 / C200
+	{ 0x1C4Au, "H67" }, // 6 / C200
+	{ 0x1C4Bu, "HM67" }, // 6 / C200
+	{ 0x1C4Cu, "Q65" }, // 6 / C200
+	{ 0x1C4Du, "QS67" }, // 6 / C200
+	{ 0x1C4Eu, "Q67" }, // 6 / C200
+	{ 0x1C4Fu, "QM67" }, // 6 / C200
+	{ 0x1C50u, "B65" }, // 6 / C200
+	{ 0x1C51u, "Cougar Point" },
+	{ 0x1C52u, "C202" }, // 6 / C200
+	{ 0x1C53u, "Cougar Point" },
+	{ 0x1C54u, "C204" }, // 6 / C200
+	{ 0x1C55u, "Cougar Point" },
+	{ 0x1C56u, "C206" }, // 6 / C200
+	{ 0x1C57u, "Cougar Point" },
+	{ 0x1C58u, "B65" },
+	{ 0x1C59u, "HM67" },
+	{ 0x1C5Au, "Q67" },
+	{ 0x1C5Bu, "Cougar Point" },
+	{ 0x1C5Cu, "H61" },
+	{ 0x1C5Du, "Cougar Point" },
+	{ 0x1C5Eu, "Cougar Point" },
+	{ 0x1C5Fu, "Cougar Point" },
+	{ 0x1D40u, "C600/X79" },
+	{ 0x1D41u, "C600/X79" },
+	{ 0x1E41u, "Panther Point" },
+	{ 0x1E42u, "Panther Point" },
+	{ 0x1E43u, "Panther Point" },
+	{ 0x1E44u, "Z77" },
+	{ 0x1E45u, "Panther Point" },
+	{ 0x1E46u, "Z75" },
+	{ 0x1E47u, "Q77" },
+	{ 0x1E48u, "Q75" },
+	{ 0x1E49u, "B75" },
+	{ 0x1E4Au, "H77" },
+	{ 0x1E4Bu, "Panther Point" },
+	{ 0x1E4Cu, "Panther Point" },
+	{ 0x1E4Du, "Panther Point" },
+	{ 0x1E4Eu, "Panther Point" },
+	{ 0x1E4Fu, "Panther Point" },
+	{ 0x1E50u, "Panther Point" },
+	{ 0x1E51u, "Panther Point" },
+	{ 0x1E52u, "Panther Point" },
+	{ 0x1E53u, "C216" },
+	{ 0x1E54u, "Panther Point" },
+	{ 0x1E55u, "QM77" },
+	{ 0x1E56u, "QS77" },
+	{ 0x1E57u, "HM77" },
+	{ 0x1E58u, "UM77" },
+	{ 0x1E59u, "HM76" },
+	{ 0x1E5Au, "Panther Point" },
+	{ 0x1E5Bu, "UM77" },
+	{ 0x1E5Cu, "Panther Point" },
+	{ 0x1E5Du, "HM75" },
+	{ 0x1E5Eu, "HM70" },
+	{ 0x1E5Fu, "NM70" },
+	{ 0x2310u, "DH89xxCC" },
+	{ 0x2390u, "DH895XCC" },
+	{ 0x2410u, "82801AA" },
+	{ 0x2420u, "82801AB" },
+	{ 0x2440u, "82801BA" },
+	{ 0x244Cu, "82801BAM" },
+	{ 0x2450u, "82801E" },
+	{ 0x2480u, "82801CA" },
+	{ 0x248Cu, "82801CAM" },
+	{ 0x24C0u, "82801DB/DBL (ICH4/ICH4-L)" },
+	{ 0x24CCu, "82801DBM (ICH4-M)" },
+	{ 0x24D0u, "82801EB/ER (ICH5/ICH5R)" },
+	{ 0x24DCu, "82801EB (ICH5)" },
+	{ 0x25A1u, "6300ESB" },
+	{ 0x2640u, "82801FB/FR (ICH6/ICH6R)" },
+	{ 0x2641u, "82801FBM (ICH6M)" },
+	{ 0x2642u, "82801FW/FRW (ICH6W/ICH6RW)" },
+	{ 0x2670u, "631xESB/632xESB/3100" },
+	{ 0x27B0u, "82801GH (ICH7DH)" },
+	{ 0x27B8u, "82801GB/GR (ICH7)" },
+	{ 0x27B9u, "82801GBM (ICH7-M)" },
+	{ 0x27BCu, "NM10" },
+	{ 0x27BDu, "82801GHM (ICH7-M DH)" },
+	{ 0x2810u, "82801HB/HR (ICH8/R)" },
+	{ 0x2811u, "82801HEM (ICH8M-E)" },
+	{ 0x2812u, "82801HH (ICH8DH)" },
+	{ 0x2814u, "82801HO (ICH8DO)" },
+	{ 0x2815u, "82801HM (ICH8M)" },
+	{ 0x2912u, "82801IH (ICH9DH)" },
+	{ 0x2914u, "82801IO (ICH9DO)" },
+	{ 0x2916u, "82801IR (ICH9R)" },
+	{ 0x2917u, "82801IM (ICH9M-E)" },
+	{ 0x2918u, "82801IB (ICH9)" },
+	{ 0x2919u, "82801IM (ICH9M)" },
+	{ 0x3197u, "Gemini Lake" },
+	{ 0x31E8u, "Gemini Lake" },
+	{ 0x3482u, "Ice Lake-LP" },
+	{ 0x3882u, "Ice Lake" },
+	{ 0x3A14u, "82801JDO (ICH10DO)" },
+	{ 0x3A16u, "82801JIR (ICH10R)" },
+	{ 0x3A18u, "82801JIB (ICH10)" },
+	{ 0x3A1Au, "82801JD (ICH10D)" },
+	{ 0x3B00u, "5/3400" },
+	{ 0x3B01u, "5/ Mobile" },
+	{ 0x3B02u, "P55" },
+	{ 0x3B03u, "PM55" },
+	{ 0x3B06u, "H55" },
+	{ 0x3B07u, "QM57" },
+	{ 0x3B08u, "H57" },
+	{ 0x3B09u, "HM55" },
+	{ 0x3B0Au, "Q57" },
+	{ 0x3B0Bu, "HM57" },
+	{ 0x3B0Fu, "QS57" },
+	{ 0x3B10u, "5/3400" },
+	{ 0x3B11u, "5/3400" },
+	{ 0x3B12u, "3400" },
+	{ 0x3B13u, "5/3400" },
+	{ 0x3B14u, "3420" },
+	{ 0x3B15u, "5/3400" },
+	{ 0x3B16u, "3450" },
+	{ 0x3B17u, "5/3400" },
+	{ 0x3B18u, "5/3400" },
+	{ 0x3B19u, "5/3400" },
+	{ 0x3B1Au, "5/3400" },
+	{ 0x3B1Bu, "5/3400" },
+	{ 0x3B1Cu, "5/3400" },
+	{ 0x3B1Du, "5/3400" },
+	{ 0x3B1Eu, "5/3400" },
+	{ 0x3B1Fu, "5/3400" },
+	{ 0x4381u, "Rocket Lake-S" }, // 500 series
+	{ 0x4382u, "Rocket Lake" }, // 500 series Mobile
+	{ 0x4383u, "Rocket Lake" }, // 500 series Server
+	{ 0x4384u, "Q570" }, // 500 series
+	{ 0x4385u, "Z590" }, // 500 series
+	{ 0x4386u, "H570" }, // 500 series
+	{ 0x4387u, "B560" }, // 500 series
+	{ 0x4388u, "H510" }, // 500 series
+	{ 0x4389u, "WM590" }, // 500 series
+	{ 0x438Au, "QM580" }, // 500 series
+	{ 0x438Bu, "HM570" }, // 500 series
+	{ 0x438Cu, "C252" }, // 500 series
+	{ 0x438Du, "C256" }, // 500 series
+	{ 0x438Eu, "H310D" },
+	{ 0x438Fu, "W580" }, // 500 series
+	{ 0x4390u, "RM590E" },
+	{ 0x4391u, "R580E" },
+	{ 0x4B00u, "Elkhart Lake" },
+	{ 0x4D87u, "Jasper Lake" },
+	{ 0x5031u, "EP80579" },
+	{ 0x5181u, "Alder Lake" },
+	{ 0x5182u, "Alder Lake" },
+	{ 0x5187u, "Alder Lake" },
+	{ 0x519Du, "Raptor Lake-P" },
+	{ 0x519Eu, "Raptor Lake-PX" },
+	{ 0x51A4u, "Alder Lake-P" },
+	{ 0x51AAu, "Alder Lake" },
+	{ 0x51ABu, "Alder Lake" },
+	{ 0x5481u, "Alder Lake-N" },
+	{ 0x5795u, "Granite Rapids"},
+	{ 0x7727u, "Arrow Lake-H" },
+	{ 0x7730u, "Arrow Lake-H" },
+	{ 0x7746u, "Arrow Lake-H" },
+	{ 0x7A04u, "Z790" }, // 700 series
+	{ 0x7A05u, "H770" }, // 700 series
+	{ 0x7A06u, "B760" }, // 700 series
+	{ 0x7A0Cu, "HM770" }, // 700 series
+	{ 0x7A0Du, "WM790" }, // 700 series
+	{ 0x7A13u, "C266" }, // 700 series
+	{ 0x7A14u, "C262" }, // 700 series
+	{ 0x7A83u, "Q670" }, // 600 series
+	{ 0x7A84u, "Z690" }, // 600 series
+	{ 0x7A85u, "H670" }, // 600 series
+	{ 0x7A86u, "B660" }, // 600 series
+	{ 0x7A87u, "H610" }, // 600 series
+	{ 0x7A88u, "W680" }, // 600 series
+	{ 0x7A8Au, "W790" }, // 700 series
+	{ 0x7A8Cu, "HM670" }, // 600 series
+	{ 0x7A8Du, "WM690" }, // 600 series
+	{ 0x7A90u, "R680E" },
+	{ 0x7A91u, "Q670E" },
+	{ 0x7A92u, "H610E" },
+	{ 0x7E01u, "Meteor Lake-P" },
+	{ 0x7F03u, "Q870" }, // 800 series
+	{ 0x7F04u, "Z890" }, // 800 series
+	{ 0x7F06u, "B860" }, // 800 series
+	{ 0x7F07u, "H810" }, // 800 series
+	{ 0x7F08u, "W880" }, // 800 series
+	{ 0x7F0Cu, "HM870" }, // 800 series
+	{ 0x7F0Du, "WM880" }, // 800 series
+	{ 0x8186u, "Atom E6xx" },
+	{ 0x8C40u, "8/C220" },
+	{ 0x8C41u, "8/C220 Mobile" },
+	{ 0x8C42u, "8/C220 Desktop" },
+	{ 0x8C43u, "8/C220" },
+	{ 0x8C44u, "Z87" },
+	{ 0x8C45u, "8/C220" },
+	{ 0x8C46u, "Z85" },
+	{ 0x8C47u, "8/C220" },
+	{ 0x8C48u, "8/C220" },
+	{ 0x8C49u, "HM86" },
+	{ 0x8C4Au, "H87" },
+	{ 0x8C4Bu, "HM87" },
+	{ 0x8C4Cu, "Q85" },
+	{ 0x8C4Du, "8/C220" },
+	{ 0x8C4Eu, "Q87" },
+	{ 0x8C4Fu, "QM87" },
+	{ 0x8C50u, "B85" },
+	{ 0x8C51u, "8/C220" },
+	{ 0x8C52u, "C222" },
+	{ 0x8C53u, "8/C220" },
+	{ 0x8C54u, "C224" },
+	{ 0x8C55u, "8/C220" },
+	{ 0x8C56u, "C226" },
+	{ 0x8C57u, "8/C220" },
+	{ 0x8C58u, "8/C220 WS" },
+	{ 0x8C59u, "8/C220" },
+	{ 0x8C5Au, "8/C220" },
+	{ 0x8C5Bu, "8/C220" },
+	{ 0x8C5Cu, "H81" },
+	{ 0x8C5Du, "8/C220" },
+	{ 0x8C5Eu, "8/C220" },
+	{ 0x8C5Fu, "8/C220" },
+	{ 0x8CC1u, "9/ Mobile" }, // 9 Series
+	{ 0x8CC2u, "9/ Desktop" }, // 9 Series
+	{ 0x8CC3u, "HM97" },
+	{ 0x8CC4u, "Z97" },
+	{ 0x8CC5u, "QM97" },
+	{ 0x8CC6u, "H97" },
+	{ 0x8D40u, "C610/X99" },
+	{ 0x8D41u, "C610/X99" },
+	{ 0x8D42u, "C610/X99" },
+	{ 0x8D43u, "C610/X99" },
+	{ 0x8D44u, "C610/X99" },
+	{ 0x8D45u, "C610/X99" },
+	{ 0x8D46u, "C610/X99" },
+	{ 0x8D47u, "C610/X99" },
+	{ 0x8D48u, "C610/X99" },
+	{ 0x8D49u, "C610/X99" },
+	{ 0x8D4Au, "C610/X99" },
+	{ 0x8D4Bu, "C610/X99" },
+	{ 0x8D4Cu, "C610/X99" },
+	{ 0x8D4Du, "C610/X99" },
+	{ 0x8D4Eu, "C610/X99" },
+	{ 0x8D4Fu, "C610/X99" },
+	{ 0x9C40u, "Lynx Point" }, // 8 Series
+	{ 0x9C41u, "Lynx Point" },
+	{ 0x9C42u, "Lynx Point" },
+	{ 0x9C43u, "Lynx Point" },
+	{ 0x9C44u, "Lynx Point" },
+	{ 0x9C45u, "Lynx Point" },
+	{ 0x9C46u, "Lynx Point" },
+	{ 0x9C47u, "Lynx Point" },
+	{ 0x9CC1u, "Wildcat Point-LP" },
+	{ 0x9CC2u, "Wildcat Point-LP" },
+	{ 0x9CC3u, "Wildcat Point-LP" },
+	{ 0x9CC5u, "Wildcat Point-LP" },
+	{ 0x9CC6u, "Wildcat Point-LP" },
+	{ 0x9CC7u, "Wildcat Point-LP" },
+	{ 0x9CC9u, "Wildcat Point-LP" },
+	{ 0x9D43u, "Sunrise Point-LP" },
+	{ 0x9D46u, "Sunrise Point-LP" },
+	{ 0x9D48u, "Sunrise Point-LP" },
+	{ 0x9D4Bu, "Sunrise Point-LP" },
+	{ 0x9D4Eu, "Sunrise Point" },
+	{ 0x9D50u, "Sunrise Point" },
+	{ 0x9D56u, "Sunrise Point-LP" },
+	{ 0x9D58u, "Sunrise Point-LP" },
+	{ 0x9D4Eu, "Sunrise Point" },
+	{ 0x9D84u, "Cannon Point-LP" }, // 300 series
+	{ 0xA082u, "Tiger Lake-LP" }, // 500 series
+	{ 0xA140u, "Sunrise Point-H" },
+	{ 0xA141u, "Sunrise Point-H" },
+	{ 0xA142u, "Sunrise Point-H" },
+	{ 0xA143u, "H110" }, // 100 / C230
+	{ 0xA144u, "H170" }, // 100 / C230
+	{ 0xA145u, "Z170" }, // 100 / C230
+	{ 0xA146u, "Q170" }, // 100 / C230
+	{ 0xA147u, "Q150" }, // 100 / C230
+	{ 0xA148u, "B150" }, // 100 / C230
+	{ 0xA149u, "C236" }, // 100 / C230
+	{ 0xA14Au, "C232" }, // 100 / C230
+	{ 0xA14Bu, "Sunrise Point-H" },
+	{ 0xA14Cu, "Sunrise Point-H" },
+	{ 0xA14Du, "QM170" }, // 100 / C230
+	{ 0xA14Eu, "HM170" }, // 100 / C230
+	{ 0xA14Fu, "Sunrise Point-H" },
+	{ 0xA150u, "CM236" }, // 100 / C230
+	{ 0xA151u, "QMS180" },
+	{ 0xA152u, "HM175" }, // 100 / C230
+	{ 0xA153u, "QM175" }, // 100 / C230
+	{ 0xA154u, "CM238" }, // 100 / C230
+	{ 0xA155u, "QMU185" },
+	{ 0xA156u, "Sunrise Point-H" },
+	{ 0xA157u, "Sunrise Point-H" },
+	{ 0xA158u, "Sunrise Point-H" },
+	{ 0xA159u, "Sunrise Point-H" },
+	{ 0xA15Au, "Sunrise Point-H" },
+	{ 0xA15Bu, "Sunrise Point-H" },
+	{ 0xA15Cu, "Sunrise Point-H" },
+	{ 0xA15Du, "Sunrise Point-H" },
+	{ 0xA15Eu, "Sunrise Point-H" },
+	{ 0xA15Fu, "Sunrise Point-H" },
+	{ 0xA1C1u, "C621" },
+	{ 0xA1C2u, "C622" },
+	{ 0xA1C3u, "C624" },
+	{ 0xA1C4u, "C625" },
+	{ 0xA1C5u, "C626" },
+	{ 0xA1C6u, "C627" },
+	{ 0xA1C7u, "C628" },
+	{ 0xA1C8u, "Lewisburg" },
+	{ 0xA1CBu, "Lewisburg" },
+	{ 0xA242u, "Lewisburg" },
+	{ 0xA243u, "Lewisburg" },
+	{ 0xA2C4u, "H270" }, // 200 / X299 / Z370
+	{ 0xA2C5u, "Z270" }, // 200 / X299 / Z370
+	{ 0xA2C6u, "Q270" }, // 200 / X299 / Z370
+	{ 0xA2C7u, "Q250" }, // 200 / X299 / Z370
+	{ 0xA2C8u, "B250" }, // 200 / X299 / Z370
+	{ 0xA2C9u, "Z370" }, // 200 / X299 / Z370
+	{ 0xA2CAu, "H310" },
+	{ 0xA2CCu, "B365" },
+	{ 0xA2D2u, "X299" }, // 200 / X299 / Z370
+	{ 0xA2D3u, "C422" },
+	{ 0xA303u, "H310" }, // 300 / C240
+	{ 0xA304u, "H370" }, // 300 / C240
+	{ 0xA305u, "Z390" }, // 300 / C240
+	{ 0xA306u, "Q370" }, // 300 / C240
+	{ 0xA308u, "B360" }, // 300 / C240
+	{ 0xA309u, "C246" }, // 300 / C240
+	{ 0xA30Au, "C242" }, // 300 / C240
+	{ 0xA30Cu, "QM370" }, // 300 / C240
+	{ 0xA30Du, "HM370" }, // 300 / C240
+	{ 0xA30Eu, "CM246" }, // 300 / C240
+	{ 0xA313u, "Cannon Lake" },
+	{ 0xA3C8u, "B460" },
+	{ 0xA3DAu, "H410" },
+	{ 0xA806u, "Lunar Lake-M" },
 	
 };
 

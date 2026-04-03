@@ -276,8 +276,8 @@ LIBNW_API VOID NWL_GetMemSensors(struct smbus_context* ctx, NWLIB_MEM_SENSORS* i
 typedef struct _NWLIB_PCI_DEV_INFO
 {
 	CHAR Name[NWL_STR_SIZE];
-	CHAR VendorId[5];
-	CHAR DeviceId[5];
+	UINT16 VendorId;
+	UINT16 DeviceId;
 	CHAR BDF[8];
 } NWLIB_PCI_DEV_INFO;
 
