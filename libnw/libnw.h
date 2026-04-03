@@ -290,6 +290,15 @@ typedef struct _NWLIB_MAINBOARD_INFO
 	LPCSTR ProductStr;
 	LPCSTR VersionStr;
 	LPCSTR SerialStr;
+	LPCSTR BiosVendor;
+	LPCSTR BiosVersion;
+	LPCSTR BiosDate;
+	LPCSTR SystemVendor;
+	LPCSTR SystemProduct;
+	LPCSTR SystemVersion;
+	LPCSTR SystemSerial;
+	UINT8 SystemUuid[16];
+	LPCSTR EnclosureType;
 	NWLIB_PCI_DEV_INFO HostBridge;
 	NWLIB_PCI_DEV_INFO IsaBridge;
 	NWLIB_PCI_DEV_INFO Smbus;

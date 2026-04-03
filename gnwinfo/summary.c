@@ -124,7 +124,7 @@ draw_bios(struct nk_context* ctx)
 	{
 		nk_layout_row(ctx, NK_DYNAMIC, 0, 2, (float[2]) { 0.3f, 0.7f });
 		nk_lhsc(ctx, N_(N__VENDOR), NK_TEXT_LEFT, g_color_text_d, nk_false, nk_true);
-		nk_lhc(ctx, gnwinfo_get_smbios_attr("0", "Vendor", NULL, NULL), NK_TEXT_LEFT, g_color_text_l);
+		nk_lhc(ctx, NWL_NodeAttrGet(g_ctx.board, "BIOS Vendor"), NK_TEXT_LEFT, g_color_text_l);
 	}
 	if (g_ctx.main_flag & MAIN_B_VERSION)
 	{
@@ -132,8 +132,8 @@ draw_bios(struct nk_context* ctx)
 		nk_lhsc(ctx, N_(N__VERSION), NK_TEXT_LEFT, g_color_text_d, nk_false, nk_true);
 		nk_lhcf(ctx, NK_TEXT_LEFT, g_color_text_l,
 			"%s %s",
-			gnwinfo_get_smbios_attr("0", "Version", NULL, NULL),
-			gnwinfo_get_smbios_attr("0", "Release Date", NULL, NULL));
+			NWL_NodeAttrGet(g_ctx.board, "BIOS Version"),
+			NWL_NodeAttrGet(g_ctx.board, "BIOS Date"));
 	}
 }
 
@@ -152,12 +152,12 @@ draw_computer(struct nk_context* ctx)
 		g_ctx.window_flag |= GUI_WINDOW_PCI;
 
 	nk_layout_row(ctx, NK_DYNAMIC, 0, 2, (float[2]) { 0.3f, 0.7f });
-	nk_lhsc(ctx, gnwinfo_get_smbios_attr("1", "Manufacturer", NULL, NULL), NK_TEXT_LEFT, g_color_text_d, nk_true, nk_true);
+	nk_lhsc(ctx, NWL_NodeAttrGet(g_ctx.board, "System Manufacturer"), NK_TEXT_LEFT, g_color_text_d, nk_true, nk_true);
 	nk_lhcf(ctx, NK_TEXT_LEFT, g_color_text_l,
 		"%s %s %s",
-		gnwinfo_get_smbios_attr("1", "Product Name", NULL, NULL),
-		gnwinfo_get_smbios_attr("3", "Type", NULL, NULL),
-		gnwinfo_get_smbios_attr("1", "Serial Number", NULL, NULL));
+		NWL_NodeAttrGet(g_ctx.board, "Enclosure Type"),
+		NWL_NodeAttrGet(g_ctx.board, "System Product"),
+		NWL_NodeAttrGet(g_ctx.board, "System Serial Number"));
 
 	nk_lhsc(ctx, NWL_NodeAttrGet(g_ctx.board, "Manufacturer"), NK_TEXT_LEFT, g_color_text_d, nk_true, nk_true);
 	nk_lhcf(ctx, NK_TEXT_LEFT, g_color_text_l,

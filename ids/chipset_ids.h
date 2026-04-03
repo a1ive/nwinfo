@@ -162,9 +162,9 @@ static const struct CHIPSET_ID_ENTRY INTEL_ISA_LIST[] =
 	{ "3B1D", "5/3400" },
 	{ "3B1E", "5/3400" },
 	{ "3B1F", "5/3400" },
-	{ "4381", "Rocket Lake Desktop" }, // 500 series
-	{ "4382", "Rocket Lake Mobile" }, // 500 series
-	{ "4383", "Rocket Lake Server" }, // 500 series
+	{ "4381", "Rocket Lake-S" }, // 500 series
+	{ "4382", "Rocket Lake" }, // 500 series Mobile
+	{ "4383", "Rocket Lake" }, // 500 series Server
 	{ "4384", "Q570" }, // 500 series
 	{ "4385", "Z590" }, // 500 series
 	{ "4386", "H570" }, // 500 series
@@ -302,7 +302,7 @@ static const struct CHIPSET_ID_ENTRY INTEL_ISA_LIST[] =
 	{ "9D58", "Sunrise Point-LP" },
 	{ "9D4E", "Sunrise Point" },
 	{ "9D84", "Cannon Point-LP" }, // 300 series
-	{ "A082", "Tiger Lake-LP" },
+	{ "A082", "Tiger Lake-LP" }, // 500 series
 	{ "A140", "Sunrise Point-H" },
 	{ "A141", "Sunrise Point-H" },
 	{ "A142", "Sunrise Point-H" },

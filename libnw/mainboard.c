@@ -18,28 +18,6 @@
 
 #include "lpc/lpc.h"
 
-static PBoardInfo
-GetDMIType2(void)
-{
-	LPBYTE p = (LPBYTE)NWLC->NwSmbios->Data;
-	const LPBYTE lastAddress = p + NWLC->NwSmbios->Length;
-	PBoardInfo pInfo;
-	PBoardInfo ret = NULL;
-	PNWL_ARG_SET dmiSet = NULL;
-	NWL_ArgSetAddU64(&dmiSet, 2);
-	while ((pInfo = (PBoardInfo)NWL_GetNextDmiTable(&p, lastAddress, dmiSet)) != NULL)
-	{
-		if (pInfo->Header.Length < 0x08)
-			continue;
-		if (pInfo->Header.Length >= 0x0E && pInfo->Type != 0x0A)
-			continue;
-		ret = pInfo;
-		break;
-	}
-	NWL_ArgSetFree(dmiSet);
-	return ret;
-}
-
 static enum DMI_VENDOR_ID
 GetBoardVendor(const char* vendor)
 {
@@ -229,19 +207,118 @@ GetChipsetInfo(NWLIB_MAINBOARD_INFO* info)
 	NWL_NodeFree(root, 1);
 }
 
+static LPCSTR
+CheckDMIString(LPCSTR str)
+{
+	if (str == NULL)
+		goto fail;
+	if (_stricmp(str, "NULL") == 0)
+		goto fail;
+	if (_stricmp(str, "To be filled by O.E.M.") == 0)
+		goto fail;
+	if (_stricmp(str, "Default string") == 0)
+		goto fail;
+	if (_stricmp(str, "System Version") == 0)
+		goto fail;
+	if (_stricmp(str, "System Product Name") == 0)
+		goto fail;
+	if (_stricmp(str, "System Serial Number") == 0)
+		goto fail;
+	if (_stricmp(str, "Base Board Product Name") == 0)
+		goto fail;
+	if (_stricmp(str, "Base Board Serial Number") == 0)
+		goto fail;
+	return str;
+fail:
+	return "";
+}
+
 BOOL NWL_GetMainboardInfo(NWLIB_MAINBOARD_INFO* info)
 {
+	LPBYTE p;
+	LPBYTE lastAddress;
+	PSMBIOSHEADER pHeader;
+	PBIOSInfo pBios = NULL;
+	PSystemInfo pSystem = NULL;
+	PBoardInfo pBoard = NULL;
+	PSystemEnclosure pEnclosure = NULL;
+	PNWL_ARG_SET dmiSet = NULL;
+
 	if (info == NULL || NWLC->NwSmbios == NULL)
 		return FALSE;
 
-	PBoardInfo pBoard = GetDMIType2();
+	p = (LPBYTE)NWLC->NwSmbios->Data;
+	lastAddress = p + NWLC->NwSmbios->Length;
+	NWL_ArgSetAddU64(&dmiSet, 0);
+	NWL_ArgSetAddU64(&dmiSet, 1);
+	NWL_ArgSetAddU64(&dmiSet, 2);
+	NWL_ArgSetAddU64(&dmiSet, 3);
+	while ((pHeader = NWL_GetNextDmiTable(&p, lastAddress, dmiSet)) != NULL)
+	{
+		switch (pHeader->Type)
+		{
+		case 0:
+			if (pBios == NULL && pHeader->Length >= 0x12)
+				pBios = (PBIOSInfo)pHeader;
+			break;
+		case 1:
+			if (pSystem == NULL && pHeader->Length >= 0x08)
+				pSystem = (PSystemInfo)pHeader;
+			break;
+		case 2:
+			if (pBoard == NULL && pHeader->Length >= 0x08)
+			{
+				PBoardInfo pInfo = (PBoardInfo)pHeader;
+				if (pInfo->Header.Length >= 0x0E && pInfo->Type != 0x0A)
+					break;
+				pBoard = pInfo;
+			}
+			break;
+		case 3:
+			if (pEnclosure == NULL && pHeader->Length >= 0x09)
+				pEnclosure = (PSystemEnclosure)pHeader;
+			break;
+		}
+	}
+	NWL_ArgSetFree(dmiSet);
+
 	if (pBoard == NULL)
 		return FALSE;
+	ZeroMemory(info, sizeof(NWLIB_MAINBOARD_INFO));
 
-	info->VendorStr = NWL_GetDmiString((UINT8*)pBoard, pBoard->Manufacturer);
-	info->ProductStr = NWL_GetDmiString((UINT8*)pBoard, pBoard->Product);
-	info->VersionStr = NWL_GetDmiString((UINT8*)pBoard, pBoard->Version);
-	info->SerialStr = NWL_GetDmiString((UINT8*)pBoard, pBoard->SN);
+	if (pBios != NULL)
+	{
+		info->BiosVendor = NWL_GetDmiString((UINT8*)pBios, pBios->Vendor);
+		info->BiosVersion = NWL_GetDmiString((UINT8*)pBios, pBios->Version);
+		info->BiosDate = NWL_GetDmiString((UINT8*)pBios, pBios->ReleaseDate);
+	}
+	info->BiosVendor = CheckDMIString(info->BiosVendor);
+	info->BiosVersion = CheckDMIString(info->BiosVersion);
+	info->BiosDate = CheckDMIString(info->BiosDate);
+
+	if (pSystem != NULL)
+	{
+		info->SystemVendor = NWL_GetDmiString((UINT8*)pSystem, pSystem->Manufacturer);
+		info->SystemProduct = NWL_GetDmiString((UINT8*)pSystem, pSystem->ProductName);
+		info->SystemVersion = NWL_GetDmiString((UINT8*)pSystem, pSystem->Version);
+		info->SystemSerial = NWL_GetDmiString((UINT8*)pSystem, pSystem->SN);
+		if (pSystem->Header.Length >= 0x19)
+			memcpy(info->SystemUuid, pSystem->UUID, sizeof(info->SystemUuid));
+	}
+	info->SystemVendor = CheckDMIString(info->SystemVendor);
+	info->SystemProduct = CheckDMIString(info->SystemProduct);
+	info->SystemVersion = CheckDMIString(info->SystemVersion);
+	info->SystemSerial = CheckDMIString(info->SystemSerial);
+
+	if (pEnclosure != NULL)
+		info->EnclosureType = NWL_SystemEnclosureTypeToStr(pEnclosure->Type);
+	else
+		info->EnclosureType = "Unknown";
+
+	info->VendorStr = CheckDMIString(NWL_GetDmiString((UINT8*)pBoard, pBoard->Manufacturer));
+	info->ProductStr = CheckDMIString(NWL_GetDmiString((UINT8*)pBoard, pBoard->Product));
+	info->VersionStr = CheckDMIString(NWL_GetDmiString((UINT8*)pBoard, pBoard->Version));
+	info->SerialStr = CheckDMIString(NWL_GetDmiString((UINT8*)pBoard, pBoard->SN));
 	info->VendorId = GetBoardVendor(info->VendorStr);
 	if (info->VendorId == VENDOR_UNKNOWN)
 		info->VendorName = info->VendorStr;
@@ -351,6 +428,15 @@ PNODE NW_Mainboard(BOOL bAppend)
 	NWL_NodeAttrSet(node, "Board Name", info.ProductStr, 0);
 	NWL_NodeAttrSet(node, "Board Version", info.VersionStr, 0);
 	NWL_NodeAttrSet(node, "Serial Number", info.SerialStr, NAFLG_FMT_SENSITIVE);
+	NWL_NodeAttrSet(node, "BIOS Vendor", info.BiosVendor, 0);
+	NWL_NodeAttrSet(node, "BIOS Version", info.BiosVersion, 0);
+	NWL_NodeAttrSet(node, "BIOS Date", info.BiosDate, 0);
+	NWL_NodeAttrSet(node, "System Manufacturer", info.SystemVendor, 0);
+	NWL_NodeAttrSet(node, "System Product", info.SystemProduct, 0);
+	NWL_NodeAttrSet(node, "System Version", info.SystemVersion, 0);
+	NWL_NodeAttrSet(node, "System Serial Number", info.SystemSerial, NAFLG_FMT_SENSITIVE);
+	NWL_NodeAttrSet(node, "System UUID", NWL_GuidToStr(info.SystemUuid), NAFLG_FMT_GUID | NAFLG_FMT_SENSITIVE);
+	NWL_NodeAttrSet(node, "Enclosure Type", info.EnclosureType, 0);
 
 	if (info.HostBridge.VendorId[0])
 	{
