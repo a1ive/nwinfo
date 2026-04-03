@@ -12,6 +12,15 @@
 
 #pragma comment(lib, "setupapi.lib")
 
+static const DEVPROPKEY DEVPKEY_PciDevice_CurrentLinkSpeed =
+{ { 0x3ab22e31, 0x8264, 0x4b4e, { 0x9a, 0xf5, 0xa8, 0xd2, 0xd8, 0xe3, 0x3e, 0x62 } }, 9 };
+static const DEVPROPKEY DEVPKEY_PciDevice_CurrentLinkWidth =
+{ { 0x3ab22e31, 0x8264, 0x4b4e, { 0x9a, 0xf5, 0xa8, 0xd2, 0xd8, 0xe3, 0x3e, 0x62 } }, 10 };
+static const DEVPROPKEY DEVPKEY_PciDevice_MaxLinkSpeed =
+{ { 0x3ab22e31, 0x8264, 0x4b4e, { 0x9a, 0xf5, 0xa8, 0xd2, 0xd8, 0xe3, 0x3e, 0x62 } }, 11 };
+static const DEVPROPKEY DEVPKEY_PciDevice_MaxLinkWidth =
+{ { 0x3ab22e31, 0x8264, 0x4b4e, { 0x9a, 0xf5, 0xa8, 0xd2, 0xd8, 0xe3, 0x3e, 0x62 } }, 12 };
+
 static void
 PrintDriverInfo(PNODE pNode, HDEVINFO hInfo, SP_DEVINFO_DATA* spData)
 {
@@ -121,6 +130,27 @@ PrintLocationPaths(PNODE pNode, HDEVINFO hInfo, SP_DEVINFO_DATA* spData)
 	}
 }
 
+static void
+PrintPcieLink(PNODE node, HDEVINFO hInfo, SP_DEVINFO_DATA* spData, LPCSTR name, const DEVPROPKEY* pkeyWidth, const DEVPROPKEY* pkeySpeed)
+{
+	DEVPROPTYPE propType = DEVPROP_TYPE_EMPTY;
+	UINT32 linkSpeed = 0;
+	UINT32 linkWidth = 0;
+
+	if (!SetupDiGetDevicePropertyW(hInfo, spData, pkeySpeed,
+		&propType, (PBYTE)&linkSpeed, sizeof(linkSpeed), NULL, 0))
+		return;
+
+	propType = DEVPROP_TYPE_EMPTY;
+	SetupDiGetDevicePropertyW(hInfo, spData, pkeyWidth,
+		&propType, (PBYTE)&linkWidth, sizeof(linkWidth), NULL, 0);
+
+	if (linkWidth != 0)
+		NWL_NodeAttrSetf(node, name, 0, "PCIe %u.0 x%u", linkSpeed, linkWidth);
+	else
+		NWL_NodeAttrSetf(node, name, 0, "PCIe %u.0", linkSpeed);
+}
+
 static BOOL
 MatchPciClass(PNWL_ARG_SET pciClasses, const char* hwClass)
 {
@@ -195,6 +225,8 @@ PNODE NWL_EnumPci(PNODE pNode, PNWL_ARG_SET pciClasses)
 				busNum & 0xFF, (devFunc >> 16) & 0x1F, devFunc & 0x07);
 
 		NWL_NodeAttrSetf(npci, "BDF", NAFLG_FMT_NEED_QUOTE, "%02X:%02X.%u", busNum & 0xFF, (devFunc >> 16) & 0x1F, devFunc & 0x07);
+		PrintPcieLink(npci, hInfo, &spData, "PCIe Current Link", &DEVPKEY_PciDevice_CurrentLinkWidth, &DEVPKEY_PciDevice_CurrentLinkSpeed);
+		PrintPcieLink(npci, hInfo, &spData, "PCIe Max Link", &DEVPKEY_PciDevice_MaxLinkWidth, &DEVPKEY_PciDevice_MaxLinkSpeed);
 
 		if (SetupDiGetDeviceRegistryPropertyW(hInfo, &spData,
 			SPDRP_MFG, NULL, (PBYTE)NWLC->NwBufW, NWINFO_BUFSZB, NULL))
