@@ -82,6 +82,17 @@ PrintSmartInfo(CDI_SMART* cdiSmart, INT nIndex)
 
 	printf("\tTemperature: %d (C)\n", cdi_get_int(cdiSmart, nIndex, CDI_INT_TEMPERATURE));
 
+	if (cdi_get_bool(cdiSmart, nIndex, CDI_BOOL_AAM))
+	{
+		printf("\tCurrent AAM: %02X\n", cdi_get_current_aam(cdiSmart, nIndex));
+		printf("\tRecommended AAM: %02X\n", cdi_get_recommend_aam(cdiSmart, nIndex));
+	}
+	if (cdi_get_bool(cdiSmart, nIndex, CDI_BOOL_APM))
+	{
+		printf("\tCurrent APM: %02X\n", cdi_get_current_apm(cdiSmart, nIndex));
+		printf("\tRecommended APM: %02X\n", cdi_get_recommend_apm(cdiSmart, nIndex));
+	}
+
 	str = cdi_get_smart_format(cdiSmart, nIndex);
 	printf("\tID  Status %-24ls Name\n", str);
 	cdi_free_string(str);

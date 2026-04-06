@@ -693,6 +693,17 @@ PrintSmartInfo(PNODE node, CDI_SMART* ptr, INT index)
 		NWL_NodeAttrSetf(node, "Power On Time (Hours)",
 			NAFLG_FMT_NUMERIC, "%d", n);
 
+	if (cdi_get_bool(ptr, index, CDI_BOOL_AAM))
+	{
+		NWL_NodeAttrSetf(node, "Current AAM", NAFLG_FMT_NUMERIC, "%u", cdi_get_current_aam(ptr, index));
+		NWL_NodeAttrSetf(node, "Recommended AAM", NAFLG_FMT_NUMERIC, "%u", cdi_get_recommend_aam(ptr, index));
+	}
+	if (cdi_get_bool(ptr, index, CDI_BOOL_APM))
+	{
+		NWL_NodeAttrSetf(node, "Current APM", NAFLG_FMT_NUMERIC, "%u", cdi_get_current_apm(ptr, index));
+		NWL_NodeAttrSetf(node, "Recommended APM", NAFLG_FMT_NUMERIC, "%u", cdi_get_recommend_apm(ptr, index));
+	}
+
 	count = cdi_get_dword(ptr, index, CDI_DWORD_ATTR_COUNT);
 	if (count)
 	{

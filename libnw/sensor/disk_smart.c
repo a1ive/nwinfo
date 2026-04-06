@@ -101,6 +101,16 @@ static void disk_get(PNODE node)
 		n = cdi_get_int(NWLC->NwSmart, i, CDI_INT_HOST_WRITES);
 		if (n >= 0)
 			NWL_NodeAttrSetf(disk, "Total Host Writes GB", NAFLG_FMT_NUMERIC, "%d", n);
+		if (cdi_get_bool(NWLC->NwSmart, i, CDI_BOOL_AAM))
+		{
+			NWL_NodeAttrSetf(disk, "Current AAM", NAFLG_FMT_NUMERIC, "%u", cdi_get_current_aam(NWLC->NwSmart, i));
+			NWL_NodeAttrSetf(disk, "Recommended AAM", NAFLG_FMT_NUMERIC, "%u", cdi_get_recommend_aam(NWLC->NwSmart, i));
+		}
+		if (cdi_get_bool(NWLC->NwSmart, i, CDI_BOOL_APM))
+		{
+			NWL_NodeAttrSetf(disk, "Current APM", NAFLG_FMT_NUMERIC, "%u", cdi_get_current_apm(NWLC->NwSmart, i));
+			NWL_NodeAttrSetf(disk, "Recommended APM", NAFLG_FMT_NUMERIC, "%u", cdi_get_recommend_apm(NWLC->NwSmart, i));
+		}
 	}
 }
 
