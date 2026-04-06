@@ -6,6 +6,7 @@
 #define INVALID_N_ID u8"!!INVALID ID - FIX ME!!"
 
 #include "lang/en_US.h"
+#include "lang/fr_FR.h"
 #include "lang/it_IT.h"
 #include "lang/ja_JP.h"
 #include "lang/ko_KR.h"
@@ -26,6 +27,7 @@ LANGID g_supported_lang_ids[] =
 	1033, // English - United States
 	2052, // Chinese - People's Republic of China
 	1028, // Chinese - Taiwan
+	1036, // French - France
 	1040, // Italian
 	1041, // Japanese
 	1042, // Korean
@@ -61,6 +63,12 @@ gnwinfo_get_lang_str(LANGID lang, GETTEXT_STR_ID id)
 	case 6153: // English - Ireland
 	case 18441:// English - Singapore
 		str = lang_en_us[id];
+		break;
+	case 1036: // French - France
+	case 2060: // French - Belgium
+	case 3084: // French - Canada
+	case 4108: // French - Switzerland
+		str = lang_fr_fr[id];
 		break;
 	case 1040: // Italian
 		str = lang_it_it[id];
