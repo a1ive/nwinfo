@@ -21,6 +21,7 @@ struct INTEL_GPU_DATA
 	ctl_device_adapter_properties_t Props;
 	LUID Luid;
 	ctl_pci_properties_t Pci;
+	ctl_pci_state_t PciState;
 	double TimeStamp;
 	uint32_t MemoryCount;
 	ctl_mem_handle_t Memory[MAX_MEM_HANDLE];
@@ -99,6 +100,10 @@ static void* igcl_gpu_init(PNWLIB_GPU_INFO info)
 		NWL_Debug(IGCL, "BDF %u:%u:%u",
 			gpu->Pci.address.bus, gpu->Pci.address.device, gpu->Pci.address.function);
 
+		gpu->PciState.Size = sizeof(ctl_pci_state_t);
+		ctx->Result = IGCL_PciGetState(ctx->Devices[i], &gpu->PciState);
+		NWL_Debug(IGCL, "PCIe Gen %d Width %d", gpu->PciState.speed.gen, gpu->PciState.speed.width);
+
 		ctx->Result = IGCL_EnumMemoryModules(ctx->Devices[i], &gpu->MemoryCount, NULL);
 		NWL_Debug(IGCL, "%u memory handle(s)", gpu->MemoryCount);
 		if (gpu->MemoryCount > MAX_MEM_HANDLE)
@@ -153,6 +158,15 @@ static uint32_t igcl_gpu_get(void* data, NWLIB_GPU_DEV* dev, uint32_t dev_count)
 			info->Flags |= NWLIB_GPU_FLAG_REBAR_SUPPORT;
 		if (gpu->Pci.resizable_bar_enabled)
 			info->Flags |= NWLIB_GPU_FLAG_REBAR_ENABLED;
+
+		if (gpu->Pci.maxSpeed.gen > 0)
+			info->MaxSpeed.Gen = (uint16_t)gpu->Pci.maxSpeed.gen;
+		if (gpu->Pci.maxSpeed.width > 0)
+			info->MaxSpeed.Lanes = (uint16_t)gpu->Pci.maxSpeed.width;
+		if (gpu->PciState.speed.gen > 0)
+			info->CurSpeed.Gen = (uint16_t)gpu->PciState.speed.gen;
+		if (gpu->PciState.speed.width > 0)
+			info->CurSpeed.Lanes = (uint16_t)gpu->PciState.speed.width;
 
 		ctx->Result = IGCL_PowerTelemetryGet(ctx->Devices[i], &ctx->Pt);
 		if (ctx->Result != CTL_RESULT_SUCCESS)

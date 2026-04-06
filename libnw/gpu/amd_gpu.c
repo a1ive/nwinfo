@@ -400,6 +400,13 @@ static uint32_t adl_gpu_get(void* data, NWLIB_GPU_DEV* dev, uint32_t dev_count)
 					info->UsagePercent = (double)gpu->Od5Activity.iActivityPercent;
 				if (gpu->Od5Activity.iEngineClock > 0)
 					info->Frequency = (double)gpu->Od5Activity.iEngineClock * 0.01; // 10 kHz ?
+				if (gpu->Od5Activity.iCurrentBusSpeed > 0)
+					info->CurSpeed.Gen = (uint16_t)gpu->Od5Activity.iCurrentBusSpeed;
+				if (gpu->Od5Activity.iCurrentBusLanes > 0)
+					info->CurSpeed.Lanes = (uint16_t)gpu->Od5Activity.iCurrentBusLanes;
+				// FIXME: Fuck AMD - no maximum bus speed
+				if (gpu->Od5Activity.iMaximumBusLanes > 0)
+					info->MaxSpeed.Lanes = (uint16_t)gpu->Od5Activity.iMaximumBusLanes;
 			}
 			// Fan speed RPM
 			gpu->Od5Fan.iSize = sizeof(ADLFanSpeedValue);
@@ -422,6 +429,13 @@ static uint32_t adl_gpu_get(void* data, NWLIB_GPU_DEV* dev, uint32_t dev_count)
 					info->UsagePercent = (double)gpu->Od6Status.iActivityPercent;
 				if (gpu->Od6Status.iEngineClock > 0)
 					info->Frequency = (double)gpu->Od6Status.iEngineClock * 0.01;
+				if (gpu->Od6Status.iCurrentBusSpeed > 0)
+					info->CurSpeed.Gen = (uint16_t)gpu->Od6Status.iCurrentBusSpeed;
+				if (gpu->Od6Status.iCurrentBusLanes > 0)
+					info->CurSpeed.Lanes = (uint16_t)gpu->Od6Status.iCurrentBusLanes;
+				// FIXME: Fuck AMD - no maximum bus speed
+				if (gpu->Od6Status.iMaximumBusLanes > 0)
+					info->MaxSpeed.Lanes = (uint16_t)gpu->Od6Status.iMaximumBusLanes;
 			}
 		}
 
@@ -443,6 +457,13 @@ static uint32_t adl_gpu_get(void* data, NWLIB_GPU_DEV* dev, uint32_t dev_count)
 					info->UsagePercent = (double)gpu->OdnPerf.iGPUActivityPercent;
 				if (gpu->OdnPerf.iGFXClock > 0)
 					info->Frequency = (double)gpu->OdnPerf.iGFXClock * 0.01f;
+				if (gpu->OdnPerf.iCurrentBusSpeed > 0)
+					info->CurSpeed.Gen = (uint16_t)gpu->OdnPerf.iCurrentBusSpeed;
+				if (gpu->OdnPerf.iCurrentBusLanes > 0)
+					info->CurSpeed.Lanes = (uint16_t)gpu->OdnPerf.iCurrentBusLanes;
+				// FIXME: Fuck AMD - no maximum bus speed
+				if (gpu->OdnPerf.iMaximumBusLanes > 0)
+					info->MaxSpeed.Lanes = (uint16_t)gpu->OdnPerf.iMaximumBusLanes;
 			}
 		}
 
@@ -456,6 +477,14 @@ static uint32_t adl_gpu_get(void* data, NWLIB_GPU_DEV* dev, uint32_t dev_count)
 				pmlog_data = (ADLPMLogData*)gpu->PMLogStartOutput.pLoggingAddress;
 
 			double val_f;
+
+			if (get_adl_sensor(gpu, pmlog_data, &od8_log, ADL_PMLOG_BUS_SPEED, &val_f, 1.0))
+				info->CurSpeed.Gen = (uint16_t)val_f;
+			if (get_adl_sensor(gpu, pmlog_data, &od8_log, ADL_PMLOG_BUS_LANES, &val_f, 1.0))
+				info->CurSpeed.Lanes = (uint16_t)val_f;
+			if (get_adl_sensor(gpu, pmlog_data, &od8_log, ADL_PMLOG_BUS_CURR_MAX_SPEED, &val_f, 1.0))
+				info->MaxSpeed.Gen = (uint16_t)val_f;
+			// FIXME: Fuck AMD - no maximum bus lanes
 
 			if (get_adl_sensor(gpu, pmlog_data, &od8_log, ADL_PMLOG_TEMPERATURE_EDGE, &val_f, 1.0))
 				info->Temperature = val_f;

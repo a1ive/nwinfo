@@ -12,6 +12,12 @@ typedef struct _NWLIB_GPU_INFO NWLIB_GPU_INFO, * PNWLIB_GPU_INFO;
 #define NWLIB_GPU_FLAG_REBAR_SUPPORT (1 << 1)
 #define NWLIB_GPU_FLAG_REBAR_ENABLED (1 << 2)
 
+typedef struct _NWLIB_GPU_PCIE_SPEED
+{
+	uint16_t Gen;
+	uint16_t Lanes;
+} NWLIB_GPU_PCIE_SPEED;
+
 typedef struct _NWLIB_GPU_DEV
 {
 	char Name[MAX_GPU_STR];
@@ -23,6 +29,8 @@ typedef struct _NWLIB_GPU_DEV
 	uint32_t PciBus;
 	uint32_t PciDevice;
 	uint32_t PciFunction;
+	NWLIB_GPU_PCIE_SPEED CurSpeed;
+	NWLIB_GPU_PCIE_SPEED MaxSpeed;
 	uint64_t TotalMemory; // Dedicated Video Memory
 	uint64_t FreeMemory; // Dedicated Video Memory
 	uint64_t UsedMemory; // Dedicated Video Memory
