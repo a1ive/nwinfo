@@ -400,6 +400,8 @@ static uint32_t adl_gpu_get(void* data, NWLIB_GPU_DEV* dev, uint32_t dev_count)
 					info->UsagePercent = (double)gpu->Od5Activity.iActivityPercent;
 				if (gpu->Od5Activity.iEngineClock > 0)
 					info->Frequency = (double)gpu->Od5Activity.iEngineClock * 0.01; // 10 kHz ?
+				if (gpu->Od5Activity.iMemoryClock > 0)
+					info->MemoryFrequency = (double)gpu->Od5Activity.iMemoryClock * 0.01;
 				if (gpu->Od5Activity.iCurrentBusSpeed > 0)
 					info->CurSpeed.Gen = (uint16_t)gpu->Od5Activity.iCurrentBusSpeed;
 				if (gpu->Od5Activity.iCurrentBusLanes > 0)
@@ -429,6 +431,8 @@ static uint32_t adl_gpu_get(void* data, NWLIB_GPU_DEV* dev, uint32_t dev_count)
 					info->UsagePercent = (double)gpu->Od6Status.iActivityPercent;
 				if (gpu->Od6Status.iEngineClock > 0)
 					info->Frequency = (double)gpu->Od6Status.iEngineClock * 0.01;
+				if (gpu->Od6Status.iMemoryClock > 0)
+					info->MemoryFrequency = (double)gpu->Od6Status.iMemoryClock * 0.01;
 				if (gpu->Od6Status.iCurrentBusSpeed > 0)
 					info->CurSpeed.Gen = (uint16_t)gpu->Od6Status.iCurrentBusSpeed;
 				if (gpu->Od6Status.iCurrentBusLanes > 0)
@@ -457,6 +461,8 @@ static uint32_t adl_gpu_get(void* data, NWLIB_GPU_DEV* dev, uint32_t dev_count)
 					info->UsagePercent = (double)gpu->OdnPerf.iGPUActivityPercent;
 				if (gpu->OdnPerf.iGFXClock > 0)
 					info->Frequency = (double)gpu->OdnPerf.iGFXClock * 0.01f;
+				if (gpu->OdnPerf.iMemoryClock > 0)
+					info->MemoryFrequency = (double)gpu->OdnPerf.iMemoryClock * 0.01f;
 				if (gpu->OdnPerf.iCurrentBusSpeed > 0)
 					info->CurSpeed.Gen = (uint16_t)gpu->OdnPerf.iCurrentBusSpeed;
 				if (gpu->OdnPerf.iCurrentBusLanes > 0)
@@ -516,6 +522,9 @@ static uint32_t adl_gpu_get(void* data, NWLIB_GPU_DEV* dev, uint32_t dev_count)
 
 			if (get_adl_sensor(gpu, pmlog_data, &od8_log, ADL_PMLOG_CLK_GFXCLK, &val_f, 1.0))
 				info->Frequency = val_f;
+
+			if (get_adl_sensor(gpu, pmlog_data, &od8_log, ADL_PMLOG_CLK_MEMCLK, &val_f, 1.0))
+				info->MemoryFrequency = val_f;
 
 			if (get_adl_sensor(gpu, pmlog_data, &od8_log, ADL_PMLOG_INFO_ACTIVITY_GFX, &val_f, 1.0))
 				info->UsagePercent = val_f;

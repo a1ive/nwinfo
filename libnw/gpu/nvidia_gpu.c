@@ -349,6 +349,21 @@ static uint32_t nv_gpu_get(void* data, NWLIB_GPU_DEV* dev, uint32_t dev_count)
 
 		info->Frequency = (double)get_khz_frequency(ctx->GpuHandle[i], &ctx->List[i].Clock) * 0.001;
 
+		{
+			NV_GPU_CLOCK_FREQUENCIES memclk = { .ClockType = NV_GPU_CLOCK_FREQUENCIES_CURRENT_FREQ };
+			for (NvU64 ver = 1; ver <= 3; ver++)
+			{
+				memclk.version = MAKE_NVAPI_VERSION(NV_GPU_CLOCK_FREQUENCIES, ver);
+				if (NvAPI_GPU_GetAllClockFrequencies(ctx->GpuHandle[i], &memclk) != NVAPI_OK)
+					continue;
+				if (memclk.domain[NVAPI_GPU_PUBLIC_CLOCK_MEMORY].bIsPresent)
+				{
+					info->MemoryFrequency = (double)memclk.domain[NVAPI_GPU_PUBLIC_CLOCK_MEMORY].frequency * 0.001;
+					break;
+				}
+			}
+		}
+
 		info->Voltage = (double)get_uv_voltage(ctx->GpuHandle[i], &ctx->List[i]) * 0.000001;
 
 		info->Temperature = get_temperature(ctx->GpuHandle[i], &ctx->List[i]);

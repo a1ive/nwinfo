@@ -40,6 +40,7 @@ typedef struct _NWLIB_GPU_DEV
 	double Energy;
 	double Power;
 	double Frequency; // MHz
+	double MemoryFrequency; // MHz
 	double Voltage;
 	double Temperature;
 	uint64_t FanSpeed;

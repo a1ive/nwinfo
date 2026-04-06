@@ -38,6 +38,7 @@ static void gpu_get(PNODE node)
 		NWL_NodeAttrSetf(gpu, "Memory Usage", NAFLG_FMT_NUMERIC, "%llu", dev->MemoryPercent);
 		NWL_NodeAttrSetf(gpu, "Power", NAFLG_FMT_NUMERIC, "%.2f", dev->Power);
 		NWL_NodeAttrSetf(gpu, "Frequency", NAFLG_FMT_NUMERIC, "%.2f", dev->Frequency);
+		NWL_NodeAttrSetf(gpu, "Memory Frequency", NAFLG_FMT_NUMERIC, "%.2f", dev->MemoryFrequency);
 		NWL_NodeAttrSetf(gpu, "Voltage", NAFLG_FMT_NUMERIC, "%.2f", dev->Voltage);
 		NWL_NodeAttrSetf(gpu, "Fan Speed", NAFLG_FMT_NUMERIC, "%llu", dev->FanSpeed);
 	}

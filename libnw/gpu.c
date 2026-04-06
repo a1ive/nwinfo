@@ -221,6 +221,7 @@ PNODE NW_Gpu(BOOL bAppend)
 
 		NWL_NodeAttrSetf(gpu, "Power (W)", NAFLG_FMT_NUMERIC, "%.1f", dev->Power);
 		NWL_NodeAttrSetf(gpu, "Frequency (MHz)", NAFLG_FMT_NUMERIC, "%.1f", dev->Frequency);
+		NWL_NodeAttrSetf(gpu, "Memory Frequency (MHz)", NAFLG_FMT_NUMERIC, "%.1f", dev->MemoryFrequency);
 		NWL_NodeAttrSetf(gpu, "Voltage (V)", NAFLG_FMT_NUMERIC, "%.2f", dev->Voltage);
 		NWL_NodeAttrSetf(gpu, "Fan Speed (RPM)", NAFLG_FMT_NUMERIC, "%llu", (unsigned long long)dev->FanSpeed);
 	}

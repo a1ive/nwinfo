@@ -210,6 +210,9 @@ static uint32_t igcl_gpu_get(void* data, NWLIB_GPU_DEV* dev, uint32_t dev_count)
 		else
 			info->Frequency = gpu->Props.Frequency;
 
+		if (ctx->Pt.vramCurrentClockFrequency.bSupported)
+			info->MemoryFrequency = ctx->Pt.vramCurrentClockFrequency.value.datadouble;
+
 		for (int j = 0; j < CTL_FAN_COUNT; j++)
 		{
 			if (ctx->Pt.fanSpeed[j].bSupported && ctx->Pt.fanSpeed[j].value.datadouble > 0.0f)
