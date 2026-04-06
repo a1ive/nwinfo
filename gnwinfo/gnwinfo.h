@@ -118,7 +118,6 @@ nk_report_end_capture(void);
 #define MAIN2_GPU_DRIVER    (1U << 1)
 
 #define GUI_WINDOW_CPUID    (1U << 0)
-#define GUI_WINDOW_SMART    (1U << 1)
 #define GUI_WINDOW_ABOUT    (1U << 2)
 #define GUI_WINDOW_SETTINGS (1U << 3)
 #define GUI_WINDOW_PCI      (1U << 4)
@@ -126,7 +125,13 @@ nk_report_end_capture(void);
 #define GUI_WINDOW_MM       (1U << 6)
 #define GUI_WINDOW_HOSTNAME (1U << 7)
 #define GUI_WINDOW_DISPLAY  (1U << 8)
-#define GUI_WINDOW_SENSOR   (1U << 9)
+
+typedef enum _GNWINFO_MAIN_VIEW
+{
+	GNWINFO_MAIN_VIEW_SUMMARY = 0,
+	GNWINFO_MAIN_VIEW_SENSOR,
+	GNWINFO_MAIN_VIEW_SMART,
+} GNWINFO_MAIN_VIEW;
 
 typedef struct _GNW_CONTEXT
 {
@@ -143,6 +148,7 @@ typedef struct _GNW_CONTEXT
 	UINT32 main_flag;
 	UINT32 main_flag2;
 	UINT32 window_flag;
+	GNWINFO_MAIN_VIEW display_view;
 	nk_bool smart_hex;
 	UINT32 smart_flag;
 	nk_bool gui_bginfo;

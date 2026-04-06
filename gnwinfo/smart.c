@@ -51,7 +51,7 @@ draw_health(struct nk_context* ctx, CDI_SMART* smart, int disk, float height)
 		n = cdi_get_int(smart, disk, CDI_INT_LIFE);
 		health = cdi_get_int(smart, disk, CDI_INT_DISK_STATUS);
 		if (n >= 0)
-			snprintf(tmp, sizeof(tmp), "%s\n%d%%", get_health_status(health), n);
+			snprintf(tmp, sizeof(tmp), "%s %d%%", get_health_status(health), n);
 		else
 			strncpy_s(tmp, sizeof(tmp), get_health_status(health), _TRUNCATE);
 		nk_block(ctx, get_attr_color(health), tmp);
@@ -77,6 +77,8 @@ draw_info(struct nk_context* ctx, CDI_SMART* smart, int disk)
 	{
 		BOOL is_ssd = cdi_get_bool(smart, disk, CDI_BOOL_SSD);
 		BOOL is_nvme = cdi_get_bool(smart, disk, CDI_BOOL_SSD_NVME);
+		BOOL has_aam = cdi_get_bool(smart, disk, CDI_BOOL_AAM);
+		BOOL has_apm = cdi_get_bool(smart, disk, CDI_BOOL_APM);
 
 		nk_layout_row_dynamic(ctx, 0, 1);
 		nk_spacer(ctx);
@@ -186,8 +188,8 @@ draw_info(struct nk_context* ctx, CDI_SMART* smart, int disk)
 		nk_l(ctx, N_(N__FEATURES), NK_TEXT_LEFT);
 		nk_lhcf(ctx, NK_TEXT_LEFT, g_color_text_l, "%s%s%s%s%s%s%s%s%s%s",
 			cdi_get_bool(smart, disk, CDI_BOOL_SMART) ? "SMART " : "",
-			cdi_get_bool(smart, disk, CDI_BOOL_AAM) ?  "AAM " : "",
-			cdi_get_bool(smart, disk, CDI_BOOL_APM) ? "APM " : "",
+			has_aam ?  "AAM " : "",
+			has_apm ? "APM " : "",
 			cdi_get_bool(smart, disk, CDI_BOOL_NCQ) ? "NCQ " : "",
 			cdi_get_bool(smart, disk, CDI_BOOL_NV_CACHE) ? "NVCache " : "",
 			cdi_get_bool(smart, disk, CDI_BOOL_DEVSLP) ? "DEVSLP " : "",
@@ -195,6 +197,19 @@ draw_info(struct nk_context* ctx, CDI_SMART* smart, int disk)
 			cdi_get_bool(smart, disk, CDI_BOOL_GPL) ? "GPL " : "",
 			cdi_get_bool(smart, disk, CDI_BOOL_TRIM) ? "TRIM " : "",
 			cdi_get_bool(smart, disk, CDI_BOOL_VOLATILE_WRITE_CACHE) ? "VolatileWriteCache " : "");
+
+		if (has_aam)
+		{
+			nk_l(ctx, "AAM", NK_TEXT_LEFT);
+			nk_lhcf(ctx, NK_TEXT_LEFT, g_color_text_l, "%u | %s = %u",
+				cdi_get_current_aam(smart, disk), N_(N__RECOMMEND_VAL), cdi_get_recommend_aam(smart, disk));
+		}
+		if (has_apm)
+		{
+			nk_l(ctx, "APM", NK_TEXT_LEFT);
+			nk_lhcf(ctx, NK_TEXT_LEFT, g_color_text_l, "%u | %s = %u",
+				cdi_get_current_apm(smart, disk), N_(N__RECOMMEND_VAL), cdi_get_recommend_apm(smart, disk));
+		}
 
 		nk_group_end(ctx);
 	}
@@ -237,37 +252,30 @@ static void
 draw_smart(struct nk_context* ctx, CDI_SMART* smart, int disk)
 {
 	WCHAR* format;
-	WCHAR* value;
-	WCHAR* name;
-	WCHAR* hex;
-	if (nk_group_begin(ctx, "SMART Attr", NK_WINDOW_BORDER))
+	DWORD i, count = cdi_get_dword(smart, disk, CDI_DWORD_ATTR_COUNT);
+	nk_layout_row(ctx, NK_DYNAMIC, 0, 4, (float[4]) { 0.05f, 0.05f, 0.55f, 0.35f });
+	nk_spacer(ctx);
+	nk_l(ctx, N_(N__ID), NK_TEXT_LEFT);
+	nk_l(ctx, N_(N__ATTRIBUTE), NK_TEXT_LEFT);
+	format = cdi_get_smart_format(smart, disk);
+	nk_l(ctx, NWL_Ucs2ToUtf8(format), NK_TEXT_LEFT);
+
+	for (i = 0; i < count; i++)
 	{
-		DWORD i, count = cdi_get_dword(smart, disk, CDI_DWORD_ATTR_COUNT);
-		nk_layout_row(ctx, NK_DYNAMIC, 0, 4, (float[4]) { 0.05f, 0.05f, 0.55f, 0.35f });
-		nk_spacer(ctx);
-		nk_l(ctx, N_(N__ID), NK_TEXT_LEFT);
-		nk_l(ctx, N_(N__ATTRIBUTE), NK_TEXT_LEFT);
-		format = cdi_get_smart_format(smart, disk);
-		nk_l(ctx, NWL_Ucs2ToUtf8(format), NK_TEXT_LEFT);
-
-		for (i = 0; i < count; i++)
-		{
-			int id = cdi_get_smart_id(smart, disk, i);
-			if (id == 0)
-				continue;
-			name = cdi_get_smart_name(smart, disk, id);
-			value = cdi_get_smart_value(smart, disk, i, g_ctx.smart_hex);
-			hex = draw_alert_icon(ctx, id, cdi_get_smart_status(smart, disk, i), format, value);
-			nk_lhcf(ctx, NK_TEXT_LEFT, g_color_text_l, "%02X", id);
-			nk_lhc(ctx, NWL_Ucs2ToUtf8(name), NK_TEXT_LEFT, g_color_text_l);
-			nk_lhcf(ctx, NK_TEXT_LEFT, g_color_text_l, "%ls%ls", value, hex);
-			cdi_free_string(name);
-			cdi_free_string(value);
-		}
-
-		cdi_free_string(format);
-		nk_group_end(ctx);
+		int id = cdi_get_smart_id(smart, disk, i);
+		if (id == 0)
+			continue;
+		WCHAR* name = cdi_get_smart_name(smart, disk, id);
+		WCHAR* value = cdi_get_smart_value(smart, disk, i, g_ctx.smart_hex);
+		WCHAR* hex = draw_alert_icon(ctx, id, cdi_get_smart_status(smart, disk, i), format, value);
+		nk_lhcf(ctx, NK_TEXT_LEFT, g_color_text_l, "%02X", id);
+		nk_lhc(ctx, NWL_Ucs2ToUtf8(name), NK_TEXT_LEFT, g_color_text_l);
+		nk_lhcf(ctx, NK_TEXT_LEFT, g_color_text_l, "%ls%ls", value, hex);
+		cdi_free_string(name);
+		cdi_free_string(value);
 	}
+
+	cdi_free_string(format);
 }
 
 VOID
@@ -279,16 +287,7 @@ gnwinfo_draw_smart_window(struct nk_context* ctx, float width, float height)
 	static int cur_disk = 0;
 	int cur_display;
 
-	if (!(g_ctx.window_flag & GUI_WINDOW_SMART))
-		return;
-	if (!nk_begin_ex(ctx, "S.M.A.R.T.",
-		nk_rect(0, height / 6.0f, width * 0.98f, height / 1.5f),
-		NK_WINDOW_BORDER | NK_WINDOW_MOVABLE | NK_WINDOW_SCALABLE | NK_WINDOW_CLOSABLE,
-		GET_PNG(IDR_PNG_SMART), GET_PNG(IDR_PNG_CLOSE)))
-	{
-		g_ctx.window_flag &= ~GUI_WINDOW_SMART;
-		goto out;
-	}
+	(void)width;
 	if (NWLC->NwSmartInit == FALSE)
 	{
 		cdi_init_smart(NWLC->NwSmart, NWLC->NwSmartFlags);
@@ -299,7 +298,7 @@ gnwinfo_draw_smart_window(struct nk_context* ctx, float width, float height)
 	{
 		nk_layout_row_dynamic(ctx, 0, 1);
 		nk_l(ctx, N_(N__NO_DISKS_FOUND), NK_TEXT_CENTERED);
-		goto out;
+		return;
 	}
 	
 	snprintf(count_str, sizeof(count_str), "#%d/", count);
@@ -323,13 +322,10 @@ gnwinfo_draw_smart_window(struct nk_context* ctx, float width, float height)
 		cdi_update_smart(NWLC->NwSmart, cur_disk);
 	g_ctx.smart_hex = !nk_check_label(ctx, N_(N__HEX), !g_ctx.smart_hex);
 	
-	nk_layout_row(ctx, NK_DYNAMIC, height / 4.0f, 2, (float[2]) {0.2f, 0.8f});
-	draw_health(ctx, NWLC->NwSmart, cur_disk, height / 4.0f);
+	nk_layout_row(ctx, NK_DYNAMIC, g_col_height * 9.0f, 2, (float[2]) {0.2f, 0.8f});
+	draw_health(ctx, NWLC->NwSmart, cur_disk, g_col_height * 9.0f);
 	draw_info(ctx, NWLC->NwSmart, cur_disk);
 
-	nk_layout_row_dynamic(ctx, height / 3.0f, 1);
+	nk_layout_row_dynamic(ctx, 0, 1);
 	draw_smart(ctx, NWLC->NwSmart, cur_disk);
-
-out:
-	nk_end(ctx);
 }

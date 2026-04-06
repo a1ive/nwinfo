@@ -54,13 +54,13 @@ gnwinfo_ctx_update_1s(void)
 	NWLIB_AUDIO_DEV* audio = NULL;
 	CHAR sys_uptime[NWL_STR_SIZE] = { 0 };
 	DWORD main_flag = 0;
-	DWORD window_flag = 0;
+	GNWINFO_MAIN_VIEW display_view = GNWINFO_MAIN_VIEW_SUMMARY;
 	NWLIB_MEM_SENSORS mem_sensors = { 0 };
 
 	AcquireSRWLockShared(&g_ctx.lock);
-	window_flag = g_ctx.window_flag;
+	display_view = g_ctx.display_view;
 	ReleaseSRWLockShared(&g_ctx.lock);
-	if (window_flag & GUI_WINDOW_SENSOR)
+	if (display_view == GNWINFO_MAIN_VIEW_SENSOR)
 	{
 		PNODE sensors = NW_Sensors(FALSE);
 		AcquireSRWLockExclusive(&g_ctx.lock);

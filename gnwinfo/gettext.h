@@ -24,6 +24,8 @@ typedef enum _GETTEXT_STR_ID
 	N__USAGE,
 	N__CACHE,
 	N__POWER_STAT,
+	N__DISKMGMT,
+	N__RECOMMEND_VAL,
 	N__GOOD,
 	N__CAUTION,
 	N__BAD,

@@ -608,8 +608,8 @@ draw_storage(struct nk_context* ctx)
 {
 	nk_layout_row(ctx, NK_DYNAMIC, 0, 2, (float[2]) { 1.0f - g_ctx.gui_ratio, g_ctx.gui_ratio });
 	nk_image_label(ctx, GET_PNG(IDR_PNG_DISK), N_(N__STORAGE), NK_TEXT_LEFT, g_color_text_d);
-	if (quick_access_button(ctx, GET_PNG(IDR_PNG_SMART), "S.M.A.R.T."))
-		g_ctx.window_flag |= GUI_WINDOW_SMART;
+	if (quick_access_button(ctx, GET_PNG(IDR_PNG_SETTINGS), N_(N__DISKMGMT)))
+		ShellExecuteW(NULL, NULL, L"diskmgmt.msc", NULL, NULL, SW_NORMAL);
 
 	INT count = NWL_NodeChildCount(g_ctx.disk);
 	for (INT i = 0; i < count; i++)
@@ -830,21 +830,29 @@ gnwinfo_draw_main_window(struct nk_context* ctx, float width, float height)
 	WCHAR report_path[MAX_PATH] = L"";
 	enum nk_report_state report_state = NK_REPORT_STATE_IDLE;
 
-	nk_layout_row_begin(ctx, NK_DYNAMIC, 0, 6);
+	nk_layout_row_begin(ctx, NK_DYNAMIC, 0, 7);
 
 	struct nk_rect rect = nk_layout_widget_bounds(ctx);
 	g_ctx.gui_ratio = rect.h / rect.w;
 
 	nk_layout_row_push(ctx, g_ctx.gui_ratio);
-	if (g_ctx.window_flag & GUI_WINDOW_SENSOR)
+	if (g_ctx.display_view != GNWINFO_MAIN_VIEW_SUMMARY)
 	{
 		if (nk_button_image_hover(ctx, GET_PNG(IDR_PNG_PC), N_(N__SUMMARY_VIEW)))
-			g_ctx.window_flag &= ~GUI_WINDOW_SENSOR;
+			g_ctx.display_view = GNWINFO_MAIN_VIEW_SUMMARY;
 	}
 	else
 	{
 		if (nk_button_image_hover(ctx, GET_PNG(IDR_PNG_SENSOR), N_(N__SENSOR_VIEW)))
-			g_ctx.window_flag |= GUI_WINDOW_SENSOR;
+			g_ctx.display_view = GNWINFO_MAIN_VIEW_SENSOR;
+	}
+	nk_layout_row_push(ctx, g_ctx.gui_ratio);
+	if (nk_button_image_hover(ctx, GET_PNG(IDR_PNG_SMART), "S.M.A.R.T."))
+	{
+		if (g_ctx.display_view == GNWINFO_MAIN_VIEW_SMART)
+			g_ctx.display_view = GNWINFO_MAIN_VIEW_SUMMARY;
+		else
+			g_ctx.display_view = GNWINFO_MAIN_VIEW_SMART;
 	}
 	nk_layout_row_push(ctx, g_ctx.gui_ratio);
 	if (nk_button_image_hover(ctx, GET_PNG(IDR_PNG_SETTINGS), N_(N__SETTINGS)))
@@ -871,32 +879,36 @@ gnwinfo_draw_main_window(struct nk_context* ctx, float width, float height)
 		InterlockedExchange(&g_ctx.exit_pending, 1);
 	nk_layout_row_end(ctx);
 
-	if (g_ctx.window_flag & GUI_WINDOW_SENSOR)
+	switch (g_ctx.display_view)
 	{
+	case GNWINFO_MAIN_VIEW_SENSOR:
 		gnwinfo_draw_sensor_window(ctx, width, height);
-		goto out;
+		break;
+	case GNWINFO_MAIN_VIEW_SMART:
+		gnwinfo_draw_smart_window(ctx, width, height);
+		break;
+	case GNWINFO_MAIN_VIEW_SUMMARY:
+		if (g_ctx.main_flag & MAIN_INFO_OS)
+			draw_os(ctx);
+		if (g_ctx.main_flag & MAIN_INFO_BIOS)
+			draw_bios(ctx);
+		if (g_ctx.main_flag & MAIN_INFO_BOARD)
+			draw_computer(ctx);
+		if (g_ctx.main_flag & MAIN_INFO_CPU)
+			draw_processor(ctx);
+		if (g_ctx.main_flag & MAIN_INFO_MEMORY)
+			draw_memory(ctx);
+		if (g_ctx.main_flag & MAIN_INFO_MONITOR)
+			draw_display(ctx);
+		if (g_ctx.main_flag & MAIN_INFO_STORAGE)
+			draw_storage(ctx);
+		if (g_ctx.main_flag & MAIN_INFO_NETWORK)
+			draw_network(ctx);
+		if (g_ctx.main_flag & MAIN_INFO_AUDIO)
+			draw_audio(ctx);
+		break;
 	}
 
-	if (g_ctx.main_flag & MAIN_INFO_OS)
-		draw_os(ctx);
-	if (g_ctx.main_flag & MAIN_INFO_BIOS)
-		draw_bios(ctx);
-	if (g_ctx.main_flag & MAIN_INFO_BOARD)
-		draw_computer(ctx);
-	if (g_ctx.main_flag & MAIN_INFO_CPU)
-		draw_processor(ctx);
-	if (g_ctx.main_flag & MAIN_INFO_MEMORY)
-		draw_memory(ctx);
-	if (g_ctx.main_flag & MAIN_INFO_MONITOR)
-		draw_display(ctx);
-	if (g_ctx.main_flag & MAIN_INFO_STORAGE)
-		draw_storage(ctx);
-	if (g_ctx.main_flag & MAIN_INFO_NETWORK)
-		draw_network(ctx);
-	if (g_ctx.main_flag & MAIN_INFO_AUDIO)
-		draw_audio(ctx);
-
-out:
 	if (report_state == NK_REPORT_STATE_ACTIVE)
 		report_state = nk_report_end_capture();
 

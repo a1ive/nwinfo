@@ -957,6 +957,11 @@ nk_block(struct nk_context* ctx, struct nk_color color, const char* str)
 {
 	static struct nk_style_button style;
 	static struct nk_color inv;
+	struct nk_rect bounds;
+	int str_len = nk_strlen(str);
+	nk_layout_peek(&bounds, ctx);
+	nk_report_capture_text(bounds.y, nk_report_get_indent(ctx, nk_true), str, str_len);
+
 	nk_zero_struct(style);
 	style.color_factor_text = 1.0f;
 	style.color_factor_background = 1.0f;
@@ -972,5 +977,5 @@ nk_block(struct nk_context* ctx, struct nk_color color, const char* str)
 	style.text_hover = inv;
 	style.text_active = inv;
 	style.text_alignment = NK_TEXT_CENTERED;
-	nk_button_label_styled(ctx, &style, str);
+	nk_button_text_styled(ctx, &style, str, str_len);
 }
