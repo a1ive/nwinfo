@@ -195,6 +195,7 @@ typedef struct _GNW_CONTEXT
 	HANDLE update_event;
 	HANDLE stop_event;
 	HANDLE update_thread;
+	volatile LONG init_done;
 	volatile LONG update_mask;
 	volatile LONG exit_pending;
 } GNW_CONTEXT;

@@ -129,7 +129,7 @@ static void
 gnwinfo_ctx_update_disk(void)
 {
 	DWORD main_flag = 0;
-
+	InterlockedExchange(&g_ctx.init_done, 0);
 	AcquireSRWLockShared(&g_ctx.lock);
 	main_flag = g_ctx.main_flag;
 	ReleaseSRWLockShared(&g_ctx.lock);
@@ -164,7 +164,7 @@ static void
 gnwinfo_ctx_update_display(void)
 {
 	PNODE edid = NW_Edid(FALSE);
-
+	InterlockedExchange(&g_ctx.init_done, 0);
 	AcquireSRWLockExclusive(&g_ctx.lock);
 	PNWLIB_GPU_INFO gpu = g_ctx.lib.NwGpu;
 	g_ctx.lib.NwGpu = NULL;
@@ -181,6 +181,7 @@ static void
 gnwinfo_ctx_update_spd(void)
 {
 	DWORD main_flag = 0;
+	InterlockedExchange(&g_ctx.init_done, 0);
 	AcquireSRWLockShared(&g_ctx.lock);
 	main_flag = g_ctx.main_flag;
 	ReleaseSRWLockShared(&g_ctx.lock);
@@ -241,6 +242,8 @@ gnwinfo_ctx_update_thread(LPVOID lpParameter)
 				break;
 			gnwinfo_ctx_run_mask(mask);
 		}
+		if (!g_ctx.init_done)
+			InterlockedExchange(&g_ctx.init_done, 1);
 	}
 	return 0;
 }
@@ -272,6 +275,7 @@ gnwinfo_ctx_init(HINSTANCE inst, HWND wnd, struct nk_context* ctx, float width, 
 	}
 
 	InitializeSRWLock(&g_ctx.lock);
+	g_ctx.init_done = 0;
 	g_ctx.update_mask = 0;
 	g_ctx.exit_pending = 0;
 	g_ctx.update_event = CreateEventW(NULL, FALSE, FALSE, NULL);
@@ -363,6 +367,8 @@ gnwinfo_ctx_init(HINSTANCE inst, HWND wnd, struct nk_context* ctx, float width, 
 	gnwinfo_ctx_update(IDT_TIMER_DISK);
 	gnwinfo_ctx_update(IDT_TIMER_SMB);
 	gnwinfo_ctx_update(IDT_TIMER_SPD);
+	if (!g_ctx.update_event || !g_ctx.update_thread)
+		InterlockedExchange(&g_ctx.init_done, 1);
 
 	for (WORD i = 0; i < sizeof(g_ctx.image) / sizeof(g_ctx.image[0]); i++)
 		g_ctx.image[i] = load_png(i + IDR_PNG_MIN);

@@ -835,48 +835,56 @@ gnwinfo_draw_main_window(struct nk_context* ctx, float width, float height)
 	struct nk_rect rect = nk_layout_widget_bounds(ctx);
 	g_ctx.gui_ratio = rect.h / rect.w;
 
-	nk_layout_row_push(ctx, g_ctx.gui_ratio);
-	if (g_ctx.display_view != GNWINFO_MAIN_VIEW_SUMMARY)
+	if (!g_ctx.init_done)
 	{
-		if (nk_button_image_hover(ctx, GET_PNG(IDR_PNG_PC), N_(N__SUMMARY_VIEW)))
-			g_ctx.display_view = GNWINFO_MAIN_VIEW_SUMMARY;
+		nk_layout_row_push(ctx, 1.0f);
+		nk_image_label(ctx, GET_PNG(IDR_PNG_REFRESH), N_(N__LOADING), NK_TEXT_LEFT, g_color_text_d);
 	}
 	else
 	{
-		if (nk_button_image_hover(ctx, GET_PNG(IDR_PNG_SENSOR), N_(N__SENSOR_VIEW)))
-			g_ctx.display_view = GNWINFO_MAIN_VIEW_SENSOR;
-	}
-	nk_layout_row_push(ctx, g_ctx.gui_ratio);
-	if (nk_button_image_hover(ctx, GET_PNG(IDR_PNG_SMART), "S.M.A.R.T."))
-	{
-		if (g_ctx.display_view == GNWINFO_MAIN_VIEW_SMART)
-			g_ctx.display_view = GNWINFO_MAIN_VIEW_SUMMARY;
+		nk_layout_row_push(ctx, g_ctx.gui_ratio);
+		if (g_ctx.display_view != GNWINFO_MAIN_VIEW_SUMMARY)
+		{
+			if (nk_button_image_hover(ctx, GET_PNG(IDR_PNG_PC), N_(N__SUMMARY_VIEW)))
+				g_ctx.display_view = GNWINFO_MAIN_VIEW_SUMMARY;
+		}
 		else
-			g_ctx.display_view = GNWINFO_MAIN_VIEW_SMART;
+		{
+			if (nk_button_image_hover(ctx, GET_PNG(IDR_PNG_SENSOR), N_(N__SENSOR_VIEW)))
+				g_ctx.display_view = GNWINFO_MAIN_VIEW_SENSOR;
+		}
+		nk_layout_row_push(ctx, g_ctx.gui_ratio);
+		if (nk_button_image_hover(ctx, GET_PNG(IDR_PNG_SMART), "S.M.A.R.T."))
+		{
+			if (g_ctx.display_view == GNWINFO_MAIN_VIEW_SMART)
+				g_ctx.display_view = GNWINFO_MAIN_VIEW_SUMMARY;
+			else
+				g_ctx.display_view = GNWINFO_MAIN_VIEW_SMART;
+		}
+		nk_layout_row_push(ctx, g_ctx.gui_ratio);
+		if (nk_button_image_hover(ctx, GET_PNG(IDR_PNG_SETTINGS), N_(N__SETTINGS)))
+			g_ctx.window_flag |= GUI_WINDOW_SETTINGS;
+		nk_layout_row_push(ctx, g_ctx.gui_ratio);
+		if (nk_button_image_hover(ctx, GET_PNG(IDR_PNG_REFRESH), N_(N__REFRESH)))
+		{
+			gnwinfo_ctx_update(IDT_TIMER_1M);
+			gnwinfo_ctx_update(IDT_TIMER_DISK);
+			gnwinfo_ctx_update(IDT_TIMER_DISPLAY);
+			gnwinfo_ctx_update(IDT_TIMER_SMB);
+		}
+		nk_layout_row_push(ctx, g_ctx.gui_ratio);
+		if (nk_button_image_hover(ctx, GET_PNG(IDR_PNG_REPORT), N_(N__SAVE_REPORT)))
+		{
+			if (select_summary_report_path(report_path))
+				report_state = nk_report_begin_capture(report_path);
+		}
+		nk_layout_row_push(ctx, g_ctx.gui_ratio);
+		if (nk_button_image_hover(ctx, GET_PNG(IDR_PNG_INFO), N_(N__ABOUT)))
+			g_ctx.window_flag |= GUI_WINDOW_ABOUT;
+		nk_layout_row_push(ctx, g_ctx.gui_ratio);
+		if (nk_button_image_hover(ctx, GET_PNG(IDR_PNG_CLOSE), N_(N__CLOSE)))
+			InterlockedExchange(&g_ctx.exit_pending, 1);
 	}
-	nk_layout_row_push(ctx, g_ctx.gui_ratio);
-	if (nk_button_image_hover(ctx, GET_PNG(IDR_PNG_SETTINGS), N_(N__SETTINGS)))
-		g_ctx.window_flag |= GUI_WINDOW_SETTINGS;
-	nk_layout_row_push(ctx, g_ctx.gui_ratio);
-	if (nk_button_image_hover(ctx, GET_PNG(IDR_PNG_REFRESH), N_(N__REFRESH)))
-	{
-		gnwinfo_ctx_update(IDT_TIMER_1M);
-		gnwinfo_ctx_update(IDT_TIMER_DISK);
-		gnwinfo_ctx_update(IDT_TIMER_DISPLAY);
-		gnwinfo_ctx_update(IDT_TIMER_SMB);
-	}
-	nk_layout_row_push(ctx, g_ctx.gui_ratio);
-	if (nk_button_image_hover(ctx, GET_PNG(IDR_PNG_REPORT), N_(N__SAVE_REPORT)))
-	{
-		if (select_summary_report_path(report_path))
-			report_state = nk_report_begin_capture(report_path);
-	}
-	nk_layout_row_push(ctx, g_ctx.gui_ratio);
-	if (nk_button_image_hover(ctx, GET_PNG(IDR_PNG_INFO), N_(N__ABOUT)))
-		g_ctx.window_flag |= GUI_WINDOW_ABOUT;
-	nk_layout_row_push(ctx, g_ctx.gui_ratio);
-	if (nk_button_image_hover(ctx, GET_PNG(IDR_PNG_CLOSE), N_(N__CLOSE)))
-		InterlockedExchange(&g_ctx.exit_pending, 1);
 	nk_layout_row_end(ctx);
 
 	switch (g_ctx.display_view)
