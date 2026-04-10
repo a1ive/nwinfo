@@ -278,14 +278,11 @@ SetUsbConnectionInfo(PNODE node, DEVINST parentDevInst, ULONG ulPort)
 	CloseHandle(hubHandle);
 }
 
-static void SetUsbDiskName(PNODE node, DEVINST usbDevInst)
+static void SetUsbDiskName(PNODE node, DEVINST usbDevInst, LPCSTR service)
 {
 	CHAR buf[DEVTREE_MAX_STR_LEN];
 	// Check if the service is USBSTOR or UASPStor
-	if (!NWL_SetDevPropString(buf, DEVTREE_MAX_STR_LEN, usbDevInst, &DEVPKEY_Device_Service))
-		return;
-
-	if (_stricmp(buf, "USBSTOR") != 0 && _stricmp(buf, "UASPStor") != 0)
+	if (_stricmp(service, "USBSTOR") != 0 && _stricmp(service, "UASPStor") != 0)
 		return;
 
 	DEVINST childDevice;
@@ -346,6 +343,8 @@ GetDeviceInfoUsb(PNODE node, void* data, DEVINST devInst, DEVINST parentDevInst,
 	ULONG port = INVALID_USB_PORT;
 	CHAR buf[DEVTREE_MAX_STR_LEN];
 	PNWLIB_IDS ids = (PNWLIB_IDS)data;
+	PNODE_ATT srv = NULL;
+
 	NWL_NodeAttrSet(node, "HWID", hwIds, 0);
 
 	NWL_ParseHwid(node, ids, NWL_Utf8ToUcs2(hwIds), 1);
@@ -357,6 +356,9 @@ GetDeviceInfoUsb(PNODE node, void* data, DEVINST devInst, DEVINST parentDevInst,
 	// Get and print device name using DEVPKEY_NAME
 	if (NWL_SetDevPropString(buf, DEVTREE_MAX_STR_LEN, devInst, &DEVPKEY_NAME))
 		NWL_NodeAttrSet(node, "Name", buf, 0);
+
+	if (NWL_SetDevPropString(buf, DEVTREE_MAX_STR_LEN, devInst, &DEVPKEY_Device_Service))
+		srv = NWL_NodeAttrSet(node, "Service", buf, 0);
 
 	if (NWL_SetDevPropString(buf, DEVTREE_MAX_STR_LEN, devInst, &DEVPKEY_Device_LocationInfo))
 		NWL_NodeAttrSet(node, "Location", buf, 0);
@@ -370,8 +372,11 @@ GetDeviceInfoUsb(PNODE node, void* data, DEVINST devInst, DEVINST parentDevInst,
 	if (port != INVALID_USB_PORT)
 		SetUsbConnectionInfo(node, parentDevInst, port);
 
+	if (!srv || !srv->value)
+		return;
+
 	// Check if it's a Mass Storage Device and get disk name
-	SetUsbDiskName(node, devInst);
+	SetUsbDiskName(node, devInst, srv->value);
 }
 
 PNODE NW_Usb(BOOL bAppend)
