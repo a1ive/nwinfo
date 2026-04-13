@@ -591,7 +591,9 @@ PrintSmartInfo(PNODE node, CDI_SMART* ptr, INT index)
 		return;
 	cdi_update_smart(ptr, index);
 
-	NWL_NodeAttrSetf(node, "Temperature (C)", NAFLG_FMT_NUMERIC, "%d", cdi_get_int(ptr, index, CDI_INT_TEMPERATURE));
+	n = cdi_get_int(ptr, index, CDI_INT_TEMPERATURE);
+	if (n >= -50)
+		NWL_NodeAttrSetf(node, "Temperature (C)", NAFLG_FMT_NUMERIC, "%d", n);
 
 	n = cdi_get_int(ptr, index, CDI_INT_LIFE);
 	if (n >= 0)
@@ -809,8 +811,15 @@ PrintDiskInfo(BOOL cdrom, BOOL volinfo, PNODE node, CDI_SMART* smart)
 			NWL_NodeAttrSetf(nd, "GPT GUID", NAFLG_FMT_GUID, "{%s}", NWL_GuidToStr(PhyDriveList[i].GptGuid));
 			break;
 		}
-		if (!cdrom)
+		if (cdrom)
+		{
+			NWL_NodeAttrSetf(nd, "Short Name", 0, "CD%lu", i);
+		}
+		else
+		{
+			NWL_NodeAttrSetf(nd, "Short Name", 0, "%s%lu", PhyDriveList[i].RemovableMedia ? "RM" : "HD", i);
 			NWL_NodeAttrSetBool(nd, "SSD", PhyDriveList[i].Ssd, 0);
+		}
 		for (INT j = 0; j < SmartCount; j++)
 		{
 			if (cdi_get_int(smart, j, CDI_INT_DISK_ID) == PhyDriveList[i].Index)
@@ -849,6 +858,8 @@ out:
 		NWL_NodeAttrSet(nd, "Size",
 			NWL_GetHumanSize(1000ULL * 1000ULL * cdi_get_dword(smart, i, CDI_DWORD_DISK_SIZE), NWLC->NwUnits, 1024),
 			NAFLG_FMT_HUMAN_SIZE);
+
+		NWL_NodeAttrSetf(nd, "Short Name", 0, "HD-%d", i);
 
 		PrintSmartInfo(nd, smart, i);
 	}

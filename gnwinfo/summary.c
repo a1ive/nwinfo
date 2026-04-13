@@ -614,39 +614,16 @@ draw_storage(struct nk_context* ctx)
 	INT count = NWL_NodeChildCount(g_ctx.disk);
 	for (INT i = 0; i < count; i++)
 	{
-		BOOL cdrom;
-		LPCSTR prefix = "HD";
-		LPCSTR path, id = "-";
-		LPCSTR ssd = "";
 		PNODE disk = NWL_NodeEnumChild(g_ctx.disk, i);
 		if (!disk)
 			continue;
-		path = NWL_NodeAttrGet(disk, "Path");
-		if (strncmp(path, "\\\\.\\CdRom", 9) == 0)
-		{
-			cdrom = TRUE;
-			prefix = "CD";
-			id = &path[9];
-		}
-		else if (strncmp(path, "\\\\.\\PhysicalDrive", 17) == 0)
-		{
-			cdrom = FALSE;
-			id = &path[17];
-			if (strcmp(NWL_NodeAttrGet(disk, "SSD"), NA_BOOL_TRUE) == 0)
-				ssd = " SSD";
-			if (strcmp(NWL_NodeAttrGet(disk, "Removable"), NA_BOOL_TRUE) == 0)
-				prefix = "RM";
-		}
-		else
-		{
-			cdrom = FALSE;
-			prefix = "HD";
-		}
+		LPCSTR prefix = NWL_NodeAttrGet(disk, "Short Name");
+		BOOL cdrom = (prefix[0] == 'C') ? TRUE : FALSE;
+		LPCSTR ssd = (strcmp(NWL_NodeAttrGet(disk, "SSD"), NA_BOOL_TRUE) == 0) ? " SSD" : "";
 
 		nk_layout_row(ctx, NK_DYNAMIC, 0, 3, (float[3]) { 0.3f, 0.4f, 0.23f });
-		snprintf(m_buf, MAX_PATH, "%s%s %s%s",
+		snprintf(m_buf, MAX_PATH, "%s %s%s",
 			prefix,
-			id,
 			NWL_NodeAttrGet(disk, "Type"),
 			ssd);
 		nk_lhsc(ctx, m_buf, NK_TEXT_LEFT, g_color_text_d, nk_true, nk_true);
@@ -661,30 +638,29 @@ draw_storage(struct nk_context* ctx)
 		if ((g_ctx.main_flag & MAIN_DISK_SMART) && strcmp(health, "-") != 0)
 		{
 			LPCSTR life = strchr(health, '(');
-			GETTEXT_STR_ID whealth = N__UNKNOWN;
+			GETTEXT_STR_ID health_str = N__UNKNOWN;
 			struct nk_color color = g_color_unknown;
 			LPCSTR temp = NWL_NodeAttrGet(disk, "Temperature (C)");
-			if (strncmp(health, "Good", 4) == 0)
+			switch (health[0])
 			{
+			case 'G': // Good
 				color = g_color_good;
-				whealth = N__GOOD;
-			}
-			else if (strncmp(health, "Caution", 7) == 0)
-			{
+				health_str = N__GOOD;
+				break;
+			case 'C': // Caution
 				color = g_color_warning;
-				whealth = N__CAUTION;
-			}
-			else if (strncmp(health, "Bad", 3) == 0)
-			{
+				health_str = N__CAUTION;
+				break;
+			case 'B': // Bad
 				color = g_color_error;
-				whealth = N__BAD;
+				health_str = N__BAD;
+				break;
 			}
 			if (life == NULL)
 				life = "";
 
 			nk_lhcf(ctx, NK_TEXT_LEFT, color,
-				u8"%s %s %s"TEMP_CELSIUS_SYMBOL, N_(whealth), life,
-				temp[0] == '-' ? "-" : temp);
+				u8"%s %s %s"TEMP_CELSIUS_SYMBOL, N_(health_str), life, temp);
 		}
 		else
 			nk_spacer(ctx);
