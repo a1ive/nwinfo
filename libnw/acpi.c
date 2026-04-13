@@ -8,15 +8,20 @@
 #define ACPI_FIELD_CHK(Hdr, Type, Field) \
 	((Hdr)->Length >= (offsetof(Type, Field) + sizeof(((Type *)0)->Field)))
 
+#ifdef LIBNW_ACPI_DESC
 LPCSTR GetAcpiTableDescription(UINT32 dwSignature)
 {
 	switch (dwSignature)
 	{
 	case ACPI_SIG('A', 'A', 'F', 'T'): return "ASRock ACPI Firmware Table";
+#ifdef _M_ARM64
 	case ACPI_SIG('A', 'E', 'S', 'T'): return "Arm Error Source Table";
 	case ACPI_SIG('A', 'G', 'D', 'I'): return "Arm Generic Diagnostic Dump and Reset Interface";
+#endif
 	case ACPI_SIG('A', 'P', 'I', 'C'): return "Multiple APIC Description Table";
+#ifdef _M_ARM64
 	case ACPI_SIG('A', 'P', 'M', 'T'): return "Arm Performance Monitoring Unit Table";
+#endif
 	case ACPI_SIG('A', 'S', 'F', '!'): return "Alert Standard Format Table";
 	case ACPI_SIG('A', 'S', 'P', 'T'): return "AMD Secure Processor Table";
 	case ACPI_SIG('B', 'B', 'R', 'T'): return "Boot Background Resource Table";
@@ -60,7 +65,9 @@ LPCSTR GetAcpiTableDescription(UINT32 dwSignature)
 	case ACPI_SIG('M', 'C', 'H', 'I'): return "Management Controller Host Interface Table";
 	case ACPI_SIG('M', 'H', 'S', 'P'): return "Microsoft Pluton Security Processor Table";
 	case ACPI_SIG('M', 'I', 'S', 'C'): return "Miscellaneous GUIDed Table Entries";
+#ifdef _M_ARM64
 	case ACPI_SIG('M', 'P', 'A', 'M'): return "Arm Memory Partitioning And Monitoring";
+#endif
 	case ACPI_SIG('M', 'P', 'S', 'T'): return "Memory Power State Table";
 	case ACPI_SIG('M', 'R', 'R', 'M'): return "Memory Range and Region Mapping Table";
 	case ACPI_SIG('M', 'S', 'C', 'T'): return "Maximum System Characteristics Table";
@@ -81,8 +88,10 @@ LPCSTR GetAcpiTableDescription(UINT32 dwSignature)
 	case ACPI_SIG('R', 'A', 'S', '2'): return "RAS2 Feature Table";
 	case ACPI_SIG('R', 'A', 'S', 'F'): return "RAS Feature Table";
 	case ACPI_SIG('R', 'G', 'R', 'T'): return "Regulatory Graphics Resource Table";
+#if 0
 	case ACPI_SIG('R', 'H', 'C', 'T'): return "RISC-V Hart Capabilities Table";
 	case ACPI_SIG('R', 'I', 'M', 'T'): return "RISC-V IO Mapping Table";
+#endif
 	case ACPI_SIG('R', 'S', 'D', 'T'): return "Root System Description Table";
 	case ACPI_SIG('S', 'B', 'S', 'T'): return "Smart Battery Specification Table";
 	case ACPI_SIG('S', 'D', 'E', 'I'): return "Software Delegated Exceptions Interface";
@@ -116,6 +125,7 @@ LPCSTR GetAcpiTableDescription(UINT32 dwSignature)
 		return "OEM Specific Information Table";
 	return "Unknown ACPI Table";
 }
+#endif
 
 static void
 PrintU8Str(PNODE pNode, LPCSTR Key, UINT8 *Str, DWORD Len)
@@ -208,7 +218,9 @@ static PNODE PrintTableHeader(PNODE pNode, DESC_HEADER* Hdr)
 	PNODE tab = NWL_NodeAppendNew(pNode, "Table", NFLG_TABLE_ROW);
 
 	PrintU8Str(tab, "Signature", Hdr->Signature, 4);
+#ifdef LIBNW_ACPI_DESC
 	NWL_NodeAttrSet(tab, "Description", GetAcpiTableDescription(dwSignature), 0);
+#endif
 	NWL_NodeAttrSetf(tab, "Revision", 0, "0x%02x", Hdr->Revision);
 	NWL_NodeAttrSetf(tab, "Length", NAFLG_FMT_NUMERIC, "%u", Hdr->Length);
 	NWL_NodeAttrSetf(tab, "Checksum", 0, "0x%02x", Hdr->Checksum);
@@ -268,7 +280,9 @@ PrintRSDP(PNODE pNode, ACPI_RSDP_V2* rsdp)
 		return NULL;
 	PNODE tab = NWL_NodeAppendNew(pNode, "Table", NFLG_TABLE_ROW);
 	PrintU8Str(tab, "Signature", rsdp->RsdpV1.Signature, RSDP_SIGNATURE_SIZE);
+#ifdef LIBNW_ACPI_DESC
 	NWL_NodeAttrSet(tab, "Description", "Root System Description Pointer", 0);
+#endif
 	NWL_NodeAttrSetf(tab, "V1 Checksum", 0, "0x%02x", rsdp->Checksum);
 	NWL_NodeAttrSet(tab, "V1 Checksum Status",
 		NWL_AcpiChecksum(&rsdp->RsdpV1, sizeof(ACPI_RSDP_V1)) == 0 ? "OK" : "ERR", 0);
@@ -305,7 +319,9 @@ PrintFACS(PNODE pNode)
 	}
 	PNODE tab = NWL_NodeAppendNew(pNode, "Table", NFLG_TABLE_ROW);
 	PrintU8Str(tab, "Signature", facs->Signature, 4);
+#ifdef LIBNW_ACPI_DESC
 	NWL_NodeAttrSet(tab, "Description", "Firmware ACPI Control Structure", 0);
+#endif
 	NWL_NodeAttrSetf(tab, "Length", NAFLG_FMT_NUMERIC, "%u", facs->Length);
 	NWL_NodeAttrSetRaw(tab, "Binary Data", facs, (size_t)facs->Length);
 	NWL_NodeAttrSetf(tab, "Hardware Signature", 0, "0x%08X", facs->HwSignature);
