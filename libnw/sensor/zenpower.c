@@ -60,6 +60,7 @@
 
 #define F17H_M01H_THM_TCON_CUR_TMP          0x00059800
 #define F17H_TEMP_OFFSET_FLAG               0x80000
+#define F1AH_TEMP_OFFSET_FLAG               0x30000
 
 static struct
 {
@@ -413,7 +414,7 @@ static inline double svi_plane_to_soc_idd(uint32_t plane)
 static inline double thm_to_tctl(uint32_t thm)
 {
 	double temp = 0.001 * ((thm >> 21) * 125);
-	if (thm & F17H_TEMP_OFFSET_FLAG)
+	if (thm & (F17H_TEMP_OFFSET_FLAG | F1AH_TEMP_OFFSET_FLAG))
 		temp += -49.0;
 	return temp;
 }

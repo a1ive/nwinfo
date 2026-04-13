@@ -388,6 +388,7 @@ static int amd_k10_temperature(struct msr_info_t* info)
 
 #define F17H_M01H_THM_TCON_CUR_TMP          0x00059800
 #define F17H_TEMP_OFFSET_FLAG               0x80000
+#define F1AH_TEMP_OFFSET_FLAG               0x30000
 
 static float amd_17h_temperature(struct msr_info_t* info)
 {
@@ -407,7 +408,7 @@ static float amd_17h_temperature(struct msr_info_t* info)
 		strstr(info->id->brand_str, "Threadripper 29"))
 		offset = -27.0f;
 
-	if ((temperature & F17H_TEMP_OFFSET_FLAG))
+	if (temperature & (F17H_TEMP_OFFSET_FLAG | F1AH_TEMP_OFFSET_FLAG))
 		offset += -49.0f;
 
 	return 0.001f * ((temperature >> 21) * 125) + offset;
