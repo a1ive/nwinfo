@@ -39,7 +39,7 @@ AudioSetCodecName(PNODE node, LPCSTR hwid)
 	vid = (uint16_t)strtoul(hwid + 20, NULL, 16);
 	did = (uint16_t)strtoul(hwid + 29, NULL, 16);
 
-	NWL_NodeAttrSet(node, "Codec Vendor", "Unknown", 0);
+	NWL_NodeAttrSetf(node, "Codec Vendor", 0, "%04X", vid);
 	for (size_t i = 0; i < sizeof(HDA_VENDOR_IDS) / sizeof(HDA_VENDOR_IDS[0]); i++)
 	{
 		if (HDA_VENDOR_IDS[i].vid == vid)
@@ -49,7 +49,7 @@ AudioSetCodecName(PNODE node, LPCSTR hwid)
 		}
 	}
 
-	NWL_NodeAttrSet(node, "Codec Device", "HDMI/DP", 0);
+	NWL_NodeAttrSetf(node, "Codec Device", 0, "%04X", did);
 	for (size_t i = 0; i < sizeof(HDA_DEVICE_IDS) / sizeof(HDA_DEVICE_IDS[0]); i++)
 	{
 		if (HDA_DEVICE_IDS[i].vid == vid && HDA_DEVICE_IDS[i].did == did)
