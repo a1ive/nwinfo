@@ -532,6 +532,7 @@ static ry_err_t get_pm_table_version(ry_handle_t* handle, uint32_t* version)
 
 static size_t get_pm_table_size_from_version(ry_handle_t* handle, uint32_t version)
 {
+#if 0
 	switch (version)
 	{
 	case 0x190001: return 0x280;
@@ -647,6 +648,7 @@ static size_t get_pm_table_size_from_version(ry_handle_t* handle, uint32_t versi
 	//case 0x730E04: return 0x288C;
 	//case 0x731004: return 0x2D74;
 	}
+#endif
 	return SMU_TABLE_MAX_SIZE;
 }
 
