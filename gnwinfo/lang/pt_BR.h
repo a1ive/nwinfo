@@ -80,6 +80,7 @@ lang_pt_br[N__MAX_] =
 	[N__HIDE_VENDOR] = u8"Ocultar fabricante",
 	[N__HIDE_VERSION] = u8"Ocultar versão",
 	[N__HIDE_CACHE] = u8"Ocultar cache",
+	[N__TEMP_UNIT] = u8"Unidade de temperatura",
 	[N__USE_SMBUS_SPD] = u8"Usar SPD",
 	[N__USE_GPU_PCI] = u8"Usar PCI",
 	[N__COMPACT_VIEW] = u8"Visão compacta",

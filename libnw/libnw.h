@@ -147,6 +147,11 @@ typedef struct _NWLIB_CONTEXT
 		FORMAT_HTML,
 	} NwFormat;
 
+#define NW_TEMP_CELSIUS 'C'
+#define NW_TEMP_FAHRENHEIT 'F'
+#define NW_TEMP_KELVIN 'K'
+	CHAR NwTempUnit;
+
 	FILE* NwFile;
 	LPCSTR* NwUnits;
 	CHAR* ErrLog;

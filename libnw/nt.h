@@ -4,6 +4,10 @@
 #define VC_EXTRALEAN
 #include <windows.h>
 
+#ifndef _NTDEF_
+typedef LONG NTSTATUS;
+#endif
+
 typedef struct _UNICODE_STRING
 {
 	USHORT Length;

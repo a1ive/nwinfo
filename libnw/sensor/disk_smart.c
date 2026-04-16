@@ -83,10 +83,10 @@ static void disk_get(PNODE node)
 			NWL_NodeAttrSetf(disk, "Life", NAFLG_FMT_NUMERIC, "%d", n);
 		n = cdi_get_int(NWLC->NwSmart, i, CDI_INT_TEMPERATURE);
 		if (n >= 0)
-			NWL_NodeAttrSetf(disk, "Temperature", NAFLG_FMT_NUMERIC, "%d", n);
+			NWL_NodeAttrSetf(disk, "Temperature", NAFLG_FMT_NUMERIC, "%.0f", NWL_GetTemperature((float)n));
 		n = cdi_get_int(NWLC->NwSmart, i, CDI_INT_TEMPERATURE_ALARM);
 		if (n >= 0)
-			NWL_NodeAttrSetf(disk, "Alarm Temperature", NAFLG_FMT_NUMERIC, "%d", n);
+			NWL_NodeAttrSetf(disk, "Alarm Temperature", NAFLG_FMT_NUMERIC, "%.0f", NWL_GetTemperature((float)n));
 		n = cdi_get_int(NWLC->NwSmart, i, CDI_INT_WEAR_LEVELING_COUNT);
 		if (n >= 0)
 			NWL_NodeAttrSetf(disk, "Wear Leveling Count", NAFLG_FMT_NUMERIC, "%d", n);

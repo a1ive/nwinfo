@@ -20,6 +20,8 @@
 #include <nuklear_gdip.h>
 
 #define TEMP_CELSIUS_SYMBOL u8"\u00b0C" // \u2103 or \u00b0C
+#define TEMP_FAHRENHEIT_SYMBOL u8"\u00b0F"
+#define TEMP_KELVIN_SYMBOL u8"K"
 
 GdipFont*
 nk_gdip_load_font(LPCWSTR name, int size);
@@ -153,6 +155,7 @@ typedef struct _GNW_CONTEXT
 	UINT32 smart_flag;
 	nk_bool gui_bginfo;
 	nk_bool gui_aa;
+	const char* temp_unit;
 
 	struct nk_image image[IDR_PNG_MAX - IDR_PNG_MIN];
 

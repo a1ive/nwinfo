@@ -336,6 +336,21 @@ gnwinfo_ctx_init(HINSTANCE inst, HWND wnd, struct nk_context* ctx, float width, 
 	g_ctx.lib.PciInfo = TRUE;
 	g_ctx.lib.MainboardInfo = TRUE;
 
+	g_ctx.lib.NwTempUnit = gnwinfo_get_ini_value(L"Window", L"TempUnit", L"C")[0];
+	switch (g_ctx.lib.NwTempUnit)
+	{
+	case NW_TEMP_FAHRENHEIT:
+		g_ctx.temp_unit = TEMP_FAHRENHEIT_SYMBOL;
+		break;
+	case NW_TEMP_KELVIN:
+		g_ctx.temp_unit = TEMP_KELVIN_SYMBOL;
+		break;
+	case NW_TEMP_CELSIUS:
+	default:
+		g_ctx.temp_unit = TEMP_CELSIUS_SYMBOL;
+		break;
+	}
+
 	if (g_debug)
 		g_ctx.lib.Debug = TRUE;
 

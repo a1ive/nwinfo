@@ -1,11 +1,8 @@
 // SPDX-License-Identifier: Unlicense
 #pragma once
 
-#define VC_EXTRALEAN
-#include <windows.h>
-#include <cfgmgr32.h>
-#include "node.h"
 #include "nt.h"
+#include "node.h"
 #include "nwapi.h"
 
 struct RAW_SMBIOS_DATA;
@@ -20,6 +17,9 @@ LIBNW_API BOOL NWL_IsAdmin(void);
 LIBNW_API DWORD NWL_ObtainPrivileges(LPWSTR privilege);
 LIBNW_API LPCSTR NWL_GetHumanSize(UINT64 size, LPCSTR human_sizes[6], UINT64 base);
 LIBNW_API LPCSTR NWL_GetHumanTime(UINT64 ullSecond);
+
+float NWL_GetTemperature(float celsius);
+LPCSTR NWL_GetTemperatureLabel(void);
 
 LIBNW_API BOOL NWL_ReadMemory(PVOID buffer, DWORD_PTR address, DWORD length);
 
@@ -36,7 +36,7 @@ LIBNW_API PVOID NWL_GetAcpiByAddr(DWORD_PTR Addr, DWORD TableId);
 LIBNW_API UINT8 NWL_AcpiChecksum(VOID* base, UINT size);
 INT NWL_GetRegDwordValue(HKEY Key, LPCWSTR SubKey, LPCWSTR ValueName, DWORD* pValue);
 HANDLE NWL_GetDiskHandleById(BOOL Cdrom, BOOL Write, DWORD Id);
-LPCSTR NWL_GetBusTypeString(STORAGE_BUS_TYPE Type);
+LPCSTR NWL_GetBusTypeString(int Type);
 LPCSTR NWL_GuidToStr(UCHAR Guid[16]);
 LPCSTR NWL_WinGuidToStr(BOOL bBracket, GUID* pGuid);
 BOOL NWL_StrToGuid(const CHAR* cchText, GUID* pGuid);

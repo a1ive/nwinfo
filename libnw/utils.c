@@ -157,6 +157,34 @@ LPCSTR NWL_GetHumanTime(UINT64 ullSecond)
 	return s_szBuffer;
 }
 
+float NWL_GetTemperature(float celsius)
+{
+	switch (NWLC->NwTempUnit)
+	{
+		case NW_TEMP_FAHRENHEIT:
+			return celsius * 1.8f + 32.0f;
+		case NW_TEMP_KELVIN:
+			return celsius + 273.15f;
+		case NW_TEMP_CELSIUS:
+		default:
+			return celsius;
+	}
+}
+
+LPCSTR NWL_GetTemperatureLabel(void)
+{
+	switch (NWLC->NwTempUnit)
+	{
+		case NW_TEMP_FAHRENHEIT:
+			return "Temperature (F)";
+		case NW_TEMP_KELVIN:
+			return "Temperature (K)";
+		case NW_TEMP_CELSIUS:
+		default:
+			return "Temperature (C)";
+	}
+}
+
 static UINT32 nt5_htonl(UINT32 x)
 {
 	UCHAR* s = (UCHAR*)&x;
@@ -472,7 +500,7 @@ HANDLE NWL_GetDiskHandleById(BOOL Cdrom, BOOL Write, DWORD Id)
 		FILE_SHARE_READ | FILE_SHARE_WRITE, 0, OPEN_EXISTING, FILE_ATTRIBUTE_SYSTEM, 0);
 }
 
-LPCSTR NWL_GetBusTypeString(STORAGE_BUS_TYPE Type)
+LPCSTR NWL_GetBusTypeString(int Type)
 {
 	switch (Type)
 	{

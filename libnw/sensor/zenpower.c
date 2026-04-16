@@ -73,7 +73,7 @@ static struct
 	uint32_t num_cores;
 	uint8_t num_ccds;
 	uint8_t zen_gen;
-	double temp_offset;
+	float temp_offset;
 	float stapm_limit;
 	float stapm_value;
 	float fast_limit;
@@ -247,12 +247,12 @@ static bool smn_init(void)
 	if (strstr(ctx.id->brand_str, "1600X") ||
 		strstr(ctx.id->brand_str, "1700X") ||
 		strstr(ctx.id->brand_str, "1800X"))
-		ctx.temp_offset = -20.0;
+		ctx.temp_offset = -20.0f;
 	else if (strstr(ctx.id->brand_str, "2700X"))
-		ctx.temp_offset = -10.0;
+		ctx.temp_offset = -10.0f;
 	else if (strstr(ctx.id->brand_str, "Threadripper 19") ||
 		strstr(ctx.id->brand_str, "Threadripper 29"))
-		ctx.temp_offset = -27.0;
+		ctx.temp_offset = -27.0f;
 
 	switch (ctx.codename)
 	{
@@ -411,19 +411,19 @@ static inline double svi_plane_to_soc_idd(uint32_t plane)
 	}
 }
 
-static inline double thm_to_tctl(uint32_t thm)
+static inline float thm_to_tctl(uint32_t thm)
 {
-	double temp = 0.001 * ((thm >> 21) * 125);
+	float temp = 0.001f * ((thm >> 21) * 125);
 	if (thm & (F17H_TEMP_OFFSET_FLAG | F1AH_TEMP_OFFSET_FLAG))
-		temp += -49.0;
+		temp += -49.0f;
 	return temp;
 }
 
-static inline double thm_to_tccd(uint32_t thm)
+static inline float thm_to_tccd(uint32_t thm)
 {
 	if (!(thm & ZEN_CCD_TEMP_VALID))
-		return 0.0;
-	return (0.125 * (thm & ZEN_CCD_TEMP_MASK) - 49.0);
+		return 0.0f;
+	return (0.125f * (thm & ZEN_CCD_TEMP_MASK) - 49.0f);
 }
 
 static inline void
@@ -436,6 +436,18 @@ get_smu_value(PNODE node, const char* name, ry_err_t(*func)(ry_handle_t*, float*
 	else if (*value == 0.0f)
 		return;
 	NWL_NodeAttrSetf(node, name, NAFLG_FMT_NUMERIC, "%.3f", *value);
+}
+
+static inline void
+get_smu_temp(PNODE node, const char* name, ry_err_t(*func)(ry_handle_t*, float*), float* value)
+{
+	float data = 0.0f;
+	ry_err_t err = func(ctx.smu, &data);
+	if (err == RYZEN_SMU_OK)
+		value = &data;
+	else if (*value == 0.0f)
+		return;
+	NWL_NodeAttrSetf(node, name, NAFLG_FMT_NUMERIC, "%.3f", NWL_GetTemperature(*value));
 }
 
 static inline void
@@ -454,23 +466,39 @@ get_smu_value_core(PNODE node, const char* name, ry_err_t(*func)(ry_handle_t*, u
 	}
 }
 
+static inline void
+get_smu_temp_core(PNODE node, const char* name, ry_err_t(*func)(ry_handle_t*, uint32_t, float*))
+{
+	for (uint32_t i = 0; i < ctx.num_cores; i++)
+	{
+		float data = 0.0f;
+		ry_err_t err = func(ctx.smu, i, &data);
+		if (err == RYZEN_SMU_OK)
+		{
+			char buf[64];
+			snprintf(buf, sizeof(buf), "%s %u", name, i);
+			NWL_NodeAttrSetf(node, buf, NAFLG_FMT_NUMERIC, "%.3f", NWL_GetTemperature(data));
+		}
+	}
+}
+
 static void smn_get(PNODE node)
 {
 	WR0_WaitPciBus(500);
 
 	uint32_t thm = WR0_RdAmdSmn(NWLC->NwDrv, WR0_SMN_AMD17H, F17H_M01H_THM_TCON_CUR_TMP);
-	double tctl = thm_to_tctl(thm);
-	NWL_NodeAttrSetf(node, "Tctl", NAFLG_FMT_NUMERIC, "%.3f", tctl);
-	double tdie = tctl - ctx.temp_offset;
-	NWL_NodeAttrSetf(node, "Tdie", NAFLG_FMT_NUMERIC, "%.3f", tdie);
+	float tctl = thm_to_tctl(thm);
+	NWL_NodeAttrSetf(node, "Tctl", NAFLG_FMT_NUMERIC, "%.3f", NWL_GetTemperature(tctl));
+	float tdie = tctl - ctx.temp_offset;
+	NWL_NodeAttrSetf(node, "Tdie", NAFLG_FMT_NUMERIC, "%.3f", NWL_GetTemperature(tdie));
 
 	for (uint8_t i = 0; i < ctx.num_ccds; i++)
 	{
 		char buf[] = "TccdXXX";
 		snprintf(buf, sizeof(buf), "Tccd%u", i + 1);
 		uint32_t thm_data = WR0_RdAmdSmn(NWLC->NwDrv, WR0_SMN_AMD17H, ctx.ccd_temp_base + (i * 4));
-		double tccd = thm_to_tccd(thm_data);
-		NWL_NodeAttrSetf(node, buf, NAFLG_FMT_NUMERIC, "%.3f", tccd);
+		float tccd = thm_to_tccd(thm_data);
+		NWL_NodeAttrSetf(node, buf, NAFLG_FMT_NUMERIC, "%.3f", NWL_GetTemperature(tccd));
 	}
 
 	uint32_t plane0 = WR0_RdAmdSmn(NWLC->NwDrv, WR0_SMN_AMD17H, ctx.svi_core_addr);
@@ -501,7 +529,7 @@ static void smn_get(PNODE node)
 		get_smu_value(node, "VRM Current Value", ryzen_smu_get_vrm_current_value, &ctx.vrm_current_value);
 		get_smu_value(node, "VRM SoC Current", ryzen_smu_get_vrmsoc_current, &ctx.vrmsoc_current);
 		get_smu_value(node, "VRM SoC Current Value", ryzen_smu_get_vrmsoc_current_value, &ctx.vrmsoc_current_value);
-		get_smu_value(node, "GFX Temperature", ryzen_smu_get_gfx_temperature, &ctx.gfx_temperature);
+		get_smu_temp(node, "GFX Temperature", ryzen_smu_get_gfx_temperature, &ctx.gfx_temperature);
 		get_smu_value(node, "GFX Voltage", ryzen_smu_get_gfx_volt, &ctx.gfx_volt);
 		get_smu_value(node, "GFX Clock", ryzen_smu_get_gfx_clk, &ctx.gfx_clk);
 		get_smu_value(node, "PSI0 Current", ryzen_smu_get_psi0_current, &ctx.psi0_current);
@@ -513,9 +541,9 @@ static void smn_get(PNODE node)
 		get_smu_value(node, "CLDO VDDP", ryzen_smu_get_cldo_vddp, &ctx.cldo_vddp);
 		get_smu_value(node, "L3 Clock", ryzen_smu_get_l3_clk, &ctx.l3_clk);
 		get_smu_value(node, "L3 VDDM", ryzen_smu_get_l3_vddm, &ctx.l3_vddm);
-		get_smu_value(node, "L3 Temperature", ryzen_smu_get_l3_temperature, &ctx.l3_temperature);
+		get_smu_temp(node, "L3 Temperature", ryzen_smu_get_l3_temperature, &ctx.l3_temperature);
 		get_smu_value(node, "Socket Power", ryzen_smu_get_socket_power, &ctx.socket_power);
-		get_smu_value_core(node, "Core Temperature", ryzen_smu_get_core_temperature);
+		get_smu_temp_core(node, "Core Temperature", ryzen_smu_get_core_temperature);
 		get_smu_value_core(node, "Core Power", ryzen_smu_get_core_power);
 		get_smu_value_core(node, "Core Voltage", ryzen_smu_get_core_volt);
 		get_smu_value_core(node, "Core Clock", ryzen_smu_get_core_clk);

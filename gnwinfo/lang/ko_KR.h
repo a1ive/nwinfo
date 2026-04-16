@@ -80,6 +80,7 @@ lang_ko_kr[N__MAX_] =
 	[N__HIDE_VENDOR] = u8"공급업체 숨기기",
 	[N__HIDE_VERSION] = u8"버전 숨기기",
 	[N__HIDE_CACHE] = u8"캐시 숨기기",
+	[N__TEMP_UNIT] = u8"온도 단위",
 	[N__USE_SMBUS_SPD] = u8"SPD 사용",
 	[N__USE_GPU_PCI] = u8"PCI 사용",
 	[N__COMPACT_VIEW] = u8"간략히 보기",

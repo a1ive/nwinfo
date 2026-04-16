@@ -125,6 +125,37 @@ nk_lang_list(struct nk_context* ctx, float item_height)
 	}
 }
 
+static void
+nk_temp_unit_list(struct nk_context* ctx, float item_height)
+{
+	struct nk_vec2 size;
+
+	size.y = 8 * (item_height + ctx->style.window.spacing.y);
+	size.y += ctx->style.window.spacing.y * 2 + ctx->style.window.combo_padding.y * 2;
+	size.x = nk_widget_width(ctx);
+
+	if (nk_combo_begin_text(ctx, g_ctx.temp_unit, nk_strlen(g_ctx.temp_unit), size))
+	{
+		nk_layout_row_dynamic(ctx, item_height, 1);
+		if (nk_combo_item_label(ctx, TEMP_CELSIUS_SYMBOL, NK_TEXT_LEFT))
+		{
+			g_ctx.temp_unit = TEMP_CELSIUS_SYMBOL;
+			g_ctx.lib.NwTempUnit = NW_TEMP_CELSIUS;
+		}
+		if (nk_combo_item_label(ctx, TEMP_FAHRENHEIT_SYMBOL, NK_TEXT_LEFT))
+		{
+			g_ctx.temp_unit = TEMP_FAHRENHEIT_SYMBOL;
+			g_ctx.lib.NwTempUnit = NW_TEMP_FAHRENHEIT;
+		}
+		if (nk_combo_item_label(ctx, TEMP_KELVIN_SYMBOL, NK_TEXT_LEFT))
+		{
+			g_ctx.temp_unit = TEMP_KELVIN_SYMBOL;
+			g_ctx.lib.NwTempUnit = NW_TEMP_KELVIN;
+		}
+		nk_combo_end(ctx);
+	}
+}
+
 VOID
 gnwinfo_draw_settings_window(struct nk_context* ctx, float width, float height)
 {
@@ -161,6 +192,10 @@ gnwinfo_draw_settings_window(struct nk_context* ctx, float width, float height)
 	nk_spacer(ctx);
 	set_label(ctx, N_(N__FONT_NAME));
 	nk_font_list(ctx, g_col_height);
+
+	nk_spacer(ctx);
+	set_label(ctx, N_(N__TEMP_UNIT));
+	nk_temp_unit_list(ctx, g_col_height);
 
 	nk_spacer(ctx);
 	set_label(ctx, N_(N__FONT_SIZE));
@@ -349,6 +384,7 @@ gnwinfo_draw_settings_window(struct nk_context* ctx, float width, float height)
 		if (g_font_name[0] != '\0')
 			gnwinfo_set_ini_value(L"Window", L"Font", L"%s", NWL_Utf8ToUcs2(g_font_name));
 		gnwinfo_set_ini_value(L"Window", L"FontSize", L"%d", g_font_size_cached);
+		gnwinfo_set_ini_value(L"Window", L"TempUnit", L"%c", g_ctx.lib.NwTempUnit);
 		set_ini_color(L"Background", g_color_back);
 		set_ini_color(L"Highlight", g_color_text_l);
 		set_ini_color(L"Default", g_color_text_d);

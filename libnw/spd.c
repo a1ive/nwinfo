@@ -1026,8 +1026,8 @@ ParseSpd(PNODE node, smbus_t* ctx, int id, UINT8 rawSpd[SPD_MAX_SIZE])
 			tsPresent = SM_DDR4_IsThermalSensorPresent(ctx, SPD_SLABE_ADDR_BASE + id);
 			NWL_NodeAttrSetBool(nspd, "Thermal Sensor", tsPresent, 0);
 			if (tsPresent)
-				NWL_NodeAttrSetf(nspd, "Temperature (C)", NAFLG_FMT_NUMERIC, "%.1f",
-					SM_DDR4_GetTemperature(ctx, SPD_SLABE_ADDR_BASE + id));
+				NWL_NodeAttrSetf(nspd, NWL_GetTemperatureLabel(), NAFLG_FMT_NUMERIC, "%.1f",
+					NWL_GetTemperature(SM_DDR4_GetTemperature(ctx, SPD_SLABE_ADDR_BASE + id)));
 		}
 		break;
 	case MEM_TYPE_DDR5:
@@ -1040,8 +1040,8 @@ ParseSpd(PNODE node, smbus_t* ctx, int id, UINT8 rawSpd[SPD_MAX_SIZE])
 			tsPresent = SM_DDR5_IsThermalSensorPresent(ctx, SPD_SLABE_ADDR_BASE + id);
 			NWL_NodeAttrSetBool(nspd, "Thermal Sensor", tsPresent, 0);
 			if (tsPresent)
-				NWL_NodeAttrSetf(nspd, "Temperature (C)", NAFLG_FMT_NUMERIC, "%.1f",
-					SM_DDR5_GetTemperature(ctx, SPD_SLABE_ADDR_BASE + id));
+				NWL_NodeAttrSetf(nspd, NWL_GetTemperatureLabel(), NAFLG_FMT_NUMERIC, "%.1f",
+					NWL_GetTemperature(SM_DDR5_GetTemperature(ctx, SPD_SLABE_ADDR_BASE + id)));
 		}
 		break;
 	case MEM_TYPE_FPM_DRAM:

@@ -297,7 +297,7 @@ PrintCpuMsr(PNODE node, uint8_t index)
 		NWL_MsrGet(msr, INFO_CUR_MULTIPLIER) / 100.0,
 		NWL_MsrGet(msr, INFO_MIN_MULTIPLIER) / 100,
 		NWL_MsrGet(msr, INFO_MAX_MULTIPLIER) / 100);
-	NWL_NodeAttrSetf(node, "Temperature (C)", NAFLG_FMT_NUMERIC, "%d", NWL_MsrGet(msr, INFO_PKG_TEMPERATURE));
+	NWL_NodeAttrSetf(node, NWL_GetTemperatureLabel(), NAFLG_FMT_NUMERIC, "%.0f", NWL_GetTemperature((float)NWL_MsrGet(msr, INFO_PKG_TEMPERATURE)));
 	NWL_NodeAttrSetf(node, "Core Voltage (V)", NAFLG_FMT_NUMERIC, "%.2lf", NWL_MsrGet(msr, INFO_VOLTAGE) / 100.0);
 	NWL_NodeAttrSetf(node, "Bus Clock (MHz)", NAFLG_FMT_NUMERIC, "%.2lf", NWL_MsrGet(msr, INFO_BUS_CLOCK) / 100.0);
 	NWL_NodeAttrSetf(node, "PL1 (W)", NAFLG_FMT_NUMERIC, "%.2lf", NWL_MsrGet(msr, INFO_PKG_PL1) / 100.0);

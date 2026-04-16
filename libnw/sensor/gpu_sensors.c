@@ -32,7 +32,7 @@ static void gpu_get(PNODE node)
 			gpu = NWL_NodeAppendNew(node, dev->Name, NFLG_ATTGROUP | NAFLG_FMT_KEY_QUOTE);
 
 		NWL_NodeAttrSetf(gpu, "Utilization", NAFLG_FMT_NUMERIC, "%.2f", dev->UsagePercent);
-		NWL_NodeAttrSetf(gpu, "Temperature", NAFLG_FMT_NUMERIC, "%.2f", dev->Temperature);
+		NWL_NodeAttrSetf(gpu, "Temperature", NAFLG_FMT_NUMERIC, "%.2f", NWL_GetTemperature((float)dev->Temperature));
 		NWL_NodeAttrSet(gpu, "Total Dedicated Memory", NWL_GetHumanSize(dev->TotalMemory, NWLC->NwUnits, 1024), NAFLG_FMT_HUMAN_SIZE);
 		NWL_NodeAttrSet(gpu, "Free Dedicated Memory", NWL_GetHumanSize(dev->FreeMemory, NWLC->NwUnits, 1024), NAFLG_FMT_HUMAN_SIZE);
 		NWL_NodeAttrSetf(gpu, "Memory Usage", NAFLG_FMT_NUMERIC, "%llu", dev->MemoryPercent);

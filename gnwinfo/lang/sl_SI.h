@@ -80,6 +80,7 @@ lang_sl_si[N__MAX_] =
 	[N__HIDE_VENDOR] = u8"Skrij vendorja",
 	[N__HIDE_VERSION] = u8"Skrij različico",
 	[N__HIDE_CACHE] = u8"Skrij predpomnilnik",
+	[N__TEMP_UNIT] = u8"Enota temperature",
 	[N__USE_SMBUS_SPD] = u8"Uporabi SPD",
 	[N__USE_GPU_PCI] = u8"Uporabi PCI",
 	[N__COMPACT_VIEW] = u8"Kompaktni pogled",

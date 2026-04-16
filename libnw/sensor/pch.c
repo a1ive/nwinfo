@@ -274,7 +274,7 @@ static void pch_fini(void)
 
 static void pch_get(PNODE node)
 {
-	NWL_NodeAttrSetf(node, "Temperature", NAFLG_FMT_NUMERIC, "%d", ctx.get());
+	NWL_NodeAttrSetf(node, "Temperature", NAFLG_FMT_NUMERIC, "%.0f", NWL_GetTemperature((float)ctx.get()));
 }
 
 sensor_t sensor_pch =

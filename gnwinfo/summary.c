@@ -239,7 +239,7 @@ draw_processor(struct nk_context* ctx)
 		if (g_ctx.cpu_info[i].MsrTemp > 0)
 			nk_lhcf(ctx, NK_TEXT_LEFT,
 				gnwinfo_get_color((double)g_ctx.cpu_info[i].MsrTemp, 65.0, 85.0),
-				u8"%d"TEMP_CELSIUS_SYMBOL, g_ctx.cpu_info[i].MsrTemp);
+				u8"%.0f%s", NWL_GetTemperature((float)g_ctx.cpu_info[i].MsrTemp), g_ctx.temp_unit);
 		else
 			nk_spacer(ctx);
 
@@ -340,7 +340,7 @@ draw_mem_spd(struct nk_context* ctx)
 			NWL_NodeAttrGet(tab, "tRAS"));
 		double temp = g_ctx.mem_sensors.Sensor[i].Temp;
 		if (temp > 0.0)
-			nk_lhcf(ctx, NK_TEXT_LEFT, gnwinfo_get_color(temp, 55.0, 85.0), u8"%.1f"TEMP_CELSIUS_SYMBOL, temp);
+			nk_lhcf(ctx, NK_TEXT_LEFT, gnwinfo_get_color(temp, 55.0, 85.0), u8"%.1f%s", NWL_GetTemperature((float)temp), g_ctx.temp_unit);
 		else
 			nk_spacer(ctx);
 	}
@@ -406,7 +406,7 @@ draw_display(struct nk_context* ctx)
 					gpu->UsagePercent, gpu->Power, gpu->Frequency, gpu->Voltage, gpu->FanSpeed);
 				nk_lhcf(ctx, NK_TEXT_LEFT,
 					gnwinfo_get_color(gpu->Temperature, 50.0, 85.0),
-					u8"%.1f"TEMP_CELSIUS_SYMBOL, gpu->Temperature);
+					u8"%.1f%s", NWL_GetTemperature((float)gpu->Temperature), g_ctx.temp_unit);
 			}
 		}
 		else
@@ -640,7 +640,7 @@ draw_storage(struct nk_context* ctx)
 			LPCSTR life = strchr(health, '(');
 			GETTEXT_STR_ID health_str = N__UNKNOWN;
 			struct nk_color color = g_color_unknown;
-			LPCSTR temp = NWL_NodeAttrGet(disk, "Temperature (C)");
+			LPCSTR temp = NWL_NodeAttrGet(disk, NWL_GetTemperatureLabel());
 			switch (health[0])
 			{
 			case 'G': // Good
@@ -660,7 +660,7 @@ draw_storage(struct nk_context* ctx)
 				life = "";
 
 			nk_lhcf(ctx, NK_TEXT_LEFT, color,
-				u8"%s %s %s"TEMP_CELSIUS_SYMBOL, N_(health_str), life, temp);
+				u8"%s %s %s%s", N_(health_str), life, temp, g_ctx.temp_unit);
 		}
 		else
 			nk_spacer(ctx);

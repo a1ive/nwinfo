@@ -593,7 +593,7 @@ PrintSmartInfo(PNODE node, CDI_SMART* ptr, INT index)
 
 	n = cdi_get_int(ptr, index, CDI_INT_TEMPERATURE);
 	if (n >= -50)
-		NWL_NodeAttrSetf(node, "Temperature (C)", NAFLG_FMT_NUMERIC, "%d", n);
+		NWL_NodeAttrSetf(node, NWL_GetTemperatureLabel(), NAFLG_FMT_NUMERIC, "%.0f", NWL_GetTemperature((float)n));
 
 	n = cdi_get_int(ptr, index, CDI_INT_LIFE);
 	if (n >= 0)

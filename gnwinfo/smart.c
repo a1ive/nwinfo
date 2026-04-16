@@ -3,10 +3,7 @@
 #include "gnwinfo.h"
 #include "gettext.h"
 #include "../libcdi/libcdi.h"
-
-LPCSTR NWL_Ucs2ToUtf8(LPCWSTR src);
-LPCWSTR NWL_Utf8ToUcs2(LPCSTR src);
-LPCSTR NWL_GetHumanSize(UINT64 size, LPCSTR human_sizes[6], UINT64 base);
+#include "utils.h"
 
 static struct nk_color
 get_attr_color(int status)
@@ -61,7 +58,7 @@ draw_health(struct nk_context* ctx, CDI_SMART* smart, int disk, float height)
 		if (alarm <= 0)
 			alarm = 60;
 		n = cdi_get_int(smart, disk, CDI_INT_TEMPERATURE);
-		snprintf(tmp, sizeof(tmp), u8"%d "TEMP_CELSIUS_SYMBOL, n);
+		snprintf(tmp, sizeof(tmp), u8"%.0f %s", NWL_GetTemperature((float)n), g_ctx.temp_unit);
 		nk_block(ctx, gnwinfo_get_color((double)n, (double) alarm, 90.0), tmp);
 		nk_group_end(ctx);
 	}

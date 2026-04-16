@@ -19,6 +19,7 @@ enum
 	NW_OPT_OUTPUT,
 	NW_OPT_CP,
 	NW_OPT_HUMAN,
+	NW_OPT_TEMP_UNIT,
 	NW_OPT_BIN,
 	NW_OPT_DEBUG,
 	NW_OPT_HIDE_SENSITIVE,
@@ -55,6 +56,7 @@ static struct optparse_option nwOptions[] =
 	{ "output", 'o', OPTPARSE_REQUIRED},
 	{ "cp", 'c', OPTPARSE_REQUIRED},
 	{ "human", 'u', OPTPARSE_NONE},
+	{ "temp-unit", 't', OPTPARSE_REQUIRED},
 	{ "bin", 'b', OPTPARSE_REQUIRED},
 	{ "debug", 'd', OPTPARSE_NONE},
 	{ "hide-sensitive", 'i', OPTPARSE_NONE},
@@ -98,6 +100,9 @@ static void nwinfo_help(void)
 		"  --cp=CODEPAGE    Set the code page of output text.\n"
 		"                   CODEPAGE can be 'ANSI' or 'UTF8'.\n"
 		"  --human          Display numbers in human readable format.\n"
+		"  --temp-unit=UNIT Specify the temperature unit.\n"
+		"                   UNIT can be 'C' (Celsius, default),\n"
+		"                   'F' (Fahrenheit) or 'K' (Kelvin).\n"
 		"  --bin=FMT        Specify binary format.\n"
 		"                   FMT can be 'NONE' (default), 'BASE64' or 'HEX'.\n"
 		"  --debug          Print debug info to stdout.\n"
@@ -285,6 +290,7 @@ int main(int argc, char* argv[])
 	ZeroMemory(&nwContext, sizeof(NWLIB_CONTEXT));
 	nwContext.NwFormat = FORMAT_YAML;
 	nwContext.HumanSize = FALSE;
+	nwContext.NwTempUnit = NW_TEMP_CELSIUS;
 	nwContext.Debug = FALSE;
 	nwContext.HideSensitive = FALSE;
 	nwContext.BinaryFormat = BIN_FMT_NONE;
@@ -336,6 +342,10 @@ int main(int argc, char* argv[])
 			break;
 		case NW_OPT_HUMAN:
 			nwContext.HumanSize = TRUE;
+			break;
+		case NW_OPT_TEMP_UNIT:
+			if (options.optarg && options.optarg[0])
+				nwContext.NwTempUnit = toupper(options.optarg[0]);
 			break;
 		case NW_OPT_BIN:
 			if (_stricmp(options.optarg, "BASE64") == 0)

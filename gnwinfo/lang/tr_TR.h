@@ -78,6 +78,7 @@ lang_tr_tr[N__MAX_] =
 	[N__HIDE_VENDOR] = u8"Üretici firma adını gizle",
 	[N__HIDE_VERSION] = u8"Sürümü gizle",
 	[N__HIDE_CACHE] = u8"Önbelleği gizle",
+	[N__TEMP_UNIT] = u8"Sıcaklık birimi",
 	[N__USE_SMBUS_SPD] = u8"SPD kullan",
 	[N__USE_GPU_PCI] = u8"PCI kullan",
 	[N__COMPACT_VIEW] = u8"Kompakt görünüm",

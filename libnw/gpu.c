@@ -213,7 +213,7 @@ PNODE NW_Gpu(BOOL bAppend)
 		PrintPcieSpeed(gpu, "PCIe Max Link", &dev->MaxSpeed);
 
 		NWL_NodeAttrSetf(gpu, "GPU Utilization", 0, "%.1f%%", dev->UsagePercent);
-		NWL_NodeAttrSetf(gpu, "Temperature (C)", NAFLG_FMT_NUMERIC, "%.1f", dev->Temperature);
+		NWL_NodeAttrSetf(gpu, NWL_GetTemperatureLabel(), NAFLG_FMT_NUMERIC, "%.1f", NWL_GetTemperature((float)dev->Temperature));
 		NWL_NodeAttrSet(gpu, "Total Memory", NWL_GetHumanSize(dev->TotalMemory, NWLC->NwUnits, 1024), NAFLG_FMT_HUMAN_SIZE);
 		NWL_NodeAttrSet(gpu, "Free Memory", NWL_GetHumanSize(dev->FreeMemory, NWLC->NwUnits, 1024), NAFLG_FMT_HUMAN_SIZE);
 		

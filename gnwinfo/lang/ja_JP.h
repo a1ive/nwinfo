@@ -80,6 +80,7 @@ lang_ja_jp[N__MAX_] =
 	[N__HIDE_VENDOR] = u8"ベンダーを非表示",
 	[N__HIDE_VERSION] = u8"バージョンを非表示",
 	[N__HIDE_CACHE] = u8"キャッシュを非表示",
+	[N__TEMP_UNIT] = u8"温度単位",
 	[N__USE_SMBUS_SPD] = u8"SPD を使用",
 	[N__USE_GPU_PCI] = u8"PCI を使用",
 	[N__COMPACT_VIEW] = u8"コンパクト表示",

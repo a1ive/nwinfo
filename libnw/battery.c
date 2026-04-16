@@ -327,7 +327,8 @@ PrintBatteryTemperature(PNODE pb, HANDLE* hb, BATTERY_QUERY_INFORMATION* pbqi)
 	if (!DeviceIoControl(hb, IOCTL_BATTERY_QUERY_INFORMATION, pbqi, sizeof(BATTERY_QUERY_INFORMATION),
 		&ulTemperature, sizeof(ulTemperature), &dwOut, NULL))
 		return;
-	NWL_NodeAttrSetf(pb, "Temperature", 0, "%lu K", ulTemperature / 10);
+	// The temperature is in 0.1K.
+	NWL_NodeAttrSetf(pb, "Temperature", NAFLG_FMT_NUMERIC, "%.1f", NWL_GetTemperature(ulTemperature / 10.0f - 273.15f));
 }
 
 static void

@@ -81,10 +81,10 @@ static void cpu_get(PNODE node)
 			NWL_NodeAttrSetf(p, "Max Multiplier", NAFLG_FMT_NUMERIC, "%.2lf", value / 100.0);
 		value = NWL_MsrGet(msr, INFO_TEMPERATURE);
 		if (value > 0)
-			NWL_NodeAttrSetf(p, "Core Temperature", NAFLG_FMT_NUMERIC, "%d", value);
+			NWL_NodeAttrSetf(p, "Core Temperature", NAFLG_FMT_NUMERIC, "%.0f", NWL_GetTemperature((float)value));
 		value = NWL_MsrGet(msr, INFO_PKG_TEMPERATURE);
 		if (value > 0)
-			NWL_NodeAttrSetf(p, "Package Temperature", NAFLG_FMT_NUMERIC, "%d", value);
+			NWL_NodeAttrSetf(p, "Package Temperature", NAFLG_FMT_NUMERIC, "%.0f", NWL_GetTemperature((float)value));
 		value = NWL_MsrGet(msr, INFO_VOLTAGE);
 		if (value > 0)
 			NWL_NodeAttrSetf(p, "Core Voltage", NAFLG_FMT_NUMERIC, "%.2lf", value / 100.0);

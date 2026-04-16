@@ -78,6 +78,7 @@ lang_zh_tw[N__MAX_] =
 	[N__HIDE_VENDOR] = u8"隱藏廠商",
 	[N__HIDE_VERSION] = u8"隱藏版本",
 	[N__HIDE_CACHE] = u8"隱藏快取",
+	[N__TEMP_UNIT] = u8"溫度單位",
 	[N__USE_SMBUS_SPD] = u8"使用 SPD",
 	[N__USE_GPU_PCI] = u8"使用 PCI",
 	[N__COMPACT_VIEW] = u8"簡潔檢視",

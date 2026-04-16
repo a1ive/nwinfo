@@ -78,6 +78,7 @@ lang_sv_se[N__MAX_] =
 	[N__HIDE_VENDOR] = u8"Dölj tillverkare",
 	[N__HIDE_VERSION] = u8"Dölj version",
 	[N__HIDE_CACHE] = u8"Dölj cache",
+	[N__TEMP_UNIT] = u8"Temperaturenhet",
 	[N__USE_SMBUS_SPD] = u8"Använd SPD",
 	[N__USE_GPU_PCI] = u8"Använd PCI",
 	[N__COMPACT_VIEW] = u8"Kompakt vy",

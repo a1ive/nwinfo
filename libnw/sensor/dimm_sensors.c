@@ -53,7 +53,7 @@ static void dimm_get(PNODE node)
 		PNODE dimm = NWL_NodeGetChild(node, name);
 		if (dimm == NULL)
 			dimm = NWL_NodeAppendNew(node, name, NFLG_ATTGROUP | NAFLG_FMT_KEY_QUOTE);
-		NWL_NodeAttrSetf(dimm, "Temperature", NAFLG_FMT_NUMERIC, "%.2f", ctx.ts.Sensor[i].Temp);
+		NWL_NodeAttrSetf(dimm, "Temperature", NAFLG_FMT_NUMERIC, "%.2f", NWL_GetTemperature(ctx.ts.Sensor[i].Temp));
 	}
 }
 

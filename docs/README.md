@@ -66,6 +66,9 @@ Exports active physical network interfaces with IPv4 addresses to `report.html` 
   `CODEPAGE` can be `ANSI` or `UTF8`.  
 - --human  
   Display numbers in human readable format.  
+- --temp-unit=`UNIT`  
+  Specify the temperature unit.  
+  `UNIT` can be `C` (Celsius, default), `F` (Fahrenheit) or `K` (Kelvin).  
 - --bin=`FORMAT`  
   Specify binary format.  
   `FORMAT` can be `NONE` (default), `BASE64` or `HEX`.  
