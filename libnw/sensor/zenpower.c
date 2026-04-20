@@ -3,7 +3,7 @@
 #include "libnw.h"
 #include "utils.h"
 #include "sensors.h"
-#include "libcpuid.h"
+#include "cpuid.h"
 #include "ioctl.h"
 #include "ryzen_smu.h"
 
@@ -184,30 +184,14 @@ static void detect_num_ccds(void)
 
 static bool smn_init(void)
 {
-	struct cpu_raw_data_array_t* raw = NWLC->NwCpuRaw;
-	struct system_id_t* id = NWLC->NwCpuid;
+	struct system_id_t* id = NWL_GetCpuid();
 
 	if (!NWLC->NwDrv)
 		goto fail;
 
-	if (raw->num_raw <= 0)
-	{
-		if (cpuid_get_all_raw_data(raw) != 0)
-			goto fail;
-	}
-
-	if (id->num_cpu_types <= 0)
-	{
-		if (cpu_identify_all(raw, id) != 0)
-			goto fail;
-	}
-
-	if (id->num_cpu_types < 1)
+	if (!id)
 		goto fail;
-
 	ctx.id = &id->cpu_types[0];
-	NWL_Debug("SMN", "CPU %s F%02X EF%02X M%02X EM%02X",
-		ctx.id->vendor_str, ctx.id->x86.family, ctx.id->x86.ext_family, ctx.id->x86.model, ctx.id->x86.ext_model);
 
 	if (ctx.id->vendor != VENDOR_AMD)
 		goto fail;

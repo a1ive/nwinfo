@@ -3,7 +3,7 @@
 #include "libnw.h"
 #include "utils.h"
 #include "sensors.h"
-#include "libcpuid.h"
+#include "cpuid.h"
 #include "cpu/rdmsr.h"
 
 static struct
@@ -18,19 +18,8 @@ static bool cpu_init(void)
 	if (NWLC->NwDrv == NULL)
 		return false;
 
-	if (NWLC->NwCpuRaw->num_raw <= 0)
-	{
-		if (cpuid_get_all_raw_data(NWLC->NwCpuRaw) != 0)
-			return false;
-	}
-
-	if (NWLC->NwCpuid->num_cpu_types <= 0)
-	{
-		if (cpu_identify_all(NWLC->NwCpuRaw, NWLC->NwCpuid) != 0)
-			return false;
-	}
-
-	if (NWLC->NwCpuid->num_cpu_types <= 0)
+	ctx.id = NWL_GetCpuid();
+	if (ctx.id == NULL)
 		return false;
 
 	if (NWLC->NwMsr == NULL)
@@ -43,7 +32,6 @@ static bool cpu_init(void)
 			NWL_MsrInit(&NWLC->NwMsr[i], NWLC->NwDrv, &NWLC->NwCpuid->cpu_types[i]);
 	}
 
-	ctx.id = NWLC->NwCpuid;
 	ctx.msr = NWLC->NwMsr;
 	ctx.ticks = GetTickCount64();
 

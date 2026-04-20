@@ -339,6 +339,7 @@
     <ClInclude Include="..\ids\tpm_ids.h" />
     <ClInclude Include="..\ids\usb_ids.h" />
     <ClInclude Include="..\ioctl\lpcio.h" />
+    <ClInclude Include="..\ioctl\mchbar.h" />
     <ClInclude Include="..\ioctl\ryzen_smu.h" />
     <ClInclude Include="..\ioctl\superio.h" />
     <ClInclude Include="..\libcdi\libcdi.h" />
@@ -349,6 +350,7 @@
     <ClInclude Include="acpi.h" />
     <ClInclude Include="audio.h" />
     <ClInclude Include="base64.h" />
+    <ClInclude Include="cpuid.h" />
     <ClInclude Include="cpu\rdmsr.h" />
     <ClInclude Include="devtree.h" />
     <ClInclude Include="disk.h" />
@@ -374,6 +376,7 @@
   <ItemGroup>
     <ClCompile Include="..\ids\ids.c" />
     <ClCompile Include="..\ioctl\lpcio.c" />
+    <ClCompile Include="..\ioctl\mchbar.c" />
     <ClCompile Include="..\ioctl\ryzen_smu.c" />
     <ClCompile Include="..\libcdi\CDIWrapper.c" />
     <ClCompile Include="..\ioctl\mutexes.c" />
@@ -427,7 +430,7 @@
     <ClCompile Include="sensor\imc.c" />
     <ClCompile Include="sensor\lhm.c" />
     <ClCompile Include="sensor\net_traffic.c" />
-    <ClCompile Include="sensor\pch.c" />
+    <ClCompile Include="sensor\intel.c" />
     <ClCompile Include="sensor\zenpower.c" />
     <ClCompile Include="smb.c" />
     <ClCompile Include="smbios.c" />

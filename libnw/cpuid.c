@@ -5,7 +5,7 @@
 #include <intrin.h>
 
 #include "libnw.h"
-#include <libcpuid.h>
+#include "cpuid.h"
 #include <libcpuid_util.h>
 #include "cpu/rdmsr.h"
 
@@ -417,14 +417,22 @@ out:
 	}
 }
 
-static inline void
-PrintCpuidMachine(PNODE node)
+struct system_id_t* NWL_GetCpuid(void)
 {
+	static enum
+	{
+		CPUID_INIT_NOT_STARTED = 0,
+		CPUID_INIT_DONE,
+		CPUID_INIT_FAILED,
+	} init_status = CPUID_INIT_NOT_STARTED;
 	struct cpu_raw_data_array_t* raw = NWLC->NwCpuRaw;
 	struct system_id_t* id = NWLC->NwCpuid;
 
-	NWL_NodeAttrSetf(node, "Total CPUs", NAFLG_FMT_NUMERIC, "%d", cpuid_get_total_cpus());
-	NWL_NodeAttrSetf(node, "CPU Clock (MHz)", NAFLG_FMT_NUMERIC, "%lu", NWL_GetCpuFreq());
+	if (init_status == CPUID_INIT_FAILED)
+		return NULL;
+	else if (init_status == CPUID_INIT_DONE)
+		return id;
+	init_status = CPUID_INIT_FAILED;
 
 	if (raw->num_raw <= 0)
 	{
@@ -432,7 +440,7 @@ PrintCpuidMachine(PNODE node)
 		if (cpuid_get_all_raw_data(raw) != 0)
 		{
 			NWL_NodeAppendMultiSz(&NWLC->ErrLog, "Cannot obtain raw CPU data");
-			return;
+			return NULL;
 		}
 	}
 
@@ -442,11 +450,30 @@ PrintCpuidMachine(PNODE node)
 		if (cpu_identify_all(raw, id) != 0)
 		{
 			NWL_NodeAppendMultiSz(&NWLC->ErrLog, cpuid_error());
-			return;
+			return NULL;
 		}
 	}
 
-	if (NWLC->NwMsr == NULL && id->num_cpu_types > 0)
+	if (id->num_cpu_types < 1)
+		return NULL;
+	struct cpu_id_t* cpu0 = &id->cpu_types[0];
+	NWL_Debug("CPU", "CPU0 %s F%02X EF%02X M%02X EM%02X",
+		cpu0->vendor_str, cpu0->x86.family, cpu0->x86.ext_family, cpu0->x86.model, cpu0->x86.ext_model);
+	init_status = CPUID_INIT_DONE;
+	return id;
+}
+
+static inline void
+PrintCpuidMachine(PNODE node)
+{
+	NWL_NodeAttrSetf(node, "Total CPUs", NAFLG_FMT_NUMERIC, "%d", cpuid_get_total_cpus());
+	NWL_NodeAttrSetf(node, "CPU Clock (MHz)", NAFLG_FMT_NUMERIC, "%lu", NWL_GetCpuFreq());
+
+	struct system_id_t* id = NWL_GetCpuid();
+	if (id == NULL)
+		return;
+
+	if (NWLC->NwMsr == NULL)
 	{
 		NWLC->NwMsr = calloc(id->num_cpu_types, sizeof(struct msr_info_t));
 		if (NWLC->NwMsr)

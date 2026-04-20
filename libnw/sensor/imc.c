@@ -3,8 +3,9 @@
 #include "libnw.h"
 #include "utils.h"
 #include "sensors.h"
-#include "libcpuid.h"
+#include "cpuid.h"
 #include "ioctl.h"
+#include "mchbar.h"
 
 #define SLOT_NAME_SIZE 16
 #define SLOT_COUNT 12
@@ -22,7 +23,6 @@ struct dimm_slot
 static struct
 {
 	struct cpu_id_t* id;
-	uint64_t mmio_reg;
 	uint16_t width;
 	uint16_t freq;
 	uint16_t ddr;
@@ -33,29 +33,6 @@ static struct
 // https://doc.coreboot.org/northbridge/intel/sandybridge/nri_registers.html
 // https://github.com/remittor/pyhwinfo
 // https://github.com/cyring/CoreFreq/blob/master/x86_64/intel_reg.h
-
-#define MCHBAR_BASE_REG_LOW     0x48
-#define MCHBAR_BASE_REG_HIGH    0x4C
-
-static inline uint32_t
-get_mmio_32(uint64_t offset)
-{
-	uint32_t data = 0;
-	int ret = WR0_RdMmIo(NWLC->NwDrv, ctx.mmio_reg + offset, &data, sizeof(uint32_t));
-	if (ret)
-		NWL_Debug("IMC", "MMIO 32 @%llX+%llx failed.", ctx.mmio_reg, offset);
-	return data;
-}
-
-static inline uint64_t
-get_mmio_64(uint64_t offset)
-{
-	uint64_t data = 0;
-	int ret = WR0_RdMmIo(NWLC->NwDrv, ctx.mmio_reg + offset, &data, sizeof(uint64_t));
-	if (ret)
-		NWL_Debug("IMC", "MMIO 64 @%llX+%llx failed.", ctx.mmio_reg, offset);
-	return data;
-}
 
 #define SNB_REG_CH1_OFFSET  0x0400
 
@@ -83,8 +60,8 @@ get_intel_mchbar_2_3(void)
 
 	ctx.ddr = 3;
 
-	uint32_t ofs_5004 = get_mmio_32(SNB_REG_MAIN_CHAN0);
-	uint32_t ofs_5008 = get_mmio_32(SNB_REG_MAIN_CHAN1);
+	uint32_t ofs_5004 = mchbar_read_32(SNB_REG_MAIN_CHAN0);
+	uint32_t ofs_5008 = mchbar_read_32(SNB_REG_MAIN_CHAN1);
 	uint32_t ch_size[2] = { 0 };
 	ch_size[0] = ((ofs_5004 >> 8) & 0xFF) + (ofs_5004 & 0xFF);
 	ch_size[1] = ((ofs_5008 >> 8) & 0xFF) + (ofs_5008 & 0xFF);
@@ -94,7 +71,7 @@ get_intel_mchbar_2_3(void)
 		if (ch_size[ch] == 0)
 			continue;
 		uint64_t ch_ofs = ch * SNB_REG_CH1_OFFSET;
-		uint32_t ofs_4000 = get_mmio_32(ch_ofs + SNB_REG_TIMING);
+		uint32_t ofs_4000 = mchbar_read_32(ch_ofs + SNB_REG_TIMING);
 		struct dimm_slot* p = &ctx.slot[ch];
 		snprintf(p->name, SLOT_NAME_SIZE, "CH%llu", ch);
 		p->tCL = (ofs_4000 >> 8) & 0x0F;
@@ -143,7 +120,7 @@ get_intel_mchbar_2_3(void)
 static void
 get_intel_mchbar_4_5(void)
 {
-	uint32_t ofs_5e00 = get_mmio_32(HSW_REG_DRAM_CLOCK);
+	uint32_t ofs_5e00 = mchbar_read_32(HSW_REG_DRAM_CLOCK);
 
 	// FIXME
 	switch (ofs_5e00 & 0x0F)
@@ -173,8 +150,8 @@ get_intel_mchbar_4_5(void)
 
 	ctx.ddr = 3;
 
-	uint32_t ofs_5004 = get_mmio_32(HSW_REG_MAIN_CHAN0);
-	uint32_t ofs_5008 = get_mmio_32(HSW_REG_MAIN_CHAN1);
+	uint32_t ofs_5004 = mchbar_read_32(HSW_REG_MAIN_CHAN0);
+	uint32_t ofs_5008 = mchbar_read_32(HSW_REG_MAIN_CHAN1);
 	uint32_t ch_size[2] = { 0 };
 	ch_size[0] = ((ofs_5004 >> 8) & 0xFF) + (ofs_5004 & 0xFF);
 	ch_size[1] = ((ofs_5008 >> 8) & 0xFF) + (ofs_5008 & 0xFF);
@@ -184,8 +161,8 @@ get_intel_mchbar_4_5(void)
 		if (ch_size[ch] == 0)
 			continue;
 		uint64_t ch_ofs = ch * HSW_REG_CH1_OFFSET;
-		uint32_t ofs_4000 = get_mmio_32(ch_ofs + HSW_REG_TIMING_RCD);
-		uint32_t ofs_4014 = get_mmio_32(ch_ofs + HSW_REG_TIMING_CAS);
+		uint32_t ofs_4000 = mchbar_read_32(ch_ofs + HSW_REG_TIMING_RCD);
+		uint32_t ofs_4014 = mchbar_read_32(ch_ofs + HSW_REG_TIMING_CAS);
 		struct dimm_slot* p = &ctx.slot[ch];
 		snprintf(p->name, SLOT_NAME_SIZE, "CH%llu", ch);
 		p->tCL = ofs_4014 & 0x1F;
@@ -235,7 +212,7 @@ get_intel_mchbar_4_5(void)
 static void
 get_intel_mchbar_6_7_8_9(void)
 {
-	uint32_t ofs_5e00 = get_mmio_32(SKL_MMR_DRAM_CLOCK);
+	uint32_t ofs_5e00 = mchbar_read_32(SKL_MMR_DRAM_CLOCK);
 
 	// FIXME
 	switch (ofs_5e00 & 0x0F)
@@ -263,8 +240,8 @@ get_intel_mchbar_6_7_8_9(void)
 		break;
 	}
 
-	uint32_t ofs_500c = get_mmio_32(SKL_MMR_MAD_CHAN0);
-	uint32_t ofs_5010 = get_mmio_32(SKL_MMR_MAD_CHAN1);
+	uint32_t ofs_500c = mchbar_read_32(SKL_MMR_MAD_CHAN0);
+	uint32_t ofs_5010 = mchbar_read_32(SKL_MMR_MAD_CHAN1);
 	uint32_t ch_size[2] = { 0 };
 	ch_size[0] = ((ofs_500c >> 16) & 0x3F) + (ofs_500c & 0x3F);
 	ch_size[1] = ((ofs_5010 >> 16) & 0x3F) + (ofs_5010 & 0x3F);
@@ -274,9 +251,9 @@ get_intel_mchbar_6_7_8_9(void)
 		if (ch_size[ch] == 0)
 			continue;
 		uint64_t ch_ofs = ch * SKL_MMR_CH1_OFFSET;
-		uint32_t ofs_4070 = get_mmio_32(ch_ofs + SKL_MMR_TIMING_CAS);
-		uint32_t ofs_4000 = get_mmio_32(ch_ofs + SKL_MMR_TIMINGS);
-		uint32_t ofs_401c = get_mmio_32(ch_ofs + SKL_MMR_SCHEDULER_CONF);
+		uint32_t ofs_4070 = mchbar_read_32(ch_ofs + SKL_MMR_TIMING_CAS);
+		uint32_t ofs_4000 = mchbar_read_32(ch_ofs + SKL_MMR_TIMINGS);
+		uint32_t ofs_401c = mchbar_read_32(ch_ofs + SKL_MMR_SCHEDULER_CONF);
 		if ((ofs_401c & 0x03) == 1 || (ofs_401c & 0x03) == 2)
 			ctx.ddr = 3;
 		struct dimm_slot* p = &ctx.slot[ch];
@@ -334,8 +311,8 @@ get_intel_mchbar_6_7_8_9(void)
 static void
 get_intel_mchbar_10_11(void)
 {
-	uint64_t ofs_5f60 = get_mmio_64(ICL_MMR_BLCK_REG);
-	uint32_t ofs_5e04 = get_mmio_32(ICL_MMR_MC_BIOS_REG);
+	uint64_t ofs_5f60 = mchbar_read_64(ICL_MMR_BLCK_REG);
+	uint32_t ofs_5e04 = mchbar_read_32(ICL_MMR_MC_BIOS_REG);
 
 	float bclk = (ofs_5f60 & 0xFFFFFFFF) / 1000.0f;
 	ctx.freq = (uint16_t)((ofs_5e04 & 0xFF) * bclk);
@@ -348,8 +325,8 @@ get_intel_mchbar_10_11(void)
 
 	ctx.ddr = 4;
 
-	uint32_t ofs_500c = get_mmio_32(ICL_MMR_MAD_CHAN0);
-	uint32_t ofs_5010 = get_mmio_32(ICL_MMR_MAD_CHAN1);
+	uint32_t ofs_500c = mchbar_read_32(ICL_MMR_MAD_CHAN0);
+	uint32_t ofs_5010 = mchbar_read_32(ICL_MMR_MAD_CHAN1);
 	uint32_t ch_size[2] = { 0 };
 	ch_size[0] = ((ofs_500c >> 16) & 0x7F) + (ofs_500c & 0x7F);
 	ch_size[1] = ((ofs_5010 >> 16) & 0x7F) + (ofs_5010 & 0x7F);
@@ -359,8 +336,8 @@ get_intel_mchbar_10_11(void)
 		if (ch_size[ch] == 0)
 			continue;
 		uint64_t ch_ofs = ch * ICL_MMR_CH1_OFFSET;
-		uint64_t ofs_4070 = get_mmio_64(ch_ofs + ICL_MMR_TIMING_CAS);
-		uint32_t ofs_4000 = get_mmio_32(ch_ofs + ICL_MMR_TIMINGS);
+		uint64_t ofs_4070 = mchbar_read_64(ch_ofs + ICL_MMR_TIMING_CAS);
+		uint32_t ofs_4000 = mchbar_read_32(ch_ofs + ICL_MMR_TIMINGS);
 		struct dimm_slot* p = &ctx.slot[ch];
 		snprintf(p->name, SLOT_NAME_SIZE, "CH%llu", ch);
 		p->tCL = (ofs_4070 >> 16) & 0x1F;
@@ -388,9 +365,9 @@ get_intel_mchbar_10_11(void)
 static void
 get_intel_mchbar_11_tgl_h(void)
 {
-	uint64_t ofs_5f60 = get_mmio_64(TGL_H_MMR_BLCK_REG);
-	uint64_t ofs_5918 = get_mmio_64(TGL_H_MMR_SA_PERF_REG);
-	uint64_t ofs_5e04 = get_mmio_32(TGL_H_MMR_MC_BIOS_REG);
+	uint64_t ofs_5f60 = mchbar_read_64(TGL_H_MMR_BLCK_REG);
+	uint64_t ofs_5918 = mchbar_read_64(TGL_H_MMR_SA_PERF_REG);
+	uint64_t ofs_5e04 = mchbar_read_32(TGL_H_MMR_MC_BIOS_REG);
 
 	float bclk = (ofs_5f60 & 0xFFFFFFFF) / 1000.0f;
 	ctx.freq = (uint16_t)(((ofs_5918 >> 2) & 0xFF) * bclk);
@@ -405,7 +382,7 @@ get_intel_mchbar_11_tgl_h(void)
 	for (uint64_t mc = 0; mc < 2; mc++)
 	{
 		uint64_t mc_ofs = mc * TGL_H_MMR_MC1_OFFSET;
-		uint32_t ofs_d80c = get_mmio_32(mc_ofs + TGL_H_MMR_CH0_DIMM_REG);
+		uint32_t ofs_d80c = mchbar_read_32(mc_ofs + TGL_H_MMR_CH0_DIMM_REG);
 		ch_size[mc] = ((ofs_d80c >> 16) & 0x7F) + (ofs_d80c & 0x7F);
 		if (ch_size[mc] == 0)
 			continue;
@@ -413,8 +390,8 @@ get_intel_mchbar_11_tgl_h(void)
 		for (uint64_t ch = 0; ch < 2; ch++)
 		{
 			uint64_t ch_ofs = mc_ofs + ch * TGL_H_MMR_CH1_OFFSET;
-			uint64_t ofs_e070 = get_mmio_64(ch_ofs + TGL_H_MMR_ODT_TCL_REG);
-			uint64_t ofs_e000 = get_mmio_64(ch_ofs + TGL_H_MMR_MC0_REG);
+			uint64_t ofs_e070 = mchbar_read_64(ch_ofs + TGL_H_MMR_ODT_TCL_REG);
+			uint64_t ofs_e000 = mchbar_read_64(ch_ofs + TGL_H_MMR_MC0_REG);
 			struct dimm_slot* p = &ctx.slot[mc * 2 + ch];
 			snprintf(p->name, SLOT_NAME_SIZE, "MC%lluCH%llu", mc, ch);
 			p->tCL = (ofs_e070 >> 16) & 0x7F;
@@ -475,9 +452,9 @@ get_intel_mchbar_11_tgl_h(void)
 static void
 get_intel_mchbar_12_13_14(void)
 {
-	uint64_t ofs_5f60 = get_mmio_64(ADL_MMR_BLCK_REG);
-	uint64_t ofs_5918 = get_mmio_64(ADL_MMR_SA_PERF_REG);
-	uint64_t ofs_5e04 = get_mmio_32(ADL_MMR_MC_BIOS_REG);
+	uint64_t ofs_5f60 = mchbar_read_64(ADL_MMR_BLCK_REG);
+	uint64_t ofs_5918 = mchbar_read_64(ADL_MMR_SA_PERF_REG);
+	uint64_t ofs_5e04 = mchbar_read_32(ADL_MMR_MC_BIOS_REG);
 
 	float bclk = (ofs_5f60 & 0xFFFFFFFF) / 1000.0f;
 	ctx.freq = (uint16_t)(((ofs_5918 >> 2) & 0xFF) * bclk);
@@ -490,8 +467,8 @@ get_intel_mchbar_12_13_14(void)
 	for (uint64_t mc = 0; mc < 2; mc++)
 	{
 		uint64_t mc_ofs = mc * ADL_MMR_MC1_OFFSET;
-		uint32_t ofs_d80c = get_mmio_32(mc_ofs + ADL_MMR_CH0_DIMM_REG);
-		uint32_t ofs_d800 = get_mmio_32(ADL_MMR_IC_DECODE);
+		uint32_t ofs_d80c = mchbar_read_32(mc_ofs + ADL_MMR_CH0_DIMM_REG);
+		uint32_t ofs_d800 = mchbar_read_32(ADL_MMR_IC_DECODE);
 		ch_size[mc] = ((ofs_d80c >> 16) & 0x7F) + (ofs_d80c & 0x7F);
 		if (ch_size[mc] == 0)
 			continue;
@@ -502,8 +479,8 @@ get_intel_mchbar_12_13_14(void)
 		for (uint64_t ch = 0; ch < 2; ch++)
 		{
 			uint64_t ch_ofs = mc_ofs + ch * ADL_MMR_CH1_OFFSET;
-			uint64_t ofs_e070 = get_mmio_64(ch_ofs + ADL_MMR_ODT_TCL_REG);
-			uint64_t ofs_e000 = get_mmio_64(ch_ofs + ADL_MMR_MC0_REG);
+			uint64_t ofs_e070 = mchbar_read_64(ch_ofs + ADL_MMR_ODT_TCL_REG);
+			uint64_t ofs_e000 = mchbar_read_64(ch_ofs + ADL_MMR_MC0_REG);
 			struct dimm_slot* p = &ctx.slot[mc * 2 + ch];
 			snprintf(p->name, SLOT_NAME_SIZE, "MC%lluCH%llu", mc, ch);
 			p->tCL = (ofs_e070 >> 16) & 0x7F;
@@ -552,7 +529,7 @@ get_intel_mchbar_12_13_14(void)
 static void
 get_intel_mchbar_15(void)
 {
-	uint32_t ofs_13d98 = get_mmio_32(MTL_MMR_PTGRAM_REG);
+	uint32_t ofs_13d98 = mchbar_read_32(MTL_MMR_PTGRAM_REG);
 
 	switch ((ofs_13d98 >> 20) & 0x0F)
 	{
@@ -583,17 +560,17 @@ get_intel_mchbar_15(void)
 	for (uint64_t mc = 0; mc < 2; mc++)
 	{
 		uint64_t mc_ofs = mc * MTL_MMR_MC1_OFFSET;
-		uint32_t ofs_d800 = get_mmio_32(mc_ofs + MTL_MMR_IC_DECODE);
-		uint32_t ofs_d80c = get_mmio_32(mc_ofs + MTL_MMR_CH0_DIMM_REG);
+		uint32_t ofs_d800 = mchbar_read_32(mc_ofs + MTL_MMR_IC_DECODE);
+		uint32_t ofs_d80c = mchbar_read_32(mc_ofs + MTL_MMR_CH0_DIMM_REG);
 		mc_width[mc] = ~ofs_d80c ? 1 << (((ofs_d800 >> 27) & 3) + 4) : 0;
 		if (mc_width[mc] == 0)
 			continue;
 		for (uint64_t ch = 0; ch < 2; ch++)
 		{
 			uint64_t ch_ofs = mc_ofs + ch * MTL_MMR_CH1_OFFSET;
-			uint32_t ofs_e070 = get_mmio_32(ch_ofs + MTL_MMR_CH0_CAS_REG);
-			uint64_t ofs_e000 = get_mmio_64(ch_ofs + MTL_MMR_CH0_PRE_REG);
-			uint64_t ofs_e138 = get_mmio_64(ch_ofs + MTL_MMR_CH0_ACT_REG);
+			uint32_t ofs_e070 = mchbar_read_32(ch_ofs + MTL_MMR_CH0_CAS_REG);
+			uint64_t ofs_e000 = mchbar_read_64(ch_ofs + MTL_MMR_CH0_PRE_REG);
+			uint64_t ofs_e138 = mchbar_read_64(ch_ofs + MTL_MMR_CH0_ACT_REG);
 			struct dimm_slot* p = &ctx.slot[mc * 2 + ch];
 			snprintf(p->name, SLOT_NAME_SIZE, "MC%lluCH%llu", mc, ch);
 			p->tCL = (ofs_e070 >> 16) & 0x7F;
@@ -607,48 +584,6 @@ get_intel_mchbar_15(void)
 	ctx.width = (mc_width[0] + mc_width[1]) * 2;
 }
 
-static uint32_t
-get_intel_reg_32(void)
-{
-	uint32_t mmio_reg = 0;
-	mmio_reg = WR0_RdPciConf32(NWLC->NwDrv, 0, MCHBAR_BASE_REG_LOW);
-	if (!(mmio_reg & 0x01))
-	{
-		WR0_WrPciConf32(NWLC->NwDrv, 0, MCHBAR_BASE_REG_LOW, mmio_reg | 0x01);
-		mmio_reg = WR0_RdPciConf32(NWLC->NwDrv, 0, MCHBAR_BASE_REG_LOW);
-		if (!(mmio_reg & 0x1))
-			return 0;
-	}
-	if (mmio_reg == 0xFFFFFFFF)
-		return 0;
-	mmio_reg &= 0xFFFFC000;
-	return mmio_reg;
-}
-
-static uint64_t
-get_intel_reg_64(uint64_t base_mask)
-{
-	uint64_t mmio_reg = 0;
-	mmio_reg = WR0_RdPciConf32(NWLC->NwDrv, 0, MCHBAR_BASE_REG_LOW);
-	if (!(mmio_reg & 0x01))
-	{
-		WR0_WrPciConf32(NWLC->NwDrv, 0, MCHBAR_BASE_REG_LOW, (uint32_t)mmio_reg | 0x01);
-		mmio_reg = WR0_RdPciConf32(NWLC->NwDrv, 0, MCHBAR_BASE_REG_LOW);
-		if (!(mmio_reg & 0x01))
-			return 0;
-	}
-	if (mmio_reg == 0xFFFFFFFF)
-		return 0;
-
-	uint64_t mmio_reg_high = WR0_RdPciConf32(NWLC->NwDrv, 0, MCHBAR_BASE_REG_HIGH);
-	if (mmio_reg_high == 0xFFFFFFFF)
-		return 0;
-
-	mmio_reg |= mmio_reg_high << 32;
-	mmio_reg &= base_mask;
-	return mmio_reg;
-}
-
 static void
 detect_intel_mchbar(void)
 {
@@ -658,7 +593,6 @@ detect_intel_mchbar(void)
 	{
 	case 0x2A: // Core 2nd Gen (Sandy Bridge)
 	case 0x3A: // Core 3rd Gen (Ivy Bridge)
-		ctx.mmio_reg = get_intel_reg_32();
 		ctx.get = get_intel_mchbar_2_3;
 		break;
 	case 0x3C: // Core 4th Gen (Haswell)
@@ -666,25 +600,21 @@ detect_intel_mchbar(void)
 	case 0x45: // Core 4th Gen (Haswell)
 	case 0x46: // Core 4th Gen (Haswell)
 	case 0x47: // Core 5th Gen (Broadwell)
-		ctx.mmio_reg = get_intel_reg_64(0x7FFFFF8000); // 38:15
 		ctx.get = get_intel_mchbar_4_5;
 		break;
 	case 0x4E: // Core 6th Gen (Sky Lake)
 	case 0x5E: // Core 6th Gen (Sky Lake)
 	case 0x8E: // Core 7/8/9th Gen (Kaby/Coffee Lake)
 	case 0x9E: // Core 7/8/9th Gen (Kaby/Coffee Lake)
-		ctx.mmio_reg = get_intel_reg_64(0x7FFFFF8000); // 38:15
 		ctx.get = get_intel_mchbar_6_7_8_9;
 		break;
 	case 0xA5: // Core 10th Gen (Comet Lake)
 	case 0xA6: // Core 10th Gen (Comet Lake)
 	case 0xA7: // Core 11th Gen (Rocket Lake)
-		ctx.mmio_reg = get_intel_reg_64(0x7FFFFF0000); // 38:16
 		ctx.get = get_intel_mchbar_10_11;
 		break;
-	//case 0x8C: // Core 11th Gen (Tiger Lake-U) // ???
+	case 0x8C: // Core 11th Gen (Tiger Lake-U) // ???
 	case 0x8D: // Core 11th Gen (Tiger Lake-H)
-		ctx.mmio_reg = get_intel_reg_64(0x7FFFFE0000); // 38:17
 		ctx.get = get_intel_mchbar_11_tgl_h;
 		break;
 	case 0x97: // Core 12th Gen (Alder Lake)
@@ -693,7 +623,6 @@ detect_intel_mchbar(void)
 	case 0xBA: // Core 13th/14th Gen (Raptor Lake)
 	case 0xBE: // Core 13th/14th Gen (Raptor Lake)
 	case 0xBF: // Core 13th/14th Gen (Raptor Lake)
-		ctx.mmio_reg = get_intel_reg_64(0x3FFFFFE0000); // 41:17
 		ctx.get = get_intel_mchbar_12_13_14;
 		break;
 	case 0xAA: // Ultra (Meteor Lake)
@@ -704,7 +633,6 @@ detect_intel_mchbar(void)
 	case 0xC5: // Ultra (Arrow Lake-H)
 	case 0xC6: // Ultra (Arrow Lake-S)
 	case 0xCC: // Ultra (Panther Lake)
-		ctx.mmio_reg = get_intel_reg_64(0x3FFFFFE0000); // 41:17
 		ctx.get = get_intel_mchbar_15;
 		break;
 	}
@@ -862,7 +790,6 @@ detect_amd_umc(void)
 	case 0x18: // Hygon Dhyana
 	case 0x19: // Zen 3 / Zen 3+ / Zen 4
 	case 0x1A: // Zen 5
-		ctx.mmio_reg = AMD_SMN_UMC_BAR;
 		ctx.get = get_amd_umc_zen;
 		break;
 	}
@@ -870,35 +797,20 @@ detect_amd_umc(void)
 
 static bool imc_init(void)
 {
-	struct cpu_raw_data_array_t* raw = NWLC->NwCpuRaw;
-	struct system_id_t* id = NWLC->NwCpuid;
+	struct system_id_t* id = NWL_GetCpuid();
 
 	if (!NWLC->NwDrv)
 		goto fail;
 
-	if (raw->num_raw <= 0)
-	{
-		if (cpuid_get_all_raw_data(raw) != 0)
-			goto fail;
-	}
-
-	if (id->num_cpu_types <= 0)
-	{
-		if (cpu_identify_all(raw, id) != 0)
-			goto fail;
-	}
-
-	if (id->num_cpu_types < 1)
+	if (!id)
 		goto fail;
-
 	ctx.id = &id->cpu_types[0];
-	NWL_Debug("IMC", "CPU %s F%02X EF%02X M%02X EM%02X",
-		ctx.id->vendor_str, ctx.id->x86.family, ctx.id->x86.ext_family, ctx.id->x86.model, ctx.id->x86.ext_model);
 
 	switch (ctx.id->vendor)
 	{
 	case VENDOR_INTEL:
-		detect_intel_mchbar();
+		if (mchbar_pch_init())
+			detect_intel_mchbar();
 		break;
 	case VENDOR_AMD:
 	case VENDOR_HYGON:
@@ -906,8 +818,7 @@ static bool imc_init(void)
 		break;
 	}
 
-	NWL_Debug("IMC", "MMIO REG %llX", ctx.mmio_reg);
-	if (!ctx.mmio_reg || !ctx.get)
+	if (!ctx.get)
 		goto fail;
 
 	return true;

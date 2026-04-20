@@ -168,6 +168,12 @@
     <ClInclude Include="..\ids\tpm_ids.h">
       <Filter>ids</Filter>
     </ClInclude>
+    <ClInclude Include="..\ioctl\mchbar.h">
+      <Filter>ioctl</Filter>
+    </ClInclude>
+    <ClInclude Include="cpuid.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="acpi.c">
@@ -368,7 +374,7 @@
     <ClCompile Include="lpc\lpc_winbond.c">
       <Filter>lpc</Filter>
     </ClCompile>
-    <ClCompile Include="sensor\pch.c">
+    <ClCompile Include="sensor\intel.c">
       <Filter>sensor</Filter>
     </ClCompile>
     <ClCompile Include="sensor\zenpower.c">
@@ -376,6 +382,9 @@
     </ClCompile>
     <ClCompile Include="tpm.c">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ioctl\mchbar.c">
+      <Filter>ioctl</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
