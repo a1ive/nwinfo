@@ -82,11 +82,13 @@ draw_msr(struct nk_context* ctx, int index, PNODE cpu)
 		nk_l(ctx, N_(N__CPU_POWER), NK_TEXT_LEFT);
 		nk_lhcf(ctx, NK_TEXT_LEFT, g_color_text_l, "%.2f W", g_ctx.cpu_info[index].MsrPower);
 		nk_l(ctx, N_(N__PL1), NK_TEXT_LEFT);
-		nk_lhcf(ctx, NK_TEXT_LEFT, g_color_text_l, "%.2f W", g_ctx.cpu_info[index].MsrPl1);
+		nk_lhcf(ctx, NK_TEXT_LEFT, g_color_text_l, "%s W", NWL_NodeAttrGet(cpu, "PL1 (W)"));
 		nk_l(ctx, N_(N__PL2), NK_TEXT_LEFT);
-		nk_lhcf(ctx, NK_TEXT_LEFT, g_color_text_l, "%.2f W", g_ctx.cpu_info[index].MsrPl2);
+		nk_lhcf(ctx, NK_TEXT_LEFT, g_color_text_l, "%s W", NWL_NodeAttrGet(cpu, "PL2 (W)"));
+		nk_l(ctx, N_(N__TDP), NK_TEXT_LEFT);
+		nk_lhcf(ctx, NK_TEXT_LEFT, g_color_text_l, "%s W", NWL_NodeAttrGet(cpu, "TDP (W)"));
 		nk_l(ctx, N_(N__MICROCODE), NK_TEXT_LEFT);
-		nk_lhcf(ctx, NK_TEXT_LEFT, g_color_text_l, "0x%X", g_ctx.cpu_info[index].BiosRev);
+		nk_lhc(ctx, NWL_NodeAttrGet(cpu, "Microcode Rev"), NK_TEXT_LEFT, g_color_text_l);
 		nk_group_end(ctx);
 	}
 }

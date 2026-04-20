@@ -302,6 +302,7 @@ PrintCpuMsr(PNODE node, uint8_t index)
 	NWL_NodeAttrSetf(node, "Bus Clock (MHz)", NAFLG_FMT_NUMERIC, "%.2lf", NWL_MsrGet(msr, INFO_BUS_CLOCK) / 100.0);
 	NWL_NodeAttrSetf(node, "PL1 (W)", NAFLG_FMT_NUMERIC, "%.2lf", NWL_MsrGet(msr, INFO_PKG_PL1) / 100.0);
 	NWL_NodeAttrSetf(node, "PL2 (W)", NAFLG_FMT_NUMERIC, "%.2lf", NWL_MsrGet(msr, INFO_PKG_PL2) / 100.0);
+	NWL_NodeAttrSetf(node, "TDP (W)", NAFLG_FMT_NUMERIC, "%d", NWL_MsrGet(msr, INFO_TDP_NOMINAL));
 	NWL_NodeAttrSetf(node, "Microcode Rev", 0, "0x%X", (UINT32)NWL_MsrGet(msr, INFO_MICROCODE_VER));
 }
 

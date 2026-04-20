@@ -47,8 +47,9 @@ lang_sl_si[N__MAX_] =
 	[N__TEMPERATURE] = u8"Temperatura",
 	[N__VOLTAGE] = u8"Napetost",
 	[N__CPU_POWER] = u8"Moč", // refer to the amount of energy per time
-	[N__PL1] = u8"PL1",
-	[N__PL2] = u8"PL2",
+	//[N__PL1],
+	//[N__PL2],
+	//[N__TDP],
 	[N__IGPU_TEMPERATURE] = u8"iGPU temperatura",
 	[N__IGPU_POWER] = u8"iGPU moč",
 	[N__MICROCODE] = u8"Mikrokoda",

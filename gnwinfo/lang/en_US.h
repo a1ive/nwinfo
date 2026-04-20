@@ -49,6 +49,7 @@ lang_en_us[N__MAX_] =
 	[N__CPU_POWER] = u8"Power", // refer to the amount of energy per time
 	[N__PL1] = u8"PL1",
 	[N__PL2] = u8"PL2",
+	[N__TDP] = u8"TDP",
 	[N__IGPU_TEMPERATURE] = u8"iGPU Temperature",
 	[N__IGPU_POWER] = u8"iGPU Power",
 	[N__MICROCODE] = u8"Microcode",

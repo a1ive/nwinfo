@@ -47,8 +47,9 @@ lang_pl_pl[N__MAX_] =
 	[N__TEMPERATURE] = u8"Temperatura",
 	[N__VOLTAGE] = u8"Napięcie",
 	[N__CPU_POWER] = u8"Moc", // ilość energii w czasie
-	[N__PL1] = u8"PL1",
-	[N__PL2] = u8"PL2",
+	//[N__PL1],
+	//[N__PL2],
+	//[N__TDP],
 	[N__IGPU_TEMPERATURE] = u8"Temperatura iGPU",
 	[N__IGPU_POWER] = u8"Moc iGPU",
 	[N__MICROCODE] = u8"Mikrokod",
