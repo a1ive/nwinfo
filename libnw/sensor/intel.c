@@ -6,6 +6,7 @@
 #include "cpuid.h"
 #include "ioctl.h"
 #include "mchbar.h"
+#include "cpu/rdmsr.h"
 
 // 900 Series
 //   NO DATA
@@ -87,6 +88,8 @@ static struct
 	struct cpu_id_t* id;
 	ULONGLONG ticks;
 	ULONGLONG delta_ticks;
+	GROUP_AFFINITY affinity;
+	HANDLE thread;
 	int core_gen;
 	uint32_t pp0_energy;
 	uint32_t pp1_energy;
@@ -286,11 +289,14 @@ static bool intel_init(void)
 	if (ctx.id->vendor != VENDOR_INTEL)
 		goto fail;
 
+	ctx.thread = GetCurrentThread();
+	NWL_GetGroupAffinity(&ctx.id->affinity_mask, &ctx.affinity);
+
 	if (!mchbar_pch_init())
-		goto fail;
+		goto ok;
 
 	if (ctx.id->x86.family != 0x06)
-		goto fail;
+		goto ok;
 	switch (ctx.id->x86.ext_model)
 	{
 	case 0x3C: // Core 4th Gen (Haswell)
@@ -303,14 +309,17 @@ static bool intel_init(void)
 	case 0x8E: // Core 7/8/9th Gen (Kaby/Coffee Lake)
 	case 0x9E: // Core 7/8/9th Gen (Kaby/Coffee Lake)
 		ctx.core_gen = 4;
-		if (pch_get_mmio_reg != 0)
+		if (pch_get_mmio_reg() != 0)
 			ctx.get_pch_sensors = get_pch_sensors_ts;
 		break;
+	case 0x7E: // Core 10th Gen (Ice Lake) // ???
 	case 0xA5: // Core 10th Gen (Comet Lake)
 	case 0xA6: // Core 10th Gen (Comet Lake)
 	case 0xA7: // Core 11th Gen (Rocket Lake)
+	case 0x8A: // Core 11th Gen (Lakefield) // ???
+	case 0x9C: // Core 11th Gen (Jasper Lake) // ???
 		ctx.core_gen = 10;
-		if (pch_get_mmio_reg != 0)
+		if (pch_get_mmio_reg() != 0)
 			ctx.get_pch_sensors = get_pch_sensors_ts;
 		break;
 	case 0x8C: // Core 11th Gen (Tiger Lake-U) // ???
@@ -330,16 +339,14 @@ static bool intel_init(void)
 	case 0xC6: // Ultra (Arrow Lake-S)
 	case 0xCC: // Ultra (Panther Lake)
 		ctx.core_gen = 12;
-		if (pch_get_mmio_reg != 0)
+		if (pch_get_mmio_reg() != 0)
 			ctx.get_pch_sensors = get_pch_sensors_pmc;
 		break;
 	}
-	if (mchbar_get_mmio_reg != 0)
+	if (mchbar_get_mmio_reg() != 0)
 		ctx.get_mchbar_sensors = get_mchbar_sensors;
 
-	if (!ctx.get_mchbar_sensors && !ctx.get_pch_sensors)
-		goto fail;
-
+ok:
 	return true;
 fail:
 	ZeroMemory(&ctx, sizeof(ctx));

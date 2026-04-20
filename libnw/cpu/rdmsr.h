@@ -67,6 +67,7 @@ struct msr_info_t
 	int cached_tdp;
 };
 
+void NWL_GetGroupAffinity(const cpu_affinity_mask_t* affmask, GROUP_AFFINITY* affinity);
 void NWL_GetCpuIndexStr(struct cpu_id_t* id, char* buf, size_t buf_len);
 LIBNW_API bool NWL_MsrInit(struct msr_info_t* info, struct wr0_drv_t* drv, struct cpu_id_t* id);
 LIBNW_API int NWL_MsrGet(struct msr_info_t* info, cpu_msrinfo_request_t which);

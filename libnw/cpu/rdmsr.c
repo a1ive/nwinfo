@@ -1,12 +1,46 @@
 // SPDX-License-Identifier: Unlicense
 
 #include "rdmsr.h"
-
 #include <windows.h>
 
 extern struct msr_fn_t msr_fn_intel;
 extern struct msr_fn_t msr_fn_amd;
 extern struct msr_fn_t msr_fn_centaur;
+
+void
+NWL_GetGroupAffinity(const cpu_affinity_mask_t* affmask, GROUP_AFFINITY* affinity)
+{
+	ZeroMemory(affinity, sizeof(*affinity));
+
+	WORD group_count = GetActiveProcessorGroupCount();
+	DWORD total_processors = 0;
+	for (WORD group = 0; group < group_count; group++)
+	{
+		DWORD processors = GetActiveProcessorCount(group);
+		KAFFINITY mask = 0;
+		for (DWORD cpu_index = 0; cpu_index < processors; cpu_index++)
+		{
+			uint32_t logical_cpu = total_processors + cpu_index;
+			uint32_t byte_index = logical_cpu / __MASK_NCPUBITS;
+			uint8_t bit = (uint8_t)(1U << (logical_cpu % __MASK_NCPUBITS));
+			if (affmask->__bits[byte_index] & bit)
+				mask |= ((KAFFINITY)1) << cpu_index;
+		}
+		if (mask != 0)
+		{
+			affinity->Group = group;
+			affinity->Mask = mask;
+			break;
+		}
+		total_processors += processors;
+	}
+
+	if (!affinity->Mask)
+	{
+		affinity->Group = 0;
+		affinity->Mask = 1;
+	}
+}
 
 void
 NWL_GetCpuIndexStr(struct cpu_id_t* id, char* buf, size_t buf_len)
@@ -69,36 +103,7 @@ NWL_MsrInit(struct msr_info_t* info, struct wr0_drv_t* drv, struct cpu_id_t* id)
 	GROUP_AFFINITY saved_aff;
 	HANDLE thread = GetCurrentThread();
 
-	// cpu->affinity_mask to GROUP_AFFINITY
-	ZeroMemory(&info->aff, sizeof(info->aff));
-	const cpu_affinity_mask_t* affinity_mask = &id->affinity_mask;
-	WORD group_count = GetActiveProcessorGroupCount();
-	DWORD total_processors = 0;
-	for (WORD group = 0; group < group_count; group++)
-	{
-		DWORD processors = GetActiveProcessorCount(group);
-		KAFFINITY mask = 0;
-		for (DWORD cpu_index = 0; cpu_index < processors; cpu_index++)
-		{
-			uint32_t logical_cpu = total_processors + cpu_index;
-			uint32_t byte_index = logical_cpu / __MASK_NCPUBITS;
-			uint8_t bit = (uint8_t)(1U << (logical_cpu % __MASK_NCPUBITS));
-			if (affinity_mask->__bits[byte_index] & bit)
-				mask |= ((KAFFINITY)1) << cpu_index;
-		}
-		if (mask != 0)
-		{
-			info->aff.Group = group;
-			info->aff.Mask = mask;
-			break;
-		}
-		total_processors += processors;
-	}
-	if (!info->aff.Mask)
-	{
-		info->aff.Group = 0;
-		info->aff.Mask = 1;
-	}
+	NWL_GetGroupAffinity(&id->affinity_mask, &info->aff);
 
 	SetThreadGroupAffinity(thread, &info->aff, &saved_aff);
 	info->clock = cpu_clock_measure(250, 1);

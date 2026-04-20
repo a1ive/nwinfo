@@ -200,9 +200,12 @@ mchbar_pch_init(void)
 		ctx.mchbar_base = mchbar_get_base_64(0x7FFFFF8000); // 38:15
 		detect_pch_thermal();
 		break;
+	case 0x7E: // Core 10th Gen (Ice Lake) // ???
 	case 0xA5: // Core 10th Gen (Comet Lake)
 	case 0xA6: // Core 10th Gen (Comet Lake)
 	case 0xA7: // Core 11th Gen (Rocket Lake)
+	case 0x8A: // Core 11th Gen (Lakefield) // ???
+	case 0x9C: // Core 11th Gen (Jasper Lake) // ???
 		ctx.mchbar_base = mchbar_get_base_64(0x7FFFFF0000); // 38:16
 		detect_pch_thermal();
 		break;
