@@ -928,12 +928,12 @@ uint32_t WR0_FindPciById(struct wr0_drv_t* drv, uint16_t vid, uint16_t did, uint
 		|| vid == 0xFFFF)
 		return addr;
 
-	for (uint8_t bus = 0; bus < 256; bus++)
+	for (uint32_t bus = 0; bus < 256; bus++)
 	{
-		for (uint8_t dev = 0; dev < 32; dev++)
+		for (uint32_t dev = 0; dev < 32; dev++)
 		{
 			mfFlag = FALSE;
-			for (uint8_t func = 0; func < 8; func++)
+			for (uint32_t func = 0; func < 8; func++)
 			{
 				if (!mfFlag && func > 0)
 					break;
