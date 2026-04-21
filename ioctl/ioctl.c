@@ -431,7 +431,7 @@ int WR0_RdMsr(struct wr0_drv_t* drv, uint32_t msr_index, uint64_t* result)
 	return 0;
 }
 
-int WR0_WrMsr(struct wr0_drv_t* drv, uint32_t msr_index, DWORD eax, DWORD edx)
+int WR0_WrMsr(struct wr0_drv_t* drv, uint32_t msr_index, uint64_t value)
 {
 	DWORD dwBytesReturned = 0;
 	DWORD outBuf;
@@ -450,6 +450,7 @@ int WR0_WrMsr(struct wr0_drv_t* drv, uint32_t msr_index, DWORD eax, DWORD edx)
 	case WR0_DRIVER_CPUZ161:
 	case WR0_DRIVER_CPUZ162:
 		ctlCode = IOCTL_CPUZ_WRITE_MSR;
+		value = ((value & 0x00000000FFFFFFFFULL) << 32) | ((value & 0xFFFFFFFF00000000ULL) >> 32);
 		break;
 	case WR0_DRIVER_HWIO:
 		ctlCode = IOCTL_HIO_WRITE_MSR;
@@ -459,8 +460,7 @@ int WR0_WrMsr(struct wr0_drv_t* drv, uint32_t msr_index, DWORD eax, DWORD edx)
 	}
 
 	inBuf.Register = msr_index;
-	inBuf.Value.HighPart = edx;
-	inBuf.Value.LowPart = eax;
+	inBuf.Value.QuadPart = value;
 
 	bRes = DeviceIoControl(drv->handle, ctlCode,
 		&inBuf, sizeof(inBuf), &outBuf, sizeof(outBuf), &dwBytesReturned, NULL);
