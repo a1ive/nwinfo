@@ -469,6 +469,74 @@ int WR0_WrMsr(struct wr0_drv_t* drv, uint32_t msr_index, uint64_t value)
 	return 0;
 }
 
+#define MSR_OC_MAILBOX 0x150
+static inline int read_oc_msr(uint64_t* result)
+{
+	int err;
+	ULONG64 in = MSR_OC_MAILBOX;
+	ULONG64 out = 0;
+	if (NWLC->NwDrv->type == WR0_DRIVER_PAWNIO)
+		err = WR0_ExecPawn(NWLC->NwDrv, &NWLC->NwDrv->pio_intel, "ioctl_read_msr", &in, 1, &out, 1, NULL);
+	else
+		err = WR0_RdMsr(NWLC->NwDrv, (uint32_t)in, &out);
+	*result = out;
+	return err;
+}
+
+static inline int write_oc_msr(uint64_t value)
+{
+	int err;
+	ULONG64 in[2] = { MSR_OC_MAILBOX, value };
+	if (NWLC->NwDrv->type == WR0_DRIVER_PAWNIO)
+		err = WR0_ExecPawn(NWLC->NwDrv, &NWLC->NwDrv->pio_intel, "ioctl_write_msr", in, 2, NULL, 0, NULL);
+	else
+		err = WR0_WrMsr(NWLC->NwDrv, (uint32_t)in[0], in[1]);
+	return err;
+}
+
+int WR0_SendOcMailbox(struct wr0_drv_t* drv, uint64_t in, uint64_t* out)
+{
+	DWORD dwBytesReturned = 0;
+
+	if (!drv || !drv->handle || drv->handle == INVALID_HANDLE_VALUE)
+		return -1;
+
+	switch (drv->type)
+	{
+	case WR0_DRIVER_WINRING0:
+	case WR0_DRIVER_HWIO:
+	case WR0_DRIVER_PAWNIO:
+	{
+		if (read_oc_msr(out))
+			return -2;
+		write_oc_msr(in);
+		for (int i = 0; i < 100; i++)
+		{
+			WR0_MicroSleep(10);
+			if (read_oc_msr(out))
+				return -2;
+			if ((*out & 0x8000000000000000ULL) == 0ULL)
+				break;
+		}
+	}
+		break;
+	case WR0_DRIVER_CPUZ161:
+	case WR0_DRIVER_CPUZ162:
+	{
+		in = ((in & 0x00000000FFFFFFFFULL) << 32) | ((in & 0xFFFFFFFF00000000ULL) >> 32);
+		if (DeviceIoControl(drv->handle, IOCTL_CPUZ_OC_MAILBOX,
+			&in, sizeof(uint64_t), out, sizeof(uint64_t), &dwBytesReturned, NULL) == FALSE)
+			return -1;
+		*out = ((*out & 0x00000000FFFFFFFFULL) << 32) | ((*out & 0xFFFFFFFF00000000ULL) >> 32);
+	}
+		break;
+	default:
+		return -1;
+	}
+	NWL_Debug("OC", "Mailbox send in=%016llX out=%016llX", in, *out);
+	return 0;
+}
+
 uint8_t WR0_RdIo8(struct wr0_drv_t* drv, uint16_t port)
 {
 	DWORD returnedLength = 0;
