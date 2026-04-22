@@ -3,6 +3,7 @@
 #include "ioctl_priv.h"
 #include "libnw.h"
 #include "utils.h"
+#include "ocmb.h"
 #include <pathcch.h>
 #include <shlobj.h>
 
@@ -469,8 +470,7 @@ int WR0_WrMsr(struct wr0_drv_t* drv, uint32_t msr_index, uint64_t value)
 	return 0;
 }
 
-#define MSR_OC_MAILBOX 0x150
-static inline int read_oc_msr(uint64_t* result)
+static inline int read_oc_msr(OC_MAILBOX_FULL* result)
 {
 	int err;
 	ULONG64 in = MSR_OC_MAILBOX;
@@ -479,14 +479,16 @@ static inline int read_oc_msr(uint64_t* result)
 		err = WR0_ExecPawn(NWLC->NwDrv, &NWLC->NwDrv->pio_intel, "ioctl_read_msr", &in, 1, &out, 1, NULL);
 	else
 		err = WR0_RdMsr(NWLC->NwDrv, (uint32_t)in, &out);
-	*result = out;
+	memcpy(result, &out, sizeof(OC_MAILBOX_FULL));
 	return err;
 }
 
-static inline int write_oc_msr(uint64_t value)
+static inline int write_oc_msr(const OC_MAILBOX_FULL* value)
 {
 	int err;
-	ULONG64 in[2] = { MSR_OC_MAILBOX, value };
+	ULONG64 in[2];
+	in[0] = MSR_OC_MAILBOX;
+	memcpy(&in[1], value, sizeof(OC_MAILBOX_FULL));
 	if (NWLC->NwDrv->type == WR0_DRIVER_PAWNIO)
 		err = WR0_ExecPawn(NWLC->NwDrv, &NWLC->NwDrv->pio_intel, "ioctl_write_msr", in, 2, NULL, 0, NULL);
 	else
@@ -494,7 +496,7 @@ static inline int write_oc_msr(uint64_t value)
 	return err;
 }
 
-int WR0_SendOcMailbox(struct wr0_drv_t* drv, uint64_t in, uint64_t* out)
+int WR0_SendOcMailbox(struct wr0_drv_t* drv, const OC_MAILBOX_FULL* in, OC_MAILBOX_FULL* out)
 {
 	DWORD dwBytesReturned = 0;
 
@@ -507,15 +509,13 @@ int WR0_SendOcMailbox(struct wr0_drv_t* drv, uint64_t in, uint64_t* out)
 	case WR0_DRIVER_HWIO:
 	case WR0_DRIVER_PAWNIO:
 	{
-		if (read_oc_msr(out))
-			return -2;
 		write_oc_msr(in);
 		for (int i = 0; i < 100; i++)
 		{
 			WR0_MicroSleep(10);
 			if (read_oc_msr(out))
 				return -2;
-			if ((*out & 0x8000000000000000ULL) == 0ULL)
+			if (out->Interface.Fields.RunBusy == 0)
 				break;
 		}
 	}
@@ -523,15 +523,23 @@ int WR0_SendOcMailbox(struct wr0_drv_t* drv, uint64_t in, uint64_t* out)
 	case WR0_DRIVER_CPUZ161:
 	case WR0_DRIVER_CPUZ162:
 	{
-		in = ((in & 0x00000000FFFFFFFFULL) << 32) | ((in & 0xFFFFFFFF00000000ULL) >> 32);
+		ULARGE_INTEGER buf;
+		buf.LowPart = in->Interface.InterfaceData;
+		buf.HighPart = in->Data;
 		if (DeviceIoControl(drv->handle, IOCTL_CPUZ_OC_MAILBOX,
-			&in, sizeof(uint64_t), out, sizeof(uint64_t), &dwBytesReturned, NULL) == FALSE)
+			&buf, sizeof(buf), &buf, sizeof(buf), &dwBytesReturned, NULL) == FALSE)
 			return -1;
-		*out = ((*out & 0x00000000FFFFFFFFULL) << 32) | ((*out & 0xFFFFFFFF00000000ULL) >> 32);
+		out->Interface.InterfaceData = buf.LowPart;
+		out->Data = buf.HighPart;
 	}
 		break;
 	default:
 		return -1;
+	}
+	if (out->Interface.Fields.CommandCompletion != MAILBOX_OC_COMPLETION_CODE_SUCCESS)
+	{
+		NWL_Debug("OC", "Mailbox send in=%016llX err=%02X", in, out->Interface.Fields.CommandCompletion);
+		return -3;
 	}
 	NWL_Debug("OC", "Mailbox send in=%016llX out=%016llX", in, *out);
 	return 0;

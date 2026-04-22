@@ -184,7 +184,9 @@ mchbar_pch_init(void)
 	switch (ctx.id->x86.ext_model)
 	{
 	case 0x2A: // Core 2nd Gen (Sandy Bridge)
+	case 0x2D: // Core 2nd Gen (Sandy Bridge) ?
 	case 0x3A: // Core 3rd Gen (Ivy Bridge)
+	case 0x3E: // Core 3rd Gen (Ivy Bridge) ?
 		ctx.mchbar_base = mchbar_get_base_32();
 		detect_pch_thermal();
 		break;
@@ -192,20 +194,27 @@ mchbar_pch_init(void)
 	case 0x3F: // Core 4th Gen (Haswell-EP)
 	case 0x45: // Core 4th Gen (Haswell)
 	case 0x46: // Core 4th Gen (Haswell)
+	case 0x3D: // Core 5th Gen (Broadwell) ?
 	case 0x47: // Core 5th Gen (Broadwell)
+	case 0x4F: // Core 5th Gen (Broadwell) ?
+	case 0x56: // Core 5th Gen (Broadwell) ?
 	case 0x4E: // Core 6th Gen (Sky Lake)
+	case 0x55: // Core 6th Gen (Sky Lake) ?
 	case 0x5E: // Core 6th Gen (Sky Lake)
 	case 0x8E: // Core 7/8/9th Gen (Kaby/Coffee Lake)
 	case 0x9E: // Core 7/8/9th Gen (Kaby/Coffee Lake)
 		ctx.mchbar_base = mchbar_get_base_64(0x7FFFFF8000); // 38:15
 		detect_pch_thermal();
 		break;
-	case 0x7E: // Core 10th Gen (Ice Lake) // ???
+	case 0x6A: // Core 10th Gen (Ice Lake) ?
+	case 0x6C: // Core 10th Gen (Ice Lake) ?
+	case 0x7D: // Core 10th Gen (Ice Lake) ?
+	case 0x7E: // Core 10th Gen (Ice Lake) ?
 	case 0xA5: // Core 10th Gen (Comet Lake)
 	case 0xA6: // Core 10th Gen (Comet Lake)
 	case 0xA7: // Core 11th Gen (Rocket Lake)
-	case 0x8A: // Core 11th Gen (Lakefield) // ???
-	case 0x9C: // Core 11th Gen (Jasper Lake) // ???
+	case 0x8A: // Core 11th Gen (Lakefield) ?
+	case 0x9C: // Core 11th Gen (Jasper Lake) ?
 		ctx.mchbar_base = mchbar_get_base_64(0x7FFFFF0000); // 38:16
 		detect_pch_thermal();
 		break;

@@ -276,6 +276,16 @@ static void get_pch_sensors_ts(PNODE node)
 	NWL_NodeAttrSetf(node, "PCH Temperature", NAFLG_FMT_NUMERIC, "%.0f", NWL_GetTemperature(get_ts_temperature(temp)));
 }
 
+static inline int send_oc_mailbox(const OC_MAILBOX_FULL* in, OC_MAILBOX_FULL* out)
+{
+	int err;
+	GROUP_AFFINITY saved_aff;
+	SetThreadGroupAffinity(ctx.thread, &ctx.affinity, &saved_aff);
+	err = WR0_SendOcMailbox(NWLC->NwDrv, in, out);
+	SetThreadGroupAffinity(ctx.thread, &saved_aff, NULL);
+	return err;
+}
+
 static bool intel_init(void)
 {
 	struct system_id_t* id = NWL_GetCpuid();
@@ -292,19 +302,24 @@ static bool intel_init(void)
 	ctx.thread = GetCurrentThread();
 	NWL_GetGroupAffinity(&ctx.id->affinity_mask, &ctx.affinity);
 
-	if (!mchbar_pch_init())
-		goto ok;
-
 	if (ctx.id->x86.family != 0x06)
-		goto ok;
+		goto fail;
+
+	if (!mchbar_pch_init())
+		goto fail;
+
 	switch (ctx.id->x86.ext_model)
 	{
 	case 0x3C: // Core 4th Gen (Haswell)
 	case 0x3F: // Core 4th Gen (Haswell-EP)
 	case 0x45: // Core 4th Gen (Haswell)
 	case 0x46: // Core 4th Gen (Haswell)
+	case 0x3D: // Core 5th Gen (Broadwell) ?
 	case 0x47: // Core 5th Gen (Broadwell)
+	case 0x4F: // Core 5th Gen (Broadwell) ?
+	case 0x56: // Core 5th Gen (Broadwell) ?
 	case 0x4E: // Core 6th Gen (Sky Lake)
+	case 0x55: // Core 6th Gen (Sky Lake) ?
 	case 0x5E: // Core 6th Gen (Sky Lake)
 	case 0x8E: // Core 7/8/9th Gen (Kaby/Coffee Lake)
 	case 0x9E: // Core 7/8/9th Gen (Kaby/Coffee Lake)
@@ -312,12 +327,15 @@ static bool intel_init(void)
 		if (pch_get_mmio_reg() != 0)
 			ctx.get_pch_sensors = get_pch_sensors_ts;
 		break;
-	case 0x7E: // Core 10th Gen (Ice Lake) // ???
+	case 0x6A: // Core 10th Gen (Ice Lake) ?
+	case 0x6C: // Core 10th Gen (Ice Lake) ?
+	case 0x7D: // Core 10th Gen (Ice Lake) ?
+	case 0x7E: // Core 10th Gen (Ice Lake) ?
 	case 0xA5: // Core 10th Gen (Comet Lake)
 	case 0xA6: // Core 10th Gen (Comet Lake)
 	case 0xA7: // Core 11th Gen (Rocket Lake)
-	case 0x8A: // Core 11th Gen (Lakefield) // ???
-	case 0x9C: // Core 11th Gen (Jasper Lake) // ???
+	case 0x8A: // Core 11th Gen (Lakefield) ?
+	case 0x9C: // Core 11th Gen (Jasper Lake) ?
 		ctx.core_gen = 10;
 		if (pch_get_mmio_reg() != 0)
 			ctx.get_pch_sensors = get_pch_sensors_ts;
@@ -346,7 +364,6 @@ static bool intel_init(void)
 	if (mchbar_get_mmio_reg() != 0)
 		ctx.get_mchbar_sensors = get_mchbar_sensors;
 
-ok:
 	return true;
 fail:
 	ZeroMemory(&ctx, sizeof(ctx));

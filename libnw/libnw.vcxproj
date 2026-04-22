@@ -340,6 +340,7 @@
     <ClInclude Include="..\ids\usb_ids.h" />
     <ClInclude Include="..\ioctl\lpcio.h" />
     <ClInclude Include="..\ioctl\mchbar.h" />
+    <ClInclude Include="..\ioctl\ocmb.h" />
     <ClInclude Include="..\ioctl\ryzen_smu.h" />
     <ClInclude Include="..\ioctl\superio.h" />
     <ClInclude Include="..\libcdi\libcdi.h" />

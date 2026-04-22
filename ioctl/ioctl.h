@@ -60,12 +60,14 @@ struct wr0_drv_t
 // PCI Device Address to Function Number
 #define PciGetFunc(address)				(address&7)
 
+typedef struct _OC_MAILBOX_FULL OC_MAILBOX_FULL;
+
 LIBNW_API BOOL WR0_CheckPawnIO(void);
 LIBNW_API BOOL WR0_InstallPawnIO(void);
 
 LIBNW_API int WR0_RdMsr(struct wr0_drv_t* drv, uint32_t msr_index, uint64_t* result);
 LIBNW_API int WR0_WrMsr(struct wr0_drv_t* drv, uint32_t msr_index, uint64_t value);
-LIBNW_API int WR0_SendOcMailbox(struct wr0_drv_t* drv, uint64_t in, uint64_t* out);
+LIBNW_API int WR0_SendOcMailbox(struct wr0_drv_t* drv, const OC_MAILBOX_FULL* in, OC_MAILBOX_FULL* out);
 LIBNW_API uint8_t WR0_RdIo8(struct wr0_drv_t* drv, uint16_t port);
 LIBNW_API uint16_t WR0_RdIo16(struct wr0_drv_t* drv, uint16_t port);
 LIBNW_API uint32_t WR0_RdIo32(struct wr0_drv_t* drv, uint16_t port);
