@@ -24,7 +24,7 @@ static NWLIB_LPC_DRV* lpc_drivers[] =
 PNWLIB_LPC
 NWL_InitLpc(struct _NWLIB_MAINBOARD_INFO* board)
 {
-	if (board == NULL)
+	if (board == NULL || NWLC->NwDrv == NULL)
 		return NULL;
 	if (!WR0_WaitIsaBus(100))
 		return NULL;
