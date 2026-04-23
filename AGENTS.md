@@ -26,19 +26,47 @@ This file guides coding agents working in the `nwinfo` repository.
 
 ## 3. Build (Follow CI First)
 
-1. Restore dependencies:
+0. Use Visual Studio 2022 Developer PowerShell when possible.
+   If `msbuild` is not in `PATH`, resolve it first:
+
+```powershell
+$msbuild = & "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe" `
+  -latest -products * -requires Microsoft.Component.MSBuild `
+  -find MSBuild\**\Bin\MSBuild.exe
+```
+
+1. Restore dependencies (CI step):
 
 ```powershell
 nuget restore .
 ```
 
-2. Common builds (CI-aligned):
+   If `nuget` is unavailable but `packages\` is already present, continue to build.
+
+2. Minimum local verification build (validated):
+
+```powershell
+& $msbuild /m:1 /p:Configuration=Release /p:Platform=x64 nwinfo.sln
+```
+
+3. CI/release matrix builds:
 
 ```powershell
 msbuild /m /p:Configuration=Release /p:Platform=x64 nwinfo.sln
+msbuild /m /p:Configuration=Release /p:Platform=x86 nwinfo.sln
+msbuild /m /p:Configuration=DLLRelease /p:Platform=x64 nwinfo.sln
+msbuild /m /p:Configuration=DLLRelease /p:Platform=x86 nwinfo.sln
 ```
 
-3. Packaging resources (when release flow is touched):
+   Build from the solution entry only (`nwinfo.sln`). Do not compile child project files (`*.vcxproj`) directly.
+   If `/m` behaves unreliably in restricted terminals, retry with `/m:1`.
+   Forbidden example:
+
+```powershell
+msbuild libnw\libnw.vcxproj /p:Configuration=Release /p:Platform=x64
+```
+
+4. Packaging resources (when release flow is touched):
 
 ```powershell
 .\copy_res.ps1 -TargetFolder PKG
