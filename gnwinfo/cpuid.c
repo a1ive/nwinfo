@@ -102,7 +102,7 @@ gnwinfo_draw_cpuid_window(struct nk_context* ctx, float width, float height)
 	if (!(g_ctx.window_flag & GUI_WINDOW_CPUID))
 		return;
 	if (!nk_begin_ex(ctx, "CPUID",
-		nk_rect(0, height / 4.0f, width * 0.98f, height / 2.0f),
+		nk_rect(0, height / 8.0f, width * 0.98f, height * 0.6f),
 		NK_WINDOW_BORDER | NK_WINDOW_MOVABLE | NK_WINDOW_SCALABLE | NK_WINDOW_CLOSABLE,
 		GET_PNG(IDR_PNG_CPU), GET_PNG(IDR_PNG_CLOSE)))
 	{
@@ -113,7 +113,7 @@ gnwinfo_draw_cpuid_window(struct nk_context* ctx, float width, float height)
 	if (g_ctx.cpu_count <= 0 || !g_ctx.cpu_info)
 		goto out;
 
-	CPUID_ROW_BEGIN(2, 0.16f);
+	CPUID_ROW_BEGIN_EX(2, 0.16f, g_col_height);
 	nk_property_int(ctx, "#CPU", -1, &cpu_index, g_ctx.cpu_count, 1, 1);
 	if (cpu_index >= g_ctx.cpu_count)
 		cpu_index = 0;
@@ -194,8 +194,7 @@ gnwinfo_draw_cpuid_window(struct nk_context* ctx, float width, float height)
 	nk_layout_row_dynamic(ctx, 0, 1);
 	nk_spacer(ctx);
 
-	struct nk_rect rect = nk_layout_widget_bounds(ctx);
-	CPUID_ROW_BEGIN_EX(3, 0.2f, NK_MAX(rect.h * 10, 100.0f));
+	CPUID_ROW_BEGIN_EX(3, 0.2f, g_col_height * 8.0f);
 	draw_features(ctx, cpu);
 	CPUID_ROW_PUSH(0.4f);
 	draw_cache(ctx, cpu);
