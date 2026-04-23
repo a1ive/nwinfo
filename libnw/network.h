@@ -40,10 +40,10 @@ typedef struct _NWLIB_NET_ADAPTER
 	ULONG64 TransmitLinkSpeed;
 	ULONG64 ReceiveLinkSpeed;
 	DWORD Mtu;
-	DWORD ReceivedOctets;
-	DWORD DiffReceived;
-	DWORD SentOctets;
-	DWORD DiffSent;
+	ULONG64 ReceivedOctets;
+	ULONG64 DiffReceived;
+	ULONG64 SentOctets;
+	ULONG64 DiffSent;
 
 	DWORD WLANState;
 	CHAR WLANProfile[NWL_NET_WLAN_PROFILE_LEN];
@@ -60,8 +60,8 @@ typedef struct _NWLIB_NET_ADAPTER_MAP
 
 typedef struct _NWLIB_NET_TRAFFIC
 {
-	double Recv;
-	double Send;
+	ULONG64 Recv;
+	ULONG64 Send;
 	CHAR StrRecv[NWL_STR_SIZE];
 	CHAR StrSend[NWL_STR_SIZE];
 } NWLIB_NET_TRAFFIC;

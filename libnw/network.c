@@ -2,8 +2,8 @@
 
 #include <winsock2.h>
 #include <windows.h>
-#include <iphlpapi.h>
 #include <ws2tcpip.h>
+#include <iphlpapi.h>
 #include <netioapi.h>
 #include <wlanapi.h>
 
@@ -106,8 +106,8 @@ FormatMacAddress(const BYTE* addr, ULONG len, CHAR* out, size_t out_len)
 	}
 }
 
-static DWORD
-NetRateFromDiff(DWORD current, DWORD previous, ULONG64 curTicks, ULONG64 prevTicks)
+static ULONG64
+NetRateFromDiff(ULONG64 current, ULONG64 previous, ULONG64 curTicks, ULONG64 prevTicks)
 {
 	ULONG64 diffBytes;
 	ULONG64 diffTicks;
@@ -126,9 +126,9 @@ NetRateFromDiff(DWORD current, DWORD previous, ULONG64 curTicks, ULONG64 prevTic
 	rate = (double)diffBytes * 1000.0 / (double)diffTicks;
 	if (rate <= 0.0)
 		return 0;
-	if (rate > (double)MAXDWORD)
-		return MAXDWORD;
-	return (DWORD)(rate + 0.5);
+	if (rate > (double)(~0ULL))
+		return ~0ULL;
+	return (ULONG64)(rate + 0.5);
 }
 
 static void
@@ -321,7 +321,7 @@ NWL_GetNetAdapters(NWLIB_NET_ADAPTER_MAP* adapters)
 	PIP_ADAPTER_MULTICAST_ADDRESS_XP pMulticast = NULL;
 	PIP_ADAPTER_DNS_SERVER_ADDRESS_XP pDnServer = NULL;
 	PIP_ADAPTER_GATEWAY_ADDRESS_LH pGateway = NULL;
-	MIB_IFROW ifRow;
+	MIB_IF_ROW2 ifRow;
 	PVOID pMaxAddress = NULL;
 	BOOL bLonghornOrLater = (NWLC->NwOsInfo.dwMajorVersion >= 6);
 	ULONG64 nowTicks = GetTickCount64();
@@ -352,8 +352,8 @@ NWL_GetNetAdapters(NWLIB_NET_ADAPTER_MAP* adapters)
 		const CHAR* desc = NULL;
 		const CHAR* adapterName = NULL;
 		BOOL hasStats = FALSE;
-		DWORD prevReceived = 0;
-		DWORD prevSent = 0;
+		ULONG64 prevReceived = 0;
+		ULONG64 prevSent = 0;
 		ULONG64 prevTicks = 0;
 
 		adapterName = pCurrAddresses->AdapterName;
@@ -441,11 +441,11 @@ NWL_GetNetAdapters(NWLIB_NET_ADAPTER_MAP* adapters)
 		adapter.Mtu = pCurrAddresses->Mtu;
 
 		ZeroMemory(&ifRow, sizeof(ifRow));
-		ifRow.dwIndex = pCurrAddresses->IfIndex;
-		if (GetIfEntry(&ifRow) == NO_ERROR)
+		ifRow.InterfaceIndex = pCurrAddresses->IfIndex;
+		if (ifRow.InterfaceIndex != 0 && GetIfEntry2(&ifRow) == NO_ERROR)
 		{
-			adapter.ReceivedOctets = ifRow.dwInOctets;
-			adapter.SentOctets = ifRow.dwOutOctets;
+			adapter.ReceivedOctets = ifRow.InOctets;
+			adapter.SentOctets = ifRow.OutOctets;
 			hasStats = TRUE;
 		}
 
@@ -530,8 +530,8 @@ NWL_FreeNetAdapters(NWLIB_NET_ADAPTER_MAP* adapters)
 VOID
 NWL_GetNetTraffic(NWLIB_NET_TRAFFIC* info, BOOL bit, const NWLIB_NET_ADAPTER_MAP* adapters)
 {
-	double recv = 0.0;
-	double send = 0.0;
+	ULONG64 recv = 0;
+	ULONG64 send = 0;
 
 	info->Recv = 0;
 	info->Send = 0;
@@ -552,16 +552,16 @@ NWL_GetNetTraffic(NWLIB_NET_TRAFFIC* info, BOOL bit, const NWLIB_NET_ADAPTER_MAP
 	if (bit)
 	{
 		strncpy_s(info->StrRecv, sizeof(info->StrRecv),
-			NWL_GetHumanSize((UINT64)(info->Recv * 8.0), BIT_UINTS, 1000), _TRUNCATE);
+			NWL_GetHumanSize(recv * 8ULL, BIT_UINTS, 1000), _TRUNCATE);
 		strncpy_s(info->StrSend, sizeof(info->StrSend),
-			NWL_GetHumanSize((UINT64)(info->Send * 8.0), BIT_UINTS, 1000), _TRUNCATE);
+			NWL_GetHumanSize(send * 8ULL, BIT_UINTS, 1000), _TRUNCATE);
 	}
 	else
 	{
 		strncpy_s(info->StrRecv, sizeof(info->StrRecv),
-			NWL_GetHumanSize((UINT64)info->Recv, NWLC->NwUnits, 1024), _TRUNCATE);
+			NWL_GetHumanSize(recv, NWLC->NwUnits, 1024), _TRUNCATE);
 		strncpy_s(info->StrSend, sizeof(info->StrSend),
-			NWL_GetHumanSize((UINT64)info->Send, NWLC->NwUnits, 1024), _TRUNCATE);
+			NWL_GetHumanSize(send, NWLC->NwUnits, 1024), _TRUNCATE);
 	}
 }
 
