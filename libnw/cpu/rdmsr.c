@@ -177,12 +177,6 @@ NWL_MsrGet(struct msr_info_t* info, cpu_msrinfo_request_t which)
 	case INFO_BUS_CLOCK:
 		ret = (int)(fn->get_bus_clock(info) * 100);
 		break;
-	case INFO_IGPU_TEMPERATURE:
-		ret = fn->get_igpu_temperature(info);
-		break;
-	case INFO_IGPU_ENERGY:
-		ret = (int)(fn->get_igpu_energy(info) * 100);
-		break;
 	case INFO_MICROCODE_VER:
 		if (info->cached_microcode == 0)
 			info->cached_microcode = (int)(fn->get_microcode_ver(info));

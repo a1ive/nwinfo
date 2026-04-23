@@ -50,8 +50,6 @@ lang_sl_si[N__MAX_] =
 	//[N__PL1],
 	//[N__PL2],
 	//[N__TDP],
-	[N__IGPU_TEMPERATURE] = u8"iGPU temperatura",
-	[N__IGPU_POWER] = u8"iGPU moč",
 	[N__MICROCODE] = u8"Mikrokoda",
 	[N__L1_D] = u8"L1 D",
 	[N__L1_I] = u8"L1 I",

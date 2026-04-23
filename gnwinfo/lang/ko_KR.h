@@ -50,8 +50,6 @@ lang_ko_kr[N__MAX_] =
 	//[N__PL1],
 	//[N__PL2],
 	//[N__TDP],
-	[N__IGPU_TEMPERATURE] = u8"iGPU 온도",
-	[N__IGPU_POWER] = u8"iGPU 전원",
 	[N__MICROCODE] = u8"마이크로코드",
 	[N__L1_D] = u8"L1 D",
 	[N__L1_I] = u8"L1 I",

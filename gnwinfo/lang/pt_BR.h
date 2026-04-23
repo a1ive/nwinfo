@@ -50,8 +50,6 @@ lang_pt_br[N__MAX_] =
 	//[N__PL1],
 	//[N__PL2],
 	//[N__TDP],
-	[N__IGPU_TEMPERATURE] = u8"Temp. iGPU",
-	[N__IGPU_POWER] = u8"Potência iGPU",
 	[N__MICROCODE] = u8"Microcódigo",
 	[N__L1_D] = u8"L1 D",
 	[N__L1_I] = u8"L1 I",

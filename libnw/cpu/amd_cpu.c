@@ -541,30 +541,6 @@ fail:
 	return 0.0;
 }
 
-static int get_igpu_temperature(struct msr_info_t* info)
-{
-	float value = 0.0f;
-	WR0_WaitPciBus(500);
-	if (info->ry == NULL)
-		info->ry = ryzen_smu_init(info->handle, info->id);
-	if (info->ry == NULL)
-		goto fail;
-	if (ryzen_smu_update_pm_table(info->ry) != RYZEN_SMU_OK)
-		goto fail;
-	if (ryzen_smu_get_gfx_temperature(info->ry, &value) != RYZEN_SMU_OK)
-		goto fail;
-	WR0_ReleasePciBus();
-	return (int)value;
-fail:
-	WR0_ReleasePciBus();
-	return 0;
-}
-
-static double get_igpu_energy(struct msr_info_t* info)
-{
-	return 0.0;
-}
-
 #define MSR_IA32_BIOS_SIGN_ID  0x8B
 
 static int get_microcode_ver(struct msr_info_t* info)
@@ -622,8 +598,6 @@ struct msr_fn_t msr_fn_amd =
 	.get_pkg_pl2 = get_pkg_pl2,
 	.get_voltage = get_voltage,
 	.get_bus_clock = get_bus_clock,
-	.get_igpu_temperature = get_igpu_temperature,
-	.get_igpu_energy = get_igpu_energy,
 	.get_microcode_ver = get_microcode_ver,
 	.get_tdp_nominal = get_tdp_nominal,
 };

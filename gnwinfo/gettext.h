@@ -48,8 +48,6 @@ typedef enum _GETTEXT_STR_ID
 	N__PL1,
 	N__PL2,
 	N__TDP,
-	N__IGPU_TEMPERATURE,
-	N__IGPU_POWER,
 	N__MICROCODE,
 	N__L1_D,
 	N__L1_I,

@@ -22,8 +22,6 @@ typedef enum
 	INFO_PKG_PL1,              // Package power limit #1 in Watts * 100
 	INFO_PKG_PL2,              // Package power limit #2 in Watts * 100
 	INFO_BUS_CLOCK,            // Bus clock in MHz * 100
-	INFO_IGPU_TEMPERATURE,     // Integrated GPU temperature in Celsius
-	INFO_IGPU_ENERGY,          // Integrated GPU energy consumption in Joules * 100
 	INFO_MICROCODE_VER,        // Microcode revision number
 	INFO_TDP_NOMINAL,          // TDP in Watts
 } cpu_msrinfo_request_t;
@@ -40,8 +38,6 @@ struct msr_fn_t
 	double (*get_pkg_pl2)(struct msr_info_t* info);
 	double (*get_voltage)(struct msr_info_t* info);
 	double (*get_bus_clock)(struct msr_info_t* info);
-	int (*get_igpu_temperature)(struct msr_info_t* info);
-	double (*get_igpu_energy)(struct msr_info_t* info);
 	int (*get_microcode_ver)(struct msr_info_t* info);
 	int (*get_tdp_nominal)(struct msr_info_t* info);
 };

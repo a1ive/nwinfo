@@ -246,23 +246,6 @@ fail:
 	return 0.0;
 }
 
-static int get_igpu_temperature(struct msr_info_t* info)
-{
-	return 0;
-}
-
-static double get_igpu_energy(struct msr_info_t* info)
-{
-	uint64_t total_energy, energy_units;
-	if (read_intel_msr(info->handle, MSR_PP1_ENERGY_STATUS, 31, 0, &total_energy))
-		goto fail;
-	if (read_intel_msr(info->handle, MSR_RAPL_POWER_UNIT, 12, 8, &energy_units))
-		goto fail;
-	return (double)total_energy / (1ULL << energy_units);
-fail:
-	return 0.0;
-}
-
 static int get_microcode_ver(struct msr_info_t* info)
 {
 	uint64_t rev;
@@ -297,8 +280,6 @@ struct msr_fn_t msr_fn_intel =
 	.get_pkg_pl2 = get_pkg_pl2,
 	.get_voltage = get_voltage,
 	.get_bus_clock = get_bus_clock,
-	.get_igpu_temperature = get_igpu_temperature,
-	.get_igpu_energy = get_igpu_energy,
 	.get_microcode_ver = get_microcode_ver,
 	.get_tdp_nominal = get_tdp_nominal,
 };

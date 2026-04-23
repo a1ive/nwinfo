@@ -48,8 +48,6 @@ lang_tr_tr[N__MAX_] =
 	//[N__PL1],
 	//[N__PL2],
 	//[N__TDP],
-	[N__IGPU_TEMPERATURE] = u8"iGPU Sıcaklığı",
-	[N__IGPU_POWER] = u8"iGPU Gücü",
 	[N__MICROCODE] = u8"Mikrokod",
 	[N__L1_D] = u8"L1 D",
 	[N__L1_I] = u8"L1 I",

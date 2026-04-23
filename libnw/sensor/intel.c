@@ -94,6 +94,7 @@ static struct
 	uint32_t pp0_energy;
 	uint32_t pp1_energy;
 	uint32_t pkg_energy;
+	uint32_t dram_energy;
 	void (*get_mchbar_sensors)(PNODE node);
 	void (*get_pch_sensors)(PNODE node);
 } ctx;
@@ -140,12 +141,15 @@ static void get_mchbar_sensors(PNODE node)
 	NWL_NodeAttrSetf(node, "UCLK MHz", NAFLG_FMT_NUMERIC, "%.3f", uclk);
 	NWL_NodeAttrSetf(node, "QCLK MHz", NAFLG_FMT_NUMERIC, "%.3f", qclk);
 
+#if 0
 	uint32_t mchbar_5938 = mchbar_read_32(0x5938);
 	// 12:8  ENERGY_UNIT
 	//  3:0  PWR_UNIT
 	uint32_t energy_unit = (mchbar_5938 >> 8) & 0x1F;
 	uint32_t power_unit = mchbar_5938 & 0xF;
+#endif
 
+#if 0
 	uint32_t mchbar_5928 = mchbar_read_32(0x5928);
 	// 31:0  PP0_ENERGY /Power(2, ENERGY_UNIT)
 	float pp0_delta_energy = 0.0f;
@@ -169,12 +173,15 @@ static void get_mchbar_sensors(PNODE node)
 		pkg_delta_energy = (float)(mchbar_593c - ctx.pkg_energy) / (1ULL << energy_unit);
 	ctx.pkg_energy = mchbar_593c;
 	NWL_NodeAttrSetf(node, "Package Power", NAFLG_FMT_NUMERIC, "%.3f", pkg_delta_energy * 1000.0f / ctx.delta_ticks);
+#endif
 
+#if 0
 	uint32_t mchbar_594c = mchbar_read_32(0x594C);
 	// 7:0 EDRAM_TEMPERATURE
 	int edram_temp = mchbar_594c & 0xFF;
 	if (edram_temp > 0)
 		NWL_NodeAttrSetf(node, "eDRAM Temperature", NAFLG_FMT_NUMERIC, "%.0f", NWL_GetTemperature((float)edram_temp));
+#endif
 
 	uint32_t mchbar_5978 = mchbar_read_32(0x5978);
 	//  7:0 PKG_TEMPERATURE
@@ -205,6 +212,7 @@ static void get_mchbar_sensors(PNODE node)
 	int tctrl_offset = (mchbar_599c >> 8) & 0xFF;
 	NWL_NodeAttrSetf(node, "T-Control", NAFLG_FMT_NUMERIC, "%.0f", NWL_GetTemperature((float)(tjmax - tctrl_offset)));
 
+#if 0
 	uint64_t mchbar_59a0 = mchbar_read_64(0x59A0);
 	// 46:32 PKG_PWR_LIM_2 /Power(2, POWER_UNIT)
 	// 14:0  PKG_PWR_LIM_1 /Power(2, POWER_UNIT)
@@ -214,6 +222,7 @@ static void get_mchbar_sensors(PNODE node)
 	float pkg_pl2 = (float)((mchbar_59a0 >> 32) & 0x7FFF) / (1ULL << power_unit);
 	if (pkg_pl2 > 0.0f)
 		NWL_NodeAttrSetf(node, "Package PL2", NAFLG_FMT_NUMERIC, "%.2f", pkg_pl2);
+#endif
 
 	uint32_t mchbar_59c0 = mchbar_read_32(0x59C0);
 	// 31    VALID
@@ -225,6 +234,7 @@ static void get_mchbar_sensors(PNODE node)
 		NWL_NodeAttrSetf(node, "GT Temperature", NAFLG_FMT_NUMERIC, "%.0f", NWL_GetTemperature((float)(tjmax - gt_offset)));
 	}
 
+#if 0
 	uint32_t mchbar_5f3c = mchbar_read_32(0x5F3C);
 	//  7:0  TDP_RATIO *100MHz
 	NWL_NodeAttrSetf(node, "cTDP Nominal Ratio", NAFLG_FMT_NUMERIC, "%u", mchbar_5f3c & 0xFF);
@@ -252,7 +262,9 @@ static void get_mchbar_sensors(PNODE node)
 	uint32_t mchbar_5f50 = mchbar_read_32(0x5F50);
 	//  1:0  TDP_LEVEL 0 - Nominal, 1 - Level 1, 2 - Level 2
 	NWL_NodeAttrSetf(node, "cTDP Current Level", NAFLG_FMT_NUMERIC, "%u", mchbar_5f50 & 0x3);
+#endif
 
+#if 0
 	uint32_t mchbar_6200 = mchbar_read_32(0x6200);
 	// 31    VALID
 	// 22:16 PKG_THERMAL_DPPM_TEMP
@@ -261,6 +273,7 @@ static void get_mchbar_sensors(PNODE node)
 		int dppm_temp = (mchbar_6200 >> 16) & 0x7F;
 		NWL_NodeAttrSetf(node, "Package DPPM Temperature", NAFLG_FMT_NUMERIC, "%.0f", NWL_GetTemperature((float)(tjmax - dppm_temp)));
 	}
+#endif
 }
 
 static void get_pch_sensors_pmc(PNODE node)
@@ -286,6 +299,142 @@ static inline int send_oc_mailbox(const OC_MAILBOX_FULL* in, OC_MAILBOX_FULL* ou
 	return err;
 }
 
+static inline int read_msr(uint32_t msr, uint64_t* value)
+{
+	int err;
+	ULONG64 in = msr;
+	ULONG64 out = 0;
+	if (NWLC->NwDrv->type == WR0_DRIVER_PAWNIO)
+		err = WR0_ExecPawn(NWLC->NwDrv, &NWLC->NwDrv->pio_intel, "ioctl_read_msr", &in, 1, &out, 1, NULL);
+	else
+		err = WR0_RdMsr(NWLC->NwDrv, msr, &out);
+	//NWL_Debug("MSR", "%X -> %llX (%d)", msr, out, err);
+	*value = out;
+	return err;
+}
+
+static void get_msr_sensors(PNODE node)
+{
+	uint64_t value;
+	GROUP_AFFINITY saved_aff;
+	SetThreadGroupAffinity(ctx.thread, &ctx.affinity, &saved_aff);
+
+	uint32_t energy_unit = 0x10; // 10000b
+	uint32_t power_unit = 0x03; // 0011b
+	uint32_t time_unit = 0x0A; // 1010b
+
+	if (read_msr(0x606, &value) == 0)
+	{
+		energy_unit = (value >> 8) & 0x1F;
+		power_unit = value & 0xF;
+		time_unit = (value >> 16) & 0xF;
+	}
+
+	// Package RAPL
+	// MSR_PKG_POWER_LIMIT 0x610
+	// MSR_PKG_ENERGY_STATUS 0x611
+	// RESERVED 0x612
+	// MSR_PKG_PERF_STATUS 0x613
+	// MSR_PKG_POWER_INFO 0x614
+	if (read_msr(0x610, &value) == 0)
+	{
+		if (value & (1ULL << 15))
+		{
+			float pl1 = (float)(value & 0x7FFF) / (1ULL << power_unit);
+			NWL_NodeAttrSetf(node, "Package PL1", NAFLG_FMT_NUMERIC, "%.0f", pl1);
+			float pl1_time = (float)(1ULL << ((value >> 17) & 0x1F)) * (1.0f + ((value >> 22) & 0x3) / 4.0f) / (1ULL << time_unit);
+			NWL_NodeAttrSetf(node, "Package PL1 Time", NAFLG_FMT_NUMERIC, "%.3f", pl1_time);
+		}
+		if (value & (1ULL << 47))
+		{
+			float pl2 = (float)((value >> 32) & 0x7FFF) / (1ULL << power_unit);
+			NWL_NodeAttrSetf(node, "Package PL2", NAFLG_FMT_NUMERIC, "%.0f", pl2);
+			float pl2_time = (float)(1ULL << ((value >> 49) & 0x1F)) * (1.0f + ((value >> 54) & 0x3) / 4.0f) / (1ULL << time_unit);
+			NWL_NodeAttrSetf(node, "Package PL2 Time", NAFLG_FMT_NUMERIC, "%.3f", pl2_time);
+		}
+	}
+	if (read_msr(0x611, &value) == 0)
+	{
+		float delta_energy = 0.0f;
+		value &= 0xFFFFFFFF;
+		if (value > ctx.pkg_energy)
+			delta_energy = (float)(value - ctx.pkg_energy) / (1ULL << energy_unit);
+		ctx.pkg_energy = (uint32_t)value;
+		NWL_NodeAttrSetf(node, "Package Power", NAFLG_FMT_NUMERIC, "%.3f", delta_energy * 1000.0f / ctx.delta_ticks);
+	}
+
+	// PP0 RAPL
+#if 0
+	if (read_msr(0x638, &value) == 0)
+	{
+		if (value & (1ULL << 15))
+		{
+			float pl1 = (float)(value & 0x7FFF) / (1ULL << power_unit);
+			NWL_NodeAttrSetf(node, "PP0 PL1", NAFLG_FMT_NUMERIC, "%.0f", pl1);
+			float pl1_time = (float)(1ULL << ((value >> 17) & 0x1F)) * (1.0f + ((value >> 22) & 0x3) / 4.0f) / (1ULL << time_unit);
+			NWL_NodeAttrSetf(node, "PP0 PL1 Time", NAFLG_FMT_NUMERIC, "%.3f", pl1_time);
+		}
+	}
+#endif
+	if (read_msr(0x639, &value) == 0)
+	{
+		float delta_energy = 0.0f;
+		value &= 0xFFFFFFFF;
+		if (value > ctx.pp0_energy)
+			delta_energy = (float)(value - ctx.pp0_energy) / (1ULL << energy_unit);
+		ctx.pp0_energy = (uint32_t)value;
+		NWL_NodeAttrSetf(node, "PP0 Power", NAFLG_FMT_NUMERIC, "%.3f", delta_energy * 1000.0f / ctx.delta_ticks);
+	}
+
+	// PP1 RAPL
+#if 0
+	if (read_msr(0x640, &value) == 0)
+	{
+		if (value & (1ULL << 15))
+		{
+			float pl1 = (float)(value & 0x7FFF) / (1ULL << power_unit);
+			NWL_NodeAttrSetf(node, "PP1 PL1", NAFLG_FMT_NUMERIC, "%.0f", pl1);
+			float pl1_time = (float)(1ULL << ((value >> 17) & 0x1F)) * (1.0f + ((value >> 22) & 0x3) / 4.0f) / (1ULL << time_unit);
+			NWL_NodeAttrSetf(node, "PP1 PL1 Time", NAFLG_FMT_NUMERIC, "%.3f", pl1_time);
+		}
+	}
+#endif
+	if (read_msr(0x641, &value) == 0)
+	{
+		float delta_energy = 0.0f;
+		value &= 0xFFFFFFFF;
+		if (value > ctx.pp1_energy)
+			delta_energy = (float)(value - ctx.pp1_energy) / (1ULL << energy_unit);
+		ctx.pp1_energy = (uint32_t)value;
+		NWL_NodeAttrSetf(node, "PP1 Power", NAFLG_FMT_NUMERIC, "%.3f", delta_energy * 1000.0f / ctx.delta_ticks);
+	}
+
+	// DRAM RAPL
+#if 0
+	if (read_msr(0x618, &value) == 0)
+	{
+		if (value & (1ULL << 15))
+		{
+			float pl1 = (float)(value & 0x7FFF) / (1ULL << power_unit);
+			NWL_NodeAttrSetf(node, "DRAM PL1", NAFLG_FMT_NUMERIC, "%.0f", pl1);
+			float pl1_time = (float)(1ULL << ((value >> 17) & 0x1F)) * (1.0f + ((value >> 22) & 0x3) / 4.0f) / (1ULL << time_unit);
+			NWL_NodeAttrSetf(node, "DRAM PL1 Time", NAFLG_FMT_NUMERIC, "%.3f", pl1_time);
+		}
+	}
+#endif
+	if (read_msr(0x619, &value) == 0)
+	{
+		float delta_energy = 0.0f;
+		value &= 0xFFFFFFFF;
+		if (value > ctx.dram_energy)
+			delta_energy = (float)(value - ctx.dram_energy) / (1ULL << energy_unit);
+		ctx.dram_energy = (uint32_t)value;
+		NWL_NodeAttrSetf(node, "DRAM Power", NAFLG_FMT_NUMERIC, "%.3f", delta_energy * 1000.0f / ctx.delta_ticks);
+	}
+
+	SetThreadGroupAffinity(ctx.thread, &saved_aff, NULL);
+}
+
 static bool intel_init(void)
 {
 	struct system_id_t* id = NWL_GetCpuid();
@@ -302,11 +451,8 @@ static bool intel_init(void)
 	ctx.thread = GetCurrentThread();
 	NWL_GetGroupAffinity(&ctx.id->affinity_mask, &ctx.affinity);
 
-	if (ctx.id->x86.family != 0x06)
-		goto fail;
-
 	if (!mchbar_pch_init())
-		goto fail;
+		goto ok;
 
 	switch (ctx.id->x86.ext_model)
 	{
@@ -364,6 +510,7 @@ static bool intel_init(void)
 	if (mchbar_get_mmio_reg() != 0)
 		ctx.get_mchbar_sensors = get_mchbar_sensors;
 
+ok:
 	return true;
 fail:
 	ZeroMemory(&ctx, sizeof(ctx));
@@ -386,6 +533,7 @@ static void intel_get(PNODE node)
 		ctx.get_mchbar_sensors(node);
 	if (ctx.get_pch_sensors)
 		ctx.get_pch_sensors(node);
+	get_msr_sensors(node);
 	ctx.ticks = GetTickCount64();
 }
 
