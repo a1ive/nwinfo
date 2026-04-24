@@ -234,6 +234,20 @@ static void get_mchbar_sensors(PNODE node)
 		NWL_NodeAttrSetf(node, "GT Temperature", NAFLG_FMT_NUMERIC, "%.0f", NWL_GetTemperature((float)(tjmax - gt_offset)));
 	}
 
+	if (ctx.core_gen >= 12)
+	{
+		uint32_t mchbar_5e04 = mchbar_read_32(0x5E04);
+		// 30:27 VDDQ_TX_ICCMAX *0.25A
+		// 26:17 VDDQ_TX_VOLTAGE *5mV
+		// 13:12 GEAR
+		// 11:8  MC_PLL_REF
+		//  7:0  MC_PLL_RATIO
+		float iccmax = ((mchbar_5e04 >> 27) & 0x0F) * 0.25f;
+		NWL_NodeAttrSetf(node, "Request VDDQ TX IccMax", NAFLG_FMT_NUMERIC, "%.2f", iccmax);
+		float txvolt = ((mchbar_5e04 >> 17) & 0x3FF) * 0.005f;
+		NWL_NodeAttrSetf(node, "Request VDDQ TX Voltage", NAFLG_FMT_NUMERIC, "%.3f", txvolt);
+	}
+
 #if 0
 	uint32_t mchbar_5f3c = mchbar_read_32(0x5F3C);
 	//  7:0  TDP_RATIO *100MHz
