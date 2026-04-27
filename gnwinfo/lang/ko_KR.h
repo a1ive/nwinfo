@@ -26,6 +26,7 @@ lang_ko_kr[N__MAX_] =
 	[N__USAGE] = u8"사용률",
 	[N__CACHE] = u8"캐시",
 	[N__POWER_STAT] = u8"전원 상태",
+	[N__POWER_OPTIONS] = u8"전원 옵션",
 	[N__DISKMGMT] = u8"디스크 관리",
 	[N__RECOMMEND_VAL] = u8"권장값",
 	[N__GOOD] = u8"좋음",

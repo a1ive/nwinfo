@@ -193,7 +193,7 @@ draw_computer(struct nk_context* ctx)
 			NWL_NodeAttrGet(g_ctx.battery, "Battery Life Percentage"),
 			time);
 	nk_lhc(ctx, m_buf, NK_TEXT_LEFT, g_color_text_l);
-	if (quick_access_button(ctx, GET_PNG(IDR_PNG_BATTERY), NULL))
+	if (quick_access_button(ctx, GET_PNG(IDR_PNG_BATTERY), N_(N__POWER_OPTIONS)))
 		ShellExecuteW(GetDesktopWindow(), NULL,
 			L"shell:::{025A5937-A6BE-4686-A844-36FE4BEC8B6D}",
 			NULL, NULL, SW_NORMAL);

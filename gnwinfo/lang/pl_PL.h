@@ -26,6 +26,7 @@ lang_pl_pl[N__MAX_] =
 	[N__USAGE] = u8"Użycie",
 	[N__CACHE] = u8"Pamięć podręczna",
 	[N__POWER_STAT] = u8"Status zasilania",
+	[N__POWER_OPTIONS] = u8"Opcje zasilania",
 	[N__DISKMGMT] = u8"Zarządzanie dyskami",
 	[N__RECOMMEND_VAL] = u8"Zalecana wartość",
 	[N__GOOD] = u8"Dobry",

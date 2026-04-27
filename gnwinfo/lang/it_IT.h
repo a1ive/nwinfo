@@ -26,6 +26,7 @@ lang_it_it[N__MAX_] =
 	[N__USAGE] = u8"Uso",
 	[N__CACHE] = u8"Cache",
 	[N__POWER_STAT] = u8"Stato alimentazione",
+	[N__POWER_OPTIONS] = u8"Opzioni risparmio energia",
 	[N__DISKMGMT] = u8"Gestione disco",
 	[N__RECOMMEND_VAL] = u8"Valore raccomandato",
 	[N__GOOD] = u8"Buono",

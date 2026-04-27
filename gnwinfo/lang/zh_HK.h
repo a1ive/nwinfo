@@ -25,6 +25,7 @@ lang_zh_hk[N__MAX_] =
 	[N__USAGE] = u8"使用率",
 	[N__CACHE] = u8"快取",
 	[N__POWER_STAT] = u8"電源狀態",
+	[N__POWER_OPTIONS] = u8"電源選項",
 	[N__DISKMGMT] = u8"磁碟管理",
 	[N__RECOMMEND_VAL] = u8"建議值",
 	[N__GOOD] = u8"良好",

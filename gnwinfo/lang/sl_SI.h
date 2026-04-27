@@ -26,6 +26,7 @@ lang_sl_si[N__MAX_] =
 	[N__USAGE] = u8"Uporaba",
 	[N__CACHE] = u8"Predpomnilnik",
 	[N__POWER_STAT] = u8"Stanje napajanja",
+	[N__POWER_OPTIONS] = u8"Možnosti napajanja",
 	[N__DISKMGMT] = u8"Upravljanje diskov",
 	[N__RECOMMEND_VAL] = u8"Priporočena vrednost",
 	[N__GOOD] = u8"Dobro",

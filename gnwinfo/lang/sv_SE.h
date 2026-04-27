@@ -25,6 +25,7 @@ lang_sv_se[N__MAX_] =
 	[N__USAGE] = u8"Användning",
 	[N__CACHE] = u8"Cache",
 	[N__POWER_STAT] = u8"Strömstatus",
+	[N__POWER_OPTIONS] = u8"Energialternativ",
 	[N__DISKMGMT] = u8"Diskhantering",
 	[N__RECOMMEND_VAL] = u8"Rekommenderat värde",
 	[N__GOOD] = u8"Bra",

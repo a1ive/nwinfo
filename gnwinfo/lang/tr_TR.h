@@ -25,6 +25,7 @@ lang_tr_tr[N__MAX_] =
 	[N__USAGE] = u8"Kullanım",
 	[N__CACHE] = u8"Ön Bellek",
 	[N__POWER_STAT] = u8"Güç Planı",
+	[N__POWER_OPTIONS] = u8"Güç Seçenekleri",
 	[N__DISKMGMT] = u8"Disk Yönetimi",
 	[N__RECOMMEND_VAL] = u8"Önerilen Değer",
 	[N__GOOD] = u8"İyi",
