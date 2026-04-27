@@ -477,7 +477,10 @@ INT NWL_GetRegDwordValue(HKEY Key, LPCWSTR SubKey, LPCWSTR ValueName, DWORD* pVa
 	DWORD Size;
 	LSTATUS lRet;
 	DWORD Value = 0;
-	lRet = RegOpenKeyExW(Key, SubKey, 0, KEY_QUERY_VALUE, &hKey);
+	REGSAM sam = KEY_QUERY_VALUE;
+	if (NWLC->NwIsWoW64)
+		sam |= KEY_WOW64_64KEY;
+	lRet = RegOpenKeyExW(Key, SubKey, 0, sam, &hKey);
 	if (ERROR_SUCCESS == lRet)
 	{
 		Size = sizeof(Value);

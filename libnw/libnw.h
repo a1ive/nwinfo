@@ -136,6 +136,7 @@ typedef struct _NWLIB_CONTEXT
 
 	LPCSTR DriverName;
 	struct wr0_drv_t* NwDrv;
+	BOOL NwIsWoW64;
 	UINT CodePage;
 	struct _NODE* NwRoot;
 	enum

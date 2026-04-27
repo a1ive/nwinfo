@@ -88,8 +88,11 @@ VOID* NWL_NtGetRegValue(HKEY Key, LPCWSTR lpSubKey, LPCWSTR lpValueName, LPDWORD
 	DWORD cbSize = 0;
 	LSTATUS lRet;
 	VOID* lpData = NULL;
+	REGSAM sam = KEY_QUERY_VALUE;
+	if (NWLC->NwIsWoW64)
+		sam |= KEY_WOW64_64KEY;
 
-	lRet = RegOpenKeyExW(Key, lpSubKey, 0, KEY_QUERY_VALUE, &hKey);
+	lRet = RegOpenKeyExW(Key, lpSubKey, 0, sam, &hKey);
 	if (lRet != ERROR_SUCCESS)
 		goto fail;
 	lRet = RegQueryValueExW(hKey, lpValueName, NULL, lpType, NULL, &cbSize);

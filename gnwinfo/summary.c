@@ -77,9 +77,10 @@ draw_os(struct nk_context* ctx)
 		nk_lhsc(ctx, N_(N__LOGIN), NK_TEXT_LEFT, g_color_text_d, nk_false, nk_true);
 		nk_lhcf(ctx, NK_TEXT_LEFT,
 			g_color_text_l,
-			"%s@%s%s%s%s%s%s",
+			"%s@%s%s%s%s%s%s%s",
 			NWL_NodeAttrGet(g_ctx.system, "Username"),
 			g_ctx.sys_hostname,
+			g_ctx.lib.NwIsWoW64 ? " WoW64" : "",
 			strcmp(NWL_NodeAttrGet(g_ctx.system, "Safe Mode"), NA_BOOL_TRUE) == 0 ? " SafeMode" : "",
 			strcmp(NWL_NodeAttrGet(g_ctx.system, "BitLocker Boot"), NA_BOOL_TRUE) == 0 ? " BitLocker" : "",
 			strcmp(NWL_NodeAttrGet(g_ctx.system, "VHD Boot"), NA_BOOL_TRUE) == 0 ? " VHD" : "",

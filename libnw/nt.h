@@ -5,7 +5,7 @@
 #include <windows.h>
 
 #ifndef _NTDEF_
-typedef LONG NTSTATUS;
+typedef _Return_type_success_(return >= 0) LONG NTSTATUS;
 #endif
 
 typedef struct _UNICODE_STRING

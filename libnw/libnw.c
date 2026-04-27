@@ -74,6 +74,7 @@ VOID NW_Init(PNWLIB_CONTEXT pContext)
 	NWL_NtGetVersion(&NWLC->NwOsInfo);
 	GetNativeSystemInfo(&NWLC->NwSi);
 	NWLC->NwIsEfi = NWL_IsEfi();
+	NWLC->NwIsWoW64 = WR0_IsWoW64();
 	NWLC->NwRoot = NWL_NodeAlloc("NWinfo", 0);
 	WR0_OpenMutexes();
 
@@ -84,8 +85,6 @@ VOID NW_Init(PNWLIB_CONTEXT pContext)
 		NWL_NodeAppendMultiSz(&NWLC->ErrLog, "SeSystemEnvironmentPrivilege required");
 	if (NWL_ObtainPrivileges(SE_LOAD_DRIVER_NAME) != ERROR_SUCCESS)
 		NWL_NodeAppendMultiSz(&NWLC->ErrLog, "SeLoadDriverPrivilege required");
-	if (WR0_IsWoW64())
-		NWL_NodeAppendMultiSz(&NWLC->ErrLog, "Running under WoW64 mode");
 
 	NWLC->NwDrv = WR0_OpenDriver();
 	NWLC->NwSmbios = NWL_GetSmbios();
