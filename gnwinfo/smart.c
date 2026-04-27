@@ -38,7 +38,7 @@ get_health_status(enum CDI_DISK_STATUS status)
 static void
 draw_health(struct nk_context* ctx, CDI_SMART* smart, int disk, float height)
 {
-	if (nk_group_begin(ctx, "SMART Health", 0))
+	if (nk_group_begin_ex(ctx, "SMART Health", 0))
 	{
 		int n;
 		int health;
@@ -70,7 +70,7 @@ draw_info(struct nk_context* ctx, CDI_SMART* smart, int disk)
 	INT n;
 	DWORD d;
 	WCHAR* str;
-	if (nk_group_begin(ctx, "SMART Info", 0))
+	if (nk_group_begin_ex(ctx, "SMART Info", 0))
 	{
 		BOOL is_ssd = cdi_get_bool(smart, disk, CDI_BOOL_SSD);
 		BOOL is_nvme = cdi_get_bool(smart, disk, CDI_BOOL_SSD_NVME);

@@ -209,8 +209,10 @@ draw_processor(struct nk_context* ctx)
 		g_ctx.cpu_usage,
 		g_ctx.cpu_freq);
 	gnwinfo_draw_percent_prog(ctx, g_ctx.cpu_usage);
-	if (quick_access_button(ctx, GET_PNG(IDR_PNG_CPUID), "CPUID"))
-		g_ctx.window_flag |= GUI_WINDOW_CPUID;
+	if (quick_access_button(ctx, GET_PNG(IDR_PNG_SENSOR), "PerfMon"))
+		ShellExecuteW(GetDesktopWindow(), NULL,
+			L"perfmon.exe",
+			NULL, NULL, SW_NORMAL);
 
 	for (INT i = 0; i < g_ctx.cpu_count; i++)
 	{
@@ -232,11 +234,11 @@ draw_processor(struct nk_context* ctx)
 			len += snprintf(m_buf + len, MAX_PATH - len, " %s %s",
 				NWL_NodeAttrGet(cpu, "Logical CPUs"),
 				N_(N__THREADS));
-		if (g_ctx.cpu_info[i].MsrPower > 0.0 && len >= 0 && len < MAX_PATH)
+		if (g_ctx.cpu_info && g_ctx.cpu_info[i].MsrPower > 0.0 && len >= 0 && len < MAX_PATH)
 			snprintf(m_buf + len, MAX_PATH - len, " %.2fW", g_ctx.cpu_info[i].MsrPower);
 
 		nk_lhc(ctx, m_buf, NK_TEXT_LEFT, g_color_text_l);
-		if (g_ctx.cpu_info[i].MsrTemp > 0)
+		if (g_ctx.cpu_info && g_ctx.cpu_info[i].MsrTemp > 0)
 			nk_lhcf(ctx, NK_TEXT_LEFT,
 				gnwinfo_get_color((double)g_ctx.cpu_info[i].MsrTemp, 65.0, 85.0),
 				u8"%.0f%s", NWL_GetTemperature((float)g_ctx.cpu_info[i].MsrTemp), g_ctx.temp_unit);
@@ -806,7 +808,7 @@ gnwinfo_draw_main_window(struct nk_context* ctx, float width, float height)
 	WCHAR report_path[MAX_PATH] = L"";
 	enum nk_report_state report_state = NK_REPORT_STATE_IDLE;
 
-	nk_layout_row_begin(ctx, NK_DYNAMIC, 0, 7);
+	nk_layout_row_begin(ctx, NK_DYNAMIC, 0, 8);
 
 	struct nk_rect rect = nk_layout_widget_bounds(ctx);
 	g_ctx.gui_ratio = rect.h / rect.w;
@@ -828,6 +830,14 @@ gnwinfo_draw_main_window(struct nk_context* ctx, float width, float height)
 		{
 			if (nk_button_image_hover(ctx, GET_PNG(IDR_PNG_SENSOR), N_(N__SENSOR_VIEW)))
 				g_ctx.display_view = GNWINFO_MAIN_VIEW_SENSOR;
+		}
+		nk_layout_row_push(ctx, g_ctx.gui_ratio);
+		if (nk_button_image_hover(ctx, GET_PNG(IDR_PNG_CPUID), "CPUID"))
+		{
+			if (g_ctx.display_view == GNWINFO_MAIN_VIEW_CPUID)
+				g_ctx.display_view = GNWINFO_MAIN_VIEW_SUMMARY;
+			else
+				g_ctx.display_view = GNWINFO_MAIN_VIEW_CPUID;
 		}
 		nk_layout_row_push(ctx, g_ctx.gui_ratio);
 		if (nk_button_image_hover(ctx, GET_PNG(IDR_PNG_SMART), "S.M.A.R.T."))
@@ -867,6 +877,9 @@ gnwinfo_draw_main_window(struct nk_context* ctx, float width, float height)
 	{
 	case GNWINFO_MAIN_VIEW_SENSOR:
 		gnwinfo_draw_sensor_window(ctx, width, height);
+		break;
+	case GNWINFO_MAIN_VIEW_CPUID:
+		gnwinfo_draw_cpuid_window(ctx, width, height);
 		break;
 	case GNWINFO_MAIN_VIEW_SMART:
 		gnwinfo_draw_smart_window(ctx, width, height);

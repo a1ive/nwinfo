@@ -344,7 +344,6 @@ wWinMain(_In_ HINSTANCE hInstance,
 		if (g_ctx.window_flag & GUI_WINDOW_SETTINGS)
 			gnwinfo_set_style(ctx);
 		gnwinfo_draw_main_window(ctx, g_ctx.gui_width, g_ctx.gui_height);
-		gnwinfo_draw_cpuid_window(ctx, g_ctx.gui_width, g_ctx.gui_height);
 		gnwinfo_draw_about_window(ctx, g_ctx.gui_width, g_ctx.gui_height);
 		gnwinfo_draw_settings_window(ctx, g_ctx.gui_width, g_ctx.gui_height);
 		gnwinfo_draw_pci_window(ctx, g_ctx.gui_width, g_ctx.gui_height);

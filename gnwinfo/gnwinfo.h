@@ -61,6 +61,9 @@ nk_combo_begin_color_dynamic(struct nk_context* ctx, struct nk_color color);
 void
 nk_block(struct nk_context* ctx, struct nk_color color, const char* str);
 
+nk_bool
+nk_group_begin_ex(struct nk_context* ctx, const char* title, nk_flags flags);
+
 enum nk_report_state
 {
 	NK_REPORT_STATE_IDLE = 0,
@@ -119,7 +122,6 @@ nk_report_end_capture(void);
 #define MAIN2_GPU_DETAIL    (1U << 0)
 #define MAIN2_GPU_DRIVER    (1U << 1)
 
-#define GUI_WINDOW_CPUID    (1U << 0)
 #define GUI_WINDOW_ABOUT    (1U << 2)
 #define GUI_WINDOW_SETTINGS (1U << 3)
 #define GUI_WINDOW_PCI      (1U << 4)
@@ -132,6 +134,7 @@ typedef enum _GNWINFO_MAIN_VIEW
 {
 	GNWINFO_MAIN_VIEW_SUMMARY = 0,
 	GNWINFO_MAIN_VIEW_SENSOR,
+	GNWINFO_MAIN_VIEW_CPUID,
 	GNWINFO_MAIN_VIEW_SMART,
 } GNWINFO_MAIN_VIEW;
 

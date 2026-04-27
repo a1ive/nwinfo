@@ -51,11 +51,11 @@ lang_sl_si[N__MAX_] =
 	//[N__PL2],
 	//[N__TDP],
 	[N__MICROCODE] = u8"Mikrokoda",
-	[N__L1_D] = u8"L1 D",
-	[N__L1_I] = u8"L1 I",
-	[N__L2] = u8"L2",
-	[N__L3] = u8"L3",
-	[N__L4] = u8"L4",
+	//[N__L1_D],
+	//[N__L1_I],
+	//[N__L2],
+	//[N__L3],
+	//[N__L4],
 	[N__BRAND] = u8"Znamka", // refer to the brand (e.g. 'Intel(R) Core(TM) i7-7700K CPU @ 4.20GHz')
 	[N__HYPERVISOR] = u8"Hipervizor",
 	[N__CODE_NAME] = u8"Kodno ime",
@@ -66,6 +66,13 @@ lang_sl_si[N__MAX_] =
 	[N__EXT_FAMILY] = u8"Razširjena družina", // Extended family
 	[N__EXT_MODEL] = u8"Razširjeni model", // Extended model
 	[N__AFF_MASK] = u8"Maska afinitete", // Affinity mask
+	[N__MAINBOARD] = u8"Matična plošča",
+	[N__CHIPSET] = u8"Nabor čipov",
+	[N__NAME] = u8"Ime",
+	//[N__UUID],
+	//[N__LPCIO],
+	//[N__TPM],
+	[N__ALGORITHMS] = u8"Algoritmi",
 	[N__ABOUT] = u8"O",
 	[N__SAVE_REPORT] = u8"Shrani poročilo",
 	[N__SENSOR_VIEW] = u8"Pogled senzorja",

@@ -51,11 +51,11 @@ lang_pl_pl[N__MAX_] =
 	//[N__PL2],
 	//[N__TDP],
 	[N__MICROCODE] = u8"Mikrokod",
-	[N__L1_D] = u8"L1 D",
-	[N__L1_I] = u8"L1 I",
-	[N__L2] = u8"L2",
-	[N__L3] = u8"L3",
-	[N__L4] = u8"L4",
+	//[N__L1_D],
+	//[N__L1_I],
+	//[N__L2],
+	//[N__L3],
+	//[N__L4],
 	[N__BRAND] = u8"Marka", // marka (np. 'Intel(R) Core(TM) i7-7700K CPU @ 4.20GHz')
 	[N__HYPERVISOR] = u8"Hypervisor",
 	[N__CODE_NAME] = u8"Nazwa kodowa",
@@ -66,6 +66,13 @@ lang_pl_pl[N__MAX_] =
 	[N__EXT_FAMILY] = u8"Rodzina ext.", // Rozszerzona rodzina
 	[N__EXT_MODEL] = u8"Model ext.", // Rozszerzony model
 	[N__AFF_MASK] = u8"Maska aff.", // Maska przypisania
+	[N__MAINBOARD] = u8"Płyta główna",
+	[N__CHIPSET] = u8"Chipset",
+	[N__NAME] = u8"Nazwa",
+	//[N__UUID],
+	//[N__LPCIO],
+	//[N__TPM],
+	[N__ALGORITHMS] = u8"Algorytmy",
 	[N__ABOUT] = u8"O programie",
 	[N__SAVE_REPORT] = u8"Zapisz raport",
 	[N__SENSOR_VIEW] = u8"Widok czujników",

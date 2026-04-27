@@ -210,11 +210,8 @@ draw_page_file(struct nk_context* ctx)
 {
 	WCHAR drive = L'C';
 
-	if (!nk_group_begin(ctx, N_(N__CREATE_PAGING_FILES), NK_WINDOW_BORDER | NK_WINDOW_TITLE))
-		return;
-
-	nk_layout_row_dynamic(ctx, 8, 1);
-	nk_spacer(ctx);
+	nk_layout_row_dynamic(ctx, g_col_height, 1);
+	nk_lhc(ctx, N_(N__CREATE_PAGING_FILES), NK_TEXT_LEFT, g_color_text_d);
 
 	nk_layout_row(ctx, NK_DYNAMIC, g_col_height, 3, (float[3]) { 0.05f, 0.20f, 0.75f });
 	nk_spacer(ctx);
@@ -250,8 +247,6 @@ draw_page_file(struct nk_context* ctx)
 		nk_lhc(ctx, N_(N__FAILED), NK_TEXT_CENTERED, g_color_error);
 	else
 		nk_spacer(ctx);
-
-	nk_group_end(ctx);
 }
 
 VOID
@@ -303,7 +298,6 @@ gnwinfo_draw_mm_window(struct nk_context* ctx, float width, float height)
 	nk_layout_row_dynamic(ctx, 8, 1);
 	nk_spacer(ctx);
 
-	nk_layout_row_dynamic(ctx, g_col_height * 9, 1);
 	draw_page_file(ctx);
 
 out:

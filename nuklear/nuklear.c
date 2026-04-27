@@ -979,3 +979,52 @@ nk_block(struct nk_context* ctx, struct nk_color color, const char* str)
 	style.text_alignment = NK_TEXT_CENTERED;
 	nk_button_text_styled(ctx, &style, str, str_len);
 }
+
+nk_bool
+nk_group_begin_ex(struct nk_context* ctx, const char* title, nk_flags flags)
+{
+	int id_len;
+	nk_hash id_hash;
+	struct nk_window* win;
+	nk_uint* x_offset;
+	nk_uint* y_offset;
+
+	NK_ASSERT(ctx);
+	NK_ASSERT(title);
+	NK_ASSERT(ctx->current);
+	NK_ASSERT(ctx->current->layout);
+	if (!ctx || !ctx->current || !ctx->current->layout || !title)
+		return 0;
+
+	/* find persistent group scrollbar value */
+	win = ctx->current;
+	id_len = (int)nk_strlen(title);
+	id_hash = nk_murmur_hash(title, (int)id_len, NK_PANEL_GROUP);
+	x_offset = nk_find_value(win, id_hash);
+	if (!x_offset)
+	{
+		x_offset = nk_add_value(ctx, win, id_hash, 0);
+		y_offset = nk_add_value(ctx, win, id_hash + 1, 0);
+
+		NK_ASSERT(x_offset);
+		NK_ASSERT(y_offset);
+		if (!x_offset || !y_offset) return 0;
+		*x_offset = *y_offset = 0;
+	}
+	else if (!(y_offset = nk_find_value(win, id_hash + 1)))
+	{
+		y_offset = nk_add_value(ctx, win, id_hash + 1, 0);
+		NK_ASSERT(y_offset);
+		if (!y_offset) return 0;
+		*x_offset = *y_offset = 0;
+	}
+
+	if (flags & NK_WINDOW_TITLE)
+	{
+		struct nk_rect bounds;
+		nk_layout_peek(&bounds, ctx);
+		nk_report_capture_text(bounds.y, nk_report_get_indent(ctx, nk_true), title, id_len);
+	}
+
+	return nk_group_scrolled_offset_begin(ctx, x_offset, y_offset, title, flags);
+}
