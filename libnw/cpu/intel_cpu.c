@@ -201,12 +201,16 @@ static double get_voltage(struct msr_info_t* info)
 		MSR_IA32_PERF_STATUS[47:32] is Core Voltage
 		P-state core voltage can be computed by MSR_IA32_PERF_STATUS[37:32] * (float) 1/(2^13).
 	*/
-	uint64_t reg;
+	uint64_t reg, vid;
 	if (info->id->x86.ext_family < 6)
 		goto fail;
-	if (read_intel_msr(info->handle, MSR_IA32_PERF_STATUS, 47, 32, &reg))
+	if (read_intel_msr(info->handle, MSR_IA32_PERF_STATUS, 63, 0, &reg))
 		goto fail;
-	return (double)reg / (1ULL << 13ULL);
+	vid = (reg >> 32) & 0xFFFF;
+	if (vid == 0)
+		vid = reg & 0xFFFF;
+	if (vid > 0)
+		return (double)vid / (1ULL << 13ULL);
 fail:
 	return 0.0;
 }
