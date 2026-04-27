@@ -618,6 +618,7 @@ static size_t get_pm_table_size_from_version(ry_handle_t* handle, uint32_t versi
 	case 0x5D0008: return 0xD54;  // CODENAME_STRIXPOINT
 	case 0x5D0009: return 0xD58;  // CODENAME_STRIXPOINT
 	case 0x5D000A: return 0xD60;
+	case 0x5D000B: return 0xD54;
 	//case 0x5E0801: return 0x16EC;
 	//case 0x5E0802: return 0x289C;
 	case 0x620105: return 0x724;  // CODENAME_GRANITERIDGE
@@ -639,6 +640,7 @@ static size_t get_pm_table_size_from_version(ry_handle_t* handle, uint32_t versi
 	case 0x650004: return 0xB74;  // CODENAME_KRACKANPOINT
 	case 0x650005: return 0xB78;  // CODENAME_KRACKANPOINT
 	case 0x650006: return 0xB80;
+	case 0x650007: return 0xD54;
 	//case 0x730A04: return 0x1EBC;
 	case 0x730204: return 0xB1C;
 	//case 0x730404: return 0x1004;
@@ -890,8 +892,11 @@ ry_err_t ryzen_smu_get_apu_slow_limit(ry_handle_t* handle, float* data)
 	case 0x004C0009:
 	case 0x005D0008:
 	case 0x005D0009:
-	case 0x0064020c:
+	case 0x005D000B:
+	case 0x0064020C:
 	case 0x00650005:
+	case 0x00650006:
+	case 0x00650007:
 		offset = 0x18;
 		break;
 	}
@@ -923,8 +928,11 @@ ry_err_t ryzen_smu_get_apu_slow_value(ry_handle_t* handle, float* data)
 	case 0x004C0009:
 	case 0x005D0008:
 	case 0x005D0009:
-	case 0x0064020c:
+	case 0x005D000B:
+	case 0x0064020C:
 	case 0x00650005:
+	case 0x00650006:
+	case 0x00650007:
 		offset = 0x1C;
 		break;
 	}
@@ -968,7 +976,10 @@ ry_err_t ryzen_smu_get_vrm_current(ry_handle_t* handle, float* data)
 		break;
 	case 0x005D0008:
 	case 0x005D0009:
+	case 0x005D000B:
 	case 0x00650005:
+	case 0x00650006:
+	case 0x00650007:
 		offset = 0x30;
 		break;
 	}
@@ -1012,7 +1023,10 @@ ry_err_t ryzen_smu_get_vrm_current_value(ry_handle_t* handle, float* data)
 		break;
 	case 0x005D0008:
 	case 0x005D0009:
+	case 0x005D000B:
 	case 0x00650005:
+	case 0x00650006:
+	case 0x00650007:
 		offset = 0x34;
 		break;
 	}
@@ -1056,7 +1070,10 @@ ry_err_t ryzen_smu_get_vrmsoc_current(ry_handle_t* handle, float* data)
 		break;
 	case 0x005D0008:
 	case 0x005D0009:
+	case 0x005D000B:
 	case 0x00650005:
+	case 0x00650006:
+	case 0x00650007:
 		offset = 0x38;
 		break;
 	}
@@ -1100,7 +1117,10 @@ ry_err_t ryzen_smu_get_vrmsoc_current_value(ry_handle_t* handle, float* data)
 		break;
 	case 0x005D0008:
 	case 0x005D0009:
+	case 0x005D000B:
 	case 0x00650005:
+	case 0x00650006:
+	case 0x00650007:
 		offset = 0x3C;
 		break;
 	}
@@ -1161,6 +1181,7 @@ ry_err_t ryzen_smu_get_core_temperature(ry_handle_t* handle, uint32_t core, floa
 		break;
 	case 0x5D0008:
 	case 0x5D0009:
+	case 0x5D000B:
 		base_offset = 0xA38;
 		break;
 	case 0x64020C:
@@ -1204,6 +1225,7 @@ ry_err_t ryzen_smu_get_core_volt(ry_handle_t* handle, uint32_t core, float* data
 		break;
 	case 0x005D0008:
 	case 0x005D0009:
+	case 0x005D000B:
 		base_offset = 0xA08;
 		break;
 	case 0x0064020C:
@@ -1244,6 +1266,7 @@ ry_err_t ryzen_smu_get_core_clk(ry_handle_t* handle, uint32_t core, float* data)
 		break;
 	case 0x005D0008:
 	case 0x005D0009:
+	case 0x005D000B:
 		base_offset = 0xA68;
 		break;
 	case 0x0064020C:
@@ -1287,6 +1310,7 @@ ry_err_t ryzen_smu_get_core_power(ry_handle_t* handle, uint32_t core, float* dat
 		break;
 	case 0x005D0008:
 	case 0x005D0009:
+	case 0x005D000B:
 		base_offset = 0x9D8;
 		break;
 	case 0x0064020C:
@@ -1337,6 +1361,7 @@ ry_err_t ryzen_smu_get_gfx_temperature(ry_handle_t* handle, float* data)
 		break;
 	case 0x5D0008:
 	case 0x5D0009:
+	case 0x5D000B:
 		offset = 0x4C8;
 		break;
 	case 0x64020C:
@@ -1384,6 +1409,7 @@ ry_err_t ryzen_smu_get_gfx_volt(ry_handle_t* handle, float* data)
 		break;
 	case 0x5D0008:
 	case 0x5D0009:
+	case 0x5D000B:
 		offset = 0x4B8;
 		break;
 	case 0x64020C:
@@ -1431,6 +1457,7 @@ ry_err_t ryzen_smu_get_gfx_clk(ry_handle_t* handle, float* data)
 		break;
 	case 0x5D0008:
 	case 0x5D0009:
+	case 0x5D000B:
 		offset = 0x4C0;
 		break;
 	case 0x64020C:
@@ -1583,6 +1610,7 @@ ry_err_t ryzen_smu_get_fclk(ry_handle_t* handle, float* data)
 		break;
 	case 0x005D0008:
 	case 0x005D0009:
+	case 0x005D000B:
 		offset = 0x4E0;
 		break;
 	case 0x00620105:
@@ -2353,6 +2381,7 @@ ry_err_t ryzen_smu_get_socket_power(ry_handle_t* handle, float* data)
 		break;
 	case 0x005D0008:
 	case 0x005D0009:
+	case 0x005D000B:
 		offset = 0xD0;
 		break;
 	}
