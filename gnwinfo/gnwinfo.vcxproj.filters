@@ -131,6 +131,9 @@
     <ClCompile Include="sensors.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="systray.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="gnwinfo.rc">

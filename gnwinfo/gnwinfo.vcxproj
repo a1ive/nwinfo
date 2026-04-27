@@ -209,6 +209,7 @@
     <ClCompile Include="smart.c" />
     <ClCompile Include="style.c" />
     <ClCompile Include="summary.c" />
+    <ClCompile Include="systray.c" />
     <ClCompile Include="utils.c" />
   </ItemGroup>
   <ItemGroup>

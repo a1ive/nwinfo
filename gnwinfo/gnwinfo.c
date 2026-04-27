@@ -25,6 +25,8 @@ nk_bool g_bginfo = 0;
 nk_bool g_debug = 0;
 
 static UINT m_dpi = USER_DEFAULT_SCREEN_DPI;
+static LPCWSTR m_window_title = L"NWinfo GUI";
+static HICON m_window_icon = NULL;
 
 #define REGION_MASK_LEFT    (1 << 0)
 #define REGION_MASK_RIGHT   (1 << 1)
@@ -70,7 +72,11 @@ window_proc(HWND wnd, UINT msg, WPARAM wparam, LPARAM lparam)
 {
 	switch (msg)
 	{
+	case WM_CREATE:
+		gnwinfo_add_systray(wnd, m_window_icon, m_window_title);
+		break;
 	case WM_DESTROY:
+		gnwinfo_remove_systray(wnd);
 		PostQuitMessage(0);
 		break;
 	case WM_TIMER:
@@ -176,6 +182,20 @@ window_proc(HWND wnd, UINT msg, WPARAM wparam, LPARAM lparam)
 		g_ctx.gui_height = HIWORD(lparam);
 		g_ctx.gui_width = LOWORD(lparam);
 		break;
+	case WM_COMMAND:
+		gnwinfo_handle_systray_cmd(wnd, LOWORD(wparam));
+		break;
+	case WM_TRAYICON:
+		switch (lparam)
+		{
+			case WM_LBUTTONUP:
+				SetForegroundWindow(wnd);
+				break;
+			case WM_RBUTTONUP:
+				gnwinfo_show_systray_menu(wnd);
+				break;
+		}
+		break;
 	}
 	if (nk_gdip_handle_event(wnd, msg, wparam, lparam))
 		return 0;
@@ -280,17 +300,18 @@ wWinMain(_In_ HINSTANCE hInstance,
 	get_ini_color(L"StateError", &g_color_error);
 	get_ini_color(L"StateUnknown", &g_color_unknown);
 
-	/* Win32 */
+	m_window_icon = LoadIconW(hInstance, MAKEINTRESOURCEW(IDI_ICON1));
+
 	memset(&wc, 0, sizeof(wc));
 	wc.style = CS_DBLCLKS;
 	wc.lpfnWndProc = window_proc;
 	wc.hInstance = hInstance;
-	wc.hIcon = LoadIconW(hInstance, MAKEINTRESOURCEW(IDI_ICON1));
+	wc.hIcon = m_window_icon;
 	wc.hCursor = LoadCursorW(NULL, IDC_ARROW);
 	wc.lpszClassName = L"NwinfoWindowClass";
 	RegisterClassW(&wc);
 
-	wnd = CreateWindowExW(exstyle, wc.lpszClassName, L"NWinfo GUI", style,
+	wnd = CreateWindowExW(exstyle, wc.lpszClassName, m_window_title, style,
 		x_pos, y_pos, (int)g_init_width, (int)g_init_height, NULL, NULL, wc.hInstance, NULL);
 
 	if (g_bginfo)

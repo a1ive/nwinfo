@@ -43,13 +43,18 @@
 #define IDT_TIMER_SMB                   (1u << 5)
 #define IDT_TIMER_SPD                   (1u << 6)
 
+#define IDM_EXIT              1001
+#define IDM_CLEAN_MEM         1002
+
+#define IDM_POWER_SCHEME_BASE 2000
+
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        103
 #define _APS_NEXT_COMMAND_VALUE         40001
-#define _APS_NEXT_CONTROL_VALUE         1001
+#define _APS_NEXT_CONTROL_VALUE         1003
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

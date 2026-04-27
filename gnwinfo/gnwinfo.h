@@ -91,6 +91,8 @@ nk_report_end_capture(void);
 
 #include <audio.h>
 
+#define WM_TRAYICON (WM_APP + 1)
+
 #define MAIN_INFO_OS        (1U << 0)
 #define MAIN_INFO_BIOS      (1U << 1)
 #define MAIN_INFO_BOARD     (1U << 2)
@@ -271,5 +273,13 @@ struct nk_color gnwinfo_get_color(double value, double warn, double err);
 void gnwinfo_draw_percent_prog(struct nk_context* ctx, double percent);
 
 UINT64 gnwinfo_clean_memory(VOID);
+
+void gnwinfo_add_systray(HWND wnd, HICON icon, LPCWSTR desc);
+void gnwinfo_remove_systray(HWND wnd);
+#if 0
+void gnwinfo_update_systray(HWND wnd, HICON icon, LPCWSTR desc);
+#endif
+void gnwinfo_show_systray_menu(HWND wnd);
+void gnwinfo_handle_systray_cmd(HWND wnd, WORD wmid);
 
 #endif
