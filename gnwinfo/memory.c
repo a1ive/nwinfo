@@ -22,22 +22,24 @@ static struct
 	nk_size page_drive_mb;
 	nk_size page_file_size;
 	int page_rc;
-} m_ctx;
+} m_ctx =
+{
+	.clean_flag = CLEAN_SYS_WORKING_SET | CLEAN_WORKING_SET | CLEAN_STANDBY_LIST | CLEAN_PR0_STANDBY_LIST | CLEAN_MODIFIED_PAGE | CLEAN_COMBINED_MM_LIST,
+};
 
 VOID
 gnwinfo_init_mm_window(struct nk_context* ctx)
 {
 	g_ctx.window_flag |= GUI_WINDOW_MM;
 	m_ctx.clean_size = 0;
-	m_ctx.clean_flag = CLEAN_SYS_WORKING_SET | CLEAN_WORKING_SET | CLEAN_STANDBY_LIST | CLEAN_PR0_STANDBY_LIST | CLEAN_MODIFIED_PAGE | CLEAN_COMBINED_MM_LIST;
 	m_ctx.page_drive_change = TRUE;
 	m_ctx.page_drive_mb = 0;
 	m_ctx.page_file_size = 8192;
 	m_ctx.page_rc = 0;
 }
 
-static UINT64
-clean_memory(UINT32 clean_flag)
+UINT64
+gnwinfo_clean_memory(VOID)
 {
 	UINT64 old_size = g_ctx.mem_status.PhysInUse;
 	UINT64 new_size = 0;
@@ -48,33 +50,33 @@ clean_memory(UINT32 clean_flag)
 	NWL_ObtainPrivileges(SE_INCREASE_QUOTA_NAME);
 	NWL_ObtainPrivileges(SE_PROF_SINGLE_PROCESS_NAME);
 
-	if (clean_flag & CLEAN_SYS_WORKING_SET)
+	if (m_ctx.clean_flag & CLEAN_SYS_WORKING_SET)
 	{
 		sfci.MinimumWorkingSet = (ULONG_PTR)-1;
 		sfci.MaximumWorkingSet = (ULONG_PTR)-1;
 		NWL_NtSetSystemInformation(SystemFileCacheInformation, &sfci, sizeof(sfci));
 	}
-	if ((clean_flag & CLEAN_SYS_WORKING_SET) && (g_ctx.lib.NwOsInfo.dwMajorVersion >= 6)) // vista
+	if ((m_ctx.clean_flag & CLEAN_SYS_WORKING_SET) && (g_ctx.lib.NwOsInfo.dwMajorVersion >= 6)) // vista
 	{
 		cmd = MemoryEmptyWorkingSets;
 		NWL_NtSetSystemInformation(SystemMemoryListInformation, &cmd, sizeof(cmd));
 	}
-	if ((clean_flag & CLEAN_PR0_STANDBY_LIST) && (g_ctx.lib.NwOsInfo.dwMajorVersion >= 6)) // vista
+	if ((m_ctx.clean_flag & CLEAN_PR0_STANDBY_LIST) && (g_ctx.lib.NwOsInfo.dwMajorVersion >= 6)) // vista
 	{
 		cmd = MemoryPurgeLowPriorityStandbyList;
 		NWL_NtSetSystemInformation(SystemMemoryListInformation, &cmd, sizeof(cmd));
 	}
-	if ((clean_flag & CLEAN_STANDBY_LIST) && (g_ctx.lib.NwOsInfo.dwMajorVersion >= 6)) // vista
+	if ((m_ctx.clean_flag & CLEAN_STANDBY_LIST) && (g_ctx.lib.NwOsInfo.dwMajorVersion >= 6)) // vista
 	{
 		cmd = MemoryPurgeStandbyList;
 		NWL_NtSetSystemInformation(SystemMemoryListInformation, &cmd, sizeof(cmd));
 	}
-	if ((clean_flag & CLEAN_MODIFIED_PAGE) && (g_ctx.lib.NwOsInfo.dwMajorVersion >= 6)) // vista
+	if ((m_ctx.clean_flag & CLEAN_MODIFIED_PAGE) && (g_ctx.lib.NwOsInfo.dwMajorVersion >= 6)) // vista
 	{
 		cmd = MemoryFlushModifiedList;
 		NWL_NtSetSystemInformation(SystemMemoryListInformation, &cmd, sizeof(cmd));
 	}
-	if ((clean_flag & CLEAN_COMBINED_MM_LIST) && (g_ctx.lib.NwOsInfo.dwMajorVersion >= 10)) // win10
+	if ((m_ctx.clean_flag & CLEAN_COMBINED_MM_LIST) && (g_ctx.lib.NwOsInfo.dwMajorVersion >= 10)) // win10
 	{
 		NWL_NtSetSystemInformation(SystemCombinePhysicalMemoryInformation, &combine_info, sizeof(combine_info));
 	}
@@ -289,7 +291,7 @@ gnwinfo_draw_mm_window(struct nk_context* ctx, float width, float height)
 	nk_layout_row_dynamic(ctx, g_col_height, 3);
 	nk_spacer(ctx);
 	if (nk_button_label(ctx, N_(N__CLEAN_MEMORY)))
-		m_ctx.clean_size = clean_memory(m_ctx.clean_flag);
+		m_ctx.clean_size = gnwinfo_clean_memory();
 	if (m_ctx.clean_size)
 		nk_lhcf(ctx, NK_TEXT_LEFT, g_color_good,"+%s", NWL_GetHumanSize(m_ctx.clean_size, NWLC->NwUnits, 1024));
 	else
