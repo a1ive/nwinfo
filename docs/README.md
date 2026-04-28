@@ -24,7 +24,39 @@
 
 <div style="page-break-after: always;"></div>
 
+## GUI (gnwinfo)
+
+### OS Support
+
+  Windows 7 and later
+
+### Language Support
+
+- English
+- Chinese (Simplified)
+- Chinese (Traditional)
+- French
+- Italian
+- Japanese
+- Korean
+- Polish
+- Portuguese (Brazil)
+- Slovenian
+- Swedish
+- Turkish
+
+### Commandline Options
+
+- /debug  
+  Print debug info to stdout.  
+
+<div style="page-break-after: always;"></div>
+
 ## CLI (nwinfo)
+
+### OS Support
+
+  Windows XP and later
 
 ### Usage
 
@@ -236,11 +268,11 @@ Note: NVMe requires Windows 10 or later.
 
 The program searches for and loads drivers in the following order: **CPUZ162 -> NwHwIo -> PawnIO**.
 
-| Driver | Filename | Bundled | CPU Sensor | SPD | ACPI | IMC | PCH |
-|--------|----------|---------|------------|-----|------|-----|-----|
-| [PawnIO](https://github.com/namazso/PawnIO)           | PawnIO.sys     | ✅ | ✅ | ✅ | ❌ | ⚠️ | ❌ |
-| [CPUZ162](https://www.cpuid.com/softwares/cpu-z.html) | cpuz162x64.sys | ❌ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| [NwHwIo](https://www.evga.com/precisionx1/)           | NwHwIox64.sys  | ❌ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Driver | Filename | Bundled | CPU Sensor | SPD | IMC |
+|--------|----------|---------|------------|-----|-----|
+| [PawnIO](https://github.com/namazso/PawnIO)           | PawnIO.sys     | ✅ | ✅ | ✅ | ⚠️ |
+| [CPUZ162](https://www.cpuid.com/softwares/cpu-z.html) | cpuz162x64.sys | ❌ | ✅ | ✅ | ✅ |
+| [NwHwIo](https://www.evga.com/precisionx1/)           | NwHwIox64.sys  | ❌ | ✅ | ✅ | ✅ |
 
 **Note:** The program can still run normally even without drivers, but some hardware information may not be accessible.
 
