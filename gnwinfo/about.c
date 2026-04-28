@@ -3,23 +3,9 @@
 #include "gnwinfo.h"
 #include "gettext.h"
 
+#include "utils.h"
 #include "ioctl.h"
 #include "version.h"
-
-LPCSTR NWL_Ucs2ToUtf8(LPCWSTR src);
-
-static void
-draw_install_pawnio_button(struct nk_context* ctx)
-{
-	if (!nk_button_label(ctx, N_(N__INSTALL_PAWNIO)))
-		return;
-	if (!WR0_InstallPawnIO())
-	{
-		MessageBoxW(g_ctx.wnd, L"Failed to install PawnIO", L"Error", MB_ICONERROR | MB_OK);
-		return;
-	}
-	NWLC->NwDrv = WR0_OpenDriver();
-}
 
 VOID
 gnwinfo_draw_about_window(struct nk_context* ctx, float width, float height)
@@ -45,12 +31,7 @@ gnwinfo_draw_about_window(struct nk_context* ctx, float width, float height)
 	if (NWLC->NwDrv)
 		nk_l(ctx, NWL_Ucs2ToUtf8(NWLC->NwDrv->id), NK_TEXT_CENTERED);
 	else
-	{
-		nk_layout_row_dynamic(ctx, 0, 3);
 		nk_spacer(ctx);
-		draw_install_pawnio_button(ctx);
-		nk_spacer(ctx);
-	}
 out:
 	nk_end(ctx);
 }

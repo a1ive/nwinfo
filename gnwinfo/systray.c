@@ -3,6 +3,7 @@
 #include <windows.h>
 #include <shellapi.h>
 #include "gnwinfo.h"
+#include "ioctl.h"
 #include "gettext.h"
 #include "utils.h"
 #include "version.h"
@@ -80,9 +81,19 @@ void gnwinfo_show_systray_menu(HWND wnd)
 	HMENU menu = CreatePopupMenu();
 	if (menu)
 	{
+		if (g_ctx.lib.NwDrv != NULL && g_ctx.lib.NwDrv->type == WR0_DRIVER_PAWNIO)
+		{
+			UINT flags = MF_STRING;
+			if (g_ctx.lib.NwDrv->installed == FALSE)
+				flags |= MF_DISABLED | MF_CHECKED;
+			AppendMenuW(menu, flags, IDM_INSTALL_PAWNIO, NWL_Utf8ToUcs2(N_(N__INSTALL_PAWNIO)));
+			AppendMenuW(menu, MF_SEPARATOR, 0, NULL);
+		}
+
 		AppendMenuW(menu, MF_STRING, IDM_CLEAN_MEM, NWL_Utf8ToUcs2(N_(N__CLEAN_MEMORY)));
 
 		AppendMenuW(menu, MF_SEPARATOR, 0, NULL);
+
 		HMENU power_menu = CreatePopupMenu();
 		if (power_menu)
 		{
@@ -91,6 +102,7 @@ void gnwinfo_show_systray_menu(HWND wnd)
 		}
 
 		AppendMenuW(menu, MF_SEPARATOR, 0, NULL);
+
 		AppendMenuW(menu, MF_STRING, IDM_EXIT, NWL_Utf8ToUcs2(N_(N__CLOSE)));
 
 		SetForegroundWindow(wnd);
@@ -103,6 +115,10 @@ void gnwinfo_handle_systray_cmd(HWND wnd, WORD wmid)
 {
 	switch (wmid)
 	{
+	case IDM_INSTALL_PAWNIO:
+		if (g_ctx.lib.NwDrv)
+			g_ctx.lib.NwDrv->installed = FALSE;
+		return;
 	case IDM_CLEAN_MEM:
 		gnwinfo_clean_memory();
 		return;

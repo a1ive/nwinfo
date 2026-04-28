@@ -45,6 +45,7 @@
 
 #define IDM_EXIT              1001
 #define IDM_CLEAN_MEM         1002
+#define IDM_INSTALL_PAWNIO    1003
 
 #define IDM_POWER_SCHEME_BASE 2000
 
@@ -54,7 +55,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        103
 #define _APS_NEXT_COMMAND_VALUE         40001
-#define _APS_NEXT_CONTROL_VALUE         1003
+#define _APS_NEXT_CONTROL_VALUE         1004
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif
