@@ -90,13 +90,11 @@ static struct
 	ULONGLONG delta_ticks;
 	GROUP_AFFINITY affinity;
 	HANDLE thread;
-	int core_gen;
+	intel_microarch_t type;
 	uint32_t pp0_energy;
 	uint32_t pp1_energy;
 	uint32_t pkg_energy;
 	uint32_t dram_energy;
-	void (*get_mchbar_sensors)(PNODE node);
-	void (*get_pch_sensors)(PNODE node);
 } ctx;
 
 #define PMC_MIN_TEMP 0x1500
@@ -124,7 +122,7 @@ static void get_mchbar_sensors(PNODE node)
 {
 	uint64_t mchbar_5f60 = mchbar_read_64(0x5F60);
 	// 31:0  BCLK_FREQ kHz
-	float bclk = (ctx.core_gen >= 10) ? (mchbar_5f60 & 0xFFFFFFFF) / 1000.0f : 100.0f;
+	float bclk = (ctx.type.microarch >= INTEL_COMETLAKE) ? (mchbar_5f60 & 0xFFFFFFFF) / 1000.0f : 100.0f;
 	NWL_NodeAttrSetf(node, "BCLK MHz", NAFLG_FMT_NUMERIC, "%.3f", bclk);
 
 	uint64_t mchbar_5918 = mchbar_read_64(0x5918);
@@ -134,9 +132,9 @@ static void get_mchbar_sensors(PNODE node)
 	//  9:2  QCLK_RATIO *BCLK*QCLK_REFERENCE
 	NWL_NodeAttrSetf(node, "SA Voltage", NAFLG_FMT_NUMERIC, "%.3f", ((mchbar_5918 >> 40) & 0xFFFF) / 8192.0);
 	float uclk = ((mchbar_5918 >> 24) & 0xFF) * bclk;
-	uint32_t qclk_ref_bit = (ctx.core_gen >= 10) ? (mchbar_5918 & (1 << 10)) : (mchbar_5918 & (1 << 7));
+	uint32_t qclk_ref_bit = (ctx.type.microarch >= INTEL_COMETLAKE) ? (mchbar_5918 & (1 << 10)) : (mchbar_5918 & (1 << 7));
 	float qclk_ref = (qclk_ref_bit) ? 1.0f : 4.0f / 3.0f;
-	uint32_t qclk_ratio = (ctx.core_gen >= 10) ? ((mchbar_5918 >> 2) & 0xFF) : (mchbar_5918 & 0x7F);
+	uint32_t qclk_ratio = (ctx.type.microarch >= INTEL_COMETLAKE) ? ((mchbar_5918 >> 2) & 0xFF) : (mchbar_5918 & 0x7F);
 	float qclk = qclk_ratio * bclk * qclk_ref;
 	NWL_NodeAttrSetf(node, "UCLK MHz", NAFLG_FMT_NUMERIC, "%.3f", uclk);
 	NWL_NodeAttrSetf(node, "QCLK MHz", NAFLG_FMT_NUMERIC, "%.3f", qclk);
@@ -236,7 +234,7 @@ static void get_mchbar_sensors(PNODE node)
 		NWL_NodeAttrSetf(node, "GT Temperature", NAFLG_FMT_NUMERIC, "%.0f", NWL_GetTemperature((float)(tjmax - gt_offset)));
 	}
 
-	if (ctx.core_gen >= 12)
+	if (ctx.type.microarch >= INTEL_TIGERLAKE_L)
 	{
 		uint32_t mchbar_5e04 = mchbar_read_32(0x5E04);
 		// 30:27 VDDQ_TX_ICCMAX *0.25A
@@ -292,17 +290,21 @@ static void get_mchbar_sensors(PNODE node)
 #endif
 }
 
-static void get_pch_sensors_pmc(PNODE node)
+static void get_pch_sensors(PNODE node)
 {
-	uint32_t tss0 = pch_read_32(PMC_TSS0);
-	if ((tss0 & (1 << 9))) // TS Reading Valid
-		NWL_NodeAttrSetf(node, "PCH Temperature", NAFLG_FMT_NUMERIC, "%.0f", NWL_GetTemperature(get_pmc_temperature(tss0)));
-}
-
-static void get_pch_sensors_ts(PNODE node)
-{
-	uint32_t temp = pch_read_32(0);
-	NWL_NodeAttrSetf(node, "PCH Temperature", NAFLG_FMT_NUMERIC, "%.0f", NWL_GetTemperature(get_ts_temperature(temp)));
+	float t = 0.0f;
+	if (ctx.type.microarch <= INTEL_ROCKETLAKE)
+	{
+		uint32_t tss0 = pch_read_32(PMC_TSS0);
+		if ((tss0 & (1 << 9))) // TS Reading Valid
+			t = get_pmc_temperature(tss0);
+	}
+	else
+	{
+		t = get_ts_temperature(pch_read_32(0));
+	}
+	if (t > 0.0f)
+		NWL_NodeAttrSetf(node, "PCH Temperature", NAFLG_FMT_NUMERIC, "%.0f", NWL_GetTemperature(t));
 }
 
 static inline int send_oc_mailbox(const OC_MAILBOX_FULL* in, OC_MAILBOX_FULL* out)
@@ -496,70 +498,15 @@ static bool intel_init(void)
 	ctx.id = &id->cpu_types[0];
 	if (ctx.id->vendor != VENDOR_INTEL)
 		goto fail;
+	if (!mchbar_pch_init())
+		goto fail;
+	ctx.type = mchbar_get_microarch();
+	if (ctx.type.cpu_type < INTEL_CPU_TYPE_ATOM)
+		goto fail;
 
 	ctx.thread = GetCurrentThread();
 	NWL_GetGroupAffinity(&ctx.id->affinity_mask, &ctx.affinity);
 
-	if (!mchbar_pch_init())
-		goto ok;
-
-	switch (ctx.id->x86.ext_model)
-	{
-	case 0x3C: // Core 4th Gen (Haswell)
-	case 0x3F: // Core 4th Gen (Haswell-EP)
-	case 0x45: // Core 4th Gen (Haswell)
-	case 0x46: // Core 4th Gen (Haswell)
-	case 0x3D: // Core 5th Gen (Broadwell) ?
-	case 0x47: // Core 5th Gen (Broadwell)
-	case 0x4F: // Core 5th Gen (Broadwell) ?
-	case 0x56: // Core 5th Gen (Broadwell) ?
-	case 0x4E: // Core 6th Gen (Sky Lake)
-	case 0x55: // Core 6th Gen (Sky Lake) ?
-	case 0x5E: // Core 6th Gen (Sky Lake)
-	case 0x8E: // Core 7/8/9th Gen (Kaby/Coffee Lake)
-	case 0x9E: // Core 7/8/9th Gen (Kaby/Coffee Lake)
-		ctx.core_gen = 4;
-		if (pch_get_mmio_reg() != 0)
-			ctx.get_pch_sensors = get_pch_sensors_ts;
-		break;
-	case 0x6A: // Core 10th Gen (Ice Lake) ?
-	case 0x6C: // Core 10th Gen (Ice Lake) ?
-	case 0x7D: // Core 10th Gen (Ice Lake) ?
-	case 0x7E: // Core 10th Gen (Ice Lake) ?
-	case 0xA5: // Core 10th Gen (Comet Lake)
-	case 0xA6: // Core 10th Gen (Comet Lake)
-	case 0xA7: // Core 11th Gen (Rocket Lake)
-	case 0x8A: // Core 11th Gen (Lakefield) ?
-	case 0x9C: // Core 11th Gen (Jasper Lake) ?
-		ctx.core_gen = 10;
-		if (pch_get_mmio_reg() != 0)
-			ctx.get_pch_sensors = get_pch_sensors_ts;
-		break;
-	case 0x8C: // Core 11th Gen (Tiger Lake-U) // ???
-	case 0x8D: // Core 11th Gen (Tiger Lake-H)
-	case 0x97: // Core 12th Gen (Alder Lake)
-	case 0x9A: // Core 12th Gen (Alder Lake)
-	case 0xB7: // Core 13th/14th Gen (Raptor Lake)
-	case 0xBA: // Core 13th/14th Gen (Raptor Lake)
-	case 0xBE: // Core 13th/14th Gen (Raptor Lake)
-	case 0xBF: // Core 13th/14th Gen (Raptor Lake)
-	case 0xAA: // Ultra (Meteor Lake)
-	case 0xAB: // Ultra (Meteor Lake)
-	case 0xAC: // Ultra (Meteor Lake)
-	case 0xB5: // Ultra (Arrow Lake-U)
-	case 0xBD: // Ultra (Lunar Lake-V)
-	case 0xC5: // Ultra (Arrow Lake-H)
-	case 0xC6: // Ultra (Arrow Lake-S)
-	case 0xCC: // Ultra (Panther Lake)
-		ctx.core_gen = 12;
-		if (pch_get_mmio_reg() != 0)
-			ctx.get_pch_sensors = get_pch_sensors_pmc;
-		break;
-	}
-	if (mchbar_get_mmio_reg() != 0)
-		ctx.get_mchbar_sensors = get_mchbar_sensors;
-
-ok:
 	return true;
 fail:
 	ZeroMemory(&ctx, sizeof(ctx));
@@ -578,10 +525,10 @@ static void intel_get(PNODE node)
 		ctx.delta_ticks = ticks - ctx.ticks;
 	else
 		ctx.delta_ticks = 1;
-	if (ctx.get_mchbar_sensors)
-		ctx.get_mchbar_sensors(node);
-	if (ctx.get_pch_sensors)
-		ctx.get_pch_sensors(node);
+	if (mchbar_get_mmio_reg() != 0)
+		get_mchbar_sensors(node);
+	if (pch_get_mmio_reg() != 0)
+		get_pch_sensors(node);
 	get_msr_sensors(node);
 	ctx.ticks = GetTickCount64();
 }

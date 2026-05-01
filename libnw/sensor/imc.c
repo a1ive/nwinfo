@@ -587,55 +587,25 @@ get_intel_mchbar_15(void)
 static void
 detect_intel_mchbar(void)
 {
-	if (ctx.id->x86.family != 0x06)
+	intel_microarch_t id = mchbar_get_microarch();
+	if (id.cpu_type != INTEL_CPU_TYPE_CORE)
 		return;
-	switch (ctx.id->x86.ext_model)
-	{
-	case 0x2A: // Core 2nd Gen (Sandy Bridge)
-	case 0x3A: // Core 3rd Gen (Ivy Bridge)
+	if (id.microarch <= INTEL_WESTMERE_EX)
+		return;
+	else if (id.microarch <= INTEL_IVYBRIDGE_X)
 		ctx.get = get_intel_mchbar_2_3;
-		break;
-	case 0x3C: // Core 4th Gen (Haswell)
-	case 0x3F: // Core 4th Gen (Haswell-EP)
-	case 0x45: // Core 4th Gen (Haswell)
-	case 0x46: // Core 4th Gen (Haswell)
-	case 0x47: // Core 5th Gen (Broadwell)
+	else if (id.microarch <= INTEL_BROADWELL_D)
 		ctx.get = get_intel_mchbar_4_5;
-		break;
-	case 0x4E: // Core 6th Gen (Sky Lake)
-	case 0x5E: // Core 6th Gen (Sky Lake)
-	case 0x8E: // Core 7/8/9th Gen (Kaby/Coffee Lake)
-	case 0x9E: // Core 7/8/9th Gen (Kaby/Coffee Lake)
+	else if (id.microarch <= INTEL_KABYLAKE)
 		ctx.get = get_intel_mchbar_6_7_8_9;
-		break;
-	case 0xA5: // Core 10th Gen (Comet Lake)
-	case 0xA6: // Core 10th Gen (Comet Lake)
-	case 0xA7: // Core 11th Gen (Rocket Lake)
+	else if (id.microarch <= INTEL_ROCKETLAKE)
 		ctx.get = get_intel_mchbar_10_11;
-		break;
-	case 0x8C: // Core 11th Gen (Tiger Lake-U) // ???
-	case 0x8D: // Core 11th Gen (Tiger Lake-H)
+	else if (id.microarch <= INTEL_TIGERLAKE)
 		ctx.get = get_intel_mchbar_11_tgl_h;
-		break;
-	case 0x97: // Core 12th Gen (Alder Lake)
-	case 0x9A: // Core 12th Gen (Alder Lake)
-	case 0xB7: // Core 13th/14th Gen (Raptor Lake)
-	case 0xBA: // Core 13th/14th Gen (Raptor Lake)
-	case 0xBE: // Core 13th/14th Gen (Raptor Lake)
-	case 0xBF: // Core 13th/14th Gen (Raptor Lake)
+	else if (id.microarch <= INTEL_RAPTORLAKE_S)
 		ctx.get = get_intel_mchbar_12_13_14;
-		break;
-	case 0xAA: // Ultra (Meteor Lake)
-	case 0xAB: // Ultra (Meteor Lake)
-	case 0xAC: // Ultra (Meteor Lake)
-	case 0xB5: // Ultra (Arrow Lake-U)
-	case 0xBD: // Ultra (Lunar Lake-V)
-	case 0xC5: // Ultra (Arrow Lake-H)
-	case 0xC6: // Ultra (Arrow Lake-S)
-	case 0xCC: // Ultra (Panther Lake)
+	else if (id.microarch <= INTEL_PANTHERLAKE_L)
 		ctx.get = get_intel_mchbar_15;
-		break;
-	}
 }
 
 // https://github.com/memtest86plus/memtest86plus/blob/main/system/imc/x86/amd_zen.c
