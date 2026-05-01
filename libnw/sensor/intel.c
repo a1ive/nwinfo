@@ -183,11 +183,13 @@ static void get_mchbar_sensors(PNODE node)
 		NWL_NodeAttrSetf(node, "eDRAM Temperature", NAFLG_FMT_NUMERIC, "%.0f", NWL_GetTemperature((float)edram_temp));
 #endif
 
+#if 0
 	uint32_t mchbar_5978 = mchbar_read_32(0x5978);
 	//  7:0 PKG_TEMPERATURE
 	int pkg_temp = mchbar_5978 & 0xFF;
 	if (pkg_temp > 0)
 		NWL_NodeAttrSetf(node, "Package Temperature", NAFLG_FMT_NUMERIC, "%.0f", NWL_GetTemperature((float)pkg_temp));
+#endif
 
 	uint32_t mchbar_597c = mchbar_read_32(0x597C);
 	//  7:0 PP0_TEMPERATURE
@@ -333,6 +335,23 @@ static void get_msr_sensors(PNODE node)
 	GROUP_AFFINITY saved_aff;
 	SetThreadGroupAffinity(ctx.thread, &ctx.affinity, &saved_aff);
 
+	int tjmax = 100;
+	if (read_msr(0x1a2, &value) == 0)
+	{
+		tjmax = (value >> 16) & 0xFF;
+		NWL_NodeAttrSetf(node, "Tj Max", NAFLG_FMT_NUMERIC, "%.0f", NWL_GetTemperature((float)tjmax));
+		int tcc_offset = (value >> 24) & 0x7F;
+		NWL_NodeAttrSetf(node, "Tcc", NAFLG_FMT_NUMERIC, "%.0f", NWL_GetTemperature((float)(tjmax - tcc_offset)));
+		int tctrl_offset = (value >> 8) & 0xFF;
+		NWL_NodeAttrSetf(node, "T-Control", NAFLG_FMT_NUMERIC, "%.0f", NWL_GetTemperature((float)(tjmax - tctrl_offset)));
+	}
+
+	if (read_msr(0x1b1, &value) == 0)
+	{
+		int delta = (value >> 16) & 0x7F;
+		NWL_NodeAttrSetf(node, "Package Temperature", NAFLG_FMT_NUMERIC, "%.0f", NWL_GetTemperature((float)(tjmax - delta)));
+	}
+
 	uint32_t energy_unit = 0x10; // 10000b
 	uint32_t power_unit = 0x03; // 0011b
 	uint32_t time_unit = 0x0A; // 1010b
@@ -444,6 +463,22 @@ static void get_msr_sensors(PNODE node)
 			delta_energy = (float)(value - ctx.dram_energy) / (1ULL << energy_unit);
 		ctx.dram_energy = (uint32_t)value;
 		NWL_NodeAttrSetf(node, "DRAM Power", NAFLG_FMT_NUMERIC, "%.3f", delta_energy * 1000.0f / ctx.delta_ticks);
+	}
+
+	if (read_msr(0x620, &value) == 0)
+	{
+		// 14:8 Uncore Min Ratio
+		//  6:0 Uncore Max Ratio
+		uint32_t min_ratio = (value >> 8) & 0x7F;
+		uint32_t max_ratio = value & 0x7F;
+		NWL_NodeAttrSetf(node, "Uncore Min Ratio", NAFLG_FMT_NUMERIC, "%u", min_ratio);
+		NWL_NodeAttrSetf(node, "Uncore Max Ratio", NAFLG_FMT_NUMERIC, "%u", max_ratio);
+	}
+	if (read_msr(0x621, &value) == 0)
+	{
+		//  6:0 Uncore Ratio
+		uint32_t ratio = value & 0x7F;
+		NWL_NodeAttrSetf(node, "Uncore Frequency MHz", NAFLG_FMT_NUMERIC, "%u", ratio * 100);
 	}
 
 	SetThreadGroupAffinity(ctx.thread, &saved_aff, NULL);
