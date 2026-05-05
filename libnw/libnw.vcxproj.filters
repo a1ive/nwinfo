@@ -424,6 +424,9 @@
     <CopyFileToFolders Include="..\ioctl\pawn\LpcIO.bin">
       <Filter>Binary Files</Filter>
     </CopyFileToFolders>
+    <CopyFileToFolders Include="..\ioctl\pawn\IntelMCHBAR.bin">
+      <Filter>Binary Files</Filter>
+    </CopyFileToFolders>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Resource.rc">

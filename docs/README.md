@@ -270,7 +270,7 @@ The program searches for and loads drivers in the following order: **CPUZ162 -> 
 
 | Driver | Filename | Bundled | CPU Sensor | SPD | IMC |
 |--------|----------|---------|------------|-----|-----|
-| [PawnIO](https://github.com/namazso/PawnIO)           | PawnIO.sys     | ✅ | ✅ | ✅ | ⚠️ |
+| [PawnIO](https://github.com/namazso/PawnIO)           | PawnIO.sys     | ✅ | ✅ | ✅ | ✅ |
 | [CPUZ162](https://www.cpuid.com/softwares/cpu-z.html) | cpuz162x64.sys | ❌ | ✅ | ✅ | ✅ |
 | [NwHwIo](https://www.evga.com/precisionx1/)           | NwHwIox64.sys  | ❌ | ✅ | ✅ | ✅ |
 
@@ -310,6 +310,7 @@ This section describes all files included in the final release package.
 | `pnp.ids` | Database | PnP (monitor) vendor database |
 | `jep106.ids` | Database | JEDEC memory module vendor database |
 | `PawnIOSetup.exe` | Driver | PawnIO driver installer (x64) |
+| `IntelMCHBAR.bin` | PawnIO Module | Intel MCHBAR module for PawnIO driver |
 | `IntelMSR.bin` | PawnIO Module | Intel MSR module for PawnIO driver |
 | `AMDFamily0F.bin` | PawnIO Module | AMD K8 MSR module for PawnIO driver |
 | `AMDFamily10.bin` | PawnIO Module | AMD K10 MSR module for PawnIO driver |

@@ -38,7 +38,15 @@ mchbar_read_32(uint64_t offset)
 		return 0;
 
 	uint32_t data = 0;
-	int ret = WR0_RdMmIo(NWLC->NwDrv, ctx.mchbar_base + offset, &data, sizeof(uint32_t));
+	int ret;
+	if (NWLC->NwDrv->type == WR0_DRIVER_PAWNIO)
+	{
+		ULONG64 out = 0;
+		ret = WR0_ExecPawn(NWLC->NwDrv, &NWLC->NwDrv->pio_mchbar, "ioctl_read_dword", &offset, 1, &out, 1, NULL);
+		data = (uint32_t)out;
+	}
+	else
+		ret = WR0_RdMmIo(NWLC->NwDrv, ctx.mchbar_base + offset, &data, sizeof(uint32_t));
 	if (ret)
 		NWL_Debug("MCHBAR", "MMIO 32 @%llX+%llx failed.", ctx.mchbar_base, offset);
 	return data;
@@ -64,7 +72,15 @@ mchbar_read_64(uint64_t offset)
 		return 0;
 
 	uint64_t data = 0;
-	int ret = WR0_RdMmIo(NWLC->NwDrv, ctx.mchbar_base + offset, &data, sizeof(uint64_t));
+	int ret;
+	if (NWLC->NwDrv->type == WR0_DRIVER_PAWNIO)
+	{
+		ULONG64 out = 0;
+		ret = WR0_ExecPawn(NWLC->NwDrv, &NWLC->NwDrv->pio_mchbar, "ioctl_read_qword", &offset, 1, &out, 1, NULL);
+		data = out;
+	}
+	else
+		ret = WR0_RdMmIo(NWLC->NwDrv, ctx.mchbar_base + offset, &data, sizeof(uint64_t));
 	if (ret)
 		NWL_Debug("MCHBAR", "MMIO 64 @%llX+%llx failed.", ctx.mchbar_base, offset);
 	return data;
@@ -77,6 +93,13 @@ mchbar_read_64(uint64_t offset)
 static uint64_t
 mchbar_get_base_64(uint64_t base_mask)
 {
+	if (NWLC->NwDrv->type == WR0_DRIVER_PAWNIO)
+	{
+		ULONG64 out = 0;
+		WR0_ExecPawn(NWLC->NwDrv, &NWLC->NwDrv->pio_mchbar, "ioctl_get_mchbar_addr", NULL, 0, &out, 1, NULL);
+		return out;
+	}
+
 	uint64_t mmio_reg = 0;
 	mmio_reg = WR0_RdPciConf32(NWLC->NwDrv, 0, MCHBAR_BASE_REG_LOW);
 	if ((mmio_reg & 0x01) == 0)

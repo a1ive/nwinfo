@@ -17,6 +17,7 @@ $FilesToCopy = @(
 	"ioctl\pawn\AMDFamily0F.bin",
 	"ioctl\pawn\AMDFamily10.bin",
 	"ioctl\pawn\AMDFamily17.bin",
+	"ioctl\pawn\IntelMCHBAR.bin",
 	"ioctl\pawn\IntelMSR.bin",
 	"ioctl\pawn\RyzenSMU.bin",
 	"ioctl\pawn\SmbusI801.bin",

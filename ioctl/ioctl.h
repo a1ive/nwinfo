@@ -49,6 +49,7 @@ struct wr0_drv_t
 	struct pio_mod_t pio_smi801;
 	struct pio_mod_t pio_smpiix4;
 	struct pio_mod_t pio_lpcio;
+	struct pio_mod_t pio_mchbar;
 };
 
 // Bus Number, Device Number and Function Number to PCI Device Address
