@@ -34,6 +34,7 @@
 /*
  * Useful links:
  * - List of Intel CPU microarchitectures: https://en.wikipedia.org/wiki/List_of_Intel_CPU_microarchitectures
+ * - List of Intel processors: https://en.wikipedia.org/wiki/List_of_Intel_processors
  * - List of Intel Pentium processors: https://en.wikipedia.org/wiki/List_of_Intel_Pentium_processors
  * - List of Intel Celeron processors: https://en.wikipedia.org/wiki/List_of_Intel_Celeron_processors
  * - List of Intel Core processors: https://en.wikipedia.org/wiki/List_of_Intel_Core_processors
@@ -45,15 +46,15 @@ const struct match_entry_t cpudb_intel[] = {
 
 	/* i486 */
 	{  4, -1, -1, -1, -1,   1,    -1,    -1, { "",              0 }, "Unknown i486",            UNKN_STR },
-	{  4,  0, -1, -1, -1,   1,    -1,    -1, { "",              0 }, "i486 DX-25/33",           UNKN_STR },
-	{  4,  1, -1, -1, -1,   1,    -1,    -1, { "",              0 }, "i486 DX-50",              UNKN_STR },
+	{  4,  0, -1, -1, -1,   1,    -1,    -1, { "",              0 }, "i486 DX-25/33",           "1 µm"   },
+	{  4,  1, -1, -1, -1,   1,    -1,    -1, { "",              0 }, "i486 DX-50",              "0.8 µm" },
 	{  4,  2, -1, -1, -1,   1,    -1,    -1, { "",              0 }, "i486 SX",                 UNKN_STR },
 	{  4,  3, -1, -1, -1,   1,    -1,    -1, { "",              0 }, "i486 DX2",                UNKN_STR },
-	{  4,  4, -1, -1, -1,   1,    -1,    -1, { "",              0 }, "i486 SL",                 UNKN_STR },
+	{  4,  4, -1, -1, -1,   1,    -1,    -1, { "",              0 }, "i486 SL",                 "0.8 µm" },
 	{  4,  5, -1, -1, -1,   1,    -1,    -1, { "",              0 }, "i486 SX2",                UNKN_STR },
 	{  4,  7, -1, -1, -1,   1,    -1,    -1, { "",              0 }, "i486 DX2 WriteBack",      UNKN_STR },
-	{  4,  8, -1, -1, -1,   1,    -1,    -1, { "",              0 }, "i486 DX4",                UNKN_STR },
-	{  4,  9, -1, -1, -1,   1,    -1,    -1, { "",              0 }, "i486 DX4 WriteBack",      UNKN_STR },
+	{  4,  8, -1, -1, -1,   1,    -1,    -1, { "",              0 }, "i486 DX4",                "0.6 µm" },
+	{  4,  9, -1, -1, -1,   1,    -1,    -1, { "",              0 }, "i486 DX4 WriteBack",      "0.6 µm" },
 
 	/* P6 CPUs */
 	{  5,  0, -1, -1, -1,   1,    -1,    -1, { "Pentium(R)",    2 }, "Pentium A-Step",    UNKN_STR  },
@@ -635,6 +636,11 @@ const struct match_entry_t cpudb_intel[] = {
 	{  6, 13, -1, -1, 189, -1,    -1,    -1, { "Core(TM) Ultra 9 2##V",  10 }, "Core Ultra 9 (Lunar Lake-V)",  "TSMC N3B" },
 	{  6, 13, -1, -1, 189, -1,    -1,    -1, { "Core(TM) Ultra 7 2##V",  10 }, "Core Ultra 7 (Lunar Lake-V)",  "TSMC N3B" },
 	{  6, 13, -1, -1, 189, -1,    -1,    -1, { "Core(TM) Ultra 5 2##V",  10 }, "Core Ultra 5 (Lunar Lake-V)",  "TSMC N3B" },
+
+	{  6,  7, -1, -1, 215, -1,    -1,    -1, { "Core(TM) 9 2##",        8 },   "Core 9 (Bartlett Lake-S)",     "Intel 7" },
+	{  6,  7, -1, -1, 215, -1,    -1,    -1, { "Core(TM) 7 2##",        8 },   "Core 7 (Bartlett Lake-S)",     "Intel 7" },
+	{  6,  7, -1, -1, 215, -1,    -1,    -1, { "Core(TM) 5 2##",        8 },   "Core 5 (Bartlett Lake-S)",     "Intel 7" },
+	{  6,  7, -1, -1, 215, -1,    -1,    -1, { "Core(TM) 3 2##",        8 },   "Core 3 (Bartlett Lake-S)",     "Intel 7" },
 
 	/* Cougar Cove (P-cores) / Darkmont (E-cores and LP E-cores) CPUs (2025, Core Ultra Series 3, Intel 18A): https://en.wikipedia.org/wiki/Panther_Lake_(microprocessor) */
 	// TBA
