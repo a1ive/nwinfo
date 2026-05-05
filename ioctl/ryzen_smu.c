@@ -31,6 +31,7 @@ typedef struct
 		NWL_Debug("SMU", __VA_ARGS__); \
 	} while (0)
 
+#if 0
 static const char* get_codename_str(ry_codename_t codename)
 {
 	switch (codename)
@@ -98,6 +99,7 @@ static const char* get_ry_err_str(ry_err_t code)
 	default: return "Unspecified Error";
 	}
 }
+#endif
 
 ry_codename_t ryzen_smu_get_codename(struct cpu_id_t* id)
 {
@@ -249,12 +251,8 @@ ry_codename_t ryzen_smu_get_codename(struct cpu_id_t* id)
 		}
 		break;
 	}
-	if (codename == CODENAME_UNKNOWN)
-		SMU_DEBUG("Unsupported CPU: Family %Xh, Model %Xh, Package %Xh",
-			id->x86.ext_family, id->x86.ext_model, id->x86.pkg_type);
-	else
-		SMU_DEBUG("Detected CPU: %s (Family %Xh, Model %Xh, Package %Xh)",
-			get_codename_str(codename), id->x86.ext_family, id->x86.ext_model, id->x86.pkg_type);
+	SMU_DEBUG("Detected CPU: %d (Family %Xh, Model %Xh, Package %Xh)",
+		codename, id->x86.ext_family, id->x86.ext_model, id->x86.pkg_type);
 	return codename;
 }
 
