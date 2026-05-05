@@ -642,6 +642,13 @@ const struct match_entry_t cpudb_intel[] = {
 	{  6,  7, -1, -1, 215, -1,    -1,    -1, { "Core(TM) 5 2##",        8 },   "Core 5 (Bartlett Lake-S)",     "Intel 7" },
 	{  6,  7, -1, -1, 215, -1,    -1,    -1, { "Core(TM) 3 2##",        8 },   "Core 3 (Bartlett Lake-S)",     "Intel 7" },
 
+	{ 6,  6, -1, -1, 204, -1,    -1,    -1, { "Core(TM) Ultra 9 3##",    8 }, "Core Ultra 9 (Panther Lake)",  "Intel 18A" },
+	{ 6,  6, -1, -1, 204, -1,    -1,    -1, { "Core(TM) Ultra 7 3##",    8 }, "Core Ultra 7 (Panther Lake)",  "Intel 18A" },
+	{ 6,  6, -1, -1, 204, -1,    -1,    -1, { "Core(TM) Ultra 5 3##",    8 }, "Core Ultra 5 (Panther Lake)",  "Intel 18A" },
+	{ 6,  6, -1, -1, 204, -1,    -1,    -1, { "Core(TM) Ultra X9 3##H", 10 }, "Core Ultra 9 (Panther Lake)",  "Intel 18A" },
+	{ 6,  6, -1, -1, 204, -1,    -1,    -1, { "Core(TM) Ultra X7 3##H", 10 }, "Core Ultra 7 (Panther Lake)",  "Intel 18A" },
+	{ 6,  6, -1, -1, 204, -1,    -1,    -1, { "Core(TM) Ultra X5 3##H", 10 }, "Core Ultra 5 (Panther Lake)",  "Intel 18A" },
+
 	/* Cougar Cove (P-cores) / Darkmont (E-cores and LP E-cores) CPUs (2025, Core Ultra Series 3, Intel 18A): https://en.wikipedia.org/wiki/Panther_Lake_(microprocessor) */
 	// TBA
 //     F   M   S  EF    EM #cores L2$    L3$ Pattern                          Codename                       Technology
