@@ -406,6 +406,7 @@ static ry_err_t get_pm_table_base(ry_handle_t* handle, uint64_t* addr)
 	case CODENAME_THREADRIPPER:
 		fn[0] = 0x0b;
 		fn[1] = 0x0c;
+		fn[2] = 0x0e;
 		goto base_addr_class_2;
 	case CODENAME_DALI:
 	case CODENAME_PICASSO:
@@ -440,6 +441,9 @@ base_addr_class_2:
 	if (rc != RYZEN_SMU_OK)
 		return rc;
 	*addr = (uint64_t)args.u32.arg0;
+	rc = send_command(handle, fn[2], &args);
+	if (rc != RYZEN_SMU_OK)
+		return rc;
 	SMU_DEBUG("PM Table Base: %llX", (unsigned long long)addr);
 	return RYZEN_SMU_OK;
 
