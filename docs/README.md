@@ -250,11 +250,12 @@ Notes:
  * `Frequency` refers to the GPU core frequency.
  * `Power` refers to the board power draw.
 
-### Memory Module SPD
+### Memory Module SPD / IMC
 
 - SMBus: Intel PCH, PIIX4 / AMD SB / Hygon
 - Memory Module: SDR, DDR, DDR2, DDR3, DDR4, DDR5
 - Thermal Sensor: DDR4, DDR5
+- IMC: Intel Core 2nd Gen and later / AMD Zen and later
 
 ### HDD / SSD S.M.A.R.T.
 
@@ -263,6 +264,8 @@ NWinfo uses [libcdi](https://github.com/a1ive/libcdi) to access S.M.A.R.T. data.
 `libcdi` is a dynamic library based on [CrystalDiskInfo](https://crystalmark.info/en/software/crystaldiskinfo/).
 
 Note: NVMe requires Windows 10 or later.
+
+<div style="page-break-after: always;"></div>
 
 ## Supported Drivers
 
@@ -287,6 +290,14 @@ Install the PawnIO driver silently using the following command:
 Uninstall the PawnIO driver silently using the following command:
 ```bat
 .\PawnIOSetup.exe -uninstall -silent
+```
+
+Delete the PawnIO driver from the Windows DriverStore:
+```bat
+REM Find the <OEMXXX.inf> name of the PawnIO driver
+pnputil /enum-drivers
+REM Delete the driver (replace oemXXX.inf with the name identified in the previous step)
+pnputil /delete-driver <oemXXX.inf> /uninstall
 ```
 
 <div style="page-break-after: always;"></div>
