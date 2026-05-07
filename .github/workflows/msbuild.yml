@@ -42,7 +42,7 @@ jobs:
         path: build/README.pdf
 
   build:
-    runs-on: windows-latest
+    runs-on: windows-2022
     needs: generate-docs
     permissions:
       contents: write
