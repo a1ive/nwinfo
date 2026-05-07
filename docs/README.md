@@ -2,12 +2,11 @@
 <div align="center">
   <img src="./images/icon.ico">
   <h2 align="center">NWinfo</h2>
-  <a href="https://zread.ai/a1ive/nwinfo" target="_blank"><img src="https://img.shields.io/badge/Ask_Zread-_.svg?style=flat&color=00b0aa&labelColor=000000&logo=data%3Aimage%2Fsvg%2Bxml%3Bbase64%2CPHN2ZyB3aWR0aD0iMTYiIGhlaWdodD0iMTYiIHZpZXdCb3g9IjAgMCAxNiAxNiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTQuOTYxNTYgMS42MDAxSDIuMjQxNTZDMS44ODgxIDEuNjAwMSAxLjYwMTU2IDEuODg2NjQgMS42MDE1NiAyLjI0MDFWNC45NjAxQzEuNjAxNTYgNS4zMTM1NiAxLjg4ODEgNS42MDAxIDIuMjQxNTYgNS42MDAxSDQuOTYxNTZDNS4zMTUwMiA1LjYwMDEgNS42MDE1NiA1LjMxMzU2IDUuNjAxNTYgNC45NjAxVjIuMjQwMUM1LjYwMTU2IDEuODg2NjQgNS4zMTUwMiAxLjYwMDEgNC45NjE1NiAxLjYwMDFaIiBmaWxsPSIjZmZmIi8%2BCjxwYXRoIGQ9Ik00Ljk2MTU2IDEwLjM5OTlIMi4yNDE1NkMxLjg4ODEgMTAuMzk5OSAxLjYwMTU2IDEwLjY4NjQgMS42MDE1NiAxMS4wMzk5VjEzLjc1OTlDMS42MDE1NiAxNC4xMTM0IDEuODg4MSAxNC4zOTk5IDIuMjQxNTYgMTQuMzk5OUg0Ljk2MTU2QzUuMzE1MDIgMTQuMzk5OSA1LjYwMTU2IDE0LjExMzQgNS42MDE1NiAxMy43NTk5VjExLjAzOTlDNS42MDE1NiAxMC42ODY0IDUuMzE1MDIgMTAuMzk5OSA0Ljk2MTU2IDEwLjM5OTlaIiBmaWxsPSIjZmZmIi8%2BCjxwYXRoIGQ9Ik0xMy43NTg0IDEuNjAwMUgxMS4wMzg0QzEwLjY4NSAxLjYwMDEgMTAuMzk4NCAxLjg4NjY0IDEwLjM5ODQgMi4yNDAxVjQuOTYwMUMxMC4zOTg0IDUuMzEzNTYgMTAuNjg1IDUuNjAwMSAxMS4wMzg0IDUuNjAwMUgxMy43NTg0QzE0LjExMTkgNS42MDAxIDE0LjM5ODQgNS4zMTM1NiAxNC4zOTg0IDQuOTYwMVYyLjI0MDFDMTQuMzk4NCAxLjg4NjY0IDE0LjExMTkgMS42MDAxIDEzLjc1ODQgMS42MDAxWiIgZmlsbD0iI2ZmZiIvPgo8cGF0aCBkPSJNNCAxMkwxMiA0TDQgMTJaIiBmaWxsPSIjZmZmIi8%2BCjxwYXRoIGQ9Ik00IDEyTDEyIDQiIHN0cm9rZT0iI2ZmZiIgc3Ryb2tlLXdpZHRoPSIxLjUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgo8L3N2Zz4K&logoColor=ffffff" alt="zread"/></a>
   <a href="https://deepwiki.com/a1ive/nwinfo"><img src="https://deepwiki.com/badge.svg" alt="Ask DeepWiki"></a>
 </div>
 <br />
 
-**NWinfo** is a Win32 program that allows you to obtain system and hardware information.
+**NWinfo** is a Win32 program for collecting system and hardware information.
 
 ## Features
 
@@ -18,9 +17,9 @@
 ## Download
 
 - Source code: https://github.com/a1ive/nwinfo  
-- Latest Release: [GitHub Releases](https://github.com/a1ive/nwinfo/releases)  
-- Nightly Build: [Github Actions](https://github.com/a1ive/nwinfo/actions/workflows/msbuild.yml) | [Direct Link](https://nightly.link/a1ive/nwinfo/workflows/msbuild/master/NWinfo.zip)
-- Libraries: [Direct Link](https://nightly.link/a1ive/nwinfo/workflows/msbuild/master/NWinfo%20Library.zip)
+- Latest release: [GitHub Releases](https://github.com/a1ive/nwinfo/releases)  
+- Nightly build: [GitHub Actions](https://github.com/a1ive/nwinfo/actions/workflows/msbuild.yml) | [Direct link](https://nightly.link/a1ive/nwinfo/workflows/msbuild/master/NWinfo.zip)
+- Libraries: [Direct link](https://nightly.link/a1ive/nwinfo/workflows/msbuild/master/NWinfo%20Library.zip)
 
 <div style="page-break-after: always;"></div>
 
@@ -45,10 +44,10 @@
 - Swedish
 - Turkish
 
-### Commandline Options
+### Command-Line Options
 
 - /debug  
-  Print debug info to stdout.  
+  Print debug information to stdout.  
 
 <div style="page-break-after: always;"></div>
 
@@ -92,39 +91,39 @@ Exports active physical network interfaces with IPv4 addresses to `report.html` 
   Specify output format.  
   `FORMAT` can be `YAML` (default), `JSON`, `LUA`, `TREE`, or `HTML`.  
 - --output=`FILE`  
-  Write to `FILE` instead of printing to screen.  
+  Write to `FILE` instead of printing to the screen.  
 - --cp=`CODEPAGE`  
   Set the code page of output text.  
   `CODEPAGE` can be `ANSI` or `UTF8`.  
 - --human  
-  Display numbers in human readable format.  
+  Display numbers in a human-readable format.  
 - --temp-unit=`UNIT`  
   Specify the temperature unit.  
-  `UNIT` can be `C` (Celsius, default), `F` (Fahrenheit) or `K` (Kelvin).  
+  `UNIT` can be `C` (Celsius, default), `F` (Fahrenheit), or `K` (Kelvin).  
 - --bin=`FORMAT`  
   Specify binary format.  
-  `FORMAT` can be `NONE` (default), `BASE64` or `HEX`.  
+  `FORMAT` can be `NONE` (default), `BASE64`, or `HEX`.  
 - --debug  
-  Print debug info to stdout.  
+  Print debug information to stdout.  
 - --hide-sensitive  
   Hide sensitive data (MAC & S/N).  
 - --driver=`NAME`  
   Specify the driver name.  
-  Available drivers are `CPUZ162`, `NwHwIo` and `PawnIO`.  
+  Available drivers are `CPUZ162`, `NwHwIo`, and `PawnIO`.  
   Use `NONE` to disable driver usage.  
-  By default, the program will search for and load drivers in the above order, see [Supported Drivers](#supported-drivers) for details.  
+  By default, the program searches for and loads drivers in the order shown above. See [Supported Drivers](#supported-drivers) for details.  
 
 ### Hardware Details
 
 - --cpu[=`FILE`]  
   Print CPUID info.  
-  Driver is required to access sensors (e.g. temperature).  
-  Intel, AMD and VIA/Zhaoxin CPUs are supported.  
-  `FILE` specifies the file name of the CPUID dump.  
+  A driver is required to access sensors, such as temperature sensors.  
+  Intel, AMD, and VIA/Zhaoxin CPUs are supported.  
+  `FILE` specifies the filename of the CPUID dump.  
 - --net[=`FLAG,...`]  
   Print network info.  
   - `GUID`  
-    Specify the GUID of the network interface, e.g. `{B16B00B5-CAFE-BEEF-DEAD-001453AD0529}`  
+    Specify the GUID of the network interface, e.g., `{B16B00B5-CAFE-BEEF-DEAD-001453AD0529}`.  
   - `FLAGS`  
     `ACTIVE` Exclude inactive network interfaces.  
     `PHYS`   Exclude virtual network interfaces.  
@@ -136,18 +135,18 @@ Exports active physical network interfaces with IPv4 addresses to `report.html` 
   Print mainboard info.  
 - --acpi[=`SGN`]  
   Print ACPI info.  
-  Driver is required to access some ACPI tables.  
-  `SGN` specifies the signature of the ACPI table, e.g. `FACP` (Fixed ACPI Description Table).  
+  A driver is required to access some ACPI tables.  
+  `SGN` specifies the ACPI table signature, e.g., `FACP` (Fixed ACPI Description Table).  
 - --smbios[=`TYPE,...`]  
   Print SMBIOS info.  
-  `TYPE` specifies the types of the SMBIOS table, e.g. `2` or `2,4,17`.  
+  `TYPE` specifies the SMBIOS structure types, e.g., `2` or `2,4,17`.  
 - --disk[=`FLAG,..`]  
   Print disk info.  
   - `PATH`  
-    Specify the path of the disk, e.g. `\\.\PhysicalDrive0`, `\\.\CdRom0`.  
+    Specify the disk path, e.g., `\\.\PhysicalDrive0` or `\\.\CdRom0`.  
   - `FLAGS`  
-    `NO-SMART` Don't print disk S.M.A.R.T. info.  
-    `NO-VOL`   Don't print volume info.  
+    `NO-SMART` Do not print disk S.M.A.R.T. info.  
+    `NO-VOL`   Do not print volume info.  
     `PHYS`     Exclude virtual drives.  
     `CD`       Include CD-ROM devices.  
     `HD`       Include hard drives.  
@@ -161,21 +160,21 @@ Exports active physical network interfaces with IPv4 addresses to `report.html` 
   Features enabled by default:  
   `WMI`, `ADATA`, `HIDENOSMART`, `ATA`, `SAT`, `SUNPLUS`, `IODATA`, `LOGITEC`,  
   `PROLIFIC`, `USBJMICRON`, `CYPRESS`, `JMICRON`, `ASMEDIA`, `REALTEK`,  
-  `MEGARAID`, `VROC`, `HIDERAID` and `CSMIAUTO`.  
+  `MEGARAID`, `VROC`, `HIDERAID`, and `CSMIAUTO`.  
   Use `DEFAULT` to specify the above features.  
   Other features are `ADVANCED`, `HD204UI`, `MEMORY`, `RTK9220DP`,  
-  `ASM1352R`, `AMDRC2`, `NOCSMI` and `CSMIRAID`.  
+  `ASM1352R`, `AMDRC2`, `NOCSMI`, and `CSMIRAID`.  
 - --display[=`FILE`]  
   Print EDID info.  
-  `FILE` specifies the file name of the SPD dump.  
+  `FILE` specifies the filename of the EDID dump.  
 - --pci[=`CLASS,..`]  
   Print PCI info.  
-  `CLASS` specifies the class codes of PCI devices, e.g. `0c05` or `03,0c05`..  
+  `CLASS` specifies PCI device class codes, e.g., `0c05` or `03,0c05`.  
 - --spd[=`FILE`]  
   Print DIMM SPD info.  
-  Driver is required to access SPD data.  
+  A driver is required to access SPD data.  
   :warning: This option may damage the hardware.  
-  `FILE` specifies the file name of the SPD dump.  
+  `FILE` specifies the filename of the SPD dump.  
 - --usb  
   Print USB info.  
 - --battery  
@@ -190,34 +189,34 @@ Exports active physical network interfaces with IPv4 addresses to `report.html` 
 - --gpu  
   Print GPU utilization and sensors (e.g. temperature).  
   GPU drivers are required to access this information.  
-  NVIDIA (NVAPI), AMD (ADL2) and Intel (IGCL) are supported.  
+  NVIDIA (NVAPI), AMD (ADL2), and Intel (IGCL) are supported.  
 - --device[=`TYPE`]  
   Print device tree.  
-  `TYPE` specifies the type of the devices, e.g. `ACPI`, `SWD`, `PCI`, or `USB`.  
+  `TYPE` specifies the device type, e.g., `ACPI`, `SWD`, `PCI`, or `USB`.  
 - --sensors[=`SRC,..`]  
-  Print sensors.  
-  `SRC` specifies the provider of sensors.  
+  Print sensor readings.  
+  `SRC` specifies the sensor provider.  
   Available providers are:  
   `LHM`, `HWINFO`, `GPU-Z`,  
-  `CPU`, `DIMM`, `GPU`, `SMART`, `DISK`, `NET`, `IMC`, `INTEL` and `ZEN`.  
+  `CPU`, `DIMM`, `GPU`, `SMART`, `DISK`, `NET`, `IMC`, `INTEL`, and `ZEN`.  
 
 ### System Information
 
 - --sys  
   Print system info.  
 - --shares  
-  Print network mapped drives and shared folders.  
+  Print mapped network drives and shared folders.  
 - --public-ip  
   Print public IP address.  
 - --product-policy[=`NAME`]  
   Print ProductPolicy.  
-  `NAME` specifies the name of the product policy.  
+  `NAME` specifies the product policy name.  
 - --font  
   Print installed fonts.  
 
 ### PowerShell Script for System Diagnostics
 
-`hw_report.ps1` is a PowerShell script designed to generate and display a detailed hardware and system report using `nwinfo`.  
+`hw_report.ps1` is a PowerShell script that generates and displays a detailed hardware and system report using `nwinfo`.  
 
 You might need to temporarily allow script execution by running the following command:
 ```powershell
@@ -277,7 +276,7 @@ The program searches for and loads drivers in the following order: **CPUZ162 -> 
 | [CPUZ162](https://www.cpuid.com/softwares/cpu-z.html) | cpuz162x64.sys | ❌ | ✅ | ✅ | ✅ |
 | [NwHwIo](https://www.evga.com/precisionx1/)           | NwHwIox64.sys  | ❌ | ✅ | ✅ | ✅ |
 
-**Note:** The program can still run normally even without drivers, but some hardware information may not be accessible.
+**Note:** The program can still run normally without a driver, but some hardware information may not be accessible.
 
 ### PawnIO Driver Installation
 
@@ -321,15 +320,15 @@ This section describes all files included in the final release package.
 | `pnp.ids` | Database | PnP (monitor) vendor database |
 | `jep106.ids` | Database | JEDEC memory module vendor database |
 | `PawnIOSetup.exe` | Driver | PawnIO driver installer (x64) |
-| `IntelMCHBAR.bin` | PawnIO Module | Intel MCHBAR module for PawnIO driver |
-| `IntelMSR.bin` | PawnIO Module | Intel MSR module for PawnIO driver |
-| `AMDFamily0F.bin` | PawnIO Module | AMD K8 MSR module for PawnIO driver |
-| `AMDFamily10.bin` | PawnIO Module | AMD K10 MSR module for PawnIO driver |
-| `AMDFamily17.bin` | PawnIO Module | AMD Zen MSR module for PawnIO driver |
-| `RyzenSMU.bin` | PawnIO Module | AMD Ryzen SMU module for PawnIO driver |
-| `SmbusPIIX4.bin` | PawnIO Module | PIIX4 SMBus module for PawnIO driver |
-| `SmbusI801.bin` | PawnIO Module | I801 SMBus module for PawnIO driver |
-| `LpcIO.bin` | PawnIO Module | LPC I/O module for PawnIO driver |
+| `IntelMCHBAR.bin` | PawnIO Module | Intel MCHBAR module for the PawnIO driver |
+| `IntelMSR.bin` | PawnIO Module | Intel MSR module for the PawnIO driver |
+| `AMDFamily0F.bin` | PawnIO Module | AMD K8 MSR module for the PawnIO driver |
+| `AMDFamily10.bin` | PawnIO Module | AMD K10 MSR module for the PawnIO driver |
+| `AMDFamily17.bin` | PawnIO Module | AMD Zen MSR module for the PawnIO driver |
+| `RyzenSMU.bin` | PawnIO Module | AMD Ryzen SMU module for the PawnIO driver |
+| `SmbusPIIX4.bin` | PawnIO Module | PIIX4 SMBus module for the PawnIO driver |
+| `SmbusI801.bin` | PawnIO Module | I801 SMBus module for the PawnIO driver |
+| `LpcIO.bin` | PawnIO Module | LPC I/O module for the PawnIO driver |
 
 <div style="page-break-after: always;"></div>
 
