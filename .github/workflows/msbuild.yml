@@ -1,4 +1,4 @@
-name: MSBuild
+﻿name: MSBuild
 
 on:
   workflow_dispatch:
@@ -42,7 +42,7 @@ jobs:
         path: build/README.pdf
 
   build:
-    runs-on: windows-2022
+    runs-on: windows-latest
     needs: generate-docs
     permissions:
       contents: write
