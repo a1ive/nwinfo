@@ -27,7 +27,8 @@
 	"2\n" \
 	"\t20 Smart Modular\n" \
 	"\t24 Kingston\n" \
-	"\t58 PNY Tech.\n" \
+	"\t50 Mushkin\n" \
+	"\t58 PNY\n" \
 	"\t64 Viking\n" \
 	"\t66 Flextronics\n" \
 	"\t69 Micron CMS\n" \
@@ -44,7 +45,7 @@
 	"\t53 SpecTek\n" \
 	"\t126 Elpida\n" \
 	"4\n" \
-	"\t11 Nanya Tech.\n" \
+	"\t11 Nanya\n" \
 	"\t15 ATI\n" \
 	"\t19 GEIL\n" \
 	"\t20 Mushkin\n" \
@@ -87,6 +88,7 @@
 	"\t98 Goldenmars\n" \
 	"\t99 Kreton\n" \
 	"\t103 Spansion\n" \
+	"\t119 Avant\n" \
 	"\t120 Asrock\n" \
 	"7\n" \
 	"\t22 Avexir\n" \
@@ -123,11 +125,14 @@
 	"\t38 Google\n" \
 	"\t42 Keysight\n" \
 	"\t51 Memorysolution\n" \
+	"\t60 Cuso\n" \
+	"\t61 Kuso\n" \
 	"\t72 Lenovo\n" \
 	"\t80 Heoriady\n" \
 	"\t88 HGST\n" \
 	"\t89 EVGA\n" \
 	"\t93 Foxtronn\n" \
+	"\t113 Asgard\n" \
 	"\t117 JUHOR\n" \
 	"\t121 Realtek\n" \
 	"10\n" \
@@ -135,8 +140,10 @@
 	"\t3 HPE\n" \
 	"\t27 YMTC\n" \
 	"\t30 Allwinner\n" \
+	"\t34 Maxsun\n" \
 	"\t36 RamCENTER\n" \
 	"\t66 Kllisre\n" \
+	"\t108 Colorful\n" \
 	"\t114 GIGABYTE\n" \
 	"\t119 Netac\n" \
 	"\t120 PCCOOLER\n" \
@@ -144,17 +151,22 @@
 	"\t2 KingSpec\n" \
 	"\t17 CXMT\n" \
 	"\t45 PUSKILL\n" \
+	"\t49 Biwin\n" \
 	"\t66 Thermaltake\n" \
 	"\t69 Chun Well\n" \
 	"\t85 Facebook\n" \
+	"\t93 SKIHOTAR\n" \
 	"\t105 Fraunhofer IIS\n" \
 	"\t107 Acer\n" \
 	"\t118 Lexar\n" \
+	"\t125 Juhor\n" \
 	"12\n" \
 	"\t18 Kingbank\n" \
 	"\t25 Allegro\n" \
+	"\t44 Hikstorage\n" \
 	"\t88 SOYO\n" \
 	"\t92 ASUS\n" \
+	"\t119 Dahua\n" \
 	"13\n" \
 	"\t16 Reliance Memory\n" \
 	"\t18 Espressif\n" \
@@ -166,6 +178,11 @@
 	"\t97 Rochester\n" \
 	"\t99 Star Memory\n" \
 	"\t100 Agile Memory\n" \
+	"\t122 Zhaoxin\n" \
+	"\t124 Hikstorage\n" \
+	"\t125 Dell\n" \
+	"14\n" \
+	"\t97 Lyczar\n" \
 	"15\n" \
 	"\t81 Xiaoli AI\n" \
 	"\t88 Trium Elek.\n" \
