@@ -121,6 +121,7 @@ lang_pl_pl[N__MAX_] =
 	[N__WINDOW_RESTART] = u8"Okno (wymaga ponownego uruchomienia)",
 	[N__ENABLE_PDH] = u8"Włącz PDH",
 	[N__BACKGROUND_INFO] = u8"Informacje w tle",
+	[N__HIDE_SYSTRAY] = u8"Ukryj ikonę w zasobniku systemowym",
 	[N__NO_QUICK_ACCESS] = u8"Wyłącz przycisk szybkiego dostępu",
 	[N__SHOW_SENSITIVE_DATA] = u8"Pokaż dane wrażliwe",
 	[N__DISABLE_DPI_SCALING] = u8"Wyłącz skalowanie DPI",

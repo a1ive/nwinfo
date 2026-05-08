@@ -121,6 +121,7 @@ lang_fr_fr[N__MAX_] =
 	[N__WINDOW_RESTART] = u8"Fenêtre (redémarrage requis)",
 	[N__ENABLE_PDH] = u8"Activer PDH",
 	[N__BACKGROUND_INFO] = u8"Informations en arrière-plan",
+	[N__HIDE_SYSTRAY] = u8"Masquer l’icône de la barre d’état système",
 	[N__NO_QUICK_ACCESS] = u8"Désactiver l’accès rapide",
 	[N__SHOW_SENSITIVE_DATA] = u8"Afficher les données sensibles",
 	[N__DISABLE_DPI_SCALING] = u8"Désactiver la mise à l’échelle DPI",

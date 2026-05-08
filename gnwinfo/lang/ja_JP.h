@@ -121,6 +121,7 @@ lang_ja_jp[N__MAX_] =
 	[N__WINDOW_RESTART] = u8"ウィンドウ (再起動が必要)",
 	[N__ENABLE_PDH] = u8"PDHを有効化",
 	[N__BACKGROUND_INFO] = u8"背景情報",
+	[N__HIDE_SYSTRAY] = u8"システムトレイアイコンを非表示",
 	[N__NO_QUICK_ACCESS] = u8"クイックアクセスボタンを無効化",
 	[N__SHOW_SENSITIVE_DATA] = u8"機密データを表示",
 	[N__DISABLE_DPI_SCALING] = u8"DPIスケーリングを無効化",

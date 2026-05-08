@@ -119,6 +119,7 @@ lang_zh_tw[N__MAX_] =
 	[N__WINDOW_RESTART] = u8"視窗 (需要重新啟動)",
 	[N__ENABLE_PDH] = u8"啟用 PDH",
 	[N__BACKGROUND_INFO] = u8"桌布背景資訊",
+	[N__HIDE_SYSTRAY] = u8"隱藏系統匣圖示",
 	[N__NO_QUICK_ACCESS] = u8"禁用快速存取按鈕",
 	[N__SHOW_SENSITIVE_DATA] = u8"顯示敏感資料",
 	[N__DISABLE_DPI_SCALING] = u8"禁用 DPI 縮放",

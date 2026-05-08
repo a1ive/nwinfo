@@ -121,6 +121,7 @@ lang_en_us[N__MAX_] =
 	[N__WINDOW_RESTART] = u8"Window (Restart required)",
 	[N__ENABLE_PDH] = u8"Enable PDH",
 	[N__BACKGROUND_INFO] = u8"Background Info",
+	[N__HIDE_SYSTRAY] = u8"Hide system tray icon",
 	[N__NO_QUICK_ACCESS] = u8"Disable quick access button",
 	[N__SHOW_SENSITIVE_DATA] = u8"Show sensitive data",
 	[N__DISABLE_DPI_SCALING] = u8"Disable DPI scaling",

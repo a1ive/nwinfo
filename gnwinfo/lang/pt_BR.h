@@ -121,6 +121,7 @@ lang_pt_br[N__MAX_] =
 	[N__WINDOW_RESTART] = u8"Janela (Requer reinício)",
 	[N__ENABLE_PDH] = u8"Ativar PDH",
 	[N__BACKGROUND_INFO] = u8"Info de Fundo",
+	[N__HIDE_SYSTRAY] = u8"Ocultar ícone na área de notificação",
 	[N__NO_QUICK_ACCESS] = u8"Desativar acesso rápido",
 	[N__SHOW_SENSITIVE_DATA] = u8"Exibir dados sensíveis",
 	[N__DISABLE_DPI_SCALING] = u8"Desativar escala de DPI",

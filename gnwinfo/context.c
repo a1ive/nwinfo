@@ -312,6 +312,9 @@ gnwinfo_ctx_init(HINSTANCE inst, HWND wnd, struct nk_context* ctx, float width, 
 	nk_end(ctx);
 	nk_gdip_render(g_ctx.gui_aa, g_color_back);
 
+	if (!(g_ctx.main_flag & MAIN_SYSTRAY))
+		gnwinfo_remove_systray(wnd);
+
 	g_ctx.gui_height = height;
 	g_ctx.gui_width = width;
 	g_ctx.gui_bginfo = !g_bginfo;

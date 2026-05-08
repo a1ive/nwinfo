@@ -121,6 +121,7 @@ lang_sl_si[N__MAX_] =
 	[N__WINDOW_RESTART] = u8"Okno (potreben je ponovni zagon)",
 	[N__ENABLE_PDH] = u8"Omogoči PDH",
 	[N__BACKGROUND_INFO] = u8"Informacije v ozadju",
+	[N__HIDE_SYSTRAY] = u8"Skrij ikono v sistemski vrstici",
 	[N__NO_QUICK_ACCESS] = u8"Onemogoči gumb za hitri dostop",
 	[N__SHOW_SENSITIVE_DATA] = u8"Prikaži občutljive podatke",
 	[N__DISABLE_DPI_SCALING] = u8"Onemogoči skaliranje DPI",

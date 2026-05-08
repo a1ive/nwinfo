@@ -103,6 +103,7 @@ nk_report_end_capture(void);
 #define MAIN_INFO_NETWORK   (1U << 7)
 #define MAIN_INFO_AUDIO     (1U << 8)
 
+#define MAIN_SYSTRAY        (1U << 14)
 #define MAIN_NO_QUICK       (1U << 15)
 #define MAIN_NET_INACTIVE   (1U << 16)
 #define MAIN_SMBUS_SPD      (1U << 17)

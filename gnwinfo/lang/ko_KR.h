@@ -121,6 +121,7 @@ lang_ko_kr[N__MAX_] =
 	[N__WINDOW_RESTART] = u8"창 (재시작 필요)",
 	[N__ENABLE_PDH] = u8"PDH 사용",
 	[N__BACKGROUND_INFO] = u8"배경 정보",
+	[N__HIDE_SYSTRAY] = u8"시스템 트레이 아이콘 숨기기",
 	[N__NO_QUICK_ACCESS] = u8"빠른 액세스 버튼 사용 안 함",
 	[N__SHOW_SENSITIVE_DATA] = u8"민감한 데이터 표시",
 	[N__DISABLE_DPI_SCALING] = u8"DPI 스케일링 사용 안 함",

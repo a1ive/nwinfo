@@ -8,8 +8,12 @@
 #include "utils.h"
 #include "version.h"
 
+static nk_bool m_systray = nk_false;
+
 void gnwinfo_add_systray(HWND wnd, HICON icon, LPCWSTR desc)
 {
+	if (m_systray == nk_true)
+		return;
 	NOTIFYICONDATAW nid = { 0 };
 	nid.cbSize = sizeof(NOTIFYICONDATAW);
 	nid.hWnd = wnd;
@@ -18,17 +22,20 @@ void gnwinfo_add_systray(HWND wnd, HICON icon, LPCWSTR desc)
 	nid.uCallbackMessage = WM_TRAYICON;
 	nid.hIcon = icon;
 	wcscpy_s(nid.szTip, ARRAYSIZE(nid.szTip), desc);
-
 	Shell_NotifyIconW(NIM_ADD, &nid);
+	m_systray = nk_true;
 }
 
 void gnwinfo_remove_systray(HWND wnd)
 {
+	if (m_systray == nk_false)
+		return;
 	NOTIFYICONDATAW nid = { 0 };
 	nid.cbSize = sizeof(NOTIFYICONDATAW);
 	nid.hWnd = wnd;
 	nid.uID = 1;
 	Shell_NotifyIconW(NIM_DELETE, &nid);
+	m_systray = nk_false;
 }
 
 #if 0

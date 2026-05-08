@@ -118,6 +118,7 @@ lang_sv_se[N__MAX_] =
 	[N__WINDOW_RESTART] = u8"Fönster (kräver omstart)",
 	[N__ENABLE_PDH] = u8"Aktivera PDH",
 	[N__BACKGROUND_INFO] = u8"Bakgrundsinfo",
+	[N__HIDE_SYSTRAY] = u8"Dölj ikon i systemfältet",
 	[N__SHOW_SENSITIVE_DATA] = u8"Visa känsliga uppgifter",
 	[N__DISABLE_DPI_SCALING] = u8"Inaktivera DPI-skalning",
 	[N__DISABLE_ANTIALIASING] = u8"Inaktivera kantutjämning",
