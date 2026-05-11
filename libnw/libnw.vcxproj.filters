@@ -389,6 +389,9 @@
     <ClCompile Include="..\ioctl\mchbar.c">
       <Filter>ioctl</Filter>
     </ClCompile>
+    <ClCompile Include="gpu\dxcore_npu.cpp">
+      <Filter>gpu</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

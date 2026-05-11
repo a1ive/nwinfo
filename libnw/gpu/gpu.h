@@ -1,8 +1,12 @@
-// SPDX-License-Identifier: Unlicense
+﻿// SPDX-License-Identifier: Unlicense
 #pragma once
 
 #include <stdint.h>
 #include "../nwapi.h"
+
+#if defined(__cplusplus)
+extern "C" {
+#endif
 
 #define MAX_GPU_STR 256
 
@@ -11,6 +15,7 @@ typedef struct _NWLIB_GPU_INFO NWLIB_GPU_INFO, * PNWLIB_GPU_INFO;
 #define NWLIB_GPU_FLAG_INTEGRATED (1 << 0)
 #define NWLIB_GPU_FLAG_REBAR_SUPPORT (1 << 1)
 #define NWLIB_GPU_FLAG_REBAR_ENABLED (1 << 2)
+#define NWLIB_GPU_FLAG_NPU (1 << 3)
 
 typedef struct _NWLIB_GPU_PCIE_SPEED
 {
@@ -63,6 +68,7 @@ enum _NWLIB_GPU_DRV_TYPE
 	NWLIB_GPU_DRV_INTEL = 0,
 	NWLIB_GPU_DRV_AMD,
 	NWLIB_GPU_DRV_NVIDIA,
+	NWLIB_GPU_DRV_DXCORE,
 	NWLIB_GPU_DRV_D3D,
 	NWLIB_GPU_DRV_COUNT
 };
@@ -78,8 +84,12 @@ typedef struct _NWLIB_GPU_INFO
 	PNODE PciList;
 } NWLIB_GPU_INFO, * PNWLIB_GPU_INFO;
 
-LIBNW_API PNWLIB_GPU_INFO NWL_InitGpu(VOID);
+LIBNW_API PNWLIB_GPU_INFO NWL_InitGpu(void);
 
-LIBNW_API VOID NWL_GetGpuInfo(PNWLIB_GPU_INFO info);
+LIBNW_API void NWL_GetGpuInfo(PNWLIB_GPU_INFO info);
 
-LIBNW_API VOID NWL_FreeGpu(PNWLIB_GPU_INFO info);
+LIBNW_API void NWL_FreeGpu(PNWLIB_GPU_INFO info);
+
+#if defined(__cplusplus)
+} // extern "C"
+#endif

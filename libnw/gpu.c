@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: Unlicense
+﻿// SPDX-License-Identifier: Unlicense
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -14,6 +14,7 @@
 extern NWLIB_GPU_DRV gpu_drv_intel;
 extern NWLIB_GPU_DRV gpu_drv_amd;
 extern NWLIB_GPU_DRV gpu_drv_nvidia;
+extern NWLIB_GPU_DRV gpu_drv_dxcore;
 extern NWLIB_GPU_DRV gpu_drv_d3d;
 
 #define PCI_CFG_VENDOR_ID         0x00
@@ -104,7 +105,7 @@ exit:
 	WR0_ReleasePciBus();
 }
 
-PNWLIB_GPU_INFO NWL_InitGpu(VOID)
+PNWLIB_GPU_INFO NWL_InitGpu(void)
 {
 	PNWLIB_GPU_INFO info = calloc(1, sizeof(NWLIB_GPU_INFO));
 	if (info == NULL)
@@ -113,6 +114,7 @@ PNWLIB_GPU_INFO NWL_InitGpu(VOID)
 	info->Driver[NWLIB_GPU_DRV_INTEL] = &gpu_drv_intel;
 	info->Driver[NWLIB_GPU_DRV_AMD] = &gpu_drv_amd;
 	info->Driver[NWLIB_GPU_DRV_NVIDIA] = &gpu_drv_nvidia;
+	info->Driver[NWLIB_GPU_DRV_DXCORE] = &gpu_drv_dxcore;
 	info->Driver[NWLIB_GPU_DRV_D3D] = &gpu_drv_d3d;
 
 	for (int i = 0; i < NWLIB_GPU_DRV_COUNT; i++)
@@ -144,7 +146,7 @@ PNWLIB_GPU_INFO NWL_InitGpu(VOID)
 	return info;
 }
 
-VOID NWL_GetGpuInfo(PNWLIB_GPU_INFO info)
+void NWL_GetGpuInfo(PNWLIB_GPU_INFO info)
 {
 	if (!info || !info->Initialized)
 		return;
@@ -161,7 +163,7 @@ VOID NWL_GetGpuInfo(PNWLIB_GPU_INFO info)
 	}
 }
 
-VOID NWL_FreeGpu(PNWLIB_GPU_INFO info)
+void NWL_FreeGpu(PNWLIB_GPU_INFO info)
 {
 	if (!info)
 		return;
@@ -208,6 +210,7 @@ PNODE NW_Gpu(BOOL bAppend)
 			dev->VendorId, dev->DeviceId, dev->Subsys, dev->RevId);
 
 		NWL_NodeAttrSetBool(gpu, "Integrated GPU", (dev->Flags & NWLIB_GPU_FLAG_INTEGRATED), 0);
+		NWL_NodeAttrSetBool(gpu, "NPU", (dev->Flags & NWLIB_GPU_FLAG_NPU), 0);
 
 		PrintPcieSpeed(gpu, "PCIe Current Link", &dev->CurSpeed);
 		PrintPcieSpeed(gpu, "PCIe Max Link", &dev->MaxSpeed);

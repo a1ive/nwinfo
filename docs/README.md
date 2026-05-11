@@ -18,8 +18,9 @@
 
 - Source code: https://github.com/a1ive/nwinfo  
 - Latest release: [GitHub Releases](https://github.com/a1ive/nwinfo/releases)  
-- Nightly build: [GitHub Actions](https://github.com/a1ive/nwinfo/actions/workflows/msbuild.yml) | [Direct link](https://nightly.link/a1ive/nwinfo/workflows/msbuild/master/NWinfo.zip)
-- Libraries: [Direct link](https://nightly.link/a1ive/nwinfo/workflows/msbuild/master/NWinfo%20Library.zip)
+- Nightly build: [Direct link](https://nightly.link/a1ive/nwinfo/workflows/msbuild/master/NWinfo.zip)  
+- Libraries: [Direct link](https://nightly.link/a1ive/nwinfo/workflows/msbuild/master/NWinfo%20Library.zip)  
+- Github actions: [GitHub Actions](https://github.com/a1ive/nwinfo/actions/workflows/msbuild.yml)  
 
 <div style="page-break-after: always;"></div>
 
@@ -235,14 +236,15 @@ Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
 | AMD           | ✅ | ✅ | ✅ | ✅ | ✅ |
 | VIA / Zhaoxin | ✅ | ✅ | ❌ | ❌ | ❌ |
 
-### GPU
+### GPU / NPU
 
 | Vendor | API | GPU Usage | VRAM | Temperature | Power | Frequency | Voltage | Fan Speed |
 |--------|-----|-----------|------|-------------|-------|-----------|---------|-----------|
-| NVIDIA  | NVAPI | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| AMD     | ADL2  | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Intel   | IGCL  | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Generic | D3D   | ✅ | ✅ | ✅ | ✅ | ❌ | ❌ | ⚠️ |
+| NVIDIA      | NVAPI  | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| AMD         | ADL2   | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Intel       | IGCL   | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Generic NPU | DXCore | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| Generic GPU | D3D    | ✅ | ✅ | ✅ | ✅ | ❌ | ❌ | ⚠️ |
 
 Notes:
  * `VRAM` refers to the dedicated video memory only.

@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: Unlicense
+﻿// SPDX-License-Identifier: Unlicense
 
 #include <windows.h>
 #include <pathcch.h>
@@ -392,21 +392,29 @@ draw_display(struct nk_context* ctx)
 			for (i = 0; i < (INT)g_ctx.lib.NwGpu->DeviceCount; i++)
 			{
 				NWLIB_GPU_DEV* gpu = &g_ctx.lib.NwGpu->Device[i];
-				CHAR name[32];
-				snprintf(name, sizeof(name), "GPU%d", i);
+				LPCSTR prefix = "GPU";
+				if (gpu->Flags & NWLIB_GPU_FLAG_INTEGRATED)
+					prefix = "iGPU";
+				if (gpu->Flags & NWLIB_GPU_FLAG_NPU)
+					prefix = "NPU";
 				nk_layout_row(ctx, NK_DYNAMIC, 0, 3, (float[3]) { 0.3f, 0.4f, 0.3f });
 
-				nk_lhsc(ctx, name, NK_TEXT_LEFT, g_color_text_d, nk_false, nk_true);
+				nk_lhscf(ctx, NK_TEXT_LEFT, g_color_text_d, nk_false, nk_true, "%s%d", prefix, i);
 				nk_lhc(ctx, gpu->Name, NK_TEXT_LEFT, g_color_text_l);
-				nk_lhcf(ctx, NK_TEXT_LEFT, g_color_text_l, "%s (%u%%)",
-					NWL_GetHumanSize(gpu->TotalMemory, NWLC->NwUnits, 1024), (unsigned)gpu->MemoryPercent);
+
+				char buf[7];
+				snprintf(buf, 7, "%.1f%%", gpu->UsagePercent);
+				nk_lhcf(ctx, NK_TEXT_LEFT, g_color_text_l, u8"%-6s %s (%u%%)",
+					buf, NWL_GetHumanSize(gpu->TotalMemory, NWLC->NwUnits, 1024), (unsigned)gpu->MemoryPercent);
 
 				if (!(g_ctx.main_flag2 & MAIN2_GPU_DETAIL))
 					continue;
+				if (gpu->Flags & NWLIB_GPU_FLAG_NPU)
+					continue;
 				nk_spacer(ctx);
 				nk_lhcf(ctx, NK_TEXT_LEFT, g_color_text_l,
-					u8"%.1f%% %.1fW %.1fMHz %.1fV %lluRPM",
-					gpu->UsagePercent, gpu->Power, gpu->Frequency, gpu->Voltage, gpu->FanSpeed);
+					u8"%.1fW %.0fMHz %.1fV %lluRPM",
+					gpu->Power, gpu->Frequency, gpu->Voltage, gpu->FanSpeed);
 				nk_lhcf(ctx, NK_TEXT_LEFT,
 					gnwinfo_get_color(gpu->Temperature, 50.0, 85.0),
 					u8"%.1f%s", NWL_GetTemperature((float)gpu->Temperature), g_ctx.temp_unit);
