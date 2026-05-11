@@ -4,6 +4,7 @@
 #include "disk.h"
 
 #include <setupapi.h>
+#include <winioctl.h>
 
 #include "utils.h"
 #include "vbr.h"
@@ -243,6 +244,107 @@ static BOOL GetDriveByVolume(BOOL bIsCdRom, HANDLE hVolume, DWORD* pDrive)
 		return bIsCdRom ? FALSE : TRUE;
 	}
 	return FALSE;
+}
+
+static VOLUME_DISK_EXTENTS*
+GetVolumeDiskExtents(HANDLE hVolume)
+{
+	DWORD dwSize = 0;
+	DWORD dwBytes = 0;
+	VOLUME_DISK_EXTENTS vde = { 0 };
+	VOLUME_DISK_EXTENTS* pExtents = NULL;
+
+	if (DeviceIoControl(hVolume, IOCTL_VOLUME_GET_VOLUME_DISK_EXTENTS,
+		NULL, 0, &vde, sizeof(VOLUME_DISK_EXTENTS), &dwBytes, NULL))
+	{
+		dwSize = (DWORD)sizeof(VOLUME_DISK_EXTENTS);
+		pExtents = malloc(dwSize);
+		if (pExtents)
+			memcpy(pExtents, &vde, dwSize);
+		return pExtents;
+	}
+
+	if (GetLastError() != ERROR_MORE_DATA || vde.NumberOfDiskExtents == 0)
+		return NULL;
+
+	dwSize = (DWORD)(sizeof(VOLUME_DISK_EXTENTS) + sizeof(DISK_EXTENT) * (vde.NumberOfDiskExtents - 1));
+	pExtents = malloc(dwSize);
+	if (!pExtents)
+		return NULL;
+
+	if (!DeviceIoControl(hVolume, IOCTL_VOLUME_GET_VOLUME_DISK_EXTENTS,
+		NULL, 0, pExtents, dwSize, &dwBytes, NULL))
+	{
+		free(pExtents);
+		return NULL;
+	}
+	return pExtents;
+}
+
+static PHY_DRIVE_INFO*
+FindDriveByIndex(PHY_DRIVE_INFO* pInfo, DWORD dwCount, DWORD dwIndex)
+{
+	for (DWORD i = 0; i < dwCount; i++)
+	{
+		if (pInfo[i].Index == dwIndex)
+			return &pInfo[i];
+	}
+	return NULL;
+}
+
+static BOOL
+HasVolumeInfo(PHY_DRIVE_INFO* pInfo, LPCWSTR lpszVolume)
+{
+	WCHAR cchVolume[MAX_PATH];
+
+	swprintf(cchVolume, MAX_PATH, L"%s\\", lpszVolume);
+	for (DWORD i = 0; i < pInfo->VolCount; i++)
+	{
+		if (_wcsicmp(pInfo->VolInfo[i].VolPath, cchVolume) == 0)
+			return TRUE;
+	}
+	return FALSE;
+}
+
+static BOOL
+AppendVolumeInfo(PHY_DRIVE_INFO* pInfo, LPCWSTR lpszVolume)
+{
+	if (HasVolumeInfo(pInfo, lpszVolume))
+		return TRUE;
+	if (pInfo->VolCount % 4 == 0)
+	{
+		DISK_VOL_INFO* volInfo = realloc(pInfo->VolInfo,
+			sizeof(DISK_VOL_INFO) * (pInfo->VolCount + 4));
+		if (!volInfo)
+			return FALSE;
+		pInfo->VolInfo = volInfo;
+	}
+	ZeroMemory(&pInfo->VolInfo[pInfo->VolCount], sizeof(DISK_VOL_INFO));
+	FillVolumeInfo(&pInfo->VolInfo[pInfo->VolCount], lpszVolume, pInfo);
+	pInfo->VolCount++;
+	return TRUE;
+}
+
+static BOOL
+AppendVolumeByDrive(PHY_DRIVE_INFO* pInfo, DWORD dwCount, DWORD dwDrive, LPCWSTR lpszVolume)
+{
+	PHY_DRIVE_INFO* pDrive = FindDriveByIndex(pInfo, dwCount, dwDrive);
+	if (!pDrive)
+		return FALSE;
+	return AppendVolumeInfo(pDrive, lpszVolume);
+}
+
+static BOOL
+AppendVolumeByExtents(PHY_DRIVE_INFO* pInfo, DWORD dwCount, VOLUME_DISK_EXTENTS* pExtents, LPCWSTR lpszVolume)
+{
+	BOOL bAdded = FALSE;
+
+	for (DWORD i = 0; i < pExtents->NumberOfDiskExtents; i++)
+	{
+		if (AppendVolumeByDrive(pInfo, dwCount, pExtents->Extents[i].DiskNumber, lpszVolume))
+			bAdded = TRUE;
+	}
+	return bAdded;
 }
 
 static UINT64
@@ -517,37 +619,30 @@ next_drive:
 		bRet && hSearch != INVALID_HANDLE_VALUE;
 		bRet = FindNextVolumeW(hSearch, cchVolume, MAX_PATH))
 	{
-		DWORD dwIndex;
 		HANDLE hVolume;
 		RemoveTrailingBackslash(cchVolume);
 		hVolume = CreateFileW(cchVolume, 0,
 			FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING, 0, NULL);
 		if (!hVolume || hVolume == INVALID_HANDLE_VALUE)
 			continue;
-		if (!GetDriveByVolume(bIsCdRom, hVolume, &dwBytes))
+		if (!bIsCdRom)
 		{
-			CloseHandle(hVolume);
-			continue;
+			VOLUME_DISK_EXTENTS* pExtents = GetVolumeDiskExtents(hVolume);
+			if (pExtents)
+			{
+				BOOL bAdded = AppendVolumeByExtents(pInfo, dwCount, pExtents, cchVolume);
+				free(pExtents);
+				if (bAdded)
+				{
+					CloseHandle(hVolume);
+					continue;
+				}
+			}
 		}
+
+		if (GetDriveByVolume(bIsCdRom, hVolume, &dwBytes))
+			AppendVolumeByDrive(pInfo, dwCount, dwBytes, cchVolume);
 		CloseHandle(hVolume);
-		for (dwIndex = 0; dwIndex < dwCount; dwIndex++)
-		{
-			if (dwBytes == pInfo[dwIndex].Index)
-				break;
-		}
-		if (dwIndex >= dwCount)
-			continue;
-		if (pInfo[dwIndex].VolCount % 4 == 0)
-		{
-			DISK_VOL_INFO* volInfo = realloc(pInfo[dwIndex].VolInfo,
-				sizeof(DISK_VOL_INFO) * (pInfo[dwIndex].VolCount + 4));
-			if (!volInfo)
-				continue;
-			pInfo[dwIndex].VolInfo = volInfo;
-		}
-		ZeroMemory(&pInfo[dwIndex].VolInfo[pInfo[dwIndex].VolCount], sizeof(DISK_VOL_INFO));
-		FillVolumeInfo(&pInfo[dwIndex].VolInfo[pInfo[dwIndex].VolCount], cchVolume, &pInfo[dwIndex]);
-		pInfo[dwIndex].VolCount++;
 	}
 
 	if (hSearch != INVALID_HANDLE_VALUE)
