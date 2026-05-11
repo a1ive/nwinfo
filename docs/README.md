@@ -272,15 +272,17 @@ Note: NVMe requires Windows 10 or later.
 
 The program searches for and loads drivers in the following order: **CPUZ162 -> NwHwIo -> PawnIO**.
 
-| Driver | Filename | Bundled | CPU Sensor | SPD | IMC |
-|--------|----------|---------|------------|-----|-----|
-| [PawnIO](https://github.com/namazso/PawnIO)           | PawnIO.sys     | ✅ | ✅ | ✅ | ✅ |
-| [CPUZ162](https://www.cpuid.com/softwares/cpu-z.html) | cpuz162x64.sys | ❌ | ✅ | ✅ | ✅ |
-| [NwHwIo](https://www.evga.com/precisionx1/)           | NwHwIox64.sys  | ❌ | ✅ | ✅ | ✅ |
+| Driver  | Bundled   | CPU Sensor | SPD | IMC |
+|---------|-----------|------------|-----|-----|
+| PawnIO  | ✅Full    | ✅ | ✅ | ✅ |
+| NwHwIo  | ✅Lite    | ✅ | ✅ | ✅ |
+| CPUZ162 | ❌        | ✅ | ✅ | ✅ |
 
 **Note:** The program can still run normally without a driver, but some hardware information may not be accessible.
 
 ### PawnIO Driver Installation
+
+PawnIO driver requires Windows (x64) 10 1809 or later.
 
 Install the PawnIO driver silently using the following command:
 

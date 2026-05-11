@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: Unlicense
+﻿// SPDX-License-Identifier: Unlicense
 #include <windows.h>
 #include <winioctl.h>
 #include <pathcch.h>
@@ -31,6 +31,8 @@ WR0_InstallPawnIO(void)
 {
 #ifdef _WIN64
 	if (NWLC->NwOsInfo.dwMajorVersion < 10)
+		return FALSE;
+	if (NWLC->NwOsInfo.dwMajorVersion == 10 && NWLC->NwOsInfo.dwBuildNumber < 17763)
 		return FALSE;
 
 	WCHAR path[MAX_PATH];

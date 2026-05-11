@@ -2,28 +2,47 @@
 
 param (
 	[Parameter(Mandatory=$true, HelpMessage="Target folder path")]
-	[string]$TargetFolder
+	[string]$TargetFolder,
+
+	[Parameter(Mandatory=$false, HelpMessage="Driver to include")]
+	[ValidateSet("CPUZ162", "NWHWIO", "PAWNIO")]
+	[string]$Driver = "PAWNIO"
 )
 
-# Define the list of files to copy or download
+# Define the list of common files to copy or download
 $FilesToCopy = @(
 	# Common files for all flavors
 	"LICENSE",
 	"README.pdf",
 	"hw_report.ps1",
 	"ids\jep106.ids",
-	"gnwinfo\gnwinfo.ini",
-	"ioctl\pawn\PawnIOSetup.exe",
-	"ioctl\pawn\AMDFamily0F.bin",
-	"ioctl\pawn\AMDFamily10.bin",
-	"ioctl\pawn\AMDFamily17.bin",
-	"ioctl\pawn\IntelMCHBAR.bin",
-	"ioctl\pawn\IntelMSR.bin",
-	"ioctl\pawn\RyzenSMU.bin",
-	"ioctl\pawn\SmbusI801.bin",
-	"ioctl\pawn\SmbusPIIX4.bin",
-	"ioctl\pawn\LpcIO.bin"
+	"gnwinfo\gnwinfo.ini"
 )
+
+$DriverFiles = @{
+	"CPUZ162" = @(
+		"ioctl\sys\cpuz162.sys",
+		"ioctl\sys\cpuz162x64.sys"
+	)
+	"NWHWIO" = @(
+		"ioctl\sys\NwHwIo.sys",
+		"ioctl\sys\NwHwIox64.sys"
+	)
+	"PAWNIO" = @(
+		"ioctl\pawn\PawnIOSetup.exe",
+		"ioctl\pawn\AMDFamily0F.bin",
+		"ioctl\pawn\AMDFamily10.bin",
+		"ioctl\pawn\AMDFamily17.bin",
+		"ioctl\pawn\IntelMCHBAR.bin",
+		"ioctl\pawn\IntelMSR.bin",
+		"ioctl\pawn\RyzenSMU.bin",
+		"ioctl\pawn\SmbusI801.bin",
+		"ioctl\pawn\SmbusPIIX4.bin",
+		"ioctl\pawn\LpcIO.bin"
+	)
+}
+
+$FilesToCopy += $DriverFiles[$Driver]
 
 $FilesToDownload = @(
 	"https://raw.githubusercontent.com/pciutils/pciids/master/pci.ids",

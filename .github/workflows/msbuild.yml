@@ -79,15 +79,24 @@ jobs:
     - name: Prepare Packages
       shell: pwsh
       run: |
-        $TargetFolder = "PKG"
-        New-Item -ItemType Directory -Path $TargetFolder -Force | Out-Null
-        Copy-Item -Path "x64\Release\nwinfo.exe" -Destination "$($TargetFolder)\nwinfo.exe"
-        Copy-Item -Path "x64\Release\gnwinfo.exe" -Destination "$($TargetFolder)\gnwinfo.exe"
-        Copy-Item -Path "x64\Release\libcdi.dll" -Destination "$($TargetFolder)\libcdi.dll"
-        Copy-Item -Path "Win32\Release\nwinfo.exe" -Destination "$($TargetFolder)\nwinfox86.exe"
-        Copy-Item -Path "Win32\Release\gnwinfo.exe" -Destination "$($TargetFolder)\gnwinfox86.exe"
-        Copy-Item -Path "Win32\Release\libcdix86.dll" -Destination "$($TargetFolder)\libcdix86.dll"
-        .\copy_res.ps1 -TargetFolder $TargetFolder
+        function Copy-PackageFiles {
+          param (
+            [string]$TargetFolder,
+            [string]$Driver
+          )
+
+          New-Item -ItemType Directory -Path $TargetFolder -Force | Out-Null
+          Copy-Item -Path "x64\Release\nwinfo.exe" -Destination "$($TargetFolder)\nwinfo.exe"
+          Copy-Item -Path "x64\Release\gnwinfo.exe" -Destination "$($TargetFolder)\gnwinfo.exe"
+          Copy-Item -Path "x64\Release\libcdi.dll" -Destination "$($TargetFolder)\libcdi.dll"
+          Copy-Item -Path "Win32\Release\nwinfo.exe" -Destination "$($TargetFolder)\nwinfox86.exe"
+          Copy-Item -Path "Win32\Release\gnwinfo.exe" -Destination "$($TargetFolder)\gnwinfox86.exe"
+          Copy-Item -Path "Win32\Release\libcdix86.dll" -Destination "$($TargetFolder)\libcdix86.dll"
+          .\copy_res.ps1 -TargetFolder $TargetFolder -Driver $Driver
+        }
+
+        Copy-PackageFiles -TargetFolder "PKG" -Driver "PAWNIO"
+        Copy-PackageFiles -TargetFolder "PKGLite" -Driver "NWHWIO"
 
     - name: Run Test
       shell: pwsh
@@ -100,12 +109,19 @@ jobs:
     - name: Create ZIPs
       run: |
         Compress-Archive -Path "PKG\*" -DestinationPath "NWinfo.zip" -Force
+        Compress-Archive -Path "PKGLite\*" -DestinationPath "NWinfoLite.zip" -Force
 
     - name: Upload Application
       uses: actions/upload-artifact@v7
       with:
         name: NWinfo
         path: PKG/
+
+    - name: Upload Lite Application
+      uses: actions/upload-artifact@v7
+      with:
+        name: NWinfo Lite
+        path: PKGLite/
 
     - name: Upload Library
       uses: actions/upload-artifact@v7
@@ -190,14 +206,33 @@ jobs:
           $changelogBody = "No changelog entries generated. Automated build from commit ${{ github.sha }}."
         }
 
-        $changelogBody | Out-File -FilePath "release_notes.txt" -Encoding utf8
+        $assetHashLines = New-Object System.Collections.Generic.List[string]
+        $assetHashLines.Add("")
+        $assetHashLines.Add("## Asset SHA-256")
+        foreach ($assetName in @("NWinfo.zip", "NWinfoLite.zip")) {
+          if (-not (Test-Path -LiteralPath $assetName)) {
+            throw "Release asset does not exist: $assetName"
+          }
+          $hash = (Get-FileHash -LiteralPath $assetName -Algorithm SHA256).Hash.ToLowerInvariant()
+          $assetHashLines.Add("* ``$assetName``: ``$hash``")
+        }
+
+        $releaseNotes = $changelogBody + "`n" + ($assetHashLines -join "`n")
+        $releaseNotes | Out-File -FilePath "release_notes.txt" -Encoding utf8
+
+    - name: Upload Release Notes
+      if: startsWith(github.ref, 'refs/tags/')
+      uses: actions/upload-artifact@v7
+      with:
+        name: release_notes
+        path: release_notes.txt
 
     - name: Release
       if: startsWith(github.ref, 'refs/tags/')
       working-directory: ${{env.GITHUB_WORKSPACE}}
       run: |
         $date_version = (Get-Date -Format 'yyyyMMdd') + ".${{ github.run_number }}"
-        gh release create "${{ github.ref_name }}" "NWinfo.zip" `
+        gh release create "${{ github.ref_name }}" "NWinfo.zip" "NWinfoLite.zip" `
           --title "${{ github.ref_name }} (Build $date_version)" `
           --notes-file "release_notes.txt"
       env:
