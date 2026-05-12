@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: Unlicense
+﻿// SPDX-License-Identifier: Unlicense
 
 #include "rdmsr.h"
 #include "ryzen_smu.h"
@@ -303,6 +303,7 @@ fail:
 	WR0_ReleasePciBus();
 	return 0;
 }
+#if 0
 
 #define THERMTRIP_STATUS_REGISTER       0xE4
 
@@ -385,6 +386,7 @@ static int amd_k10_temperature(struct msr_info_t* info)
 	}
 	return (int)(((value >> 21) & 0x7FF) / 8.0f);
 }
+#endif
 
 #define F17H_M01H_THM_TCON_CUR_TMP          0x00059800
 #define F17H_TEMP_OFFSET_FLAG               0x80000
@@ -420,10 +422,12 @@ static int get_pkg_temperature(struct msr_info_t* info)
 	WR0_WaitPciBus(10);
 	if (info->id->x86.ext_family >= 0x17)
 		ret = (int)amd_17h_temperature(info);
+#if 0
 	else if (info->id->x86.ext_family > 0x0F)
 		ret = amd_k10_temperature(info);
 	else if (info->id->x86.ext_family == 0x0F)
 		ret = amd_k8_temperature(info);
+#endif
 	WR0_ReleasePciBus();
 	return ret;
 }
