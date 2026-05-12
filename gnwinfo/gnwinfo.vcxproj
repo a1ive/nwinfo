@@ -177,7 +177,10 @@
     <ClInclude Include="..\nuklear\nuklear_gdip.h" />
     <ClInclude Include="gettext.h" />
     <ClInclude Include="gnwinfo.h" />
+    <ClInclude Include="lang\de_DE.h" />
+    <ClInclude Include="lang\el_GR.h" />
     <ClInclude Include="lang\en_US.h" />
+    <ClInclude Include="lang\es_ES.h" />
     <ClInclude Include="lang\fr_FR.h" />
     <ClInclude Include="lang\it_IT.h" />
     <ClInclude Include="lang\ja_JP.h" />

@@ -5,7 +5,10 @@
 
 #define INVALID_N_ID u8"!!INVALID ID - FIX ME!!"
 
+#include "lang/de_DE.h"
+#include "lang/el_GR.h"
 #include "lang/en_US.h"
+#include "lang/es_ES.h"
 #include "lang/fr_FR.h"
 #include "lang/it_IT.h"
 #include "lang/ja_JP.h"
@@ -27,6 +30,9 @@ LANGID g_supported_lang_ids[] =
 	1033, // English - United States
 	2052, // Chinese - People's Republic of China
 	1028, // Chinese - Taiwan
+	1031, // German - Germany
+	1032, // Greek
+	1034, // Spanish - Spain (Traditional Sort)
 	1036, // French - France
 	1040, // Italian
 	1041, // Japanese
@@ -55,22 +61,78 @@ gnwinfo_get_lang_str(LANGID lang, GETTEXT_STR_ID id)
 	case 1028: // Chinese - Taiwan
 		str = lang_zh_tw[id];
 		break;
+	case 1031: // German - Germany
+	case 2055: // German - Switzerland
+	case 3079: // German - Austria
+	case 4103: // German - Luxembourg
+	case 5127: // German - Liechtenstein
+		str = lang_de_de[id];
+		break;
 	case 1033: // English - United States
 	case 2057: // English - United Kingdom
 	case 3081: // English - Australia
 	case 4105: // English - Canada
 	case 5129: // English - New Zealand
 	case 6153: // English - Ireland
+	case 7177: // English - South Africa
+	case 8201: // English - Jamaica
+	case 9225: // English - Caribbean
+	case 10249:// English - Belize
+	case 11273:// English - Trinidad
+	case 12297:// English - Zimbabwe
+	case 13321:// English - Philippines
+	case 14345:// English - Indonesia
+	case 15369:// English - Hong Kong SAR
+	case 16393:// English - India
+	case 17417:// English - Malaysia
 	case 18441:// English - Singapore
 		str = lang_en_us[id];
+		break;
+	case 1034: // Spanish - Spain (Traditional Sort)
+	case 2058: // Spanish - Mexico
+	case 3082: // Spanish - Spain (Modern Sort)
+	case 4106: // Spanish - Guatemala
+	case 5130: // Spanish - Costa Rica
+	case 6154: // Spanish - Panama
+	case 7178: // Spanish - Dominican Republic
+	case 8202: // Spanish - Venezuela
+	case 9226: // Spanish - Colombia
+	case 10250:// Spanish - Peru
+	case 11274:// Spanish - Argentina
+	case 12298:// Spanish - Ecuador
+	case 13322:// Spanish - Chile
+	case 14346:// Spanish - Uruguay
+	case 15370:// Spanish - Paraguay
+	case 16394:// Spanish - Bolivia
+	case 17418:// Spanish - El Salvador
+	case 18442:// Spanish - Honduras
+	case 19466:// Spanish - Nicaragua
+	case 20490:// Spanish - Puerto Rico
+	case 21514:// Spanish - United States
+		str = lang_es_es[id];
+		break;
+	case 1032: // Greek - Greece
+		str = lang_el_gr[id];
 		break;
 	case 1036: // French - France
 	case 2060: // French - Belgium
 	case 3084: // French - Canada
 	case 4108: // French - Switzerland
+	case 5132: // French - Luxembourg
+	case 6156: // French - Monaco
+	case 7180: // French - West Indies
+	case 8204: // French - Reunion
+	case 9228: // French - Democratic Rep. of Congo
+	case 10252:// French - Senegal
+	case 11276:// French - Cameroon
+	case 12300:// French - Cote d'Ivoire
+	case 13324:// French - Mali
+	case 14348:// French - Morocco
+	case 15372:// French - Haiti
 		str = lang_fr_fr[id];
 		break;
-	case 1040: // Italian
+	case 1040: // Italian - Italy
+	case 2064: // Italian - Switzerland
 		str = lang_it_it[id];
 		break;
 	case 1041: // Japanese

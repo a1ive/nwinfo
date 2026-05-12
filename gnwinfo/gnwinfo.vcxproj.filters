@@ -39,7 +39,16 @@
     <ClInclude Include="gettext.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="lang\de_DE.h">
+      <Filter>Lang</Filter>
+    </ClInclude>
+    <ClInclude Include="lang\el_GR.h">
+      <Filter>Lang</Filter>
+    </ClInclude>
     <ClInclude Include="lang\en_US.h">
+      <Filter>Lang</Filter>
+    </ClInclude>
+    <ClInclude Include="lang\es_ES.h">
       <Filter>Lang</Filter>
     </ClInclude>
     <ClInclude Include="lang\it_IT.h">
