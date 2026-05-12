@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: Unlicense
+﻿// SPDX-License-Identifier: Unlicense
 
 #include "gnwinfo.h"
 #include "gettext.h"
@@ -71,16 +71,10 @@ draw_color_picker(struct nk_context* ctx, struct nk_color* color)
 	}
 }
 
-static void
+static inline void
 nk_font_list(struct nk_context* ctx, float item_height)
 {
-	struct nk_vec2 size;
-
-	size.y = 8 * (item_height + ctx->style.window.spacing.y);
-	size.y += ctx->style.window.spacing.y * 2 + ctx->style.window.combo_padding.y * 2;
-	size.x = nk_widget_width(ctx);
-
-	if (nk_combo_begin_text(ctx, g_font_name, nk_strlen(g_font_name), size))
+	if (nk_combo_begin_ex(ctx, g_font_name, item_height, nk_false))
 	{
 		PNODE node = NW_Font(FALSE);
 		INT count = NWL_NodeChildCount(node);
@@ -101,17 +95,11 @@ nk_font_list(struct nk_context* ctx, float item_height)
 	}
 }
 
-static void
+static inline void
 nk_lang_list(struct nk_context* ctx, float item_height)
 {
-	struct nk_vec2 size;
-
-	size.y = 8 * (item_height + ctx->style.window.spacing.y);
-	size.y += ctx->style.window.spacing.y * 2 + ctx->style.window.combo_padding.y * 2;
-	size.x = nk_widget_width(ctx);
-
 	const char* lang_name = N_(N__LANG_NAME_);
-	if (nk_combo_begin_text(ctx, lang_name, nk_strlen(lang_name), size))
+	if (nk_combo_begin_ex(ctx, lang_name, item_height, nk_false))
 	{
 		nk_layout_row_dynamic(ctx, item_height, 1);
 		for (size_t i = 0; i < g_supported_lang_num; i++)
@@ -125,16 +113,10 @@ nk_lang_list(struct nk_context* ctx, float item_height)
 	}
 }
 
-static void
+static inline void
 nk_temp_unit_list(struct nk_context* ctx, float item_height)
 {
-	struct nk_vec2 size;
-
-	size.y = 8 * (item_height + ctx->style.window.spacing.y);
-	size.y += ctx->style.window.spacing.y * 2 + ctx->style.window.combo_padding.y * 2;
-	size.x = nk_widget_width(ctx);
-
-	if (nk_combo_begin_text(ctx, g_ctx.temp_unit, nk_strlen(g_ctx.temp_unit), size))
+	if (nk_combo_begin_ex(ctx, g_ctx.temp_unit, item_height, nk_false))
 	{
 		nk_layout_row_dynamic(ctx, item_height, 1);
 		if (nk_combo_item_label(ctx, TEMP_CELSIUS_SYMBOL, NK_TEXT_LEFT))

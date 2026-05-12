@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: Unlicense
+﻿// SPDX-License-Identifier: Unlicense
 
 #define NK_INCLUDE_FIXED_TYPES
 #define NK_INCLUDE_STANDARD_VARARGS
@@ -1027,4 +1027,21 @@ nk_group_begin_ex(struct nk_context* ctx, const char* title, nk_flags flags)
 	}
 
 	return nk_group_scrolled_offset_begin(ctx, x_offset, y_offset, title, flags);
+}
+
+nk_bool
+nk_combo_begin_ex(struct nk_context* ctx, const char* selected, float height, nk_bool capture)
+{
+	struct nk_rect bounds;
+	struct nk_vec2 size;
+	int len = nk_strlen(selected);
+	size.x = nk_widget_width(ctx);
+	size.y = 8 * (height + ctx->style.window.spacing.y);
+	size.y += ctx->style.window.spacing.y * 2 + ctx->style.window.combo_padding.y * 2;
+	if (capture)
+	{
+		nk_layout_peek(&bounds, ctx);
+		nk_report_capture_text(bounds.y, nk_report_get_indent(ctx, nk_false), selected, len);
+	}
+	return nk_combo_begin_text(ctx, selected, len, size);
 }

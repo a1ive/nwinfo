@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: Unlicense
+﻿// SPDX-License-Identifier: Unlicense
 
 #pragma once
 
@@ -63,6 +63,9 @@ nk_block(struct nk_context* ctx, struct nk_color color, const char* str);
 
 nk_bool
 nk_group_begin_ex(struct nk_context* ctx, const char* title, nk_flags flags);
+
+nk_bool
+nk_combo_begin_ex(struct nk_context* ctx, const char* selected, float height, nk_bool capture);
 
 enum nk_report_state
 {

@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: Unlicense
+﻿// SPDX-License-Identifier: Unlicense
 
 #include "gnwinfo.h"
 #include "gettext.h"
@@ -38,12 +38,7 @@ gnwinfo_draw_cpuid_window(struct nk_context* ctx, float width, float height)
 
 	nk_layout_row(ctx, NK_DYNAMIC, g_col_height, 2, (float[2]) { 0.2f, 0.8f });
 
-	struct nk_vec2 size;
-	size.y = 8 * (g_col_height + ctx->style.window.spacing.y);
-	size.y += ctx->style.window.spacing.y * 2 + ctx->style.window.combo_padding.y * 2;
-	size.x = nk_widget_width(ctx);
-
-	if (nk_combo_begin_text(ctx, cpu->name, nk_strlen(cpu->name), size))
+	if (nk_combo_begin_ex(ctx, cpu->name, g_col_height, nk_true))
 	{
 		nk_layout_row_dynamic(ctx, g_col_height, 1);
 		for (int i = 0; i < g_ctx.cpu_count; i++)
