@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: Unlicense
+﻿// SPDX-License-Identifier: Unlicense
 
 #include "gnwinfo.h"
 #include "gettext.h"
@@ -212,39 +212,6 @@ draw_info(struct nk_context* ctx, CDI_SMART* smart, int disk)
 	}
 }
 
-static WCHAR*
-draw_alert_icon(struct nk_context* ctx, BYTE id, int status, LPCWSTR format, WCHAR* value)
-{
-	static WCHAR hex[18];
-	// RawValues(N)
-	if (format[0] == L'R')
-	{
-		wcscpy_s(hex, ARRAYSIZE(hex), value);
-		value[0] = '\0';
-	}
-	// Cur RawValues(N)
-	else if (wcsncmp(format, L"Cur R", 5) == 0)
-	{
-		wcscpy_s(hex, ARRAYSIZE(hex), &value[4]);
-		value[4] = L'\0';
-	}
-	// Cur Wor --- RawValues(N)
-	else if (wcsncmp(format, L"Cur Wor --- R", 13) == 0)
-	{
-		wcscpy_s(hex, ARRAYSIZE(hex), &value[8]);
-		value[8] = L'\0';
-	}
-	// Cur Wor Thr RawValues(N)
-	else
-	{
-		wcscpy_s(hex, ARRAYSIZE(hex), &value[12]);
-		value[12] = L'\0';
-	}
-
-	nk_block(ctx, get_attr_color(status), "");
-	return hex;
-}
-
 static void
 draw_smart(struct nk_context* ctx, CDI_SMART* smart, int disk)
 {
@@ -264,10 +231,10 @@ draw_smart(struct nk_context* ctx, CDI_SMART* smart, int disk)
 			continue;
 		WCHAR* name = cdi_get_smart_name(smart, disk, id);
 		WCHAR* value = cdi_get_smart_value(smart, disk, i, g_ctx.smart_hex);
-		WCHAR* hex = draw_alert_icon(ctx, id, cdi_get_smart_status(smart, disk, i), format, value);
+		nk_block(ctx, get_attr_color(cdi_get_smart_status(smart, disk, i)), "");
 		nk_lhcf(ctx, NK_TEXT_LEFT, g_color_text_l, "%02X", id);
 		nk_lhc(ctx, NWL_Ucs2ToUtf8(name), NK_TEXT_LEFT, g_color_text_l);
-		nk_lhcf(ctx, NK_TEXT_LEFT, g_color_text_l, "%ls%ls", value, hex);
+		nk_lhc(ctx, NWL_Ucs2ToUtf8(value), NK_TEXT_LEFT, g_color_text_l);
 		cdi_free_string(name);
 		cdi_free_string(value);
 	}
