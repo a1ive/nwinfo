@@ -216,6 +216,7 @@ VOID NW_Fini(VOID)
 	NWL_UnloadIds(&NWLC->NwUsbIds);
 	NWL_UnloadIds(&NWLC->NwPnpIds);
 	NWL_UnloadIds(&NWLC->NwJep106);
+	NWL_FreeConvBuffers();
 	NWL_Debug("NW", "Exit");
 	NWL_Debug = FakeDebugPrint;
 	ZeroMemory(NWLC, sizeof(NWLIB_CONTEXT));

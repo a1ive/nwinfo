@@ -716,14 +716,31 @@ NWL_UnixTimeToStr(INT nix)
 	return buf;
 }
 
-static NWL_TLS CHAR Utf8Buf[NWINFO_BUFSZ + 1];
+static NWL_TLS CHAR* Utf8Buf;
+static NWL_TLS WCHAR* Ucs2Buf;
+
+VOID
+NWL_FreeConvBuffers(VOID)
+{
+	free(Utf8Buf);
+	free(Ucs2Buf);
+	Utf8Buf = NULL;
+	Ucs2Buf = NULL;
+}
 
 LPCSTR
 NWL_Ucs2ToUtf8(LPCWSTR src)
 {
 	size_t i;
-	CHAR* p = Utf8Buf;
-	ZeroMemory(Utf8Buf, sizeof(Utf8Buf));
+	CHAR* p;
+
+	if (!Utf8Buf)
+	{
+		Utf8Buf = (CHAR*)malloc(NWINFO_BUFSZ + 1);
+		if (!Utf8Buf)
+			NWL_ErrExit(ERROR_OUTOFMEMORY, "Failed to allocate memory in " __FUNCTION__);
+	}
+	p = Utf8Buf;
 	for (i = 0; i < NWINFO_BUFSZ / 3; i++)
 	{
 		if (src[i] == 0x0000)
@@ -747,17 +764,24 @@ NWL_Ucs2ToUtf8(LPCWSTR src)
 			*p++ = (src[i] & 0x3F) | 0x80;
 		}
 	}
+	*p = '\0';
 	return Utf8Buf;
 }
 
-static NWL_TLS WCHAR Ucs2Buf[NWINFO_BUFSZ + 1];
-
-LPCWSTR NWL_Utf8ToUcs2(LPCSTR src)
+LPCWSTR
+NWL_Utf8ToUcs2(LPCSTR src)
 {
 	size_t i;
 	size_t j = 0;
-	WCHAR *p = Ucs2Buf;
-	ZeroMemory(Ucs2Buf, sizeof(Ucs2Buf));
+	WCHAR *p;
+
+	if (!Ucs2Buf)
+	{
+		Ucs2Buf = (WCHAR*)malloc(sizeof(WCHAR) * (NWINFO_BUFSZ + 1));
+		if (!Ucs2Buf)
+			NWL_ErrExit(ERROR_OUTOFMEMORY, "Failed to allocate memory in " __FUNCTION__);
+	}
+	p = Ucs2Buf;
 	for (i = 0; src[i] != '\0' && j < NWINFO_BUFSZ; )
 	{
 		if ((src[i] & 0x80) == 0)

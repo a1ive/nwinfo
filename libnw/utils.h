@@ -47,6 +47,7 @@ LIBNW_API HMONITOR NWL_GetMonitorFromName(LPCWSTR lpDevice);
 LPCSTR NWL_UnixTimeToStr(INT nix);
 LPCSTR NWL_Ucs2ToUtf8(LPCWSTR src);
 LPCWSTR NWL_Utf8ToUcs2(LPCSTR src);
+VOID NWL_FreeConvBuffers(VOID);
 
 HANDLE NWL_NtCreateFile(LPCWSTR lpFileName, BOOL bWrite);
 LIBNW_API BOOL NWL_NtCreatePageFile(WCHAR wDrive, LPCWSTR lpPath, UINT64 minSizeInMb, UINT64 maxSizeInMb);
