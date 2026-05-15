@@ -676,15 +676,17 @@ nk_hover_begin(struct nk_context* ctx, float width)
 	in = &ctx->input;
 
 	w = nk_iceilf(width);
-	h = nk_iceilf(nk_null_rect.h);
-	x = nk_ifloorf(in->mouse.pos.x + 1) - (int)win->layout->clip.x;
+	h = NK_MAX(win->layout->row.min_height, ctx->style.font->height + 2 * ctx->style.window.padding.y);
+	x = nk_ifloorf(in->mouse.pos.x + 1) - (int)win->layout->clip.x + 2 * ctx->style.window.padding.x;
 	if (w + x > (int)win->bounds.w) x = (int)win->bounds.w - w;
 	y = nk_ifloorf(in->mouse.pos.y + 1) - (int)win->layout->clip.y;
+	if (y > h + (int)ctx->style.font->height)
+		y -= h + (int)ctx->style.font->height;
 
 	bounds.x = (float)x;
 	bounds.y = (float)y;
 	bounds.w = (float)w;
-	bounds.h = (float)h;
+	bounds.h = (float)nk_iceilf(nk_null_rect.h);
 
 	ret = nk_popup_begin(ctx, NK_POPUP_DYNAMIC,
 		"__##Tooltip##__", NK_WINDOW_NO_SCROLLBAR | NK_WINDOW_BORDER, bounds);

@@ -152,7 +152,7 @@ gnwinfo_draw_settings_window(struct nk_context* ctx, float width, float height)
 		goto out;
 	}
 
-	nk_layout_row_dynamic(ctx, 0, 1);
+	nk_layout_row_dynamic(ctx, g_col_height, 1);
 	set_label(ctx, N_(N__WINDOW_RESTART));
 	nk_layout_row(ctx, NK_DYNAMIC, 0, 2, (float[2]) { 0.1f, 0.9f });
 	nk_spacer(ctx);
@@ -194,7 +194,7 @@ gnwinfo_draw_settings_window(struct nk_context* ctx, float width, float height)
 	set_label(ctx, N_(N__ALPHA));
 	nk_property_int(ctx, "#", 10, &g_init_alpha, 255, 5, 10);
 
-	nk_layout_row_dynamic(ctx, 0, 1);
+	nk_layout_row_dynamic(ctx, g_col_height, 1);
 	set_label(ctx, N_(N__COLOR));
 	nk_layout_row(ctx, NK_DYNAMIC, 25, 3, (float[3]) { 0.1f, 0.4f, 0.5f });
 	nk_spacer(ctx);
@@ -219,7 +219,7 @@ gnwinfo_draw_settings_window(struct nk_context* ctx, float width, float height)
 	set_label(ctx, "STATE UNKNOWN");
 	draw_color_picker(ctx, &g_color_unknown);
 
-	nk_layout_row_dynamic(ctx, 0, 1);
+	nk_layout_row_dynamic(ctx, g_col_height, 1);
 	set_label(ctx, N_(N__HIDE_COMPONENTS));
 
 	nk_layout_row(ctx, NK_DYNAMIC, 0, 3, (float[3]) { 0.1f, 0.45f, 0.45f });
@@ -239,7 +239,7 @@ gnwinfo_draw_settings_window(struct nk_context* ctx, float width, float height)
 	nk_checkbox_flags_label(ctx, N_(N__AUDIO), &g_ctx.main_flag, MAIN_INFO_AUDIO);
 	nk_spacer(ctx);
 
-	nk_layout_row_dynamic(ctx, 0, 1);
+	nk_layout_row_dynamic(ctx, g_col_height, 1);
 	set_label(ctx, N_(N__OS));
 	nk_layout_row(ctx, NK_DYNAMIC, 0, 2, (float[2]) { 0.1f, 0.9f });
 	nk_spacer(ctx);
@@ -251,7 +251,7 @@ gnwinfo_draw_settings_window(struct nk_context* ctx, float width, float height)
 	nk_spacer(ctx);
 	nk_checkbox_flags_label(ctx, N_(N__HIDE_LOGIN), &g_ctx.main_flag, MAIN_OS_DETAIL);
 
-	nk_layout_row_dynamic(ctx, 0, 1);
+	nk_layout_row_dynamic(ctx, g_col_height, 1);
 	set_label(ctx, N_(N__BIOS));
 	nk_layout_row(ctx, NK_DYNAMIC, 0, 2, (float[2]) { 0.1f, 0.9f });
 	nk_spacer(ctx);
@@ -259,7 +259,7 @@ gnwinfo_draw_settings_window(struct nk_context* ctx, float width, float height)
 	nk_spacer(ctx);
 	nk_checkbox_flags_label(ctx, N_(N__HIDE_VERSION), &g_ctx.main_flag, MAIN_B_VERSION);
 
-	nk_layout_row_dynamic(ctx, 0, 1);
+	nk_layout_row_dynamic(ctx, g_col_height, 1);
 	set_label(ctx, N_(N__CPU));
 	nk_layout_row(ctx, NK_DYNAMIC, 0, 2, (float[2]) { 0.1f, 0.9f });
 	nk_spacer(ctx);
@@ -267,7 +267,7 @@ gnwinfo_draw_settings_window(struct nk_context* ctx, float width, float height)
 	nk_spacer(ctx);
 	nk_checkbox_flags_label(ctx, N_(N__HIDE_CACHE), &g_ctx.main_flag, MAIN_CPU_CACHE);
 
-	nk_layout_row_dynamic(ctx, 0, 1);
+	nk_layout_row_dynamic(ctx, g_col_height, 1);
 	set_label(ctx, N_(N__MEMORY));
 	nk_layout_row(ctx, NK_DYNAMIC, 0, 2, (float[2]) { 0.1f, 0.9f });
 	nk_spacer(ctx);
@@ -275,7 +275,7 @@ gnwinfo_draw_settings_window(struct nk_context* ctx, float width, float height)
 	nk_spacer(ctx);
 	nk_checkbox_flags_label(ctx, N_(N__USE_SMBUS_SPD), &g_ctx.main_flag, MAIN_SMBUS_SPD);
 
-	nk_layout_row_dynamic(ctx, 0, 1);
+	nk_layout_row_dynamic(ctx, g_col_height, 1);
 	set_label(ctx, N_(N__DISPLAY));
 	nk_layout_row(ctx, NK_DYNAMIC, 0, 2, (float[2]) { 0.1f, 0.9f });
 	nk_spacer(ctx);
@@ -283,7 +283,7 @@ gnwinfo_draw_settings_window(struct nk_context* ctx, float width, float height)
 	nk_spacer(ctx);
 	nk_checkbox_flags_label(ctx, N_(N__USE_GPU_PCI), &g_ctx.main_flag2, MAIN2_GPU_DRIVER);
 
-	nk_layout_row_dynamic(ctx, 0, 1);
+	nk_layout_row_dynamic(ctx, g_col_height, 1);
 	set_label(ctx, N_(N__NETWORK));
 	nk_layout_row(ctx, NK_DYNAMIC, 0, 2, (float[2]) { 0.1f, 0.9f });
 	nk_spacer(ctx);
@@ -293,7 +293,7 @@ gnwinfo_draw_settings_window(struct nk_context* ctx, float width, float height)
 	nk_spacer(ctx);
 	nk_checkbox_flags_label(ctx, N_(N__HIDE_DETAILS), &g_ctx.main_flag, MAIN_NET_DETAIL);
 
-	nk_layout_row_dynamic(ctx, 0, 1);
+	nk_layout_row_dynamic(ctx, g_col_height, 1);
 	set_label(ctx, N_(N__STORAGE));
 	nk_layout_row(ctx, NK_DYNAMIC, 0, 2, (float[2]) { 0.1f, 0.9f });
 	nk_spacer(ctx);
@@ -349,7 +349,7 @@ gnwinfo_draw_settings_window(struct nk_context* ctx, float width, float height)
 	nk_spacer(ctx);
 	nk_checkbox_flags_label(ctx, N_(N__HIDE_RAID_VOLUME), &g_ctx.smart_flag, CDI_FLAG_HIDE_RAID_VOLUME);
 
-	nk_layout_row(ctx, NK_DYNAMIC, 0, 2, (float[2]) { 0.8f, 0.2f });
+	nk_layout_row(ctx, NK_DYNAMIC, g_col_height, 2, (float[2]) { 0.8f, 0.2f });
 	nk_spacer(ctx);
 	if (nk_button_label(ctx, N_(N__SAVE)))
 	{
