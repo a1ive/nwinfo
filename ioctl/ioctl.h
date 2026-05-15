@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: Unlicense
+﻿// SPDX-License-Identifier: Unlicense
 #pragma once
 
 #include <stdint.h>
@@ -10,7 +10,6 @@ enum wr0_driver_type
 	WR0_DRIVER_NONE = 0,
 	WR0_DRIVER_WINRING0,
 	WR0_DRIVER_HWIO,
-	WR0_DRIVER_CPUZ161,
 	WR0_DRIVER_CPUZ162,
 	WR0_DRIVER_PAWNIO,
 

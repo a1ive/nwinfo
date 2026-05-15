@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: Unlicense
+﻿// SPDX-License-Identifier: Unlicense
 #pragma once
 
 #include <windows.h>
@@ -81,15 +81,6 @@
 #define IOCTL_OLS_WRITE_PCI_CONFIG \
 	CTL_CODE(OLS_TYPE, 0x852, METHOD_BUFFERED, FILE_WRITE_ACCESS)
 
-// HwRwDrv.sys
-#define HWRWDRV_ID							L"HwRwDrv"
-#if defined(_M_AMD64)
-#define HWRWDRV_NAME						L"HwRwDrvx64.sys"
-#else
-#define HWRWDRV_NAME						L"HwRwDrv.sys"
-#endif
-#define HWRWDRV_OBJ							L"\\\\.\\HwRwDrv"
-
 // PCI Error Code
 #define OLS_ERROR_PCI_BUS_NOT_EXIST		(0xE0000001L)
 #define OLS_ERROR_PCI_NO_DEVICE			(0xE0000002L)
@@ -147,7 +138,7 @@ typedef struct _OLS_WRITE_MEMORY_INPUT
 
 #pragma pack(pop)
 
-// HwIo.sys
+// NwHwIo.sys
 #define HWIODRV_ID							L"NwHwIo"
 #if defined(_M_AMD64)
 #define HWIODRV_NAME						L"NwHwIox64.sys"
@@ -183,14 +174,6 @@ typedef struct _OLS_WRITE_MEMORY_INPUT
 #define IOCTL_HIO_WRITE_PCI_CONFIG 0x80006420
 
 // CPUZ.sys
-#define CPUZ161DRV_ID						L"cpuz161"
-#if defined(_M_AMD64)
-#define CPUZ161DRV_NAME						L"cpuz161x64.sys"
-#else
-#define CPUZ161DRV_NAME						L"cpuz161.sys"
-#endif
-#define CPUZ161DRV_OBJ						L"\\\\.\\CPUZ161"
-
 #define CPUZ162DRV_ID						L"cpuz162"
 #if defined(_M_AMD64)
 #define CPUZ162DRV_NAME						L"cpuz162x64.sys"
