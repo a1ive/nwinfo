@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: Unlicense
+﻿// SPDX-License-Identifier: Unlicense
 
 #include "libnw.h"
 #include "utils.h"
@@ -46,19 +46,19 @@
 #define F1AH_M70H_SVI_TEL_PLANE0            (F1AH_M70H_SVI + 0x10)
 #define F1AH_M70H_SVI_TEL_PLANE1            (F1AH_M70H_SVI + 0x14)
 
+#define ZEN_REPORTED_TEMP_CTRL_BASE         0x00059800
+
+#define ZEN_CCD_TEMP(offset, x)             (ZEN_REPORTED_TEMP_CTRL_BASE + (offset) + ((x) * 4))
 #define ZEN_CCD_TEMP_VALID                  (1 << 11)
 #define ZEN_CCD_TEMP_MASK                   0x7FF
 
-#define F17H_M70H_CCD_TEMP_BASE             0x00059954
-#define F19H_M11H_CCD_TEMP_BASE             0x00059B00
-#define F1AH_M70H_CCD_TEMP_BASE             0x00059B08
+#define ZEN_CCD_TEMP_OFFSET_154             0x154
+#define ZEN_CCD_TEMP_OFFSET_300             0x300
+#define ZEN_CCD_TEMP_OFFSET_308             0x308
 
-#define MAX_CCD_COUNT                       8
+#define MAX_CCD_COUNT                       12
 
-#define FUSE1_BASE                          0x5D218
-#define FUSE2_BASE                          0x5D21C
-
-#define F17H_M01H_THM_TCON_CUR_TMP          0x00059800
+#define F17H_M01H_THM_TCON_CUR_TMP          ZEN_REPORTED_TEMP_CTRL_BASE
 #define F17H_TEMP_OFFSET_FLAG               0x80000
 #define F1AH_TEMP_OFFSET_FLAG               0x30000
 
@@ -70,8 +70,9 @@ static struct
 	uint32_t svi_core_addr;
 	uint32_t svi_soc_addr;
 	uint32_t ccd_temp_base;
+	uint16_t ccd_temp_mask;
 	uint32_t num_cores;
-	uint8_t num_ccds;
+	uint8_t ccd_temp_limit;
 	uint8_t zen_gen;
 	float temp_offset;
 	float stapm_limit;
@@ -102,84 +103,81 @@ static struct
 	float socket_power;
 } ctx;
 
-static inline uint32_t count_set_bits(uint32_t v)
+static inline bool thm_is_valid_tccd(uint32_t thm)
 {
-	uint32_t result = 0;
-	while (v > 0)
-	{
-		if (v & 1)
-			result++;
-		v >>= 1;
-	}
-	return result;
+	return thm != 0xFFFFFFFF && (thm & ZEN_CCD_TEMP_VALID) != 0;
 }
 
-static void detect_num_ccds(void)
+static void detect_ccd_temps(void)
 {
-	uint32_t fuse1 = FUSE1_BASE;
-	uint32_t fuse2 = FUSE2_BASE;
-	uint32_t ccds_present = 0, ccds_down = 0;
-	uint8_t ext_family = ctx.id->x86.ext_family;
-	uint8_t ext_model = ctx.id->x86.ext_model;
+	uint32_t ccd_offset = 0;
 
-	//if (ctx.num_ccds > 0)
-		//return;
+	ctx.ccd_temp_base = 0;
+	ctx.ccd_temp_mask = 0;
+	ctx.ccd_temp_limit = 0;
 
-	switch (ctx.id->x86.ext_family)
+	switch (ctx.codename)
 	{
-	case 0x17:
-		switch (ctx.codename)
-		{
-		case CODENAME_CASTLEPEAK:
-		case CODENAME_ROME:
-		case CODENAME_MATISSE:
-			break;
-		default:
-			fuse1 += 0x40;
-			fuse2 += 0x40;
-			break;
-		}
+	case CODENAME_SUMMITRIDGE:
+	case CODENAME_THREADRIPPER:
+	case CODENAME_NAPLES:
+	case CODENAME_PINNACLERIDGE:
+	case CODENAME_COLFAX:
+	case CODENAME_RAVENRIDGE:
+	case CODENAME_RAVENRIDGE2:
+	case CODENAME_PICASSO:
+		ccd_offset = ZEN_CCD_TEMP_OFFSET_154;
+		ctx.ccd_temp_limit = 4;
 		break;
-	case 0x19:
-		switch (ctx.codename)
-		{
-		case CODENAME_RAPHAEL:
-		case CODENAME_DRAGONRANGE:
-			fuse1 += 0x1A4;
-			fuse2 += 0x1A4;
-			break;
-		default:
-			break;
-		}
+	case CODENAME_CASTLEPEAK:
+	case CODENAME_ROME:
+	case CODENAME_RENOIR:
+	case CODENAME_LUCIENNE:
+	case CODENAME_MATISSE:
+	case CODENAME_MILAN:
+	case CODENAME_CHAGALL:
+	case CODENAME_VERMEER:
+	case CODENAME_CEZANNE:
+		ccd_offset = ZEN_CCD_TEMP_OFFSET_154;
+		ctx.ccd_temp_limit = 8;
 		break;
-	case 0x1A:
-		fuse1 += 0x1A4;
-		fuse2 += 0x1A4;
+	case CODENAME_MENDOCINO:
+	case CODENAME_REMBRANDT:
+		ccd_offset = ZEN_CCD_TEMP_OFFSET_300;
+		ctx.ccd_temp_limit = 8;
+		break;
+	case CODENAME_GENOA:
+	case CODENAME_STORMPEAK:
+	case CODENAME_BERGAMO:
+		ccd_offset = ZEN_CCD_TEMP_OFFSET_300;
+		ctx.ccd_temp_limit = 12;
+		break;
+	case CODENAME_RAPHAEL:
+	case CODENAME_DRAGONRANGE:
+	case CODENAME_PHOENIX:
+	case CODENAME_PHOENIX2:
+	case CODENAME_HAWKPOINT:
+	case CODENAME_GRANITERIDGE:
+		ccd_offset = ZEN_CCD_TEMP_OFFSET_308;
+		ctx.ccd_temp_limit = 8;
 		break;
 	}
+
+	if (ctx.ccd_temp_limit == 0)
+		return;
+	if (ctx.ccd_temp_limit > MAX_CCD_COUNT)
+		ctx.ccd_temp_limit = MAX_CCD_COUNT;
+
+	ctx.ccd_temp_base = ZEN_CCD_TEMP(ccd_offset, 0);
 
 	WR0_WaitPciBus(500);
-	ccds_present = WR0_RdAmdSmn(NWLC->NwDrv, WR0_SMN_AMD17H, fuse1);
-	ccds_down = WR0_RdAmdSmn(NWLC->NwDrv, WR0_SMN_AMD17H, fuse2);
+	for (uint8_t i = 0; i < ctx.ccd_temp_limit; i++)
+	{
+		uint32_t thm = WR0_RdAmdSmn(NWLC->NwDrv, WR0_SMN_AMD17H, ZEN_CCD_TEMP(ccd_offset, i));
+		if (thm_is_valid_tccd(thm))
+			ctx.ccd_temp_mask |= (uint16_t)(1u << i);
+	}
 	WR0_ReleasePciBus();
-	NWL_Debug("SMN", "fuse1=%08Xh fuse2=%08Xh ccds_present=%08Xh ccds_down=%08Xh", fuse1, fuse2, ccds_present, ccds_down);
-
-	if (ccds_present != 0 || ccds_down != 0)
-	{
-		uint32_t ccd_enable_map = (ccds_present >> 22) & 0x3;
-		uint32_t enabled_ccds = count_set_bits(ccd_enable_map);
-		ctx.num_ccds = (uint8_t)(enabled_ccds > 0 ? enabled_ccds : 1);
-		NWL_Debug("SMN", "Detected %u enabled CCD(s), map=%Xh", ctx.num_ccds, ccd_enable_map);
-	}
-	else
-	{
-		if (ctx.num_ccds == 0)
-			ctx.num_ccds = 1;
-		NWL_Debug("SMN", "Could not detect number of CCDs, defaulting to %u", ctx.num_ccds);
-	}
-
-	if (ctx.num_ccds > MAX_CCD_COUNT)
-		ctx.num_ccds = MAX_CCD_COUNT;
 }
 
 static bool smn_init(void)
@@ -203,7 +201,6 @@ static bool smn_init(void)
 	switch (ctx.id->x86.ext_family)
 	{
 	case 0x17:
-		ctx.ccd_temp_base = F17H_M70H_CCD_TEMP_BASE;
 		ctx.svi_core_addr = F17H_M01H_SVI_TEL_PLANE0;
 		ctx.svi_soc_addr = F17H_M01H_SVI_TEL_PLANE1;
 		if (ctx.id->x86.ext_model >= 0x31)
@@ -212,7 +209,6 @@ static bool smn_init(void)
 			ctx.zen_gen = 1;
 		break;
 	case 0x19:
-		ctx.ccd_temp_base = F17H_M70H_CCD_TEMP_BASE;
 		ctx.svi_core_addr = F19H_M21H_SVI_TEL_PLANE0;
 		ctx.svi_soc_addr = F19H_M21H_SVI_TEL_PLANE1;
 		if (ctx.id->x86.ext_model >= 0x61)
@@ -221,7 +217,6 @@ static bool smn_init(void)
 			ctx.zen_gen = 3;
 		break;
 	case 0x1A:
-		ctx.ccd_temp_base = F1AH_M70H_CCD_TEMP_BASE;
 		ctx.svi_core_addr = F1AH_M20H_SVI_TEL_PLANE0;
 		ctx.svi_soc_addr = F1AH_M20H_SVI_TEL_PLANE1;
 		ctx.zen_gen = 5;
@@ -256,13 +251,11 @@ static bool smn_init(void)
 	case CODENAME_COLFAX: // 17h 0x08
 		ctx.svi_core_addr = F17H_M01H_SVI_TEL_PLANE0;
 		ctx.svi_soc_addr = F17H_M01H_SVI_TEL_PLANE1;
-		ctx.num_ccds = 4;
 		break;
 	case CODENAME_CASTLEPEAK: // 17h 0x31
 	case CODENAME_ROME: // 17h 0x31
 		ctx.svi_core_addr = F17H_M30H_SVI_TEL_PLANE0;
 		ctx.svi_soc_addr = F17H_M30H_SVI_TEL_PLANE1;
-		ctx.num_ccds = 8;
 		break;
 	case CODENAME_RENOIR: // 17h 0x60
 	case CODENAME_LUCIENNE: // 17h 0x68
@@ -275,25 +268,20 @@ static bool smn_init(void)
 	case CODENAME_MATISSE: // 17h 0x71
 		ctx.svi_core_addr = F17H_M70H_SVI_TEL_PLANE0;
 		ctx.svi_soc_addr = F17H_M70H_SVI_TEL_PLANE1;
-		ctx.num_ccds = 8;
 		break;
 	case CODENAME_MILAN: // 19h 0x00,0x01
 	case CODENAME_CHAGALL: // 19h 0x08
 		ctx.svi_core_addr = F19H_M01H_SVI_TEL_PLANE1;
 		ctx.svi_soc_addr = F19H_M01H_SVI_TEL_PLANE0;
-		ctx.num_ccds = 8;
 		break;
 	case CODENAME_GENOA: // 19h 0x11
 		ctx.svi_core_addr = F19H_M61H_SVI_TEL_PLANE1;
 		ctx.svi_soc_addr = F19H_M61H_SVI_TEL_PLANE0;
-		ctx.ccd_temp_base = F19H_M11H_CCD_TEMP_BASE;
 		ctx.zen_gen = 4;
-		ctx.num_ccds = 8;
 		break;
 	case CODENAME_VERMEER: // 19h 0x20, 0x21 AM4
 		ctx.svi_core_addr = F19H_M21H_SVI_TEL_PLANE0;
 		ctx.svi_soc_addr = F19H_M21H_SVI_TEL_PLANE1;
-		ctx.num_ccds = 2;
 		break;
 	case CODENAME_REMBRANDT: // 19h 0x40, 0x44
 	case CODENAME_CEZANNE: // 19h 0x50
@@ -306,8 +294,6 @@ static bool smn_init(void)
 	case CODENAME_RAPHAEL: // 19h 0x61 AM5
 		ctx.svi_core_addr = F19H_M61H_SVI_TEL_PLANE0;
 		ctx.svi_soc_addr = F19H_M61H_SVI_TEL_PLANE1;
-		ctx.ccd_temp_base = F1AH_M70H_CCD_TEMP_BASE;
-		ctx.num_ccds = 2;
 		break;
 	case CODENAME_STRIXPOINT: // 1Ah 0x20, 0x24
 		ctx.svi_core_addr = F1AH_M20H_SVI_TEL_PLANE0;
@@ -316,17 +302,16 @@ static bool smn_init(void)
 	case CODENAME_GRANITERIDGE: // 1Ah 0x44
 		ctx.svi_core_addr = F1AH_M70H_SVI_TEL_PLANE0;
 		ctx.svi_soc_addr = F1AH_M70H_SVI_TEL_PLANE1;
-		ctx.num_ccds = 2;
 		break;
 	case CODENAME_STRIXHALO: // 1Ah 0x70
 		ctx.svi_core_addr = F1AH_M70H_SVI_TEL_PLANE0;
 		ctx.svi_soc_addr = F1AH_M70H_SVI_TEL_PLANE1;
-		ctx.num_ccds = 8;
 		break;
 	}
-	NWL_Debug("SMN", "Zen %u CCD Temp Base %x, SVI Core %x, SVI SoC %x", ctx.zen_gen, ctx.ccd_temp_base, ctx.svi_core_addr, ctx.svi_soc_addr);
 
-	detect_num_ccds();
+	detect_ccd_temps();
+	NWL_Debug("SMN", "Zen %u CCD Temp Base %x(+%u), CCD Mask %x, SVI Core %x, SVI SoC %x",
+		ctx.zen_gen, ctx.ccd_temp_base, ctx.ccd_temp_limit, ctx.ccd_temp_mask, ctx.svi_core_addr, ctx.svi_soc_addr);
 	if (ctx.id->num_cores > 0)
 		ctx.num_cores = (uint32_t)ctx.id->num_cores;
 	if (ctx.num_cores > SMU_MAX_CORE)
@@ -405,8 +390,6 @@ static inline float thm_to_tctl(uint32_t thm)
 
 static inline float thm_to_tccd(uint32_t thm)
 {
-	if (!(thm & ZEN_CCD_TEMP_VALID))
-		return 0.0f;
 	return (0.125f * (thm & ZEN_CCD_TEMP_MASK) - 49.0f);
 }
 
@@ -476,11 +459,15 @@ static void smn_get(PNODE node)
 	float tdie = tctl - ctx.temp_offset;
 	NWL_NodeAttrSetf(node, "Tdie", NAFLG_FMT_NUMERIC, "%.3f", NWL_GetTemperature(tdie));
 
-	for (uint8_t i = 0; i < ctx.num_ccds; i++)
+	for (uint8_t i = 0; i < ctx.ccd_temp_limit; i++)
 	{
 		char buf[] = "TccdXXX";
+		if (!(ctx.ccd_temp_mask & (1u << i)))
+			continue;
 		snprintf(buf, sizeof(buf), "Tccd%u", i + 1);
 		uint32_t thm_data = WR0_RdAmdSmn(NWLC->NwDrv, WR0_SMN_AMD17H, ctx.ccd_temp_base + (i * 4));
+		if (!thm_is_valid_tccd(thm_data))
+			continue;
 		float tccd = thm_to_tccd(thm_data);
 		NWL_NodeAttrSetf(node, buf, NAFLG_FMT_NUMERIC, "%.3f", NWL_GetTemperature(tccd));
 	}
