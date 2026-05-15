@@ -36,12 +36,15 @@
 - Chinese (Simplified)
 - Chinese (Traditional)
 - French
+- German
+- Greek
 - Italian
 - Japanese
 - Korean
 - Polish
 - Portuguese (Brazil)
 - Slovenian
+- Spanish
 - Swedish
 - Turkish
 
