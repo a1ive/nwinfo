@@ -11,7 +11,7 @@ This file guides coding agents working in the `nwinfo` repository.
 - `libnw`, `libcdi`, `libcpuid`, `liblhm`: libraries and helper/test binaries.
 - Platform and toolchain:
 - Windows (Win32/x64/ARM64).
-- Visual Studio 2022 + MSBuild (`v143`).
+- Visual Studio 2026 + MSBuild (`v145`).
 - C17/C++20, with `TreatWarningAsError=true` in most projects.
 
 ## 2. Repository Map

@@ -34,6 +34,7 @@ typedef struct _NWLIB_GPU_DEV
 	uint32_t PciBus;
 	uint32_t PciDevice;
 	uint32_t PciFunction;
+	uint32_t DxVersion;
 	NWLIB_GPU_PCIE_SPEED CurSpeed;
 	NWLIB_GPU_PCIE_SPEED MaxSpeed;
 	uint64_t TotalMemory; // Dedicated Video Memory
