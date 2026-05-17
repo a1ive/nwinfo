@@ -67,6 +67,9 @@ int WR0_ExecPawn(struct wr0_drv_t* drv, struct pio_mod_t* mod, LPCSTR fn,
 	if (!mod->hd || mod->hd == INVALID_HANDLE_VALUE)
 		return -1;
 
+	if (in_size > (MAXDWORD - sizeof(PIO_EXEC_INPUT)) / sizeof(ULONG64))
+		return -1;
+
 	inBufSize = (DWORD)(sizeof(PIO_EXEC_INPUT) + in_size * sizeof(ULONG64));
 
 	inBuf = calloc(1, inBufSize);
