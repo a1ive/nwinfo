@@ -382,6 +382,10 @@ static void* d3d_gpu_init(PNWLIB_GPU_INFO info)
 
 		// KMTQAITYPE_ADAPTERTYPE requires Windows 8 or later
 		query_adapter_info(ctx, gpu, KMTQAITYPE_ADAPTERTYPE, &gpu->AdapterType, sizeof(D3DKMT_ADAPTERTYPE));
+		// SoftwareDevice = (1 << 2)
+		// HybridDiscrete = (1 << 4)
+		// HybridIntegrated = (1 << 5)
+		NWL_Debug(GDID3D, "Adapter type %xh", gpu->AdapterType.Value);
 		if (gpu->AdapterType.SoftwareDevice)
 		{
 			NWL_Debug(GDID3D, "Skipping software adapter %s", gpu->Name);
@@ -509,6 +513,7 @@ fill_missing_gpu_info(NWLIB_GPU_DEV* info, const NWLIB_GPU_DEV* fallback)
 		info->Temperature = fallback->Temperature;
 	if (info->FanSpeed == 0)
 		info->FanSpeed = fallback->FanSpeed;
+	info->Flags |= fallback->Flags;
 }
 
 static void
@@ -525,6 +530,8 @@ fill_d3d_gpu_info(struct D3D_GPU_CTX* ctx, struct D3D_GPU_DATA* gpu, NWLIB_GPU_D
 	info->DxVersion = (uint32_t)gpu->FeatureLevel;
 	info->CurSpeed = gpu->CurSpeed;
 	info->MaxSpeed = gpu->MaxSpeed;
+	if (gpu->AdapterType.HybridIntegrated)
+		info->Flags |= NWLIB_GPU_FLAG_INTEGRATED;
 
 	ctx->Result = query_adapter_info(ctx, gpu, KMTQAITYPE_GETSEGMENTSIZE, &gpu->SegSize, sizeof(D3DKMT_SEGMENTSIZEINFO));
 	if (NT_SUCCESS(ctx->Result))
