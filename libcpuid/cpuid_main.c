@@ -1133,6 +1133,7 @@ static int cpuid_basic_identify(struct cpu_raw_data_t* raw, struct cpu_id_t* dat
 			data->x86.ext_family = data->x86.family + xfamily;
 		data->x86.ext_model = data->x86.model + (xmodel << 4);
 		data->x86.pkg_type = (raw->ext_cpuid[1][EBX] >> 28);
+		data->x86.cpuid = raw->basic_cpuid[1][EAX];
 	}
 	ext = raw->ext_cpuid[0][EAX] - 0x80000000;
 

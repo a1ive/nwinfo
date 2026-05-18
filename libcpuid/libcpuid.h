@@ -524,6 +524,9 @@ struct x86_id_t {
 	/** SSE execution unit size (64 or 128; -1 if N/A) */
 	int32_t sse_size;
 
+	/** CPUID leaf 0x01 EAX */
+	uint32_t cpuid;
+
 	/** contains information about SGX features if the processor, if present */
 	struct cpu_sgx_t sgx;
 };
