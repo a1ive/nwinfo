@@ -374,12 +374,6 @@ static void* d3d_gpu_init(PNWLIB_GPU_INFO info)
 		NWL_Debug(GDID3D, "Device ID [%04X-%04X SUBSYS %08X REV %02X ]", gpu->DeviceIds.DeviceIds.VendorID,
 			gpu->DeviceIds.DeviceIds.DeviceID, gpu->DeviceIds.DeviceIds.SubSystemID, gpu->DeviceIds.DeviceIds.RevisionID);
 
-		if (gpu->DeviceIds.DeviceIds.VendorID == 0x1414)
-		{
-			NWL_Debug(GDID3D, "Skipping Microsoft Device %s", gpu->Name);
-			continue;
-		}
-
 		// KMTQAITYPE_ADAPTERTYPE requires Windows 8 or later
 		query_adapter_info(ctx, gpu, KMTQAITYPE_ADAPTERTYPE, &gpu->AdapterType, sizeof(D3DKMT_ADAPTERTYPE));
 		// SoftwareDevice = (1 << 2)
