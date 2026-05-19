@@ -110,6 +110,8 @@ gnwinfo_ctx_update_1s(void)
 	NWL_NodeFree(old_network, 1);
 	free(old_audio);
 	free(old_cpu);
+
+	gnwinfo_update_systray(g_ctx.wnd, g_window_icon);
 }
 
 static void
@@ -311,9 +313,6 @@ gnwinfo_ctx_init(HINSTANCE inst, HWND wnd, struct nk_context* ctx, float width, 
 	nk_spacer(ctx);
 	nk_end(ctx);
 	nk_gdip_render(g_ctx.gui_aa, g_color_back);
-
-	if (!(g_ctx.main_flag & MAIN_SYSTRAY))
-		gnwinfo_remove_systray(wnd);
 
 	g_ctx.gui_height = height;
 	g_ctx.gui_width = width;

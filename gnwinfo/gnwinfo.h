@@ -228,6 +228,8 @@ extern float g_col_height;
 extern nk_bool g_dpi_scaling;
 extern nk_bool g_bginfo;
 extern nk_bool g_debug;
+extern LPCWSTR g_window_title;
+extern HICON g_window_icon;
 
 #define NK_COLOR_YELLOW     {0xFF, 0xEA, 0x00, 0xFF}
 #define NK_COLOR_RED        {0xFF, 0x17, 0x44, 0xFF}
@@ -278,11 +280,9 @@ void gnwinfo_draw_percent_prog(struct nk_context* ctx, double percent);
 
 UINT64 gnwinfo_clean_memory(VOID);
 
-void gnwinfo_add_systray(HWND wnd, HICON icon, LPCWSTR desc);
+void gnwinfo_add_systray(HWND wnd, HICON icon);
 void gnwinfo_remove_systray(HWND wnd);
-#if 0
-void gnwinfo_update_systray(HWND wnd, HICON icon, LPCWSTR desc);
-#endif
+void gnwinfo_update_systray(HWND wnd, HICON icon);
 void gnwinfo_show_systray_menu(HWND wnd);
 void gnwinfo_handle_systray_cmd(HWND wnd, WORD wmid);
 

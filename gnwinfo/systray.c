@@ -10,7 +10,7 @@
 
 static nk_bool m_systray = nk_false;
 
-void gnwinfo_add_systray(HWND wnd, HICON icon, LPCWSTR desc)
+void gnwinfo_add_systray(HWND wnd, HICON icon)
 {
 	if (m_systray == nk_true)
 		return;
@@ -21,7 +21,7 @@ void gnwinfo_add_systray(HWND wnd, HICON icon, LPCWSTR desc)
 	nid.uFlags = NIF_ICON | NIF_MESSAGE | NIF_TIP;
 	nid.uCallbackMessage = WM_TRAYICON;
 	nid.hIcon = icon;
-	wcscpy_s(nid.szTip, ARRAYSIZE(nid.szTip), desc);
+	wcscpy_s(nid.szTip, ARRAYSIZE(nid.szTip), g_window_title);
 	Shell_NotifyIconW(NIM_ADD, &nid);
 	m_systray = nk_true;
 }
@@ -38,19 +38,30 @@ void gnwinfo_remove_systray(HWND wnd)
 	m_systray = nk_false;
 }
 
-#if 0
-void gnwinfo_update_systray(HWND wnd, HICON icon, LPCWSTR desc)
+void gnwinfo_update_systray(HWND wnd, HICON icon)
 {
+	if (g_ctx.main_flag & MAIN_SYSTRAY)
+		gnwinfo_add_systray(wnd, icon);
+	else
+	{
+		gnwinfo_remove_systray(wnd);
+		return;
+	}
+
 	NOTIFYICONDATAW nid = { 0 };
 	nid.cbSize = sizeof(NOTIFYICONDATAW);
 	nid.hWnd = wnd;
 	nid.uID = 1;
 	nid.uFlags = NIF_ICON | NIF_TIP;
 	nid.hIcon = icon;
-	wcscpy_s(nid.szTip, ARRAYSIZE(nid.szTip), desc);
+	swprintf(nid.szTip, ARRAYSIZE(nid.szTip),
+		L"CPU: %.0f%%\nRAM: %u%%\n\u2191 %hs\n\u2193 %hs",
+		g_ctx.cpu_usage,
+		g_ctx.mem_status.PhysUsage,
+		g_ctx.net_traffic.StrSend,
+		g_ctx.net_traffic.StrRecv);
 	Shell_NotifyIconW(NIM_MODIFY, &nid);
 }
-#endif
 
 #define MAX_POWER_SCHEMES 64
 
