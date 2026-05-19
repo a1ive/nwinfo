@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: Unlicense
+﻿// SPDX-License-Identifier: Unlicense
 
 #include "cpuid.h"
 #include "ioctl.h"
@@ -417,6 +417,10 @@ identify_f06(struct cpu_id_t* id)
 		break;
 	case 0xCC:
 		ctx.type.microarch = INTEL_PANTHERLAKE_L;
+		ctx.type.cpu_type = INTEL_CPU_TYPE_CORE;
+		break;
+	case 0xE5:
+		ctx.type.microarch = INTEL_PANTHERLAKE_R;
 		ctx.type.cpu_type = INTEL_CPU_TYPE_CORE;
 		break;
 	case 0xD5:

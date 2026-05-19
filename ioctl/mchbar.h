@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: Unlicense
+﻿// SPDX-License-Identifier: Unlicense
 #pragma once
 
 #include <stdint.h>
@@ -122,6 +122,7 @@ enum intel_core_microarch
 	INTEL_ARROWLAKE_U,
 	INTEL_LUNARLAKE_M, /* Lion Cove / Skymont */
 	INTEL_PANTHERLAKE_L, /* Cougar Cove / Darkmont */
+	INTEL_PANTHERLAKE_R, /* Cougar Cove / Darkmont */
 	INTEL_WILDCATLAKE_L,
 	INTEL_NOVALAKE, /* Coyote Cove / Arctic Wolf */
 	INTEL_NOVALAKE_L, /* Coyote Cove / Arctic Wolf */
