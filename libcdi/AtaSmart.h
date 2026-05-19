@@ -44,6 +44,7 @@ static const TCHAR* commandTypeString[] =
 	_T("nj"), // NVMe JMicron
 	_T("na"), // NVMe ASMedia
 	_T("nr"), // NVMe Realtek
+	_T("n9"), // NVMe Realtek9220DP
 	_T("nt"), // NVMe Intel RST
 	_T("iv"), // NVMe Intel VROC
 	_T("mr"), // MegaRAID SAS
@@ -52,6 +53,7 @@ static const TCHAR* commandTypeString[] =
 	_T("j3"), // JMB39X
 	_T("j6"), // JMS586_20
 	_T("j4"), // JMS586_40
+	_T("j9"), // JMS59X
 	_T("dg"), // Debug
 };
 
@@ -341,17 +343,17 @@ public:
 		CMD_TYPE_PHYSICAL_DRIVE,
 		CMD_TYPE_SCSI_MINIPORT,
 		CMD_TYPE_SILICON_IMAGE,
-		CMD_TYPE_SAT,			// SAT = SCSI_ATA_TRANSLATION
+		CMD_TYPE_SAT,					// SAT = SCSI_ATA_TRANSLATION
 		CMD_TYPE_SUNPLUS,
 		CMD_TYPE_IO_DATA,
 		CMD_TYPE_LOGITEC,
 		CMD_TYPE_PROLIFIC,
 		CMD_TYPE_JMICRON,
 		CMD_TYPE_CYPRESS,
-		CMD_TYPE_SAT_ASM1352R,	// AMS1352 2nd drive
+		CMD_TYPE_SAT_ASM1352R,			// AMS1352 2nd drive
 		CMD_TYPE_SAT_REALTEK9220DP,
-		CMD_TYPE_CSMI,				// CSMI = Common Storage Management Interface
-		CMD_TYPE_CSMI_PHYSICAL_DRIVE, // CSMI = Common Storage Management Interface 
+		CMD_TYPE_CSMI,					// CSMI = Common Storage Management Interface
+		CMD_TYPE_CSMI_PHYSICAL_DRIVE,	// CSMI = Common Storage Management Interface 
 		CMD_TYPE_WMI,
 		CMD_TYPE_NVME_SAMSUNG,
 		CMD_TYPE_NVME_INTEL,
@@ -363,11 +365,12 @@ public:
 		CMD_TYPE_NVME_INTEL_RST,
 		CMD_TYPE_NVME_INTEL_VROC,
 		CMD_TYPE_MEGARAID,
-		CMD_TYPE_AMD_RC2,// +AMD_RC2
+		CMD_TYPE_AMD_RC2,				// +AMD_RC2
 		CMD_TYPE_JMS56X,
 		CMD_TYPE_JMB39X,
 		CMD_TYPE_JMS586_20,
 		CMD_TYPE_JMS586_40,
+		CMD_TYPE_JMS59X,
 		CMD_TYPE_DEBUG
 	};
 
@@ -395,7 +398,7 @@ public:
 	//	INTERFACE_TYPE_UASP,
 		INTERFACE_TYPE_SCSI, 
 		INTERFACE_TYPE_NVME,
-		INTERFACE_TYPE_AMD_RC2,// +AMD_RC2
+		INTERFACE_TYPE_AMD_RC2,			// +AMD_RC2
 	//	INTERFACE_TYPE_USB_NVME,
 	};
 
@@ -502,13 +505,15 @@ protected:
 
 	struct NVME_IDENTIFY_DEVICE
 	{
-		CHAR		Reserved1[4];
+		WORD		PCIeSubSysVID;
+		WORD		PCIeVID;
 		CHAR		SerialNumber[20];
 		CHAR		Model[40];
 		CHAR		FirmwareRev[8];
-		CHAR		Reserved2[9];
+		CHAR		Reserved2[8];
+		CHAR		TertiaryVersion;
 		CHAR		MinorVersion;
-		SHORT		MajorVersion;
+		WORD		MajorVersion;
 		CHAR		Reserved3[428];
 		CHAR		Reserved4[3584];
 	};
@@ -1980,6 +1985,7 @@ public:
 	BOOL FlagUsbJMB39X = FALSE;
 	BOOL FlagUsbJMS586_20 = FALSE;
 	BOOL FlagUsbJMS586_40 = FALSE;
+	BOOL FlagUsbJMS59X = FALSE;
 #endif
 	BOOL FlagNoWakeUp = FALSE;// +M 20211216
 
@@ -1993,6 +1999,8 @@ protected:
 	HMODULE hJMB39X{};
 	HMODULE hJMS586_20{};
 	HMODULE hJMS586_40{};
+	HMODULE hJMS59X{};
+
 	// 2023/02/24 Compatible with SIV
 	HANDLE hMutexJMicron{};
 	HANDLE CreateWorldMutex(CONST TCHAR* name);
@@ -2134,6 +2142,10 @@ protected:
 	BOOL GetSmartAttributeNVMeJMS586_40(BYTE index, BYTE port, ATA_SMART_INFO* asi);
 	BOOL GetNVMeIdInfoJMS586_40(BYTE index, BYTE port, NVME_ID* nvmeId);
 	BOOL ControllerSerialNum2IdJMS586_40(BYTE csn, BYTE* cid);
+
+	BOOL AddDiskJMS59X(INT index);
+	BOOL DoIdentifyDeviceJMS59X(INT index, BYTE port, IDENTIFY_DEVICE* identify);
+	BOOL GetSmartInfoJMS59X(INT index, BYTE port, ATA_SMART_INFO* asi);
 #endif
 
 	DWORD GetTransferMode(WORD w63, WORD w76, WORD w77, WORD w88, CString &currentTransferMode, CString &maxTransferMode, CString &Interface, INTERFACE_TYPE *interfaceType);

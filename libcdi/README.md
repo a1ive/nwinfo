@@ -58,7 +58,7 @@ Initializes the SMART data.
     - It scans all disks and collects S.M.A.R.T. information, which may take some time.
 - **Parameters:**
     - `ptr`: A pointer to the `CDI_SMART` structure.
-    - `flags`: Various options for disk processing. See the **Disk Processing Options** section below. The recommended value is `0x01FBFF81`.
+    - `flags`: Various options for disk processing. See the **Disk Processing Options** section below. Use `CDI_FLAG_DEFAULT` unless you need to override individual options.
 - **Return Value:** None.
 
 ---
@@ -286,6 +286,33 @@ Disables APM and refreshes the cached identify data.
 #define CDI_FLAG_CSMI_DISABLE           (0ULL << CDI_CSMI_SHIFT) // FALSE
 #define CDI_FLAG_CSMI_AUTO              (1ULL << CDI_CSMI_SHIFT) // TRUE
 #define CDI_FLAG_CSMI_RAID              (2ULL << CDI_CSMI_SHIFT) // FALSE
+#define CDI_FLAG_ENABLE_JMS56X          (1ULL << 31) // FALSE
+#define CDI_FLAG_ENABLE_JMB39X          (1ULL << 32) // FALSE
+#define CDI_FLAG_ENABLE_JMS586_20       (1ULL << 33) // FALSE
+#define CDI_FLAG_ENABLE_JMS586_40       (1ULL << 34) // FALSE
+#define CDI_FLAG_ENABLE_JMS59X          (1ULL << 35) // FALSE
+
+#define CDI_FLAG_DEFAULT \
+    ( \
+        CDI_FLAG_USE_WMI | \
+        CDI_FLAG_WORKAROUND_ADATA | \
+        CDI_FLAG_HIDE_NO_SMART | \
+        CDI_FLAG_ATA_PASS_THROUGH | \
+        CDI_FLAG_ENABLE_USB_SAT | \
+        CDI_FLAG_ENABLE_USB_SUNPLUS | \
+        CDI_FLAG_ENABLE_USB_IODATA | \
+        CDI_FLAG_ENABLE_USB_LOGITEC | \
+        CDI_FLAG_ENABLE_USB_PROLIFIC | \
+        CDI_FLAG_ENABLE_USB_JMICRON | \
+        CDI_FLAG_ENABLE_USB_CYPRESS | \
+        CDI_FLAG_ENABLE_NVME_JMICRON | \
+        CDI_FLAG_ENABLE_NVME_ASMEDIA | \
+        CDI_FLAG_ENABLE_NVME_REALTEK | \
+        CDI_FLAG_ENABLE_MEGA_RAID | \
+        CDI_FLAG_ENABLE_INTEL_VROC | \
+        CDI_FLAG_HIDE_RAID_VOLUME | \
+        CDI_FLAG_CSMI_AUTO \
+    )
 ```
 
 ## Enumerations

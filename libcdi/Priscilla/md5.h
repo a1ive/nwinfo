@@ -1,10 +1,6 @@
 #ifndef MD5_H
 #define MD5_H
 
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
-
 typedef signed char int8_t;
 typedef short int16_t;
 typedef int int32_t;

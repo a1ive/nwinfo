@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: Unlicense
+﻿// SPDX-License-Identifier: Unlicense
 
 #pragma once
 
@@ -6,7 +6,7 @@
 #define QUOTE(x) QUOTE_(x)
 
 #define LIBCDI_MAJOR_VERSION 9
-#define LIBCDI_MINOR_VERSION 8
+#define LIBCDI_MINOR_VERSION 9
 #define LIBCDI_MICRO_VERSION 0
 #define LIBCDI_BUILD_VERSION 0
 

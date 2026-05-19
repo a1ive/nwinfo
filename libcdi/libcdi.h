@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #define VC_EXTRALEAN
 #include <windows.h>
@@ -142,6 +142,17 @@ enum CDI_DISK_STATUS
 #define CDI_FLAG_CSMI_RESERVED_5		(5ULL << CDI_CSMI_SHIFT)
 #define CDI_FLAG_CSMI_RESERVED_6		(6ULL << CDI_CSMI_SHIFT)
 #define CDI_FLAG_CSMI_RESERVED_7		(7ULL << CDI_CSMI_SHIFT)
+
+// FlagUsbJMS56X
+#define CDI_FLAG_ENABLE_JMS56X			(1ULL << 31) // FALSE
+// FlagUsbJMB39X
+#define CDI_FLAG_ENABLE_JMB39X			(1ULL << 32) // FALSE
+// FlagUsbJMS586_20
+#define CDI_FLAG_ENABLE_JMS586_20		(1ULL << 33) // FALSE
+// FlagUsbJMS586_40
+#define CDI_FLAG_ENABLE_JMS586_40		(1ULL << 34) // FALSE
+// FlagUsbJMS59X
+#define CDI_FLAG_ENABLE_JMS59X			(1ULL << 35) // FALSE
 
 #define CDI_FLAG_DEFAULT \
 	( \

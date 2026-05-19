@@ -262,6 +262,7 @@ typedef DWORD(WINAPI* _GetDllVersionJMB39X) (PBYTE major, PBYTE minor, PBYTE rev
 typedef int(WINAPI* _GetControllerCountJMB39X) ();
 typedef BOOL(WINAPI* _GetSmartInfoJMB39X) (int index, unsigned char port, UNION_SMART_ATTRIBUTE* attribute, UNION_SMART_THRESHOLD* threshold);
 typedef BOOL(WINAPI* _GetIdentifyInfoJMB39X) (int index, unsigned char port, UNION_IDENTIFY_DEVICE* identify);
+typedef int(WINAPI* _GetRaidCountMB39X) ();
 
 // JMicron JMS586_Old API
 typedef DWORD(WINAPI* _GetDllVersionJMS586_20) (PBYTE major, PBYTE minor, PBYTE revision, PBYTE release);
@@ -282,4 +283,11 @@ typedef BOOL(WINAPI* _GetNVMePortInfoJMS586_40) (BYTE index, unsigned char port,
 typedef BOOL(WINAPI* _GetNVMeSmartInfoJMS586_40) (BYTE index, unsigned char port, UNION_SMART_ATTRIBUTE* smartInfo);
 typedef BOOL(WINAPI* _GetNVMeIdInfoJMS586_40) (BYTE index, unsigned char port, NVME_ID* nvmeId);
 typedef BOOL(WINAPI* _ControllerSerialNum2IdJMS586_40) (BYTE csn, BYTE* cid);
+
+// JMicron JMS59X API
+typedef DWORD(WINAPI* _GetDllVersionJMS59X) (PBYTE major, PBYTE minor, PBYTE revision, PBYTE release);
+typedef int(WINAPI* _GetControllerCountJMS59X) ();
+typedef BOOL(WINAPI* _GetSmartInfoJMS59X) (int index, unsigned char port, UNION_SMART_ATTRIBUTE* attribute, UNION_SMART_THRESHOLD* threshold);
+typedef BOOL(WINAPI* _GetIdentifyInfoJMS59X) (int index, unsigned char port, UNION_IDENTIFY_DEVICE* identify);
+typedef int(WINAPI* _GetRaidCountJMS59X) ();
 

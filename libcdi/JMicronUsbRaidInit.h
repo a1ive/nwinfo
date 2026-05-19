@@ -25,6 +25,9 @@ BOOL DeinitializeJMS586_20(HMODULE* hModule);
 BOOL InitializeJMS586_40(HMODULE* hModule);
 BOOL DeinitializeJMS586_40(HMODULE* hModule);
 
+BOOL InitializeJMS59X(HMODULE* hModule);
+BOOL DeinitializeJMS59X(HMODULE* hModule);
+
 //-----------------------------------------------------------------------------
 //
 // Funtions
@@ -56,6 +59,12 @@ _GetNVMePortInfoJMS586_40 pGetNVMePortInfoJMS586_40 = NULL;
 _GetNVMeSmartInfoJMS586_40 pGetNVMeSmartInfoJMS586_40 = NULL;
 _GetNVMeIdInfoJMS586_40 pGetNVMeIdInfoJMS586_40 = NULL;
 _ControllerSerialNum2IdJMS586_40 pControllerSerialNum2IdJMS586_40 = NULL;
+
+_GetDllVersionJMS59X pGetDllVersionJMS59X = NULL;
+_GetControllerCountJMS59X pGetControllerCountJMS59X = NULL;
+_GetSmartInfoJMS59X pGetSmartInfoJMS59X = NULL;
+_GetIdentifyInfoJMS59X pGetIdentifyInfoJMS59X = NULL;
+_GetRaidCountJMS59X pGetRaidCountJMS59X = NULL;
 
 //-----------------------------------------------------------------------------
 //
@@ -291,6 +300,61 @@ BOOL InitializeJMS586_40(HMODULE* hModule)
 	return TRUE;
 }
 
+BOOL InitializeJMS59X(HMODULE* hModule)
+{
+	TCHAR fullPath[MAX_PATH] = {};
+	TCHAR drive[MAX_PATH] = {};
+	TCHAR path[MAX_PATH] = {};
+	TCHAR dllPath[MAX_PATH] = {};
+
+	GetModuleFileNameW(NULL, fullPath, MAX_PATH);
+	_wsplitpath_s(fullPath, drive, MAX_PATH, path, MAX_PATH, NULL, 0, NULL, 0);
+	wcscat_s(dllPath, MAX_PATH, drive);
+	wcscat_s(dllPath, MAX_PATH, path);
+	wcscat_s(dllPath, MAX_PATH, DLL_DIR);
+
+#ifdef _M_ARM64
+	wcscat_s(dllPath, MAX_PATH, L"JMS59xA64.dll");
+#elif _M_X64
+	wcscat_s(dllPath, MAX_PATH, L"JMS59x64.dll");
+#else
+	wcscat_s(dllPath, MAX_PATH, L"JMS59x86.dll");
+#endif
+
+	if (!CheckCodeSign(CERTNAME_JMS59X, dllPath)) { return FALSE; }
+	*hModule = LoadLibraryW(dllPath);
+
+	if (*hModule == NULL)
+	{
+		return FALSE;
+	}
+
+	//-----------------------------------------------------------------------------
+	// GetProcAddress
+	//-----------------------------------------------------------------------------
+	pGetDllVersionJMS59X = (_GetDllVersionJMS59X)GetProcAddress(*hModule, "GetDllVersion");
+	pGetControllerCountJMS59X = (_GetControllerCountJMS59X)GetProcAddress(*hModule, "GetControllerCount");
+	pGetSmartInfoJMS59X = (_GetSmartInfoJMS59X)GetProcAddress(*hModule, "GetSmartInfoFx");
+	pGetIdentifyInfoJMS59X = (_GetIdentifyInfoJMS59X)GetProcAddress(*hModule, "GetIdentifyInfoFx");
+	pGetRaidCountJMS59X = (_GetRaidCountJMS59X)GetProcAddress(*hModule, "GetAvailableRaidsFx");
+
+	//-----------------------------------------------------------------------------
+	// Check Functions
+	//-----------------------------------------------------------------------------
+	if (!(pGetDllVersionJMS59X
+		&& pGetControllerCountJMS59X
+		&& pGetSmartInfoJMS59X
+		&& pGetIdentifyInfoJMS59X
+		&& pGetRaidCountJMS59X
+		))
+	{
+		FreeLibrary(*hModule);
+		*hModule = NULL;
+		return FALSE;
+	}
+
+	return TRUE;
+}
 
 //-----------------------------------------------------------------------------
 //
@@ -350,6 +414,23 @@ BOOL DeinitializeJMS586_20(HMODULE* hModule)
 }
 
 BOOL DeinitializeJMS586_40(HMODULE* hModule)
+{
+	BOOL result = FALSE;
+
+	if (*hModule == NULL)
+	{
+		return TRUE;
+	}
+	else
+	{
+		result = FreeLibrary(*hModule);
+		*hModule = NULL;
+
+		return result;
+	}
+}
+
+BOOL DeinitializeJMS59X(HMODULE* hModule)
 {
 	BOOL result = FALSE;
 

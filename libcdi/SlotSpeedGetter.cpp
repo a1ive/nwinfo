@@ -53,6 +53,7 @@ CString GetStringValueFromQuery(IWbemServices* pIWbemServices, const CString que
 					VariantClear(&pVal);
 				}
 				VariantInit(&pVal);
+				SAFE_RELEASE(pCOMDev);
 			}
 		}
 	}
@@ -61,7 +62,6 @@ CString GetStringValueFromQuery(IWbemServices* pIWbemServices, const CString que
 		result = L"";
 	}
 
-	SAFE_RELEASE(pCOMDev);
 	SAFE_RELEASE(pEnumCOMDevs);
 	return result;
 }
@@ -147,7 +147,14 @@ SlotMaxCurrSpeed GetSlotMaxCurrSpeedFromDeviceID(const CString DeviceID)
 			BYTE ResultBuffer[1024]{};
 			DWORD RequiredSize{};
 
-			const HMODULE hMod = LoadLibrary(TEXT("Setupapi.dll"));
+			// const HMODULE hMod = LoadLibrary(TEXT("Setupapi.dll"));
+			// Fix: Use full path to prevent DLL search order hijacking
+			TCHAR systemDir[MAX_PATH];
+			GetSystemDirectory(systemDir, MAX_PATH);
+			TCHAR setupapiPath[MAX_PATH];
+			_stprintf_s(setupapiPath, MAX_PATH, TEXT("%s\\Setupapi.dll"), systemDir);
+			const HMODULE hMod = LoadLibrary(setupapiPath);
+
 			if (hMod && hMod != INVALID_HANDLE_VALUE) {
 				FN_SetupDiGetDeviceProperty SetupDiGetDeviceProperty =
 					(FN_SetupDiGetDeviceProperty)GetProcAddress(hMod, "SetupDiGetDevicePropertyW");
@@ -177,6 +184,7 @@ SlotMaxCurrSpeed GetSlotMaxCurrSpeedFromDeviceID(const CString DeviceID)
 
 		++CurrentDevice;
 	} while (LastResult);
+	SetupDiDestroyDeviceInfoList(ClassDeviceInformations);
 
 	return ConvertOSResult(OSLevelResult);
 }

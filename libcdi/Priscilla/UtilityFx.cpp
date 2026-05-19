@@ -272,7 +272,7 @@ void SplitCString(const CString& str, const CString& delimiter, CStringArray& ar
 
 
 
-
+#if _MSC_VER > 1310
 // ---------------------------------------------------------
 // 20260123: Safe for unaligned/page-boundary (Using memcpy for atomic-like MOV) >>>
 
@@ -336,7 +336,7 @@ NODISCARD USHORT B8toB16le(const BYTE(&v)[6]) noexcept {
 
 // 20260123: Safe for unaligned/page-boundary <<<
 // ---------------------------------------------------------
-
+#endif
 
 
 ////------------------------------------------------
@@ -929,3 +929,110 @@ void SetClipboardText(CString clip)
 		CloseClipboard();
 	}
 }
+
+////------------------------------------------------
+//   SHLWAPI.DLL compatible functions
+////------------------------------------------------
+#if _MSC_VER <= 1310
+BOOL PathRemoveFileSpecFxA(char* path)
+{
+	char* filespec = path;
+	BOOL modified = FALSE;
+
+	if (!path || !*path) { return FALSE; }
+	if (*path == '\\') { filespec = ++path; }
+	if (*path == '\\') { filespec = ++path; }
+
+	while (*path)
+	{
+		if (*path == '\\')
+		{
+			filespec = path;
+		}
+		else if (*path == ':')
+		{
+			filespec = ++path;
+			if (*path == '\\') { filespec++; }
+		}
+		path = CharNextA(path);
+	}
+
+	if (*filespec)
+	{
+		*filespec = '\0';
+		modified = TRUE;
+	}
+
+	return modified;
+}
+
+BOOL PathRemoveFileSpecFxW(WCHAR* path)
+{
+	WCHAR* filespec = path;
+	BOOL modified = FALSE;
+
+	if (!path || !*path) { return FALSE; }
+	if (*path == '\\') { filespec = ++path; }
+	if (*path == '\\') { filespec = ++path; }
+
+	while (*path)
+	{
+		if (*path == '\\')
+		{
+			filespec = path;
+		}
+		else if (*path == ':')
+		{
+			filespec = ++path;
+			if (*path == '\\') { filespec++; }
+		}
+		path++;
+	}
+
+	if (*filespec)
+	{
+		*filespec = '\0';
+		modified = TRUE;
+	}
+
+	return modified;
+}
+
+char* PathFindFileNameFxA(const char* path)
+{
+	const char* p = path;
+	const char* name = NULL;
+	while (*p)
+	{
+		if (*p == '\\' || *p == '/')
+		{
+			name = p + 1;
+		}
+		p = CharNextA(p);
+	}
+	if (name)
+	{
+		return (char*)name;
+	}
+	return (char*)path;
+}
+
+WCHAR* PathFindFileNameFxW(const WCHAR* path)
+{
+	const WCHAR* p = path;
+	const WCHAR* name = NULL;
+	while (*p)
+	{
+		if (*p == '\\' || *p == '/')
+		{
+			name = p + 1;
+		}
+		p++;
+	}
+	if (name)
+	{
+		return (WCHAR*)name;
+	}
+	return (WCHAR*)path;
+}
+#endif

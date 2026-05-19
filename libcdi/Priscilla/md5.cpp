@@ -6,12 +6,6 @@
 #include "../stdafx.h"
 #include "md5.h"
 
-#if _MSC_VER > 1310
-
-// skip
-
-#else
-
 /*
  * Constants defined by the MD5 algorithm
  */
@@ -230,5 +224,3 @@ void md5File(FILE *file, uint8_t *result){
     memcpy(result, ctx.digest, 16);
 }
 */
-
-#endif

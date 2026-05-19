@@ -33,10 +33,9 @@ ULONG64 B8toB64(BYTE b0, BYTE b1 = 0, BYTE b2 = 0, BYTE b3 = 0, BYTE b4 = 0, BYT
 DWORD B8toB32(BYTE b0, BYTE b1 = 0, BYTE b2 = 0, BYTE b3 = 0);
 void SplitCString(const CString& str, const CString& delimiter, CStringArray& arr);
 
-
+#if _MSC_VER > 1310
 // ---------------------------------------------------------
 // 20260123: Safe for unaligned/page-boundary (Using memcpy for atomic-like MOV) >>>
-
 #ifndef NODISCARD
   #if (defined(__cplusplus) && __cplusplus >= 201703L) || (defined(_MSVC_LANG) && _MSVC_LANG >= 201703L)
     #define NODISCARD [[nodiscard]]
@@ -77,12 +76,9 @@ NODISCARD INT B8toINTle(const BYTE(&v)[6]) noexcept;
 /* 6byte(le) to USHORT (Safe for page-boundary) */
 NODISCARD USHORT B8toB16le(const BYTE(&v)[6]) noexcept;
 
-
 // 20260123: Safe for unaligned/page-boundary <<<
 // ---------------------------------------------------------
-
-
-
+#endif
 
 ////------------------------------------------------
 //   .ini support function
@@ -127,3 +123,21 @@ CStringA UE(const CStringA& ansiStr);
 ////------------------------------------------------
 
 void SetClipboardText(CString clip);
+
+////------------------------------------------------
+//   SHLWAPI.DLL compatible functions
+////------------------------------------------------
+#if _MSC_VER <= 1310
+#ifdef UNICODE
+#define PathRemoveFileSpecFx      PathRemoveFileSpecFxW
+#define PathFindFileNameFx        PathFindFileNameFxW
+#else
+#define PathRemoveFileSpecFx      PathRemoveFileSpecFxA
+#define PathFindFileNameFx        PathFindFileNameFxA
+#endif
+
+BOOL PathRemoveFileSpecFxA(char* path);
+BOOL PathRemoveFileSpecFxW(WCHAR* path);
+char* PathFindFileNameFxA(const char* path);
+WCHAR* PathFindFileNameFxW(const WCHAR* path);
+#endif

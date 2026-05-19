@@ -42,4 +42,5 @@
 #define CERTNAME_JMS56X				L"Open Source Developer, Noriyuki Miyazaki"
 #define CERTNAME_JMB39X				L"Open Source Developer, Noriyuki Miyazaki"
 #define CERTNAME_JMS586_20			L"Open Source Developer, Noriyuki Miyazaki"
-#define CERTNAME_JMS586_40			L"Open Source Developer, Noriyuki Miyazaki"
+#define CERTNAME_JMS586_40			L"Open Source Developer, Noriyuki MIYAZAKI"
+#define CERTNAME_JMS59X				L"CrystalMark Inc."

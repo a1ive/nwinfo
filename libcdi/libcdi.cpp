@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+﻿// SPDX-License-Identifier: MIT
 
 #include "stdafx.h"
 #include "AtaSmart.h"
@@ -71,6 +71,11 @@ cdi_init_smart(CDI_SMART * ptr, UINT64 flags)
 	ptr->CsmiType = (flags >> CDI_CSMI_SHIFT) & 0x07;
 	if (ptr->CsmiType >= CAtaSmart::CSMI_TYPE_ENABLE_ALL)
 		ptr->CsmiType = CAtaSmart::CSMI_TYPE_ENABLE_AUTO;
+	ptr->FlagUsbJMS56X = check_flag(flags, CDI_FLAG_ENABLE_JMS56X);
+	ptr->FlagUsbJMB39X = check_flag(flags, CDI_FLAG_ENABLE_JMB39X);
+	ptr->FlagUsbJMS586_20 = check_flag(flags, CDI_FLAG_ENABLE_JMS586_20);
+	ptr->FlagUsbJMS586_40 = check_flag(flags, CDI_FLAG_ENABLE_JMS586_40);
+	ptr->FlagUsbJMS59X = check_flag(flags, CDI_FLAG_ENABLE_JMS59X);
 
 	ptr->Init(check_flag(flags, CDI_FLAG_USE_WMI),
 		check_flag(flags, CDI_FLAG_ADVANCED_SEARCH),
