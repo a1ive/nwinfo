@@ -1,4 +1,4 @@
-﻿/*
+/*
 # Nuklear
 ![](https://cloud.githubusercontent.com/assets/8057201/11761525/ae06f0ca-a0c6-11e5-819d-5610b25f6ef4.gif)
 
@@ -3338,7 +3338,7 @@ enum nk_widget_states {
     NK_WIDGET_STATE_ACTIVE      = NK_WIDGET_STATE_ACTIVED|NK_WIDGET_STATE_MODIFIED /**!< widget is currently activated */
 };
 NK_API enum nk_widget_layout_states nk_widget(struct nk_rect*, const struct nk_context*);
-NK_API enum nk_widget_layout_states nk_widget_fitting(struct nk_rect*, const struct nk_context*, struct nk_vec2);
+#define nk_widget_fitting(bounds, ctx, padding) nk_widget(bounds, ctx)
 NK_API struct nk_rect nk_widget_bounds(const struct nk_context*);
 NK_API struct nk_vec2 nk_widget_position(const struct nk_context*);
 NK_API struct nk_vec2 nk_widget_size(const struct nk_context*);
@@ -6055,7 +6055,7 @@ struct nk_context {
 #define NK_ALIGN_PTR_BACK(x, mask)\
     (NK_UINT_TO_PTR((NK_PTR_TO_UINT((nk_byte*)(x)) & ~(mask-1))))
 
-#if ((defined(__GNUC__) && __GNUC__ >= 4) || defined(__clang__)) && !defined(EMSCRIPTEN)
+#if ((defined(__GNUC__) && __GNUC__ >= 4) || defined(__clang__)) && !defined(__EMSCRIPTEN__)
 #define NK_OFFSETOF(st,m) (__builtin_offsetof(st,m))
 #else
 #define NK_OFFSETOF(st,m) ((nk_ptr)&(((st*)0)->m))
@@ -21617,7 +21617,7 @@ nk_contextual_item_text(struct nk_context *ctx, const char *text, int len,
 
     win = ctx->current;
     style = &ctx->style;
-    state = nk_widget_fitting(&bounds, ctx, style->contextual_button.padding);
+    state = nk_widget(&bounds, ctx);
     if (!state) return nk_false;
 
     in = (state == NK_WIDGET_ROM || win->layout->flags & NK_WINDOW_ROM) ? 0 : &ctx->input;
@@ -21652,7 +21652,7 @@ nk_contextual_item_image_text(struct nk_context *ctx, struct nk_image img,
 
     win = ctx->current;
     style = &ctx->style;
-    state = nk_widget_fitting(&bounds, ctx, style->contextual_button.padding);
+    state = nk_widget(&bounds, ctx);
     if (!state) return nk_false;
 
     in = (state == NK_WIDGET_ROM || win->layout->flags & NK_WINDOW_ROM) ? 0 : &ctx->input;
@@ -21688,7 +21688,7 @@ nk_contextual_item_symbol_text(struct nk_context *ctx, enum nk_symbol_type symbo
 
     win = ctx->current;
     style = &ctx->style;
-    state = nk_widget_fitting(&bounds, ctx, style->contextual_button.padding);
+    state = nk_widget(&bounds, ctx);
     if (!state) return nk_false;
 
     in = (state == NK_WIDGET_ROM || win->layout->flags & NK_WINDOW_ROM) ? 0 : &ctx->input;
@@ -23696,23 +23696,6 @@ nk_widget(struct nk_rect *bounds, const struct nk_context *ctx)
     if (!NK_INBOX(in->mouse.pos.x, in->mouse.pos.y, v.x, v.y, v.w, v.h))
         return NK_WIDGET_ROM;
     return NK_WIDGET_VALID;
-}
-NK_API enum nk_widget_layout_states
-nk_widget_fitting(struct nk_rect *bounds, const struct nk_context *ctx,
-    struct nk_vec2 item_padding)
-{
-    /* update the bounds to stand without padding  */
-    enum nk_widget_layout_states state;
-    NK_UNUSED(item_padding);
-
-    NK_ASSERT(ctx);
-    NK_ASSERT(ctx->current);
-    NK_ASSERT(ctx->current->layout);
-    if (!ctx || !ctx->current || !ctx->current->layout)
-        return NK_WIDGET_INVALID;
-
-    state = nk_widget(bounds, ctx);
-    return state;
 }
 NK_API void
 nk_spacing(struct nk_context *ctx, int cols)
