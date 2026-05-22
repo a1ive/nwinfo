@@ -23,9 +23,6 @@
 #define TEMP_FAHRENHEIT_SYMBOL u8"\u00b0F"
 #define TEMP_KELVIN_SYMBOL u8"K"
 
-GdipFont*
-nk_gdip_load_font(LPCWSTR name, int size);
-
 nk_bool
 nk_begin_ex(struct nk_context* ctx, const char* title,
 	struct nk_rect bounds, nk_flags flags, struct nk_image img_icon, struct nk_image img_close);
