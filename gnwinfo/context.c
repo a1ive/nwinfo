@@ -247,6 +247,7 @@ gnwinfo_ctx_update_thread(LPVOID lpParameter)
 		if (!g_ctx.init_done)
 			InterlockedExchange(&g_ctx.init_done, 1);
 	}
+	NWL_FreeConvBuffers();
 	return 0;
 }
 
@@ -361,7 +362,6 @@ gnwinfo_ctx_init(HINSTANCE inst, HWND wnd, struct nk_context* ctx, float width, 
 	NW_Init(&g_ctx.lib);
 	g_ctx.lib.NwSmartFlags = ~g_ctx.smart_flag;
 	g_ctx.lib.HideSensitive = strtoul(gnwinfo_get_ini_value(L"Window", L"HideSensitive", L"0"), NULL, 10);
-	g_ctx.lib.NwRoot = NWL_NodeAlloc("NWinfo", 0);
 	g_ctx.cpuid = NW_Cpuid(TRUE);
 	g_ctx.system = NW_System(TRUE);
 	g_ctx.smbios = NW_Smbios(TRUE);
@@ -393,7 +393,7 @@ gnwinfo_ctx_init(HINSTANCE inst, HWND wnd, struct nk_context* ctx, float width, 
 	SetTimer(g_ctx.wnd, IDT_TIMER_1M, 60 * 1000, (TIMERPROC)NULL);
 }
 
-noreturn void
+void
 gnwinfo_ctx_exit(void)
 {
 	KillTimer(g_ctx.wnd, IDT_TIMER_1S);
@@ -440,5 +440,4 @@ gnwinfo_ctx_exit(void)
 	NW_Fini();
 	for (WORD i = 0; i < sizeof(g_ctx.image) / sizeof(g_ctx.image[0]); i++)
 		nk_gdip_image_free(g_ctx.image[i]);
-	exit(0);
 }

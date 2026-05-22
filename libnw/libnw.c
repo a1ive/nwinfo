@@ -4,6 +4,7 @@
 #include "utils.h"
 #include "efivars.h"
 #include "network.h"
+#include "cpuid.h"
 
 #include "libcpuid.h"
 #include "../libcdi/libcdi.h"
@@ -199,6 +200,7 @@ VOID NW_Fini(VOID)
 			NWL_MsrFini(&NWLC->NwMsr[i]);
 		free(NWLC->NwMsr);
 	}
+	NWL_FreeCpuFreq();
 	cpuid_free_system_id(NWLC->NwCpuid);
 	free(NWLC->NwCpuid);
 	cpuid_free_raw_data_array(NWLC->NwCpuRaw);

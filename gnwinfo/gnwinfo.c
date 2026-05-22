@@ -423,16 +423,22 @@ wWinMain(_In_ HINSTANCE hInstance,
 		gnwinfo_draw_hostname_window(ctx, g_ctx.gui_width, g_ctx.gui_height);
 		ReleaseSRWLockExclusive(&g_ctx.lock);
 		if (g_ctx.exit_pending)
-			gnwinfo_ctx_exit();
+			running = 0;
 
 		/* Draw */
 		nk_gdip_render(g_ctx.gui_aa, g_color_back);
 	}
 
+	gnwinfo_ctx_exit();
+	if (IsWindow(wnd))
+		DestroyWindow(wnd);
 	CoUninitialize();
-	nk_gdipfont_del(g_font);
+	if (g_font)
+	{
+		nk_gdipfont_del(g_font);
+		g_font = NULL;
+	}
 	nk_gdip_shutdown();
 	UnregisterClassW(wc.lpszClassName, wc.hInstance);
-	gnwinfo_ctx_exit();
 	return 0;
 }

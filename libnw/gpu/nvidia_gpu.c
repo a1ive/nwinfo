@@ -113,7 +113,9 @@ static void* nv_gpu_init(PNWLIB_GPU_INFO info)
 
 fail:
 	NWL_Debug(NVDL, "INIT ERR %d", ctx->Result);
+	free(ctx->List);
 	NvAPI_Unload();
+	free(ctx);
 	return NULL;
 }
 
@@ -383,6 +385,7 @@ static void nv_gpu_free(void* data)
 		return;
 	free(ctx->List);
 	NvAPI_Unload();
+	free(ctx);
 }
 
 NWLIB_GPU_DRV gpu_drv_nvidia =

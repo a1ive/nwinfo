@@ -332,6 +332,7 @@ PrintFACS(PNODE pNode)
 	NWL_NodeAttrSetf(tab, "X Firmware Waking Vector", 0, "0x%016llx", facs->XFwWakingVector);
 	NWL_NodeAttrSetf(tab, "FACS Version", 0, "0x%02X", facs->Version);
 	NWL_NodeAttrSetBool(tab, "OSPM 64-bit Wake", (facs->OspmFlags & 0x01), 0);
+	free(facs);
 	return tab;
 }
 

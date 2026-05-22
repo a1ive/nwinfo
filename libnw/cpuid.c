@@ -67,10 +67,10 @@ GetProcessorPerfDist(size_t* pCount)
 	return ppd;
 }
 
+static PSYSTEM_PROCESSOR_PERFORMANCE_DISTRIBUTION m_saved_ppd = NULL;
 DWORD
 NWL_GetCpuFreq(VOID)
 {
-	static PSYSTEM_PROCESSOR_PERFORMANCE_DISTRIBUTION saved_ppd = NULL;
 	PSYSTEM_PROCESSOR_PERFORMANCE_DISTRIBUTION cur_ppd = NULL;
 
 	size_t cpu_count = 0;
@@ -87,14 +87,14 @@ NWL_GetCpuFreq(VOID)
 		return (DWORD) (sum / cpu_count);
 	}
 
-	if (!saved_ppd)
-		saved_ppd = GetProcessorPerfDist(NULL);
-	if (!saved_ppd)
+	if (!m_saved_ppd)
+		m_saved_ppd = GetProcessorPerfDist(NULL);
+	if (!m_saved_ppd)
 		goto fail;
 	cur_ppd = GetProcessorPerfDist(NULL);
 	if (!cur_ppd)
 		goto fail;
-	if (cur_ppd->ProcessorCount != saved_ppd->ProcessorCount ||
+	if (cur_ppd->ProcessorCount != m_saved_ppd->ProcessorCount ||
 		cur_ppd->ProcessorCount < cpu_count)
 		goto fail;
 
@@ -105,7 +105,7 @@ NWL_GetCpuFreq(VOID)
 		PSYSTEM_PROCESSOR_PERFORMANCE_STATE_DISTRIBUTION cur_state =
 			(PSYSTEM_PROCESSOR_PERFORMANCE_STATE_DISTRIBUTION)((BYTE*)cur_ppd + cur_ppd->Offsets[i]);
 		PSYSTEM_PROCESSOR_PERFORMANCE_STATE_DISTRIBUTION saved_state =
-			(PSYSTEM_PROCESSOR_PERFORMANCE_STATE_DISTRIBUTION)((BYTE*)saved_ppd + saved_ppd->Offsets[i]);
+			(PSYSTEM_PROCESSOR_PERFORMANCE_STATE_DISTRIBUTION)((BYTE*)m_saved_ppd + m_saved_ppd->Offsets[i]);
 		if (cur_state->StateCount != saved_state->StateCount)
 			continue;
 		ULONG max_mhz = ppi[i].MaxMhz;
@@ -120,18 +120,19 @@ NWL_GetCpuFreq(VOID)
 	}
 
 	free(ppi);
-	free(saved_ppd);
-	saved_ppd = cur_ppd;
+	free(m_saved_ppd);
+	m_saved_ppd = cur_ppd;
 
 	if (total_hits_delta == 0)
 		return 0;
 	return (DWORD)(total_freq_contrib / total_hits_delta / 100);
 
 fail:
-	if (saved_ppd)
+	free(ppi);
+	if (m_saved_ppd)
 	{
-		free(saved_ppd);
-		saved_ppd = NULL;
+		free(m_saved_ppd);
+		m_saved_ppd = NULL;
 	}
 	if (cur_ppd)
 		free(cur_ppd);
@@ -139,6 +140,13 @@ fail:
 	DWORD reg_freq = 0;
 	NWL_GetRegDwordValue(HKEY_LOCAL_MACHINE, L"HARDWARE\\DESCRIPTION\\System\\CentralProcessor\\0", L"~MHz", &reg_freq);
 	return reg_freq;
+}
+
+void
+NWL_FreeCpuFreq(void)
+{
+	free(m_saved_ppd);
+	m_saved_ppd = NULL;
 }
 
 static LPCSTR

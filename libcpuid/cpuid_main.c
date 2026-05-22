@@ -1773,7 +1773,7 @@ int cpu_identify_all(struct cpu_raw_data_array_t* raw_array, struct system_id_t*
 			cpuid_grow_system_id(system, system->num_cpu_types + 1);
 			cpuid_grow_type_info(&type_info, type_info.num + 1);
 			if ((r = cpu_ident_internal(&raw_array->raw[logical_cpu], &system->cpu_types[cpu_type_index], &type_info.data[cpu_type_index].id_info)) != ERR_OK)
-				return r;
+				goto out;
 			type_info.data[cpu_type_index].purpose = purpose;
 			if (is_topology_supported)
 				type_info.data[cpu_type_index].package_id = cur_package_id;
@@ -1816,8 +1816,6 @@ int cpu_identify_all(struct cpu_raw_data_array_t* raw_array, struct system_id_t*
 		/* Update the total_logical_cpus value for each purpose */
 		system->cpu_types[cpu_type_index].total_logical_cpus = logical_cpu;
 	}
-	cpuid_free_type_info(&type_info);
-
 	/* Update the grand total of cache instances */
 	if (is_topology_supported) {
 		system->l1_instruction_total_instances = caches_all->instances[L1I];
@@ -1827,7 +1825,10 @@ int cpu_identify_all(struct cpu_raw_data_array_t* raw_array, struct system_id_t*
 		system->l4_total_instances             = caches_all->instances[L4];
 	}
 
-	return cpuid_set_error(ERR_OK);
+out:
+	cpuid_free_type_info(&type_info);
+	free(caches_all);
+	return cpuid_set_error(r);
 }
 
 int cpu_request_core_type(cpu_purpose_t purpose, struct cpu_raw_data_array_t* raw_array, struct cpu_id_t* data)
