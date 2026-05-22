@@ -39,8 +39,8 @@ def extract_document_name(doc):
     except Exception as e:
         print("  |-- [WARN] Error scanning cover page: {}".format(e))
 
-    print("  |-- [WARN] Could not find name. Using default 'JEP106BM'.")
-    return "JEP106BM"
+    print("  |-- [WARN] Could not find name. Using default 'JEP106BO'.")
+    return "JEP106BO"
 
 def extract_document_date(doc):
     """Scans a specific page of the PDF to find the document's effective date."""
