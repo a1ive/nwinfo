@@ -4838,7 +4838,7 @@ VOID CAtaSmart::CheckSsdSupport(ATA_SMART_INFO &asi)
 			}
 			break;
 		case 0xAD:
-			if (asi.DiskVendorId == SSD_VENDOR_KIOXIA)
+			if (asi.DiskVendorId == SSD_VENDOR_TOSHIBA || asi.DiskVendorId == SSD_VENDOR_KIOXIA)
 			{
 				asi.Life = asi.Attribute[j].CurrentValue - 100;
 				if (asi.Life <= 0 || asi.Life > 100) { asi.Life = -1; }
@@ -12259,10 +12259,10 @@ BOOL CAtaSmart::FillSmartData(ATA_SMART_INFO* asi)
 				}
 				break;
 			case 0xAD:
-				if (asi->DiskVendorId == SSD_VENDOR_KIOXIA)
+				if (asi->DiskVendorId == SSD_VENDOR_TOSHIBA || asi->DiskVendorId == SSD_VENDOR_KIOXIA)
 				{
 					asi->Life = asi->Attribute[j].CurrentValue - 100;
-					if (asi->Life < 0 || asi->Life > 100) { asi->Life = -1; }
+					if (asi->Life <= 0 || asi->Life > 100) { asi->Life = -1; }
 				}
 				break;
 			case 0xB1:
