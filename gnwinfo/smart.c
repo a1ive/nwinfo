@@ -247,9 +247,7 @@ gnwinfo_draw_smart_window(struct nk_context* ctx, float width, float height)
 {
 	INT count;
 	WCHAR* str;
-	CHAR count_str[16];
 	static int cur_disk = 0;
-	int cur_display;
 
 	(void)width;
 	if (NWLC->NwSmartInit == FALSE)
@@ -264,24 +262,28 @@ gnwinfo_draw_smart_window(struct nk_context* ctx, float width, float height)
 		nk_l(ctx, N_(N__NO_DISKS_FOUND), NK_TEXT_CENTERED);
 		return;
 	}
-	
-	snprintf(count_str, sizeof(count_str), "#%d/", count);
-	nk_layout_row(ctx, NK_DYNAMIC, g_col_height, 4, (float[4]) { 0.14f, 0.6f, 0.18f, 0.08f });
 
-	cur_display = cur_disk + 1;
-	nk_property_int(ctx, count_str, 0, &cur_display, count + 1, 1, 1);
-	cur_disk = cur_display - 1;
-	if (cur_disk >= count)
-		cur_disk = 0;
-	else if (cur_disk < 0)
-		cur_disk = count - 1;
+	nk_layout_row(ctx, NK_DYNAMIC, g_col_height, 4, (float[4]) { 0.6f, 0.14f, 0.18f, 0.08f });
 
 	str = cdi_get_string(NWLC->NwSmart, cur_disk, CDI_STRING_MODEL);
-	nk_lhcf(ctx, NK_TEXT_CENTERED, g_color_text_l,
-		"%s %s",
-		NWL_Ucs2ToUtf8(str),
-		NWL_GetHumanSize(cdi_get_dword(NWLC->NwSmart, cur_disk, CDI_DWORD_DISK_SIZE), &NWLC->NwUnits[2], 1000));
+	if (nk_combo_begin_ex(ctx, NWL_Ucs2ToUtf8(str), g_col_height, nk_true))
+	{
+		nk_layout_row_dynamic(ctx, g_col_height, 1);
+		for (int i = 0; i < count; i++)
+		{
+			WCHAR* model = cdi_get_string(NWLC->NwSmart, i, CDI_STRING_MODEL);
+			if (nk_combo_item_label(ctx, NWL_Ucs2ToUtf8(model), NK_TEXT_LEFT))
+				cur_disk = i;
+			cdi_free_string(model);
+		}
+		nk_combo_end(ctx);
+	}
 	cdi_free_string(str);
+
+	nk_lhc(ctx,
+		NWL_GetHumanSize(cdi_get_dword(NWLC->NwSmart, cur_disk, CDI_DWORD_DISK_SIZE), &NWLC->NwUnits[2], 1000),
+		NK_TEXT_CENTERED, g_color_text_l);
+	
 	if (nk_button_image_label(ctx, GET_PNG(IDR_PNG_REFRESH), N_(N__REFRESH), NK_TEXT_CENTERED))
 		cdi_update_smart(NWLC->NwSmart, cur_disk);
 	g_ctx.smart_hex = !nk_check_label(ctx, N_(N__HEX), !g_ctx.smart_hex);

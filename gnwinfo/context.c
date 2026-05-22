@@ -304,13 +304,15 @@ gnwinfo_ctx_init(HINSTANCE inst, HWND wnd, struct nk_context* ctx, float width, 
 	g_ctx.smart_flag = strtoul(gnwinfo_get_ini_value(L"Widgets", L"SmartFlags", L"0xE7060366"), NULL, 16);
 	g_ctx.gui_aa = strtoul(gnwinfo_get_ini_value(L"Window", L"AntiAliasing", L"1"), NULL, 10);
 
+	for (WORD i = 0; i < sizeof(g_ctx.image) / sizeof(g_ctx.image[0]); i++)
+		g_ctx.image[i] = load_png(i + IDR_PNG_MIN);
+
 	nk_begin_ex(ctx, N_(N__LOADING),
-		nk_rect(width * 0.2f, height / 3, width * 0.6f, height / 4),
-		NK_WINDOW_TITLE | NK_WINDOW_BORDER | NK_WINDOW_NO_INPUT, nk_image_id(0), GET_PNG(IDR_PNG_CLOSE));
+		nk_rect(width * 0.2f, height / 3, width * 0.6f, g_col_height * 5.0f),
+		NK_WINDOW_TITLE | NK_WINDOW_BORDER | NK_WINDOW_NO_INPUT, GET_PNG(IDR_PNG_REFRESH), GET_PNG(IDR_PNG_CLOSE));
 	nk_layout_row_dynamic(ctx, 0, 1);
 	nk_spacer(ctx);
 	nk_lhsc(ctx, N_(N__PLS_WAIT), NK_TEXT_CENTERED, g_color_text_d, nk_false, nk_false);
-	nk_spacer(ctx);
 	nk_end(ctx);
 	nk_gdip_render(g_ctx.gui_aa, g_color_back);
 
@@ -386,9 +388,6 @@ gnwinfo_ctx_init(HINSTANCE inst, HWND wnd, struct nk_context* ctx, float width, 
 	gnwinfo_ctx_update(IDT_TIMER_SPD);
 	if (!g_ctx.update_event || !g_ctx.update_thread)
 		InterlockedExchange(&g_ctx.init_done, 1);
-
-	for (WORD i = 0; i < sizeof(g_ctx.image) / sizeof(g_ctx.image[0]); i++)
-		g_ctx.image[i] = load_png(i + IDR_PNG_MIN);
 
 	SetTimer(g_ctx.wnd, IDT_TIMER_1S, 1000, (TIMERPROC)NULL);
 	SetTimer(g_ctx.wnd, IDT_TIMER_1M, 60 * 1000, (TIMERPROC)NULL);
