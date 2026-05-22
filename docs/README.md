@@ -91,27 +91,27 @@ Exports active physical network interfaces with IPv4 addresses to `report.html` 
 
 ### General Options
 
-- --format=`FORMAT`  
+- \-\-format=`FORMAT`  
   Specify output format.  
   `FORMAT` can be `YAML` (default), `JSON`, `LUA`, `TREE`, or `HTML`.  
-- --output=`FILE`  
+- \-\-output=`FILE`  
   Write to `FILE` instead of printing to the screen.  
-- --cp=`CODEPAGE`  
+- \-\-cp=`CODEPAGE`  
   Set the code page of output text.  
   `CODEPAGE` can be `ANSI` or `UTF8`.  
-- --human  
+- \-\-human  
   Display numbers in a human-readable format.  
-- --temp-unit=`UNIT`  
+- \-\-temp-unit=`UNIT`  
   Specify the temperature unit.  
   `UNIT` can be `C` (Celsius, default), `F` (Fahrenheit), or `K` (Kelvin).  
-- --bin=`FORMAT`  
+- \-\-bin=`FORMAT`  
   Specify binary format.  
   `FORMAT` can be `NONE` (default), `BASE64`, or `HEX`.  
-- --debug  
+- \-\-debug  
   Print debug information to stdout.  
-- --hide-sensitive  
+- \-\-hide-sensitive  
   Hide sensitive data (MAC & S/N).  
-- --driver=`NAME`  
+- \-\-driver=`NAME`  
   Specify the driver name.  
   Available drivers are `CPUZ162`, `NwHwIo`, and `PawnIO`.  
   Use `NONE` to disable driver usage.  
@@ -119,12 +119,12 @@ Exports active physical network interfaces with IPv4 addresses to `report.html` 
 
 ### Hardware Details
 
-- --cpu[=`FILE`]  
+- \-\-cpu[=`FILE`]  
   Print CPUID info.  
   A driver is required to access sensors, such as temperature sensors.  
   Intel, AMD, and VIA/Zhaoxin CPUs are supported.  
   `FILE` specifies the filename of the CPUID dump.  
-- --net[=`FLAG,...`]  
+- \-\-net[=`FLAG,...`]  
   Print network info.  
   - `GUID`  
     Specify the GUID of the network interface, e.g., `{B16B00B5-CAFE-BEEF-DEAD-001453AD0529}`.  
@@ -135,16 +135,16 @@ Exports active physical network interfaces with IPv4 addresses to `report.html` 
     `WLAN`   Include IEEE 802.11 wireless addresses.  
     `IPV4`   Show IPv4 addresses only.  
     `IPV6`   Show IPv6 addresses only.  
-- --board  
+- \-\-board  
   Print mainboard info.  
-- --acpi[=`SGN`]  
+- \-\-acpi[=`SGN`]  
   Print ACPI info.  
   A driver is required to access some ACPI tables.  
   `SGN` specifies the ACPI table signature, e.g., `FACP` (Fixed ACPI Description Table).  
-- --smbios[=`TYPE,...`]  
+- \-\-smbios[=`TYPE,...`]  
   Print SMBIOS info.  
   `TYPE` specifies the SMBIOS structure types, e.g., `2` or `2,4,17`.  
-- --disk[=`FLAG,..`]  
+- \-\-disk[=`FLAG,..`]  
   Print disk info.  
   - `PATH`  
     Specify the disk path, e.g., `\\.\PhysicalDrive0` or `\\.\CdRom0`.  
@@ -159,7 +159,7 @@ Exports active physical network interfaces with IPv4 addresses to `report.html` 
     `SCSI`     Include SCSI devices.  
     `SAS`      Include SAS devices.  
     `USB`      Include USB devices.  
-- --smart=`FLAG,...`  
+- \-\-smart=`FLAG,...`  
   Specify S.M.A.R.T. features.  
   Features enabled by default:  
   `WMI`, `ADATA`, `HIDENOSMART`, `ATA`, `SAT`, `SUNPLUS`, `IODATA`, `LOGITEC`,  
@@ -168,36 +168,36 @@ Exports active physical network interfaces with IPv4 addresses to `report.html` 
   Use `DEFAULT` to specify the above features.  
   Other features are `ADVANCED`, `HD204UI`, `MEMORY`, `RTK9220DP`,  
   `ASM1352R`, `AMDRC2`, `NOCSMI`, and `CSMIRAID`.  
-- --display[=`FILE`]  
+- \-\-display[=`FILE`]  
   Print EDID info.  
   `FILE` specifies the filename of the EDID dump.  
-- --pci[=`CLASS,..`]  
+- \-\-pci[=`CLASS,..`]  
   Print PCI info.  
   `CLASS` specifies PCI device class codes, e.g., `0c05` or `03,0c05`.  
-- --spd[=`FILE`]  
+- \-\-spd[=`FILE`]  
   Print DIMM SPD info.  
   A driver is required to access SPD data.  
   :warning: This option may damage the hardware.  
   `FILE` specifies the filename of the SPD dump.  
-- --usb  
+- \-\-usb  
   Print USB info.  
-- --battery  
+- \-\-battery  
   Print battery info.  
-- --uefi[=`FLAG,..`]  
+- \-\-uefi[=`FLAG,..`]  
   Print UEFI info.  
   - `FLAGS`  
     `MENU` Print UEFI boot menus.  
     `VARS` List all UEFI variables.  
-- --audio  
+- \-\-audio  
   Print audio devices.  
-- --gpu  
+- \-\-gpu  
   Print GPU utilization and sensors (e.g. temperature).  
   GPU drivers are required to access this information.  
   NVIDIA (NVAPI), AMD (ADL2), and Intel (IGCL) are supported.  
-- --device[=`TYPE`]  
+- \-\-device[=`TYPE`]  
   Print device tree.  
   `TYPE` specifies the device type, e.g., `ACPI`, `SWD`, `PCI`, or `USB`.  
-- --sensors[=`SRC,..`]  
+- \-\-sensors[=`SRC,..`]  
   Print sensor readings.  
   `SRC` specifies the sensor provider.  
   Available providers are:  
@@ -206,16 +206,16 @@ Exports active physical network interfaces with IPv4 addresses to `report.html` 
 
 ### System Information
 
-- --sys  
+- \-\-sys  
   Print system info.  
-- --shares  
+- \-\-shares  
   Print mapped network drives and shared folders.  
-- --public-ip  
+- \-\-public-ip  
   Print public IP address.  
-- --product-policy[=`NAME`]  
+- \-\-product-policy[=`NAME`]  
   Print ProductPolicy.  
   `NAME` specifies the product policy name.  
-- --font  
+- \-\-font  
   Print installed fonts.  
 
 ### PowerShell Script for System Diagnostics
