@@ -7,6 +7,10 @@
 #include <windowsx.h>
 #include <dbt.h>
 #include <shellapi.h>
+#include <stdlib.h>
+#ifdef _DEBUG
+#include <crtdbg.h>
+#endif
 
 LPCSTR NWL_Ucs2ToUtf8(LPCWSTR src);
 LPCWSTR NWL_Utf8ToUcs2(LPCSTR src);
@@ -32,6 +36,48 @@ static UINT m_dpi = USER_DEFAULT_SCREEN_DPI;
 #define REGION_MASK_RIGHT   (1 << 1)
 #define REGION_MASK_TOP     (1 << 2)
 #define REGION_MASK_BOTTOM  (1 << 3)
+
+#ifdef _DEBUG
+static void
+dump_memory_leaks(void)
+{
+	WCHAR module_path[MAX_PATH];
+	WCHAR log_path[MAX_PATH] = L"MemoryLeaks.log";
+	HANDLE log_file;
+	int old_report_mode;
+	_HFILE old_report_file;
+	DWORD written;
+
+	if (GetModuleFileNameW(NULL, module_path, MAX_PATH) &&
+		SUCCEEDED(PathCchRemoveFileSpec(module_path, MAX_PATH)) &&
+		SUCCEEDED(PathCchAppend(module_path, MAX_PATH, L"MemoryLeaks.log")))
+		wcscpy_s(log_path, MAX_PATH, module_path);
+
+	log_file = CreateFileW(log_path, GENERIC_WRITE, FILE_SHARE_READ, NULL,
+		CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+	if (log_file == INVALID_HANDLE_VALUE)
+		return;
+
+	old_report_mode = _CrtSetReportMode(_CRT_WARN, _CRTDBG_MODE_FILE);
+	old_report_file = _CrtSetReportFile(_CRT_WARN, log_file);
+	if (!_CrtDumpMemoryLeaks())
+	{
+		static const char no_leaks[] = "No CRT memory leaks detected.\r\n";
+		WriteFile(log_file, no_leaks, (DWORD)(sizeof(no_leaks) - 1), &written, NULL);
+	}
+	_CrtSetReportFile(_CRT_WARN, old_report_file);
+	_CrtSetReportMode(_CRT_WARN, old_report_mode);
+	CloseHandle(log_file);
+}
+
+static void
+init_memory_leak_check(void)
+{
+	int flags = _CrtSetDbgFlag(_CRTDBG_REPORT_FLAG);
+	_CrtSetDbgFlag(flags | _CRTDBG_ALLOC_MEM_DF);
+	atexit(dump_memory_leaks);
+}
+#endif
 
 static void
 set_dpi_scaling(HWND wnd)
@@ -268,6 +314,9 @@ wWinMain(_In_ HINSTANCE hInstance,
 	DWORD layered_flag = LWA_ALPHA;
 
 	_set_invalid_parameter_handler(invalid_param_handler);
+#ifdef _DEBUG
+	init_memory_leak_check();
+#endif
 
 	parse_cmdline(lpCmdLine);
 
