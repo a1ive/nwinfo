@@ -92,6 +92,7 @@ enum
 	NW_OPT_GPU,
 	NW_OPT_FONT,
 	NW_OPT_DEVICE,
+	NW_OPT_DRV_STORE,
 	NW_OPT_SENSORS,
 };
 
@@ -129,6 +130,7 @@ static struct optparse_option nwOptions[] =
 	{ "gpu", 0, OPTPARSE_NONE },
 	{ "font", 0, OPTPARSE_NONE },
 	{ "device", 0, OPTPARSE_OPTIONAL },
+	{ "drv-store", 0, OPTPARSE_OPTIONAL },
 	{ "sensors", 0, OPTPARSE_OPTIONAL },
 	{ 0, 0, 0 },
 };
@@ -226,6 +228,10 @@ static void nwinfo_help(void)
 		"  --device[=TYPE]  Print device tree.\n"
 		"                   TYPE specifies the type of the devices,\n"
 		"                   e.g. 'ACPI', 'SWD', 'PCI' or 'USB'.\n"
+		"  --drv-store[=DRIVE_LETTER]\n"
+		"                   Print Windows driver store info.\n"
+		"                   DRIVE_LETTER specifies the drive letter of\n"
+		"                   the target system, e.g. 'D'.\n"
 		"  --sensors[=SRC,..]\n"
 		"                   Print sensors.\n"
 		"                   SRC specifies the provider of sensors.\n"
@@ -555,6 +561,11 @@ int main(int argc, char* argv[])
 			if (options.optarg && options.optarg[0])
 				nwContext.DevTreeFilter = options.optarg;
 			nwContext.DevTree = TRUE;
+			break;
+		case NW_OPT_DRV_STORE:
+			if (options.optarg && isalpha(options.optarg[0]))
+				nwContext.DrvStoreDrive = towupper(options.optarg[0]);
+			nwContext.DrvStore = TRUE;
 			break;
 		case NW_OPT_SENSORS:
 		{

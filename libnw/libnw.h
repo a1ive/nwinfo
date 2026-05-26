@@ -67,6 +67,7 @@ typedef struct _NWLIB_CONTEXT
 	BOOL GpuInfo;
 	BOOL FontInfo;
 	BOOL DevTree;
+	BOOL DrvStore;
 	BOOL Sensors;
 
 	BOOL Debug;
@@ -82,6 +83,7 @@ typedef struct _NWLIB_CONTEXT
 	LPCSTR CpuDump;
 	LPCSTR SpdDump;
 	LPCSTR EdidDump;
+	WCHAR DrvStoreDrive;
 
 #define NW_NET_ACTIVE (1 << 0)
 #define NW_NET_PHYS   (1 << 1)
@@ -206,6 +208,7 @@ LIBNW_API PNODE NW_ProductPolicy(BOOL bAppend);
 LIBNW_API PNODE NW_Gpu(BOOL bAppend);
 LIBNW_API PNODE NW_Font(BOOL bAppend);
 LIBNW_API PNODE NW_DevTree(BOOL bAppend);
+LIBNW_API PNODE NW_DrvStore(BOOL bAppend);
 LIBNW_API PNODE NW_Sensors(BOOL bAppend);
 
 LIBNW_API VOID NWL_GetUptime(CHAR* szUptime, DWORD dwSize);

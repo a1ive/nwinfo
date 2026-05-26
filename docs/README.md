@@ -1,4 +1,4 @@
-﻿<br />
+<br />
 <div align="center">
   <img src="./images/icon.ico">
   <h2 align="center">NWinfo</h2>
@@ -198,6 +198,9 @@ Exports active physical network interfaces with IPv4 addresses to `report.html` 
 - \-\-device[=`TYPE`]  
   Print device tree.  
   `TYPE` specifies the device type, e.g., `ACPI`, `SWD`, `PCI`, or `USB`.  
+- \-\-drv-store[=`DRIVE_LETTER`]
+  Print Windows driver store info.
+  `DRIVE_LETTER` specifies the drive letter of an offline target system, e.g., `D`.
 - \-\-sensors[=`SRC,..`]  
   Print sensor readings.  
   `SRC` specifies the sensor provider.  
