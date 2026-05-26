@@ -202,6 +202,125 @@ typedef struct _EFI_KEY_OPTION
 	EFI_INPUT_KEY Keys[];
 } EFI_KEY_OPTION;
 
+/// EFI Time Abstraction:
+///  Year:       1900 - 9999
+///  Month:      1 - 12
+///  Day:        1 - 31
+///  Hour:       0 - 23
+///  Minute:     0 - 59
+///  Second:     0 - 59
+///  Nanosecond: 0 - 999,999,999
+///  TimeZone:   -1440 to 1440 or 2047
+typedef struct _EFI_TIME
+{
+	UINT16 Year;
+	UINT8 Month;
+	UINT8 Day;
+	UINT8 Hour;
+	UINT8 Minute;
+	UINT8 Second;
+	UINT8 Pad1;
+	UINT32 Nanosecond;
+	INT16 TimeZone;
+	UINT8 Daylight;
+	UINT8 Pad2;
+} EFI_TIME;
+
+typedef struct
+{
+	///
+	/// An identifier which identifies the agent which added the signature to the list.
+	///
+	GUID        SignatureOwner;
+	///
+	/// The format of the signature is defined by the SignatureType.
+	///
+	UINT8       SignatureData[1];
+} EFI_SIGNATURE_DATA;
+
+typedef struct
+{
+	///
+	/// Type of the signature. GUID signature types are defined in below.
+	///
+	GUID        SignatureType;
+	///
+	/// Total size of the signature list, including this header.
+	///
+	UINT32      SignatureListSize;
+	///
+	/// Size of the signature header which precedes the array of signatures.
+	///
+	UINT32      SignatureHeaderSize;
+	///
+	/// Size of each signature.
+	///
+	UINT32      SignatureSize;
+	///
+	/// Header before the array of signatures. The format of this header is specified
+	/// by the SignatureType.
+	/// UINT8           SignatureHeader[SignatureHeaderSize];
+	///
+	/// An array of signatures. Each signature is SignatureSize bytes in length.
+	/// EFI_SIGNATURE_DATA Signatures[][SignatureSize];
+	///
+} EFI_SIGNATURE_LIST;
+
+typedef UINT8 EFI_SM3_HASH[32];
+typedef UINT8 EFI_SHA1_HASH[20];
+typedef UINT8 EFI_SHA224_HASH[28];
+typedef UINT8 EFI_SHA256_HASH[32];
+typedef UINT8 EFI_SHA384_HASH[48];
+typedef UINT8 EFI_SHA512_HASH[64];
+
+typedef struct
+{
+	///
+	/// The SHA256 hash of an X.509 certificate's To-Be-Signed contents.
+	///
+	EFI_SHA256_HASH    ToBeSignedHash;
+	///
+	/// The time that the certificate shall be considered to be revoked.
+	///
+	EFI_TIME           TimeOfRevocation;
+} EFI_CERT_X509_SHA256;
+
+typedef struct
+{
+	///
+	/// The SHA384 hash of an X.509 certificate's To-Be-Signed contents.
+	///
+	EFI_SHA384_HASH    ToBeSignedHash;
+	///
+	/// The time that the certificate shall be considered to be revoked.
+	///
+	EFI_TIME           TimeOfRevocation;
+} EFI_CERT_X509_SHA384;
+
+typedef struct
+{
+	///
+	/// The SHA512 hash of an X.509 certificate's To-Be-Signed contents.
+	///
+	EFI_SHA512_HASH    ToBeSignedHash;
+	///
+	/// The time that the certificate shall be considered to be revoked.
+	///
+	EFI_TIME           TimeOfRevocation;
+} EFI_CERT_X509_SHA512;
+
+typedef struct
+{
+	///
+	/// The SM3 hash of an X.509 certificate's To-Be-Signed contents.
+	///
+	EFI_SM3_HASH    ToBeSignedHash;
+	///
+	/// The time that the certificate shall be considered to be revoked.
+	///
+	EFI_TIME        TimeOfRevocation;
+} EFI_CERT_X509_SM3;
+
 #pragma pack()
 
 #define END_ENTIRE_DEVICE_PATH_SUBTYPE    0xFF
@@ -259,6 +378,22 @@ typedef struct _VARIABLE_NAME
 } VARIABLE_NAME, * PVARIABLE_NAME;
 
 extern GUID EFI_GV_GUID;
+extern GUID EFI_IMAGE_SECURITY_DATABASE_GUID;
+extern GUID EFI_CERT_SHA256_GUID;
+extern GUID EFI_CERT_RSA2048_GUID;
+extern GUID EFI_CERT_RSA2048_SHA256_GUID;
+extern GUID EFI_CERT_SHA1_GUID;
+extern GUID EFI_CERT_SM3_GUID;
+extern GUID EFI_CERT_RSA2048_SHA1_GUID;
+extern GUID EFI_CERT_X509_GUID;
+extern GUID EFI_CERT_X509_SM3_GUID;
+extern GUID EFI_CERT_SHA224_GUID;
+extern GUID EFI_CERT_SHA384_GUID;
+extern GUID EFI_CERT_SHA512_GUID;
+extern GUID EFI_CERT_X509_SHA256_GUID;
+extern GUID EFI_CERT_X509_SHA384_GUID;
+extern GUID EFI_CERT_X509_SHA512_GUID;
+extern GUID EFI_CERT_TYPE_PKCS7_GUID;
 
 LIBNW_API BOOL NWL_IsEfi(VOID);
 LIBNW_API DWORD NWL_GetEfiVar(LPCWSTR lpName, LPGUID lpGuid,

@@ -186,6 +186,7 @@ Exports active physical network interfaces with IPv4 addresses to `report.html` 
 - \-\-uefi[=`FLAG,..`]  
   Print UEFI info.  
   - `FLAGS`  
+    `CERT` Parse UEFI Secure Boot signature databases.  
     `MENU` Print UEFI boot menus.  
     `VARS` List all UEFI variables.  
 - \-\-audio  

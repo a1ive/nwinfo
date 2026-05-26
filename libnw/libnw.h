@@ -106,6 +106,7 @@ typedef struct _NWLIB_CONTEXT
 	UINT64 DiskFlags;
 #define NW_UEFI_VARS     (1 << 0)
 #define NW_UEFI_MENU     (1 << 1)
+#define NW_UEFI_CERT     (1 << 2)
 	UINT64 UefiFlags;
 
 	VOID (*SpdProgress) (LPCSTR lpszText);

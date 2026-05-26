@@ -212,6 +212,7 @@ static void nwinfo_help(void)
 		"  --battery        Print battery info.\n"
 		"  --uefi[=FLAG,..] Print UEFI info.\n"
 		"    FLAGS:\n"
+		"      CERT         Parse UEFI Secure Boot signature databases.\n"
 		"      MENU         Print UEFI boot menus.\n"
 		"      VARS         List all UEFI variables.\n"
 		"  --shares         Print network mapped drives and shared folders.\n"
@@ -524,6 +525,7 @@ int main(int argc, char* argv[])
 			{
 				{"vars", NW_UEFI_VARS},
 				{"menu", NW_UEFI_MENU},
+				{"cert", NW_UEFI_CERT},
 			};
 			nwinfo_get_opts(options.optarg, &nwContext.UefiFlags, ARRAYSIZE(filter), filter, NULL);
 			nwContext.UefiInfo = TRUE;
