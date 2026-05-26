@@ -526,6 +526,11 @@ enum nk_symbol_type {
     NK_SYMBOL_TRIANGLE_DOWN_OUTLINE,
     NK_SYMBOL_TRIANGLE_LEFT_OUTLINE,
     NK_SYMBOL_TRIANGLE_RIGHT_OUTLINE,
+    NK_SYMBOL_CHEVRON_UP,
+    NK_SYMBOL_CHEVRON_RIGHT,
+    NK_SYMBOL_CHEVRON_DOWN,
+    NK_SYMBOL_CHEVRON_LEFT,
+    NK_SYMBOL_HAMBURGER, /** Three horizontal lines. */
     NK_SYMBOL_MAX
 };
 /* =============================================================================
@@ -3810,6 +3815,9 @@ NK_API void nk_contextual_end(struct nk_context*);
  * ============================================================================= */
 NK_API void nk_tooltip(struct nk_context*, const char*);
 NK_API void nk_tooltip_offset(struct nk_context *ctx, const char *text, enum nk_tooltip_pos position, struct nk_vec2 offset);
+NK_API void nk_do_tooltip(struct nk_context*, const char*, struct nk_rect);
+NK_API void nk_do_tooltip_delay(struct nk_context*, const char*, struct nk_rect, float*);
+NK_API void nk_do_tooltip_delay_clicked(struct nk_context*, const char*, struct nk_rect, float* timer, nk_bool*);
 #ifdef NK_INCLUDE_STANDARD_VARARGS
 NK_API void nk_tooltipf(struct nk_context*, NK_PRINTF_FORMAT_STRING const char*, ...) NK_PRINTF_VARARG_FUNC(2);
 NK_API void nk_tooltipfv(struct nk_context*, NK_PRINTF_FORMAT_STRING const char*, va_list) NK_PRINTF_VALIST_FUNC(2);
@@ -4935,6 +4943,10 @@ NK_API nk_bool nk_input_is_mouse_click_down_in_rect(const struct nk_input *i, en
 NK_API nk_bool nk_input_any_mouse_click_in_rect(const struct nk_input*, struct nk_rect);
 NK_API nk_bool nk_input_is_mouse_prev_hovering_rect(const struct nk_input*, struct nk_rect);
 NK_API nk_bool nk_input_is_mouse_hovering_rect(const struct nk_input*, struct nk_rect);
+NK_API nk_bool nk_input_is_mouse_hovering_still_rect(const struct nk_input*, struct nk_rect);
+NK_API nk_bool nk_input_is_mouse_hovering_delay_rect(const struct nk_context*, struct nk_rect, float*, float);
+NK_API nk_bool nk_input_is_mouse_hovering_still_delay_rect(const struct nk_context*, struct nk_rect, float*, float);
+NK_API nk_bool nk_input_is_mouse_hovering_still_delay_clicked_rect(const struct nk_context*, struct nk_rect, float*, float, nk_bool*);
 NK_API nk_bool nk_input_is_mouse_moved(const struct nk_input*);
 NK_API nk_bool nk_input_mouse_clicked(const struct nk_input*, enum nk_buttons, struct nk_rect);
 NK_API nk_bool nk_input_is_mouse_down(const struct nk_input*, enum nk_buttons);
@@ -5570,6 +5582,7 @@ struct nk_style_window {
 
     enum nk_tooltip_pos tooltip_origin;
     struct nk_vec2 tooltip_offset;
+    float tooltip_delay;
 };
 
 struct nk_style {
@@ -18425,6 +18438,139 @@ nk_input_is_mouse_hovering_rect(const struct nk_input *i, struct nk_rect rect)
     if (!i) return nk_false;
     return NK_INBOX(i->mouse.pos.x, i->mouse.pos.y, rect.x, rect.y, rect.w, rect.h);
 }
+
+/**
+ * # nk_input_is_mouse_hovering_still_rect
+ * Returns true if the mouse is hovering over rect and hasn't moved since the last
+ * frame, false otherwise.
+ */
+NK_API nk_bool
+nk_input_is_mouse_hovering_still_rect(const struct nk_input *i, struct nk_rect rect)
+{
+    if (!i) return nk_false;
+    return (NK_INBOX(i->mouse.pos.x, i->mouse.pos.y, rect.x, rect.y, rect.w, rect.h) &&
+            !nk_input_is_mouse_moved(i));
+}
+
+/**
+ * # nk_input_is_mouse_hovering_delay_rect
+ * Returns true if the mouse has been hovering over rect for `delay` seconds or more.
+ *
+ * Parameter   | Description
+ * ------------|---------------------------------------------------------------
+ * \param[in] ctx     | Must point to an either stack or heap allocated `nk_context` struct
+ * \param[in] rect    | The rect area you're checking against
+ * \param[in|out] timer | Must point to a float used to track the total seconds hovered across frames
+ * \param[in] delay     | The wait time in seconds
+ *
+ * \returns `true` if the the mouse has hovered long enough, `false otherwise`
+ */
+NK_API nk_bool
+nk_input_is_mouse_hovering_delay_rect(const struct nk_context *ctx, struct nk_rect rect, float* timer, float delay)
+{
+    NK_ASSERT(ctx);
+    if (!ctx) {
+        return nk_false;
+    } else {
+        const struct nk_input* i = &ctx->input;
+        if (NK_INBOX(i->mouse.pos.x, i->mouse.pos.y, rect.x, rect.y, rect.w, rect.h)) {
+            *timer += ctx->delta_time_seconds;
+            return *timer >= delay;
+        } else if (NK_INBOX(i->mouse.prev.x, i->mouse.prev.y, rect.x, rect.y, rect.w, rect.h)) {
+            *timer = 0;
+        }
+        return nk_false;
+    }
+
+}
+
+/**
+ * # nk_input_is_mouse_hovering_still_delay_rect
+ * Returns true if the mouse has been hovering motionless over rect for `delay` seconds or more. The timer
+ * does not reset once the delay is reached as long as you are still hovering over the rect.
+ *
+ * Parameter   | Description
+ * ------------|---------------------------------------------------------------
+ * \param[in] ctx     | Must point to an either stack or heap allocated `nk_context` struct
+ * \param[in] rect    | The rect area you're checking against
+ * \param[in|out] timer | Must point to a float used to track the total seconds hovered across frames
+ * \param[in] delay     | The wait time in seconds
+ *
+ * \returns `true` if the the mouse has hovered without moving long enough, `false otherwise`
+ */
+NK_API nk_bool
+nk_input_is_mouse_hovering_still_delay_rect(const struct nk_context *ctx, struct nk_rect rect, float* timer, float delay)
+{
+    NK_ASSERT(ctx);
+    if (!ctx) {
+        return nk_false;
+    } else {
+        const struct nk_input* i = &ctx->input;
+        if (NK_INBOX(i->mouse.pos.x, i->mouse.pos.y, rect.x, rect.y, rect.w, rect.h)) {
+            /* once it triggers, moving within the bounds should not make it disappear */
+            if (*timer >= delay) {
+                return nk_true;
+            }
+            if (!nk_input_is_mouse_moved(i)) {
+                *timer += ctx->delta_time_seconds;
+                return *timer >= delay;
+            }
+            *timer = 0;
+        } else if (NK_INBOX(i->mouse.prev.x, i->mouse.prev.y, rect.x, rect.y, rect.w, rect.h)) {
+            *timer = 0;
+        }
+        return nk_false;
+    }
+}
+
+/**
+ * # nk_input_is_mouse_hovering_still_delay_clicked_rect
+ * Works the same as `nk_input_is_mouse_hovering_still_delay_rect` unless clicked is set. If clicked is true,
+ * then it returns false regardless of the timer value as long as the mouse is motionless. It goes back to working
+ * as normal once the mouse has moved (clicked is set to false, timer to 0).
+ *
+ * Parameter   | Description
+ * ------------|---------------------------------------------------------------
+ * \param[in] ctx     | Must point to an either stack or heap allocated `nk_context` struct
+ * \param[in] rect    | The rect area you're checking against
+ * \param[in|out] timer | Must point to a float used to track the total seconds hovered across frames
+ * \param[in] delay     | The wait time in seconds
+ * \param[in|out] clicked | Must point to an nk_bool used to indicate whether the item in question has been clicked (reset to false internally on mouse motion)
+ *
+ * \returns `true` if the the mouse has hovered without moving long enough, `false otherwise`
+ */
+NK_API nk_bool
+nk_input_is_mouse_hovering_still_delay_clicked_rect(const struct nk_context *ctx, struct nk_rect rect, float* timer, float delay, nk_bool* clicked)
+{
+    NK_ASSERT(ctx);
+    if (!ctx) {
+        return nk_false;
+    } else {
+        const struct nk_input* i = &ctx->input;
+        if (*clicked) {
+            /* could also be based on maintaining hover rather than motionless once clicked */
+            if (!nk_input_is_mouse_moved(i)) {
+                return nk_false;
+            }
+            *clicked = nk_false;
+            *timer = 0;
+        }
+        if (NK_INBOX(i->mouse.pos.x, i->mouse.pos.y, rect.x, rect.y, rect.w, rect.h)) {
+            /* once it triggers, moving within the bounds should not make it disappear */
+            if (*timer >= delay) {
+                return nk_true;
+            }
+            if (!nk_input_is_mouse_moved(i)) {
+                *timer += ctx->delta_time_seconds;
+                return *timer >= delay;
+            }
+            *timer = 0;
+        } else if (NK_INBOX(i->mouse.prev.x, i->mouse.prev.y, rect.x, rect.y, rect.w, rect.h)) {
+            *timer = 0;
+        }
+        return nk_false;
+    }
+}
 NK_API nk_bool
 nk_input_is_mouse_prev_hovering_rect(const struct nk_input *i, struct nk_rect rect)
 {
@@ -19221,13 +19367,14 @@ nk_style_from_table(struct nk_context *ctx, const struct nk_color *table)
     win->tooltip_padding = nk_vec2(4,4);
 
     /* default tooltip just down and to the right of the cursor
-     * so it doesn't cover the text
+     * so it doesn't cover the text and a default delay of 0.5 seconds
      *
      * TODO might be worth consolidating tooltip styling
      * into its own style structure, though it is a
      * type of window...*/
     win->tooltip_origin = NK_TOP_LEFT;
     win->tooltip_offset = nk_vec2(12, 12);
+    win->tooltip_delay = 0.5f;
 }
 NK_API void
 nk_style_set_font(struct nk_context *ctx, const struct nk_user_font *font)
@@ -24389,20 +24536,32 @@ nk_draw_symbol(struct nk_command_buffer *out, enum nk_symbol_type type,
     struct nk_rect content, struct nk_color background, struct nk_color foreground,
     float border_width, const struct nk_user_font *font)
 {
+    /* Use the border_width as the line thickness. */
+    if (border_width <= 0.0f) {
+        border_width = 1.0f;
+    }
     switch (type) {
-    case NK_SYMBOL_X:
+    case NK_SYMBOL_X: {
+        float pad_x = content.w * 0.2f;
+        float pad_y = content.h * 0.2f;
+        float x0 = content.x + pad_x;
+        float y0 = content.y + pad_y;
+        float x1 = content.x + content.w - pad_x;
+        float y1 = content.y + content.h - pad_y;
+        nk_stroke_line(out, x0, y0, x1, y1, border_width, foreground);
+        nk_stroke_line(out, x1, y0, x0, y1, border_width, foreground);
+    } break;
     case NK_SYMBOL_UNDERSCORE:
     case NK_SYMBOL_PLUS:
     case NK_SYMBOL_MINUS: {
         /* single character text symbol */
-        const char *X = (type == NK_SYMBOL_X) ? "x":
-            (type == NK_SYMBOL_UNDERSCORE) ? "_":
+        const char *character = (type == NK_SYMBOL_UNDERSCORE) ? "_":
             (type == NK_SYMBOL_PLUS) ? "+": "-";
         struct nk_text text;
         text.padding = nk_vec2(0,0);
         text.background = background;
         text.text = foreground;
-        nk_widget_text(out, content, X, 1, &text, NK_TEXT_CENTERED, font);
+        nk_widget_text(out, content, character, 1, &text, NK_TEXT_CENTERED, font);
     } break;
     case NK_SYMBOL_CIRCLE_SOLID:
     case NK_SYMBOL_CIRCLE_OUTLINE:
@@ -24416,7 +24575,7 @@ nk_draw_symbol(struct nk_command_buffer *out, enum nk_symbol_type type,
         } else {
             nk_fill_circle(out, content, foreground);
             if (type == NK_SYMBOL_CIRCLE_OUTLINE)
-                nk_fill_circle(out, nk_shrink_rect(content, 1), background);
+                nk_fill_circle(out, nk_shrink_rect(content, border_width), background);
         }
     } break;
     case NK_SYMBOL_TRIANGLE_UP:
@@ -24444,6 +24603,58 @@ nk_draw_symbol(struct nk_command_buffer *out, enum nk_symbol_type type,
         nk_triangle_from_direction(points, content, 0, 0, heading);
         nk_stroke_triangle(out, points[0].x, points[0].y, points[1].x, points[1].y,
             points[2].x, points[2].y, border_width, foreground);
+    } break;
+    case NK_SYMBOL_CHEVRON_UP:
+    case NK_SYMBOL_CHEVRON_RIGHT:
+    case NK_SYMBOL_CHEVRON_DOWN:
+    case NK_SYMBOL_CHEVRON_LEFT: {
+        struct nk_vec2 points[3];
+        switch (type) {
+            case NK_SYMBOL_CHEVRON_RIGHT:
+                points[0].x = content.x;
+                points[0].y = content.y;
+                points[1].x = content.x + content.w;
+                points[1].y = content.y + content.h * 0.5f;
+                points[2].x = content.x;
+                points[2].y = content.y + content.h;
+                break;
+            case NK_SYMBOL_CHEVRON_LEFT:
+                points[0].x = content.x + content.w;
+                points[0].y = content.y;
+                points[1].x = content.x;
+                points[1].y = content.y + content.h * 0.5f;
+                points[2].x = content.x + content.w;
+                points[2].y = content.y + content.h;
+                break;
+            case NK_SYMBOL_CHEVRON_UP:
+                points[0].x = content.x;
+                points[0].y = content.y + content.h;
+                points[1].x = content.x + content.w * 0.5f;
+                points[1].y = content.y;
+                points[2].x = content.x + content.w;
+                points[2].y = content.y + content.h;
+                break;
+            case NK_SYMBOL_CHEVRON_DOWN:
+                points[0].x = content.x;
+                points[0].y = content.y;
+                points[1].x = content.x + content.w * 0.5f;
+                points[1].y = content.y + content.h;
+                points[2].x = content.x + content.w;
+                points[2].y = content.y;
+                break;
+            default:
+                break;
+        }
+        nk_stroke_line(out, points[0].x, points[0].y, points[1].x, points[1].y, border_width, foreground);
+        nk_stroke_line(out, points[1].x, points[1].y, points[2].x, points[2].y, border_width, foreground);
+    } break;
+    case NK_SYMBOL_HAMBURGER: {
+        float y2 = content.y + content.h * 0.5f;
+        float y3 = content.y + content.h - border_width;
+        float x1 = content.x + content.w;
+        nk_stroke_line(out, content.x, content.y, x1, content.y, border_width, foreground);
+        nk_stroke_line(out, content.x, y2, x1, y2, border_width, foreground);
+        nk_stroke_line(out, content.x, y3, x1, y3, border_width, foreground);
     } break;
     default:
     case NK_SYMBOL_NONE:
@@ -24599,7 +24810,7 @@ nk_draw_button_symbol(struct nk_command_buffer *out,
     else sym = style->text_normal;
 
     sym = nk_rgb_factor(sym, style->color_factor_text);
-    nk_draw_symbol(out, type, *content, bg, sym, 1, font);
+    nk_draw_symbol(out, type, *content, bg, sym, style->border, font);
 }
 NK_LIB nk_bool
 nk_do_button_symbol(nk_flags *state,
@@ -24690,7 +24901,7 @@ nk_draw_button_text_symbol(struct nk_command_buffer *out,
     sym = nk_rgb_factor(sym, style->color_factor_text);
     text.text = nk_rgb_factor(text.text, style->color_factor_text);
     text.padding = nk_vec2(0,0);
-    nk_draw_symbol(out, type, *symbol, style->text_background, sym, 0, font);
+    nk_draw_symbol(out, type, *symbol, style->text_background, sym, style->border, font);
     nk_widget_text(out, *label, str, len, &text, NK_TEXT_CENTERED, font);
 }
 NK_LIB nk_bool
@@ -30112,7 +30323,7 @@ nk_combo_begin_symbol(struct nk_context *ctx, enum nk_symbol_type symbol, struct
         bounds.x = header.x + style->combo.content_padding.x;
         bounds.w = (button.x - style->combo.content_padding.y) - bounds.x;
         nk_draw_symbol(&win->buffer, symbol, bounds, sym_background, symbol_color,
-            1.0f, style->font);
+            style->combo.border, style->font);
 
         /* draw open/close button */
         nk_draw_button_symbol(&win->buffer, &bounds, &content, ctx->last_widget_state,
@@ -30215,7 +30426,7 @@ nk_combo_begin_symbol_text(struct nk_context *ctx, const char *selected, int len
         image.h = header.h - 2 * style->combo.content_padding.y;
         image.w = image.h;
         nk_draw_symbol(&win->buffer, symbol, image, text.background, symbol_color,
-            1.0f, style->font);
+            style->combo.border, style->font);
 
         /* draw label */
         text.padding = nk_vec2(0,0);
@@ -30738,6 +30949,45 @@ nk_tooltip_end(struct nk_context *ctx)
     ctx->current->seq--;
     nk_popup_close(ctx);
     nk_popup_end(ctx);
+}
+
+/**
+ * Display a default tooltip if the mouse is hovering over the rect `bounds`
+ */
+NK_API void
+nk_do_tooltip(struct nk_context* ctx, const char* text, struct nk_rect bounds)
+{
+    NK_ASSERT(ctx);
+    if (nk_input_is_mouse_hovering_rect(&ctx->input, bounds)) {
+        nk_tooltip_offset(ctx, text, ctx->style.window.tooltip_origin, ctx->style.window.tooltip_offset);
+    }
+}
+
+/**
+ * Display a default tooltip if the mouse hovers motionless for the default delay (ctx->style.window.tooltip_delay)
+ * `timer` is used to track the time across frames.
+ */
+NK_API void
+nk_do_tooltip_delay(struct nk_context* ctx, const char* text, struct nk_rect bounds, float* timer)
+{
+    NK_ASSERT(ctx);
+    if (nk_input_is_mouse_hovering_still_delay_rect(ctx, bounds, timer, ctx->style.window.tooltip_delay)) {
+        nk_tooltip_offset(ctx, text, ctx->style.window.tooltip_origin, ctx->style.window.tooltip_offset);
+    }
+}
+
+/**
+ * Display a default tooltip if the mouse hovers motionless for the default delay (ctx->style.window.tooltip_delay) unless
+ * `clicked` is true. `clicked` will be reset to false (and `timer` to 0) when the mouse moves.
+ * `timer` is used to track the time across frames.
+ */
+NK_API void
+nk_do_tooltip_delay_clicked(struct nk_context* ctx, const char* text, struct nk_rect bounds, float* timer, nk_bool* clicked)
+{
+    NK_ASSERT(ctx);
+    if (nk_input_is_mouse_hovering_still_delay_clicked_rect(ctx, bounds, timer, ctx->style.window.tooltip_delay, clicked)) {
+        nk_tooltip_offset(ctx, text, ctx->style.window.tooltip_origin, ctx->style.window.tooltip_offset);
+    }
 }
 
 NK_API void

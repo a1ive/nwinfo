@@ -29,7 +29,7 @@ gnwinfo_set_style(struct nk_context* ctx)
 	struct nk_color back_p3 = convert_color(g_color_back, -0.03f);
 	struct nk_color back_p4 = convert_color(g_color_back, -0.04f);
 	struct nk_color back_p8 = convert_color(g_color_back, -0.08f);
-	struct nk_color back_n2 = convert_color(g_color_back, 0.02f);
+	struct nk_color back_n4 = convert_color(g_color_back, 0.04f);
 
 	ctx->style.text.color = g_color_text_d;
 
@@ -61,14 +61,13 @@ gnwinfo_set_style(struct nk_context* ctx)
 	ctx->style.button.text_normal = g_color_text_d;
 	ctx->style.button.text_hover = g_color_text_d;
 	ctx->style.button.text_active = g_color_text_d;
-	//ctx->style.button.normal = nk_style_item_color(back_n2);
-	ctx->style.button.normal = nk_style_item_color(g_color_back);
-	ctx->style.button.hover = nk_style_item_color(back_p2);
+	ctx->style.button.normal = nk_style_item_color(back_n4);
+	ctx->style.button.hover = nk_style_item_color(back_p8);
 	ctx->style.button.active = nk_style_item_color(back_p4);
 	ctx->style.button.rounding = 0;
-	ctx->style.button.border = 1.0f;
+	ctx->style.button.border = 0.0f;
 	ctx->style.button.padding = nk_vec2(0.0f, 0.0f);
-	ctx->style.button.border_color = back_p8;
+	ctx->style.button.image_padding = nk_vec2(0.0f, 0.0f);
 
 	ctx->style.checkbox.text_normal = g_color_text_d;
 	ctx->style.checkbox.text_hover = g_color_text_d;
@@ -102,6 +101,9 @@ gnwinfo_set_style(struct nk_context* ctx)
 	ctx->style.combo.label_normal = g_color_text_d;
 	ctx->style.combo.label_hover = g_color_text_d;
 	ctx->style.combo.label_active = g_color_text_d;
+	ctx->style.combo.sym_normal = NK_SYMBOL_HAMBURGER;
+	ctx->style.combo.sym_hover = NK_SYMBOL_TRIANGLE_DOWN;
+	ctx->style.combo.sym_active = NK_SYMBOL_TRIANGLE_DOWN_OUTLINE;
 	ctx->style.combo.button.normal = nk_style_item_color(g_color_back);
 	ctx->style.combo.button.hover = nk_style_item_color(g_color_back);
 	ctx->style.combo.button.active = nk_style_item_color(g_color_back);
@@ -162,20 +164,23 @@ gnwinfo_set_style(struct nk_context* ctx)
 	ctx->style.edit.selected_text_normal = back_p3;
 	ctx->style.edit.selected_text_hover = back_p3;
 	ctx->style.edit.border_color = back_p8;
-	//ctx->style.edit.padding = nk_vec2(0.0f, 0.0f);
 
 	ctx->style.tab.background = nk_style_item_color(back_p2);
 	ctx->style.tab.text = g_color_text_d;
-	ctx->style.tab.border_color = back_p8;
+	ctx->style.tab.border = 0.0f;
+	ctx->style.tab.indent = (float)g_font_size;
+	ctx->style.tab.sym_maximize = NK_SYMBOL_CHEVRON_DOWN;
+	ctx->style.tab.sym_minimize = NK_SYMBOL_CHEVRON_RIGHT;
 	ctx->style.tab.tab_minimize_button.normal = nk_style_item_color(back_p2);
-	ctx->style.tab.tab_minimize_button.hover = nk_style_item_color(back_p2);
+	ctx->style.tab.tab_minimize_button.hover = nk_style_item_color(back_p8);
 	ctx->style.tab.tab_minimize_button.active = nk_style_item_color(back_p2);
 	ctx->style.tab.tab_minimize_button.text_background = back_p2;
 	ctx->style.tab.tab_minimize_button.text_normal = g_color_text_d;
 	ctx->style.tab.tab_minimize_button.text_hover = g_color_text_d;
 	ctx->style.tab.tab_minimize_button.text_active = g_color_text_d;
+	ctx->style.tab.tab_maximize_button = ctx->style.tab.tab_minimize_button;
 
-	ctx->style.contextual_button.normal = nk_style_item_color(back_n2);
+	ctx->style.contextual_button.normal = nk_style_item_color(back_n4);
 	ctx->style.contextual_button.hover = nk_style_item_color(back_p2);
 	ctx->style.contextual_button.active = nk_style_item_color(back_p4);
 	ctx->style.contextual_button.text_background = g_color_back;
