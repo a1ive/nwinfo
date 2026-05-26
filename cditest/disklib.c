@@ -352,12 +352,12 @@ DWORD GetDriveInfoList(BOOL bIsCdRom, PHY_DRIVE_INFO** pDriveList)
 		pInfo[i].Index = sdn.DeviceNumber;
 
 		if (SetupDiGetDeviceInstanceIdW(hDevInfo, &infoData, mBuf.w, DISKLIB_BUFSZB, NULL))
-			wcsncpy_s(pInfo[i].HwID, MAX_PATH, mBuf.w, MAX_PATH);
+			wcsncpy_s(pInfo[i].HwID, MAX_PATH, mBuf.w, _TRUNCATE);
 		if (SetupDiGetDeviceRegistryPropertyW(hDevInfo, &infoData, SPDRP_FRIENDLYNAME,
 			NULL, (PBYTE)mBuf.w, DISKLIB_BUFSZB, NULL) ||
 			SetupDiGetDeviceRegistryPropertyW(hDevInfo, &infoData, SPDRP_DEVICEDESC,
 				NULL, (PBYTE)mBuf.w, DISKLIB_BUFSZB, NULL))
-			wcsncpy_s(pInfo[i].HwName, MAX_PATH, mBuf.w, MAX_PATH);
+			wcsncpy_s(pInfo[i].HwName, MAX_PATH, mBuf.w, _TRUNCATE);
 
 		hDrive = GetDiskHandleById(bIsCdRom, FALSE, pInfo[i].Index);
 

@@ -7,6 +7,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <wchar.h>
+#include <shlwapi.h>
+#include <pathcch.h>
 
 const DEVPROPKEY DEVPKEY_DriverPackage_DriverInfName =
 { { 0x8163eb01, 0x142c, 0x4f7a, { 0x94, 0xe1, 0xa2, 0x74, 0xcc, 0x47, 0xdb, 0xba } }, 2 };
@@ -371,13 +373,6 @@ NWL_DriverStoreCopy(HDRVSTORE DriverStoreHandle, LPCWSTR DriverPackageFilename,
 		ProcessorArchitecture, LocaleName, Flags, DestinationPath);
 }
 
-static LPCWSTR
-DrvStoreGetFileName(LPCWSTR path)
-{
-	LPCWSTR p = wcsrchr(path, L'\\');
-	return p ? p + 1 : path;
-}
-
 PNODE_ATT
 NWL_DrvStoreSetProperty(PNODE node, HDRVSTORE hDrvStore, DWORD objType, LPCWSTR objName, LPCSTR name, const DEVPROPKEY* propKey)
 {
@@ -496,16 +491,14 @@ DrvStoreEnumPackages(HDRVSTORE hDrvStore, LPCWSTR drvStorePath,
 	if (attr == NULL)
 	{
 		WCHAR name[MAX_PATH];
-		wcsncpy_s(name, ARRAYSIZE(name), DrvStoreGetFileName(drvStorePath), _TRUNCATE);
-		LPWSTR ext = wcsrchr(name, L'.');
-		if (ext && _wcsicmp(ext, L".inf") == 0)
-			*ext = L'\0';
+		wcsncpy_s(name, ARRAYSIZE(name), PathFindFileNameW(drvStorePath), _TRUNCATE);
+		PathCchRemoveExtension(name, MAX_PATH);
 		NWL_NodeAttrSet(node, "Name", NWL_Ucs2ToUtf8(name), 0);
 	}
 
 	attr = NWL_DrvStoreSetProperty(node, hDrvStore, DriverPackage, drvStorePath, "Inf Name", &DEVPKEY_DriverPackage_DriverInfName);
 	if (attr == NULL)
-		NWL_NodeAttrSet(node, "Inf Name", NWL_Ucs2ToUtf8(DrvStoreGetFileName(drvStorePath)), 0);
+		NWL_NodeAttrSet(node, "Inf Name", NWL_Ucs2ToUtf8(PathFindFileNameW(drvStorePath)), 0);
 
 	NWL_DrvStoreSetProperty(node, hDrvStore, DriverPackage, drvStorePath, "Original Inf Name", &DEVPKEY_DriverPackage_OriginalInfName);
 	if (pkgInfo->PublishedInfName[0])

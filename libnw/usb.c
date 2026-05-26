@@ -315,13 +315,13 @@ ParseHwClass(PNODE nd, PNWLIB_IDS ids, LPCWSTR compId)
 			NWL_NodeAttrSet(nd, "Compatible ID", NWL_Ucs2ToUtf8(curId), 0);
 			LPCWSTR strClass = wcsstr(curId, L"Class_");
 			if (strClass)
-				wcsncpy_s(hwClass, 3, strClass + 6, 2);
+				wcsncpy_s(hwClass, 3, strClass + 6, _TRUNCATE);
 			strClass = wcsstr(curId, L"SubClass_");
 			if (strClass)
-				wcsncpy_s(hwClass + 2, 3, strClass + 9, 2);
+				wcsncpy_s(hwClass + 2, 3, strClass + 9, _TRUNCATE);
 			strClass = wcsstr(curId, L"Prot_");
 			if (strClass)
-				wcsncpy_s(hwClass + 4, 3, strClass + 5, 2);
+				wcsncpy_s(hwClass + 4, 3, strClass + 5, _TRUNCATE);
 			hwClass[6] = L'\0';
 			break;
 		}

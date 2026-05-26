@@ -42,7 +42,7 @@ PrintProductPolicyEntry(PNODE node, PPRODUCT_POLICY_VALUE ppValue)
 	LPCSTR pName;
 
 	wcsncpy_s(NWLC->NwBufW, NWINFO_BUFSZW,
-		(WCHAR*)((PUINT8)ppValue + sizeof(PRODUCT_POLICY_VALUE)), ppValue->wNameSize / sizeof(WCHAR));
+		(WCHAR*)((PUINT8)ppValue + sizeof(PRODUCT_POLICY_VALUE)), _TRUNCATE);
 	pName = NWL_Ucs2ToUtf8(NWLC->NwBufW);
 	if (NWLC->ProductPolicy && _stricmp(pName, NWLC->ProductPolicy) != 0)
 		return;

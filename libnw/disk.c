@@ -195,7 +195,7 @@ PrintVolumeInfo(PNODE pNode, const DISK_VOL_INFO* pInfo)
 		NWL_NodeAttrSet(pNode, "Path", NWL_Ucs2ToUtf8(pInfo->VolPath), 0);
 	if (pInfo->VolPath[0])
 	{
-		wcsncpy_s(cchGuid, MAX_PATH, pInfo->VolPath, MAX_PATH);
+		wcsncpy_s(cchGuid, MAX_PATH, pInfo->VolPath, _TRUNCATE);
 		size_t len = wcslen(cchGuid);
 		if (len > 0 && cchGuid[len - 1] == L'\\')
 			cchGuid[len - 1] = L'\0';
@@ -540,12 +540,12 @@ DWORD NWL_GetDriveInfoList(BOOL bIsCdRom, BOOL bGetVolume, PHY_DRIVE_INFO** pDri
 		pInfo[i].Index = sdn.DeviceNumber;
 
 		if (SetupDiGetDeviceInstanceIdW(hDevInfo, &infoData, NWLC->NwBufW, NWINFO_BUFSZB, NULL))
-			wcsncpy_s(pInfo[i].HwID, MAX_PATH, NWLC->NwBufW, MAX_PATH);
+			wcsncpy_s(pInfo[i].HwID, MAX_PATH, NWLC->NwBufW, _TRUNCATE);
 		if (SetupDiGetDeviceRegistryPropertyW(hDevInfo, &infoData, SPDRP_FRIENDLYNAME,
 			NULL, (PBYTE)NWLC->NwBufW, NWINFO_BUFSZB, NULL) ||
 			SetupDiGetDeviceRegistryPropertyW(hDevInfo, &infoData, SPDRP_DEVICEDESC,
 				NULL, (PBYTE)NWLC->NwBufW, NWINFO_BUFSZB, NULL))
-			wcsncpy_s(pInfo[i].HwName, MAX_PATH, NWLC->NwBufW, MAX_PATH);
+			wcsncpy_s(pInfo[i].HwName, MAX_PATH, NWLC->NwBufW, _TRUNCATE);
 
 		hDrive = NWL_GetDiskHandleById(bIsCdRom, FALSE, pInfo[i].Index);
 		pInfo[i].Handle = hDrive;
