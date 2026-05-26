@@ -121,6 +121,7 @@ lang_tr_tr[N__MAX_] =
 	[N__ENABLE_PDH] = u8"PDH'yi etkinleştir",
 	[N__BACKGROUND_INFO] = u8"Arka plan bilgisini göster",
 	[N__HIDE_SYSTRAY] = u8"Sistem tepsisi simgesini gizle",
+	[N__NO_QUICK_ACCESS] = u8"Hızlı erişim düğmesini devre dışı bırak",
 	[N__SHOW_SENSITIVE_DATA] = u8"Hassas bilgileri göster",
 	[N__DISABLE_DPI_SCALING] = u8"DPI ölçeklemeyi devre dışı bırak",
 	[N__DISABLE_ANTIALIASING] = u8"Kenar yumuşatma (anti-aliasing) özelliğini devre dışı bırak",
