@@ -177,6 +177,9 @@
     <ClInclude Include="..\ioctl\ocmb.h">
       <Filter>ioctl</Filter>
     </ClInclude>
+    <ClInclude Include="drvstore.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="acpi.c">
@@ -391,6 +394,9 @@
     </ClCompile>
     <ClCompile Include="gpu\dxcore_npu.cpp">
       <Filter>gpu</Filter>
+    </ClCompile>
+    <ClCompile Include="drvstore.c">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

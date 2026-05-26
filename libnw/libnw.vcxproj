@@ -506,6 +506,7 @@
     <ClInclude Include="cpu\rdmsr.h" />
     <ClInclude Include="devtree.h" />
     <ClInclude Include="disk.h" />
+    <ClInclude Include="drvstore.h" />
     <ClInclude Include="efivars.h" />
     <ClInclude Include="lpc\lpc.h" />
     <ClInclude Include="network.h" />
@@ -547,6 +548,7 @@
     <ClCompile Include="devtree.c" />
     <ClCompile Include="disk.c" />
     <ClCompile Include="display.c" />
+    <ClCompile Include="drvstore.c" />
     <ClCompile Include="efivars.c" />
     <ClCompile Include="font.c" />
     <ClCompile Include="format.c" />
