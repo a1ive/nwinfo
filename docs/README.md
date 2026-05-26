@@ -198,9 +198,9 @@ Exports active physical network interfaces with IPv4 addresses to `report.html` 
 - \-\-device[=`TYPE`]  
   Print device tree.  
   `TYPE` specifies the device type, e.g., `ACPI`, `SWD`, `PCI`, or `USB`.  
-- \-\-drv-store[=`DRIVE_LETTER`]
+- \-\-drv-store[=`OFFLINE_PATH`]
   Print Windows driver store info.
-  `DRIVE_LETTER` specifies the drive letter of an offline target system, e.g., `D`.
+  `OFFLINE_PATH` specifies the path of the offline system, e.g., `D:\`  or `E:\\Backup`.
 - \-\-sensors[=`SRC,..`]  
   Print sensor readings.  
   `SRC` specifies the sensor provider.  

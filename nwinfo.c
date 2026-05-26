@@ -228,10 +228,10 @@ static void nwinfo_help(void)
 		"  --device[=TYPE]  Print device tree.\n"
 		"                   TYPE specifies the type of the devices,\n"
 		"                   e.g. 'ACPI', 'SWD', 'PCI' or 'USB'.\n"
-		"  --drv-store[=DRIVE_LETTER]\n"
+		"  --drv-store[=OFFLINE_PATH]\n"
 		"                   Print Windows driver store info.\n"
-		"                   DRIVE_LETTER specifies the drive letter of\n"
-		"                   the target system, e.g. 'D'.\n"
+		"                   OFFLINE_PATH specifies the path of the offline system,\n"
+		"                   e.g. 'D:\\' or 'E:\\Backup'.\n"
 		"  --sensors[=SRC,..]\n"
 		"                   Print sensors.\n"
 		"                   SRC specifies the provider of sensors.\n"
@@ -356,6 +356,7 @@ int main(int argc, char* argv[])
 	nwContext.SmbiosTypes = NULL;
 	nwContext.DiskPath = NULL;
 	nwContext.PciClasses = NULL;
+	nwContext.DrvStoreDrive = NULL;
 
 	struct optparse options;
 	optparse_init(&options, argv);
@@ -563,8 +564,8 @@ int main(int argc, char* argv[])
 			nwContext.DevTree = TRUE;
 			break;
 		case NW_OPT_DRV_STORE:
-			if (options.optarg && isalpha(options.optarg[0]))
-				nwContext.DrvStoreDrive = towupper(options.optarg[0]);
+			if (options.optarg && options.optarg[0])
+				nwContext.DrvStoreDrive = options.optarg;
 			nwContext.DrvStore = TRUE;
 			break;
 		case NW_OPT_SENSORS:

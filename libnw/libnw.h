@@ -83,7 +83,7 @@ typedef struct _NWLIB_CONTEXT
 	LPCSTR CpuDump;
 	LPCSTR SpdDump;
 	LPCSTR EdidDump;
-	WCHAR DrvStoreDrive;
+	LPCSTR DrvStoreDrive;
 
 #define NW_NET_ACTIVE (1 << 0)
 #define NW_NET_PHYS   (1 << 1)

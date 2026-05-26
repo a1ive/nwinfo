@@ -8,37 +8,41 @@
 #include <string.h>
 #include <wchar.h>
 
-static const DEVPROPKEY DEVPKEY_DriverPackage_DriverInfName =
+const DEVPROPKEY DEVPKEY_DriverPackage_DriverInfName =
 { { 0x8163eb01, 0x142c, 0x4f7a, { 0x94, 0xe1, 0xa2, 0x74, 0xcc, 0x47, 0xdb, 0xba } }, 2 };
-static const DEVPROPKEY DEVPKEY_DriverPackage_OriginalInfName =
+const DEVPROPKEY DEVPKEY_DriverPackage_OriginalInfName =
 { { 0x8163eb01, 0x142c, 0x4f7a, { 0x94, 0xe1, 0xa2, 0x74, 0xcc, 0x47, 0xdb, 0xba } }, 3 };
-static const DEVPROPKEY DEVPKEY_DriverPackage_SignerName =
+const DEVPROPKEY DEVPKEY_DriverPackage_SignerName =
 { { 0x8163eb01, 0x142c, 0x4f7a, { 0x94, 0xe1, 0xa2, 0x74, 0xcc, 0x47, 0xdb, 0xba } }, 7 };
-static const DEVPROPKEY DEVPKEY_DriverPackage_ProviderName =
+const DEVPROPKEY DEVPKEY_DriverPackage_ProviderName =
 { { 0x8163eb01, 0x142c, 0x4f7a, { 0x94, 0xe1, 0xa2, 0x74, 0xcc, 0x47, 0xdb, 0xba } }, 12 };
-static const DEVPROPKEY DEVPKEY_DriverPackage_ClassGuid =
+const DEVPROPKEY DEVPKEY_DriverPackage_ClassGuid =
 { { 0x8163eb01, 0x142c, 0x4f7a, { 0x94, 0xe1, 0xa2, 0x74, 0xcc, 0x47, 0xdb, 0xba } }, 13 };
-static const DEVPROPKEY DEVPKEY_DriverPackage_DriverDate =
+const DEVPROPKEY DEVPKEY_DriverPackage_DriverDate =
 { { 0x8163eb01, 0x142c, 0x4f7a, { 0x94, 0xe1, 0xa2, 0x74, 0xcc, 0x47, 0xdb, 0xba } }, 14 };
-static const DEVPROPKEY DEVPKEY_DriverPackage_DriverVersion =
+const DEVPROPKEY DEVPKEY_DriverPackage_DriverVersion =
 { { 0x8163eb01, 0x142c, 0x4f7a, { 0x94, 0xe1, 0xa2, 0x74, 0xcc, 0x47, 0xdb, 0xba } }, 15 };
-static const DEVPROPKEY DEVPKEY_DriverPackage_ProductName =
+const DEVPROPKEY DEVPKEY_DriverPackage_ProductName =
 { { 0x8163eb01, 0x142c, 0x4f7a, { 0x94, 0xe1, 0xa2, 0x74, 0xcc, 0x47, 0xdb, 0xba } }, 23 };
-static const DEVPROPKEY DEVPKEY_DriverPackage_ImportDate =
+const DEVPROPKEY DEVPKEY_DriverPackage_ImportDate =
 { { 0x8163eb01, 0x142c, 0x4f7a, { 0x94, 0xe1, 0xa2, 0x74, 0xcc, 0x47, 0xdb, 0xba } }, 26 };
-static const DEVPROPKEY DEVPKEY_DriverPackage_DriverPackageId =
+const DEVPROPKEY DEVPKEY_DriverPackage_DriverPackageId =
 { { 0x8163eb01, 0x142c, 0x4f7a, { 0x94, 0xe1, 0xa2, 0x74, 0xcc, 0x47, 0xdb, 0xba } }, 32 };
-static const DEVPROPKEY DEVPKEY_DriverPackage_CatalogFile =
+const DEVPROPKEY DEVPKEY_DriverPackage_CatalogFile =
 { { 0x8163eb01, 0x142c, 0x4f7a, { 0x94, 0xe1, 0xa2, 0x74, 0xcc, 0x47, 0xdb, 0xba } }, 37 };
-static const DEVPROPKEY DEVPKEY_DriverPackage_Primitive =
+const DEVPROPKEY DEVPKEY_DriverPackage_Primitive =
 { { 0x8163eb01, 0x142c, 0x4f7a, { 0x94, 0xe1, 0xa2, 0x74, 0xcc, 0x47, 0xdb, 0xba } }, 40 };
-static const DEVPROPKEY DEVPKEY_DeviceClass_ClassName =
+#if 0
+const DEVPROPKEY DEVPKEY_DeviceClass_ClassName =
 { { 0x259abffc, 0x50a7, 0x47ce, { 0xaf, 0x08, 0x68, 0xc9, 0xa7, 0xd7, 0x33, 0x66 } }, 3 };
+#else
+extern const DEVPROPKEY DEVPKEY_DeviceClass_ClassName;
+#endif
 
 static HMODULE m_drvstore_dll = NULL;
 
 HDRVSTORE
-NWL_DriverStoreOpen(LPCWSTR TargetSystemPath, LPCWSTR TargetBootDrive, DWORD Flags)
+NWL_DriverStoreOpen(LPCSTR Drive, DWORD Flags)
 {
 	if (!m_drvstore_dll)
 		m_drvstore_dll = LoadLibraryW(L"drvstore.dll");
@@ -48,8 +52,46 @@ NWL_DriverStoreOpen(LPCWSTR TargetSystemPath, LPCWSTR TargetBootDrive, DWORD Fla
 
 	*(FARPROC*)&pfnDriverStoreOpen = GetProcAddress(m_drvstore_dll, "DriverStoreOpenW");
 	if (!pfnDriverStoreOpen)
-		return NULL;
-	return pfnDriverStoreOpen(TargetSystemPath, TargetBootDrive, Flags, NULL);
+		goto fail;
+
+	LPCWSTR targetSystemPath = NULL;
+	LPCWSTR targetBootDrive = NULL;
+	WCHAR systemPath[MAX_PATH] = L"C:\\Windows";
+	WCHAR bootDrive[MAX_PATH] = L"C:\\";
+
+	if (Drive)
+	{
+		if (isalpha((unsigned char)Drive[0]) &&
+			(Drive[1] == '\0' || (Drive[1] == ':' && Drive[2] == '\0')))
+		{
+			bootDrive[0] = (WCHAR)Drive[0];
+			systemPath[0] = (WCHAR)Drive[0];
+		}
+		else
+		{
+			size_t len;
+			wcsncpy_s(bootDrive, ARRAYSIZE(bootDrive), NWL_Utf8ToUcs2(Drive), _TRUNCATE);
+			len = wcslen(bootDrive);
+			while (len > 3 && (bootDrive[len - 1] == L'\\' || bootDrive[len - 1] == L'/'))
+				bootDrive[--len] = L'\0';
+			wcsncpy_s(systemPath, ARRAYSIZE(systemPath), bootDrive, _TRUNCATE);
+			len = wcslen(systemPath);
+			if (len && systemPath[len - 1] != L'\\' && systemPath[len - 1] != L'/')
+				wcscat_s(systemPath, ARRAYSIZE(systemPath), L"\\");
+			wcscat_s(systemPath, ARRAYSIZE(systemPath), L"Windows");
+		}
+		targetBootDrive = bootDrive;
+		targetSystemPath = systemPath;
+	}
+
+	HDRVSTORE ret = pfnDriverStoreOpen(targetSystemPath, targetBootDrive, Flags, NULL);
+	if (ret == NULL || ret == INVALID_HANDLE_VALUE)
+		goto fail;
+	return ret;
+fail:
+	FreeLibrary(m_drvstore_dll);
+	m_drvstore_dll = NULL;
+	return NULL;
 }
 
 BOOL
@@ -57,7 +99,7 @@ NWL_DriverStoreClose(HDRVSTORE DriverStoreHandle)
 {
 	BOOL(WINAPI * pfnDriverStoreClose)(HDRVSTORE) = NULL;
 
-	if (DriverStoreHandle == NULL || DriverStoreHandle == INVALID_HANDLE_VALUE)
+	if (DriverStoreHandle == NULL)
 		return FALSE;
 	*(FARPROC*)&pfnDriverStoreClose = GetProcAddress(m_drvstore_dll, "DriverStoreClose");
 	if (!pfnDriverStoreClose)
@@ -330,14 +372,14 @@ NWL_DriverStoreCopy(HDRVSTORE DriverStoreHandle, LPCWSTR DriverPackageFilename,
 }
 
 static LPCWSTR
-GetDrvStoreFileName(LPCWSTR path)
+DrvStoreGetFileName(LPCWSTR path)
 {
 	LPCWSTR p = wcsrchr(path, L'\\');
 	return p ? p + 1 : path;
 }
 
-static PNODE_ATT
-DrvStoreSetProperty(PNODE node, HDRVSTORE hDrvStore, DWORD objType, LPCWSTR objName, LPCSTR name, const DEVPROPKEY* propKey)
+PNODE_ATT
+NWL_DrvStoreSetProperty(PNODE node, HDRVSTORE hDrvStore, DWORD objType, LPCWSTR objName, LPCSTR name, const DEVPROPKEY* propKey)
 {
 	DEVPROPTYPE propType = DEVPROP_TYPE_EMPTY;
 	DWORD propSize = 0;
@@ -448,38 +490,38 @@ DrvStoreEnumPackages(HDRVSTORE hDrvStore, LPCWSTR drvStorePath,
 	PNODE node = NWL_NodeAlloc("Driver", NFLG_TABLE_ROW);
 	PNODE_ATT attr;
 
-	attr = DrvStoreSetProperty(node, hDrvStore, DriverPackage, drvStorePath, "Name", &DEVPKEY_DriverPackage_ProductName);
+	attr = NWL_DrvStoreSetProperty(node, hDrvStore, DriverPackage, drvStorePath, "Name", &DEVPKEY_DriverPackage_ProductName);
 	if (attr == NULL)
-		attr = DrvStoreSetProperty(node, hDrvStore, DriverPackage, drvStorePath, "Name", &DEVPKEY_DriverPackage_DriverPackageId);
+		attr = NWL_DrvStoreSetProperty(node, hDrvStore, DriverPackage, drvStorePath, "Name", &DEVPKEY_DriverPackage_DriverPackageId);
 	if (attr == NULL)
 	{
 		WCHAR name[MAX_PATH];
-		wcsncpy_s(name, ARRAYSIZE(name), GetDrvStoreFileName(drvStorePath), _TRUNCATE);
+		wcsncpy_s(name, ARRAYSIZE(name), DrvStoreGetFileName(drvStorePath), _TRUNCATE);
 		LPWSTR ext = wcsrchr(name, L'.');
 		if (ext && _wcsicmp(ext, L".inf") == 0)
 			*ext = L'\0';
 		NWL_NodeAttrSet(node, "Name", NWL_Ucs2ToUtf8(name), 0);
 	}
 
-	attr = DrvStoreSetProperty(node, hDrvStore, DriverPackage, drvStorePath, "Inf Name", &DEVPKEY_DriverPackage_DriverInfName);
+	attr = NWL_DrvStoreSetProperty(node, hDrvStore, DriverPackage, drvStorePath, "Inf Name", &DEVPKEY_DriverPackage_DriverInfName);
 	if (attr == NULL)
-		NWL_NodeAttrSet(node, "Inf Name", NWL_Ucs2ToUtf8(GetDrvStoreFileName(drvStorePath)), 0);
+		NWL_NodeAttrSet(node, "Inf Name", NWL_Ucs2ToUtf8(DrvStoreGetFileName(drvStorePath)), 0);
 
-	DrvStoreSetProperty(node, hDrvStore, DriverPackage, drvStorePath, "Original Inf Name", &DEVPKEY_DriverPackage_OriginalInfName);
+	NWL_DrvStoreSetProperty(node, hDrvStore, DriverPackage, drvStorePath, "Original Inf Name", &DEVPKEY_DriverPackage_OriginalInfName);
 	if (pkgInfo->PublishedInfName[0])
 		NWL_NodeAttrSet(node, "Published Inf Name", NWL_Ucs2ToUtf8(pkgInfo->PublishedInfName), 0);
 
-	DrvStoreSetProperty(node, hDrvStore, DriverPackage, drvStorePath, "Provider", &DEVPKEY_DriverPackage_ProviderName);
-	DrvStoreSetProperty(node, hDrvStore, DriverPackage, drvStorePath, "Version", &DEVPKEY_DriverPackage_DriverVersion);
-	DrvStoreSetProperty(node, hDrvStore, DriverPackage, drvStorePath, "Date", &DEVPKEY_DriverPackage_DriverDate);
+	NWL_DrvStoreSetProperty(node, hDrvStore, DriverPackage, drvStorePath, "Provider", &DEVPKEY_DriverPackage_ProviderName);
+	NWL_DrvStoreSetProperty(node, hDrvStore, DriverPackage, drvStorePath, "Version", &DEVPKEY_DriverPackage_DriverVersion);
+	NWL_DrvStoreSetProperty(node, hDrvStore, DriverPackage, drvStorePath, "Date", &DEVPKEY_DriverPackage_DriverDate);
 
 	LPCSTR group_name = "Unknown";
 
-	attr = DrvStoreSetProperty(node, hDrvStore, DriverPackage, drvStorePath, "Class GUID", &DEVPKEY_DriverPackage_ClassGuid);
+	attr = NWL_DrvStoreSetProperty(node, hDrvStore, DriverPackage, drvStorePath, "Class GUID", &DEVPKEY_DriverPackage_ClassGuid);
 	if (attr)
 	{
 		group_name = attr->value;
-		attr = DrvStoreSetProperty(node, hDrvStore, DeviceSetupClass, NWL_Utf8ToUcs2(attr->value), "Type", &DEVPKEY_DeviceClass_ClassName);
+		attr = NWL_DrvStoreSetProperty(node, hDrvStore, DeviceSetupClass, NWL_Utf8ToUcs2(attr->value), "Type", &DEVPKEY_DeviceClass_ClassName);
 		if (attr)
 			group_name = attr->value;
 	}
@@ -489,16 +531,16 @@ DrvStoreEnumPackages(HDRVSTORE hDrvStore, LPCWSTR drvStorePath,
 		group = NWL_NodeAppendNew(root, group_name, NFLG_TABLE);
 	NWL_NodeAppendChild(group, node);
 
-	DrvStoreSetProperty(node, hDrvStore, DriverPackage, drvStorePath, "Signer", &DEVPKEY_DriverPackage_SignerName);
-	DrvStoreSetProperty(node, hDrvStore, DriverPackage, drvStorePath, "Package ID", &DEVPKEY_DriverPackage_DriverPackageId);
-	DrvStoreSetProperty(node, hDrvStore, DriverPackage, drvStorePath, "Catalog", &DEVPKEY_DriverPackage_CatalogFile);
-	DrvStoreSetProperty(node, hDrvStore, DriverPackage, drvStorePath, "Import Date", &DEVPKEY_DriverPackage_ImportDate);
+	NWL_DrvStoreSetProperty(node, hDrvStore, DriverPackage, drvStorePath, "Signer", &DEVPKEY_DriverPackage_SignerName);
+	NWL_DrvStoreSetProperty(node, hDrvStore, DriverPackage, drvStorePath, "Package ID", &DEVPKEY_DriverPackage_DriverPackageId);
+	NWL_DrvStoreSetProperty(node, hDrvStore, DriverPackage, drvStorePath, "Catalog", &DEVPKEY_DriverPackage_CatalogFile);
+	NWL_DrvStoreSetProperty(node, hDrvStore, DriverPackage, drvStorePath, "Import Date", &DEVPKEY_DriverPackage_ImportDate);
 	NWL_NodeAttrSetBool(node, "Inbox", pkgInfo->Flags & DRIVER_PACKAGE_INBOX, 0);
 	NWL_NodeAttrSetBool(node, "OEM", pkgInfo->Flags & DRIVER_PACKAGE_OEM, 0);
 	NWL_NodeAttrSetBool(node, "Published", pkgInfo->Flags & DRIVER_PACKAGE_PUBLISHED, 0);
 	NWL_NodeAttrSetBool(node, "F6", pkgInfo->Flags & DRIVER_PACKAGE_F6, 0);
 	NWL_NodeAttrSetBool(node, "Base Version", pkgInfo->Flags & DRIVER_PACKAGE_BASEVERSION, 0);
-	DrvStoreSetProperty(node, hDrvStore, DriverPackage, drvStorePath, "Primitive", &DEVPKEY_DriverPackage_Primitive);
+	NWL_DrvStoreSetProperty(node, hDrvStore, DriverPackage, drvStorePath, "Primitive", &DEVPKEY_DriverPackage_Primitive);
 	NWL_NodeAttrSet(node, "Path", NWL_Ucs2ToUtf8(drvStorePath), 0);
 	return TRUE;
 }
@@ -506,32 +548,14 @@ DrvStoreEnumPackages(HDRVSTORE hDrvStore, LPCWSTR drvStorePath,
 PNODE NW_DrvStore(BOOL bAppend)
 {
 	PNODE node = NWL_NodeAlloc("DrvStore", 0);
-	HDRVSTORE hDrvStore;
-	LPCWSTR targetSystemPath = NULL;
-	LPCWSTR targetBootDrive = NULL;
-	WCHAR systemPath[] = L"C:\\Windows";
-	WCHAR bootDrive[] = L"C:\\";
 
 	if (bAppend)
 		NWL_NodeAppendChild(NWLC->NwRoot, node);
 
-	if (NWLC->DrvStoreDrive)
-	{
-		systemPath[0] = NWLC->DrvStoreDrive;
-		bootDrive[0] = NWLC->DrvStoreDrive;
-		targetBootDrive = bootDrive;
-		targetSystemPath = systemPath;
-	}
-
-	hDrvStore = NWL_DriverStoreOpen(targetSystemPath, targetBootDrive, DRIVERSTORE_OPEN_NONE);
+	HDRVSTORE hDrvStore = NWL_DriverStoreOpen(NWLC->DrvStoreDrive, DRIVERSTORE_OPEN_NONE);
 	if (!hDrvStore)
 	{
 		NWL_NodeAppendMultiSz(&NWLC->ErrLog, "DriverStoreOpen failed");
-		if (m_drvstore_dll)
-		{
-			FreeLibrary(m_drvstore_dll);
-			m_drvstore_dll = NULL;
-		}
 		return node;
 	}
 
