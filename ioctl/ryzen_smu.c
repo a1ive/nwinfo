@@ -2391,3 +2391,43 @@ ry_err_t ryzen_smu_get_socket_power(ry_handle_t* handle, float* data)
 		return RYZEN_SMU_UNSUPPORTED;
 	return ryzen_smu_get_pm_table_float(handle, offset, data);
 }
+
+float ryzen_smu_get_temp_offset(struct wr0_drv_t* drv_handle, struct cpu_id_t* id)
+{
+	static bool initialized = false;
+	static float offset = 0.0f;
+	static const struct
+	{
+		const char* str;
+		float offset;
+	} amd_temp_offset_table[] =
+	{
+		{ "1600X", -20.0f },
+		{ "1700X", -20.0f },
+		{ "1800X", -20.0f },
+		{ "2700X", -10.0f },
+		{ "Threadripper 19", -27.0f },
+		{ "Threadripper 29", -27.0f },
+		{ "EPYC 7", -27.0f },
+		{ "EPYC 9", -49.0f },
+	};
+	if (initialized)
+		return offset;
+	offset = 0.0f;
+	initialized = true;
+	if (!drv_handle || !id || id->vendor != VENDOR_AMD || id->x86.ext_family < 0x17)
+		return offset;
+	for (size_t i = 0; i < ARRAYSIZE(amd_temp_offset_table); i++)
+	{
+		if (strstr(id->brand_str, amd_temp_offset_table[i].str) != NULL)
+		{
+			offset += amd_temp_offset_table[i].offset;
+			break;
+		}
+	}
+	uint32_t tctl = WR0_RdAmdSmn(drv_handle, WR0_SMN_AMD17H, F17H_M01H_THM_TCON_CUR_TMP);
+	if (tctl & (F17H_TEMP_OFFSET_FLAG | F1AH_TEMP_OFFSET_FLAG))
+		offset += -49.0f;
+	SMU_DEBUG("CPU %s, Temp Offset = %.0f", id->brand_str, offset);
+	return offset;
+}

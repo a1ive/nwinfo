@@ -388,31 +388,11 @@ static int amd_k10_temperature(struct msr_info_t* info)
 }
 #endif
 
-#define F17H_M01H_THM_TCON_CUR_TMP          0x00059800
-#define F17H_TEMP_OFFSET_FLAG               0x80000
-#define F1AH_TEMP_OFFSET_FLAG               0x30000
-
 static float amd_17h_temperature(struct msr_info_t* info)
 {
 	uint32_t temperature;
-	float offset = 0.0f;
-
-
+	float offset = ryzen_smu_get_temp_offset(info->handle, info->id);
 	temperature = WR0_RdAmdSmn(info->handle, WR0_SMN_AMD17H, F17H_M01H_THM_TCON_CUR_TMP);
-
-	if (strstr(info->id->brand_str, "1600X") ||
-		strstr(info->id->brand_str, "1700X") ||
-		strstr(info->id->brand_str, "1800X"))
-		offset = -20.0f;
-	else if (strstr(info->id->brand_str, "2700X"))
-		offset = -10.0f;
-	else if (strstr(info->id->brand_str, "Threadripper 19") ||
-		strstr(info->id->brand_str, "Threadripper 29"))
-		offset = -27.0f;
-
-	if (temperature & (F17H_TEMP_OFFSET_FLAG | F1AH_TEMP_OFFSET_FLAG))
-		offset += -49.0f;
-
 	return 0.001f * ((temperature >> 21) * 125) + offset;
 }
 

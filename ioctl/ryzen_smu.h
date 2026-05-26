@@ -178,3 +178,8 @@ ry_err_t ryzen_smu_get_l3_vddm(ry_handle_t* handle, float* data);
 ry_err_t ryzen_smu_get_l3_temperature(ry_handle_t* handle, float* data);
 
 ry_err_t ryzen_smu_get_socket_power(ry_handle_t* handle, float* data);
+
+#define F17H_M01H_THM_TCON_CUR_TMP          0x00059800
+#define F17H_TEMP_OFFSET_FLAG               0x80000
+#define F1AH_TEMP_OFFSET_FLAG               0x30000
+float ryzen_smu_get_temp_offset(struct wr0_drv_t* drv_handle, struct cpu_id_t* id);

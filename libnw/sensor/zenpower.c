@@ -46,7 +46,7 @@
 #define F1AH_M70H_SVI_TEL_PLANE0            (F1AH_M70H_SVI + 0x10)
 #define F1AH_M70H_SVI_TEL_PLANE1            (F1AH_M70H_SVI + 0x14)
 
-#define ZEN_REPORTED_TEMP_CTRL_BASE         0x00059800
+#define ZEN_REPORTED_TEMP_CTRL_BASE         F17H_M01H_THM_TCON_CUR_TMP
 
 #define ZEN_CCD_TEMP(offset, x)             (ZEN_REPORTED_TEMP_CTRL_BASE + (offset) + ((x) * 4))
 #define ZEN_CCD_TEMP_VALID                  (1 << 11)
@@ -57,10 +57,6 @@
 #define ZEN_CCD_TEMP_OFFSET_308             0x308
 
 #define MAX_CCD_COUNT                       12
-
-#define F17H_M01H_THM_TCON_CUR_TMP          ZEN_REPORTED_TEMP_CTRL_BASE
-#define F17H_TEMP_OFFSET_FLAG               0x80000
-#define F1AH_TEMP_OFFSET_FLAG               0x30000
 
 static struct
 {
@@ -223,15 +219,7 @@ static bool smn_init(void)
 		break;
 	}
 
-	if (strstr(ctx.id->brand_str, "1600X") ||
-		strstr(ctx.id->brand_str, "1700X") ||
-		strstr(ctx.id->brand_str, "1800X"))
-		ctx.temp_offset = -20.0f;
-	else if (strstr(ctx.id->brand_str, "2700X"))
-		ctx.temp_offset = -10.0f;
-	else if (strstr(ctx.id->brand_str, "Threadripper 19") ||
-		strstr(ctx.id->brand_str, "Threadripper 29"))
-		ctx.temp_offset = -27.0f;
+	ctx.temp_offset = ryzen_smu_get_temp_offset(NWLC->NwDrv, ctx.id);
 
 	switch (ctx.codename)
 	{
@@ -382,10 +370,7 @@ static inline double svi_plane_to_soc_idd(uint32_t plane)
 
 static inline float thm_to_tctl(uint32_t thm)
 {
-	float temp = 0.001f * ((thm >> 21) * 125);
-	if (thm & (F17H_TEMP_OFFSET_FLAG | F1AH_TEMP_OFFSET_FLAG))
-		temp += -49.0f;
-	return temp;
+	return 0.001f * ((thm >> 21) * 125);
 }
 
 static inline float thm_to_tccd(uint32_t thm)
@@ -456,7 +441,7 @@ static void smn_get(PNODE node)
 	uint32_t thm = WR0_RdAmdSmn(NWLC->NwDrv, WR0_SMN_AMD17H, F17H_M01H_THM_TCON_CUR_TMP);
 	float tctl = thm_to_tctl(thm);
 	NWL_NodeAttrSetf(node, "Tctl", NAFLG_FMT_NUMERIC, "%.3f", NWL_GetTemperature(tctl));
-	float tdie = tctl - ctx.temp_offset;
+	float tdie = tctl + ctx.temp_offset;
 	NWL_NodeAttrSetf(node, "Tdie", NAFLG_FMT_NUMERIC, "%.3f", NWL_GetTemperature(tdie));
 
 	for (uint8_t i = 0; i < ctx.ccd_temp_limit; i++)
