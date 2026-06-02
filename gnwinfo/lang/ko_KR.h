@@ -1,14 +1,14 @@
-﻿// SPDX-License-Identifier: Unlicense
+// SPDX-License-Identifier: Unlicense
 // This file should be saved in UTF-8 **with** BOM encoding
-// Translated by: @VenusGirl, nonlol(https://nonlol.tistory.com/226)
+// Translated by: @VenusGirl, 비너스걸: https://venusgirls.tistory.com/
 
 #include "../gettext.h"
 
 static const char*
 lang_ko_kr[N__MAX_] =
 {
-	[N__FONT_] = u8"Gulim",
-	[N__LANG_NAME_] = u8"한국어",
+	[N__FONT_] = u8"Gulim", // The font name used in the GUI, should not be translated
+	[N__LANG_NAME_] = u8"한국어", // The language name used in the GUI
 	[N__LOADING] = u8"읽는 중",
 	[N__PLS_WAIT] = u8"기다려 주세요 ...",
 	[N__OS] = u8"운영 체제",
@@ -48,32 +48,32 @@ lang_ko_kr[N__MAX_] =
 	[N__BUS_CLOCK] = u8"버스 클럭",
 	[N__TEMPERATURE] = u8"온도",
 	[N__VOLTAGE] = u8"전압",
-	[N__CPU_POWER] = u8"전원",
-	//[N__PL1],
-	//[N__PL2],
-	//[N__TDP],
+	[N__CPU_POWER] = u8"전원", // refer to the amount of energy per time
+	[N__PL1] = u8"PL1",
+	[N__PL2] = u8"PL2",
+	[N__TDP] = u8"TDP",
 	[N__MICROCODE] = u8"마이크로코드",
-	//[N__L1_D],
-	//[N__L1_I],
-	//[N__L2],
-	//[N__L3],
-	//[N__L4],
-	[N__BRAND] = u8"상표",
+	[N__L1_D] = u8"L1 D",
+	[N__L1_I] = u8"L1 I",
+	[N__L2] = u8"L2",
+	[N__L3] = u8"L3",
+	[N__L4] = u8"L4",
+	[N__BRAND] = u8"상표", // refer to the brand (e.g. 'Intel(R) Core(TM) i7-7700K CPU @ 4.20GHz')
 	[N__HYPERVISOR] = u8"하이퍼바이저",
 	[N__CODE_NAME] = u8"코드 이름",
-	[N__TECHNOLOGY] = u8"공정",
-	[N__FAMILY] = u8"제품군",
-	[N__MODEL] = u8"모델",
+	[N__TECHNOLOGY] = u8"공정", // refer to the technology of the CPU (e.g. 14nm, 10nm, etc.)
+	[N__FAMILY] = u8"제품군", // refer to the family of the CPU
+	[N__MODEL] = u8"모델", // refer to the model of the CPU
 	[N__STEPPING] = u8"스테핑",
-	[N__EXT_FAMILY] = u8"확장 제품군",
-	[N__EXT_MODEL] = u8"확장 모델",
+	[N__EXT_FAMILY] = u8"확장 제품군", // Extended family
+	[N__EXT_MODEL] = u8"확장 모델", // Extended model
 	[N__AFF_MASK] = u8"Aff.Mask",
 	[N__MAINBOARD] = u8"메인보드",
 	[N__CHIPSET] = u8"칩셋",
 	[N__NAME] = u8"이름",
-	//[N__UUID],
-	//[N__LPCIO],
-	//[N__TPM],
+	[N__UUID] = u8"UUID",
+	[N__LPCIO] = u8"LPCIO",
+	[N__TPM] = u8"TPM",
 	[N__ALGORITHMS] = u8"알고리즘",
 	[N__ABOUT] = u8"정보",
 	[N__SAVE_REPORT] = u8"보고서 저장",
@@ -149,7 +149,7 @@ lang_ko_kr[N__MAX_] =
 	[N__POWER_ON_COUNT] = u8"전원 켜기 횟수",
 	[N__POWER_ON_HOURS] = u8"전원 켜기 시간",
 	[N__DRIVE] = u8"드라이브",
-	[N__STANDARD] = u8"표준",
+	[N__STANDARD] = u8"표준", // refer to the standard of the drive (e.g. SATA, NVMe)
 	[N__ID] = u8"ID",
 	[N__ATTRIBUTE] = u8"속성",
 	[N__HEX] = u8"HEX",
@@ -172,5 +172,5 @@ lang_ko_kr[N__MAX_] =
 	[N__HIDE_DISK_SPACE_BAR] = u8"디스크 공간 표시줄 숨기기",
 	[N__FREE] = u8"여유",
 	[N__CLOSE] = u8"닫기",
-	[N__INSTALL_PAWNIO] = u8"PawnIO 설치",
+	[N__INSTALL_PAWNIO] = u8"PawnIO 설치", // install the PawnIO driver
 };
