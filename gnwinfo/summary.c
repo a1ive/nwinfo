@@ -519,8 +519,11 @@ draw_volume(struct nk_context* ctx, PNODE disk, BOOL cdrom)
 				percent,
 				N_(N__FREE),
 				NWL_NodeAttrGet(tab, "Free Space"));
-		if (quick_access_button(ctx, img, volume_guid))
-			open_folder(drive, volume_guid);
+		if (volume_guid[0] == '\\')
+		{
+			if (quick_access_button(ctx, img, volume_guid))
+				open_folder(drive, volume_guid);
+		}
 	}
 }
 

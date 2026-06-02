@@ -161,7 +161,8 @@
       <EnableDpiAwareness>PerMonitorHighDPIAware</EnableDpiAwareness>
     </Manifest>
     <PostBuildEvent>
-      <Command>copy "$(ProjectDir)gnwinfo.ini" "$(SolutionDir)$(Platform)\$(Configuration)\"</Command>
+      <Command>
+      </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -191,7 +192,8 @@
       <EnableDpiAwareness>PerMonitorHighDPIAware</EnableDpiAwareness>
     </Manifest>
     <PostBuildEvent>
-      <Command>copy "$(ProjectDir)gnwinfo.ini" "$(SolutionDir)$(Platform)\$(Configuration)\"</Command>
+      <Command>
+      </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -221,7 +223,8 @@
       <EnableDpiAwareness>PerMonitorHighDPIAware</EnableDpiAwareness>
     </Manifest>
     <PostBuildEvent>
-      <Command>copy "$(ProjectDir)gnwinfo.ini" "$(SolutionDir)$(Platform)\$(Configuration)\"</Command>
+      <Command>
+      </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -251,7 +254,8 @@
       <EnableDpiAwareness>PerMonitorHighDPIAware</EnableDpiAwareness>
     </Manifest>
     <PostBuildEvent>
-      <Command>copy "$(ProjectDir)gnwinfo.ini" "$(SolutionDir)$(Platform)\$(Configuration)\"</Command>
+      <Command>
+      </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">
@@ -281,7 +285,8 @@
       <EnableDpiAwareness>PerMonitorHighDPIAware</EnableDpiAwareness>
     </Manifest>
     <PostBuildEvent>
-      <Command>copy "$(ProjectDir)gnwinfo.ini" "$(SolutionDir)$(Platform)\$(Configuration)\"</Command>
+      <Command>
+      </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">
@@ -311,13 +316,14 @@
       <EnableDpiAwareness>PerMonitorHighDPIAware</EnableDpiAwareness>
     </Manifest>
     <PostBuildEvent>
-      <Command>copy "$(ProjectDir)gnwinfo.ini" "$(SolutionDir)$(Platform)\$(Configuration)\"</Command>
+      <Command>
+      </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <CopyFileToFolders Include="gnwinfo.ini">
+    <None Include="gnwinfo.ini">
       <FileType>Document</FileType>
-    </CopyFileToFolders>
+    </None>
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>

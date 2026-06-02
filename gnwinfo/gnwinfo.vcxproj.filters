@@ -22,6 +22,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+    <None Include="gnwinfo.ini" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="gnwinfo.h">
@@ -237,8 +238,5 @@
     <Image Include="icons\report.png">
       <Filter>Resource Files</Filter>
     </Image>
-  </ItemGroup>
-  <ItemGroup>
-    <CopyFileToFolders Include="gnwinfo.ini" />
   </ItemGroup>
 </Project>
