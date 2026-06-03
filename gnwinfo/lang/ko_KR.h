@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: Unlicense
+﻿// SPDX-License-Identifier: Unlicense
 // This file should be saved in UTF-8 **with** BOM encoding
 // Translated by: @VenusGirl, 비너스걸: https://venusgirls.tistory.com/
 
