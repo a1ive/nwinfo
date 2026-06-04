@@ -501,26 +501,27 @@ draw_volume(struct nk_context* ctx, PNODE disk, BOOL cdrom)
 			img = GET_PNG(IDR_PNG_OS);
 		if (cdrom)
 			img = GET_PNG(IDR_PNG_CD);
-		nk_spacer(ctx);
-		nk_lhcf(ctx, NK_TEXT_LEFT, g_color_text_d, "[%s]",
-			drive ? drive : NWL_NodeAttrGet(tab, "Partition Flag"));
-		nk_lhcf(ctx, NK_TEXT_LEFT,
-			g_color_text_l,
-			"%s %s %s",
-			NWL_NodeAttrGet(tab, "Total Space"),
-			NWL_NodeAttrGet(tab, "Filesystem"),
-			NWL_NodeAttrGet(tab, "Label"));
-		if (g_ctx.main_flag & MAIN_VOLUME_PROG)
-			gnwinfo_draw_percent_prog(ctx, percent);
-		else
-			nk_lhcf(ctx, NK_TEXT_LEFT,
-				gnwinfo_get_color(percent, 70.0, 90.0),
-				"%.0f%% %s: %s",
-				percent,
-				N_(N__FREE),
-				NWL_NodeAttrGet(tab, "Free Space"));
 		if (volume_guid[0] == '\\')
 		{
+			nk_spacer(ctx);
+			nk_lhcf(ctx, NK_TEXT_LEFT, g_color_text_d, "[%s]",
+				drive ? drive : NWL_NodeAttrGet(tab, "Partition Flag"));
+			nk_lhcf(ctx, NK_TEXT_LEFT,
+				g_color_text_l,
+				"%s %s %s",
+				NWL_NodeAttrGet(tab, "Total Space"),
+				NWL_NodeAttrGet(tab, "Filesystem"),
+				NWL_NodeAttrGet(tab, "Label"));
+			if (g_ctx.main_flag & MAIN_VOLUME_PROG)
+				gnwinfo_draw_percent_prog(ctx, percent);
+			else
+				nk_lhcf(ctx, NK_TEXT_LEFT,
+					gnwinfo_get_color(percent, 70.0, 90.0),
+					"%.0f%% %s: %s",
+					percent,
+					N_(N__FREE),
+					NWL_NodeAttrGet(tab, "Free Space"));
+
 			if (quick_access_button(ctx, img, volume_guid))
 				open_folder(drive, volume_guid);
 		}

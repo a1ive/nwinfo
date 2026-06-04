@@ -40,23 +40,128 @@ GetGptFlag(GUID* pGuid, BOOL* pBootable)
 		return "BIOS";
 	else if (_stricmp(lpszGuid, "024dee41-33e7-11d3-9d69-0008c781f39f") == 0)
 		return "MBR";
+	else if (_stricmp(lpszGuid, "af9b60a0-1431-4f62-bc68-3311714a69ad") == 0)
+		return "LDM";
+	else if (_stricmp(lpszGuid, "5808c8aa-7e8f-42e0-85d2-e1e90434cfb3") == 0)
+		return "LDM-META";
+	else if (_stricmp(lpszGuid, "0fc63daf-8483-4772-8e79-3d69d8477de4") == 0)
+		return "LINUX-DATA";
+	else if (_stricmp(lpszGuid, "0657fd6d-a4ab-43c4-84e5-0933c84b4f4f") == 0)
+		return "LINUX-SWAP";
+	else if (_stricmp(lpszGuid, "ca7d7ccb-63ed-4c53-861c-1742536059cc") == 0)
+		return "LUKS";
+	else if (_stricmp(lpszGuid, "e6d6d379-f507-44c2-a23c-238f2a3df928") == 0)
+		return "LVM";
+	else if (_stricmp(lpszGuid, "48465300-0000-11aa-aa11-00306543ecac") == 0)
+		return "APPLE-HFS";
+	else if (_stricmp(lpszGuid, "7c3457ef-0000-11aa-aa11-00306543ecac") == 0)
+		return "APPLE-APFS";
+	else if (_stricmp(lpszGuid, "55465300-0000-11aa-aa11-00306543ecac") == 0)
+		return "APPLE-UFS";
+	else if (_stricmp(lpszGuid, "52414944-0000-11aa-aa11-00306543ecac") == 0)
+		return "APPLE-RAID";
+	else if (_stricmp(lpszGuid, "52414944-5f4f-11aa-aa11-00306543ecac") == 0)
+		return "APPLE-RAID-OFFLINE";
+	else if (_stricmp(lpszGuid, "426f6f74-0000-11aa-aa11-00306543ecac") == 0)
+		return "APPLE-BOOT";
+	else if (_stricmp(lpszGuid, "4c616265-6c00-11aa-aa11-00306543ecac") == 0)
+		return "APPLE-LABEL";
+	else if (_stricmp(lpszGuid, "5265636f-7665-11aa-aa11-00306543ecac") == 0)
+		return "APPLE-TV-RECOVERY";
+	else if (_stricmp(lpszGuid, "53746f72-6167-11aa-aa11-00306543ecac") == 0)
+		return "APPLE-CORE-STORAGE";
+	else if (_stricmp(lpszGuid, "69646961-6700-11aa-aa11-00306543ecac") == 0)
+		return "APPLE-SILICON-BOOT";
+	else if (_stricmp(lpszGuid, "52637672-7900-11aa-aa11-00306543ecac") == 0)
+		return "APPLE-SILICON-RECOVERY";
 	return "DATA";
 }
 
 static LPCSTR
-GetMbrFlag(LONGLONG llStartingOffset, PHY_DRIVE_INFO* pParent)
+GetMbrFlag(LONGLONG llStartingOffset, BYTE PartType, PHY_DRIVE_INFO* pParent)
 {
 	INT i;
 	LONGLONG llLba = llStartingOffset >> 9;
+
+	switch (PartType)
+	{
+	case 0x05:
+	case 0x0F:
+	case 0x85:
+		return "EXTENDED";
+	case 0x42:
+		return "LDM";
+	}
+
 	for (i = 0; i < 4; i++)
 	{
 		if (llLba == pParent->MbrLba[i])
 			return "PRIMARY";
 	}
-	return "EXTENDED";
+	return "LOGICAL";
 }
 
-static void
+static BOOL
+IsValidPartitionEntry(PARTITION_INFORMATION_EX* pPartInfo)
+{
+	if (pPartInfo->PartitionLength.QuadPart <= 0)
+		return FALSE;
+
+	const GUID emptyGuid = { 0 };
+	switch (pPartInfo->PartitionStyle)
+	{
+	case PARTITION_STYLE_MBR:
+		return pPartInfo->Mbr.PartitionType != 0;
+	case PARTITION_STYLE_GPT:
+		return (memcmp(&pPartInfo->Gpt.PartitionType, &emptyGuid, sizeof(GUID)) != 0);
+	}
+	return FALSE;
+}
+
+static BOOL
+FillPartitionInfoFromEntry(DISK_VOL_INFO* pInfo,
+	PARTITION_INFORMATION_EX* pPartInfo, PHY_DRIVE_INFO* pParent)
+{
+	BOOL bBootable = FALSE;
+
+	if (!IsValidPartitionEntry(pPartInfo))
+		return FALSE;
+
+	pInfo->StartLba = (UINT64)(pPartInfo->StartingOffset.QuadPart >> 9);
+	pInfo->PartSize = (UINT64)pPartInfo->PartitionLength.QuadPart;
+	pInfo->PartNum = pPartInfo->PartitionNumber;
+	if (pParent && pInfo->PartNum)
+		snprintf(pInfo->PartPath, MAX_PATH,
+			"\\\\?\\GLOBALROOT\\Device\\Harddisk%lu\\Partition%lu",
+			pParent->Index, pInfo->PartNum);
+
+	switch (pPartInfo->PartitionStyle)
+	{
+	case PARTITION_STYLE_MBR:
+		snprintf(pInfo->PartType, DISK_PROP_STR_LEN, "0x%02X", pPartInfo->Mbr.PartitionType);
+		strncpy_s(pInfo->PartId, DISK_PROP_STR_LEN,
+			NWL_WinGuidToStr(TRUE, &pPartInfo->Mbr.PartitionId), _TRUNCATE);
+		strncpy_s(pInfo->PartFlag, DISK_PROP_STR_LEN,
+			GetMbrFlag(pPartInfo->StartingOffset.QuadPart, pPartInfo->Mbr.PartitionType, pParent),
+			_TRUNCATE);
+		pInfo->Bootable = pPartInfo->Mbr.BootIndicator;
+		break;
+	case PARTITION_STYLE_GPT:
+		strncpy_s(pInfo->PartType, DISK_PROP_STR_LEN,
+			NWL_WinGuidToStr(TRUE, &pPartInfo->Gpt.PartitionType), _TRUNCATE);
+		strncpy_s(pInfo->PartId, DISK_PROP_STR_LEN,
+			NWL_WinGuidToStr(TRUE, &pPartInfo->Gpt.PartitionId), _TRUNCATE);
+		strncpy_s(pInfo->PartFlag, DISK_PROP_STR_LEN,
+			GetGptFlag(&pPartInfo->Gpt.PartitionType, &bBootable), _TRUNCATE);
+		pInfo->Bootable = bBootable;
+		break;
+	default:
+		return FALSE;
+	}
+	return TRUE;
+}
+
+static BOOL
 FillPartitionInfo(DISK_VOL_INFO* pInfo, LPCWSTR lpszPath, PHY_DRIVE_INFO* pParent)
 {
 	BOOL bRet;
@@ -65,29 +170,14 @@ FillPartitionInfo(DISK_VOL_INFO* pInfo, LPCWSTR lpszPath, PHY_DRIVE_INFO* pParen
 	DWORD dwPartInfo = sizeof(PARTITION_INFORMATION_EX);
 	hDevice = CreateFileW(lpszPath, GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING, 0, NULL);
 	if (!hDevice || hDevice == INVALID_HANDLE_VALUE)
-		return;
+		return FALSE;
 	bRet = DeviceIoControl(hDevice, IOCTL_DISK_GET_PARTITION_INFO_EX, NULL, 0, &partInfo, dwPartInfo, &dwPartInfo, NULL);
 	CloseHandle(hDevice);
 	if (!bRet)
-		return;
+		return FALSE;
 	if (partInfo.StartingOffset.QuadPart == 0) // CDROM
-		return;
-	pInfo->StartLba = partInfo.StartingOffset.QuadPart >> 9;
-	pInfo->PartNum = partInfo.PartitionNumber;
-	switch (partInfo.PartitionStyle)
-	{
-	case PARTITION_STYLE_MBR:
-		snprintf(pInfo->PartType, DISK_PROP_STR_LEN, "0x%02X", partInfo.Mbr.PartitionType);
-		strncpy_s(pInfo->PartId, DISK_PROP_STR_LEN, NWL_WinGuidToStr(TRUE, &partInfo.Mbr.PartitionId), _TRUNCATE);
-		strncpy_s(pInfo->PartFlag, DISK_PROP_STR_LEN, GetMbrFlag(partInfo.StartingOffset.QuadPart, pParent), _TRUNCATE);
-		pInfo->Bootable = partInfo.Mbr.BootIndicator;
-		break;
-	case PARTITION_STYLE_GPT:
-		strncpy_s(pInfo->PartType, DISK_PROP_STR_LEN, NWL_WinGuidToStr(TRUE, &partInfo.Gpt.PartitionType), _TRUNCATE);
-		strncpy_s(pInfo->PartId, DISK_PROP_STR_LEN, NWL_WinGuidToStr(TRUE, &partInfo.Gpt.PartitionId), _TRUNCATE);
-		strncpy_s(pInfo->PartFlag, DISK_PROP_STR_LEN, GetGptFlag(&partInfo.Gpt.PartitionType, &pInfo->Bootable), _TRUNCATE);
-		break;
-	}
+		return FALSE;
+	return FillPartitionInfoFromEntry(pInfo, &partInfo, pParent);
 }
 
 static void
@@ -102,6 +192,8 @@ PrintPartitionInfo(PNODE pNode, const DISK_VOL_INFO* pInfo)
 	NWL_NodeAttrSet(pNode, "Partition ID", pInfo->PartId, NAFLG_FMT_GUID);
 	NWL_NodeAttrSet(pNode, "Partition Flag", pInfo->PartFlag, 0);
 	NWL_NodeAttrSetBool(pNode, "Boot Indicator", pInfo->Bootable, 0);
+	if (pInfo->PartSize)
+		NWL_NodeAttrSet(pNode, "Partition Size", NWL_GetHumanSize(pInfo->PartSize, NWLC->NwUnits, 1024), NAFLG_FMT_HUMAN_SIZE);
 }
 
 static void
@@ -160,12 +252,10 @@ FillVolumeInfo(DISK_VOL_INFO* pInfo, LPCWSTR lpszVolume, PHY_DRIVE_INFO* pParent
 	swprintf(pInfo->VolPath, MAX_PATH, L"%s\\", lpszVolume);
 	strncpy_s(pInfo->VolRealPath, MAX_PATH, GetRealVolumePath(lpszVolume), _TRUNCATE);
 	GetVolumeFsUuid(lpszVolume, pInfo->VolFsUuid);
+	FillPartitionInfo(pInfo, lpszVolume, pParent);
 
-	if (GetVolumeInformationW(pInfo->VolPath, pInfo->VolLabel, MAX_PATH,
-		NULL, NULL, NULL, pInfo->VolFs, MAX_PATH))
-	{
-		FillPartitionInfo(pInfo, lpszVolume, pParent);
-	}
+	GetVolumeInformationW(pInfo->VolPath, pInfo->VolLabel, MAX_PATH,
+		NULL, NULL, NULL, pInfo->VolFs, MAX_PATH);
 	GetDiskFreeSpaceExW(pInfo->VolPath, NULL, &pInfo->VolTotalSpace, &pInfo->VolFreeSpace);
 	if (pInfo->VolTotalSpace.QuadPart != 0)
 		pInfo->VolUsage = 100.0 - (pInfo->VolFreeSpace.QuadPart * 100.0) / pInfo->VolTotalSpace.QuadPart;
@@ -191,8 +281,10 @@ PrintVolumeInfo(PNODE pNode, const DISK_VOL_INFO* pInfo)
 
 	if (pInfo->VolRealPath[0])
 		NWL_NodeAttrSet(pNode, "Path", pInfo->VolRealPath, 0);
-	else
+	else if (pInfo->VolPath[0])
 		NWL_NodeAttrSet(pNode, "Path", NWL_Ucs2ToUtf8(pInfo->VolPath), 0);
+	else if (pInfo->PartPath[0])
+		NWL_NodeAttrSet(pNode, "Path", pInfo->PartPath, 0);
 	if (pInfo->VolPath[0])
 	{
 		wcsncpy_s(cchGuid, MAX_PATH, pInfo->VolPath, _TRUNCATE);
@@ -203,13 +295,19 @@ PrintVolumeInfo(PNODE pNode, const DISK_VOL_INFO* pInfo)
 	}
 
 	PrintPartitionInfo(pNode, pInfo);
-	NWL_NodeAttrSet(pNode, "Label", NWL_Ucs2ToUtf8(pInfo->VolLabel), 0);
-	NWL_NodeAttrSet(pNode, "Filesystem", NWL_Ucs2ToUtf8(pInfo->VolFs), 0);
-	NWL_NodeAttrSet(pNode, "FS UUID", pInfo->VolFsUuid, 0);
-	NWL_NodeAttrSet(pNode, "Free Space",
-		NWL_GetHumanSize(pInfo->VolFreeSpace.QuadPart, NWLC->NwUnits, 1024), NAFLG_FMT_HUMAN_SIZE);
-	NWL_NodeAttrSet(pNode, "Total Space",
-		NWL_GetHumanSize(pInfo->VolTotalSpace.QuadPart, NWLC->NwUnits, 1024), NAFLG_FMT_HUMAN_SIZE);
+	if (pInfo->VolLabel[0])
+		NWL_NodeAttrSet(pNode, "Label", NWL_Ucs2ToUtf8(pInfo->VolLabel), 0);
+	if (pInfo->VolFs[0])
+		NWL_NodeAttrSet(pNode, "Filesystem", NWL_Ucs2ToUtf8(pInfo->VolFs), 0);
+	if (pInfo->VolFsUuid[0])
+		NWL_NodeAttrSet(pNode, "FS UUID", pInfo->VolFsUuid, 0);
+	if (pInfo->VolFreeSpace.QuadPart || pInfo->VolTotalSpace.QuadPart)
+	{
+		NWL_NodeAttrSet(pNode, "Free Space",
+			NWL_GetHumanSize(pInfo->VolFreeSpace.QuadPart, NWLC->NwUnits, 1024), NAFLG_FMT_HUMAN_SIZE);
+		NWL_NodeAttrSet(pNode, "Total Space",
+			NWL_GetHumanSize(pInfo->VolTotalSpace.QuadPart, NWLC->NwUnits, 1024), NAFLG_FMT_HUMAN_SIZE);
+	}
 	if (pInfo->VolTotalSpace.QuadPart != 0)
 		NWL_NodeAttrSetf(pNode, "Usage", 0, "%.2f%%", pInfo->VolUsage);
 	if (pInfo->VolNames)
@@ -292,8 +390,8 @@ FindDriveByIndex(PHY_DRIVE_INFO* pInfo, DWORD dwCount, DWORD dwIndex)
 	return NULL;
 }
 
-static BOOL
-HasVolumeInfo(PHY_DRIVE_INFO* pInfo, LPCWSTR lpszVolume)
+static DISK_VOL_INFO*
+FindVolumeInfo(PHY_DRIVE_INFO* pInfo, LPCWSTR lpszVolume)
 {
 	WCHAR cchVolume[MAX_PATH];
 
@@ -301,15 +399,111 @@ HasVolumeInfo(PHY_DRIVE_INFO* pInfo, LPCWSTR lpszVolume)
 	for (DWORD i = 0; i < pInfo->VolCount; i++)
 	{
 		if (_wcsicmp(pInfo->VolInfo[i].VolPath, cchVolume) == 0)
+			return &pInfo->VolInfo[i];
+	}
+	return NULL;
+}
+
+static VOID
+CopyPartitionInfo(DISK_VOL_INFO* pDst, const DISK_VOL_INFO* pSrc)
+{
+	strncpy_s(pDst->PartPath, MAX_PATH, pSrc->PartPath, _TRUNCATE);
+	pDst->StartLba = pSrc->StartLba;
+	pDst->PartSize = pSrc->PartSize;
+	pDst->PartNum = pSrc->PartNum;
+	strncpy_s(pDst->PartType, DISK_PROP_STR_LEN, pSrc->PartType, _TRUNCATE);
+	strncpy_s(pDst->PartId, DISK_PROP_STR_LEN, pSrc->PartId, _TRUNCATE);
+	strncpy_s(pDst->PartFlag, DISK_PROP_STR_LEN, pSrc->PartFlag, _TRUNCATE);
+	pDst->Bootable = pSrc->Bootable;
+}
+
+static DISK_VOL_INFO*
+FindPartitionByExtent(PHY_DRIVE_INFO* pInfo, const DISK_EXTENT* pExtent)
+{
+	UINT64 ullExtentStart = (UINT64)pExtent->StartingOffset.QuadPart;
+
+	for (DWORD i = 0; i < pInfo->PartCount; i++)
+	{
+		DISK_VOL_INFO* pPart = &pInfo->PartInfo[i];
+		UINT64 ullPartStart = pPart->StartLba << 9;
+		UINT64 ullPartEnd = ullPartStart + pPart->PartSize;
+
+		if (ullPartEnd < ullPartStart)
+			ullPartEnd = ~(UINT64)0;
+		if (ullExtentStart >= ullPartStart && ullExtentStart < ullPartEnd)
+			return pPart;
+	}
+	return NULL;
+}
+
+static BOOL
+HasVolumeForPartition(PHY_DRIVE_INFO* pInfo, const DISK_VOL_INFO* pPart)
+{
+	for (DWORD i = 0; i < pInfo->VolCount; i++)
+	{
+		DISK_VOL_INFO* pVol = &pInfo->VolInfo[i];
+		if (pVol->StartLba == pPart->StartLba &&
+			pVol->PartSize == pPart->PartSize &&
+			pVol->PartNum == pPart->PartNum)
 			return TRUE;
 	}
 	return FALSE;
 }
 
-static BOOL
+static DISK_VOL_INFO*
 AppendVolumeInfo(PHY_DRIVE_INFO* pInfo, LPCWSTR lpszVolume)
 {
-	if (HasVolumeInfo(pInfo, lpszVolume))
+	DISK_VOL_INFO* pVol = FindVolumeInfo(pInfo, lpszVolume);
+	if (pVol)
+		return pVol;
+	if (pInfo->VolCount % 4 == 0)
+	{
+		DISK_VOL_INFO* volInfo = realloc(pInfo->VolInfo,
+			sizeof(DISK_VOL_INFO) * (pInfo->VolCount + 4));
+		if (!volInfo)
+			return NULL;
+		pInfo->VolInfo = volInfo;
+	}
+	ZeroMemory(&pInfo->VolInfo[pInfo->VolCount], sizeof(DISK_VOL_INFO));
+	FillVolumeInfo(&pInfo->VolInfo[pInfo->VolCount], lpszVolume, pInfo);
+	pInfo->VolCount++;
+	return &pInfo->VolInfo[pInfo->VolCount - 1];
+}
+
+static BOOL
+AppendVolumeByDrive(PHY_DRIVE_INFO* pInfo, DWORD dwCount, DWORD dwDrive, LPCWSTR lpszVolume)
+{
+	PHY_DRIVE_INFO* pDrive = FindDriveByIndex(pInfo, dwCount, dwDrive);
+	if (!pDrive)
+		return FALSE;
+	return AppendVolumeInfo(pDrive, lpszVolume) != NULL;
+}
+
+static BOOL
+AppendVolumeByExtents(PHY_DRIVE_INFO* pInfo, DWORD dwCount, VOLUME_DISK_EXTENTS* pExtents, LPCWSTR lpszVolume)
+{
+	BOOL bAdded = FALSE;
+
+	for (DWORD i = 0; i < pExtents->NumberOfDiskExtents; i++)
+	{
+		PHY_DRIVE_INFO* pDrive = FindDriveByIndex(pInfo, dwCount, pExtents->Extents[i].DiskNumber);
+		if (pDrive)
+		{
+			DISK_VOL_INFO* pVol = AppendVolumeInfo(pDrive, lpszVolume);
+			DISK_VOL_INFO* pPart = FindPartitionByExtent(pDrive, &pExtents->Extents[i]);
+			if (pVol && pPart)
+				CopyPartitionInfo(pVol, pPart);
+			if (pVol)
+				bAdded = TRUE;
+		}
+	}
+	return bAdded;
+}
+
+static BOOL
+AppendPartitionOnlyInfo(PHY_DRIVE_INFO* pInfo, const DISK_VOL_INFO* pPart)
+{
+	if (HasVolumeForPartition(pInfo, pPart))
 		return TRUE;
 	if (pInfo->VolCount % 4 == 0)
 	{
@@ -320,31 +514,19 @@ AppendVolumeInfo(PHY_DRIVE_INFO* pInfo, LPCWSTR lpszVolume)
 		pInfo->VolInfo = volInfo;
 	}
 	ZeroMemory(&pInfo->VolInfo[pInfo->VolCount], sizeof(DISK_VOL_INFO));
-	FillVolumeInfo(&pInfo->VolInfo[pInfo->VolCount], lpszVolume, pInfo);
+	CopyPartitionInfo(&pInfo->VolInfo[pInfo->VolCount], pPart);
 	pInfo->VolCount++;
 	return TRUE;
 }
 
-static BOOL
-AppendVolumeByDrive(PHY_DRIVE_INFO* pInfo, DWORD dwCount, DWORD dwDrive, LPCWSTR lpszVolume)
+static VOID
+AppendMissingPartitionInfo(PHY_DRIVE_INFO* pInfo, DWORD dwCount)
 {
-	PHY_DRIVE_INFO* pDrive = FindDriveByIndex(pInfo, dwCount, dwDrive);
-	if (!pDrive)
-		return FALSE;
-	return AppendVolumeInfo(pDrive, lpszVolume);
-}
-
-static BOOL
-AppendVolumeByExtents(PHY_DRIVE_INFO* pInfo, DWORD dwCount, VOLUME_DISK_EXTENTS* pExtents, LPCWSTR lpszVolume)
-{
-	BOOL bAdded = FALSE;
-
-	for (DWORD i = 0; i < pExtents->NumberOfDiskExtents; i++)
+	for (DWORD i = 0; i < dwCount; i++)
 	{
-		if (AppendVolumeByDrive(pInfo, dwCount, pExtents->Extents[i].DiskNumber, lpszVolume))
-			bAdded = TRUE;
+		for (DWORD j = 0; j < pInfo[i].PartCount; j++)
+			AppendPartitionOnlyInfo(&pInfo[i], &pInfo[i].PartInfo[j]);
 	}
-	return bAdded;
 }
 
 static UINT64
@@ -360,10 +542,32 @@ GetDiskSize(HANDLE hDisk)
 }
 
 static BOOL
+AppendPartitionEntry(PHY_DRIVE_INFO* pInfo, PARTITION_INFORMATION_EX* pPartInfo)
+{
+	if (!IsValidPartitionEntry(pPartInfo))
+		return TRUE;
+	if (pInfo->PartCount % 4 == 0)
+	{
+		DISK_VOL_INFO* partInfo = realloc(pInfo->PartInfo,
+			sizeof(DISK_VOL_INFO) * (pInfo->PartCount + 4));
+		if (!partInfo)
+			return FALSE;
+		pInfo->PartInfo = partInfo;
+	}
+	ZeroMemory(&pInfo->PartInfo[pInfo->PartCount], sizeof(DISK_VOL_INFO));
+	if (!FillPartitionInfoFromEntry(&pInfo->PartInfo[pInfo->PartCount], pPartInfo, pInfo))
+		return FALSE;
+	pInfo->PartCount++;
+	return TRUE;
+}
+
+static BOOL
 GetDiskPartMap(HANDLE hDisk, BOOL bIsCdRom, PHY_DRIVE_INFO* pInfo)
 {
 	DRIVE_LAYOUT_INFORMATION_EX* pLayout = (VOID*)NWLC->NwBuf;
 	DWORD dwBytes = NWINFO_BUFSZ;
+	DWORD dwEntryOffset = FIELD_OFFSET(DRIVE_LAYOUT_INFORMATION_EX, PartitionEntry);
+	DWORD dwEntryCount;
 
 	if (bIsCdRom)
 		goto fail;
@@ -371,8 +575,11 @@ GetDiskPartMap(HANDLE hDisk, BOOL bIsCdRom, PHY_DRIVE_INFO* pInfo)
 	if (!DeviceIoControl(hDisk, IOCTL_DISK_GET_DRIVE_LAYOUT_EX, NULL, 0,
 		pLayout, dwBytes, &dwBytes, NULL))
 		goto fail;
-	if (dwBytes < sizeof(DRIVE_LAYOUT_INFORMATION_EX) - sizeof(PARTITION_INFORMATION_EX))
+	if (dwBytes < dwEntryOffset)
 		goto fail;
+	dwEntryCount = (dwBytes - dwEntryOffset) / sizeof(PARTITION_INFORMATION_EX);
+	if (dwEntryCount > pLayout->PartitionCount)
+		dwEntryCount = pLayout->PartitionCount;
 
 	pInfo->PartMap = pLayout->PartitionStyle;
 	switch (pInfo->PartMap)
@@ -392,6 +599,8 @@ GetDiskPartMap(HANDLE hDisk, BOOL bIsCdRom, PHY_DRIVE_INFO* pInfo)
 	default:
 		goto fail;
 	}
+	for (DWORD i = 0; i < dwEntryCount; i++)
+		AppendPartitionEntry(pInfo, &pLayout->PartitionEntry[i]);
 	return TRUE;
 
 fail:
@@ -648,6 +857,8 @@ next_drive:
 	if (hSearch != INVALID_HANDLE_VALUE)
 		FindVolumeClose(hSearch);
 
+	AppendMissingPartitionInfo(pInfo, dwCount);
+
 	return dwCount;
 }
 
@@ -666,6 +877,7 @@ NWL_DestoryDriveInfoList(PHY_DRIVE_INFO* pInfo, DWORD dwCount)
 			}
 			free(pInfo[i].VolInfo);
 		}
+		free(pInfo[i].PartInfo);
 		if (pInfo[i].Handle && pInfo[i].Handle != INVALID_HANDLE_VALUE)
 			CloseHandle(pInfo[i].Handle);
 	}

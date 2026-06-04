@@ -22,7 +22,9 @@ typedef struct _DISK_VOL_INFO
 	CHAR VolRealPath[MAX_PATH];
 	CHAR VolFsUuid[DISK_UUID_STR_LEN];
 	// Partition Info
+	CHAR PartPath[MAX_PATH];
 	UINT64 StartLba;
+	UINT64 PartSize;
 	DWORD PartNum;
 	CHAR PartType[DISK_PROP_STR_LEN];
 	CHAR PartId[DISK_PROP_STR_LEN];
@@ -54,6 +56,8 @@ typedef struct _PHY_DRIVE_INFO
 
 	DWORD VolCount;
 	DISK_VOL_INFO* VolInfo;
+	DWORD PartCount;
+	DISK_VOL_INFO* PartInfo;
 }PHY_DRIVE_INFO;
 
 LIBNW_API DWORD NWL_GetDriveInfoList(BOOL bIsCdRom, BOOL bGetVolume, PHY_DRIVE_INFO** pDriveList);
