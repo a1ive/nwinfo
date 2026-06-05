@@ -66,7 +66,7 @@ const struct match_entry_t cpudb_centaur[] = {
 
 	/* Zhaoxin */
 //     F   M   S  EF    EM #cores  L2$    L3$  Pattern                              Codename                         Technology
-	{  7, -1, -1, -1,   -1,  -1,    -1,    -1, {"ZHAOXIN",                     2 }, "Unknown Zhaoxin CPU"            ""       },
+	{  7, -1, -1, -1,   -1,  -1,    -1,    -1, {"ZHAOXIN",                     2 }, "Unknown Zhaoxin CPU",           ""       },
 
 	/* Zhangjiang (2015, 28 nm) */
 	{  7, -1, -1, -1,   15,  -1,    -1,    -1, { "ZHAOXIN KaisHeng KH-C",      8 }, "Zhaoxin KaisHeng (ZhangJiang)", "28 nm"  }, // C+ (4000)
@@ -81,7 +81,11 @@ const struct match_entry_t cpudb_centaur[] = {
 	{  7, -1, -1, -1,   59,  -1,    -1,    -1, { "ZHAOXIN KaiXian KX-U6###",   8 }, "Zhaoxin KaiXian (LuJiaZui)",    "16 nm"  }, // KX (U6000)
 	/* Yongfeng (2022, 16 nm) */
 	{  7, -1, -1, -1,   91,  -1,    -1,    -1, { "ZHAOXIN KaisHeng KH-40###",  8 }, "Zhaoxin KaisHeng (Yongfeng)",   "16 nm"  }, // KH (40000)
-	{  7, -1, -1, -1,   91,  -1,    -1,    -1, { "ZHAOXIN KaiXian KX-7###",    8 }, "Zhaoxin KaiXian (ShiJiDaDao)",  "7 nm"   }, // KX (7000)
+	/* ShiJiDaDao / Century Avenue (2023, 7 nm) */
+	{  7, -1, -1, -1,  107,  -1,    -1,    -1, { "ZHAOXIN KaiXian KX-7###",    8 }, "Zhaoxin KaiXian (ShiJiDaDao)",  "7 nm"   }, // KX (7000)
+	{  7, -1, -1, -1,  123,  -1,    -1,    -1, { "ZHAOXIN KaisHeng KH-50###",  8 }, "Zhaoxin KaisHeng (ShiJiDaDao)", "7 nm"   }, // KH (50000)
+	/* ??? (2026) */
+	{  7, -1, -1, -1,  139,  -1,    -1,    -1, { "ZHAOXIN KaiXian KX-8###",    8 }, "Zhaoxin KaiXian",               "7 nm"   }, // KX (8000)
 //     F   M   S  EF    EM #cores  L2$    L3$  Pattern                              Codename                         Technology
 };
 

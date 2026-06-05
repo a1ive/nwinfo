@@ -376,6 +376,10 @@ const struct match_entry_t cpudb_amd[] = {
 	/* Family 18h */
 	/* Zen Architecture for Hygon (2018) => https://en.wikichip.org/wiki/hygon/microarchitectures/dhyana */
 	{ 15, -1, -1, 24,    0,  -1,    -1,    -1, { "C86",                    8 }, "C86 (Dhyana)",                   "14 nm"     },
+	{ 15, -1, -1, 24,    2,  -1,    -1,    -1, { "C86",                   10 }, "C86-3G (Dhyana)",                "14 nm"     },
+	{ 15, -1, -1, 24,    4,  -1,    -1,    -1, { "C86",                   10 }, "C86-4G (Dharma)",                "14 nm"     },
+	{ 15, -1, -1, 24,    6,  -1,    -1,    -1, { "C86",                   10 }, "C86-4G (Shanghai)",              "14 nm"     },
+	{ 15, -1, -1, 24,    7,  -1,    -1,    -1, { "C86",                   10 }, "C86-4G (Chengdu)",               "14 nm"     },
 
 	/* Family 19h */
 	/* Zen 3 (2020) => https://en.wikichip.org/wiki/amd/microarchitectures/zen_3 */
