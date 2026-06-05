@@ -341,6 +341,7 @@
     <ClInclude Include="lang\ko_KR.h" />
     <ClInclude Include="lang\pl_PL.h" />
     <ClInclude Include="lang\pt_BR.h" />
+    <ClInclude Include="lang\ru_RU.h" />
     <ClInclude Include="lang\sl_SI.h" />
     <ClInclude Include="lang\sv_SE.h" />
     <ClInclude Include="lang\tr_TR.h" />

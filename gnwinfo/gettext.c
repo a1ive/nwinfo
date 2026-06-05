@@ -15,6 +15,7 @@
 #include "lang/ko_KR.h"
 #include "lang/pl_PL.h"
 #include "lang/pt_BR.h"
+#include "lang/ru_RU.h"
 #include "lang/sl_SI.h"
 #include "lang/sv_SE.h"
 #include "lang/tr_TR.h"
@@ -39,6 +40,7 @@ LANGID g_supported_lang_ids[] =
 	1042, // Korean
 	1045, // Polish
 	1046, // Portuguese - Brazil
+	1049, // Russian
 	1053, // Swedish
 	1055, // Turkish
 	1060, // Slovenian
@@ -147,6 +149,9 @@ gnwinfo_get_lang_str(LANGID lang, GETTEXT_STR_ID id)
 	case 1046: // Portuguese - Brazil
 	case 2070: // Portuguese - Portugal
 		str = lang_pt_br[id];
+		break;
+	case 1049: // Russian
+		str = lang_ru_ru[id];
 		break;
 	case 1053: // Swedish
 		str = lang_sv_se[id];
