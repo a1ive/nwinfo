@@ -43,6 +43,7 @@
 - Korean
 - Polish
 - Portuguese (Brazil)
+- Russian
 - Slovenian
 - Spanish
 - Swedish
@@ -272,6 +273,27 @@ NWinfo uses [libcdi](https://github.com/a1ive/libcdi) to access S.M.A.R.T. data.
 `libcdi` is a dynamic library based on [CrystalDiskInfo](https://crystalmark.info/en/software/crystaldiskinfo/).
 
 Note: NVMe requires Windows 10 or later.
+
+<div style="page-break-after: always;"></div>
+
+## Supported Sensor Providers
+
+The `--sensors[=SRC,..]` option reads sensor data from the following providers. If `SRC` is omitted, NWinfo tries all providers and prints the ones that initialize successfully.
+
+| Provider | Source | Notes |
+|----------|--------|-------|
+| `LHM`    | LibreHardwareMonitor | Uses `liblhm.dll` and `LibreHardwareMonitorLib.dll` to enumerate LibreHardwareMonitor sensors. |
+| `HWINFO` | HWiNFO shared memory | Requires HWiNFO to be running with sensor shared memory available. |
+| `GPU-Z`  | GPU-Z shared memory | Requires GPU-Z to be running. |
+| `CPU`    | Built-in CPU provider | Reports CPU utilization, frequency, and MSR-based CPU readings. A driver is required for MSR sensors. |
+| `DIMM`   | Built-in memory provider | Reports memory usage and DIMM thermal sensors when available. A driver is required for SMBus thermal sensors. |
+| `GPU`    | Built-in GPU provider | Reports GPU utilization, memory usage, temperature, power, clocks, voltage, and fan speed through supported GPU APIs. |
+| `SMART`  | Built-in S.M.A.R.T. provider | Reports disk health, temperature, lifetime/wear, and related S.M.A.R.T. data through `libcdi`. |
+| `DISK`   | Built-in disk I/O provider | Reports disk throughput, IOPS, latency, utilization, queue depth, and counters. |
+| `NET`    | Built-in network provider | Reports network throughput, total traffic, link speed, and WLAN signal quality. |
+| `IMC`    | Built-in memory controller provider | Reports integrated memory controller data for supported Intel and AMD platforms. A driver is required. |
+| `INTEL`  | Built-in Intel platform provider | Reports Intel-specific MCH, PCH, and MSR sensor data. A driver is required. |
+| `ZEN`    | Built-in AMD Zen provider | Reports AMD Zen SMU/SMN sensor data. A driver is required. |
 
 <div style="page-break-after: always;"></div>
 
