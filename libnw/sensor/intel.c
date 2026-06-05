@@ -483,6 +483,12 @@ static void get_msr_sensors(PNODE node)
 		NWL_NodeAttrSetf(node, "Uncore Frequency MHz", NAFLG_FMT_NUMERIC, "%u", ratio * 100);
 	}
 
+	if (read_msr(0x601, &value) == 0)
+	{
+		float pl4 = (float)(value & 0x1FFF) / (1ULL << power_unit);
+		NWL_NodeAttrSetf(node, "Package PL4", NAFLG_FMT_NUMERIC, "%.0f", pl4);
+	}
+
 	SetThreadGroupAffinity(ctx.thread, &saved_aff, NULL);
 }
 
