@@ -241,5 +241,8 @@
     <Image Include="icons\report.png">
       <Filter>Resource Files</Filter>
     </Image>
+    <Image Include="icons\minimize.png">
+      <Filter>Resource Files</Filter>
+    </Image>
   </ItemGroup>
 </Project>

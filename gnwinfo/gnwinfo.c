@@ -228,6 +228,16 @@ window_proc(HWND wnd, UINT msg, WPARAM wparam, LPARAM lparam)
 		g_ctx.gui_height = HIWORD(lparam);
 		g_ctx.gui_width = LOWORD(lparam);
 		break;
+	case WM_SYSCOMMAND:
+		if ((wparam & 0xFFF0) == SC_MINIMIZE)
+		{
+			if (g_ctx.main_flag & MAIN_SYSTRAY)
+				ShowWindow(wnd, SW_HIDE);
+			else
+				ShowWindow(wnd, SW_MINIMIZE);
+			return 0;
+		}
+		break;
 	case WM_COMMAND:
 		gnwinfo_handle_systray_cmd(wnd, LOWORD(wparam));
 		break;
@@ -235,7 +245,7 @@ window_proc(HWND wnd, UINT msg, WPARAM wparam, LPARAM lparam)
 		switch (lparam)
 		{
 			case WM_LBUTTONUP:
-				SetForegroundWindow(wnd);
+				ShowWindow(wnd, SW_SHOW);
 				break;
 			case WM_RBUTTONUP:
 				gnwinfo_show_systray_menu(wnd);

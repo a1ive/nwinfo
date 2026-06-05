@@ -32,8 +32,9 @@
 #define IDR_PNG_GPU                     135
 #define IDR_PNG_SENSOR                  136
 #define IDR_PNG_REPORT                  137
+#define IDR_PNG_MINIMIZE                138
 
-#define IDR_PNG_MAX                     138
+#define IDR_PNG_MAX                     139
 
 #define IDT_TIMER_1S                    (1u << 0)
 #define IDT_TIMER_1M                    (1u << 1)

@@ -394,6 +394,7 @@ static struct
 {
 	ULONG_PTR token;
 
+	HWND wnd;
 	GpGraphics* window;
 	GpGraphics* memory;
 	GpImage* bitmap;
@@ -770,6 +771,7 @@ nk_gdip_init(HWND hwnd, unsigned int width, unsigned int height)
 	GdiplusStartupInput startup = { 1, NULL, FALSE, TRUE };
 	GdiplusStartup(&gdip.token, &startup, NULL);
 
+	gdip.wnd = hwnd;
 	GdipCreateFromHWND(hwnd, &gdip.window);
 	GdipCreateBitmapFromGraphics(width, height, gdip.window, &gdip.bitmap);
 	GdipGetImageGraphicsContext(gdip.bitmap, &gdip.memory);
@@ -1425,7 +1427,7 @@ nk_report_end_capture(void)
 
 static nk_bool
 nk_panel_begin_ex(struct nk_context* ctx, const char* title, enum nk_panel_type panel_type,
-	struct nk_image img_icon, struct nk_image img_close)
+	struct nk_image img_icon, struct nk_image img_minimize, struct nk_image img_close)
 {
 	struct nk_input* in;
 	struct nk_window* win;
@@ -1618,12 +1620,10 @@ nk_panel_begin_ex(struct nk_context* ctx, const char* title, enum nk_panel_type 
 					button.x = header.x;
 					header.x += button.w + style->window.header.spacing.x + style->window.header.padding.x;
 				}
-				if (nk_do_button_image(&ws, &win->buffer, button, (layout->flags & NK_WINDOW_MINIMIZED) ?
-					img_close : img_close, // TODO: use minimize icon
-					NK_BUTTON_DEFAULT, &style->window.header.minimize_button, in) && !(win->flags & NK_WINDOW_ROM))
-					layout->flags = (layout->flags & NK_WINDOW_MINIMIZED) ?
-					layout->flags & (nk_flags)~NK_WINDOW_MINIMIZED :
-					layout->flags | NK_WINDOW_MINIMIZED;
+				if (nk_do_button_image(&ws, &win->buffer, button,
+					img_minimize, NK_BUTTON_DEFAULT,
+					&style->window.header.minimize_button, in) && !(win->flags & NK_WINDOW_ROM))
+					PostMessageW(gdip.wnd, WM_SYSCOMMAND, SC_MINIMIZE, 0);
 			}
 		}
 
@@ -1689,7 +1689,7 @@ nk_panel_begin_ex(struct nk_context* ctx, const char* title, enum nk_panel_type 
 
 nk_bool
 nk_begin_ex(struct nk_context* ctx, const char* title,
-	struct nk_rect bounds, nk_flags flags, struct nk_image img_icon, struct nk_image img_close)
+	struct nk_rect bounds, nk_flags flags, struct nk_image img_icon, struct nk_image img_minimize, struct nk_image img_close)
 {
 	struct nk_window* win;
 	struct nk_style* style;
@@ -1839,7 +1839,7 @@ nk_begin_ex(struct nk_context* ctx, const char* title,
 	}
 	win->layout = (struct nk_panel*)nk_create_panel(ctx);
 	ctx->current = win;
-	ret = nk_panel_begin_ex(ctx, title, NK_PANEL_WINDOW, img_icon, img_close);
+	ret = nk_panel_begin_ex(ctx, title, NK_PANEL_WINDOW, img_icon, img_minimize, img_close);
 	win->layout->offset_x = &win->scrollbar.x;
 	win->layout->offset_y = &win->scrollbar.y;
 	return ret;

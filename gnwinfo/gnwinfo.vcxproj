@@ -395,6 +395,7 @@
     <Image Include="icons\gpu.png" />
     <Image Include="icons\info.png" />
     <Image Include="icons\memory.png" />
+    <Image Include="icons\minimize.png" />
     <Image Include="icons\mm.png" />
     <Image Include="icons\monitor.png" />
     <Image Include="icons\network.png" />
