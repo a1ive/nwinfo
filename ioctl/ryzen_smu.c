@@ -532,130 +532,6 @@ static ry_err_t get_pm_table_version(ry_handle_t* handle, uint32_t* version)
 	return RYZEN_SMU_OK;
 }
 
-static size_t get_pm_table_size_from_version(ry_handle_t* handle, uint32_t version)
-{
-#if 0
-	switch (version)
-	{
-	case 0x190001: return 0x280;
-	case 0x190101: return 0x45C;
-	case 0x190201: return 0x814;
-	case 0x1E0001: return 0x570;
-	case 0x1E0002: return 0x580;
-	case 0x1E0003:
-	case 0x1E0004:
-	case 0x1E0005:
-	case 0x1E000A:
-	case 0x1E0101: return 0x610;
-	//case 0x240003: return 0x18AC; // CODENAME_CASTLEPEAK, CODENAME_MATISSE
-	case 0x240503: return 0xD7C;  // CODENAME_CASTLEPEAK, CODENAME_MATISSE
-	case 0x240603: return 0xAB0;  // CODENAME_CASTLEPEAK, CODENAME_MATISSE
-	case 0x240703: return 0x7E4;  // CODENAME_CASTLEPEAK, CODENAME_MATISSE
-	case 0x240802: return 0x7E0;  // CODENAME_CASTLEPEAK, CODENAME_MATISSE
-	case 0x240803: return 0x7E4;  // CODENAME_CASTLEPEAK, CODENAME_MATISSE
-	case 0x240902: return 0x514;  // CODENAME_CASTLEPEAK, CODENAME_MATISSE
-	case 0x240903: return 0x518;  // CODENAME_CASTLEPEAK, CODENAME_MATISSE
-	case 0x260001: return 0x610;  // CODENAME_FIREFLIGHT
-	//case 0x2D0008: return 0x1AB0; // CODENAME_MILAN
-	case 0x2D0803: return 0x894;  // CODENAME_VERMEER, CODENAME_CHAGALL
-	case 0x2D0903: return 0x7E4;  // CODENAME_VERMEER, CODENAME_CHAGALL
-	case 0x370000: return 0x79C;  // CODENAME_RENOIR, CODENAME_LUCIENNE
-	case 0x370001: return 0x88C;  // CODENAME_RENOIR, CODENAME_LUCIENNE
-	case 0x370002: return 0x894;  // CODENAME_RENOIR, CODENAME_LUCIENNE
-	case 0x370003:
-	case 0x370004: return 0x8B4;  // CODENAME_RENOIR, CODENAME_LUCIENNE
-	case 0x370005: return 0x8D0;  // CODENAME_RENOIR, CODENAME_LUCIENNE
-	//case 0x380005: return 0x1BB0; // CODENAME_VERMEER, CODENAME_CHAGALL
-	case 0x380505: return 0xF30;  // CODENAME_VERMEER, CODENAME_CHAGALL
-	case 0x380605: return 0xC10;  // CODENAME_VERMEER, CODENAME_CHAGALL
-	case 0x380705: return 0x8F0;  // CODENAME_VERMEER, CODENAME_CHAGALL
-	case 0x380804: return 0x8A4;  // CODENAME_VERMEER, CODENAME_CHAGALL
-	case 0x380805: return 0x8F0;  // CODENAME_VERMEER, CODENAME_CHAGALL
-	case 0x380904: return 0x5A4;  // CODENAME_VERMEER, CODENAME_CHAGALL
-	case 0x380905: return 0x5D0;  // CODENAME_VERMEER, CODENAME_CHAGALL
-	case 0x3F0000: return 0x7AC;
-	case 0x400001: return 0x910;
-	case 0x400002: return 0x928;
-	case 0x400003: return 0x94C;
-	case 0x400004:
-	case 0x400005: return 0x944;  // CODENAME_CEZANNE
-	case 0x450004: return 0xAA4;  // CODENAME_REMBRANDT
-	case 0x450005: return 0xAB0;  // CODENAME_REMBRANDT
-	//case 0x470004: return 0x1E48;
-	//case 0x470104: return 0x1A20;
-	//case 0x470204: return 0x1554;
-	case 0x470304: return 0xDA8;
-	case 0x470404: return 0x980;
-	case 0x4C0003: return 0xB18;  // CODENAME_PHOENIX, CODENAME_HAWKPOINT
-	case 0x4C0004: return 0xB1C;  // CODENAME_PHOENIX, CODENAME_HAWKPOINT
-	case 0x4C0005: return 0xAF8;  // CODENAME_PHOENIX, CODENAME_HAWKPOINT
-	case 0x4C0006: return 0xAFC;  // CODENAME_PHOENIX, CODENAME_HAWKPOINT
-	case 0x4C0007: return 0xB00;  // CODENAME_PHOENIX, CODENAME_HAWKPOINT
-	case 0x4C0008: return 0xAF0;  // CODENAME_PHOENIX, CODENAME_HAWKPOINT
-	case 0x4C0009: return 0xB00;  // CODENAME_PHOENIX, CODENAME_HAWKPOINT
-	case 0x540000: return 0x828;  // CODENAME_RAPHAEL
-	case 0x540001: return 0x82C;  // CODENAME_RAPHAEL
-	case 0x540002: return 0x87C;  // CODENAME_RAPHAEL
-	case 0x540003: return 0x89C;  // CODENAME_RAPHAEL
-	case 0x540004: return 0x8BC;  // CODENAME_RAPHAEL
-	case 0x540005: return 0x8C8;  // CODENAME_RAPHAEL
-	case 0x540100: return 0x618;  // CODENAME_RAPHAEL
-	case 0x540101: return 0x61C;  // CODENAME_RAPHAEL
-	case 0x540102: return 0x66C;  // CODENAME_RAPHAEL
-	case 0x540103: return 0x68C;  // CODENAME_RAPHAEL
-	case 0x540104: return 0x6A8;  // CODENAME_RAPHAEL
-	case 0x540105: return 0x6B4;  // CODENAME_RAPHAEL
-	case 0x540108: return 0x6BC;  // CODENAME_RAPHAEL
-	case 0x540208: return 0x8D0;  // CODENAME_RAPHAEL
-	//case 0x5C0002: return 0x1E3C; // CODENAME_STORMPEAK
-	//case 0x5C0003: return 0x1E48; // CODENAME_STORMPEAK
-	//case 0x5C0102: return 0x1A14; // CODENAME_STORMPEAK
-	//case 0x5C0103: return 0x1A20; // CODENAME_STORMPEAK
-	//case 0x5C0202: return 0x15EC; // CODENAME_STORMPEAK
-	//case 0x5C0203: return 0x15F8; // CODENAME_STORMPEAK
-	case 0x5C0302: return 0xD9C;  // CODENAME_STORMPEAK
-	case 0x5C0303: return 0xDA8;  // CODENAME_STORMPEAK
-	case 0x5C0402: return 0x974;  // CODENAME_STORMPEAK
-	case 0x5C0403: return 0x980;  // CODENAME_STORMPEAK
-	case 0x5D0008: return 0xD54;  // CODENAME_STRIXPOINT
-	case 0x5D0009: return 0xD58;  // CODENAME_STRIXPOINT
-	case 0x5D000A: return 0xD60;
-	case 0x5D000B: return 0xD54;
-	//case 0x5E0801: return 0x16EC;
-	//case 0x5E0802: return 0x289C;
-	case 0x620105: return 0x724;  // CODENAME_GRANITERIDGE
-	case 0x620205: return 0x994;  // CODENAME_GRANITERIDGE
-	case 0x621101:
-	case 0x621102: return 0x724;  // CODENAME_GRANITERIDGE
-	case 0x621201:
-	case 0x621202: return 0x994;  // CODENAME_GRANITERIDGE
-	case 0x640107: return 0xDC0;  // CODENAME_STRIXHALO
-	case 0x640108: return 0xDC4;  // CODENAME_STRIXHALO
-	case 0x640109:
-	case 0x64010A: return 0xDD4;  // CODENAME_STRIXHALO
-	case 0x64010C: return 0xDDC;  // CODENAME_STRIXHALO
-	//case 0x640207: return 0x100C; // CODENAME_STRIXHALO
-	//case 0x640208: return 0x1010; // CODENAME_STRIXHALO
-	case 0x640209:
-	//case 0x64020A: return 0x1020; // CODENAME_STRIXHALO
-	//case 0x64020C: return 0x1028; // CODENAME_STRIXHALO
-	case 0x650004: return 0xB74;  // CODENAME_KRACKANPOINT
-	case 0x650005: return 0xB78;  // CODENAME_KRACKANPOINT
-	case 0x650006: return 0xB80;
-	case 0x650007: return 0xD54;
-	//case 0x730A04: return 0x1EBC;
-	case 0x730204: return 0xB1C;
-	//case 0x730404: return 0x1004;
-	//case 0x730604: return 0x14EC;
-	//case 0x730804: return 0x19D4;
-	//case 0x730C04: return 0x23A4;
-	//case 0x730E04: return 0x288C;
-	//case 0x731004: return 0x2D74;
-	}
-#endif
-	return SMU_TABLE_MAX_SIZE;
-}
-
 static ry_err_t transfer_table_to_dram(ry_handle_t* handle)
 {
 	ry_args_t args;
@@ -748,7 +624,7 @@ ry_handle_t* ryzen_smu_init(struct wr0_drv_t* drv_handle, struct cpu_id_t* id)
 		SMU_DEBUG("PM Version %X", handle->pm_table_version);
 		SMU_DEBUG("PM Table Base: %llX", (unsigned long long)handle->pm_table_base_addr);
 
-		handle->pm_table_size = get_pm_table_size_from_version(handle, handle->pm_table_version);
+		handle->pm_table_size = SMU_TABLE_MAX_SIZE;
 		SMU_DEBUG("PM Table Size: %zu", handle->pm_table_size);
 
 		ZeroMemory(&handle->pm_table_buffer, sizeof(handle->pm_table_buffer));
@@ -781,7 +657,7 @@ ry_handle_t* ryzen_smu_init(struct wr0_drv_t* drv_handle, struct cpu_id_t* id)
 	if (rc != RYZEN_SMU_OK && rc != RYZEN_SMU_UNSUPPORTED)
 		goto fail;
 
-	handle->pm_table_size = get_pm_table_size_from_version(handle, handle->pm_table_version);
+	handle->pm_table_size = SMU_TABLE_MAX_SIZE;
 	SMU_DEBUG("PM Table Size: %zu", handle->pm_table_size);
 
 	ZeroMemory(&handle->pm_table_buffer, sizeof(handle->pm_table_buffer));
@@ -1138,58 +1014,62 @@ ry_err_t ryzen_smu_get_core_temperature(ry_handle_t* handle, uint32_t core, floa
 
 	switch (handle->pm_table_version)
 	{
-	case 0x240803:
+	case 0x001E0004:
+		base_offset = 0x6C;
+		max_cores = 4;
+		break;
+	case 0x00240803:
 		base_offset = 0x2CC;
 		break;
-	case 0x240903:
+	case 0x00240903:
 		base_offset = 0x28C;
 		max_cores = 8;
 		break;
-	case 0x370000:
-	case 0x370001:
-	case 0x370002:
-	case 0x370003:
-	case 0x370004:
+	case 0x00370000:
+	case 0x00370001:
+	case 0x00370002:
+	case 0x00370003:
+	case 0x00370004:
 		base_offset = 0x340;
 		break;
-	case 0x370005:
+	case 0x00370005:
 		base_offset = 0x35C;
 		break;
-	case 0x380804:
+	case 0x00380804:
 		base_offset = 0x324;
 		break;
-	case 0x380805:
+	case 0x00380805:
 		base_offset = 0x330;
 		break;
-	case 0x380904:
+	case 0x00380904:
 		base_offset = 0x2E4;
 		max_cores = 8;
 		break;
-	case 0x380905:
+	case 0x00380905:
 		base_offset = 0x2F0;
 		max_cores = 8;
 		break;
-	case 0x3F0000:
+	case 0x003F0000:
 		base_offset = 0x258;
 		max_cores = 4;
 		break;
-	case 0x400004:
-	case 0x400005:
+	case 0x00400004:
+	case 0x00400005:
 		base_offset = 0x360;
 		break;
-	case 0x4C0006:
+	case 0x004C0006:
 		base_offset = 0x840;
 		max_cores = 8;
 		break;
-	case 0x5D0008:
-	case 0x5D0009:
-	case 0x5D000B:
+	case 0x005D0008:
+	case 0x005D0009:
+	case 0x005D000B:
 		base_offset = 0xA38;
 		break;
-	case 0x64020C:
+	case 0x0064020C:
 		base_offset = 0xC10;
 		break;
-	case 0x620205:
+	case 0x00620205:
 		base_offset = 0x534;
 		break;
 	}
@@ -1332,41 +1212,41 @@ ry_err_t ryzen_smu_get_gfx_temperature(ry_handle_t* handle, float* data)
 
 	switch (handle->pm_table_version)
 	{
-	case 0x370000:
-	case 0x370001:
-	case 0x370002:
-	case 0x370003:
-	case 0x370004:
+	case 0x00370000:
+	case 0x00370001:
+	case 0x00370002:
+	case 0x00370003:
+	case 0x00370004:
 		offset = 0x5AC;
 		break;
-	case 0x370005:
+	case 0x00370005:
 		offset = 0x5C8;
 		break;
-	case 0x400001:
-		offset = 0x604;
-		break;
-	case 0x400002:
-		offset = 0x61C;
-		break;
-	case 0x400003:
-		offset = 0x63C;
-		break;
-	case 0x400004:
-	case 0x400005:
-		offset = 0x640;
-		break;
-	case 0x3F0000:
+	case 0x003F0000:
 		offset = 0x380;
 		break;
-	case 0x4C0006:
+	case 0x00400001:
+		offset = 0x604;
+		break;
+	case 0x00400002:
+		offset = 0x61C;
+		break;
+	case 0x00400003:
+		offset = 0x63C;
+		break;
+	case 0x00400004:
+	case 0x00400005:
+		offset = 0x640;
+		break;
+	case 0x004C0006:
 		offset = 0x358;
 		break;
-	case 0x5D0008:
-	case 0x5D0009:
-	case 0x5D000B:
+	case 0x005D0008:
+	case 0x005D0009:
+	case 0x005D000B:
 		offset = 0x4C8;
 		break;
-	case 0x64020C:
+	case 0x0064020C:
 		offset = 0x550;
 		break;
 	}
@@ -1383,38 +1263,38 @@ ry_err_t ryzen_smu_get_gfx_volt(ry_handle_t* handle, float* data)
 
 	switch (handle->pm_table_version)
 	{
-	case 0x370000:
-	case 0x370001:
-	case 0x370002:
-	case 0x370003:
-	case 0x370004:
+	case 0x00370000:
+	case 0x00370001:
+	case 0x00370002:
+	case 0x00370003:
+	case 0x00370004:
 		offset = 0x5A8;
 		break;
-	case 0x370005:
+	case 0x00370005:
 		offset = 0x5C4;
 		break;
-	case 0x400001:
+	case 0x00400001:
 		offset = 0x600;
 		break;
-	case 0x400002:
+	case 0x00400002:
 		offset = 0x618;
 		break;
-	case 0x400003:
+	case 0x00400003:
 		offset = 0x638;
 		break;
-	case 0x400004:
-	case 0x400005:
+	case 0x00400004:
+	case 0x00400005:
 		offset = 0x63C;
 		break;
-	case 0x3F0000:
+	case 0x003F0000:
 		offset = 0x37C;
 		break;
-	case 0x5D0008:
-	case 0x5D0009:
-	case 0x5D000B:
+	case 0x005D0008:
+	case 0x005D0009:
+	case 0x005D000B:
 		offset = 0x4B8;
 		break;
-	case 0x64020C:
+	case 0x0064020C:
 		offset = 0x54C;
 		break;
 	}
@@ -1431,38 +1311,38 @@ ry_err_t ryzen_smu_get_gfx_clk(ry_handle_t* handle, float* data)
 
 	switch (handle->pm_table_version)
 	{
-	case 0x370000:
-	case 0x370001:
-	case 0x370002:
-	case 0x370003:
-	case 0x370004:
+	case 0x00370000:
+	case 0x00370001:
+	case 0x00370002:
+	case 0x00370003:
+	case 0x00370004:
 		offset = 0x5B4;
 		break;
-	case 0x370005:
+	case 0x00370005:
 		offset = 0x5D0;
 		break;
-	case 0x400001:
+	case 0x00400001:
 		offset = 0x60C;
 		break;
-	case 0x400002:
+	case 0x00400002:
 		offset = 0x624;
 		break;
-	case 0x400003:
+	case 0x00400003:
 		offset = 0x644;
 		break;
-	case 0x400004:
-	case 0x400005:
+	case 0x00400004:
+	case 0x00400005:
 		offset = 0x648;
 		break;
-	case 0x3F0000:
+	case 0x003F0000:
 		offset = 0x388;
 		break;
-	case 0x5D0008:
-	case 0x5D0009:
-	case 0x5D000B:
+	case 0x005D0008:
+	case 0x005D0009:
+	case 0x005D000B:
 		offset = 0x4C0;
 		break;
-	case 0x64020C:
+	case 0x0064020C:
 		offset = 0x588;
 		break;
 	}
