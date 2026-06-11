@@ -1,4 +1,4 @@
-﻿// SPDX-License-Identifier: Unlicense
+// SPDX-License-Identifier: Unlicense
 // This file should be saved in UTF-8 **with** BOM encoding
 // Translated by: @bovirus
 
@@ -42,7 +42,7 @@ lang_it_it[N__MAX_] =
 	[N__SB_OFF] = u8"Boot sicuro disabilitato",
 	[N__TOTAL] = u8"Totale",
 	[N__FEATURES] = u8"Funzionalità",
-	[N__FEATURE_LEVEL] = u8"Livello funzionalità",
+	[N__FEATURE_LEVEL] = u8"Livello funzionalità", // refer to the microarchitecture levels of the CPU (e.g. x86-64-v3)
 	//[N__MSR],
 	[N__MULTIPLIER] = u8"Moltiplicatore",
 	[N__CORE_SPEED] = u8"Velocità core",
