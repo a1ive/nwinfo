@@ -180,6 +180,9 @@
     <ClInclude Include="drvstore.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\ids\acpi_ids.h">
+      <Filter>ids</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="acpi.c">
