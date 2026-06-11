@@ -350,7 +350,6 @@ This section describes all files included in the final release package.
 | `gnwinfo.ini` | Configuration | Configuration file for the GUI |
 | `pci.ids` | Database | PCI database |
 | `usb.ids` | Database | USB database |
-| `pnp.ids` | Database | PnP (monitor) vendor database |
 | `jep106.ids` | Database | JEDEC memory module vendor database |
 | `PawnIOSetup.exe` | Driver | PawnIO driver installer (x64) |
 | `IntelMCHBAR.bin` | PawnIO Module | Intel MCHBAR module for the PawnIO driver |

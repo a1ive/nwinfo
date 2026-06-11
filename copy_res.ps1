@@ -46,7 +46,6 @@ $FilesToCopy += $DriverFiles[$Driver]
 
 $FilesToDownload = @(
 	"https://raw.githubusercontent.com/pciutils/pciids/master/pci.ids",
-	"https://raw.githubusercontent.com/vcrhonek/hwdata/master/pnp.ids",
 	"https://raw.githubusercontent.com/vcrhonek/hwdata/master/usb.ids"
 )
 
@@ -127,19 +126,5 @@ if (Test-Path -Path $PciIdsPath) {
 		Write-Output "Successfully modified $PciIdsPath"
 	} catch {
 		Write-Error "Error modifying ${PciIdsPath}: $_"
-	}
-}
-
-# Add version info and remove invalid vendor codename from pnp.ids
-$PnpIdsPath = Join-Path -Path $TargetFolder -ChildPath "pnp.ids"
-if (Test-Path -Path $PnpIdsPath) {
-	try {
-		Add-Content -Path $PnpIdsPath -Value "# Version: $(Get-Date -Format 'yyyy.MM.dd')"
-		$content = Get-Content -Path $PnpIdsPath -Raw
-		$content = $content -replace "Invalid Vendor Codename - ", ""
-		Set-Content -Path $PnpIdsPath -Value $content
-		Write-Output "Successfully modified $PnpIdsPath"
-	} catch {
-		Write-Error "Error modifying ${PnpIdsPath}: $_"
 	}
 }
