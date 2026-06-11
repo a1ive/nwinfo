@@ -42,6 +42,7 @@ lang_el_gr[N__MAX_] =
 	[N__SB_OFF] = u8"SecureBootΑνενεργό",
 	[N__TOTAL] = u8"Σύνολο",
 	[N__FEATURES] = u8"Χαρακτηριστικά",
+	[N__FEATURE_LEVEL] = u8"Επίπεδο χαρακτηριστικών",
 	[N__MULTIPLIER] = u8"Πολλαπλασιαστής",
 	[N__CORE_SPEED] = u8"Ταχύτητα πυρήνα",
 	[N__BUS_CLOCK] = u8"Ρολόι διαύλου",

@@ -42,6 +42,7 @@ lang_fr_fr[N__MAX_] =
 	[N__SB_OFF] = u8"SecureBoot désactivé",
 	[N__TOTAL] = u8"Total",
 	[N__FEATURES] = u8"Fonctionnalités",
+	[N__FEATURE_LEVEL] = u8"Niveau de fonctionnalité",
 	//[N__MSR]
 	[N__MULTIPLIER] = u8"Multiplicateur",
 	[N__CORE_SPEED] = u8"Fréquence des cœurs",

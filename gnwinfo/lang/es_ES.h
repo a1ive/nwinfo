@@ -42,6 +42,7 @@ lang_es_es[N__MAX_] =
 	[N__SB_OFF] = u8"SecureBootDesactivado",
 	[N__TOTAL] = u8"Total",
 	[N__FEATURES] = u8"Funciones",
+	[N__FEATURE_LEVEL] = u8"Nivel de características",
 	[N__MULTIPLIER] = u8"Multiplicador",
 	[N__CORE_SPEED] = u8"Velocidad del núcleo",
 	[N__BUS_CLOCK] = u8"Reloj de bus",

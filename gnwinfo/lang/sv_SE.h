@@ -41,6 +41,7 @@ lang_sv_se[N__MAX_] =
 	[N__SB_OFF] = u8"Säker uppstart av",
 	[N__TOTAL] = u8"Totalt",
 	[N__FEATURES] = u8"Funktioner",
+	[N__FEATURE_LEVEL] = u8"Funktionsnivå",
 	[N__MULTIPLIER] = u8"Multiplikator",
 	[N__CORE_SPEED] = u8"Kärnhastighet",
 	[N__BUS_CLOCK] = u8"Bussklocka",

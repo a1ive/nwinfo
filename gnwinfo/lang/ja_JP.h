@@ -42,6 +42,7 @@ lang_ja_jp[N__MAX_] =
 	[N__SB_OFF] = u8"セキュアブート無効",
 	[N__TOTAL] = u8"合計",
 	[N__FEATURES] = u8"拡張命令",
+	[N__FEATURE_LEVEL] = u8"機能レベル",
 	[N__MSR] = u8"MSR",
 	[N__MULTIPLIER] = u8"倍率",
 	[N__CORE_SPEED] = u8"コア速度",

@@ -40,6 +40,7 @@ lang_zh_cn[N__MAX_] =
 	[N__SB_OFF] = u8"安全启动关闭",
 	[N__TOTAL] = u8"总计",
 	[N__FEATURES] = u8"特性",
+	[N__FEATURE_LEVEL] = u8"特性级别",
 	[N__MULTIPLIER] = u8"倍频",
 	[N__CORE_SPEED] = u8"核心频率",
 	[N__BUS_CLOCK] = u8"总线时钟",

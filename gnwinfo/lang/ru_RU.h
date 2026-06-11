@@ -42,6 +42,7 @@ lang_ru_ru[N__MAX_] =
     [N__SB_OFF] = u8"SecureBoot выкл.",
     [N__TOTAL] = u8"Всего",
     [N__FEATURES] = u8"Возможности",
+    [N__FEATURE_LEVEL] = u8"Уровень возможностей",
     [N__MSR] = u8"MSR",
     [N__MULTIPLIER] = u8"Множитель",
     [N__CORE_SPEED] = u8"Частота ядра",

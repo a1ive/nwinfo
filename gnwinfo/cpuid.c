@@ -93,6 +93,16 @@ gnwinfo_draw_cpuid_window(struct nk_context* ctx, float width, float height)
 	CPUID_ROW_END;
 
 	CPUID_ROW_BEGIN(6, 0.2f);
+	nk_l(ctx, N_(N__FEATURE_LEVEL), NK_TEXT_LEFT);
+	CPUID_ROW_PUSH((1.0f / 3 - 0.2f));
+	nk_lhc(ctx, NWL_NodeAttrGet(cpu, "Feature Level"), NK_TEXT_LEFT, g_color_text_l);
+	CPUID_ROW_PUSH(0.2f);
+	nk_l(ctx, "CPUID", NK_TEXT_LEFT);
+	CPUID_ROW_PUSH(0.3f);
+	nk_lhc(ctx, NWL_NodeAttrGet(cpu, "CPUID"), NK_TEXT_LEFT, g_color_text_l);
+	CPUID_ROW_END;
+
+	CPUID_ROW_BEGIN(6, 0.2f);
 	nk_l(ctx, N_(N__FAMILY), NK_TEXT_LEFT);
 	CPUID_ROW_PUSH((1.0f / 3 - 0.2f));
 	nk_lhc(ctx, NWL_NodeAttrGet(cpu, "Family"), NK_TEXT_LEFT, g_color_text_l);

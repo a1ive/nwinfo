@@ -41,6 +41,7 @@ lang_zh_hk[N__MAX_] =
 	[N__SB_OFF] = u8"安全開機已關閉",
 	[N__TOTAL] = u8"總計",
 	[N__FEATURES] = u8"功能",
+	[N__FEATURE_LEVEL] = u8"功能級別",
 	[N__MULTIPLIER] = u8"倍頻",
 	[N__CORE_SPEED] = u8"核心時脈",
 	[N__BUS_CLOCK] = u8"匯流排時脈",

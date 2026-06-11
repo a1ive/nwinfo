@@ -42,6 +42,7 @@ lang_sl_si[N__MAX_] =
 	[N__SB_OFF] = u8"SecureBootOff",
 	[N__TOTAL] = u8"Skupaj",
 	[N__FEATURES] = u8"Značilnosti",
+	[N__FEATURE_LEVEL] = u8"Raven značilnosti",
 	[N__MSR] = u8"MSR",
 	[N__MULTIPLIER] = u8"Množitelj",
 	[N__CORE_SPEED] = u8"Hitrost jeder",

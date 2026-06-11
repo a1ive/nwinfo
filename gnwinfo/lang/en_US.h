@@ -42,6 +42,7 @@ lang_en_us[N__MAX_] =
 	[N__SB_OFF] = u8"SecureBootOff",
 	[N__TOTAL] = u8"Total",
 	[N__FEATURES] = u8"Features",
+	[N__FEATURE_LEVEL] = u8"Feature Level", // refer to the microarchitecture levels of the CPU (e.g. x86-64-v3)
 	[N__MSR] = u8"MSR",
 	[N__MULTIPLIER] = u8"Multiplier",
 	[N__CORE_SPEED] = u8"Core Speed",

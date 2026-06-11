@@ -42,6 +42,7 @@ lang_it_it[N__MAX_] =
 	[N__SB_OFF] = u8"Boot sicuro disabilitato",
 	[N__TOTAL] = u8"Totale",
 	[N__FEATURES] = u8"Funzionalità",
+	[N__FEATURE_LEVEL] = u8"Livello funzionalità",
 	//[N__MSR],
 	[N__MULTIPLIER] = u8"Moltiplicatore",
 	[N__CORE_SPEED] = u8"Velocità core",

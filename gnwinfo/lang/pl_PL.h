@@ -42,6 +42,7 @@ lang_pl_pl[N__MAX_] =
 	[N__SB_OFF] = u8"SecureBootWyłączony",
 	[N__TOTAL] = u8"Łącznie",
 	[N__FEATURES] = u8"Funkcje",
+	[N__FEATURE_LEVEL] = u8"Poziom funkcji",
 	[N__MSR] = u8"MSR",
 	[N__MULTIPLIER] = u8"Mnożnik",
 	[N__CORE_SPEED] = u8"Prędkość rdzenia",

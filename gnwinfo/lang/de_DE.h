@@ -42,6 +42,7 @@ lang_de_de[N__MAX_] =
 	[N__SB_OFF] = u8"SecureBootAus",
 	[N__TOTAL] = u8"Gesamt",
 	[N__FEATURES] = u8"Funktionen",
+	[N__FEATURE_LEVEL] = u8"Feature-Level",
 	[N__MULTIPLIER] = u8"Multiplikator",
 	[N__CORE_SPEED] = u8"Kerntakt",
 	[N__BUS_CLOCK] = u8"Bustakt",

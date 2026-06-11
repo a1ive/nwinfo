@@ -42,6 +42,7 @@ lang_ko_kr[N__MAX_] =
 	[N__SB_OFF] = u8"보안 부팅 꺼짐",
 	[N__TOTAL] = u8"합계",
 	[N__FEATURES] = u8"기능",
+	[N__FEATURE_LEVEL] = u8"기능 수준",
 	[N__MSR] = u8"MSR",
 	[N__MULTIPLIER] = u8"배수",
 	[N__CORE_SPEED] = u8"코어 속도",

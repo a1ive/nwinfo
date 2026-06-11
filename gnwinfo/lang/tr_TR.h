@@ -41,6 +41,7 @@ lang_tr_tr[N__MAX_] =
 	[N__SB_OFF] = u8"Güvenli Önyükleme kapalı",
 	[N__TOTAL] = u8"Toplam",
 	[N__FEATURES] = u8"Özellikler",
+	[N__FEATURE_LEVEL] = u8"Özellik Düzeyi",
 	[N__MULTIPLIER] = u8"Çarpan",
 	[N__CORE_SPEED] = u8"Çekirdek Hızı",
 	[N__BUS_CLOCK] = u8"Veri yolu",

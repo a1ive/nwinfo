@@ -42,6 +42,7 @@ lang_pt_br[N__MAX_] =
 	[N__SB_OFF] = u8"SecureBootOff",
 	[N__TOTAL] = u8"Total",
 	[N__FEATURES] = u8"Recursos",
+	[N__FEATURE_LEVEL] = u8"Nível de recursos",
 	[N__MSR] = u8"MSR",
 	[N__MULTIPLIER] = u8"Multiplicador",
 	[N__CORE_SPEED] = u8"Velocidade do Núcleo",

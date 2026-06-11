@@ -173,6 +173,25 @@ CpuVendorToStr(cpu_vendor_t vendor)
 	}
 }
 
+static LPCSTR
+CpuFeatureLevelToStr(cpu_feature_level_t level)
+{
+	switch (level)
+	{
+	case FEATURE_LEVEL_I386: return "i386";
+	case FEATURE_LEVEL_I486: return "i486";
+	case FEATURE_LEVEL_I586: return "i586";
+	case FEATURE_LEVEL_I686: return "i686";
+	case FEATURE_LEVEL_X86_64_V1: return "x86-64-v1";
+	case FEATURE_LEVEL_X86_64_V2: return "x86-64-v2";
+	case FEATURE_LEVEL_X86_64_V3: return "x86-64-v3";
+	case FEATURE_LEVEL_X86_64_V4: return "x86-64-v4";
+	}
+	if (level >= FEATURE_LEVEL_ARM_V1)
+		return "ARM";
+	return "Unknown";
+}
+
 static void
 PrintHypervisor(PNODE node, const struct cpu_id_t* data)
 {
@@ -352,6 +371,7 @@ PrintCpuInfo(PNODE node, struct cpu_id_t* data, uint8_t index)
 	NWL_NodeAttrSetf(node, "Ext.Model", 0, "%02Xh", data->x86.ext_model);
 	NWL_NodeAttrSetf(node, "Package Type", 0, "%Xh", data->x86.pkg_type);
 	NWL_NodeAttrSetf(node, "CPUID", 0, "%08X", data->x86.cpuid);
+	NWL_NodeAttrSet(node, "Feature Level", CpuFeatureLevelToStr(data->feature_level), 0);
 
 	NWL_NodeAttrSetf(node, "Cores", NAFLG_FMT_NUMERIC, "%d", data->num_cores);
 	NWL_NodeAttrSetf(node, "Logical CPUs", NAFLG_FMT_NUMERIC, "%d", data->num_logical_cpus);
