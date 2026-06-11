@@ -1,0 +1,321 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   inkscape:export-ydpi="90.000000"
+   inkscape:export-xdpi="90.000000"
+   width="736"
+   height="544"
+   id="svg11300"
+   sodipodi:version="0.32"
+   inkscape:version="0.91 r"
+   sodipodi:docname="distributor-logo-windows.svg"
+   inkscape:output_extension="org.inkscape.output.svg.inkscape"
+   version="1.0"
+   style="display:inline;enable-background:new"
+   inkscape:export-filename="/home/sam/paper-template.png">
+  <title
+     id="title3004">Paper Icon Theme Template</title>
+  <sodipodi:namedview
+     stroke="#ef2929"
+     fill="#f57900"
+     id="base"
+     pagecolor="#6b6b6b"
+     bordercolor="#000000"
+     borderopacity="0.25490196"
+     inkscape:pageopacity="0"
+     inkscape:pageshadow="2"
+     inkscape:zoom="1"
+     inkscape:cx="141.04336"
+     inkscape:cy="265.02458"
+     inkscape:current-layer="layer6"
+     showgrid="false"
+     inkscape:grid-bbox="true"
+     inkscape:document-units="px"
+     inkscape:showpageshadow="false"
+     inkscape:window-width="1920"
+     inkscape:window-height="1023"
+     inkscape:window-x="0"
+     inkscape:window-y="27"
+     width="400px"
+     height="300px"
+     inkscape:snap-nodes="true"
+     inkscape:snap-bbox="true"
+     gridtolerance="10000"
+     inkscape:object-nodes="true"
+     inkscape:snap-grids="true"
+     showguides="true"
+     inkscape:guide-bbox="true"
+     inkscape:window-maximized="1"
+     inkscape:bbox-paths="true"
+     inkscape:snap-bbox-midpoints="true"
+     inkscape:snap-global="true"
+     inkscape:object-paths="true"
+     inkscape:snap-intersection-paths="true"
+     inkscape:snap-smooth-nodes="true">
+    <inkscape:grid
+       spacingy="1px"
+       spacingx="1px"
+       id="grid5883"
+       type="xygrid"
+       enabled="true"
+       visible="true"
+       empspacing="4"
+       snapvisiblegridlinesonly="true" />
+    <inkscape:grid
+       type="xygrid"
+       id="grid11592"
+       empspacing="2"
+       visible="true"
+       enabled="false"
+       spacingx="0.5px"
+       spacingy="0.5px"
+       color="#ff0000"
+       opacity="0.1254902"
+       empcolor="#ff0000"
+       empopacity="0.25098039"
+       snapvisiblegridlinesonly="true" />
+  </sodipodi:namedview>
+  <defs
+     id="defs3">
+    <filter
+       inkscape:collect="always"
+       style="color-interpolation-filters:sRGB"
+       id="filter4192"
+       x="-0.026608696"
+       width="1.0532174"
+       y="-0.021857143"
+       height="1.0437143">
+      <feGaussianBlur
+         inkscape:collect="always"
+         stdDeviation="4.08"
+         id="feGaussianBlur4194" />
+    </filter>
+  </defs>
+  <metadata
+     id="metadata4">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:creator>
+          <cc:Agent>
+            <dc:title>Sam Hewitt</dc:title>
+          </cc:Agent>
+        </dc:creator>
+        <dc:source />
+        <cc:license
+           rdf:resource="http://creativecommons.org/licenses/by-sa/3.0/" />
+        <dc:title>Paper Icon Theme Template</dc:title>
+        <dc:subject>
+          <rdf:Bag />
+        </dc:subject>
+        <dc:date />
+        <dc:rights>
+          <cc:Agent>
+            <dc:title />
+          </cc:Agent>
+        </dc:rights>
+        <dc:publisher>
+          <cc:Agent>
+            <dc:title />
+          </cc:Agent>
+        </dc:publisher>
+        <dc:identifier />
+        <dc:relation />
+        <dc:language />
+        <dc:coverage />
+        <dc:description />
+        <dc:contributor>
+          <cc:Agent>
+            <dc:title />
+          </cc:Agent>
+        </dc:contributor>
+      </cc:Work>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+      </cc:Work>
+      <cc:License
+         rdf:about="http://creativecommons.org/licenses/by-sa/3.0/">
+        <cc:permits
+           rdf:resource="http://creativecommons.org/ns#Reproduction" />
+        <cc:permits
+           rdf:resource="http://creativecommons.org/ns#Distribution" />
+        <cc:requires
+           rdf:resource="http://creativecommons.org/ns#Notice" />
+        <cc:requires
+           rdf:resource="http://creativecommons.org/ns#Attribution" />
+        <cc:permits
+           rdf:resource="http://creativecommons.org/ns#DerivativeWorks" />
+        <cc:requires
+           rdf:resource="http://creativecommons.org/ns#ShareAlike" />
+      </cc:License>
+    </rdf:RDF>
+  </metadata>
+  <g
+     style="display:inline"
+     inkscape:groupmode="layer"
+     inkscape:label="Icon"
+     id="layer1"
+     transform="translate(0,244)">
+    <g
+       style="display:none"
+       inkscape:label="Baseplate"
+       id="layer7"
+       inkscape:groupmode="layer">
+      <text
+         y="337.74512"
+         xml:space="preserve"
+         x="15.006836"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:18px;font-family:'DejaVu Sans';-inkscape-font-specification:'DejaVu Sans';display:inline;fill:#000000;fill-opacity:1;stroke:none;enable-background:new"
+         inkscape:label="context"
+         id="context"><tspan
+           style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:'DejaVu Sans';-inkscape-font-specification:'DejaVu Sans'"
+           y="337.74512"
+           x="15.006836"
+           sodipodi:role="line"
+           id="tspan3933">places</tspan></text>
+      <text
+         y="337.74512"
+         xml:space="preserve"
+         x="142.48828"
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:18px;line-height:125%;font-family:'DejaVu Sans';-inkscape-font-specification:'DejaVu Sans Bold';text-align:start;writing-mode:lr-tb;text-anchor:start;display:inline;fill:#000000;fill-opacity:1;stroke:none;enable-background:new"
+         sodipodi:linespacing="125%"
+         inkscape:label="icon-name"
+         id="icon-name"><tspan
+           style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:18px;font-family:'DejaVu Sans';-inkscape-font-specification:'DejaVu Sans Bold'"
+           y="337.74512"
+           x="142.48828"
+           sodipodi:role="line"
+           id="tspan3937">distributor-logo-windows</tspan></text>
+      <rect
+         style="display:inline;overflow:visible;visibility:visible;fill:#d3d7cf;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:2;marker:none;enable-background:accumulate"
+         id="rect16x16"
+         width="16"
+         height="16"
+         x="-32"
+         y="268"
+         inkscape:label="16x16"
+         transform="scale(-1,1)" />
+      <rect
+         style="display:inline;overflow:visible;visibility:visible;fill:#d3d7cf;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:2;marker:none;enable-background:accumulate"
+         id="rect24x24"
+         width="24"
+         height="24"
+         x="-76"
+         y="260"
+         inkscape:label="24x24"
+         transform="scale(-1,1)" />
+      <rect
+         style="display:inline;overflow:visible;visibility:visible;fill:#d3d7cf;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:2;marker:none;enable-background:accumulate"
+         id="rect32x32"
+         width="32"
+         height="32"
+         x="-128"
+         y="252"
+         inkscape:label="32x32"
+         transform="scale(-1,1)" />
+      <rect
+         inkscape:label="48x48"
+         y="236"
+         x="-192"
+         height="48"
+         width="48"
+         id="rect48x48"
+         style="display:inline;overflow:visible;visibility:visible;fill:#d3d7cf;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:2;marker:none;enable-background:accumulate"
+         transform="scale(-1,1)" />
+      <rect
+         style="display:inline;overflow:visible;visibility:visible;fill:#d3d7cf;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:2;marker:none;enable-background:accumulate"
+         id="rect3951"
+         width="512"
+         height="512"
+         x="-720"
+         y="-228"
+         inkscape:label="48x48"
+         transform="scale(-1,1)" />
+    </g>
+    <g
+       inkscape:groupmode="layer"
+       id="layer6"
+       inkscape:label="Symbols"
+       style="display:inline">
+      <path
+         id="pathWindowsShadowSoft1"
+         d="m 240,-192 212,0 0,212 -212,0 z m 236,0 212,0 0,212 -212,0 z m -236,236 212,0 0,212 -212,0 z m 236,0 212,0 0,212 -212,0 z"
+         style="color:#000000;display:inline;overflow:visible;visibility:visible;opacity:0.1;fill:#000000;fill-opacity:1;fill-rule:nonzero;stroke:none;marker:none;enable-background:new;filter:url(#filter4192)"
+         inkscape:connector-curvature="0" />
+      <path
+         id="pathWindowsShadowSoft2"
+         d="m 240,-192 212,0 0,212 -212,0 z m 236,0 212,0 0,212 -212,0 z m -236,236 212,0 0,212 -212,0 z m 236,0 212,0 0,212 -212,0 z"
+         style="color:#000000;display:inline;overflow:visible;visibility:visible;opacity:0.2;fill:#000000;fill-opacity:1;fill-rule:nonzero;stroke:none;marker:none;enable-background:new;filter:url(#filter4192)"
+         inkscape:connector-curvature="0" />
+      <path
+         id="pathWindowsShadowHard"
+         d="m 240,-194 212,0 0,212 -212,0 z m 236,0 212,0 0,212 -212,0 z m -236,236 212,0 0,212 -212,0 z m 236,0 212,0 0,212 -212,0 z"
+         style="color:#000000;display:inline;overflow:visible;visibility:visible;opacity:0.2;fill:#000000;fill-opacity:1;fill-rule:nonzero;stroke:none;marker:none;enable-background:new"
+         inkscape:connector-curvature="0" />
+      <path
+         id="pathWindows16Shadow"
+         d="m 18,271 5,0 0,5 -5,0 z m 7,0 5,0 0,5 -5,0 z m -7,7 5,0 0,5 -5,0 z m 7,0 5,0 0,5 -5,0 z"
+         style="color:#000000;display:inline;overflow:visible;visibility:visible;opacity:0.2;fill:#000000;fill-opacity:1;fill-rule:nonzero;stroke:none;marker:none;enable-background:new"
+         inkscape:connector-curvature="0" />
+      <path
+         id="pathWindows24Shadow"
+         d="m 56,264 8,0 0,8 -8,0 z m 10,0 8,0 0,8 -8,0 z m -10,10 8,0 0,8 -8,0 z m 10,0 8,0 0,8 -8,0 z"
+         style="color:#000000;display:inline;overflow:visible;visibility:visible;opacity:0.2;fill:#000000;fill-opacity:1;fill-rule:nonzero;stroke:none;marker:none;enable-background:new"
+         inkscape:connector-curvature="0" />
+      <path
+         id="pathWindows32Shadow"
+         d="m 100,257 11,0 0,11 -11,0 z m 13,0 11,0 0,11 -11,0 z m -13,13 11,0 0,11 -11,0 z m 13,0 11,0 0,11 -11,0 z"
+         style="color:#000000;display:inline;overflow:visible;visibility:visible;opacity:0.2;fill:#000000;fill-opacity:1;fill-rule:nonzero;stroke:none;marker:none;enable-background:new"
+         inkscape:connector-curvature="0" />
+      <path
+         id="pathWindows48Shadow"
+         d="m 150,243 17,0 0,17 -17,0 z m 19,0 17,0 0,17 -17,0 z m -19,19 17,0 0,17 -17,0 z m 19,0 17,0 0,17 -17,0 z"
+         style="color:#000000;display:inline;overflow:visible;visibility:visible;opacity:0.2;fill:#000000;fill-opacity:1;fill-rule:nonzero;stroke:none;marker:none;enable-background:new"
+         inkscape:connector-curvature="0" />
+      <path
+         id="pathWindowsMain"
+         d="m 240,-196 212,0 0,212 -212,0 z m 236,0 212,0 0,212 -212,0 z m -236,236 212,0 0,212 -212,0 z m 236,0 212,0 0,212 -212,0 z"
+         style="color:#000000;display:inline;overflow:visible;visibility:visible;fill:#0078d4;fill-opacity:1;fill-rule:nonzero;stroke:none;marker:none;enable-background:new"
+         inkscape:connector-curvature="0" />
+      <path
+         id="pathWindows16"
+         d="m 18,270 5,0 0,5 -5,0 z m 7,0 5,0 0,5 -5,0 z m -7,7 5,0 0,5 -5,0 z m 7,0 5,0 0,5 -5,0 z"
+         style="color:#000000;display:inline;overflow:visible;visibility:visible;fill:#0078d4;fill-opacity:1;fill-rule:nonzero;stroke:none;marker:none;enable-background:new"
+         inkscape:connector-curvature="0" />
+      <path
+         id="pathWindows24"
+         d="m 56,263 8,0 0,8 -8,0 z m 10,0 8,0 0,8 -8,0 z m -10,10 8,0 0,8 -8,0 z m 10,0 8,0 0,8 -8,0 z"
+         style="color:#000000;display:inline;overflow:visible;visibility:visible;fill:#0078d4;fill-opacity:1;fill-rule:nonzero;stroke:none;marker:none;enable-background:new"
+         inkscape:connector-curvature="0" />
+      <path
+         id="pathWindows32"
+         d="m 100,256 11,0 0,11 -11,0 z m 13,0 11,0 0,11 -11,0 z m -13,13 11,0 0,11 -11,0 z m 13,0 11,0 0,11 -11,0 z"
+         style="color:#000000;display:inline;overflow:visible;visibility:visible;fill:#0078d4;fill-opacity:1;fill-rule:nonzero;stroke:none;marker:none;enable-background:new"
+         inkscape:connector-curvature="0" />
+      <path
+         id="pathWindows48"
+         d="m 150,242 17,0 0,17 -17,0 z m 19,0 17,0 0,17 -17,0 z m -19,19 17,0 0,17 -17,0 z m 19,0 17,0 0,17 -17,0 z"
+         style="color:#000000;display:inline;overflow:visible;visibility:visible;fill:#0078d4;fill-opacity:1;fill-rule:nonzero;stroke:none;marker:none;enable-background:new"
+         inkscape:connector-curvature="0" />
+      <path
+         id="pathWindowsHighlight"
+         d="M 240,-196 452,-196 452,-194 240,-194 z M 476,-196 688,-196 688,-194 476,-194 z M 240,40 452,40 452,42 240,42 z M 476,40 688,40 688,42 476,42 z M 18,270 23,270 23,271 18,271 z M 25,270 30,270 30,271 25,271 z M 18,277 23,277 23,278 18,278 z M 25,277 30,277 30,278 25,278 z M 56,263 64,263 64,264 56,264 z M 66,263 74,263 74,264 66,264 z M 56,273 64,273 64,274 56,274 z M 66,273 74,273 74,274 66,274 z M 100,256 111,256 111,257 100,257 z M 113,256 124,256 124,257 113,257 z M 100,269 111,269 111,270 100,270 z M 113,269 124,269 124,270 113,270 z M 150,242 167,242 167,243 150,243 z M 169,242 186,242 186,243 169,243 z M 150,261 167,261 167,262 150,262 z M 169,261 186,261 186,262 169,262 z"
+         style="color:#000000;display:inline;overflow:visible;visibility:visible;opacity:0.2;fill:#ffffff;fill-opacity:1;fill-rule:nonzero;stroke:none;marker:none;enable-background:new"
+         inkscape:connector-curvature="0" />
+    </g>
+  </g>
+</svg>

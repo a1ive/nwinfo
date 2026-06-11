@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="736"
+   height="544"
+   id="svg11300"
+   sodipodi:version="0.32"
+   inkscape:version="0.91 r"
+   sodipodi:docname="sensor.svg"
+   version="1.0"
+   style="display:inline;enable-background:new">
+  <title id="title3004">Paper Icon Theme</title>
+  <defs id="defs3">
+    <filter inkscape:collect="always" style="color-interpolation-filters:sRGB" id="filter4324" x="-0.024" width="1.048" y="-0.024" height="1.048">
+      <feGaussianBlur inkscape:collect="always" stdDeviation="4.48" id="feGaussianBlur4326" />
+    </filter>
+  </defs>
+  <g style="display:inline" inkscape:groupmode="layer" inkscape:label="Icon" id="layer1" transform="translate(0,244)">
+    <g style="display:none" inkscape:label="Baseplate" id="layer7" inkscape:groupmode="layer">
+      <text y="337.74512" xml:space="preserve" x="15.006836" style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:18px;font-family:'DejaVu Sans';-inkscape-font-specification:'DejaVu Sans';display:inline;fill:#000000;fill-opacity:1;stroke:none;enable-background:new" inkscape:label="context" id="context"><tspan y="337.74512" x="15.006836" sodipodi:role="line" id="tspan3933">devices</tspan></text>
+      <text y="337.74512" xml:space="preserve" x="142.48828" style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:18px;line-height:125%;font-family:'DejaVu Sans';-inkscape-font-specification:'DejaVu Sans Bold';text-align:start;writing-mode:lr-tb;text-anchor:start;display:inline;fill:#000000;fill-opacity:1;stroke:none;enable-background:new" sodipodi:linespacing="125%" inkscape:label="icon-name" id="icon-name"><tspan y="337.74512" x="142.48828" sodipodi:role="line" id="tspan3937">sensor</tspan></text>
+      <rect style="display:inline;overflow:visible;visibility:visible;fill:#d3d7cf;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:2;marker:none;enable-background:accumulate" id="rect16x16" width="16" height="16" x="-32" y="268" inkscape:label="16x16" transform="scale(-1,1)" />
+      <rect style="display:inline;overflow:visible;visibility:visible;fill:#d3d7cf;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:2;marker:none;enable-background:accumulate" id="rect24x24" width="24" height="24" x="-76" y="260" inkscape:label="24x24" transform="scale(-1,1)" />
+      <rect style="display:inline;overflow:visible;visibility:visible;fill:#d3d7cf;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:2;marker:none;enable-background:accumulate" id="rect32x32" width="32" height="32" x="-128" y="252" inkscape:label="32x32" transform="scale(-1,1)" />
+      <rect inkscape:label="48x48" y="236" x="-192" height="48" width="48" id="rect48x48" style="display:inline;overflow:visible;visibility:visible;fill:#d3d7cf;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:2;marker:none;enable-background:accumulate" transform="scale(-1,1)" />
+      <rect style="display:inline;overflow:visible;visibility:visible;fill:#d3d7cf;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:2;marker:none;enable-background:accumulate" id="rect3951" width="512" height="512" x="-720" y="-228" inkscape:label="48x48" transform="scale(-1,1)" />
+    </g>
+    <g inkscape:groupmode="layer" inkscape:label="Symbols" id="layer6" style="display:inline">
+      <!-- 16x16 -->
+      <circle cx="24" cy="276" r="7.5" fill="#4295ac" style="stroke:none" />
+      <circle cx="19.7868" cy="279.5353" r="0.6000" fill="#ffffff" style="stroke:none" />
+      <circle cx="18.5471" cy="276.7179" r="0.6000" fill="#ffffff" style="stroke:none" />
+      <circle cx="19.0153" cy="273.6756" r="0.6000" fill="#ffffff" style="stroke:none" />
+      <circle cx="21.0449" cy="271.3613" r="0.6000" fill="#ffffff" style="stroke:none" />
+      <circle cx="24.0000" cy="270.5000" r="0.6000" fill="#ffffff" style="stroke:none" />
+      <circle cx="26.9551" cy="271.3613" r="0.6000" fill="#ffffff" style="stroke:none" />
+      <circle cx="28.9847" cy="273.6756" r="0.6000" fill="#ffffff" style="stroke:none" />
+      <circle cx="29.4529" cy="276.7179" r="0.6000" fill="#ffffff" style="stroke:none" />
+      <circle cx="28.2132" cy="279.5353" r="0.6000" fill="#ffffff" style="stroke:none" />
+      
+      <path d="M 24,272.5000 L 23.5000,276 L 24.5000,276 Z" fill="#3f3f3f" style="stroke:none" transform="rotate(-32.50, 24.00, 276.00)" />
+      <circle cx="24" cy="276" r="1.0" fill="#3f3f3f" style="stroke:none" />
+
+      <!-- 24x24 -->
+      <circle cx="64" cy="272" r="11.0" fill="#4295ac" style="stroke:none" />
+      <circle cx="57.8716" cy="277.1423" r="0.9000" fill="#ffffff" style="stroke:none" />
+      <circle cx="56.0684" cy="273.0442" r="0.9000" fill="#ffffff" style="stroke:none" />
+      <circle cx="56.7495" cy="268.6191" r="0.9000" fill="#ffffff" style="stroke:none" />
+      <circle cx="59.7016" cy="265.2529" r="0.9000" fill="#ffffff" style="stroke:none" />
+      <circle cx="64.0000" cy="264.0000" r="0.9000" fill="#ffffff" style="stroke:none" />
+      <circle cx="68.2984" cy="265.2529" r="0.9000" fill="#ffffff" style="stroke:none" />
+      <circle cx="71.2505" cy="268.6191" r="0.9000" fill="#ffffff" style="stroke:none" />
+      <circle cx="71.9316" cy="273.0442" r="0.9000" fill="#ffffff" style="stroke:none" />
+      <circle cx="70.1284" cy="277.1423" r="0.9000" fill="#ffffff" style="stroke:none" />
+      
+      <path d="M 64,267.0000 L 63.2500,272 L 64.7500,272 Z" fill="#3f3f3f" style="stroke:none" transform="rotate(-32.50, 64.00, 272.00)" />
+      <circle cx="64" cy="272" r="1.5" fill="#3f3f3f" style="stroke:none" />
+
+      <!-- 32x32 -->
+      <circle cx="112" cy="268" r="15.0" fill="#4295ac" style="stroke:none" />
+      <circle cx="103.5735" cy="275.0707" r="1.2500" fill="#ffffff" style="stroke:none" />
+      <circle cx="101.0941" cy="269.4358" r="1.2500" fill="#ffffff" style="stroke:none" />
+      <circle cx="102.0306" cy="263.3512" r="1.2500" fill="#ffffff" style="stroke:none" />
+      <circle cx="106.0897" cy="258.7227" r="1.2500" fill="#ffffff" style="stroke:none" />
+      <circle cx="112.0000" cy="257.0000" r="1.2500" fill="#ffffff" style="stroke:none" />
+      <circle cx="117.9103" cy="258.7227" r="1.2500" fill="#ffffff" style="stroke:none" />
+      <circle cx="121.9694" cy="263.3512" r="1.2500" fill="#ffffff" style="stroke:none" />
+      <circle cx="122.9059" cy="269.4358" r="1.2500" fill="#ffffff" style="stroke:none" />
+      <circle cx="120.4265" cy="275.0707" r="1.2500" fill="#ffffff" style="stroke:none" />
+      
+      <path d="M 112,261.0000 L 111.0000,268 L 113.0000,268 Z" fill="#3f3f3f" style="stroke:none" transform="rotate(-32.50, 112.00, 268.00)" />
+      <circle cx="112" cy="268" r="2.0" fill="#3f3f3f" style="stroke:none" />
+
+      <!-- 48x48 -->
+      <circle cx="168" cy="260" r="22.5" fill="#4295ac" style="stroke:none" />
+      <circle cx="155.3603" cy="270.6060" r="1.8000" fill="#ffffff" style="stroke:none" />
+      <circle cx="151.6412" cy="262.1537" r="1.8000" fill="#ffffff" style="stroke:none" />
+      <circle cx="153.0459" cy="253.0268" r="1.8000" fill="#ffffff" style="stroke:none" />
+      <circle cx="159.1346" cy="246.0840" r="1.8000" fill="#ffffff" style="stroke:none" />
+      <circle cx="168.0000" cy="243.5000" r="1.8000" fill="#ffffff" style="stroke:none" />
+      <circle cx="176.8654" cy="246.0840" r="1.8000" fill="#ffffff" style="stroke:none" />
+      <circle cx="182.9541" cy="253.0268" r="1.8000" fill="#ffffff" style="stroke:none" />
+      <circle cx="184.3588" cy="262.1537" r="1.8000" fill="#ffffff" style="stroke:none" />
+      <circle cx="180.6397" cy="270.6060" r="1.8000" fill="#ffffff" style="stroke:none" />
+      
+      <path d="M 168,249.5000 L 166.5000,260 L 169.5000,260 Z" fill="#3f3f3f" style="stroke:none" transform="rotate(-32.50, 168.00, 260.00)" />
+      <circle cx="168" cy="260" r="3.0" fill="#3f3f3f" style="stroke:none" />
+
+      <!-- 512x512 -->
+      <!-- Drop shadow -->
+      <circle cx="464" cy="32" r="240" fill="#000000" opacity="0.1" filter="url(#filter4324)" style="stroke:none" />
+      <!-- Main plate -->
+      <circle cx="464" cy="28" r="240" fill="#4295ac" style="stroke:none" />
+      <!-- Top highlight -->
+      <path d="M 464,-212 A 240,240 0 0 0 224,28 A 240,240 0 0 0 224.0513,29.4649 A 240,240 0 0 1 464,-210 A 240,240 0 0 1 703.9487,29.0352 A 240,240 0 0 0 704,28 A 240,240 0 0 0 464,-212 z" fill="#ffffff" opacity="0.2" style="stroke:none" />
+      <!-- Gauge dots -->
+      <circle cx="329.1762" cy="141.1306" r="20.0000" fill="#ffffff" style="stroke:none" />
+      <circle cx="289.5057" cy="50.9726" r="20.0000" fill="#ffffff" style="stroke:none" />
+      <circle cx="304.4898" cy="-46.3808" r="20.0000" fill="#ffffff" style="stroke:none" />
+      <circle cx="369.4353" cy="-120.4369" r="20.0000" fill="#ffffff" style="stroke:none" />
+      <circle cx="464.0000" cy="-148.0000" r="20.0000" fill="#ffffff" style="stroke:none" />
+      <circle cx="558.5647" cy="-120.4369" r="20.0000" fill="#ffffff" style="stroke:none" />
+      <circle cx="623.5102" cy="-46.3808" r="20.0000" fill="#ffffff" style="stroke:none" />
+      <circle cx="638.4943" cy="50.9726" r="20.0000" fill="#ffffff" style="stroke:none" />
+      <circle cx="598.8238" cy="141.1306" r="20.0000" fill="#ffffff" style="stroke:none" />
+      
+      <!-- Needle -->
+      <path d="M 464,-84.0000 L 448.0000,28 L 480.0000,28 Z" fill="#3f3f3f" style="stroke:none" transform="rotate(-32.50, 464.00, 28.00)" />
+      <!-- Center hub -->
+      <circle cx="464" cy="28" r="32.0" fill="#3f3f3f" style="stroke:none" />
+    </g>
+  </g>
+</svg>

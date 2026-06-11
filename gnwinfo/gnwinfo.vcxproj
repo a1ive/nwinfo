@@ -324,6 +324,39 @@
     <None Include="gnwinfo.ini">
       <FileType>Document</FileType>
     </None>
+    <None Include="icons\battery.svg" />
+    <None Include="icons\cd.svg" />
+    <None Include="icons\close.svg" />
+    <None Include="icons\cpu.svg" />
+    <None Include="icons\cpuid.svg" />
+    <None Include="icons\dir.svg" />
+    <None Include="icons\disk.svg" />
+    <None Include="icons\display.svg" />
+    <None Include="icons\dmi.svg" />
+    <None Include="icons\driver.svg" />
+    <None Include="icons\edit.svg" />
+    <None Include="icons\eth.svg" />
+    <None Include="icons\firmware.svg" />
+    <None Include="icons\gpu.svg" />
+    <None Include="icons\info.svg" />
+    <None Include="icons\LICENSE" />
+    <None Include="icons\memory.svg" />
+    <None Include="icons\minimize.svg" />
+    <None Include="icons\mm.svg" />
+    <None Include="icons\monitor.svg" />
+    <None Include="icons\network.svg" />
+    <None Include="icons\os.svg" />
+    <None Include="icons\pc.svg" />
+    <None Include="icons\pci.svg" />
+    <None Include="icons\README.md" />
+    <None Include="icons\refresh.svg" />
+    <None Include="icons\render-bitmap.py" />
+    <None Include="icons\report.svg" />
+    <None Include="icons\rocket.svg" />
+    <None Include="icons\sensor.svg" />
+    <None Include="icons\settings.svg" />
+    <None Include="icons\smart.svg" />
+    <None Include="icons\wlan.svg" />
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
@@ -380,6 +413,7 @@
   </ItemGroup>
   <ItemGroup>
     <Image Include="..\docs\images\icon.ico" />
+    <Image Include="..\docs\images\icon.png" />
     <Image Include="icons\battery.png" />
     <Image Include="icons\cd.png" />
     <Image Include="icons\close.png" />
@@ -389,6 +423,7 @@
     <Image Include="icons\disk.png" />
     <Image Include="icons\display.png" />
     <Image Include="icons\dmi.png" />
+    <Image Include="icons\driver.png" />
     <Image Include="icons\edit.png" />
     <Image Include="icons\eth.png" />
     <Image Include="icons\firmware.png" />

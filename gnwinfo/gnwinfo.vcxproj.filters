@@ -19,10 +19,114 @@
     <Filter Include="Lang">
       <UniqueIdentifier>{8a0edad7-af44-4042-b02a-cf8df3843b1a}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Icons">
+      <UniqueIdentifier>{6c772004-ed43-455e-a2d2-49c64c84a027}</UniqueIdentifier>
+      <Extensions>
+      </Extensions>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
     <None Include="gnwinfo.ini" />
+    <None Include="icons\battery.svg">
+      <Filter>Icons</Filter>
+    </None>
+    <None Include="icons\cd.svg">
+      <Filter>Icons</Filter>
+    </None>
+    <None Include="icons\close.svg">
+      <Filter>Icons</Filter>
+    </None>
+    <None Include="icons\cpu.svg">
+      <Filter>Icons</Filter>
+    </None>
+    <None Include="icons\cpuid.svg">
+      <Filter>Icons</Filter>
+    </None>
+    <None Include="icons\dir.svg">
+      <Filter>Icons</Filter>
+    </None>
+    <None Include="icons\disk.svg">
+      <Filter>Icons</Filter>
+    </None>
+    <None Include="icons\display.svg">
+      <Filter>Icons</Filter>
+    </None>
+    <None Include="icons\dmi.svg">
+      <Filter>Icons</Filter>
+    </None>
+    <None Include="icons\driver.svg">
+      <Filter>Icons</Filter>
+    </None>
+    <None Include="icons\edit.svg">
+      <Filter>Icons</Filter>
+    </None>
+    <None Include="icons\eth.svg">
+      <Filter>Icons</Filter>
+    </None>
+    <None Include="icons\firmware.svg">
+      <Filter>Icons</Filter>
+    </None>
+    <None Include="icons\gpu.svg">
+      <Filter>Icons</Filter>
+    </None>
+    <None Include="icons\info.svg">
+      <Filter>Icons</Filter>
+    </None>
+    <None Include="icons\LICENSE">
+      <Filter>Icons</Filter>
+    </None>
+    <None Include="icons\memory.svg">
+      <Filter>Icons</Filter>
+    </None>
+    <None Include="icons\minimize.svg">
+      <Filter>Icons</Filter>
+    </None>
+    <None Include="icons\mm.svg">
+      <Filter>Icons</Filter>
+    </None>
+    <None Include="icons\monitor.svg">
+      <Filter>Icons</Filter>
+    </None>
+    <None Include="icons\network.svg">
+      <Filter>Icons</Filter>
+    </None>
+    <None Include="icons\os.svg">
+      <Filter>Icons</Filter>
+    </None>
+    <None Include="icons\pc.svg">
+      <Filter>Icons</Filter>
+    </None>
+    <None Include="icons\pci.svg">
+      <Filter>Icons</Filter>
+    </None>
+    <None Include="icons\README.md">
+      <Filter>Icons</Filter>
+    </None>
+    <None Include="icons\refresh.svg">
+      <Filter>Icons</Filter>
+    </None>
+    <None Include="icons\render-bitmap.py">
+      <Filter>Icons</Filter>
+    </None>
+    <None Include="icons\report.svg">
+      <Filter>Icons</Filter>
+    </None>
+    <None Include="icons\rocket.svg">
+      <Filter>Icons</Filter>
+    </None>
+    <None Include="icons\sensor.svg">
+      <Filter>Icons</Filter>
+    </None>
+    <None Include="icons\settings.svg">
+      <Filter>Icons</Filter>
+    </None>
+    <None Include="icons\smart.svg">
+      <Filter>Icons</Filter>
+    </None>
+    <None Include="icons\wlan.svg">
+      <Filter>Icons</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="gnwinfo.h">
@@ -242,6 +346,12 @@
       <Filter>Resource Files</Filter>
     </Image>
     <Image Include="icons\minimize.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="..\docs\images\icon.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="icons\driver.png">
       <Filter>Resource Files</Filter>
     </Image>
   </ItemGroup>

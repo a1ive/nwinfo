@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+	<style>
+		.drop-shadow { fill: #000000; opacity: 0.15; }
+		.pin { fill: #757575; }
+		.chip { fill: #00875a; }
+		.chip-edge { fill: #006b49; }
+		.core-shadow { fill: #006b49; opacity: 0.46; }
+		.core-edge { fill: #fbc02d; }
+		.core { fill: #ffeb3b; }
+	</style>
+	<defs>
+		<clipPath id="chip-clip">
+			<rect x="96" y="96" width="320" height="320" rx="24" ry="24"/>
+		</clipPath>
+	</defs>
+	<g>
+		<!-- Drop Shadow -->
+		<g class="drop-shadow" transform="translate(16 16)">
+			<!-- Left pins shadow -->
+			<path d="M 96,128 H 64 V 64 H 32 V 160 H 96 Z"/>
+			<rect x="32" y="240" width="64" height="32"/>
+			<path d="M 96,352 H 32 V 448 H 64 V 384 H 96 Z"/>
+			<!-- Right pins shadow -->
+			<path d="M 416,128 H 448 V 64 H 480 V 160 H 416 Z"/>
+			<rect x="416" y="240" width="64" height="32"/>
+			<path d="M 416,352 H 480 V 448 H 448 V 384 H 416 Z"/>
+			<!-- Chip body shadow -->
+			<rect x="96" y="96" width="320" height="320" rx="24" ry="24"/>
+		</g>
+
+		<!-- Main Pins -->
+		<g class="pin">
+			<!-- Left pins -->
+			<path d="M 96,128 H 64 V 64 H 32 V 160 H 96 Z"/>
+			<rect x="32" y="240" width="64" height="32"/>
+			<path d="M 96,352 H 32 V 448 H 64 V 384 H 96 Z"/>
+			<!-- Right pins -->
+			<path d="M 416,128 H 448 V 64 H 480 V 160 H 416 Z"/>
+			<rect x="416" y="240" width="64" height="32"/>
+			<path d="M 416,352 H 480 V 448 H 448 V 384 H 416 Z"/>
+		</g>
+
+		<!-- Chip Body -->
+		<rect class="chip" x="96" y="96" width="320" height="320" rx="24" ry="24"/>
+		<rect class="chip-edge" x="96" y="384" width="320" height="32" clip-path="url(#chip-clip)"/>
+
+		<!-- Core Shadow (Flat 45-degree shadow) -->
+		<polygon class="core-shadow" clip-path="url(#chip-clip)" points="320 192, 416 288, 416 416, 288 416, 192 320, 192 192"/>
+
+		<!-- Processor Core -->
+		<rect class="core-edge" x="192" y="192" width="128" height="128" rx="8" ry="8"/>
+		<rect class="core" x="192" y="192" width="128" height="112" rx="8" ry="8"/>
+	</g>
+</svg>

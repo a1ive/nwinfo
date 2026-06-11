@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="736"
+   height="544"
+   id="svg11300"
+   sodipodi:version="0.32"
+   inkscape:version="0.91 r"
+   sodipodi:docname="dmi.svg"
+   version="1.0"
+   style="display:inline;enable-background:new">
+  <title id="title3004">Paper Icon Theme Template</title>
+  <metadata
+     id="metadata4">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:creator>
+          <cc:Agent>
+            <dc:title>Sam Hewitt</dc:title>
+          </cc:Agent>
+        </dc:creator>
+        <dc:source />
+        <cc:license
+           rdf:resource="http://creativecommons.org/licenses/by-sa/3.0/" />
+        <dc:title>Paper Icon Theme Template</dc:title>
+        <dc:subject>
+          <rdf:Bag />
+        </dc:subject>
+        <dc:date />
+        <dc:rights>
+          <cc:Agent>
+            <dc:title />
+          </cc:Agent>
+        </dc:rights>
+        <dc:publisher>
+          <cc:Agent>
+            <dc:title />
+          </cc:Agent>
+        </dc:publisher>
+        <dc:identifier />
+        <dc:relation />
+        <dc:language />
+        <dc:coverage />
+        <dc:description />
+        <dc:contributor>
+          <cc:Agent>
+            <dc:title />
+          </cc:Agent>
+        </dc:contributor>
+      </cc:Work>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+      </cc:Work>
+      <cc:License
+         rdf:about="http://creativecommons.org/licenses/by-sa/3.0/">
+        <cc:permits
+           rdf:resource="http://creativecommons.org/ns#Reproduction" />
+        <cc:permits
+           rdf:resource="http://creativecommons.org/ns#Distribution" />
+        <cc:requires
+           rdf:resource="http://creativecommons.org/ns#Notice" />
+        <cc:requires
+           rdf:resource="http://creativecommons.org/ns#Attribution" />
+        <cc:permits
+           rdf:resource="http://creativecommons.org/ns#DerivativeWorks" />
+        <cc:requires
+           rdf:resource="http://creativecommons.org/ns#ShareAlike" />
+      </cc:License>
+    </rdf:RDF>
+  </metadata>
+  <g style="display:inline" inkscape:groupmode="layer" inkscape:label="Icon" id="layer1" transform="translate(0,244)">
+    <g style="display:none" inkscape:label="Baseplate" id="layer7" inkscape:groupmode="layer">
+      <text
+         y="337.74512"
+         xml:space="preserve"
+         x="15.006836"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:18px;font-family:'DejaVu Sans';-inkscape-font-specification:'DejaVu Sans';display:inline;fill:#000000;fill-opacity:1;stroke:none;enable-background:new"
+         inkscape:label="context"
+         id="context"><tspan
+            style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:'DejaVu Sans';-inkscape-font-specification:'DejaVu Sans'"
+            y="337.74512"
+            x="15.006836"
+            sodipodi:role="line"
+            id="tspan3933">logos</tspan></text>
+      <text
+         y="337.74512"
+         xml:space="preserve"
+         x="142.48828"
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:18px;line-height:125%;font-family:'DejaVu Sans';-inkscape-font-specification:'DejaVu Sans Bold';text-align:start;writing-mode:lr-tb;text-anchor:start;display:inline;fill:#000000;fill-opacity:1;stroke:none;enable-background:new"
+         sodipodi:linespacing="125%"
+         inkscape:label="icon-name"
+         id="icon-name"><tspan
+            style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:18px;font-family:'DejaVu Sans';-inkscape-font-specification:'DejaVu Sans Bold'"
+            y="337.74512"
+            x="142.48828"
+            sodipodi:role="line"
+            id="tspan3937">dmi</tspan></text>
+      <rect style="display:inline;fill:#d3d7cf;stroke:none" id="rect16x16" width="16" height="16" x="-32" y="268" transform="scale(-1,1)" />
+      <rect style="display:inline;fill:#d3d7cf;stroke:none" id="rect24x24" width="24" height="24" x="-76" y="260" transform="scale(-1,1)" />
+      <rect style="display:inline;fill:#d3d7cf;stroke:none" id="rect32x32" width="32" height="32" x="-128" y="252" transform="scale(-1,1)" />
+      <rect style="display:inline;fill:#d3d7cf;stroke:none" id="rect48x48" width="48" height="48" x="-192" y="236" transform="scale(-1,1)" />
+      <rect style="display:inline;fill:#d3d7cf;stroke:none" id="rect3951" width="512" height="512" x="-720" y="-228" transform="scale(-1,1)" />
+    </g>
+    <g inkscape:groupmode="layer" id="layer6" inkscape:label="Symbols" style="display:inline">
+      <!-- 16x16 -->
+      <rect x="18.6250" y="268.0000" width="11.0453" height="15.7283" fill="#231f20" style="stroke:none" />
+      <path d="M 19.0975,283.2558 L 29.1978,283.2558 L 29.1978,268.7088 L 19.0975,268.7088 Z" fill="#ffffff" style="stroke:none" />
+      <path d="M 20.5381,281.4495 L 27.8241,281.4495 L 27.8241,270.0800 L 20.5381,270.0800 Z" fill="none" stroke="#231f20" stroke-width="0.7733" stroke-linecap="butt" stroke-linejoin="miter" />
+      <path d="M 20.7030,281.2883 L 27.7566,281.2883 L 27.7566,270.0963 L 20.7030,270.0963 Z" fill="#231f20" style="stroke:none" />
+      <path d="M 27.3519,276.6408 L 27.3519,270.6040 L 21.1199,270.6040 C 23.3978,270.7895 26.8050,271.0562 27.3519,276.6408" fill="#1b4298" style="stroke:none" />
+      <path d="M 23.8897,281.4507 C 25.4548,280.4838 26.5233,278.7500 26.5233,276.7515 C 26.5233,273.7068 24.0946,271.2337 21.1003,271.2337 L 21.0856,271.2353 L 21.0884,272.9244 C 23.8190,272.9244 26.0609,275.0060 26.0609,277.5663 C 26.0609,279.1074 25.1202,280.6081 23.8870,281.4509" fill="#ffffff" style="stroke:none" />
+      <path d="M 23.8462,281.4909 C 23.8462,281.4909 22.8772,282.1757 21.2834,282.1757 L 21.2834,281.9960 C 21.3012,281.9991 22.4746,282.0391 23.8462,281.4909" fill="#231f20" style="stroke:none" />
+
+      <!-- 24x24 -->
+      <rect x="55.9375" y="260.0000" width="16.5680" height="23.5925" fill="#231f20" style="stroke:none" />
+      <path d="M 56.6463,282.8837 L 71.7967,282.8837 L 71.7967,261.0631 L 56.6463,261.0631 Z" fill="#ffffff" style="stroke:none" />
+      <path d="M 58.8072,280.1743 L 69.7362,280.1743 L 69.7362,263.1200 L 58.8072,263.1200 Z" fill="none" stroke="#231f20" stroke-width="1.1600" stroke-linecap="butt" stroke-linejoin="miter" />
+      <path d="M 59.0545,279.9324 L 69.6349,279.9324 L 69.6349,263.1444 L 59.0545,263.1444 Z" fill="#231f20" style="stroke:none" />
+      <path d="M 69.0278,272.9611 L 69.0278,263.9059 L 59.6799,263.9059 C 63.0968,264.1843 68.2075,264.5843 69.0278,272.9611" fill="#1b4298" style="stroke:none" />
+      <path d="M 63.8345,280.1760 C 66.1822,278.7257 67.7850,276.1250 67.7850,273.1272 C 67.7850,268.5602 64.1419,264.8506 59.6505,264.8506 L 59.6284,264.8530 L 59.6326,267.3866 C 63.7284,267.3866 67.0914,270.5090 67.0914,274.3494 C 67.0914,276.6611 65.6803,278.9121 63.8305,280.1764" fill="#ffffff" style="stroke:none" />
+      <path d="M 63.7693,280.2364 C 63.7693,280.2364 62.3158,281.2636 59.9251,281.2636 L 59.9251,280.9940 C 59.9518,280.9987 61.7119,281.0586 63.7693,280.2364" fill="#231f20" style="stroke:none" />
+
+      <!-- 32x32 -->
+      <rect x="101.2500" y="252.0000" width="22.0906" height="31.4567" fill="#231f20" style="stroke:none" />
+      <path d="M 102.1950,282.5117 L 122.3956,282.5117 L 122.3956,253.4175 L 102.1950,253.4175 Z" fill="#ffffff" style="stroke:none" />
+      <path d="M 105.0762,278.8990 L 119.6483,278.8990 L 119.6483,256.1600 L 105.0762,256.1600 Z" fill="none" stroke="#231f20" stroke-width="1.5467" stroke-linecap="butt" stroke-linejoin="miter" />
+      <path d="M 105.4060,278.5765 L 119.5132,278.5765 L 119.5132,256.1926 L 105.4060,256.1926 Z" fill="#231f20" style="stroke:none" />
+      <path d="M 118.7037,269.2815 L 118.7037,257.2079 L 106.2399,257.2079 C 110.7957,257.5791 117.6100,258.1124 118.7037,269.2815" fill="#1b4298" style="stroke:none" />
+      <path d="M 111.7793,278.9013 C 114.9095,276.9676 117.0467,273.5000 117.0467,269.5030 C 117.0467,263.4135 112.1892,258.4675 106.2007,258.4675 L 106.1712,258.4707 L 106.1768,261.8488 C 111.6379,261.8488 116.1218,266.0120 116.1218,271.1326 C 116.1218,274.2147 114.2404,277.2161 111.7740,278.9018" fill="#ffffff" style="stroke:none" />
+      <path d="M 111.6924,278.9818 C 111.6924,278.9818 109.7544,280.3514 106.5668,280.3514 L 106.5668,279.9920 C 106.6024,279.9982 108.9492,280.0782 111.6924,278.9818" fill="#231f20" style="stroke:none" />
+
+      <!-- 48x48 -->
+      <rect x="151.8750" y="236.0000" width="33.1360" height="47.1850" fill="#231f20" style="stroke:none" />
+      <path d="M 153.2925,281.7675 L 183.5935,281.7675 L 183.5935,238.1262 L 153.2925,238.1262 Z" fill="#ffffff" style="stroke:none" />
+      <path d="M 157.6144,276.3486 L 179.4724,276.3486 L 179.4724,242.2400 L 157.6144,242.2400 Z" fill="none" stroke="#231f20" stroke-width="2.3200" stroke-linecap="butt" stroke-linejoin="miter" />
+      <path d="M 158.1090,275.8648 L 179.2698,275.8648 L 179.2698,242.2889 L 158.1090,242.2889 Z" fill="#231f20" style="stroke:none" />
+      <path d="M 178.0556,261.9223 L 178.0556,243.8119 L 159.3598,243.8119 C 166.1935,244.3686 176.4150,245.1686 178.0556,261.9223" fill="#1b4298" style="stroke:none" />
+      <path d="M 167.6690,276.3520 C 172.3643,273.4514 175.5700,268.2501 175.5700,262.2545 C 175.5700,253.1203 168.2837,245.7012 159.3010,245.7012 L 159.2567,245.7060 L 159.2567,250.7733 C 167.4569,250.7733 174.1828,257.0181 174.1828,264.6989 C 174.1828,269.3221 171.3607,273.8242 167.6610,276.3528" fill="#ffffff" style="stroke:none" />
+      <path d="M 167.5386,276.4727 C 167.5386,276.4727 164.6316,278.5271 159.8501,278.5271 L 159.8501,277.9880 C 159.9037,277.9973 163.4238,278.1173 167.5386,276.4727" fill="#231f20" style="stroke:none" />
+
+      <!-- 512x512 -->
+      <rect x="292.0000" y="-228.0000" width="353.4502" height="503.3064" fill="#231f20" style="stroke:none" />
+      <path d="M 307.1200,260.1864 L 630.3302,260.1864 L 630.3302,-205.3200 L 307.1200,-205.3200 Z" fill="#ffffff" style="stroke:none" />
+      <path d="M 353.2199,202.3847 L 586.3723,202.3847 L 586.3723,-161.4398 L 353.2199,-161.4398 Z" fill="none" stroke="#231f20" stroke-width="24.7468" stroke-linecap="butt" stroke-linejoin="miter" />
+      <path d="M 358.4957,197.2247 L 584.2108,197.2247 L 584.2108,-160.9186 L 358.4957,-160.9186 Z" fill="#231f20" style="stroke:none" />
+      <path d="M 571.2593,48.5044 L 571.2593,-144.6732 L 371.8376,-144.6732 C 444.7312,-148.7346 553.7605,-130.2019 571.2593,48.5044" fill="#1b4298" style="stroke:none" />
+      <path d="M 460.4696,202.4210 C 510.5525,171.4814 544.7469,116.0006 544.7469,52.0475 C 544.7469,-45.3832 467.0266,-124.5208 371.2107,-124.5208 L 370.7384,-124.4694 L 370.8286,-70.4184 C 458.2066,-70.4184 529.9495,-3.8072 529.9495,78.1215 C 529.9495,127.4359 499.8471,175.4580 460.3839,202.4296" fill="#ffffff" style="stroke:none" />
+      <path d="M 459.0780,203.7092 C 459.0780,203.7092 428.0699,225.6226 377.0681,225.6226 L 377.0681,219.8725 C 377.6392,219.9713 415.1872,221.2509 459.0780,203.7092" fill="#231f20" style="stroke:none" />
+    </g>
+  </g>
+</svg>

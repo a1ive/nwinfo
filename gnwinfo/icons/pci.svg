@@ -1,0 +1,364 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   inkscape:export-ydpi="90.000000"
+   inkscape:export-xdpi="90.000000"
+   width="736"
+   height="544"
+   id="svg11300"
+   sodipodi:version="0.32"
+   inkscape:version="0.91 r"
+   sodipodi:docname="pci.svg"
+   inkscape:output_extension="org.inkscape.output.svg.inkscape"
+   version="1.0"
+   style="display:inline;enable-background:new"
+   inkscape:export-filename="/home/sam/paper-template.png">
+  <title
+     id="title3004">Paper Icon Theme Template</title>
+  <sodipodi:namedview
+     stroke="#ef2929"
+     fill="#f57900"
+     id="base"
+     pagecolor="#4a4a4a"
+     bordercolor="#000000"
+     borderopacity="0.25490196"
+     inkscape:pageopacity="0"
+     inkscape:pageshadow="2"
+     inkscape:zoom="1"
+     inkscape:cx="309.74748"
+     inkscape:cy="133.13554"
+     inkscape:current-layer="layer6"
+     showgrid="false"
+     inkscape:grid-bbox="true"
+     inkscape:document-units="px"
+     inkscape:showpageshadow="false"
+     inkscape:window-width="1920"
+     inkscape:window-height="1023"
+     inkscape:window-x="0"
+     inkscape:window-y="27"
+     width="400px"
+     height="300px"
+     inkscape:snap-nodes="true"
+     inkscape:snap-bbox="true"
+     gridtolerance="10000"
+     inkscape:object-nodes="true"
+     inkscape:snap-grids="true"
+     showguides="true"
+     inkscape:guide-bbox="true"
+     inkscape:window-maximized="1"
+     inkscape:bbox-paths="true"
+     inkscape:snap-bbox-midpoints="true"
+     inkscape:snap-global="true"
+     inkscape:object-paths="true"
+     inkscape:snap-intersection-paths="true"
+     inkscape:snap-smooth-nodes="true"
+     showborder="false">
+    <inkscape:grid
+       spacingy="1px"
+       spacingx="1px"
+       id="grid5883"
+       type="xygrid"
+       enabled="true"
+       visible="true"
+       empspacing="4"
+       snapvisiblegridlinesonly="true" />
+    <inkscape:grid
+       type="xygrid"
+       id="grid11592"
+       empspacing="2"
+       visible="true"
+       enabled="false"
+       spacingx="0.5px"
+       spacingy="0.5px"
+       color="#ff0000"
+       opacity="0.1254902"
+       empcolor="#ff0000"
+       empopacity="0.25098039"
+       snapvisiblegridlinesonly="true" />
+  </sodipodi:namedview>
+  <defs
+     id="defs3">
+    <filter
+       inkscape:collect="always"
+       style="color-interpolation-filters:sRGB"
+       id="filter4324"
+       x="-0.024"
+       width="1.048"
+       y="-0.024"
+       height="1.048">
+      <feGaussianBlur
+         inkscape:collect="always"
+         stdDeviation="4.48"
+         id="feGaussianBlur4326" />
+    </filter>
+  </defs>
+  <metadata
+     id="metadata4">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:creator>
+          <cc:Agent>
+            <dc:title>Sam Hewitt</dc:title>
+          </cc:Agent>
+        </dc:creator>
+        <dc:source />
+        <cc:license
+           rdf:resource="http://creativecommons.org/licenses/by-sa/3.0/" />
+        <dc:title>Paper Icon Theme Template</dc:title>
+        <dc:subject>
+          <rdf:Bag />
+        </dc:subject>
+        <dc:date />
+        <dc:rights>
+          <cc:Agent>
+            <dc:title />
+          </cc:Agent>
+        </dc:rights>
+        <dc:publisher>
+          <cc:Agent>
+            <dc:title />
+          </cc:Agent>
+        </dc:publisher>
+        <dc:identifier />
+        <dc:relation />
+        <dc:language />
+        <dc:coverage />
+        <dc:description />
+        <dc:contributor>
+          <cc:Agent>
+            <dc:title />
+          </cc:Agent>
+        </dc:contributor>
+      </cc:Work>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+      </cc:Work>
+      <cc:License
+         rdf:about="http://creativecommons.org/licenses/by-sa/3.0/">
+        <cc:permits
+           rdf:resource="http://creativecommons.org/ns#Reproduction" />
+        <cc:permits
+           rdf:resource="http://creativecommons.org/ns#Distribution" />
+        <cc:requires
+           rdf:resource="http://creativecommons.org/ns#Notice" />
+        <cc:requires
+           rdf:resource="http://creativecommons.org/ns#Attribution" />
+        <cc:permits
+           rdf:resource="http://creativecommons.org/ns#DerivativeWorks" />
+        <cc:requires
+           rdf:resource="http://creativecommons.org/ns#ShareAlike" />
+      </cc:License>
+    </rdf:RDF>
+  </metadata>
+  <g
+     style="display:inline"
+     inkscape:groupmode="layer"
+     inkscape:label="Icon"
+     id="layer1"
+     transform="translate(0,244)">
+    <g
+       style="display:none"
+       inkscape:label="Baseplate"
+       id="layer7"
+       inkscape:groupmode="layer">
+      <text
+         y="337.74512"
+         xml:space="preserve"
+         x="15.006836"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:18px;font-family:'DejaVu Sans';-inkscape-font-specification:'DejaVu Sans';display:inline;fill:#000000;fill-opacity:1;stroke:none;enable-background:new"
+         inkscape:label="context"
+         id="context"><tspan
+           style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:'DejaVu Sans';-inkscape-font-specification:'DejaVu Sans'"
+           y="337.74512"
+           x="15.006836"
+           sodipodi:role="line"
+           id="tspan3933">devices</tspan></text>
+      <text
+         y="337.74512"
+         xml:space="preserve"
+         x="142.48828"
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:18px;line-height:125%;font-family:'DejaVu Sans';-inkscape-font-specification:'DejaVu Sans Bold';text-align:start;writing-mode:lr-tb;text-anchor:start;display:inline;fill:#000000;fill-opacity:1;stroke:none;enable-background:new"
+         sodipodi:linespacing="125%"
+         inkscape:label="icon-name"
+         id="icon-name"><tspan
+           style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:18px;font-family:'DejaVu Sans';-inkscape-font-specification:'DejaVu Sans Bold'"
+           y="337.74512"
+           x="142.48828"
+           sodipodi:role="line"
+           id="tspan3937">pci</tspan></text>
+      <rect
+         style="display:inline;overflow:visible;visibility:visible;fill:#d3d7cf;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:2;marker:none;enable-background:accumulate"
+         id="rect16x16"
+         width="16"
+         height="16"
+         x="-32"
+         y="268"
+         inkscape:label="16x16"
+         transform="scale(-1,1)" />
+      <rect
+         style="display:inline;overflow:visible;visibility:visible;fill:#d3d7cf;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:2;marker:none;enable-background:accumulate"
+         id="rect24x24"
+         width="24"
+         height="24"
+         x="-76"
+         y="260"
+         inkscape:label="24x24"
+         transform="scale(-1,1)" />
+      <rect
+         style="display:inline;overflow:visible;visibility:visible;fill:#d3d7cf;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:2;marker:none;enable-background:accumulate"
+         id="rect32x32"
+         width="32"
+         height="32"
+         x="-128"
+         y="252"
+         inkscape:label="32x32"
+         transform="scale(-1,1)" />
+      <rect
+         inkscape:label="48x48"
+         y="236"
+         x="-192"
+         height="48"
+         width="48"
+         id="rect48x48"
+         style="display:inline;overflow:visible;visibility:visible;fill:#d3d7cf;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:2;marker:none;enable-background:accumulate"
+         transform="scale(-1,1)" />
+      <rect
+         style="display:inline;overflow:visible;visibility:visible;fill:#d3d7cf;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:2;marker:none;enable-background:accumulate"
+         id="rect3951"
+         width="512"
+         height="512"
+         x="-720"
+         y="-228"
+         inkscape:label="48x48"
+         transform="scale(-1,1)" />
+    </g>
+    <g
+       inkscape:groupmode="layer"
+       id="layer6"
+       inkscape:label="Symbols"
+       style="display:inline">
+      <!-- 16x16 -->
+      <rect x="17" y="270" width="2" height="1" fill="#b0bec5" style="stroke:none" />
+      <rect x="18" y="270" width="1" height="12" fill="#b0bec5" style="stroke:none" />
+      <rect x="18" y="281" width="1" height="1" fill="#b0bec5" style="stroke:none" />
+      <path d="M 20,271 L 30,271 C 30.5,271 31,271.5 31,272 L 31,280 L 24,280 L 24,279 L 21,279 L 21,280 L 19,280 L 19,272 C 19,271.5 19.5,271 20,271 Z" fill="#4bae4f" style="stroke:none" />
+      <rect x="19" y="271" width="12" height="1" fill="#ffffff" opacity="0.2" style="stroke:none" />
+      <rect x="24" y="280" width="6" height="1" fill="#000000" opacity="0.2" style="stroke:none" />
+      <rect x="19" y="280" width="2" height="1" fill="#000000" opacity="0.2" style="stroke:none" />
+      <rect x="25" y="279" width="1" height="2" fill="#feea3a" style="stroke:none" />
+      <rect x="27" y="279" width="1" height="2" fill="#feea3a" style="stroke:none" />
+      <rect x="29" y="279" width="1" height="2" fill="#feea3a" style="stroke:none" />
+      <rect x="21" y="273" width="5" height="4" rx="0.5" ry="0.5" fill="#37474f" style="stroke:none" />
+      <rect x="22" y="272" width="3" height="1" fill="#b0bec5" style="stroke:none" />
+      <rect x="22" y="277" width="3" height="1" fill="#b0bec5" style="stroke:none" />
+      <rect x="20" y="274" width="1" height="2" fill="#b0bec5" style="stroke:none" />
+      <rect x="26" y="274" width="1" height="2" fill="#b0bec5" style="stroke:none" />
+
+      <!-- 24x24 -->
+      <rect x="53" y="263" width="3" height="2" fill="#b0bec5" style="stroke:none" />
+      <rect x="54" y="264" width="1" height="17" fill="#b0bec5" style="stroke:none" />
+      <path d="M 57,265 L 73,265 C 74,265 74,266 74,267 L 74,278 L 63,278 L 63,276 L 58,276 L 58,278 L 56,278 L 56,267 C 56,266 56,265 57,265 Z" fill="#4bae4f" style="stroke:none" />
+      <rect x="56" y="265" width="18" height="1" fill="#ffffff" opacity="0.2" style="stroke:none" />
+      <rect x="63" y="278" width="11" height="1" fill="#000000" opacity="0.2" style="stroke:none" />
+      <rect x="56" y="278" width="3" height="1" fill="#000000" opacity="0.2" style="stroke:none" />
+      <rect x="65" y="276" width="1" height="3" fill="#feea3a" style="stroke:none" />
+      <rect x="67" y="276" width="1" height="3" fill="#feea3a" style="stroke:none" />
+      <rect x="69" y="276" width="1" height="3" fill="#feea3a" style="stroke:none" />
+      <rect x="71" y="276" width="1" height="3" fill="#feea3a" style="stroke:none" />
+      <rect x="61" y="269" width="7" height="4" rx="0.5" ry="0.5" fill="#37474f" style="stroke:none" />
+      <rect x="62" y="268" width="1" height="1" fill="#b0bec5" style="stroke:none" />
+      <rect x="66" y="268" width="1" height="1" fill="#b0bec5" style="stroke:none" />
+      <rect x="62" y="273" width="1" height="1" fill="#b0bec5" style="stroke:none" />
+      <rect x="66" y="273" width="1" height="1" fill="#b0bec5" style="stroke:none" />
+      <rect x="59" y="270" width="2" height="1" fill="#b0bec5" style="stroke:none" />
+      <rect x="59" y="272" width="2" height="1" fill="#b0bec5" style="stroke:none" />
+      <rect x="68" y="270" width="2" height="1" fill="#b0bec5" style="stroke:none" />
+      <rect x="68" y="272" width="2" height="1" fill="#b0bec5" style="stroke:none" />
+
+      <!-- 32x32 -->
+      <rect x="98" y="256" width="4" height="2" fill="#b0bec5" style="stroke:none" />
+      <path d="M 100,257 L 102,257 L 102,278 L 101,278 L 101,279 L 100,279 Z" fill="#b0bec5" style="stroke:none" />
+      <path d="M 103,259 L 125,259 C 125.5,259 126,259.5 126,260 L 126,277 L 112,277 L 112,274 L 106,274 L 106,277 L 102,277 L 102,260 C 102,259.5 102.5,259 103,259 Z" fill="#4bae4f" style="stroke:none" />
+      <rect x="103" y="259" width="23" height="1" fill="#ffffff" opacity="0.2" style="stroke:none" />
+      <rect x="112" y="277" width="13" height="1" fill="#000000" opacity="0.2" style="stroke:none" />
+      <rect x="102" y="277" width="4" height="1" fill="#000000" opacity="0.2" style="stroke:none" />
+      <rect x="113" y="274" width="2" height="4" fill="#feea3a" style="stroke:none" />
+      <rect x="116" y="274" width="2" height="4" fill="#feea3a" style="stroke:none" />
+      <rect x="119" y="274" width="2" height="4" fill="#feea3a" style="stroke:none" />
+      <rect x="122" y="274" width="2" height="4" fill="#feea3a" style="stroke:none" />
+      <rect x="109" y="264" width="7" height="6" rx="1" ry="1" fill="#37474f" style="stroke:none" />
+      <rect x="110" y="262" width="1" height="2" fill="#b0bec5" style="stroke:none" />
+      <rect x="114" y="262" width="1" height="2" fill="#b0bec5" style="stroke:none" />
+      <rect x="110" y="270" width="1" height="2" fill="#b0bec5" style="stroke:none" />
+      <rect x="114" y="270" width="1" height="2" fill="#b0bec5" style="stroke:none" />
+      <rect x="107" y="265" width="2" height="1" fill="#b0bec5" style="stroke:none" />
+      <rect x="107" y="268" width="2" height="1" fill="#b0bec5" style="stroke:none" />
+      <rect x="116" y="265" width="2" height="1" fill="#b0bec5" style="stroke:none" />
+      <rect x="116" y="268" width="2" height="1" fill="#b0bec5" style="stroke:none" />
+
+      <!-- 48x48 -->
+      <rect x="147" y="242" width="6" height="3" rx="1" ry="1" fill="#b0bec5" style="stroke:none" />
+      <path d="M 150,244 L 153,244 L 153,276 L 152,276 L 152,277 L 151,277 L 151,276 L 150,276 Z" fill="#b0bec5" style="stroke:none" />
+      <path d="M 154,246 L 187,246 C 187.5,246 188,246.5 188,247 L 188,273 L 168,273 L 168,269 L 159,269 L 159,273 L 153,273 L 153,247 C 153,246.5 153.5,246 154,246 Z" fill="#4bae4f" style="stroke:none" />
+      <rect x="154" y="246" width="34" height="1" fill="#ffffff" opacity="0.2" style="stroke:none" />
+      <rect x="168" y="273" width="19" height="1" fill="#000000" opacity="0.2" style="stroke:none" />
+      <rect x="153" y="273" width="6" height="1" fill="#000000" opacity="0.2" style="stroke:none" />
+      <rect x="170" y="269" width="3" height="5" fill="#feea3a" style="stroke:none" />
+      <rect x="174" y="269" width="3" height="5" fill="#feea3a" style="stroke:none" />
+      <rect x="178" y="269" width="3" height="5" fill="#feea3a" style="stroke:none" />
+      <rect x="182" y="269" width="3" height="5" fill="#feea3a" style="stroke:none" />
+      <rect x="163" y="254" width="11" height="9" rx="1.5" ry="1.5" fill="#37474f" style="stroke:none" />
+      <rect x="165" y="251" width="2" height="3" fill="#b0bec5" style="stroke:none" />
+      <rect x="171" y="251" width="2" height="3" fill="#b0bec5" style="stroke:none" />
+      <rect x="166" y="263" width="2" height="3" fill="#b0bec5" style="stroke:none" />
+      <rect x="171" y="263" width="2" height="3" fill="#b0bec5" style="stroke:none" />
+      <rect x="160" y="255" width="3" height="2" fill="#b0bec5" style="stroke:none" />
+      <rect x="160" y="260" width="3" height="2" fill="#b0bec5" style="stroke:none" />
+      <rect x="174" y="255" width="3" height="2" fill="#b0bec5" style="stroke:none" />
+      <rect x="174" y="260" width="3" height="2" fill="#b0bec5" style="stroke:none" />
+
+      <!-- 512x512 -->
+      <rect x="240" y="-160" width="64" height="32" rx="8" ry="8" fill="#000000" opacity="0.1" filter="url(#filter4324)" style="stroke:none" />
+      <path d="M 272,-136 L 304,-136 L 304,200 L 296,200 L 296,208 L 280,208 L 280,200 L 272,200 Z" fill="#000000" opacity="0.1" filter="url(#filter4324)" style="stroke:none" />
+      <path d="M 320,-112 L 672,-112 A 16 16 0 0 1 688,-96 L 688,172 L 464,172 L 464,124 L 368,124 L 368,172 L 304,172 L 304,-96 A 16 16 0 0 1 320,-112 Z" fill="#000000" opacity="0.1" filter="url(#filter4324)" style="stroke:none" />
+      <rect x="240" y="-164" width="64" height="32" rx="8" ry="8" fill="#b0bec5" style="stroke:none" />
+      <path d="M 272,-140 L 304,-140 L 304,196 L 296,196 L 296,204 L 280,204 L 280,196 L 272,196 Z" fill="#b0bec5" style="stroke:none" />
+      <path d="M 320,-116 L 672,-116 A 16 16 0 0 1 688,-100 L 688,168 L 464,168 L 464,120 L 368,120 L 368,168 L 304,168 L 304,-100 A 16 16 0 0 1 320,-116 Z" fill="#4bae4f" style="stroke:none" />
+      <path d="M 320,-116 L 672,-116 A 16 16 0 0 1 688,-100 L 688,-98 A 16 16 0 0 0 672,-114 L 320,-114 A 16 16 0 0 0 304,-98 L 304,-100 A 16 16 0 0 1 320,-116 Z" fill="#ffffff" opacity="0.2" style="stroke:none" />
+      <rect x="464" y="168" width="208" height="4" fill="#000000" opacity="0.2" style="stroke:none" />
+      <rect x="304" y="168" width="64" height="4" fill="#000000" opacity="0.2" style="stroke:none" />
+      <rect x="480" y="120" width="32" height="64" fill="#feea3a" style="stroke:none" />
+      <rect x="528" y="120" width="32" height="64" fill="#feea3a" style="stroke:none" />
+      <rect x="576" y="120" width="32" height="64" fill="#feea3a" style="stroke:none" />
+      <rect x="624" y="120" width="32" height="64" fill="#feea3a" style="stroke:none" />
+      <rect x="480" y="184" width="32" height="4" fill="#000000" opacity="0.2" style="stroke:none" />
+      <rect x="528" y="184" width="32" height="4" fill="#000000" opacity="0.2" style="stroke:none" />
+      <rect x="576" y="184" width="32" height="4" fill="#000000" opacity="0.2" style="stroke:none" />
+      <rect x="624" y="184" width="32" height="4" fill="#000000" opacity="0.2" style="stroke:none" />
+      <rect x="424" y="-36" width="112" height="96" rx="16" ry="16" fill="#37474f" style="stroke:none" />
+      <rect x="440" y="-60" width="16" height="24" fill="#b0bec5" style="stroke:none" />
+      <rect x="504" y="-60" width="16" height="24" fill="#b0bec5" style="stroke:none" />
+      <rect x="440" y="60" width="16" height="24" fill="#b0bec5" style="stroke:none" />
+      <rect x="504" y="60" width="16" height="24" fill="#b0bec5" style="stroke:none" />
+      <rect x="400" y="-20" width="24" height="16" fill="#b0bec5" style="stroke:none" />
+      <rect x="400" y="28" width="24" height="16" fill="#b0bec5" style="stroke:none" />
+      <rect x="536" y="-20" width="24" height="16" fill="#b0bec5" style="stroke:none" />
+      <rect x="536" y="28" width="24" height="16" fill="#b0bec5" style="stroke:none" />
+</g>
+  </g>
+</svg>

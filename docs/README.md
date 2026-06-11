@@ -1,6 +1,6 @@
 <br />
 <div align="center">
-  <img src="./images/icon.ico">
+  <img src="./images/icon.png">
   <h2 align="center">NWinfo</h2>
   <a href="https://deepwiki.com/a1ive/nwinfo"><img src="https://deepwiki.com/badge.svg" alt="Ask DeepWiki"></a>
 </div>
@@ -375,3 +375,4 @@ This project is licensed under the [Unlicense](https://unlicense.org/) license.
 * [optparse](https://github.com/skeeto/optparse)
 * [hwdata](https://github.com/vcrhonek/hwdata)
 * [PawnIO](https://pawnio.eu/)
+* [Paper Icon Theme](https://github.com/snwh/paper-icon-theme)

@@ -1,6 +1,6 @@
 ﻿<br />
 <div align="center">
-  <img src="./docs/images/icon.ico">
+  <img src="./docs/images/icon.png">
   <h2 align="center">NWinfo</h2>
   <div align="center">
     <img src="https://img.shields.io/github/license/a1ive/nwinfo?label=LICENSE&color=ad1453">
@@ -43,3 +43,4 @@ This project is licensed under the [Unlicense](https://unlicense.org/) license.
 * [optparse](https://github.com/skeeto/optparse)
 * [hwdata](https://github.com/vcrhonek/hwdata)
 * [PawnIO](https://pawnio.eu/)
+* [Paper Icon Theme](https://github.com/snwh/paper-icon-theme)

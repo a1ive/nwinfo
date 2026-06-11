@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="736"
+   height="544"
+   id="svg11300"
+   sodipodi:version="0.32"
+   inkscape:version="0.91 r"
+   sodipodi:docname="minimize.svg"
+   version="1.0"
+   style="display:inline;enable-background:new">
+   <title id="title3004">Paper Icon Theme</title>
+   <defs id="defs3" />
+   <g style="display:inline" inkscape:groupmode="layer" inkscape:label="Icon" id="layer1" transform="translate(0,244)">
+     <g style="display:none" inkscape:label="Baseplate" id="layer7" inkscape:groupmode="layer">
+       <text y="337.74512" xml:space="preserve" x="15.006836" style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:18px;font-family:'DejaVu Sans';-inkscape-font-specification:'DejaVu Sans';display:inline;fill:#000000;fill-opacity:1;stroke:none;enable-background:new" inkscape:label="context" id="context"><tspan y="337.74512" x="15.006836" sodipodi:role="line" id="tspan3933">actions</tspan></text>
+       <text y="337.74512" xml:space="preserve" x="142.48828" style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:18px;line-height:125%;font-family:'DejaVu Sans';-inkscape-font-specification:'DejaVu Sans Bold';text-align:start;writing-mode:lr-tb;text-anchor:start;display:inline;fill:#000000;fill-opacity:1;stroke:none;enable-background:new" sodipodi:linespacing="125%" inkscape:label="icon-name" id="icon-name"><tspan y="337.74512" x="142.48828" sodipodi:role="line" id="tspan3937">minimize</tspan></text>
+       <rect style="display:inline;overflow:visible;visibility:visible;fill:#d3d7cf;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:2;marker:none;enable-background:accumulate" id="rect16x16" width="16" height="16" x="-32" y="268" inkscape:label="16x16" transform="scale(-1,1)" />
+       <rect style="display:inline;overflow:visible;visibility:visible;fill:#d3d7cf;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:2;marker:none;enable-background:accumulate" id="rect24x24" width="24" height="24" x="-76" y="260" inkscape:label="24x24" transform="scale(-1,1)" />
+       <rect style="display:inline;overflow:visible;visibility:visible;fill:#d3d7cf;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:2;marker:none;enable-background:accumulate" id="rect32x32" width="32" height="32" x="-128" y="252" inkscape:label="32x32" transform="scale(-1,1)" />
+       <rect inkscape:label="48x48" y="236" x="-192" height="48" width="48" id="rect48x48" style="display:inline;overflow:visible;visibility:visible;fill:#d3d7cf;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:2;marker:none;enable-background:accumulate" transform="scale(-1,1)" />
+       <rect style="display:inline;overflow:visible;visibility:visible;fill:#d3d7cf;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:2;marker:none;enable-background:accumulate" id="rect3951" width="512" height="512" x="-720" y="-228" inkscape:label="48x48" transform="scale(-1,1)" />
+     </g>
+     <g inkscape:groupmode="layer" inkscape:label="Symbols" id="layer6" style="display:inline">
+       <!-- 16x16 -->
+       <rect x="20" y="278" width="8" height="2" rx="1" ry="1" fill="#E4BB45" />
+
+       <!-- 24x24 -->
+       <rect x="58" y="275" width="12" height="3" rx="1.5" ry="1.5" fill="#E4BB45" />
+
+       <!-- 32x32 -->
+       <rect x="104" y="272" width="16" height="4" rx="2" ry="2" fill="#E4BB45" />
+
+       <!-- 48x48 -->
+       <rect x="156" y="266" width="24" height="6" rx="3" ry="3" fill="#E4BB45" />
+
+       <!-- 512x512 -->
+       <rect x="336" y="92" width="256" height="64" rx="32" ry="32" fill="#E4BB45" />
+     </g>
+   </g>
+</svg>
