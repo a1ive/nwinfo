@@ -20,7 +20,9 @@
 static const CHAR* Win10BuildNumber(DWORD dwBuildNumber)
 {
 	if (dwBuildNumber >= 28000U)
-		return "11 26H1"; // TBA
+		return "11 26H1"; // ARM only
+	if (dwBuildNumber >= 26300U)
+		return "11 26H2";
 	if (dwBuildNumber >= 26200U)
 		return "11 25H2";
 	if (dwBuildNumber >= 26100U)
