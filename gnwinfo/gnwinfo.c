@@ -86,10 +86,7 @@ set_dpi_scaling(HWND wnd)
 	GetPrivateProfileStringW(L"Window", L"Font", L"-", font_name, NWL_STR_SIZE, g_ini_path);
 	if (wcscmp(font_name, L"-") == 0)
 		wcscpy_s(font_name, NWL_STR_SIZE, NWL_Utf8ToUcs2(N_(N__FONT_)));
-	if (g_bginfo)
-		g_dpi_scaling = 0;
-	else
-		g_dpi_scaling = strtol(gnwinfo_get_ini_value(L"Window", L"DpiScaling", L"1"), NULL, 10);
+	g_dpi_scaling = strtol(gnwinfo_get_ini_value(L"Window", L"DpiScaling", L"1"), NULL, 10);
 	if (g_font)
 	{
 		nk_gdipfont_del(g_font);
@@ -104,9 +101,24 @@ set_dpi_scaling(HWND wnd)
 		g_font_size = (int)(g_font_size * g_dpi_factor);
 		// resize window
 		GetWindowRect(wnd, &rect);
-		SetWindowPos(wnd, NULL, 0, 0,
-			(int)((rect.right - rect.left) * g_dpi_factor), (int)((rect.bottom - rect.top) * g_dpi_factor),
-			SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE);
+		if (g_bginfo)
+		{
+			int new_w = (int)((rect.right - rect.left) * g_dpi_factor);
+			int new_h = (int)((rect.bottom - rect.top) * g_dpi_factor);
+			RECT desktop = { 0, 0, 1024, 768 };
+			int x;
+			GetWindowRect(GetDesktopWindow(), &desktop);
+			x = desktop.right > (LONG)new_w ? (desktop.right - new_w) : 0;
+			SetWindowPos(wnd, HWND_BOTTOM, x, 0,
+				new_w, new_h,
+				SWP_NOACTIVATE);
+		}
+		else
+		{
+			SetWindowPos(wnd, NULL, 0, 0,
+				(int)((rect.right - rect.left) * g_dpi_factor), (int)((rect.bottom - rect.top) * g_dpi_factor),
+				SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE);
+		}
 	}
 	g_font = nk_gdip_load_font(font_name, g_font_size);
 	nk_gdip_set_font(g_font);
