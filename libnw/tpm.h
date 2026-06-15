@@ -22,6 +22,7 @@ typedef struct _NWL_TPM_ALGORITHM
 typedef struct _NWL_TPM_INFO
 {
 	UINT32 TpmVersion;
+	UINT32 TpmType;
 	CHAR ManufacturerId[NWL_TPM_MANUFACTURER_ID_LEN];
 	LPCSTR ManufacturerName;
 	CHAR VendorString[NWL_TPM_VENDOR_STRING_LEN];
@@ -38,6 +39,7 @@ typedef struct _NWL_TPM_INFO
 } NWL_TPM_INFO, *PNWL_TPM_INFO;
 
 LPCSTR NWL_TPMGetVersionStr(UINT32 Version);
+LPCSTR NWL_TPMGetIfStr(UINT32 IfType);
 TBS_RESULT NWL_TPMContextCreate(PCTBS_CONTEXT_PARAMS pContextParams, PTBS_HCONTEXT phContext);
 TBS_RESULT NWL_TPMGetDeviceInfo(UINT32 Size, PVOID Info);
 TBS_RESULT NWL_TPMContextClose(TBS_HCONTEXT hContext);

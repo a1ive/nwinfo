@@ -386,6 +386,7 @@ GetTpmInfo(PNODE node)
 	if (rc != TBS_SUCCESS)
 		return;
 	NWL_NodeAttrSet(node, "TPM Version", NWL_TPMGetVersionStr(tpmInfo.TpmVersion), 0);
+	NWL_NodeAttrSet(node, "TPM Interface", NWL_TPMGetIfStr(tpmInfo.TpmType), 0);
 	if (tpmInfo.ManufacturerId[0] != '\0')
 		NWL_NodeAttrSet(node, "TPM Manufacturer ID", tpmInfo.ManufacturerId, 0);
 	if (tpmInfo.ManufacturerName != NULL)

@@ -230,10 +230,11 @@ gnwinfo_draw_cpuid_window(struct nk_context* ctx, float width, float height)
 	{
 		nk_layout_row(ctx, NK_DYNAMIC, 0, 2, (float[2]) { 0.2f, 0.8f });
 		nk_l(ctx, N_(N__VENDOR), NK_TEXT_LEFT);
-		nk_lhcf(ctx, NK_TEXT_LEFT, g_color_text_l, "%s (%s, ID=%s)",
+		nk_lhcf(ctx, NK_TEXT_LEFT, g_color_text_l, "%s (%s, ID=%s, %s)",
 			NWL_NodeAttrGet(g_ctx.board, "TPM Manufacturer"),
 			NWL_NodeAttrGet(g_ctx.board, "TPM Vendor String"),
-			NWL_NodeAttrGet(g_ctx.board, "TPM Manufacturer ID"));
+			NWL_NodeAttrGet(g_ctx.board, "TPM Manufacturer ID"),
+			NWL_NodeAttrGet(g_ctx.board, "TPM Interface"));
 		nk_l(ctx, N_(N__VERSION), NK_TEXT_LEFT);
 		nk_lhcf(ctx, NK_TEXT_LEFT, g_color_text_l, "%s r%s %s fw%s", tpm_ver,
 			NWL_NodeAttrGet(g_ctx.board, "TPM Spec Revision"),

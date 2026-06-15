@@ -698,6 +698,19 @@ LPCSTR NWL_TPMGetVersionStr(UINT32 Version)
 	}
 }
 
+LPCSTR NWL_TPMGetIfStr(UINT32 IfType)
+{
+	switch (IfType)
+	{
+	case TPM_IFTYPE_1: return "I/O-port or MMIO";
+	case TPM_IFTYPE_TRUSTZONE: return "Trustzone";
+	case TPM_IFTYPE_HW: return "HW TPM";
+	case TPM_IFTYPE_EMULATOR: return "SW-emulator";
+	case TPM_IFTYPE_SPB: return "SPB attached";
+	}
+	return "UNKNOWN";
+}
+
 TBS_RESULT NWL_TPMContextCreate(PCTBS_CONTEXT_PARAMS pContextParams, PTBS_HCONTEXT phContext)
 {
 	TBS_RESULT(WINAPI *TPM_Context_Create)(PCTBS_CONTEXT_PARAMS, PTBS_HCONTEXT) = NULL;
@@ -809,6 +822,7 @@ TBS_RESULT NWL_TPMGetInfo(PNWL_TPM_INFO Info)
 		return rc;
 
 	tempInfo.TpmVersion = deviceInfo.tpmVersion;
+	tempInfo.TpmType = deviceInfo.tpmInterfaceType;
 	response = (PBYTE)malloc(TBS_IN_OUT_BUF_SIZE_MAX);
 	if (response == NULL)
 		return TBS_E_INTERNAL_ERROR;
