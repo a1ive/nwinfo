@@ -401,6 +401,9 @@
     <ClCompile Include="drvstore.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="hid.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

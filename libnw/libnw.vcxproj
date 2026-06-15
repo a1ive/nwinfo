@@ -562,6 +562,7 @@
     <ClCompile Include="gpu\intel_gpu.c" />
     <ClCompile Include="gpu\nvapi.c" />
     <ClCompile Include="gpu\nvidia_gpu.c" />
+    <ClCompile Include="hid.c" />
     <ClCompile Include="iplookup.c" />
     <ClCompile Include="libinfo.c" />
     <ClCompile Include="libnw.c" />

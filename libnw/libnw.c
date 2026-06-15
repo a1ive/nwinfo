@@ -174,6 +174,8 @@ VOID NW_Print(LPCSTR lpFileName)
 		NW_DevTree(TRUE);
 	if (NWLC->DrvStore)
 		NW_DrvStore(TRUE);
+	if (NWLC->HidInfo)
+		NW_Hid(TRUE);
 	if (NWLC->Sensors)
 		NW_Sensors(TRUE);
 	NW_Libinfo();

@@ -93,6 +93,7 @@ enum
 	NW_OPT_FONT,
 	NW_OPT_DEVICE,
 	NW_OPT_DRV_STORE,
+	NW_OPT_HID,
 	NW_OPT_SENSORS,
 };
 
@@ -131,6 +132,7 @@ static struct optparse_option nwOptions[] =
 	{ "font", 0, OPTPARSE_NONE },
 	{ "device", 0, OPTPARSE_OPTIONAL },
 	{ "drv-store", 0, OPTPARSE_OPTIONAL },
+	{ "hid", 0, OPTPARSE_NONE },
 	{ "sensors", 0, OPTPARSE_OPTIONAL },
 	{ 0, 0, 0 },
 };
@@ -232,6 +234,7 @@ static void nwinfo_help(void)
 		"                   Print Windows driver store info.\n"
 		"                   OFFLINE_PATH specifies the path of the offline system,\n"
 		"                   e.g. 'D:\\' or 'E:\\Backup'.\n"
+		"  --hid            Print Human Interface Devices (HID) info.\n"
 		"  --sensors[=SRC,..]\n"
 		"                   Print sensors.\n"
 		"                   SRC specifies the provider of sensors.\n"
@@ -567,6 +570,9 @@ int main(int argc, char* argv[])
 			if (options.optarg && options.optarg[0])
 				nwContext.DrvStoreDrive = options.optarg;
 			nwContext.DrvStore = TRUE;
+			break;
+		case NW_OPT_HID:
+			nwContext.HidInfo = TRUE;
 			break;
 		case NW_OPT_SENSORS:
 		{
