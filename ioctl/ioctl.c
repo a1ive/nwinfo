@@ -226,6 +226,7 @@ static BOOL load_pio(struct wr0_drv_t* drv)
 	load_pio_mod(&drv->pio_amd10, L"AMDFamily10.bin");
 	load_pio_mod(&drv->pio_amd17, L"AMDFamily17.bin");
 	load_pio_mod(&drv->pio_intel, L"IntelMSR.bin");
+	load_pio_mod(&drv->pio_zhaoxin, L"ZhaoxinMSR.bin");
 	load_pio_mod(&drv->pio_rysmu, L"RyzenSMU.bin");
 	load_pio_mod(&drv->pio_smi801, L"SmbusI801.bin");
 	load_pio_mod(&drv->pio_smpiix4, L"SmbusPIIX4.bin");
@@ -263,6 +264,7 @@ static void uninstall_pio(struct wr0_drv_t* drv)
 	unload_pio_mod(&drv->pio_amd10);
 	unload_pio_mod(&drv->pio_amd17);
 	unload_pio_mod(&drv->pio_intel);
+	unload_pio_mod(&drv->pio_zhaoxin);
 	unload_pio_mod(&drv->pio_rysmu);
 	unload_pio_mod(&drv->pio_smi801);
 	unload_pio_mod(&drv->pio_smpiix4);

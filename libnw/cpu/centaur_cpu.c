@@ -5,7 +5,6 @@
 #define MSR_IA32_PERF_STATUS  0x198
 
 #define MSR_IA32_BIOS_SIGN_ID 0x8B
-#define MSR_FSB_FREQ          0xCD
 
 #define MSR_ZX_TEMP          0x1423
 #define MSR_ZX_TEMP_CRIT     0x1416
@@ -17,9 +16,9 @@
 #define MSR_VIA_TEMP_0F      0x1423
 
 static inline int
-read_centaur_msr(struct wr0_drv_t* handle, uint32_t msr_index, uint8_t highbit, uint8_t lowbit, uint64_t* result)
+read_centaur_msr(struct msr_info_t* info, uint32_t msr_index, uint8_t highbit, uint8_t lowbit, uint64_t* result)
 {
-	int err;
+	int err = ERR_NOT_IMP;
 	const uint8_t bits = highbit - lowbit + 1;
 	ULONG64 in = msr_index;
 	ULONG64 out = 0;
@@ -27,10 +26,13 @@ read_centaur_msr(struct wr0_drv_t* handle, uint32_t msr_index, uint8_t highbit, 
 	if (highbit > 63 || lowbit > highbit)
 		return ERR_INVRANGE;
 
-	if (handle->type == WR0_DRIVER_PAWNIO)
-		err = ERR_NOT_IMP;
+	if (info->handle->type == WR0_DRIVER_PAWNIO)
+	{
+		if (info->id->x86.ext_family == 0x07)
+			err = WR0_ExecPawn(info->handle, &info->handle->pio_zhaoxin, "ioctl_read_msr", &in, 1, &out, 1, NULL);
+	}
 	else
-		err = WR0_RdMsr(handle, msr_index, &out);
+		err = WR0_RdMsr(info->handle, msr_index, &out);
 
 	if (err)
 		return err;
@@ -73,11 +75,11 @@ static int get_temperature(struct msr_info_t* info)
 		{
 		case 0x0A:
 		case 0x0D:
-			if (read_centaur_msr(info->handle, MSR_VIA_TEMP_0A_0D, 23, 0, &reg))
+			if (read_centaur_msr(info, MSR_VIA_TEMP_0A_0D, 23, 0, &reg))
 				return 0;
 			break;
 		case 0x0F:
-			if (read_centaur_msr(info->handle, MSR_VIA_TEMP_0F, 23, 0, &reg))
+			if (read_centaur_msr(info, MSR_VIA_TEMP_0F, 23, 0, &reg))
 				return 0;
 			break;
 		default:
@@ -86,7 +88,7 @@ static int get_temperature(struct msr_info_t* info)
 	}
 		break;
 	case 0x07: // Zhaoxin
-		if (read_centaur_msr(info->handle, MSR_ZX_TEMP, 23, 0, &reg))
+		if (read_centaur_msr(info, MSR_ZX_TEMP, 23, 0, &reg))
 			return 0;
 		break;
 	default:
@@ -118,32 +120,29 @@ static double get_pkg_pl2(struct msr_info_t* info)
 
 static double get_voltage(struct msr_info_t* info)
 {
+	uint64_t reg, vid;
+	if (info->id->x86.ext_family < 6)
+		goto fail;
+	if (read_centaur_msr(info, MSR_IA32_PERF_STATUS, 63, 0, &reg))
+		goto fail;
+	vid = (reg >> 32) & 0xFFFF;
+	if (vid == 0)
+		vid = reg & 0xFFFF;
+	if (vid > 0)
+		return (double)vid / (1ULL << 13ULL);
+fail:
 	return 0.0;
 }
 
 static double get_bus_clock(struct msr_info_t* info)
 {
-	uint64_t reg;
-	if (read_centaur_msr(info->handle, MSR_FSB_FREQ, 2, 0, &reg))
-		goto fail;
-	switch (reg)
-	{
-	case 0: return 266.67;
-	case 1: return 133.33;
-	case 2: return 200.00;
-	case 3: return 166.67;
-	case 4: return 333.33;
-	case 5: return 100.00;
-	case 6: return 400.00;
-	}
-fail:
-	return 0.0;
+	return 100.0;
 }
 
 static int get_microcode_ver(struct msr_info_t* info)
 {
 	uint64_t rev;
-	if (read_centaur_msr(info->handle, MSR_IA32_BIOS_SIGN_ID, 63, 32, &rev))
+	if (read_centaur_msr(info, MSR_IA32_BIOS_SIGN_ID, 63, 32, &rev))
 		goto fail;
 	return (int)rev;
 fail:

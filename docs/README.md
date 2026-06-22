@@ -363,6 +363,7 @@ This section describes all files included in the final release package.
 | `SmbusPIIX4.bin` | PawnIO Module | PIIX4 SMBus module for the PawnIO driver |
 | `SmbusI801.bin` | PawnIO Module | I801 SMBus module for the PawnIO driver |
 | `LpcIO.bin` | PawnIO Module | LPC I/O module for the PawnIO driver |
+| `ZhaoxinMSR.bin` | PawnIO Module | Zhaoxin MSR module for the PawnIO driver |
 
 <div style="page-break-after: always;"></div>
 

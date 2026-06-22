@@ -38,7 +38,8 @@ $DriverFiles = @{
 		"ioctl\pawn\RyzenSMU.bin",
 		"ioctl\pawn\SmbusI801.bin",
 		"ioctl\pawn\SmbusPIIX4.bin",
-		"ioctl\pawn\LpcIO.bin"
+		"ioctl\pawn\LpcIO.bin",
+		"ioctl\pawn\ZhaoxinMSR.bin"
 	)
 }
 

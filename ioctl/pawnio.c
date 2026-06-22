@@ -12,6 +12,13 @@ BOOL
 WR0_CheckPawnIO(void)
 {
 #ifdef _WIN64
+	HANDLE sys = CreateFileW(PAWNIO_OBJ, GENERIC_WRITE | GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING, 0, NULL);
+	if (sys != INVALID_HANDLE_VALUE)
+	{
+		CloseHandle(sys);
+		return TRUE;
+	}
+
 	WCHAR path[MAX_PATH];
 	// Program Files\\PawnIO\\PawnIOLib.dll
 	SHGetFolderPathW(NULL, CSIDL_PROGRAM_FILES, NULL, 0, path);

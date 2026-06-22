@@ -44,6 +44,7 @@ struct wr0_drv_t
 	struct pio_mod_t pio_amd10;
 	struct pio_mod_t pio_amd17;
 	struct pio_mod_t pio_intel;
+	struct pio_mod_t pio_zhaoxin;
 	struct pio_mod_t pio_rysmu;
 	struct pio_mod_t pio_smi801;
 	struct pio_mod_t pio_smpiix4;

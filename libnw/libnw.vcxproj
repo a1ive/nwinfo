@@ -633,6 +633,9 @@
     <CopyFileToFolders Include="..\ioctl\pawn\IntelMCHBAR.bin">
       <FileType>Document</FileType>
     </CopyFileToFolders>
+    <CopyFileToFolders Include="..\ioctl\pawn\ZhaoxinMSR.bin">
+      <FileType>Document</FileType>
+    </CopyFileToFolders>
     <None Include="exports.def" />
     <None Include="packages.config" />
   </ItemGroup>
