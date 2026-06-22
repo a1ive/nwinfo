@@ -1865,7 +1865,7 @@ nk_image_label(struct nk_context* ctx, struct nk_image img,
 	style = &ctx->style;
 	len = nk_strlen(str);
 	nk_layout_peek(&bounds, ctx);
-	nk_report_capture_text(bounds.y, 0, str, len);
+	nk_report_capture_text(bounds.y, nk_report_get_indent(ctx, nk_false), str, len);
 	if (!nk_widget(&bounds, ctx))
 		return;
 

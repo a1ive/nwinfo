@@ -333,6 +333,7 @@ gnwinfo_ctx_init(HINSTANCE inst, HWND wnd, struct nk_context* ctx, float width, 
 	g_ctx.lib.AcpiTable = 0;
 	g_ctx.lib.SmbiosTypes = NULL;
 	g_ctx.lib.DiskPath = NULL;
+	g_ctx.lib.UefiFlags = NW_UEFI_CERT;
 
 	g_ctx.lib.CpuInfo = TRUE;
 	g_ctx.lib.SysInfo = TRUE;
