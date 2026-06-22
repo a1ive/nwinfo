@@ -70,16 +70,16 @@ VOID gnwinfo_draw_pci_window(struct nk_context* ctx, float width, float height)
 	draw_pci_class(ctx, "Multimedia controller", GET_PNG(IDR_PNG_MM), "04", &id);
 	draw_pci_class(ctx, "Memory controller", GET_PNG(IDR_PNG_MEMORY), "05", &id);
 	draw_pci_class(ctx, "Bridge", GET_PNG(IDR_PNG_PCI), "06", &id);
-	draw_pci_class(ctx, "Communication controller", GET_PNG(IDR_PNG_FIRMWARE), "07", &id);
+	draw_pci_class(ctx, "Communication controller", GET_PNG(IDR_PNG_NETWORK), "07", &id);
 	draw_pci_class(ctx, "Generic system peripheral", GET_PNG(IDR_PNG_PC), "08", &id);
 	draw_pci_class(ctx, "Input device controller", GET_PNG(IDR_PNG_PCI), "09", &id);
 	draw_pci_class(ctx, "Docking station", GET_PNG(IDR_PNG_PCI), "0a", &id);
 	draw_pci_class(ctx, "Processor", GET_PNG(IDR_PNG_CPU), "0b", &id);
 	draw_pci_class(ctx, "Serial bus controller", GET_PNG(IDR_PNG_FIRMWARE), "0c", &id);
 	draw_pci_class(ctx, "Wireless controller", GET_PNG(IDR_PNG_WLAN), "0d", &id);
-	draw_pci_class(ctx, "Intelligent controller", GET_PNG(IDR_PNG_PCI), "0e", &id);
-	draw_pci_class(ctx, "Satellite communications controller", GET_PNG(IDR_PNG_WLAN), "0f", &id);
-	draw_pci_class(ctx, "Encryption controller", GET_PNG(IDR_PNG_FIRMWARE), "10", &id);
+	draw_pci_class(ctx, "Intelligent controller", GET_PNG(IDR_PNG_GPU), "0e", &id);
+	draw_pci_class(ctx, "Satellite communications controller", GET_PNG(IDR_PNG_ROCKET), "0f", &id);
+	draw_pci_class(ctx, "Encryption controller", GET_PNG(IDR_PNG_LOCK), "10", &id);
 	id++;
 	nk_bool other_expanded = nk_false;
 	if (nk_tree_image_push_id(ctx, NK_TREE_TAB, GET_PNG(IDR_PNG_PCI), "Other", NK_MINIMIZED, id))

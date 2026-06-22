@@ -2223,8 +2223,61 @@ nk_block(struct nk_context* ctx, struct nk_color color, const char* str)
 	nk_button_text_styled(ctx, &style, str, str_len);
 }
 
+static nk_bool
+nk_group_scrolled_offset_begin_ex(struct nk_context* ctx,
+	nk_uint* x_offset, nk_uint* y_offset, const char* title, nk_flags flags, struct nk_image img_icon)
+{
+	struct nk_rect bounds;
+	struct nk_window panel;
+	struct nk_window* win;
+
+	win = ctx->current;
+	nk_panel_alloc_space(&bounds, ctx);
+	{
+		const struct nk_rect* c = &win->layout->clip;
+		if (!NK_INTERSECT(c->x, c->y, c->w, c->h, bounds.x, bounds.y, bounds.w, bounds.h) &&
+			!(flags & NK_WINDOW_MOVABLE))
+		{
+			return 0;
+		}
+	}
+	if (win->flags & NK_WINDOW_ROM)
+		flags |= NK_WINDOW_ROM;
+
+	nk_zero(&panel, sizeof(panel));
+	panel.bounds = bounds;
+	panel.flags = flags;
+	panel.scrollbar.x = *x_offset;
+	panel.scrollbar.y = *y_offset;
+	panel.buffer = win->buffer;
+	panel.layout = (struct nk_panel*)nk_create_panel(ctx);
+	ctx->current = &panel;
+	nk_panel_begin_ex(ctx, (flags & NK_WINDOW_TITLE) ? title : 0, NK_PANEL_GROUP,
+		img_icon, nk_image_id(0), nk_image_id(0));
+
+	win->buffer = panel.buffer;
+	win->buffer.clip = panel.layout->clip;
+	panel.layout->offset_x = x_offset;
+	panel.layout->offset_y = y_offset;
+	panel.layout->parent = win->layout;
+	win->layout = panel.layout;
+
+	ctx->current = win;
+	if ((panel.layout->flags & NK_WINDOW_CLOSED) ||
+		(panel.layout->flags & NK_WINDOW_MINIMIZED))
+	{
+		nk_flags f = panel.layout->flags;
+		nk_group_scrolled_end(ctx);
+		if (f & NK_WINDOW_CLOSED)
+			return NK_WINDOW_CLOSED;
+		if (f & NK_WINDOW_MINIMIZED)
+			return NK_WINDOW_MINIMIZED;
+	}
+	return 1;
+}
+
 nk_bool
-nk_group_begin_ex(struct nk_context* ctx, const char* title, nk_flags flags)
+nk_group_begin_ex(struct nk_context* ctx, const char* title, nk_flags flags, struct nk_image img_icon)
 {
 	int id_len;
 	nk_hash id_hash;
@@ -2269,7 +2322,7 @@ nk_group_begin_ex(struct nk_context* ctx, const char* title, nk_flags flags)
 		nk_report_capture_text(bounds.y, nk_report_get_indent(ctx, nk_true), title, id_len);
 	}
 
-	return nk_group_scrolled_offset_begin(ctx, x_offset, y_offset, title, flags);
+	return nk_group_scrolled_offset_begin_ex(ctx, x_offset, y_offset, title, flags, img_icon);
 }
 
 nk_bool

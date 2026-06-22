@@ -127,6 +127,12 @@
     <None Include="icons\wlan.svg">
       <Filter>Icons</Filter>
     </None>
+    <None Include="icons\uefi.svg">
+      <Filter>Icons</Filter>
+    </None>
+    <None Include="icons\lock.svg">
+      <Filter>Icons</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="gnwinfo.h">
@@ -221,9 +227,6 @@
     <ClCompile Include="pci.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="dmi.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="memory.c">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -249,6 +252,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="systray.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="board.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -352,6 +358,12 @@
       <Filter>Resource Files</Filter>
     </Image>
     <Image Include="icons\driver.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="icons\uefi.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="icons\lock.png">
       <Filter>Resource Files</Filter>
     </Image>
   </ItemGroup>

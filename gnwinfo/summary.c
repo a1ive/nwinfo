@@ -118,8 +118,7 @@ draw_bios(struct nk_context* ctx)
 
 	nk_lhc(ctx, m_buf, NK_TEXT_LEFT, g_color_text_l);
 
-	if (quick_access_button(ctx, GET_PNG(IDR_PNG_DMI), "SMBIOS"))
-		g_ctx.window_flag |= GUI_WINDOW_DMI;
+	nk_spacer(ctx);
 
 	if (g_ctx.main_flag & MAIN_B_VENDOR)
 	{
@@ -821,7 +820,7 @@ gnwinfo_draw_main_window(struct nk_context* ctx, float width, float height)
 	WCHAR report_path[MAX_PATH] = L"";
 	enum nk_report_state report_state = NK_REPORT_STATE_IDLE;
 
-	nk_layout_row_begin(ctx, NK_DYNAMIC, 0, 7);
+	nk_layout_row_begin(ctx, NK_DYNAMIC, 0, 8);
 
 	struct nk_rect rect = nk_layout_widget_bounds(ctx);
 	g_ctx.gui_ratio = rect.h / rect.w;
@@ -851,6 +850,14 @@ gnwinfo_draw_main_window(struct nk_context* ctx, float width, float height)
 				g_ctx.display_view = GNWINFO_MAIN_VIEW_SUMMARY;
 			else
 				g_ctx.display_view = GNWINFO_MAIN_VIEW_CPUID;
+		}
+		nk_layout_row_push(ctx, g_ctx.gui_ratio);
+		if (nk_button_image_hover(ctx, GET_PNG(IDR_PNG_FIRMWARE), N_(N__MAINBOARD)))
+		{
+			if (g_ctx.display_view == GNWINFO_MAIN_VIEW_BOARD)
+				g_ctx.display_view = GNWINFO_MAIN_VIEW_SUMMARY;
+			else
+				g_ctx.display_view = GNWINFO_MAIN_VIEW_BOARD;
 		}
 		nk_layout_row_push(ctx, g_ctx.gui_ratio);
 		if (nk_button_image_hover(ctx, GET_PNG(IDR_PNG_SMART), "S.M.A.R.T."))
@@ -890,6 +897,9 @@ gnwinfo_draw_main_window(struct nk_context* ctx, float width, float height)
 		break;
 	case GNWINFO_MAIN_VIEW_CPUID:
 		gnwinfo_draw_cpuid_window(ctx, width, height);
+		break;
+	case GNWINFO_MAIN_VIEW_BOARD:
+		gnwinfo_draw_board_window(ctx, width, height);
 		break;
 	case GNWINFO_MAIN_VIEW_SMART:
 		gnwinfo_draw_smart_window(ctx, width, height);

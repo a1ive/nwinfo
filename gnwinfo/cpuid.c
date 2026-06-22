@@ -158,20 +158,12 @@ gnwinfo_draw_cpuid_window(struct nk_context* ctx, float width, float height)
 	nk_lhc(ctx, NWL_NodeAttrGet(cpu, "Microcode Rev"), NK_TEXT_LEFT, g_color_text_l);
 	CPUID_ROW_END;
 
-	nk_layout_row_dynamic(ctx, 6 * g_col_height, 1);
-	LPCSTR feature = NWL_NodeAttrGet(cpu, "Features");
-	if (nk_group_begin_ex(ctx, N_(N__FEATURES), NK_WINDOW_BORDER | NK_WINDOW_TITLE))
-	{
-		nk_layout_row_dynamic(ctx, 0, 4);
-		for (LPCSTR c = feature; *c != '\0'; c += strlen(c) + 1)
-			nk_lhc(ctx, c, NK_TEXT_CENTERED, g_color_text_l);
-		nk_group_end(ctx);
-	}
+	nk_layout_row_dynamic(ctx, 0, 1);
+	nk_spacer(ctx);
 
 	nk_layout_row(ctx, NK_DYNAMIC, 6 * g_col_height, 2, (float[2]) { 0.5f, 0.5f });
-
 	PNODE cache = NWL_NodeGetChild(cpu, "Cache");
-	if (nk_group_begin_ex(ctx, N_(N__CACHE), NK_WINDOW_BORDER | NK_WINDOW_TITLE))
+	if (nk_group_begin_ex(ctx, N_(N__CACHE), NK_WINDOW_BORDER | NK_WINDOW_TITLE, GET_PNG(IDR_PNG_CPU)))
 	{
 		nk_layout_row(ctx, NK_DYNAMIC, 0, 2, (float[2]) { 0.2f, 0.8f });
 		nk_l(ctx, N_(N__L1_D), NK_TEXT_LEFT);
@@ -187,7 +179,7 @@ gnwinfo_draw_cpuid_window(struct nk_context* ctx, float width, float height)
 		nk_group_end(ctx);
 	}
 
-	if (nk_group_begin_ex(ctx, N_(N__MSR), NK_WINDOW_BORDER | NK_WINDOW_TITLE))
+	if (nk_group_begin_ex(ctx, N_(N__MSR), NK_WINDOW_BORDER | NK_WINDOW_TITLE, GET_PNG(IDR_PNG_SENSOR)))
 	{
 		nk_layout_row(ctx, NK_DYNAMIC, 0, 2, (float[2]) { 0.5f, 0.5f });
 		nk_l(ctx, N_(N__MULTIPLIER), NK_TEXT_LEFT);
@@ -204,48 +196,12 @@ gnwinfo_draw_cpuid_window(struct nk_context* ctx, float width, float height)
 		nk_group_end(ctx);
 	}
 
-	nk_layout_row_dynamic(ctx, 6 * g_col_height, 1);
-	if (nk_group_begin_ex(ctx, N_(N__MAINBOARD), NK_WINDOW_BORDER | NK_WINDOW_TITLE))
-	{
-		nk_layout_row(ctx, NK_DYNAMIC, 0, 2, (float[2]) { 0.2f, 0.8f });
-		nk_l(ctx, N_(N__VENDOR), NK_TEXT_LEFT);
-		nk_lhc(ctx, NWL_NodeAttrGet(g_ctx.board, "Manufacturer"), NK_TEXT_LEFT, g_color_text_l);
-		nk_l(ctx, N_(N__CHIPSET), NK_TEXT_LEFT);
-		nk_lhc(ctx, NWL_NodeAttrGet(g_ctx.board, "Chipset"), NK_TEXT_LEFT, g_color_text_l);
-		nk_l(ctx, N_(N__NAME), NK_TEXT_LEFT);
-		nk_lhcf(ctx, NK_TEXT_LEFT, g_color_text_l, "%s %s",
-			NWL_NodeAttrGet(g_ctx.board, "Board Name"), NWL_NodeAttrGet(g_ctx.board, "Board Version"));
-		nk_l(ctx, N_(N__UUID), NK_TEXT_LEFT);
-		nk_lhc(ctx, NWL_NodeAttrGet(g_ctx.board, "System UUID"), NK_TEXT_LEFT, g_color_text_l);
-		nk_l(ctx, N_(N__LPCIO), NK_TEXT_LEFT);
-		nk_lhc(ctx, NWL_NodeAttrGet(g_ctx.board, "LPC0"), NK_TEXT_LEFT, g_color_text_l);
-		nk_group_end(ctx);
-	}
-
-	LPCSTR tpm_ver = NWL_NodeAttrGet(g_ctx.board, "TPM Version");
-	if (tpm_ver[0] != 'v')
-		return;
 	nk_layout_row_dynamic(ctx, 8 * g_col_height, 1);
-	if (nk_group_begin_ex(ctx, N_(N__TPM), NK_WINDOW_BORDER | NK_WINDOW_TITLE))
+	LPCSTR feature = NWL_NodeAttrGet(cpu, "Features");
+	if (nk_group_begin_ex(ctx, N_(N__FEATURES), NK_WINDOW_BORDER | NK_WINDOW_TITLE, GET_PNG(IDR_PNG_INFO)))
 	{
-		nk_layout_row(ctx, NK_DYNAMIC, 0, 2, (float[2]) { 0.2f, 0.8f });
-		nk_l(ctx, N_(N__VENDOR), NK_TEXT_LEFT);
-		nk_lhcf(ctx, NK_TEXT_LEFT, g_color_text_l, "%s (%s, ID=%s, %s)",
-			NWL_NodeAttrGet(g_ctx.board, "TPM Manufacturer"),
-			NWL_NodeAttrGet(g_ctx.board, "TPM Vendor String"),
-			NWL_NodeAttrGet(g_ctx.board, "TPM Manufacturer ID"),
-			NWL_NodeAttrGet(g_ctx.board, "TPM Interface"));
-		nk_l(ctx, N_(N__VERSION), NK_TEXT_LEFT);
-		nk_lhcf(ctx, NK_TEXT_LEFT, g_color_text_l, "%s r%s %s fw%s", tpm_ver,
-			NWL_NodeAttrGet(g_ctx.board, "TPM Spec Revision"),
-			NWL_NodeAttrGet(g_ctx.board, "TPM Spec Date"),
-			NWL_NodeAttrGet(g_ctx.board, "TPM Firmware Version"));
-
-		nk_layout_row_dynamic(ctx, 0, 1);
-		nk_l(ctx, N_(N__ALGORITHMS), NK_TEXT_LEFT);
 		nk_layout_row_dynamic(ctx, 0, 4);
-		LPCSTR algorithms = NWL_NodeAttrGet(g_ctx.board, "TPM Algorithms");
-		for (LPCSTR c = algorithms; *c != '\0'; c += strlen(c) + 1)
+		for (LPCSTR c = feature; *c != '\0'; c += strlen(c) + 1)
 			nk_lhc(ctx, c, NK_TEXT_CENTERED, g_color_text_l);
 		nk_group_end(ctx);
 	}

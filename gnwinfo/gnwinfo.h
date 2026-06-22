@@ -59,7 +59,7 @@ void
 nk_block(struct nk_context* ctx, struct nk_color color, const char* str);
 
 nk_bool
-nk_group_begin_ex(struct nk_context* ctx, const char* title, nk_flags flags);
+nk_group_begin_ex(struct nk_context* ctx, const char* title, nk_flags flags, struct nk_image img_icon);
 
 nk_bool
 nk_combo_begin_ex(struct nk_context* ctx, const char* selected, float height, nk_bool capture);
@@ -128,7 +128,6 @@ nk_report_end_capture(void);
 #define GUI_WINDOW_ABOUT    (1U << 2)
 #define GUI_WINDOW_SETTINGS (1U << 3)
 #define GUI_WINDOW_PCI      (1U << 4)
-#define GUI_WINDOW_DMI      (1U << 5)
 #define GUI_WINDOW_MM       (1U << 6)
 #define GUI_WINDOW_HOSTNAME (1U << 7)
 #define GUI_WINDOW_DISPLAY  (1U << 8)
@@ -139,6 +138,7 @@ typedef enum _GNWINFO_MAIN_VIEW
 	GNWINFO_MAIN_VIEW_SENSOR,
 	GNWINFO_MAIN_VIEW_CPUID,
 	GNWINFO_MAIN_VIEW_SMART,
+	GNWINFO_MAIN_VIEW_BOARD,
 } GNWINFO_MAIN_VIEW;
 
 typedef struct _GNW_CONTEXT
@@ -256,9 +256,9 @@ VOID gnwinfo_draw_about_window(struct nk_context* ctx, float width, float height
 VOID gnwinfo_draw_smart_window(struct nk_context* ctx, float width, float height);
 VOID gnwinfo_draw_settings_window(struct nk_context* ctx, float width, float height);
 VOID gnwinfo_draw_pci_window(struct nk_context* ctx, float width, float height);
-VOID gnwinfo_draw_dmi_window(struct nk_context* ctx, float width, float height);
 VOID gnwinfo_draw_display_window(struct nk_context* ctx, float width, float height);
 VOID gnwinfo_draw_sensor_window(struct nk_context* ctx, float width, float height);
+VOID gnwinfo_draw_board_window(struct nk_context* ctx, float width, float height);
 
 VOID gnwinfo_set_style(struct nk_context* ctx);
 

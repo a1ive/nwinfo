@@ -35,8 +35,10 @@
 #define IDR_PNG_REPORT                  138
 #define IDR_PNG_MINIMIZE                139
 #define IDR_PNG_DRIVER                  140
+#define IDR_PNG_UEFI                    141
+#define IDR_PNG_LOCK                    142
 
-#define IDR_PNG_MAX                     141
+#define IDR_PNG_MAX                     143
 
 #define IDT_TIMER_1S                    (1u << 0)
 #define IDT_TIMER_1M                    (1u << 1)

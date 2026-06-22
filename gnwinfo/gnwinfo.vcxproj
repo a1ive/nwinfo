@@ -340,6 +340,7 @@
     <None Include="icons\gpu.svg" />
     <None Include="icons\info.svg" />
     <None Include="icons\LICENSE" />
+    <None Include="icons\lock.svg" />
     <None Include="icons\memory.svg" />
     <None Include="icons\minimize.svg" />
     <None Include="icons\mm.svg" />
@@ -356,6 +357,7 @@
     <None Include="icons\sensor.svg" />
     <None Include="icons\settings.svg" />
     <None Include="icons\smart.svg" />
+    <None Include="icons\uefi.svg" />
     <None Include="icons\wlan.svg" />
     <None Include="packages.config" />
   </ItemGroup>
@@ -386,10 +388,10 @@
   <ItemGroup>
     <ClCompile Include="..\nuklear\nuklear.c" />
     <ClCompile Include="about.c" />
+    <ClCompile Include="board.c" />
     <ClCompile Include="context.c" />
     <ClCompile Include="cpuid.c" />
     <ClCompile Include="display.c" />
-    <ClCompile Include="dmi.c" />
     <ClCompile Include="gettext.c" />
     <ClCompile Include="gnwinfo.c" />
     <ClCompile Include="hostname.c" />
@@ -429,6 +431,7 @@
     <Image Include="icons\firmware.png" />
     <Image Include="icons\gpu.png" />
     <Image Include="icons\info.png" />
+    <Image Include="icons\lock.png" />
     <Image Include="icons\memory.png" />
     <Image Include="icons\minimize.png" />
     <Image Include="icons\mm.png" />
@@ -443,6 +446,7 @@
     <Image Include="icons\sensor.png" />
     <Image Include="icons\settings.png" />
     <Image Include="icons\smart.png" />
+    <Image Include="icons\uefi.png" />
     <Image Include="icons\wlan.png" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
