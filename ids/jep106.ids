@@ -1,6 +1,6 @@
 
-# JEP106BO
-# Version: 2026.05.15
+# JEP106BP
+# Version: 2026.08.31
 1
 	1 AMD
 	2 AMI
@@ -1403,7 +1403,7 @@
 	2 Semidrive
 	3 MyTek Electronics Corp
 	4 Wxilicon Technology Co Ltd
-	5 Shenzhen Meixin Electronics Ltd
+	5 Shenzhen Chiway Technology Co Ltd
 	6 Ghost Wolf
 	7 LiSion Technologies Inc
 	8 Power Active Co Ltd
@@ -2089,7 +2089,7 @@
 	53 Shenzhen Shande Semiconductor Co. Ltd.
 	54 AheadComputing
 	55 Beijing Ronghua Kangweiye Technology
-	56 Shanghai Yunsilicon Technology Co Ltd
+	56 Guangdong Long Wins Semiconductor
 	57 Shenzhen Wolongtai Technology Co Ltd.
 	58 Vervesemi Microelectronics
 	59 HRDWYR Ventures Private Limited
@@ -2122,7 +2122,7 @@
 	86 Shanghai Chip4Tao Technology Co Ltd
 	87 Shenzhenshijimokkejiyouxiangongsi
 	88 DEGUA
-	89 TENGYIN CELESTIALSTORAGE
+	89 Tengyin CelestialStorage
 	90 Shenzhen Minder Semiconductor Co Ltd
 	91 GUANGSUJIE
 	92 HVLANYN Technology
@@ -2215,9 +2215,114 @@
 	52 ARIA Sensing Srl
 	53 EverModule Technology Co Ltd
 	54 The AIO
-	55 North Magna Limited
+	55 INTEGER
 	56 Unisemi Power Inc
 	57 Shenzhen RongPei Technology Co Ltd
 	58 HKIC International Electronics Limited
 	59 Shenzhen DTX Space Technology Co Ltd
 	60 Ranxin Technology
+	61 Shenzhen Jinbei Technology Co Ltd
+	62 Kubb
+	63 Xenith (Shanghai) Technology Co Ltd
+	64 Dongguan Xincun Chengbang Technology
+	65 Shenzhen Zhuoyun Lianchuang Technology
+	66 CS Semiconductor Limited
+	67 Fuzhou Huijinshang Electronics Co Ltd
+	68 Shenzhen Hangchen Micro Technology Co
+	69 Shenzhen EMTEK Storage Technology Co
+	70 Wuhan Sifang Chuangxin Technology Co
+	71 Shenzhen Lightning Wings Technology Co
+	72 Shenzhendaqi Semiconductor Technology
+	73 Shenzhen Xinyu Technology Co Ltd
+	74 CellByte Technology Co Limited
+	75 Nanjing Junji Intelligent Technology Co Ltd
+	76 XCENA
+	77 Shenzhen Huahao Xin Technology Co
+	78 KORX
+	79 Beijing Huake Huihai Technology Co Ltd.
+	80 Pigvision Microsystems
+	81 INPACK Technologies
+	82 Dongguan Hongmao Storage Technology
+	83 Amitai Group Limited
+	84 Shanghai Chuantai Electronic Technology
+	85 Shenzhen Xincun Technology Co Ltd
+	86 Hyphen Deux Company Limited
+	87 Shanghai Huahong ZealCore Electronics
+	88 Melexis Technologies NV
+	89 BBR
+	90 Shenzhen Mainstor Semiconductor
+	91 Xin Jiang JIU ZHOU XIAN DA Commercial
+	92 Shenzhen Huizhi Lutong Semiconductor
+	93 Qingdao Benyuan Microelectronics Co Ltd
+	94 Shanghai Puquan Electronic Technology Co
+	95 Shanghai RORKE Storage Technology Co
+	96 Xiamen SOPHGO Technologies Ltd
+	97 Shanghai Fast AI Data Chip Technology Co
+	98 Shenzhen Xunlian Semi Co Ltd
+	99 Venuchip Technology Co Ltd
+	100 Shenzhen Juding Storage Technology Co
+	101 Shenzhen RVsilicon Technology Ltd
+	102 Geruishi Technology Co Limited
+	103 Shenzhen Xinweiling Electronics Co Ltd
+	104 Zhaochu Semiconductor (Shenzhen) Co
+	105 Nsing Technologies Inc
+	106 Communication Technology Ltd
+	107 Shenzhen Huachao Electronics Co Ltd
+	108 Shenzhen JIN YU Semiconductor Co Ltd
+	109 Shenzhen Huanyin Technology Co Ltd
+	110 Futurepath Technology (Shenzhen) Co Ltd
+	111 Enermade
+	112 Shanghai Timar Integrated Circuit Co Ltd
+	113 Neo Density Limited
+	114 Audinate Holdings Pty Ltd
+	115 Beijing Hecun Information Technology Co
+	116 Crache Digital International Limited
+	117 Suiling (Shenzhen) Intelligent Technology Co
+	118 Red Semiconductor International Ltd
+	119 Shanghai Saikechi Electronics Co Ltd
+	120 Aheesa Digital Innovations Private Limited
+	121 Shanghai InfoTM Micro-Electronics Co
+	122 Shen Zhen Xin Xi Hao Lin Electronics
+	123 Arvern Silicon
+	124 MicroSA
+	125 Mykybor Electronics Co Limited
+	126 Realtek Semiconductor Corporation
+19
+	1 SiliconGo Microelectronics Co Ltd SiliconGo
+	2 EXRAM
+	3 Brillian Network & Automation Integrated
+	4 Shenzhen Lingdechuang Technology Co Ltd
+	5 UpscalAi
+	6 Celero Communications Inc
+	7 Umido Technology Co Ltd
+	8 Beijing Shi-Xun Electronic Technology Co Ltd
+	9 coolpad
+	10 Shenzhen Hemingshixian Co Ltd.
+	11 Foxin
+	12 Shen Zhen Tencen Technology Co Ltd
+	13 Calterah Semiconductor Technology
+	14 Shenzhen Fushidun Industrial Co Ltd
+	15 Shenzhen Annyteck Storage Co Ltd
+	16 Xinzexin Holding Co Ltd
+	17 tinyGO
+	18 Alson Technology Limited
+	19 XYXTEM
+	20 Mosaic SoC
+	21 Micro Computer (HK) Tech Limited
+	22 Positron AI Inc
+	23 Jogeek Technology Limited
+	24 Hunan Jiuren Intelligent Manufacturing
+	25 Shenzhen Mensata Cloud AI Technology Co
+	26 Weisulang Technology (Shanghai) Co Ltd
+	27 Junhangkegong Semiconductor (Shenzhen)
+	28 Shenzhen ShengQi Technology Co Ltd
+	29 Egis Technology Inc
+	30 Nanjing Terra Tech Trade Export Import Co
+	31 Shenzhen EAGET Industry Co Ltd
+	32 Ibase Technology Inc
+	33 Shenzhen Huazi Supercomputing Technology Co
+	34 Tokyo Artisan Intelligence
+	35 Kiwimoore (Quzhou) Semiconductor Co Ltd
+	36 Inspire Semiconductor
+	37 Shenzhen Sumem Semiconductor Company
+	38 Maiwei Technology Co Ltd
