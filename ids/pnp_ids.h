@@ -1132,7 +1132,7 @@
 	"ITX\tintegrated Tech Express\n" \
 	"IUC\tICSL\n" \
 	"IVI\tIntervoice\n" \
-	"IVM\tIiyama\n" \
+	"IVM\tiiyama\n" \
 	"IVO\tInfoVision\n" \
 	"IVR\tInlife-Handnet\n" \
 	"IVS\tIntevac Photonics\n" \

@@ -469,6 +469,8 @@ fail:
 
 static double get_voltage(struct msr_info_t* info)
 {
+	if(info->id->x86.ext_family >= 0x1a)
+		goto fail;
 	/* Refer links above
 		MSRC001_00[6B:64][15:9]  is vid (Jaguar and before)
 		MSRC001_00[6B:64][21:14] is vid (Zen)

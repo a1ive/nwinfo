@@ -29,7 +29,7 @@
  * \file     libcpuid.h
  * \author   Veselin Georgiev
  * \date     Oct 2008
- * \version  0.8.1
+ * \version  0.8.2
  *
  * Version history:
  *
@@ -89,6 +89,7 @@
  *                       add more fields in cpu_raw_data_t (ID_AA64DFR2_EL1, ID_AA64FPFR0_EL1, ID_AA64ISAR3_EL1),
  *                       support ARMv9.5-A (FEATURE_LEVEL_ARM_V9_5_A in cpu_feature_level_t and more CPU_FEATURE in cpu_feature_t).
  * * 0.8.1 (2025-08-19): A lot of DB updates, fixes.
+ * * 0.8.2 (2026-09-13): A lot of DB updates, fixes.
  */
 
 /** @mainpage A simple libcpuid introduction
