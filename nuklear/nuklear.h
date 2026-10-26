@@ -439,6 +439,7 @@ struct nk_panel;
 struct nk_context;
 struct nk_draw_vertex_layout_element;
 struct nk_style_button;
+struct nk_style_link;
 struct nk_style_toggle;
 struct nk_style_selectable;
 struct nk_style_slide;
@@ -472,6 +473,11 @@ NK_STATIC_ASSERT(!((nk_bool)1) == !(nk_true));
 
 enum nk_heading         {NK_UP, NK_RIGHT, NK_DOWN, NK_LEFT};
 enum nk_button_behavior {NK_BUTTON_DEFAULT, NK_BUTTON_REPEATER};
+enum nk_link_underline {
+    NK_LINK_UNDERLINE_NONE,
+    NK_LINK_UNDERLINE_HOVER,
+    NK_LINK_UNDERLINE_ALWAYS
+};
 enum nk_modify          {NK_FIXED = nk_false, NK_MODIFIABLE = nk_true};
 enum nk_orientation     {NK_VERTICAL, NK_HORIZONTAL};
 enum nk_collapse_states {NK_MINIMIZED = nk_false, NK_MAXIMIZED = nk_true};
@@ -3376,6 +3382,23 @@ NK_API void nk_value_color_hex(struct nk_context*, const char *prefix, struct nk
 #endif
 /* =============================================================================
  *
+ *                                  LINK
+ *
+ * ============================================================================= */
+NK_API nk_bool nk_link_text(struct nk_context*, const char *title, int len, nk_flags align);
+NK_API nk_bool nk_link_label(struct nk_context*, const char *title, nk_flags align);
+NK_API nk_bool nk_link_text_styled(struct nk_context*, const struct nk_style_link*, const char *title, int len, nk_flags align);
+NK_API nk_bool nk_link_label_styled(struct nk_context*, const struct nk_style_link*, const char *title, nk_flags align);
+NK_API nk_bool nk_link_text_underline(struct nk_context*, const char *title, int len, nk_flags align, enum nk_link_underline);
+NK_API nk_bool nk_link_label_underline(struct nk_context*, const char *title, nk_flags align, enum nk_link_underline);
+NK_API nk_bool nk_link_text_hover_underline(struct nk_context*, const char *title, int len, nk_flags align);
+NK_API nk_bool nk_link_label_hover_underline(struct nk_context*, const char *title, nk_flags align);
+NK_API nk_bool nk_link_text_no_underline(struct nk_context*, const char *title, int len, nk_flags align);
+NK_API nk_bool nk_link_label_no_underline(struct nk_context*, const char *title, nk_flags align);
+NK_API nk_bool nk_link_text_colored(struct nk_context*, const char *title, int len, nk_flags align, struct nk_color);
+NK_API nk_bool nk_link_label_colored(struct nk_context*, const char *title, nk_flags align, struct nk_color);
+/* =============================================================================
+ *
  *                                  BUTTON
  *
  * ============================================================================= */
@@ -5137,6 +5160,18 @@ struct nk_style_text {
     float disabled_factor;
 };
 
+struct nk_style_link {
+    struct nk_color text_normal;
+    struct nk_color text_hover;
+    struct nk_color text_active;
+    enum nk_link_underline underline;
+    float underline_thickness;
+    struct nk_vec2 padding;
+    struct nk_vec2 touch_padding;
+    float color_factor;
+    float disabled_factor;
+};
+
 struct nk_style_button {
     /* background */
     struct nk_style_item normal;
@@ -5593,6 +5628,7 @@ struct nk_style {
     int cursor_visible;
 
     struct nk_style_text text;
+    struct nk_style_link link;
     struct nk_style_button button;
     struct nk_style_button contextual_button;
     struct nk_style_button menu_button;
@@ -5995,7 +6031,10 @@ struct nk_context {
 #define NK_PI 3.141592654f
 #define NK_PI_HALF 1.570796326f
 #define NK_UTF_INVALID 0xFFFD
+/* Digits after decimal for nk_property_float/double display. Overridable before include. */
+#ifndef NK_MAX_FLOAT_PRECISION
 #define NK_MAX_FLOAT_PRECISION 2
+#endif
 
 #define NK_UNUSED(x) ((void)(x))
 #define NK_SATURATE(x) (NK_MAX(0, NK_MIN(1.0f, x)))
@@ -6330,6 +6369,10 @@ struct nk_text {
 };
 NK_LIB void nk_widget_text(struct nk_command_buffer *o, struct nk_rect b, const char *string, int len, const struct nk_text *t, nk_flags a, const struct nk_user_font *f);
 NK_LIB void nk_widget_text_wrap(struct nk_command_buffer *o, struct nk_rect b, const char *string, int len, const struct nk_text *t, const struct nk_user_font *f);
+
+/* link */
+NK_LIB void nk_draw_link(struct nk_command_buffer *out, const struct nk_rect *bounds, nk_flags state, const struct nk_style_link *style, const char *str, int len, nk_flags align, const struct nk_user_font *font, struct nk_color background);
+NK_LIB nk_bool nk_do_link(nk_flags *state, struct nk_command_buffer *out, struct nk_rect bounds, const char *str, int len, nk_flags align, const struct nk_style_link *style, const struct nk_input *in, const struct nk_user_font *font, struct nk_color background);
 
 /* button */
 NK_LIB nk_bool nk_button_behavior(nk_flags *state, struct nk_rect r, const struct nk_input *i, enum nk_button_behavior behavior);
@@ -16982,7 +17025,7 @@ nk_font_baker_memory(nk_size *temp, int *glyph_count,
     *glyph_count = 0;
     for (iter = config_list; iter; iter = iter->next) {
         i = iter;
-        do {if (!i->range) iter->range = nk_font_default_glyph_ranges();
+        do {if (!i->range) i->range = nk_font_default_glyph_ranges();
             range_count = nk_range_count(i->range);
             total_range_count += range_count;
             *glyph_count += nk_range_glyph_count(i->range, range_count);
@@ -17402,6 +17445,8 @@ nk_font_init(struct nk_font *font, float pixel_height,
     font->texture = atlas;
     font->fallback_codepoint = fallback_codepoint;
     font->fallback = nk_font_find_glyph(font, fallback_codepoint);
+    if (!font->fallback)
+        font->fallback = font->glyphs;
 
     font->handle.height = font->info.height * font->scale;
     font->handle.width = nk_font_text_width;
@@ -18755,6 +18800,7 @@ nk_style_from_table(struct nk_context *ctx, const struct nk_color *table)
 {
     struct nk_style *style;
     struct nk_style_text *text;
+    struct nk_style_link *link;
     struct nk_style_button *button;
     struct nk_style_toggle *toggle;
     struct nk_style_selectable *select;
@@ -18780,6 +18826,19 @@ nk_style_from_table(struct nk_context *ctx, const struct nk_color *table)
     text->padding = nk_vec2(0,0);
     text->color_factor = 1.0f;
     text->disabled_factor = NK_WIDGET_DISABLED_FACTOR;
+
+    /* default link */
+    link = &style->link;
+    nk_zero_struct(*link);
+    link->text_normal          = table[NK_COLOR_TEXT];
+    link->text_hover           = table[NK_COLOR_TEXT];
+    link->text_active          = table[NK_COLOR_TEXT];
+    link->underline            = NK_LINK_UNDERLINE_ALWAYS;
+    link->underline_thickness  = 1.0f;
+    link->padding              = nk_vec2(0,0);
+    link->touch_padding        = nk_vec2(0,0);
+    link->color_factor         = 1.0f;
+    link->disabled_factor      = NK_WIDGET_DISABLED_FACTOR;
 
     /* default button */
     button = &style->button;
@@ -23240,10 +23299,10 @@ nk_tree_element_image_push_hashed_base(struct nk_context *ctx, enum nk_tree_type
     /* draw label */
     {nk_flags dummy = 0;
     struct nk_rect label;
-    /* calculate size of the text and tooltip */
+    /* selectable insets by padding on both sides */
     text_len = nk_strlen(title);
     text_width = style->font->width(style->font->userdata, style->font->height, title, text_len);
-    text_width += (4 * padding.x);
+    text_width += 2 * padding.x;
 
     header.w = NK_MAX(header.w, sym.w + item_spacing.x);
     label.x = sym.x + sym.w + item_spacing.x;
@@ -23927,6 +23986,7 @@ nk_widget_disable_begin(struct nk_context* ctx)
     style->tab.tab_minimize_button.color_factor_text = style->tab.tab_minimize_button.disabled_factor;
     style->tab.tab_minimize_button.color_factor_background = style->tab.tab_minimize_button.disabled_factor;
     style->text.color_factor = style->text.disabled_factor;
+    style->link.color_factor = style->link.disabled_factor;
 }
 NK_API void
 nk_widget_disable_end(struct nk_context* ctx)
@@ -23990,6 +24050,7 @@ nk_widget_disable_end(struct nk_context* ctx)
     style->tab.tab_minimize_button.color_factor_text = 1.0f;
     style->tab.tab_minimize_button.color_factor_background = 1.0f;
     style->text.color_factor = 1.0f;
+    style->link.color_factor = 1.0f;
 }
 
 
@@ -24291,6 +24352,260 @@ nk_label_colored_wrap(struct nk_context *ctx, const char *str, struct nk_color c
     nk_text_wrap_colored(ctx, str, nk_strlen(str), color);
 }
 
+
+
+
+
+/* ===============================================================
+ *
+ *                              LINK
+ *
+ * ===============================================================*/
+NK_INTERN void
+nk_link_text_bounds(struct nk_rect bounds, const char *string, int len,
+    struct nk_vec2 padding, nk_flags align, const struct nk_user_font *font,
+    struct nk_rect *out_label, float *out_glyph_width)
+{
+    struct nk_rect label;
+    float glyph_width;
+    float text_width;
+    nk_flags a = align;
+
+    NK_ASSERT(out_label);
+    NK_ASSERT(out_glyph_width);
+    NK_ASSERT(font);
+    if (!out_label || !out_glyph_width || !font) return;
+
+    bounds.h = NK_MAX(bounds.h, 2 * padding.y);
+    glyph_width = font->width(font->userdata, font->height, string, len);
+    text_width = glyph_width + (2.0f * padding.x);
+
+    if (!(a & (NK_TEXT_ALIGN_LEFT | NK_TEXT_ALIGN_CENTERED | NK_TEXT_ALIGN_RIGHT)))
+        a |= NK_TEXT_ALIGN_LEFT;
+    if (!(a & (NK_TEXT_ALIGN_TOP | NK_TEXT_ALIGN_MIDDLE | NK_TEXT_ALIGN_BOTTOM)))
+        a |= NK_TEXT_ALIGN_TOP;
+
+    if (a & NK_TEXT_ALIGN_LEFT) {
+        label.x = bounds.x + padding.x;
+        label.w = NK_MAX(0, bounds.w - 2 * padding.x);
+    } else if (a & NK_TEXT_ALIGN_CENTERED) {
+        label.w = NK_MAX(1, 2 * padding.x + (float)text_width);
+        label.x = (bounds.x + padding.x + ((bounds.w - 2 * padding.x) - label.w) / 2);
+        label.x = NK_MAX(bounds.x + padding.x, label.x);
+        label.w = NK_MIN(bounds.x + bounds.w, label.x + label.w);
+        if (label.w >= label.x) label.w -= label.x;
+    } else {
+        label.x = NK_MAX(bounds.x + padding.x, (bounds.x + bounds.w) - (2 * padding.x + (float)text_width));
+        label.w = (float)text_width + 2 * padding.x;
+    }
+
+    if (a & NK_TEXT_ALIGN_TOP) {
+        label.y = bounds.y + padding.y;
+        label.h = NK_MIN(font->height, bounds.h - 2 * padding.y);
+    } else if (a & NK_TEXT_ALIGN_MIDDLE) {
+        label.y = bounds.y + bounds.h/2.0f - (float)font->height/2.0f;
+        label.h = NK_MAX(bounds.h/2.0f, bounds.h - (bounds.h/2.0f + font->height/2.0f));
+    } else {
+        label.y = bounds.y + bounds.h - font->height;
+        label.h = font->height;
+    }
+
+    *out_label = label;
+    *out_glyph_width = glyph_width;
+}
+NK_LIB void
+nk_draw_link(struct nk_command_buffer *out, const struct nk_rect *bounds,
+    nk_flags state, const struct nk_style_link *style, const char *str, int len,
+    nk_flags align, const struct nk_user_font *font, struct nk_color background)
+{
+    struct nk_text text;
+    struct nk_rect label;
+    struct nk_color color;
+    float glyph_width;
+    nk_bool draw_underline = nk_false;
+
+    NK_ASSERT(out);
+    NK_ASSERT(bounds);
+    NK_ASSERT(style);
+    NK_ASSERT(font);
+    if (!out || !bounds || !style || !font || !str)
+        return;
+
+    if (state & NK_WIDGET_STATE_HOVER)
+        color = style->text_hover;
+    else if (state & NK_WIDGET_STATE_ACTIVED)
+        color = style->text_active;
+    else color = style->text_normal;
+    color = nk_rgb_factor(color, style->color_factor);
+
+    text.padding = style->padding;
+    text.background = background;
+    text.text = color;
+    nk_widget_text(out, *bounds, str, len, &text, align, font);
+
+    if (style->underline == NK_LINK_UNDERLINE_ALWAYS)
+        draw_underline = nk_true;
+    else if (style->underline == NK_LINK_UNDERLINE_HOVER &&
+        (state & (NK_WIDGET_STATE_HOVER|NK_WIDGET_STATE_ACTIVED)))
+        draw_underline = nk_true;
+
+    if (!draw_underline || style->underline_thickness <= 0)
+        return;
+
+    nk_link_text_bounds(*bounds, str, len, style->padding, align, font, &label, &glyph_width);
+    {
+        float x0 = label.x;
+        float x1 = label.x + NK_MIN(glyph_width, label.w);
+        float y = label.y + font->height - style->underline_thickness;
+        if (x1 > x0)
+            nk_stroke_line(out, x0, y, x1, y, style->underline_thickness, color);
+    }
+}
+NK_LIB nk_bool
+nk_do_link(nk_flags *state, struct nk_command_buffer *out,
+    struct nk_rect bounds, const char *str, int len, nk_flags align,
+    const struct nk_style_link *style, const struct nk_input *in,
+    const struct nk_user_font *font, struct nk_color background)
+{
+    struct nk_rect label;
+    struct nk_rect touch;
+    float glyph_width;
+    nk_bool ret;
+
+    NK_ASSERT(state);
+    NK_ASSERT(style);
+    NK_ASSERT(out);
+    NK_ASSERT(str);
+    NK_ASSERT(font);
+    if (!out || !style || !font || !str || !state)
+        return nk_false;
+
+    nk_link_text_bounds(bounds, str, len, style->padding, align, font, &label, &glyph_width);
+    touch.x = label.x - style->touch_padding.x;
+    touch.y = label.y - style->touch_padding.y;
+    touch.w = NK_MIN(glyph_width, label.w) + 2 * style->touch_padding.x;
+    touch.h = font->height + 2 * style->touch_padding.y;
+    if (touch.x < bounds.x) {
+        touch.w -= (bounds.x - touch.x);
+        touch.x = bounds.x;
+    }
+    if (touch.y < bounds.y) {
+        touch.h -= (bounds.y - touch.y);
+        touch.y = bounds.y;
+    }
+    if (touch.x + touch.w > bounds.x + bounds.w)
+        touch.w = NK_MAX(0, bounds.x + bounds.w - touch.x);
+    if (touch.y + touch.h > bounds.y + bounds.h)
+        touch.h = NK_MAX(0, bounds.y + bounds.h - touch.y);
+
+    ret = nk_button_behavior(state, touch, in, NK_BUTTON_DEFAULT);
+    nk_draw_link(out, &bounds, *state, style, str, len, align, font, background);
+    return ret;
+}
+NK_API nk_bool
+nk_link_text_styled(struct nk_context *ctx, const struct nk_style_link *style,
+    const char *title, int len, nk_flags align)
+{
+    struct nk_window *win;
+    struct nk_panel *layout;
+    const struct nk_input *in;
+    struct nk_rect bounds;
+    enum nk_widget_layout_states state;
+
+    NK_ASSERT(ctx);
+    NK_ASSERT(style);
+    NK_ASSERT(ctx->current);
+    NK_ASSERT(ctx->current->layout);
+    if (!style || !ctx || !ctx->current || !ctx->current->layout) return 0;
+
+    win = ctx->current;
+    layout = win->layout;
+    state = nk_widget(&bounds, ctx);
+
+    if (!state) return 0;
+    in = (state == NK_WIDGET_ROM || state == NK_WIDGET_DISABLED || layout->flags & NK_WINDOW_ROM) ? 0 : &ctx->input;
+    return nk_do_link(&ctx->last_widget_state, &win->buffer, bounds,
+                    title, len, align, style, in, ctx->style.font,
+                    ctx->style.window.background);
+}
+NK_API nk_bool
+nk_link_text(struct nk_context *ctx, const char *title, int len, nk_flags align)
+{
+    NK_ASSERT(ctx);
+    if (!ctx) return 0;
+    return nk_link_text_styled(ctx, &ctx->style.link, title, len, align);
+}
+NK_API nk_bool
+nk_link_label_styled(struct nk_context *ctx, const struct nk_style_link *style,
+    const char *title, nk_flags align)
+{
+    return nk_link_text_styled(ctx, style, title, nk_strlen(title), align);
+}
+NK_API nk_bool
+nk_link_label(struct nk_context *ctx, const char *title, nk_flags align)
+{
+    return nk_link_text(ctx, title, nk_strlen(title), align);
+}
+NK_API nk_bool
+nk_link_text_underline(struct nk_context *ctx, const char *title, int len,
+    nk_flags align, enum nk_link_underline underline)
+{
+    struct nk_style_link style;
+    NK_ASSERT(ctx);
+    if (!ctx) return 0;
+    style = ctx->style.link;
+    style.underline = underline;
+    return nk_link_text_styled(ctx, &style, title, len, align);
+}
+NK_API nk_bool
+nk_link_label_underline(struct nk_context *ctx, const char *title,
+    nk_flags align, enum nk_link_underline underline)
+{
+    return nk_link_text_underline(ctx, title, nk_strlen(title), align, underline);
+}
+NK_API nk_bool
+nk_link_text_hover_underline(struct nk_context *ctx, const char *title,
+    int len, nk_flags align)
+{
+    return nk_link_text_underline(ctx, title, len, align, NK_LINK_UNDERLINE_HOVER);
+}
+NK_API nk_bool
+nk_link_label_hover_underline(struct nk_context *ctx, const char *title,
+    nk_flags align)
+{
+    return nk_link_text_hover_underline(ctx, title, nk_strlen(title), align);
+}
+NK_API nk_bool
+nk_link_text_no_underline(struct nk_context *ctx, const char *title,
+    int len, nk_flags align)
+{
+    return nk_link_text_underline(ctx, title, len, align, NK_LINK_UNDERLINE_NONE);
+}
+NK_API nk_bool
+nk_link_label_no_underline(struct nk_context *ctx, const char *title,
+    nk_flags align)
+{
+    return nk_link_text_no_underline(ctx, title, nk_strlen(title), align);
+}
+NK_API nk_bool
+nk_link_text_colored(struct nk_context *ctx, const char *title, int len,
+    nk_flags align, struct nk_color color)
+{
+    struct nk_style_link style;
+    NK_ASSERT(ctx);
+    if (!ctx) return 0;
+    style = ctx->style.link;
+    style.text_normal = color;
+    style.text_hover = color;
+    style.text_active = color;
+    return nk_link_text_styled(ctx, &style, title, len, align);
+}
+NK_API nk_bool
+nk_link_label_colored(struct nk_context *ctx, const char *title,
+    nk_flags align, struct nk_color color)
+{
+    return nk_link_text_colored(ctx, title, nk_strlen(title), align, color);
+}
 
 
 
@@ -30013,6 +30328,22 @@ nk_color_picker(struct nk_context *ctx, struct nk_colorf color,
  *                          COMBO
  *
  * ===============================================================*/
+/* Outer popup height that fits `count` rows: each row is item_height plus
+ * trailing spacing, plus combo top padding and the border nk_panel_begin
+ * subtracts. Combos always get NK_WINDOW_BORDER from nk_nonblock_begin. */
+NK_INTERN float
+nk_combo_calc_max_height(const struct nk_context *ctx, int count, int item_height)
+{
+    struct nk_vec2 spacing;
+    struct nk_vec2 padding;
+
+    spacing = ctx->style.window.spacing;
+    padding = nk_panel_get_padding(&ctx->style, NK_PANEL_COMBO);
+    return (float)count * (float)item_height
+        + (float)count * spacing.y
+        + padding.y
+        + 2.0f * ctx->style.window.combo_border;
+}
 NK_INTERN nk_bool
 nk_combo_begin(struct nk_context *ctx, struct nk_window *win,
     struct nk_vec2 size, nk_bool is_clicked, struct nk_rect header)
@@ -30713,9 +31044,7 @@ nk_combo(struct nk_context *ctx, const char *const *items, int count,
     int selected, int item_height, struct nk_vec2 size)
 {
     int i = 0;
-    int max_height;
-    struct nk_vec2 item_spacing;
-    struct nk_vec2 window_padding;
+    float max_height;
 
     NK_ASSERT(ctx);
     NK_ASSERT(items);
@@ -30723,11 +31052,8 @@ nk_combo(struct nk_context *ctx, const char *const *items, int count,
     if (!ctx || !items ||!count)
         return selected;
 
-    item_spacing = ctx->style.window.spacing;
-    window_padding = nk_panel_get_padding(&ctx->style, ctx->current->layout->type);
-    max_height = count * item_height + count * (int)item_spacing.y;
-    max_height += (int)item_spacing.y * 2 + (int)window_padding.y * 2;
-    size.y = NK_MIN(size.y, (float)max_height);
+    max_height = nk_combo_calc_max_height(ctx, count, item_height);
+    size.y = NK_MIN(size.y, max_height);
     if (nk_combo_begin_label(ctx, items[selected], size)) {
         nk_layout_row_dynamic(ctx, (float)item_height, 1);
         for (i = 0; i < count; ++i) {
@@ -30743,9 +31069,7 @@ nk_combo_separator(struct nk_context *ctx, const char *items_separated_by_separa
     int separator, int selected, int count, int item_height, struct nk_vec2 size)
 {
     int i;
-    int max_height;
-    struct nk_vec2 item_spacing;
-    struct nk_vec2 window_padding;
+    float max_height;
     const char *current_item;
     const char *iter;
     int length = 0;
@@ -30755,12 +31079,8 @@ nk_combo_separator(struct nk_context *ctx, const char *items_separated_by_separa
     if (!ctx || !items_separated_by_separator)
         return selected;
 
-    /* calculate popup window */
-    item_spacing = ctx->style.window.spacing;
-    window_padding = nk_panel_get_padding(&ctx->style, ctx->current->layout->type);
-    max_height = count * item_height + count * (int)item_spacing.y;
-    max_height += (int)item_spacing.y * 2 + (int)window_padding.y * 2;
-    size.y = NK_MIN(size.y, (float)max_height);
+    max_height = nk_combo_calc_max_height(ctx, count, item_height);
+    size.y = NK_MIN(size.y, max_height);
 
     /* find selected item */
     current_item = items_separated_by_separator;
@@ -30798,9 +31118,7 @@ nk_combo_callback(struct nk_context *ctx, void(*item_getter)(void*, int, const c
     void *userdata, int selected, int count, int item_height, struct nk_vec2 size)
 {
     int i;
-    int max_height;
-    struct nk_vec2 item_spacing;
-    struct nk_vec2 window_padding;
+    float max_height;
     const char *item;
 
     NK_ASSERT(ctx);
@@ -30808,12 +31126,8 @@ nk_combo_callback(struct nk_context *ctx, void(*item_getter)(void*, int, const c
     if (!ctx || !item_getter)
         return selected;
 
-    /* calculate popup window */
-    item_spacing = ctx->style.window.spacing;
-    window_padding = nk_panel_get_padding(&ctx->style, ctx->current->layout->type);
-    max_height = count * item_height + count * (int)item_spacing.y;
-    max_height += (int)item_spacing.y * 2 + (int)window_padding.y * 2;
-    size.y = NK_MIN(size.y, (float)max_height);
+    max_height = nk_combo_calc_max_height(ctx, count, item_height);
+    size.y = NK_MIN(size.y, max_height);
 
     item_getter(userdata, selected, &item);
     if (nk_combo_begin_label(ctx, item, size)) {
@@ -31031,7 +31345,9 @@ nk_tooltip_offset(struct nk_context *ctx, const char *text, enum nk_tooltip_pos 
     text_len = nk_strlen(text);
     text_width = style->font->width(style->font->userdata,
                     style->font->height, text, text_len);
-    text_width += (4 * padding.x);
+    /* outer bounds: nk_panel_begin subtracts popup padding and border */
+    text_width += 2 * style->window.popup_padding.x;
+    text_width += 2 * style->window.popup_border;
     text_height = (style->font->height + 2 * padding.y);
 
     /* execute tooltip and fill with text */
