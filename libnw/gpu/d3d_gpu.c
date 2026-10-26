@@ -76,6 +76,9 @@ struct D3D_GPU_CTX
 	PNWLIB_GPU_INFO Info;
 	HMODULE Gdi;
 	HMODULE Dxgi;
+	HMODULE D3d12;
+	HMODULE D3d11;
+	BOOL FeatureLevelFailed;
 	IDXGIFactory* DxgiFactory;
 	NTSTATUS(APIENTRY* EnumAdapters)(D3DKMT_ENUMADAPTERS*);
 	NTSTATUS(APIENTRY* QueryAdapterInfo)(const D3DKMT_QUERYADAPTERINFO*);
@@ -115,9 +118,15 @@ static void
 get_gpu_pcie_speed(struct D3D_GPU_DATA* gpu)
 {
 	if (NWLC->NwDrv == NULL || NWLC->NwDrv->type == WR0_DRIVER_PAWNIO)
+	{
+		NWL_Debug(GDID3D, "Skipping PCIe speed: no supported PCI configuration driver");
 		return;
+	}
 	if (!WR0_WaitPciBus(500))
+	{
+		NWL_Debug(GDID3D, "Skipping PCIe speed: cannot acquire PCI bus mutex");
 		return;
+	}
 	NWL_Debug(GDID3D, "Getting PCIe speed for device at %02X:%02X.%d",
 		gpu->Bdf.BusNumber, gpu->Bdf.DeviceNumber, gpu->Bdf.FunctionNumber);
 	uint32_t pci_addr = PciBusDevFunc(gpu->Bdf.BusNumber, gpu->Bdf.DeviceNumber, gpu->Bdf.FunctionNumber);
@@ -184,7 +193,7 @@ find_duplicated_gpu(PNWLIB_GPU_INFO info, D3DKMT_ADAPTERADDRESS* bdf, D3DKMT_DEV
 }
 
 static D3D_FEATURE_LEVEL
-get_d3d_feature_level(struct D3D_GPU_DATA* gpu)
+get_d3d_feature_level(struct D3D_GPU_CTX* ctx, struct D3D_GPU_DATA* gpu)
 {
 	D3D_FEATURE_LEVEL level = 0;
 	const D3D_FEATURE_LEVEL levels[] =
@@ -201,62 +210,80 @@ get_d3d_feature_level(struct D3D_GPU_DATA* gpu)
 		D3D_FEATURE_LEVEL_9_1
 	};
 
-	if (gpu->DxgiAdapter == NULL)
+	if (gpu->DxgiAdapter == NULL || ctx->FeatureLevelFailed)
+	{
+		NWL_Debug(GDID3D, "Skipping Direct3D feature level: %s",
+			ctx->FeatureLevelFailed ? "previous probe raised an exception" : "no matching DXGI adapter");
 		return level;
+	}
 
-	HMODULE d3d12 = LoadLibraryW(L"d3d12.dll");
-	if (d3d12)
+	// Keep the runtimes loaded until backend cleanup instead of unloading them after each probe.
+	if (ctx->D3d12 == NULL)
+	{
+		NWL_Debug(GDID3D, "Loading d3d12.dll");
+		ctx->D3d12 = LoadLibraryW(L"d3d12.dll");
+		if (ctx->D3d12 == NULL)
+			NWL_Debug(GDID3D, "Cannot load d3d12.dll: %lu", GetLastError());
+		else
+			NWL_Debug(GDID3D, "Loaded d3d12.dll");
+	}
+	if (ctx->D3d12)
 	{
 		HRESULT(WINAPI* pfn_d3d12_create_device)(IUnknown*, D3D_FEATURE_LEVEL, REFIID, void**) = NULL;
 
-		*(FARPROC*)&pfn_d3d12_create_device = GetProcAddress(d3d12, "D3D12CreateDevice");
+		*(FARPROC*)&pfn_d3d12_create_device = GetProcAddress(ctx->D3d12, "D3D12CreateDevice");
 		if (pfn_d3d12_create_device)
 		{
 			for (UINT i = 0; i < (UINT)ARRAYSIZE(levels) && levels[i] >= D3D_FEATURE_LEVEL_11_0; i++)
 			{
-				ID3D12Device* device = NULL;
-
-				if (SUCCEEDED(pfn_d3d12_create_device((IUnknown*)gpu->DxgiAdapter, levels[i],
-					&IID_ID3D12Device, (void**)&device)))
-				{
-					level = levels[i];
-					device->lpVtbl->Release(device);
-					break;
-				}
+				NWL_Debug(GDID3D, "D3D12 probing feature level %04X", (UINT)levels[i]);
+				// A NULL output tests support without creating a device; S_FALSE is success.
+				HRESULT result = pfn_d3d12_create_device((IUnknown*)gpu->DxgiAdapter, levels[i],
+					&IID_ID3D12Device, NULL);
+				NWL_Debug(GDID3D, "D3D12 feature level %04X returned %08lX", (UINT)levels[i], (ULONG)result);
+				if (SUCCEEDED(result))
+					return levels[i];
 			}
 		}
-		FreeLibrary(d3d12);
-		if (level != 0)
-			return level;
+		else
+			NWL_Debug(GDID3D, "Cannot get D3D12CreateDevice: %lu", GetLastError());
 	}
 
-	HMODULE d3d11 = LoadLibraryW(L"d3d11.dll");
-	if (d3d11)
+	if (ctx->D3d11 == NULL)
+	{
+		NWL_Debug(GDID3D, "Loading d3d11.dll");
+		ctx->D3d11 = LoadLibraryW(L"d3d11.dll");
+		if (ctx->D3d11 == NULL)
+			NWL_Debug(GDID3D, "Cannot load d3d11.dll: %lu", GetLastError());
+		else
+			NWL_Debug(GDID3D, "Loaded d3d11.dll");
+	}
+	if (ctx->D3d11)
 	{
 		HRESULT(WINAPI* pfn_d3d11_create_device)(IDXGIAdapter*, D3D_DRIVER_TYPE, HMODULE, UINT,
 			const D3D_FEATURE_LEVEL*, UINT, UINT, ID3D11Device**, D3D_FEATURE_LEVEL*, ID3D11DeviceContext**) = NULL;
 
-		*(FARPROC*)&pfn_d3d11_create_device = GetProcAddress(d3d11, "D3D11CreateDevice");
+		*(FARPROC*)&pfn_d3d11_create_device = GetProcAddress(ctx->D3d11, "D3D11CreateDevice");
 		if (pfn_d3d11_create_device)
 		{
 			for (UINT i = 1; i < (UINT)ARRAYSIZE(levels); i++)
 			{
-				ID3D11Device* device = NULL;
-				ID3D11DeviceContext* device_context = NULL;
 				D3D_FEATURE_LEVEL detected_level = 0;
 
-				if (SUCCEEDED(pfn_d3d11_create_device(gpu->DxgiAdapter, D3D_DRIVER_TYPE_UNKNOWN, NULL, 0, &levels[i], 1,
-					D3D11_SDK_VERSION, &device, &detected_level, &device_context)))
+				NWL_Debug(GDID3D, "D3D11 probing feature level %04X", (UINT)levels[i]);
+				HRESULT result = pfn_d3d11_create_device(gpu->DxgiAdapter, D3D_DRIVER_TYPE_UNKNOWN, NULL, 0,
+					&levels[i], 1, D3D11_SDK_VERSION, NULL, &detected_level, NULL);
+				NWL_Debug(GDID3D, "D3D11 feature level %04X returned %08lX (detected %04X)",
+					(UINT)levels[i], (ULONG)result, (UINT)detected_level);
+				if (SUCCEEDED(result))
+				{
 					level = detected_level;
-				if (device_context)
-					device_context->lpVtbl->Release(device_context);
-				if (device)
-					device->lpVtbl->Release(device);
-				if (level != 0)
 					break;
+				}
 			}
 		}
-		FreeLibrary(d3d11);
+		else
+			NWL_Debug(GDID3D, "Cannot get D3D11CreateDevice: %lu", GetLastError());
 	}
 
 	return level;
@@ -386,8 +413,23 @@ static void* d3d_gpu_init(PNWLIB_GPU_INFO info)
 			continue;
 		}
 
-		gpu->FeatureLevel = get_d3d_feature_level(gpu);
+		NWL_Debug(GDID3D, "Querying Direct3D feature level for adapter [%u]: %s", i, gpu->Name);
+		__try
+		{
+			gpu->FeatureLevel = get_d3d_feature_level(ctx, gpu);
+		}
+		__except (EXCEPTION_EXECUTE_HANDLER)
+		{
+			// Feature detection is optional; retain this adapter's other information.
+			ctx->FeatureLevelFailed = TRUE;
+			gpu->FeatureLevel = 0;
+			NWL_Debug(GDID3D, "Direct3D feature level EXCEPTION %08lX on adapter [%u]; disabling further probes",
+				GetExceptionCode(), i);
+		}
+		NWL_Debug(GDID3D, "Direct3D feature level %04X for adapter [%u]", (UINT)gpu->FeatureLevel, i);
+		NWL_Debug(GDID3D, "Querying PCIe speed for adapter [%u]", i);
 		get_gpu_pcie_speed(gpu);
+		NWL_Debug(GDID3D, "PCIe speed query complete for adapter [%u]", i);
 
 		if (find_duplicated_gpu(info, &gpu->Bdf, &gpu->DeviceIds.DeviceIds))
 			NWL_Debug(GDID3D, "Using duplicated adapter as fallback [%04X-%04X SUBSYS %08X REV %02X ] %s",
@@ -403,7 +445,9 @@ static void* d3d_gpu_init(PNWLIB_GPU_INFO info)
 		memset(&gpu->Stats, 0, sizeof(D3DKMT_QUERYSTATISTICS));
 		gpu->Stats.Type = D3DKMT_QUERYSTATISTICS_ADAPTER;
 		gpu->Stats.AdapterLuid = gpu->OpenAdapter.AdapterLuid;
+		NWL_Debug(GDID3D, "Querying adapter [%u] statistics", i);
 		ctx->Result = ctx->QueryStatistics(&gpu->Stats);
+		NWL_Debug(GDID3D, "Adapter [%u] statistics returned %08lX", i, (ULONG)ctx->Result);
 		if (NT_SUCCESS(ctx->Result))
 		{
 			gpu->NbSegments = gpu->Stats.QueryResult.AdapterInformation.NbSegments;
@@ -596,6 +640,18 @@ static void d3d_gpu_free(void* data)
 			ctx->Adapter[i].DxgiAdapter->lpVtbl->Release(ctx->Adapter[i].DxgiAdapter);
 	if (ctx->DxgiFactory)
 		ctx->DxgiFactory->lpVtbl->Release(ctx->DxgiFactory);
+	if (ctx->D3d11)
+	{
+		NWL_Debug(GDID3D, "Unloading d3d11.dll");
+		FreeLibrary(ctx->D3d11);
+		NWL_Debug(GDID3D, "Unloaded d3d11.dll");
+	}
+	if (ctx->D3d12)
+	{
+		NWL_Debug(GDID3D, "Unloading d3d12.dll");
+		FreeLibrary(ctx->D3d12);
+		NWL_Debug(GDID3D, "Unloaded d3d12.dll");
+	}
 	if (ctx->Dxgi)
 		FreeLibrary(ctx->Dxgi);
 	FreeLibrary(ctx->Gdi);
