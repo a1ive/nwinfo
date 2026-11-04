@@ -8914,11 +8914,11 @@ nk_str_append_str_utf8(struct nk_str *str, const char *text)
     nk_rune unicode;
     if (!str || !text) return 0;
 
-    glyph_len = byte_len = nk_utf_decode(text+byte_len, &unicode, 4);
+    glyph_len = nk_utf_decode(text, &unicode, 4);
     while (unicode != '\0' && glyph_len) {
-        glyph_len = nk_utf_decode(text+byte_len, &unicode, 4);
         byte_len += glyph_len;
         num_runes++;
+        glyph_len = nk_utf_decode(text+byte_len, &unicode, 4);
     }
     nk_str_append_text_char(str, text, byte_len);
     return num_runes;
@@ -9042,11 +9042,11 @@ nk_str_insert_str_utf8(struct nk_str *str, int pos, const char *text)
     nk_rune unicode;
     if (!str || !text) return 0;
 
-    glyph_len = byte_len = nk_utf_decode(text+byte_len, &unicode, 4);
+    glyph_len = nk_utf_decode(text, &unicode, 4);
     while (unicode != '\0' && glyph_len) {
-        glyph_len = nk_utf_decode(text+byte_len, &unicode, 4);
         byte_len += glyph_len;
         num_runes++;
+        glyph_len = nk_utf_decode(text+byte_len, &unicode, 4);
     }
     nk_str_insert_at_rune(str, pos, text, byte_len);
     return num_runes;
@@ -9104,14 +9104,14 @@ nk_str_remove_runes(struct nk_str *str, int len)
     NK_ASSERT(len >= 0);
     if (!str || len < 0) return;
     if (len >= str->len) {
-        str->len = 0;
+        nk_str_clear(str);
         return;
     }
 
     index = str->len - len;
     begin = nk_str_at_rune(str, index, &unicode, &len);
     end = (const char*)str->buffer.memory.ptr + str->buffer.allocated;
-    nk_str_remove_chars(str, (int)(end-begin)+1);
+    nk_str_remove_chars(str, (int)(end-begin));
 }
 NK_API void
 nk_str_delete_chars(struct nk_str *s, int pos, int len)
@@ -10284,7 +10284,6 @@ nk_draw_list_stroke_poly_line(struct nk_draw_list *list, const struct nk_vec2 *p
     nk_draw_list_push_userdata(list, list->userdata);
 #endif
 
-    color.a = (nk_byte)((float)color.a * list->config.global_alpha);
     nk_color_fv(&col.r, color);
     col_trans = col;
     col_trans.a = 0;
@@ -23155,6 +23154,8 @@ nk_tree_base(struct nk_context *ctx, enum nk_tree_type type,
     state = nk_find_value(win, tree_hash);
     if (!state) {
         state = nk_add_value(ctx, win, tree_hash, 0);
+        NK_ASSERT(state);
+        if (!state) return nk_false;
         *state = initial_state;
     }
     return nk_tree_state_base(ctx, type, img, title, (enum nk_collapse_states*)state);
@@ -23343,6 +23344,8 @@ nk_tree_element_base(struct nk_context *ctx, enum nk_tree_type type,
     state = nk_find_value(win, tree_hash);
     if (!state) {
         state = nk_add_value(ctx, win, tree_hash, 0);
+        NK_ASSERT(state);
+        if (!state) return nk_false;
         *state = initial_state;
     } return nk_tree_element_image_push_hashed_base(ctx, type, img, title,
         nk_strlen(title), (enum nk_collapse_states*)state, selected);
@@ -29668,7 +29671,6 @@ nk_property(struct nk_context *ctx, const char *name, struct nk_property_variant
         win->property.name = hash;
         win->property.select_start = *select_begin;
         win->property.select_end = *select_end;
-        win->edit.active = nk_true;
         if (*state == NK_PROPERTY_DRAG) {
             ctx->input.mouse.grab = nk_true;
             ctx->input.mouse.grabbed = nk_true;
@@ -29684,7 +29686,6 @@ nk_property(struct nk_context *ctx, const char *name, struct nk_property_variant
         win->property.select_start = 0;
         win->property.select_end = 0;
         win->property.active = 0;
-        win->edit.active = nk_false;
     }
 }
 NK_API nk_bool
